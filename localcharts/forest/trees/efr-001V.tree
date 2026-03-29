@@ -1,0 +1,51 @@
+\date{2024-04-25}
+\author{eigil-rischel}
+\taxon{proposition}
+\import{macros}
+\p{
+    Let #{f} be a convex function.
+    Then #{f = (f^*)^*} (where #{f^*} denotes the Legendre transform), under the identification #{(X^*)^* = X} of a finite-dimensional vector space with its double dual. 
+}
+\proof{
+    \p{
+        Recall that #{f^* = ((f|_0)^*)^+,} as a minmax problem.
+        Then the claim is that ##{(((((f|_0)^*)^+)|_0)^*)^+ = f.}
+        Using first the rewrite #{((-)^*)^+ = ((-)^-)^*,} and the notation #{((-)^*|_0)^* = -|^0,}
+        we can rewrite that as
+        ##{((f|_0)^-|^0)^+}
+    }
+    \p{
+        Now observe that, restricted to the subcategory #{\Minmax_l} given by minmax problems #{(X,Y,L)} where #{X,Y} are real vector spaces, and those homomorphisms given by linear (rather than merely affine) maps, #{(-)|_0} and #{-|^0} form endofunctors, and #{(-)|_0 \dashv (-)|^0}.
+    }
+    \p{
+        Since #{(-)^-} is left adjoint to the inclusion, we have #{(-)|_0^- \dashv -|^0}.
+        Hence there is a canonical map, the unit of the adjunction, #{L \to (L|_0)^-|^0} for any #{L}.
+        If #{L = (X,*,f)} is an element of #{\Conv}, then by the universal property, this map factors over #{((f|_0)^-|^0)^+}. This gives us the inequality #{f \geq (f^*)^*}.
+    }
+    \p{
+        (Note that this inequality actually holds even if #{f} is not convex, and indeed we haven't really used convexity yet).
+    }
+
+    \p{
+        Observe that, using the natural identification #{(X^*)^* = X}, we have ##{(f|_0)|^0 = (X \oplus X, X^*, (x,x';\alpha) \mapsto f(x) - \alpha(x) + \alpha(x')).} Clearly #{\inf_x \sup_\alpha f(x) - \alpha(x) + \alpha(x') = f(x'),} since the supremum is infinite unless #{x = x'}. But observe that #{(f^*)^*(x') = \sup_\alpha \inf_x f(x) - \alpha(x) + \alpha(x')}
+    }
+    \p{
+        Our claim now is that we may exchange these extremizers by strong duality. This amounts to the claim that the local Beck-Chevalley property holds for this square at #{(f|_0)|^0}:
+        \quiver{
+            \begin{tikzcd}
+            (X \oplus (X^*)^*, *) \ar[d] \ar[r] & ((X^*)^*, *) \ar[d]\\
+            (X \oplus (X^*)^*, X^*) \ar[r] & ((X^*)^*, X^*)
+            \end{tikzcd}
+        }
+    }
+    \p{
+        But by \ref{efr-001U}, strong duality holds in every square of the form
+        \quiver{
+            \begin{tikzcd}
+            (X, *) \ar[d] \ar[r] & (*, *) \ar[d]\\
+            (X, X^*) \ar[r] & (*, X^*)
+            \end{tikzcd}
+        }
+        and by \ref{efr-003C}, this is establishes that the previous square has the Beck-Chevalley condition as well, which finishes the proof.
+    }
+}
