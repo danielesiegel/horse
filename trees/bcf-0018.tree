@@ -10,7 +10,7 @@
 
 \p{The trit-tick is not a free parameter. It is forced by three constraints already present in the forest.}
 
-\subtree{\title{Constraint 1: GF(3) conservation (from \nonterminal{horse-0003}, \nonterminal{bci-stage-4})}
+\subtree{\title{Constraint 1: GF(3) conservation (from [[horse-0003]], [[bci-stage-4]])}
 \p{The pipeline's end-to-end invariant ([[horse-0003]], [[bci-stage-4]]) requires: ##{\sum_{i} \mathrm{trit}(U_i) \equiv 0 \pmod{3}} Every temporal window in which trits are summed must divide evenly into three phases. If the clock quantum does not divide by 3, the conservation check has a rounding residue and the invariant fails at the boundary.}
 \p{\strong{Requirement}: the base time unit #{q} must satisfy #{f_s / q \equiv 0 \pmod{3}} for every sample rate #{f_s} in the stack.}
 }
@@ -35,7 +35,7 @@
 }
 
 \subtree{\title{The derivation}
-\p{The flick has factorization: ##{705{,}600{,}000 = 2^6 \cdot 3^2 \cdot 5^2 \cdot 7^2 \cdot 10^2 = 2^6 \cdot 3^2 \cdot 5^4 \cdot 7^2} The integer divisors of the flick are the candidates for #{q}. Constraint 1 requires #{3 \mid (f/q)} for all stack rates #{f}, i.e.\ the trit-tick frequency #{1/q} must carry at least #{3^1} in its factorization above what the rates require.}
+\p{The flick has factorization: ##{705{,}600{,}000 = 2^6 \cdot 3^2 \cdot 5^2 \cdot 7^2 \cdot 10^2 = 2^6 \cdot 3^2 \cdot 5^4 \cdot 7^2} The integer divisors of the flick are the candidates for #{q}. Constraint 1 requires #{3 \mid (f/q)} for all stack rates #{f}, i.e. the trit-tick frequency #{1/q} must carry at least #{3^1} in its factorization above what the rates require.}
 
 \p{The minimal multiplier that injects the missing #{3} and satisfies all rates simultaneously is #{5}. Check: ##{705{,}600{,}000 \times 5 = 3{,}528{,}000{,}000 = 2^9 \cdot 3^2 \cdot 5^6 \cdot 7^2} The #{3^2} factor guarantees that every rate — including 250 Hz (#{= 2 \cdot 5^3}), 10 Hz (#{= 2 \cdot 5}), and 300 kHz (#{= 2^2 \cdot 3 \cdot 5^5}) — yields a sample-window that divides into exactly 3 GF(3) phases:}
 
@@ -58,5 +58,5 @@
 }
 
 \subtree{\title{Result}
-\p{The trit-tick is forced: ##{\boxed{1 \text{ trit-tick} = \tfrac{1}{5} \text{ flick} = \tfrac{1}{3{,}528{,}000{,}000} \text{ s} \approx 0.2834 \text{ ns}}} It is the GCD-compatible quantum of the GF(3) conservation law ([[horse-0003]]) with the full BCI hardware stack ([[bcf-0003]]) and the flick multimedia standard (\ref{bib-flick}).}
+\p{The trit-tick is forced: ##{\boxed{1 \text{ trit-tick} = \tfrac{1}{5} \text{ flick} = \tfrac{1}{3{,}528{,}000{,}000} \text{ s} \approx 0.2834 \text{ ns}}} It is the GCD-compatible quantum of the GF(3) conservation law ([[horse-0003]]) with the full BCI hardware stack ([[bcf-0003]]) and the flick multimedia standard (\ref{bib-flick}). The same conservation law governs the triadic structure of supertile levels and SMEC embedding training phases ([[bcf-0027]]).}
 }
