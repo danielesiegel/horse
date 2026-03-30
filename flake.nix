@@ -57,6 +57,13 @@
           installPhase = ''
             mkdir -p $out
             cp -r output/* $out/
+            cat > $out/index.html <<'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head><meta http-equiv="refresh" content="0; url=index.xml"></head>
+            <body><a href="index.xml">Redirecting to bci.horse...</a></body>
+            </html>
+            EOF
           '';
         };
         default = forest;
