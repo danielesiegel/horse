@@ -1,0 +1,40 @@
+\title{BCI Device Modalities as Concrete Objects}
+\taxon{definition}
+\import{macros}
+
+\p{Following Myers' notion of \em{concrete object} — an object is concrete
+insofar as it lives in many categories simultaneously — the brain under BCI
+measurement is maximally concrete. Each device modality adds a categorical
+perspective.}
+
+\subtree{
+\title{Device modality table}
+
+\p{Each row is a forgetful functor from the brain to a single-modality view:}
+
+\table{
+  \tr{\th{Device} \th{Category} \th{Objects} \th{Morphisms} \th{Trit}}
+  \tr{\td{OpenBCI Cyton 8ch EEG} \td{Vect} \td{voltage vectors ∈ ℝ⁸} \td{linear maps (re-montage)} \td{spectral band → ±1,0}}
+  \tr{\td{fNIRS (760/850nm)} \td{GF(3)-Mod} \td{HbO/HbR/baseline triples} \td{Beer-Lambert linear maps} \td{HbO=+1, HbR=-1, rest=0}}
+  \tr{\td{sEMG} \td{Top} \td{muscle activation surfaces} \td{continuous deformations} \td{contract=+1, relax=-1, hold=0}}
+  \tr{\td{Eye tracking} \td{Prob} \td{gaze distributions on screen} \td{saccade transition kernels} \td{fixation=0, saccade=±1}}
+  \tr{\td{Haptic feedback} \td{Cat^{op}} \td{actuator states} \td{efferent commands (contravariant)} \td{stimulate=+1, inhibit=-1, idle=0}}
+  \tr{\td{Braille display} \td{Set} \td{pin configurations (6×2 grid)} \td{functions between layouts} \td{raised=+1, lowered=-1, transition=0}}
+}
+}
+
+\subtree{
+\title{Concreteness as multimodal fusion}
+\taxon{remark}
+
+\p{The product functor #{U = \prod_i U_i : \mathrm{Brain} \to \prod_i \cat{C}_i}
+is jointly faithful when all modalities are active. This is the categorical
+statement of why multimodal BCI outperforms unimodal: more forgetful functors
+means a more faithful joint representation.}
+
+\p{The GF(3) trit assignment per modality gives a canonical projection to
+GF(3)-Mod for every device. The composite
+#{U_{\mathrm{GF}(3)} : \mathrm{Brain} \to \mathrm{GF}(3)\text{-Mod}^6}
+is the \strong{trit tensor} — a 6-channel trit signal that gatomic stores
+as datoms and VCV Rack sonifies as CV.}
+}

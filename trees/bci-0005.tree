@@ -1,0 +1,44 @@
+\title{Kan Extensions for Electrode Optimization}
+\taxon{definition}
+\import{macros}
+
+\p{Kan extensions solve the two fundamental electrode problems in BCI:
+\strong{reconstruction} (filling in missing channels) and \strong{optimization}
+(finding the minimal montage for a target discrimination).}
+
+\subtree{
+\title{Right Kan extension: signal reconstruction}
+\taxon{proposition}
+
+\p{Let #{A} be the full electrode set (256-channel ideal), #{B} the actual
+electrode set (8-channel Cyton), #{H : A \to B} the embedding profunctor.
+For desired full-brain signal #{F : A \to \mathrm{Vect}}, the right Kan extension
+
+##{\mathrm{ran}_H F(b) = \int_{a:A} H(a,b) \to F(a)}
+
+is the optimal signal reconstruction from 8 channels. The universal property
+guarantees it is the best approximation in the categorical sense.}
+}
+
+\subtree{
+\title{Left Kan lift: electrode optimization}
+\taxon{proposition}
+
+\p{Given target cognitive state #{K} and desired discrimination #{F}, the left
+Kan lift
+
+##{\mathrm{lift}_K F(a,b) = \int^{c:C} K(b,c) \times F(a,c)}
+
+answers: what is the minimal montage that can detect the pattern? This is
+the electrode optimization problem solved universally.}
+}
+
+\subtree{
+\title{Adaptive montage as Kan extension chain}
+\taxon{remark}
+
+\p{Real-time adaptive BCI alternates between lift (choose next electrode to
+activate) and extension (reconstruct from current set). The chain
+lift → measure → extend → classify forms a comonad on the category of
+montage configurations. Its coalgebras are the adaptive BCI strategies.}
+}

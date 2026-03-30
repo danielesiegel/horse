@@ -1,0 +1,32 @@
+\title{Cofunctors as Neural Control}
+\taxon{definition}
+\import{macros}
+
+\p{Spivak's cofunctors (comonoid maps in Poly) formalize \em{control}: a
+cofunctor #{\varphi : c \to d} means #{d} controls #{c} via #{\varphi}.
+In BCI, the control flows bidirectionally:}
+
+\ul{
+\li{\strong{Decode (afferent)}: cofunctor #{\mathrm{Brain} \to \mathrm{Decoder}}.
+    The decoder controls interpretation of neural signals. Each brain state maps
+    to a decoder state; the decoder chooses which action to emit.}
+\li{\strong{Feedback (efferent)}: cofunctor #{\mathrm{Stimulator} \to \mathrm{Brain}}.
+    Neurofeedback stimulation controls cortical state. The brain's current state
+    determines which stimulation the controller applies.}
+\li{\strong{Closed loop}: the composite cofunctor
+    #{\mathrm{Brain} \to \mathrm{Decoder} \to \mathrm{Effector} \to \mathrm{Stimulator} \to \mathrm{Brain}}
+    is an endomorphism in #{\Cat^{\sharp}}. A natural transformation between
+    two such loops relates two control strategies — calibration is exactly
+    finding the right 2-cell.}
+}
+
+\subtree{
+\title{Reafference as comonoid structure}
+\taxon{remark}
+
+\p{The comonoid structure on #{Sy^S} gives us the \strong{reafference} signal:
+the copy map #{\Delta : Sy^S \to Sy^S \triangleleft Sy^S} duplicates the brain
+state into a prediction copy and an observation copy. The corollary discharge
+is the natural transformation comparing prediction to observation —
+exactly the mechanism gatomic.db implements as \code{reafference-check!}.}
+}

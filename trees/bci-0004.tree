@@ -1,0 +1,44 @@
+\title{Capability-Secured Neural Intent}
+\taxon{definition}
+\import{macros}
+
+\p{The OCapN architecture applied to BCI. A decoded neural intent is a
+\strong{capability}: an unforgeable, attenuable reference authorizing an action.}
+
+\subtree{
+\title{BCI-OCapN correspondence}
+
+\table{
+  \tr{\th{OCapN concept} \th{BCI interpretation}}
+  \tr{\td{Vat} \td{Processing node (brain region, decoder, effector)}}
+  \tr{\td{Capability reference} \td{Decoded intent with bounded authority}}
+  \tr{\td{Attenuation} \td{Confidence-weighted intent (P=0.3 "move left" has less authority)}}
+  \tr{\td{CapTP handshake} \td{Decoder-effector calibration protocol}}
+  \tr{\td{Promise pipeline} \td{Predictive motor command issued before confirmation}}
+  \tr{\td{Revocation} \td{Intent rollback on misclassification}}
+}
+}
+
+\subtree{
+\title{Safety through attenuation}
+\taxon{remark}
+
+\p{A misclassified "move arm" with confidence 0.2 should not have the same
+authority as confidence 0.95. Capability attenuation gives this naturally:
+the decoder issues an attenuated capability whose authority is proportional
+to classification confidence. The effector cannot escalate beyond what
+the capability grants. This is \em{not} metaphor — it is the correct
+security model for invasive BCI.}
+}
+
+\subtree{
+\title{CRDT brain state via Loro}
+\taxon{remark}
+
+\p{Multiple decoders (EEG, fNIRS, sEMG) produce concurrent state updates.
+Loro's CRDT merge gives consistent global state. Text CRDTs for neural speech
+output, structured CRDTs for hierarchical cognitive state (attention × valence
+× arousal), version control for intent rollback. The brain state
+\em{is} a CRDT: eventually consistent, conflict-free, mergeable across
+modalities.}
+}
