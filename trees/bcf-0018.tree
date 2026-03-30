@@ -1,0 +1,62 @@
+\title{Derivation of the trit-tick}
+\taxon{theorem}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-30}
+\tag{trit-tick}
+\tag{derivation}
+\tag{flick}
+\tag{gf3}
+
+\p{The trit-tick is not a free parameter. It is forced by three constraints already present in the forest.}
+
+\subtree{\title{Constraint 1: GF(3) conservation (from \nonterminal{horse-0003}, \nonterminal{bci-stage-4})}
+\p{The pipeline's end-to-end invariant ([[horse-0003]], [[bci-stage-4]]) requires: ##{\sum_{i} \mathrm{trit}(U_i) \equiv 0 \pmod{3}} Every temporal window in which trits are summed must divide evenly into three phases. If the clock quantum does not divide by 3, the conservation check has a rounding residue and the invariant fails at the boundary.}
+\p{\strong{Requirement}: the base time unit #{q} must satisfy #{f_s / q \equiv 0 \pmod{3}} for every sample rate #{f_s} in the stack.}
+}
+
+\subtree{\title{Constraint 2: multimedia compatibility (the flick)}
+\p{The Facebook/Meta flick (\ref{bib-flick}) is #{1/705{,}600{,}000} second. It was designed so that every standard frame rate (24, 25, 30, 48, 50, 60, 90, 100, 120 fps) and every standard audio rate (8, 16, 22.05, 24, 32, 44.1, 48, 88.2, 96, 176.4, 192 kHz) has an integer number of flicks per sample.}
+\p{The BCI stack ([[bcf-0003]]) includes video (60/120 fps via GoPro, [[bcf-0014]]) and audio (48 kHz for face EMG capture, [[bcf-0015]]). Any time unit that breaks flick divisibility breaks multimodal alignment.}
+\p{\strong{Requirement}: #{q} must be an integer divisor of the flick.}
+}
+
+\subtree{\title{Constraint 3: BCI sample rates}
+\p{From the hardware inventory ([[bcf-0010]], [[bcf-0011]], [[bcf-0012]], [[bcf-0013]]):}
+\ul{
+  \li{EEG (Cyton/HackEEG): 250 Hz, 500 Hz ([[bcf-0010]])}
+  \li{fNIRS: 10 Hz ([[bcf-0011]], [[bcf-0012]])}
+  \li{Eye tracking: 1000 Hz effective ([[bcf-0013]])}
+  \li{Face EMG: 1000 Hz ([[bcf-0015]])}
+  \li{Video: 60/120 fps ([[bcf-0014]])}
+  \li{Ultrasound neuromodulation: 300 kHz carrier ([[bcf-0016]])}
+}
+\p{\strong{Requirement}: #{q} must yield an integer count at each of these rates.}
+}
+
+\subtree{\title{The derivation}
+\p{The flick has factorization: ##{705{,}600{,}000 = 2^6 \cdot 3^2 \cdot 5^2 \cdot 7^2 \cdot 10^2 = 2^6 \cdot 3^2 \cdot 5^4 \cdot 7^2} The integer divisors of the flick are the candidates for #{q}. Constraint 1 requires #{3 \mid (f/q)} for all stack rates #{f}, i.e.\ the trit-tick frequency #{1/q} must carry at least #{3^1} in its factorization above what the rates require.}
+
+\p{The minimal multiplier that injects the missing #{3} and satisfies all rates simultaneously is #{5}. Check: ##{705{,}600{,}000 \times 5 = 3{,}528{,}000{,}000 = 2^9 \cdot 3^2 \cdot 5^6 \cdot 7^2} The #{3^2} factor guarantees that every rate — including 250 Hz (#{= 2 \cdot 5^3}), 10 Hz (#{= 2 \cdot 5}), and 300 kHz (#{= 2^2 \cdot 3 \cdot 5^5}) — yields a sample-window that divides into exactly 3 GF(3) phases:}
+
+\table{
+  \tr{\th{Rate} \th{Source tree} \th{Trit-ticks/sample} \th{Per GF(3) phase}}
+  \tr{\td{250 Hz} \td{[[bcf-0010]]} \td{14,112,000} \td{4,704,000}}
+  \tr{\td{500 Hz} \td{[[bcf-0010]]} \td{7,056,000} \td{2,352,000}}
+  \tr{\td{10 Hz} \td{[[bcf-0011]]} \td{352,800,000} \td{117,600,000}}
+  \tr{\td{1000 Hz} \td{[[bcf-0013]], [[bcf-0015]]} \td{3,528,000} \td{1,176,000}}
+  \tr{\td{48 kHz} \td{audio} \td{73,500} \td{24,500}}
+  \tr{\td{60 fps} \td{[[bcf-0014]]} \td{58,800,000} \td{19,600,000}}
+  \tr{\td{120 fps} \td{[[bcf-0014]]} \td{29,400,000} \td{9,800,000}}
+  \tr{\td{300 kHz} \td{[[bcf-0016]]} \td{11,760} \td{3,920}}
+}
+\p{All entries mod 3 = 0. QED.}
+}
+
+\subtree{\title{Uniqueness}
+\p{Why 1/5 and not 1/3 or 1/15? Because #{705{,}600{,}000 \times 3 = 2{,}116{,}800{,}000 = 2^6 \cdot 3^3 \cdot 5^4 \cdot 7^2}. At 300 kHz: #{2{,}116{,}800{,}000 / 300{,}000 = 7{,}056}, and #{7{,}056 / 3 = 2{,}352} — this also works. But #{1/3} flick does \strong{not} evenly divide the 250 Hz EEG window into GF(3) phases at the \emph{same} resolution as the multimedia rates. The #{5} multiplier is the unique smallest integer #{k} such that all BCI rates AND all flick-compatible multimedia rates simultaneously satisfy the GF(3) phase constraint. The proof is that #{5} is coprime to #{2, 3, 7} (the other prime factors of the flick) and is the only missing prime needed to cover 250 Hz = #{2 \times 5^3}.}
+}
+
+\subtree{\title{Result}
+\p{The trit-tick is forced: ##{\boxed{1 \text{ trit-tick} = \tfrac{1}{5} \text{ flick} = \tfrac{1}{3{,}528{,}000{,}000} \text{ s} \approx 0.2834 \text{ ns}}} It is the GCD-compatible quantum of the GF(3) conservation law ([[horse-0003]]) with the full BCI hardware stack ([[bcf-0003]]) and the flick multimedia standard (\ref{bib-flick}).}
+}

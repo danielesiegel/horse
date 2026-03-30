@@ -1,0 +1,69 @@
+\title{bci.red: causally closed efferent subsystem}
+\taxon{theorem}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-30}
+\tag{bci-red}
+\tag{causal-closure}
+\tag{efferent}
+\meta{trit}{+1}
+\meta{band}{beta}
+
+\p{\strong{Claim}: the bci.red subsystem is causally closed — every cause of every event within bci.red is itself within bci.red, given an initial decoded intent from the bci.horse crossover.}
+
+\subtree{\title{Definition of bci.red}
+\p{bci.red is the efferent/activation room of the BCI Factory ([[horse-0001]]). Its defining property: trit #{= +1}, associated with beta burst. A visitor is in bci.red when they \emph{act} on the system ([[horse-0007]]).}
+\p{The subsystem consists of:}
+\ol{
+  \li{\strong{Decode} (Stage 4): functorial decode of descended brain state to motor intent ([[horse-0005]], [[bci-stage-4]])}
+  \li{\strong{OCapN capability}: the decoded intent wrapped as an unforgeable, attenuable capability ([[bci-0004]])}
+  \li{\strong{Actuators} (write channels): ultrasound neuromodulation ([[bcf-0016]]), neurofeedback display, game effectors}
+  \li{\strong{Cofunctor control}: the closed-loop cofunctor #{\mathrm{Brain} \to \mathrm{Decoder} \to \mathrm{Effector} \to \mathrm{Stimulator} \to \mathrm{Brain}} ([[bci-0003]])}
+  \li{\strong{Staking}: GAY staked on efferent predictions at red-team rate 3x ([[horse-0006]], [[horse-0007]])}
+  \li{\strong{Trit budget}: all efferent events carry trit #{+1}}
+}
+}
+
+\subtree{\title{Causal closure argument}
+\p{For bci.red, the causal chain starting from a decoded intent:}
+\ol{
+  \li{\strong{Intent → capability}: Stage 4 maps the descended section to a motor intent ([[bci-stage-4]]). The OCapN wrapper ([[bci-0004]]) attenuates authority by classification confidence — a 0.2-confidence command has less authority than 0.95. This is internal to bci.red: the capability system is entirely within the efferent path.}
+  \li{\strong{Capability → effector}: the capability authorizes an action. The ultrasound probe ([[bcf-0016]]) receives a stimulation command. The effector is in bci.red by definition — it is a write channel.}
+  \li{\strong{Effector → brain}: the stimulation pulse reaches cortex ([[bcf-0016]]). This closes the cofunctor loop ([[bci-0003]]): #{\mathrm{Stimulator} \to \mathrm{Brain}} is the efferent cofunctor. The brain state change caused by stimulation is an efferent event (trit #{+1}) — it is the \emph{consequence} of an action, not a spontaneous observation.}
+  \li{\strong{Brain → re-decode}: the stimulation-altered brain state re-enters Stage 4 in the next cycle. The loop is: decode → act → re-decode. This entire loop lives within bci.red once initiated.}
+  \li{\strong{Staking → rebalancing}: red-team GAY staking ([[horse-0007]]) is a function of efferent predictions. The GF(3) auto-rebalancing adjusts red rewards based on the proportion of red vs blue visits — this is an internal economic feedback within the efferent subsystem.}
+}
+
+\p{The critical boundary: \strong{the initial decoded intent enters bci.red from bci.horse} (the crossover, trit 0). This is the one input from outside. Once the intent is inside bci.red, all subsequent causation is internal. The crossover provides the initial condition; bci.red provides the dynamics.}
+}
+
+\subtree{\title{Formal statement}
+\p{Let #{\mathcal{R}} be the full subcategory of the BCI pipeline category whose objects are efferent events (Stage 4, capabilities, actuators, stimulation-induced brain changes, staking events with trit #{+1}). Then:}
+\ol{
+  \li{#{\mathcal{R}} is a \strong{cosieve}: every morphism out of an object of #{\mathcal{R}} has its target in #{\mathcal{R}}.}
+  \li{The inclusion #{\mathcal{R} \hookrightarrow \mathcal{P}} has a \strong{left adjoint}: the efferent projection #{\pi_{+}: \mathcal{P} \to \mathcal{R}} that discards all afferent components. The unit #{\mathrm{id}_{\mathcal{R}} = \pi_{+} \circ \iota} is the statement that projecting a pure efferent event back to the efferent subsystem is the identity.}
+  \li{The cofunctor loop ([[bci-0003]]) is an \strong{endomorphism} on #{\mathcal{R}}: #{\mathrm{Brain} \xrightarrow{\text{decode}} \mathrm{Intent} \xrightarrow{\text{cap}} \mathrm{Effector} \xrightarrow{\text{stim}} \mathrm{Brain}} — all vertices and edges are in #{\mathcal{R}}.}
+  \li{The reafference copy ([[bci-0003]], comonoid #{\Delta}) splits within #{\mathcal{R}}: prediction and observation of the efferent effect are both efferent events.}
+}
+}
+
+\subtree{\title{Dual to bci.blue}
+\p{bci.blue is a sieve ([[bcf-0019]]); bci.red is a cosieve. The duality is exact:}
+\table{
+  \tr{\th{Property} \th{bci.blue (#{\mathcal{B}})} \th{bci.red (#{\mathcal{R}})}}
+  \tr{\td{Trit} \td{#{-1}} \td{#{+1}}}
+  \tr{\td{Band} \td{alpha suppression} \td{beta burst}}
+  \tr{\td{Direction} \td{afferent (world → brain)} \td{efferent (brain → world)}}
+  \tr{\td{Closure type} \td{sieve (closed under precomposition)} \td{cosieve (closed under postcomposition)}}
+  \tr{\td{Adjoint} \td{right: afferent projection #{\pi_-}} \td{left: efferent projection #{\pi_+}}}
+  \tr{\td{Pipeline stages} \td{Stages 1--3} \td{Stage 4 + actuators}}
+  \tr{\td{GAY rate} \td{1.5x (observation)} \td{3x (action)}}
+  \tr{\td{Can run alone?} \td{Yes (pure observation)} \td{Yes, given initial intent from horse}}
+}
+\p{The GF(3) conservation law ([[horse-0003]]) is the compatibility condition: the sum of all events across both subsystems and the crossover must vanish mod 3. The trit-tick ([[bcf-0017]], [[bcf-0018]]) provides the temporal resolution at which this conservation is verified.}
+}
+
+\subtree{\title{Operational consequence}
+\p{bci.red can run without bci.blue \emph{once a decoded intent exists}. The closed cofunctor loop ([[bci-0003]]) cycles: decode → capability → effector → stimulation → re-decode. No sensor input from bci.blue is required for this cycle to continue. This is the \strong{pure action mode} — the mode in which a trained rider issues motor commands via learned self-regulation ([[bci-0006]]).}
+\p{Causal closure means: nothing bci.blue does can corrupt bci.red's output. A noisy EEG channel cannot cause a spurious stimulation pulse. A dropped fNIRS optode cannot alter the ultrasound output. The OCapN capability model ([[bci-0004]]) enforces this: the stimulator's authority is bounded by the capability token issued at decode time, and that token cannot be inflated by afferent data arriving after issuance.}
+}

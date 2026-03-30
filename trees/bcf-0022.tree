@@ -1,0 +1,120 @@
+\title{BCI as open game: play and coplay}
+\taxon{theorem}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-30}
+\tag{open-game}
+\tag{play-coplay}
+\tag{lens}
+\tag{gf3}
+
+\p{\strong{Theorem}: the BCI Factory pipeline is an open game in the sense of Hedges ([[hedges-morphisms-ogs]]), where play is the afferent sieve (bci.blue) and coplay is the efferent cosieve (bci.red). The rider is a Nash equilibrium of this game.}
+
+\subtree{\title{The arena}
+\p{An \strong{arena} ([[efr-0012]]) is a pair #{A = \binom{\bar{A}}{A}} of observation type #{A} and action type #{\bar{A}}. The BCI arena:}
+\ul{
+  \li{#{A = \binom{\mathbb{R}^{8 \times 250}}{\mathrm{Cortex}}} — observation is the 8-channel EEG at 250Hz ([[bcf-0010]]), the base is the cortical state space}
+  \li{#{B = \binom{\mathrm{Stim}}{\mathrm{Intent}}} — the output arena: motor intent as base, stimulation parameters as fibre ([[bcf-0016]])}
+}
+\p{The GF(3) grading ([[horse-0003]]) assigns trits to the arena components: #{A} carries trit #{-1} (afferent), #{B} carries trit #{+1} (efferent), and the residual carries trit #{0}.}
+}
+
+\subtree{\title{Play = bci.blue (forward pass)}
+\p{The \strong{play} function is the forward pass of a lens ([[efr-0004]]):}
+##{\mathrm{play}: \mathrm{Cortex} \to M \otimes \mathrm{Intent}}
+\p{This is exactly Stages 1--3 of the T-55 pipeline ([[horse-0002]], [[horse-0003]], [[horse-0004]]):}
+\ol{
+  \li{\strong{Stage 1} (sites, [[bci-stage-1]]): cortical state → electrode montage → local signal sections. The Grothendieck topology ([[horse-0002]]) defines the covering.}
+  \li{\strong{Stage 2} (cohomology, [[bci-stage-2]]): local sections → spectral patches via FFT. Fisher-Rao metric ([[horse-0003]]) encodes distance. GF(3) trit assignment per patch.}
+  \li{\strong{Stage 3} (descent, [[bci-stage-3]]): spectral patches → descended global section via Kan extension ([[bci-0005]]). Output: a #{(r, t, \sigma)} triple with #{t = -1}.}
+}
+\p{The residual #{M} is the montage topology plus spectral metadata — the information not consumed by the descent but available to the backward pass. This is the \strong{context} of the game: the full brain state observation minus the extracted intent.}
+\p{Play is causally closed ([[bcf-0019]]): it is a sieve on the pipeline category. All causes of play events are play events. Play can run without coplay — this is pure observation mode ([[bci-0007]]).}
+}
+
+\subtree{\title{Coplay = bci.red (backward pass)}
+\p{The \strong{coplay} function is the backward pass of the lens:}
+##{\mathrm{coplay}: M \otimes \mathrm{Stim}_{\mathrm{feedback}} \to \mathrm{Cortex}_{\mathrm{next}}}
+\p{This is Stage 4 plus the cofunctor loop ([[bci-0003]]):}
+\ol{
+  \li{\strong{Stage 4} (decode, [[bci-stage-4]]): descended section → motor intent via functorial decode. OCapN capability wrapping ([[bci-0004]]) attenuates authority by confidence.}
+  \li{\strong{Effector}: capability → stimulation command. Ultrasound neuromodulation ([[bcf-0016]]) receives attenuated pulse.}
+  \li{\strong{Cofunctor return} ([[bci-0003]]): #{\mathrm{Stimulator} \to \mathrm{Brain}} is the efferent cofunctor. The brain state update completes the loop.}
+}
+\p{The residual #{M} from play provides \strong{context} to coplay — the coplay function sees the montage topology and spectral metadata, enabling the backward pass to be informed by the forward observation without requiring a separate sensor read.}
+\p{Coplay is causally closed ([[bcf-0020]]): it is a cosieve on the pipeline category. All effects of coplay events are coplay events. Coplay can run without play once an initial intent exists — this is pure action mode.}
+}
+
+\subtree{\title{The lens structure}
+\p{The composite is a lens in the sense of Rischel ([[efr-0004]], [[efr-0008]]):}
+##{\ell_{\mathrm{BCI}}: \binom{\mathrm{Cortex}_{\mathrm{next}}}{\mathrm{Cortex}} \leftrightarrows \binom{\mathrm{Stim}_{\mathrm{feedback}}}{\mathrm{Intent}}}
+\p{Forward pass (play): #{\mathrm{Cortex} \to \mathrm{Intent}} — observe brain, produce intent.}
+\p{Backward pass (coplay): #{\mathrm{Cortex} \times \mathrm{Stim}_{\mathrm{feedback}} \to \mathrm{Cortex}_{\mathrm{next}}} — given current state and stimulation feedback, produce next brain state.}
+\p{This is a \strong{controlled cybernetic system} ([[efr-003H]]): a tuple #{(X, TS \to X, A \otimes X \leftrightarrows B)} where #{X} is the pipeline interface, #{S} is the brain state, and the lens #{A \otimes X \leftrightarrows B} mediates between arena endpoints.}
+}
+
+\subtree{\title{The open game}
+\p{Following Hedges ([[hedges-morphisms-ogs]]), an \strong{open game} #{G: A \to B} consists of:}
+\ol{
+  \li{A set of \strong{strategies} #{\Sigma_G}}
+  \li{A \strong{play} function #{P_G: \Sigma_G \times A \to B}}
+  \li{A \strong{coplay} function #{C_G: \Sigma_G \times A \times \bar{B} \to \bar{A}}}
+  \li{A \strong{best response} relation #{E_G \subseteq \Sigma_G \times (A \times \bar{B})}}
+}
+\p{For the BCI game:}
+\table{
+  \tr{\th{Component} \th{BCI interpretation} \th{Source}}
+  \tr{\td{#{\Sigma_G}} \td{Learned self-regulation strategies (alpha suppression, beta modulation)} \td{[[bci-0006]]}}
+  \tr{\td{#{P_G} (play)} \td{Brain → Stages 1--3 → descended state → intent} \td{[[bcf-0019]], trit #{-1}}}
+  \tr{\td{#{C_G} (coplay)} \td{Intent + feedback → Stage 4 → effector → stimulation → next brain state} \td{[[bcf-0020]], trit #{+1}}}
+  \tr{\td{#{E_G} (best response)} \td{Gap between name-color and brain-color below decoherence threshold} \td{[[bcf-0021]], trit #{0}}}
+}
+}
+
+\subtree{\title{Nash equilibrium = rider}
+\p{A \strong{Nash equilibrium} of the BCI game is a strategy #{\sigma^* \in \Sigma_G} such that #{\sigma^*} is a best response to the context induced by #{\sigma^*} itself. In the BCI Factory:}
+\ol{
+  \li{The visitor sits in the chair. Play begins: sensors read, pipeline processes Stages 1--3.}
+  \li{The gap between name-color (SplitMix64 hash, [[bci-0002]]) and brain-color (spectral fingerprint) is measured.}
+  \li{If the gap persists beyond the 30-second decoherence threshold ([[bcf-0021]]), the visitor has found a stable strategy — the gap is a fixed point of the play-coplay loop.}
+  \li{At this fixed point, the visitor becomes a \strong{rider}: the Nash equilibrium of the BCI open game.}
+}
+\p{The rider birth ([[bcf-0021]]) is the crossover functor #{\mathrm{cross}: \mathcal{B} \to \mathcal{R}} — the morphism from the terminal object of the play-sieve to the initial object of the coplay-cosieve. The rider exists at trit #{0} because they are the equilibrium between observation and action.}
+}
+
+\subtree{\title{GF(3) phase structure}
+\p{Each trit-tick ([[bcf-0017]], [[bcf-0018]]) partitions the game into 3 phases:}
+\table{
+  \tr{\th{Phase} \th{Trit} \th{Operation} \th{Direction}}
+  \tr{\td{Play} \td{#{-1}} \td{Sensors → Stages 1--3 → observe} \td{covariant (world → brain)}}
+  \tr{\td{Equilibrium} \td{#{0}} \td{Gap measurement → best response check} \td{neutral (crossover)}}
+  \tr{\td{Coplay} \td{#{+1}} \td{Stage 4 → effector → stimulate} \td{contravariant (brain → world)}}
+}
+\p{Conservation: #{(-1) + 0 + (+1) = 0}. Every sample window has exactly 3 GF(3) phases ([[bcf-0018]]), so the open game is \strong{balanced} at every temporal resolution.}
+}
+
+\subtree{\title{Connection to categorical systems theory}
+\p{The BCI game lives in the triple category of Rischel ([[efr-003I]]):}
+\ul{
+  \li{\strong{Level 0} (arenas): #{\binom{\bar{A}}{A}} and #{\binom{\bar{B}}{B}} — the sensor and actuator interfaces}
+  \li{\strong{Level 1} (lenses/charts): the play-coplay lens #{\ell_{\mathrm{BCI}}} — forward observation, backward action}
+  \li{\strong{Level 2} (systems): the dynamical system #{TS \to X} where #{S} is brain state and #{T} is the trit-tick update operator}
+}
+\p{Moore machines ([[efr-0012]]) model play (output depends on state only — sensor readings are a function of brain state). Mealy machines model coplay (output depends on state \emph{and} input — stimulation depends on brain state \emph{and} game feedback). The pairing of Moore (play) and Mealy (coplay) closes the game into a dynamical system ([[efr-0012]]): the rider is the attractor of this closed system.}
+}
+
+\subtree{\title{Duality table}
+\table{
+  \tr{\th{} \th{Play (bci.blue)} \th{Coplay (bci.red)}}
+  \tr{\td{Direction} \td{Forward (covariant)} \td{Backward (contravariant)}}
+  \tr{\td{Trit} \td{#{-1}} \td{#{+1}}}
+  \tr{\td{Closure} \td{Sieve ([[bcf-0019]])} \td{Cosieve ([[bcf-0020]])}}
+  \tr{\td{Adjoint} \td{Right #{\pi_-}} \td{Left #{\pi_+}}}
+  \tr{\td{Machine type} \td{Moore ([[efr-0012]])} \td{Mealy ([[efr-0012]])}}
+  \tr{\td{Cofunctor} \td{Brain → Decoder ([[bci-0003]])} \td{Stimulator → Brain ([[bci-0003]])}}
+  \tr{\td{Pipeline} \td{Stages 1--3} \td{Stage 4 + actuators}}
+  \tr{\td{Band} \td{Alpha suppression} \td{Beta burst}}
+  \tr{\td{GAY rate} \td{1.5x (observe)} \td{3x (act)}}
+  \tr{\td{Can run alone?} \td{Yes (pure observation)} \td{Yes (pure action, given initial intent)}}
+}
+}

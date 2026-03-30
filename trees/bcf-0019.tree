@@ -1,0 +1,58 @@
+\title{bci.blue: causally closed afferent subsystem}
+\taxon{theorem}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-30}
+\tag{bci-blue}
+\tag{causal-closure}
+\tag{afferent}
+\meta{trit}{-1}
+\meta{band}{alpha}
+
+\p{\strong{Claim}: the bci.blue subsystem is causally closed — every cause of every event within bci.blue is itself within bci.blue.}
+
+\subtree{\title{Definition of bci.blue}
+\p{bci.blue is the afferent/inhibitory room of the BCI Factory ([[horse-0001]]). Its defining property: trit #{= -1}, associated with alpha suppression. A visitor is in bci.blue when they \emph{observe} the neural stream without acting on it ([[horse-0007]]).}
+\p{The subsystem consists of:}
+\ol{
+  \li{\strong{Sensors} (read channels): EEG ([[bcf-0010]]), fNIRS ([[bcf-0011]], [[bcf-0012]]), eye tracking ([[bcf-0013]])}
+  \li{\strong{Stages 1--3} of the T-55 pipeline: signal acquisition ([[horse-0002]], [[bci-stage-1]]), spectral analysis ([[horse-0003]], [[bci-stage-2]]), descent ([[horse-0004]], [[bci-stage-3]])}
+  \li{\strong{Witness accrual}: GAY accrual at blue-team rate 1.5x ([[horse-0006]], [[horse-0007]])}
+  \li{\strong{Trit budget}: all afferent events carry trit #{-1}}
+}
+}
+
+\subtree{\title{Causal closure argument}
+\p{A subsystem #{S} is \strong{causally closed} if for every event #{e \in S} and every cause #{c} of #{e}, we have #{c \in S}. Equivalently, no event outside #{S} is a cause of any event inside #{S}.}
+
+\p{For bci.blue, the causal chain is:}
+\ol{
+  \li{\strong{Photons/electrons → sensor}: cortical activity causes voltage at electrode (EEG) or optical absorption change (fNIRS). These are physical causes internal to the measurement apparatus — the sensor is in bci.blue by definition.}
+  \li{\strong{Sensor → Stage 1 (sites)}: the electrode montage defines the Grothendieck topology ([[horse-0002]]). The restriction maps are spatial filters — purely geometric, no efferent input.}
+  \li{\strong{Stage 1 → Stage 2 (cohomology)}: FFT per patch ([[bci-stage-2]]). The computation is a function of the local signal section only. The GF(3) encoding (HbO=+1, HbR=-1, baseline=0, [[horse-0003]]) is applied per-patch. No motor intent enters.}
+  \li{\strong{Stage 2 → Stage 3 (descent)}: gluing local sections via cocycle data ([[bci-stage-3]]). The Fisher-Rao metric is computed from spectral densities. The Kan extension for missing channels ([[bci-0005]]) reconstructs from \emph{existing} afferent data — it does not inject efferent signal.}
+  \li{\strong{Stage 3 → witness receipt}: the descended global section produces a #{(r, t, \sigma)} triple ([[horse-0006]]) with #{t = -1}. This receipt accrues GAY passively — the witness observes, they do not act.}
+}
+
+\p{At no point does the causal chain reference:}
+\ul{
+  \li{Motor intent (efferent, trit #{+1}, bci.red)}
+  \li{The decode stage (Stage 4, [[bci-stage-4]]) — decode maps brain state to \emph{intent}, which is an efferent concept}
+  \li{The neuromodulation channel ([[bcf-0016]]) — the write channel is bci.red's}
+  \li{Any action taken by the observer}
+}
+}
+
+\subtree{\title{Formal statement}
+\p{Let #{\mathcal{B}} be the full subcategory of the BCI pipeline category whose objects are afferent events (sensors, Stages 1--3, witness receipts with trit #{-1}). Then:}
+\ol{
+  \li{#{\mathcal{B}} is a \strong{sieve} on the Grothendieck topology of the pipeline: every morphism into an object of #{\mathcal{B}} has its source in #{\mathcal{B}}.}
+  \li{The inclusion #{\mathcal{B} \hookrightarrow \mathcal{P}} (full pipeline) has a \strong{right adjoint}: the afferent projection #{\pi_{-}: \mathcal{P} \to \mathcal{B}} that discards all efferent components. The counit #{\pi_{-} \circ \iota = \mathrm{id}_{\mathcal{B}}} is the statement that projecting a pure afferent event back to the afferent subsystem is the identity.}
+  \li{The sheaf condition on #{\mathcal{B}} is \strong{independently satisfiable}: the descent in Stage 3 can glue local sections without any data from Stages 4 or the neuromodulation channel. #{H^1(X, \mathcal{F}|_{\mathcal{B}})} is computed entirely within #{\mathcal{B}}.}
+}
+}
+
+\subtree{\title{Operational consequence}
+\p{bci.blue can run without bci.red. The sensors record. The pipeline processes Stages 1--3. The witness accrues GAY. No decode, no motor output, no stimulation. This is the \strong{pure observation mode} — the mode in which the first rider sits in the chair and simply sees their own brain ([[bci-0007]]).}
+\p{Causal closure means: nothing bci.red does can corrupt bci.blue's output. A bug in the decode stage cannot backpropagate into the spectral analysis. A miscalibrated ultrasound pulse cannot alter the EEG recording. The rooms are separate because the causation is separate.}
+}
