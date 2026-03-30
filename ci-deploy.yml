@@ -1,0 +1,47 @@
+name: Build & Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache forester binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.forester
+          key: forester-4.3.1-linux-x86_64
+
+      - name: Build forester site
+        run: |
+          chmod +x ./forester
+          ./forester build forest.toml
+
+      - name: Deploy to Cloudflare Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: bci-horse
+          directory: output
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy preview (PR)
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: bci-horse
+          directory: output
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
