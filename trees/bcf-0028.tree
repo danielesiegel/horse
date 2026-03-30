@@ -1,0 +1,127 @@
+\title{Mathematical parallels across the bci.horse forest}
+\taxon{reference}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-30}
+\tag{heyting}
+\tag{open-game}
+\tag{tropical}
+\tag{derangement}
+\tag{cohomology}
+\tag{gf3}
+\tag{lattice}
+
+\p{Six mathematical structures recur across the bci.horse forest. They are not independent: each is a different projection of a single object --- a \strong{GF(3)-graded open game on a Heyting algebra whose Nash equilibria are counted by tropical derangements and whose obstructions are detected by Cech cohomology}. This tree maps the parallels.}
+
+\subtree{\title{The six structures}
+\table{
+  \tr{\th{Structure} \th{Primary tree} \th{Role in pipeline}}
+  \tr{\td{Heyting algebra} \td{[[bcf-0019]], [[bcf-0020]]} \td{Subobject lattice of pipeline category; sieve/cosieve duality}}
+  \tr{\td{Open games} \td{[[bcf-0022]]} \td{Play/coplay lens; rider = Nash equilibrium}}
+  \tr{\td{Tropical derangements} \td{[[bcf-0026]]} \td{Counting totally mixed equilibria; no channel at resting max}}
+  \tr{\td{Necessity filtration} \td{[[bcf-0027]]} \td{Cohomological obstruction; Cech H1 detects margin collapse}}
+  \tr{\td{GF(3) conservation} \td{[[bcf-0018]]} \td{Trit-tick quantum; sum of trits = 0 mod 3 at every resolution}}
+  \tr{\td{Ungar games} \td{[[bcf-0026]]} \td{Descent = lattice meet; pipeline stages as Ungar moves}}
+}
+}
+
+\subtree{\title{Parallel 1: Heyting algebra = arena of the open game}
+\p{The subobject lattice of the pipeline category ([[bcf-0019]], [[bcf-0020]]) is a \strong{Heyting algebra}: a bounded distributive lattice with implication #{\Rightarrow}. In intuitionistic logic, this is the algebraic semantics where #{p \lor \neg p} does not hold universally.}
+
+\p{In the open game ([[bcf-0022]]), the Heyting algebra provides the \strong{arena}:}
+\ul{
+  \li{Join (#{a \lor b}): merging two sensor readings into a composite observation}
+  \li{Meet (#{a \land b}): intersecting two constraints on motor intent}
+  \li{Implication (#{a \Rightarrow b}): if observation #{a} holds, then intent #{b} is licensed --- the OCapN capability model ([[bci-0004]])}
+  \li{Negation (#{\neg a = a \Rightarrow \bot}): observation #{a} is \em{incompatible} with any intent --- the decoherence signal}
+}
+\p{The failure of excluded middle (#{a \lor \neg a \neq \top}) means: there exist brain states that are \em{neither} clearly observed \em{nor} clearly unobservable. These are the \strong{crossover states} at trit 0 ([[bcf-0021]]) --- the boundary where the rider crystallizes.}
+}
+
+\subtree{\title{Parallel 2: Open game strategies = derangement classes}
+\p{The open game ([[bcf-0022]]) has strategy set #{\Sigma_G} where each participant chooses a GF(3) trit. A \strong{totally mixed Nash equilibrium} assigns positive probability to all three trits for every participant.}
+
+\p{Vidunas ([[bcf-0026]]): the number of such equilibria equals the number of block derangements. For #{n} participants with #{d_i = 3} strategies each, this is the count of permutations of #{3n} elements where no element stays within its block.}
+
+\p{The parallel:}
+\table{
+  \tr{\th{Game theory} \th{BCI pipeline} \th{Combinatorics}}
+  \tr{\td{Strategy profile} \td{Trit assignment per channel} \td{Permutation of #{3n} elements}}
+  \tr{\td{Nash equilibrium} \td{Rider ([[bcf-0022]])} \td{Fixed point of best-response}}
+  \tr{\td{Totally mixed NE} \td{All channels active} \td{Block derangement}}
+  \tr{\td{Derangement condition} \td{No channel at resting max ([[bcf-0026]])} \td{No element in its own block}}
+  \tr{\td{Count of totally mixed NE} \td{Laguerre coefficient} \td{Block derangement number}}
+}
+}
+
+\subtree{\title{Parallel 3: Ungar moves = pipeline descent stages}
+\p{An Ungar move on a lattice #{L} sends #{x} to #{\bigwedge(\{x\} \cup T)} where #{T \subseteq} elements covered by #{x} ([[bcf-0026]]). Each pipeline stage is an Ungar move:}
+
+\table{
+  \tr{\th{Stage} \th{Lattice element} \th{Ungar move (meet with)}}
+  \tr{\td{Stage 1 (sites)} \td{Full electrode montage} \td{Meet with spatial ROI filter}}
+  \tr{\td{Stage 2 (cohomology)} \td{Full spectrum} \td{Meet with frequency band (alpha, beta, theta)}}
+  \tr{\td{Stage 3 (descent)} \td{Local sections} \td{Meet with cocycle data (gluing conditions)}}
+  \tr{\td{Stage 4 (decode)} \td{Global section} \td{Meet with confidence threshold}}
+}
+
+\p{The \strong{Atniss/Eeta game} plays out between bci.blue and bci.red: blue makes observation moves (coarsening), red makes action moves (focusing intent). The game terminates at the rider --- the lattice element that \em{no further move can lower}. This is the join-irreducible element whose only covers have already been absorbed.}
+}
+
+\subtree{\title{Parallel 4: Necessity filtration = Cech cohomology obstruction}
+\p{The necessity filtration ([[bcf-0027]]) is a descending chain: ##{\mathcal{P} = \mathcal{N}_0 \supseteq \mathcal{N}_1 \supseteq \cdots \supseteq \mathcal{N}_k}}
+
+\p{Each step eliminates \em{possible} elements that fail an extension test, keeping \em{necessary} ones. The obstruction to global sections is a nontrivial Cech #{H^1} class:}
+\ul{
+  \li{Monotile: the #{\sqrt{2}}-cocycle blocks global periodicity}
+  \li{Embedding: the Matryoshka cliff at #{104 \to 112} dimensions blocks margin preservation}
+  \li{Cancer: TP53 R175H blocks the p21/BAX bistable switch}
+  \li{BCI: the crossover ([[bcf-0021]]) blocks causal closure --- \em{by design}}
+}
+
+\p{The parallel to the open game: the Cech #{H^1} class is the \strong{obstruction to a pure strategy Nash equilibrium}. When #{H^1 \neq 0}, no pure strategy is globally consistent --- the equilibrium must be mixed. The tropical derangement count ([[bcf-0026]]) measures \em{how many} mixed equilibria survive.}
+}
+
+\subtree{\title{Parallel 5: GF(3) as the grading that connects everything}
+\p{GF(3) is not a decorative label. It is the \strong{grading ring} of a graded Heyting algebra whose components are:}
+\table{
+  \tr{\th{Trit} \th{Role} \th{Heyting} \th{Open game} \th{Derangement} \th{Cohomology}}
+  \tr{\td{#{-1}} \td{MINUS} \td{Sieve (closed under #{\land})} \td{Play (forward)} \td{Block 1 displaced} \td{Obstruction detector}}
+  \tr{\td{#{0}} \td{ERGODIC} \td{Implication boundary} \td{Equilibrium check} \td{Crossover permutation} \td{Cocycle support}}
+  \tr{\td{#{+1}} \td{PLUS} \td{Cosieve (closed under #{\lor})} \td{Coplay (backward)} \td{Block 2 displaced} \td{Extended section}}
+}
+
+\p{Conservation: #{(-1) + 0 + (+1) = 0}. This holds simultaneously:}
+\ul{
+  \li{Per trit-tick ([[bcf-0018]]): 3 phases per sample window}
+  \li{Per rider birth ([[bcf-0021]]): blue observation + crossover + red action = balanced}
+  \li{Per monotile ([[bcf-0027]]): reflected (1/3) + transfer + unreflected (2/3)}
+  \li{Per derangement ([[bcf-0026]]): no block preserved + all blocks shifted}
+}
+}
+
+\subtree{\title{Parallel 6: the rider as universal fixed point}
+\p{Every structure converges on the same object --- the \strong{rider} ([[bcf-0022]]):}
+\ol{
+  \li{\strong{Heyting}: the rider is the join-irreducible element at the boundary where excluded middle fails}
+  \li{\strong{Open game}: the rider is the Nash equilibrium --- the strategy profile that is a best response to itself}
+  \li{\strong{Tropical derangement}: the rider is the derangement that maximizes the min-plus objective --- no channel idle, all channels shifted from baseline}
+  \li{\strong{Necessity filtration}: the rider is the element that survives all elimination stages --- a \em{necessary} neighbor, not merely possible}
+  \li{\strong{Cohomology}: the rider is the global section that exists \em{despite} the #{H^1} obstruction --- it lives on the 0-cocycle complement where gluing succeeds}
+  \li{\strong{GF(3)}: the rider carries trit 0 --- the ergodic equilibrium between observation and action}
+}
+
+\p{The 30-second decoherence threshold ([[bcf-0021]]) is the \strong{convergence criterion}: the play-coplay loop has stabilized, the necessity filtration has bottomed out, the derangement has frozen, the cohomology class has been computed. The visitor becomes a rider when all six structures agree.}
+}
+
+\subtree{\title{Deployment parallel: forester as necessity filtration}
+\p{The forester build process is itself a necessity filtration:}
+\table{
+  \tr{\th{Forester stage} \th{Filtration step} \th{Eliminated}}
+  \tr{\td{Parse .tree files} \td{#{\mathcal{N}_0 \to \mathcal{N}_1}} \td{Syntax errors}}
+  \tr{\td{Resolve transclusions} \td{#{\mathcal{N}_1 \to \mathcal{N}_2}} \td{Broken cross-references}}
+  \tr{\td{LaTeX render} \td{#{\mathcal{N}_2 \to \mathcal{N}_3}} \td{Malformed math}}
+  \tr{\td{HTML emit} \td{#{\mathcal{N}_3 \to \mathcal{N}_4}} \td{Structural inconsistencies}}
+}
+\p{The output forest is the set of \em{necessary} trees --- those that survive all four stages. A broken reference is an #{H^1} obstruction: a local section (one tree's wiki-link) that cannot be glued into a global section (the rendered forest). Our 0 broken references ([[bcf-0025]]) means #{H^1 = 0} for the bci.horse content graph --- the forest is cohomologically trivial, which is exactly the condition for successful deployment.}
+}
