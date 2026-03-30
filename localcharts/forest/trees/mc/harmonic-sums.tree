@@ -1,0 +1,64 @@
+\title{Harmonic sums}
+\author{matteo-capucci}
+\import{macros}
+
+\p{
+	Consider the quantale #{\mathbb{L}=([0,\infty], \geq, \cdot)}. Notice the following can be done with #{\overline\R} and #{0,1}, though the results vary.
+
+	It is closed, meaning there is an operation #{\multimap} such that
+	##{\dfrac{ab \geq c}{a \geq b \multimap c}}
+	Concretely, this means
+	##{
+		b \multimap c := \begin{cases}
+			c/b & \text{if }c,b \in (0,\infty)\\
+			0 & \text{if }c=0\text{ or }b=\infty\\
+			\infty & \text{if }b=0\text{ or }c=\infty
+		\end{cases}
+	}
+	It also has \emph{sums} and \emph{harmonic sums}, the latter being defined as
+	##{{\sum_i}^* x_i = \dfrac1{\sum_i \dfrac1{x_i}}}
+	Since #{1/x} is the semantics of #{x \multimap 1}, this means harmonic sum is the ''de Morgan dual'' to sum.
+	We also have
+	##{\sum_i (b \multimap {a_i}) = b \multimap {\sum_i a_i}}
+	##{\sum_i ({b_i} \multimap a) = {{\sum_i}^* b_i} \multimap a}
+	Clearly one can express this in any #{\mathbb{L}}-enriched category, leading to the definition of \textbf{internal sums and cosums}:
+}
+
+\transclude{sums}
+
+\p{
+	So sums seems to be `limity' and cosums `colimity'.
+}
+
+\p{
+	Sums are known to be associative and commutative. Harmonic sums are too:
+	##{a +^*(b +^*c) = \dfrac1{1/a + 1/b +1/c} = (a +^* b)+^* c}
+	and
+	##{a +^* b +^* c = \dfrac{1}{1/a + 1/b + 1/c}}
+	Harmonic sum is a monoidal product on #{[0,\infty]} too, since when #{a \leq b, a' \leq b'}, then #{1/a \geq 1/b, 1/a' \geq 1/b'} and thus
+	##{a+^*a' = \dfrac1{1/a+1/a'} \leq \dfrac1{1/b + 1/b'} = b+^*b'}
+}
+
+\p{
+	Sums and harmonic sums lie in a spectrum which includes #{p}-norms as well as #{\sup} and #{\inf}. Specifically, define the \defcase{#{p}-sum} to be
+	##{{\sum_i}^p\ b_i := \left(\sum_i (b_i)^p\right)^{1/p}}
+	Then
+	\ol{
+		\li{#{{\sum}^{-\infty}} is #{\inf} and #{{\sum}^\infty} is #{\sup},}
+		\li{#{{\sum}^{1}} is just sum and #{{\sum}^{-1}} is harmonic sum.}
+	}
+	So we can indeed see sum as a deformed colimit and harmonic sum as a deformed limit:
+
+	\quiver{
+		\begin{tikzcd}
+			\inf & \cdots & {{\sum}^{-p}} & \cdots & {{\sum}^*} & 1 & {\sum} & \cdots & {{\sum}^p} & \cdots & \sup \\
+			{-\infty} && {-p} && {-1} & 0 & 1 && p && \infty
+			\arrow[no head, from=2-5, to=2-6]
+			\arrow[no head, from=2-6, to=2-7]
+			\arrow[no head, from=2-1, to=2-3]
+			\arrow[no head, from=2-3, to=2-5]
+			\arrow[from=2-9, to=2-11]
+			\arrow[no head, from=2-9, to=2-7]
+		\end{tikzcd}
+	}
+}
