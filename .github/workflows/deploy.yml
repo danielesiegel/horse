@@ -15,25 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: cachix/install-nix-action@v30
         with:
-          node-version: '22'
+          nix_path: nixpkgs=channel:nixos-unstable
 
-      - name: Cache forester binary
-        uses: actions/cache@v4
-        with:
-          path: ~/.forester
-          key: forester-4.3.1-linux-x86_64
-
-      - name: Build forester site
-        run: |
-          chmod +x ./forester
-          ./forester build bci-forest.toml
-          cp index.html output/index.html
+      - name: Build forest with nix
+        run: nix build .#forest --print-build-logs
 
       - name: Deploy to Cloudflare Pages
         if: github.ref == 'refs/heads/main'
-        run: npx wrangler pages deploy output --project-name=bci-horse --commit-dirty=true
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./result --project-name=bci-horse --commit-dirty=true
