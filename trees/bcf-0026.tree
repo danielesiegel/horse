@@ -1,0 +1,54 @@
+\title{Tropical derangements and Ungar games}
+\taxon{reference}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-30}
+\tag{derangement}
+\tag{nash}
+\tag{tropical}
+\tag{game-theory}
+\tag{lattice}
+
+\p{\strong{Derangements count Nash equilibria.} The maximal number of totally mixed Nash equilibria in a multi-player game equals the number of block derangements (McKelvey--McLennan, Vidunas). The Ungar game (Defant--Kravitz--Williams) plays combinatorial games on lattices via meet operations. Both structures appear in the BCI open game ([[bcf-0022]]).}
+
+\subtree{\title{Counting derangements and Nash equilibria (Vidunas 2014)}
+\p{[arXiv:1401.5400](https://arxiv.org/abs/1401.5400). The maximal number of totally mixed Nash equilibria in games of #{n} players with strategy sets of sizes #{d_1, \ldots, d_n} equals the number of \strong{block derangements}: permutations of #{d_1 + \cdots + d_n} elements with no fixed point within any block. The counts are linearization coefficients for Laguerre polynomials.}
+
+\p{For the BCI open game ([[bcf-0022]]) with GF(3) trit strategies #{d_i = 3} for each of #{n} participants, the number of totally mixed Nash equilibria is the number of derangements of #{3n} elements respecting the block structure — no participant's trit stays fixed. This is the \strong{trit-tick derangement count}: how many ways can all participants simultaneously shift their cognitive state.}
+}
+
+\subtree{\title{The Ungar Games (Defant--Kravitz--Williams 2024)}
+\p{[Combinatorica 44(3), 531--561](https://doi.org/10.1007/s00493-024-00083-6). Given a finite lattice #{L}, an \strong{Ungar move} sends #{x \in L} to #{\bigwedge(\{x\} \cup T)} where #{T \subseteq} elements covered by #{x}. Two players (Atniss, Eeta) alternate nontrivial Ungar moves from the top element; first player unable to move loses.}
+
+\p{Key results:}
+\ul{
+  \li{Principal order ideals in weak order on #{S_n} that are Eeta wins: #{O(0.95586^n \cdot n!)}}
+  \li{Characterization of Eeta wins for intervals in Young's lattice (includes all principal order ideals)}
+  \li{Characterization of Eeta wins in Tamari lattices}
+}
+
+\p{The lattice structure maps onto bci.horse: the \strong{subobject lattice} of the pipeline category ([[1kjla]], [[s40lq]]) is a Heyting algebra where Ungar moves correspond to \strong{descent operations} — restricting a sheaf section to a smaller open set ([[horse-0004]]). Each stage of the pipeline is an Ungar move: coarsening the electrode montage, restricting the spectral window, descending to a smaller support.}
+}
+
+\subtree{\title{Tropical structure}
+\p{The \strong{tropical semiring} #{(\mathbb{R} \cup \{-\infty\}, \max, +)} replaces addition with max and multiplication with addition. Tropical derangements are derangements in the tropical setting where the fixed-point condition becomes: no coordinate achieves its tropical maximum at the identity.}
+
+\p{In the BCI context: the trit-tick ([[bcf-0017]], [[bcf-0018]]) operates on a GF(3) semiring. The tropical lift replaces discrete trit values #{(-1, 0, +1)} with continuous spectral power values, and the derangement condition becomes: \strong{no electrode channel stays at its resting-state maximum power}. A tropical derangement of the EEG montage is a brain state where every channel has shifted from baseline — the opposite of alpha suppression, which is a \em{partial} derangement.}
+
+\p{The \strong{spectral gap} ([[bcf-0021]]) between bci.blue (trit -1) and bci.red (trit +1) is the tropical distance from a derangement to the identity permutation. The rider emerges when this gap stabilizes — the tropical Nash equilibrium is the derangement that maximizes the min-plus objective across all channels.}
+}
+
+\subtree{\title{Connection to horsefacts.eth and invariant testing}
+\p{The invariant testing methodology ([[bcf-0025]]) from horsefacts.eth's Foundry work is the \strong{computational dual} of the derangement count: an invariant test checks that a property holds under all permutations of function calls (fuzz sequences). The invariant is preserved iff no derangement of the call sequence breaks it. The number of sequences to test grows as the block derangement count — this is why invariant testing is hard and why Foundry's bounded approach (capped call depth) is necessary.}
+
+\p{The Kernel KB4/KB5 fellowship ([[bcf-0025]]) operated during the period when Foundry invariant testing was being developed. The commit-reveal pattern (\code{horsefacts/commit-reveal}) implements a 2-player Ungar game: commit (Atniss move = descend to hash), reveal (Eeta move = meet with preimage). The game terminates when the reveal matches — the lattice element reaches a fixed point.}
+}
+
+\subtree{\title{Bibliography}
+\ul{
+  \li{R. Vidunas. \em{Counting derangements and Nash equilibria}. arXiv:1401.5400, 2014.}
+  \li{C. Defant, N. Kravitz, N. Williams. \em{The Ungar Games}. Combinatorica 44(3):531--561, 2024.}
+  \li{R. McKelvey, A. McLennan. \em{The maximal number of regular totally mixed Nash equilibria}. J. Econ. Theory 72:411--425, 1997.}
+  \li{P. da Silva, A. Jamshidpey, S. Tavar\'{e}. \em{Markov chains arising from biased random derangements}. arXiv:2211.13831, 2022.}
+}
+}
