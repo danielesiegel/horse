@@ -1,33 +1,22 @@
-\title{Stage 1: Signal → Sites}
-\taxon{definition}
+\title{Stage 1: Signal Acquisition — Implementation}
+\author{bmorphism}
 \import{macros}
+\date{2026-03-29}
+\taxon{reference}
 
-\p{The first stage maps raw neural signals to categorical sites. A
-\define{theory of composition} is a symmetric monoidal double category. For BCI:}
-
-\ul{
-\li{\strong{Objects} (interfaces) = electrode sites (Fp1, Fp2, C3, C4, O1, O2, ...)}
-\li{\strong{Operations} (compositions) = montage derivations (bipolar, Laplacian, common average)}
-\li{\strong{Tight maps} = physical repositioning of electrodes}
-\li{\strong{2-cells} = interpolation between montage schemes}
-}
-
-\p{The montage \em{is} a symmetric monoidal double category. Parallel electrodes
-tensor; serial derivations compose.}
+\p{Implementation details for Stage 1 ([[horse-0002]]).}
 
 \subtree{
-\title{Raw sample space}
-\taxon{example}
-
-\p{Raw ADC samples live in \dbl{Set}: sets of voltage readings, functions between
-sample buffers (downsampling, windowing), spans as shared-reference re-montaging.}
+\title{Hardware Path}
+\p{OpenBCI Cyton → USB dongle → 250Hz raw samples → ring buffer (2048 samples = 8.192s window). The ring buffer is the sheaf's stalk at each electrode site.}
 }
 
 \subtree{
-\title{Electrode graph as ACSets}
-\taxon{example}
+\title{Montage as Topology}
+\p{8 electrodes define 8 open sets. Overlaps are determined by spatial adjacency (10-20 system). The topology is fixed at montage time — changing electrode placement changes the site.}
+}
 
-\p{The electrode montage is a combinatorial data structure: electrodes reference
-each other through derivation chains. ACSets encode this directly — each electrode
-is a row, each derivation is a morphism.}
+\subtree{
+\title{Timing Budget}
+\p{0.2ms of the 4.0ms critical path. Signal acquisition is the outer hull of T-55 ([[horse-0001]]) — fast, thin, first contact with the world.}
 }

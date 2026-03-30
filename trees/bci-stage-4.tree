@@ -1,51 +1,27 @@
-\title{Stage 4: Decode → Categorical Semantics}
-\taxon{definition}
+\title{Stage 4: Decode — Implementation}
+\author{bmorphism}
 \import{macros}
+\date{2026-03-29}
+\taxon{reference}
 
-\p{The fourth stage decodes neural intent into capability-secured actions,
-mediated by CRDTs for concurrent state and polynomial functors for I/O typing.}
+\p{Implementation details for Stage 4 ([[horse-0005]]).}
 
 \subtree{
-\title{Capability-secured intent via OCapN}
-\taxon{example}
-
-\p{Decoded neural intents are \strong{capabilities}. The brain is a vat issuing
-capability tokens that authorize actions. Decoded intent = capability reference
-(unforgeable, attenuated). Effector = receiving vat (robotic arm, keyboard,
-smart home). CapTP = transport protocol ensuring intent → action fidelity.}
-
-\p{BCI outputs \em{must} be capability-secured: a misclassified "move arm" should
-not have unbounded authority. Object capabilities give exactly the right
-attenuation model.}
+\title{Intent Mapping}
+\p{The descended global section maps to motor intent via a learned functorial decode. Training data: paired (brain state, intended action) from neurofeedback games ([[bci-0006]]). The functor is refined online — every game session improves the decode.}
 }
 
 \subtree{
-\title{CRDT for concurrent BCI state}
-\taxon{example}
-
-\p{Multiple processing pipelines (EEG decoder, fNIRS decoder, sEMG decoder) produce
-concurrent state updates that must merge consistently. The brain state is a CRDT:
-text CRDTs for neural speech decoding, structured CRDTs for hierarchical cognitive
-state (attention, valence, arousal), version control for rolling back
-misclassified intents.}
+\title{OCapN Security}
+\p{Neural intent is a capability. The decode stage wraps intent in an OCapN capability token: the rider's motor command is only executable by the rider's own actuator chain. No ambient authority — your brain commands cannot be intercepted or replayed.}
 }
 
 \subtree{
-\title{E-graph optimization of decode pipeline}
-\taxon{example}
-
-\p{E-graphs (equality saturation) optimize the decode DAG. Multiple equivalent
-paths exist (FFT→threshold vs wavelet→classifier). The e-graph finds the
-Pareto-optimal path for latency × accuracy. Rewrite rules encode domain
-knowledge.}
+\title{Valence Output}
+\p{Final output: trit #{\in \{-1, 0, +1\}}. GF(3) conservation verified end-to-end: ##{\sum \mathrm{input\;trits} = \sum \mathrm{output\;trits} = 0} The crew compartment of T-55 — where the rider lives.}
 }
 
 \subtree{
-\title{Polynomial functors for BCI I/O}
-\taxon{example}
-
-\p{Polynomial functors type the BCI I/O:
-#{p_{\mathrm{BCI}} = \Sigma_{s : \mathrm{BrainState}} y^{\mathrm{Action}(s)}}.
-Each brain state #{s} has a dependent type of available actions. Cospans of
-polynomials = undirected wiring between BCI subsystems.}
+\title{Timing Budget}
+\p{1.0ms of the 4.0ms critical path. The crew compartment — fast decode, because by this point the hard work is done. The rider receives clean intent.}
 }

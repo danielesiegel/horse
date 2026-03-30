@@ -1,43 +1,22 @@
-\title{Stage 3: Global Assembly → Descent}
-\taxon{definition}
+\title{Stage 3: Descent — Implementation}
+\author{bmorphism}
 \import{macros}
+\date{2026-03-29}
+\taxon{reference}
 
-\p{The third stage glues local patches into coherent whole-brain state.
-The factory's core theorem: \strong{effective descent = real-time BCI}.}
+\p{Implementation details for Stage 3 ([[horse-0004]]).}
 
 \subtree{
-\title{BCI paradigm hierarchy}
-\taxon{example}
-
-\p{The three levels of categorical systems theory map directly to BCI:}
-
-\ul{
-\li{\strong{Paradigm} = measurement modality. EEG lives in the set paradigm
-    (systems compared for equality). EEG+fNIRS lives in the category paradigm
-    (graded comparison by morphisms).}
-\li{\strong{Doctrine} = processing framework. FFT-based, wavelet, Riemannian geometry.}
-\li{\strong{Theory} = specific BCI system. 8ch motor imagery, P300 speller, SSVEP.}
-}
-
-\p{Moving from the set paradigm to the category paradigm enables graded
-comparisons: "this signal is 0.7 similar to left-intent, with a cohomology
-obstruction class in H¹ indicating ambiguity localized to C3/C4."}
+\title{Gluing Algorithm}
+\p{Compute cocycle data on electrode overlaps (Fisher-Rao distance between adjacent spectral densities). Solve the descent problem: find the global section that minimizes total cocycle obstruction. This is a constrained optimization on the GF(3) lattice.}
 }
 
 \subtree{
-\title{The brain as concrete object}
-\taxon{example}
-
-\p{The brain lives simultaneously in Top (electrode sites), Vect (voltage readings),
-Prob (Bayesian decoding), Cat (cognitive states and transitions), and GF(3)-Mod
-(trit-valued fNIRS). The more modalities fused, the more concrete the object.}
+\title{Artifact Rejection}
+\p{When an electrode drops out, #{H^1} increases. The descent degrades gracefully: the descended section uses Kan extension from the remaining sites. Below 4 active electrodes, descent fails — the spall liner is breached.}
 }
 
 \subtree{
-\title{Hemodynamic PDEs via Decapodes}
-\taxon{example}
-
-\p{Decapodes.jl encodes the hemodynamic response function as a discrete exterior
-calculus problem on the cortical mesh. Gluing local Decapodes solutions = descent
-in the Stacks sense.}
+\title{Timing Budget}
+\p{1.8ms of the 4.0ms critical path. The spall liner — most expensive stage, provides structural integrity. This is where the T-55 earns its armor rating.}
 }

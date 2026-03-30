@@ -1,40 +1,34 @@
-\title{BCI Device Modalities as Concrete Objects}
-\taxon{definition}
+\title{Devices and Color}
+\author{bmorphism}
 \import{macros}
+\date{2026-03-29}
+\taxon{reference}
 
-\p{Following Myers' notion of \em{concrete object} — an object is concrete
-insofar as it lives in many categories simultaneously — the brain under BCI
-measurement is maximally concrete. Each device modality adds a categorical
-perspective.}
+\p{The hardware layer of the BCI Factory ([[horse-0001]]).}
 
 \subtree{
-\title{Device modality table}
+\title{SplitMix64 Color Hash}
+\p{Every name maps to a hue via SplitMix64 deterministic hash. Seed the RNG with the name, extract a 64-bit state, map to HSL hue. 1.7M colors/sec on commodity hardware. The color is your Rider identity — computed, not chosen.}
 
-\p{Each row is a forgetful functor from the brain to a single-modality view:}
-
-\table{
-  \tr{\th{Device} \th{Category} \th{Objects} \th{Morphisms} \th{Trit}}
-  \tr{\td{OpenBCI Cyton 8ch EEG} \td{Vect} \td{voltage vectors ∈ ℝ⁸} \td{linear maps (re-montage)} \td{spectral band → ±1,0}}
-  \tr{\td{fNIRS (760/850nm)} \td{GF(3)-Mod} \td{HbO/HbR/baseline triples} \td{Beer-Lambert linear maps} \td{HbO=+1, HbR=-1, rest=0}}
-  \tr{\td{sEMG} \td{Top} \td{muscle activation surfaces} \td{continuous deformations} \td{contract=+1, relax=-1, hold=0}}
-  \tr{\td{Eye tracking} \td{Prob} \td{gaze distributions on screen} \td{saccade transition kernels} \td{fixation=0, saccade=±1}}
-  \tr{\td{Haptic feedback} \td{Cat^{op}} \td{actuator states} \td{efferent commands (contravariant)} \td{stimulate=+1, inhibit=-1, idle=0}}
-  \tr{\td{Braille display} \td{Set} \td{pin configurations (6×2 grid)} \td{functions between layouts} \td{raised=+1, lowered=-1, transition=0}}
-}
+\p{Implementation: Gay.jl \code{color_at(seed)} with \code{splitmix64_next} producing the raw state.}
 }
 
 \subtree{
-\title{Concreteness as multimodal fusion}
-\taxon{remark}
+\title{EEG: OpenBCI Cyton 8ch}
+\p{250Hz sample rate. 8 electrodes define the Grothendieck topology ([[horse-0002]]). The montage is the site — the topological structure on which all sheaves live.}
+}
 
-\p{The product functor #{U = \prod_i U_i : \mathrm{Brain} \to \prod_i \cat{C}_i}
-is jointly faithful when all modalities are active. This is the categorical
-statement of why multimodal BCI outperforms unimodal: more forgetful functors
-means a more faithful joint representation.}
+\subtree{
+\title{fNIRS}
+\p{Near-infrared spectroscopy measures HbO/HbR concentration. Natural GF(3) encoding: HbO = +1, HbR = -1, baseline = 0. Cross-modal fusion with EEG via tensor product of sheaves.}
+}
 
-\p{The GF(3) trit assignment per modality gives a canonical projection to
-GF(3)-Mod for every device. The composite
-#{U_{\mathrm{GF}(3)} : \mathrm{Brain} \to \mathrm{GF}(3)\text{-Mod}^6}
-is the \strong{trit tensor} — a 6-channel trit signal that gatomic stores
-as datoms and VCV Rack sonifies as CV.}
+\subtree{
+\title{Eye Tracking}
+\p{120Hz gaze position defines the attention functor ([[horse-0005]]). Regions under fixation get higher decode priority.}
+}
+
+\subtree{
+\title{Device Inventory}
+\p{See [[horse-0001]] for current status. Primary: Cyton 8ch (shared) at 222 Dore St.}
 }
