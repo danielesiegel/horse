@@ -1,18 +1,46 @@
 \title{Synchronization: trit-tick GF(3)}
 \taxon{protocol}
 \author{monaduck1069}
-\date{2026-03-29}
+\date{2026-03-30}
 \tag{synchronization}
 \tag{gf3}
 \tag{trit-tick}
+\tag{flick}
+\meta{trit-tick-hz}{3528000000}
+\meta{flick-hz}{705600000}
 
 \p{Each modality receives a trit assignment in #{GF(3) = \{0, 1, 2\}}. Temporal alignment via arithmetic in the three-element Galois field.}
 
+\subtree{\title{The trit-tick}
+\p{One trit-tick is one fifth of a \strong{flick} (Facebook/Meta's time unit, #{1/705{,}600{,}000} second). Thus:}
+\ul{
+  \li{#{1 \text{ trit-tick} = \frac{1}{5} \text{ flick} = \frac{1}{3{,}528{,}000{,}000} \text{ s} \approx 0.2834 \text{ ns}}}
+  \li{#{3{,}528{,}000{,}000 = 2^9 \cdot 3^2 \cdot 5^6 \cdot 7^2}}
+}
+\p{The #{3^2} factor in the trit-tick frequency is the key: every sample window at every standard rate divides into \strong{exactly three} GF(3) phases with zero remainder.}
+}
+
+\subtree{\title{GF(3) Phase Alignment}
+\p{Trit-ticks per sample at each BCI modality rate, and per GF(3) phase:}
+\table{
+  \tr{\th{Modality} \th{Rate} \th{Trit-ticks/sample} \th{Per GF(3) phase}}
+  \tr{\td{EEG (Cyton)} \td{250 Hz} \td{14,112,000} \td{4,704,000}}
+  \tr{\td{EEG (high-res)} \td{500 Hz} \td{7,056,000} \td{2,352,000}}
+  \tr{\td{fNIRS} \td{10 Hz} \td{352,800,000} \td{117,600,000}}
+  \tr{\td{Audio} \td{48 kHz} \td{73,500} \td{24,500}}
+  \tr{\td{Video} \td{60 fps} \td{58,800,000} \td{19,600,000}}
+  \tr{\td{Video (high)} \td{120 fps} \td{29,400,000} \td{9,800,000}}
+}
+\p{All rows mod 3 = 0. No drift. No interpolation. The three phases tile every sample window exactly.}
+}
+
 \subtree{\title{The trit-tick Protocol}
 \ul{
-  \li{Each device stamps events with its GF(3) phase}
+  \li{Each device stamps events with its GF(3) phase (0, 1, or 2) within the current sample window}
   \li{Synchronization is verified by checking that trit sums across modalities satisfy the constraint equations}
   \li{\strong{Composable}: adding or removing a modality means adding or removing one trit assignment. No global reconfiguration}
   \li{\strong{Mix-and-match}: any subset of the stack can synchronize without the full stack being present}
+  \li{\strong{Flick-compatible}: since 5 trit-ticks = 1 flick, the scheme inherits flick's exact divisibility by all standard multimedia rates (24, 25, 30, 48, 50, 60, 90, 100, 120 fps and 8/16/22.05/24/32/44.1/48/88.2/96/176.4/192 kHz)}
 }
-\p{This replaces traditional master-clock architectures with a distributed, algebraic synchronization scheme. The math is trivial (addition mod 3). The consequence is profound: the stack is not a fixed system but a composable kit.}}
+\p{This replaces traditional master-clock architectures with a distributed, algebraic synchronization scheme. The math is trivial (addition mod 3). The consequence is profound: the stack is not a fixed system but a composable kit.}
+}
