@@ -292,6 +292,53 @@
   <xsl:template match="f:backmatter//f:backmatter">
   </xsl:template>
 
+  <xsl:template match="f:contributions[not(*)]"/>
+  <xsl:template match="f:context[not(*)]"/>
+  <xsl:template match="f:related[not(*)]"/>
+  <xsl:template match="f:backlinks[not(*)]"/>
+  <xsl:template match="f:references[not(*)]"/>
+
+  <xsl:template match="f:contributions[*]">
+    <div class="backmatter-section">
+      <h2>Contributions</h2>
+      <xsl:apply-templates />
+    </div>
+  </xsl:template>
+
+  <xsl:template match="f:context[*]">
+    <div class="backmatter-section">
+      <h2>Context</h2>
+      <xsl:apply-templates />
+    </div>
+  </xsl:template>
+
+  <xsl:template match="f:related[*]">
+    <div class="backmatter-section">
+      <h2>Related</h2>
+      <xsl:apply-templates />
+    </div>
+  </xsl:template>
+
+  <xsl:template match="f:backlinks[*]">
+    <div class="backmatter-section">
+      <h2>Backlinks</h2>
+      <xsl:apply-templates />
+    </div>
+  </xsl:template>
+
+  <xsl:template match="f:references[*]">
+    <div class="backmatter-section">
+      <h2>References</h2>
+      <xsl:apply-templates />
+    </div>
+  </xsl:template>
+
+  <xsl:template match="f:contributor">
+    <li class="contributor">
+      <xsl:value-of select="." />
+    </li>
+  </xsl:template>
+
   <xsl:template match="f:tree[f:mainmatter[*] or not(@hidden-when-empty = 'true')]">
     <section>
       <xsl:attribute name="lang">
@@ -341,6 +388,9 @@
 
   <xsl:template match="f:tree"></xsl:template>
 
-
+  <xsl:template match="f:anchor"/>
+  <xsl:template match="f:parent"/>
+  <xsl:template match="f:route"/>
+  <xsl:template match="f:number"/>
 
 </xsl:stylesheet>
