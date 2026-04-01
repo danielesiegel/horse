@@ -1,0 +1,52 @@
+\title{Electrode Augmentation for Extended Sessions}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-31}
+\taxon{reference}
+
+\p{For a BCI Factory rider ([[horse-0001]]) who sits for hours — neurofeedback loops, flam3 diffusion sessions, hyperscanning — the electrode-scalp interface is the comfort bottleneck. Wet gel dries out and itches after 30 minutes. Rigid dry pins create pressure hotspots that become painful by 20 minutes. The question: \strong{what is the best someone can do with a 3D printer and commodity parts to stay comfortable for 2+ hour sessions while maintaining usable signal?}}
+
+\subtree{
+\title{Comfort-First Ranking}
+
+\table{
+  \tr{\th{Rank} \th{Approach} \th{Comfort (60min+)} \th{Signal} \th{Cost} \th{Tree}}
+  \tr{\td{1} \td{TPU Arch Electrodes} \td{★★★★★} \td{★★★★} \td{~$3} \td{[[bci-0010]]}}
+  \tr{\td{2} \td{Coiled-Spring Prongs} \td{★★★★} \td{★★★★} \td{~$2} \td{[[bci-0011]]}}
+  \tr{\td{3} \td{Conductive Filament Flat} \td{★★★★} \td{★★★} \td{~$1} \td{[[bci-0012]]}}
+  \tr{\td{4} \td{cEEGrid Ear Adapters} \td{★★★★★} \td{★★★} \td{~$15} \td{[[bci-0013]]}}
+  \tr{\td{5} \td{Ultracortex Mark IV (modified)} \td{★★★} \td{★★★★} \td{~$50} \td{[[bci-0014]]}}
+}
+}
+
+\subtree{
+\title{The Best Someone Can Do}
+
+\p{For maximum comfort in extended sessions with a Cyton 8ch ([[bci-0002]]):}
+
+\ol{
+  \li{\strong{Print arch electrodes in flexible TPU} ([[bci-0010]]). The arch deforms under radial pressure, distributing force across a curved contact surface instead of point-loading like pins. Vasconcelos et al. (2021) showed comfort ratings stable at 60+ minutes where pin electrodes degraded sharply after 20 minutes. The arches flex to match individual scalp curvature — no two heads need the same geometry. Coat with Ag/AgCl via electroless plating or wrap with conductive fabric.}
+  \li{\strong{Supplement with ear-electrodes} ([[bci-0013]]) for reference channels. The cEEGrid sits behind the ear on hairless skin — zero hair-penetration problem, zero pressure points, wearable for hours like earbuds. Knierim et al. (2022) published an OpenBCI-compatible adapter design.}
+  \li{\strong{Use OpenSCAD for parametric arch geometry.} Five arches, 6mm outer radius, 4.5mm inner radius, 1mm spacing. The upper 40\% of each arch is hollow to allow radial deformation. One \code{.scad} file parameterizes arch count, radius, hollow fraction, and base diameter per head.}
+}
+
+\p{Sheaf-theoretic framing ([[bci-0001]]): arch compliance maximizes the contact area of each electrode's open set #{U_i}, reducing impedance variance across the montage. Lower impedance variance = tighter local sections of the signal presheaf = smaller obstruction class #{H^1(X, \mathcal{G})} ([[bci-0008]]). Comfort is not separate from signal quality — a rider who shifts in the chair because of pain introduces motion artifacts that destroy the cocycle condition.}
+}
+
+\subtree{
+\title{Extended Session Guidelines}
+
+\ol{
+  \li{\strong{Material}: TPU Shore A 93 (flexible, skin-safe). NOT PLA (rigid, pressure hotspots). NOT ABS (fumes, brittle).}
+  \li{\strong{Cap}: Stretch knit fabric (cotton/elastane/polyamide blend), not rigid shell. Uniform adduction pressure across all electrodes.}
+  \li{\strong{Impedance target}: <50 kΩ dry is acceptable for Cyton's 24-bit ADC. Don't over-tighten the cap chasing <5 kΩ — that's a comfort-destroying mistake.}
+  \li{\strong{Session protocol}: Check comfort at 0, 30, 60 min. If any electrode scores >4/10 on Scott-Huskisson pain scale, rotate it 15° to redistribute pressure.}
+  \li{\strong{Hair strategy}: Comb hair flat, distribute evenly. Orient arches perpendicular to hair growth direction. The arch passes through hair without needing to part it.}
+}
+}
+
+\transclude{bci-0010}
+\transclude{bci-0011}
+\transclude{bci-0012}
+\transclude{bci-0013}
+\transclude{bci-0014}

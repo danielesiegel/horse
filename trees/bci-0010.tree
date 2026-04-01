@@ -1,0 +1,65 @@
+\title{TPU Arch Electrodes}
+\author{monaduck1069}
+\import{macros}
+\date{2026-03-31}
+\taxon{reference}
+\tag{electrode}
+\tag{comfort}
+\tag{3d-print}
+
+\p{The arch electrode replaces pins with semi-circular arches that deform under pressure, distributing force across a curved contact surface. This is the \strong{highest-comfort dry electrode design} validated in peer-reviewed literature for 60+ minute sessions.}
+
+\subtree{
+\title{Design}
+
+\p{Five parallel arches on a common baseplate. Each arch: 1mm width, 6mm outer radius, 4.5mm inner radius, 1mm inter-arch spacing. The lower half is solid for structural stability; the upper 40\% is hollow to allow radial deformation under scalp pressure. Alternating 1.2mm/2.4mm lateral shift prevents electrode tilting on curved scalp.}
+
+\p{When the cap presses the electrode against the scalp, each arch deforms outward, increasing the contact surface area. This is the fundamental comfort advantage: force is distributed across arches rather than concentrated on pin tips.}
+}
+
+\subtree{
+\title{Materials}
+
+\ul{
+  \li{\strong{Substrate}: TPU filament, Shore hardness A 93 (e.g., NinjaTek NinjaFlex, Polymaker PolyFlex). Print on any FDM printer with direct-drive extruder at 220-230°C. Layer height 0.1mm for smooth skin contact.}
+  \li{\strong{Coating}: Ag/AgCl via electroless plating (Vasconcelos method) — immerse in PVP:DMSO solution, functionalize with silver ions, reduce to metallic silver, chlorinate. Survives 400\% strain and 500+ bending cycles.}
+  \li{\strong{DIY alternative}: Skip plating. Wrap arch tips with conductive fabric tape (Adafruit \#3960) or apply conductive paint (MG Chemicals 842AR). Lower signal quality but zero chemistry required.}
+}
+}
+
+\subtree{
+\title{Comfort Data}
+
+\p{Vasconcelos et al. (Frontiers in Neuroscience, 2021, doi:10.3389/fnins.2021.748100):}
+\ul{
+  \li{15 volunteers, 21-channel EEG, 60-minute sessions}
+  \li{Arch electrodes: comfort stable at ~2/10 pain through 60 min}
+  \li{Pin electrodes: comfort degraded from ~2/10 to ~4/10 by 30 min}
+  \li{91.9\% average channel reliability (arch) vs comparable pin performance}
+  \li{Alpha activity and VEP signal quality: no significant difference from gel-based}
+}
+
+\p{Key finding: arch electrodes require initial orientation to match hair direction (adds ~10 min first-time setup), but re-application is as fast as pins (~5 min). For a BCI Factory walk-up, orient arches during first visit; subsequent visits are plug-and-play.}
+}
+
+\subtree{
+\title{OpenSCAD Parametric Design}
+
+\p{Target parameters for BCI Factory Cyton 8ch ([[bci-0002]]):}
+
+\table{
+  \tr{\th{Parameter} \th{Default} \th{Range} \th{Notes}}
+  \tr{\td{arch_count} \td{5} \td{3-7} \td{More arches = more contact area, diminishing returns past 7}}
+  \tr{\td{outer_radius} \td{6mm} \td{5-8mm} \td{Larger = more deformation range}}
+  \tr{\td{inner_radius} \td{4.5mm} \td{3.5-6mm} \td{Wall thickness = outer - inner}}
+  \tr{\td{arch_width} \td{1mm} \td{0.8-1.5mm} \td{Thinner = more flexible, fragile below 0.8mm}}
+  \tr{\td{hollow_fraction} \td{0.4} \td{0.3-0.5} \td{Upper portion that deforms; higher = softer}}
+  \tr{\td{base_diameter} \td{15mm} \td{12-18mm} \td{Must fit cap holder socket}}
+  \tr{\td{lateral_shift} \td{1.2/2.4mm} \td{—} \td{Alternating pattern prevents tilt}}
+}
+}
+
+\subtree{
+\title{Source}
+\p{Vasconcelos, B., Fiedler, P., Machts, R., Haueisen, J., Fonseca, C. "The Arch Electrode: A Novel Dry Electrode Concept for Improved Wearing Comfort." \em{Frontiers in Neuroscience}, 15, 748100 (2021).}
+}
