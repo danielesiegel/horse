@@ -1,0 +1,69 @@
+\title{Hunting For Startup Folder Persistence}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{T1547.001}
+
+\tag{startup-folder}
+
+\tag{persistence}
+
+\tag{autoruns}
+
+\tag{watchdog}
+
+\tag{filesystem-monitoring}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect T1547.001 startup folder persistence by monitoring Windows startup directories for suspicious file creation, analyzing autoruns entries, and using Python watchdog for real-time filesystem monitoring.}
+
+\subtree{
+\title{Hunting for Startup Folder Persistence}
+\subtree{
+\title{Overview}
+\p{Attackers use Windows startup folders for persistence (MITRE ATT&CK T1547.001 — Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder). Files placed in \code{\startverb \%APPDATA\%\startverb \Microsoft\stopverb\startverb \Windows\stopverb\startverb \Start\stopverb Menu\startverb \Programs\stopverb\startverb \Startup\stopverb\stopverb} or \code{\startverb C:\startverb \ProgramData\stopverb\startverb \Microsoft\stopverb\startverb \Windows\stopverb\startverb \Start\stopverb Menu\startverb \Programs\stopverb\startverb \Startup\stopverb\stopverb} execute automatically at user logon. This skill scans startup directories for suspicious files, monitors for real-time changes using Python watchdog, and analyzes file metadata to detect persistence implants.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for startup folder persistence}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb watchdog\stopverb}, \code{\startverb pefile\stopverb} (optional for PE analysis)}
+\li{Access to Windows startup folders (user and all-users)}
+\li{Windows Event Logs for Event ID 4663 correlation (optional)}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Enumerate all files in user and system startup directories}
+\li{Analyze file types, creation timestamps, and digital signatures}
+\li{Flag suspicious file extensions (.bat, .vbs, .ps1, .lnk, .exe)}
+\li{Check for recently created files (< 7 days) as potential implants}
+\li{Monitor startup folders in real-time using watchdog FileSystemEventHandler}
+\li{Correlate with known legitimate startup entries}
+\li{Generate threat hunting report with T1547.001 MITRE mapping}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing all startup folder contents with risk scores, file metadata, and suspicious indicators}
+\li{Real-time monitoring alerts for new file creation in startup directories}
+}
+}
+}

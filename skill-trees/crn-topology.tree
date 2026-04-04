@@ -1,0 +1,139 @@
+\title{Crn Topology}
+
+\taxon{skill}
+
+\meta{description}{Chemical Reaction Network topology for generating and analyzing reaction}
+
+\subtree{
+\title{CRN Topology Skill: Reaction Network Generation}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: +1 (PLUS - generator) \strong{Color}: #D82626 (Red) \strong{Principle}: Network structure → Dynamical behavior \strong{Frame}: Hypergraph topology of chemical reactions}
+
+\subtree{
+\title{Overview}
+\p{\strong{CRN Topology} generates and analyzes the graph structure of chemical reaction networks. The topology determines qualitative dynamics—multistability, oscillations, and computational capacity.}
+
+\ol{
+\li{\strong{Species-reaction graph}: Bipartite hypergraph}
+\li{\strong{Stoichiometric matrix}: Linear algebra of reactions}
+\li{\strong{Deficiency}: Gap between complexes and rank}
+\li{\strong{Persistence}: Network admits no extinctions}
+}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+Deficiency δ = n - ℓ - s
+  n = number of complexes
+  ℓ = number of linkage classes  
+  s = rank of stoichiometric matrix
+
+Zero deficiency theorem:
+  δ = 0 and weakly reversible ⟹ unique stable equilibrium
+\stopverb}
+
+\pre{\startverb
+def crn_deficiency(network: CRN) -> int:
+    n = len(network.complexes)
+    l = network.linkage_classes()
+    s = np.linalg.matrix_rank(network.stoichiometry)
+    return n - l - s
+\stopverb}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{1. Stoichiometric Matrix Generation}
+\pre{\startverb
+class CRNGenerator:
+    def __init__(self, species: list[str]):
+        self.species = species
+    
+    def random_reaction(self) -> Reaction:
+        """Generate topology-valid reaction."""
+        reactants = self.sample_complex()
+        products = self.sample_complex()
+        return Reaction(reactants, products)
+    
+    def stoichiometry_matrix(self, reactions) -> np.ndarray:
+        """S[i,j] = net change in species i from reaction j."""
+        S = np.zeros((len(self.species), len(reactions)))
+        for j, rxn in enumerate(reactions):
+            S[:, j] = rxn.products - rxn.reactants
+        return S
+\stopverb}
+}
+
+\subtree{
+\title{2. Network Motif Generation}
+\pre{\startverb
+def generate_oscillator_topology() -> CRN:
+    """Generate Brusselator-like topology."""
+    return CRN([
+        "A → X",
+        "2X + Y → 3X",
+        "B + X → Y + D", 
+        "X → E"
+    ])
+
+def generate_bistable_topology() -> CRN:
+    """Generate Schlögl-like bistability."""
+    return CRN([
+        "A + 2X ⇌ 3X",
+        "X ⇌ B"
+    ])
+\stopverb}
+}
+
+\subtree{
+\title{3. Deficiency Analysis}
+\pre{\startverb
+def analyze_topology(crn: CRN) -> dict:
+    """Determine dynamical properties from topology."""
+    delta = crn_deficiency(crn)
+    wr = is_weakly_reversible(crn)
+    return {
+        "deficiency": delta,
+        "weakly_reversible": wr,
+        "unique_equilibrium": delta == 0 and wr,
+        "multistability_possible": delta > 0,
+        "complex_balanced": check_complex_balance(crn)
+    }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Generate CRN with target properties
+just crn-generate --oscillator --species 3
+
+# Compute deficiency
+just crn-deficiency network.crn
+
+# Visualize reaction hypergraph
+just crn-topology network.crn
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\pre{\startverb
+assembly-index (-1) ⊗ turing-chemputer (0) ⊗ crn-topology (+1) = 0 ✓  [Molecular Complexity]
+persistent-homology (-1) ⊗ turing-chemputer (0) ⊗ crn-topology (+1) = 0 ✓  [Topological CRN]
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{turing-chemputer} (0): Execute reactions in CRN}
+\li{\strong{assembly-index} (-1): Validate molecular complexity}
+\li{\strong{acsets} (0): Algebraic representation of CRN hypergraph}
+}
+
+\p{\strong{Skill Name}: crn-topology \strong{Type}: Reaction Network Generator \strong{Trit}: +1 (PLUS) \strong{Color}: #D82626 (Red)}
+}
+}

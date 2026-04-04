@@ -1,0 +1,196 @@
+\title{Ctp Yoneda}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'CTP-Yoneda Skill'}
+
+\subtree{
+\title{CTP-Yoneda Skill}
+\blockquote{*"The Yoneda lemma is arguably the most important result in category theory."* — Emily Riehl}
+
+\p{Category Theory in Programming (CTP) by NoahStoryM - Racket tutorial mapping abstract CT concepts to programming constructs with GF(3) colored awareness.}
+
+\subtree{
+\title{Overview}
+\p{\strong{Source}: [NoahStoryM/ctp](https://github.com/NoahStoryM/ctp) \strong{Docs}: [docs.racket-lang.org/ctp](https://docs.racket-lang.org/ctp/index.html) \strong{Local}: \code{\startverb .topos/ctp/\stopverb}}
+}
+
+\subtree{
+\title{Chapters (GF(3) Colored)}
+\pre{\startverb
+| # | Chapter | Trit | Color | Status |
+|---|---------|------|-------|--------|
+| 1 | Category | +1 | `#E67F86` | ✓ Complete |
+| 2 | Functor | -1 | `#D06546` | ✓ Complete |
+| 3 | Natural Transformation | 0 | `#1316BB` | ✓ Complete |
+| 4 | Yoneda Lemma | +1 | `#BA2645` | Planned |
+| 5 | Higher Categories | -1 | `#49EE54` | Planned |
+| 6 | (Co)Limits | 0 | `#11C710` | Planned |
+| 7 | Adjunctions | +1 | `#76B0F0` | Planned |
+| 8 | (Co)Monads | -1 | `#E59798` | Planned |
+| 9 | CCC & λ-calculus | 0 | `#5333D9` | Planned |
+| 10 | Toposes | +1 | `#7E90EB` | Planned |
+| 11 | Kan Extensions | -1 | `#1D9E7E` | Planned |
+\stopverb}
+
+\p{\strong{GF(3) Sum}: (+1) + (-1) + (0) + (+1) + (-1) + (0) + (+1) + (-1) + (0) + (+1) + (-1) = 0 ✓ BALANCED}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Category (Chapter 1)}
+\ul{
+\li{Objects, morphisms, composition, identity}
+\li{Digraphs → Free categories}
+\li{Subcategories, product/coproduct categories}
+\li{Quotient categories, congruence relations}
+}
+}
+
+\subtree{
+\title{Functor (Chapter 2)}
+\ul{
+\li{Structure-preserving maps between categories}
+\li{Constant, opposite, binary functors}
+\li{Hom functors (covariant/contravariant)}
+\li{Free monoid/category functors}
+\li{Finite automata as functors (DFA, NFA, TDFA)}
+}
+}
+
+\subtree{
+\title{Natural Transformation (Chapter 3)}
+\ul{
+\li{Morphisms between functors}
+\li{Functor categories}
+\li{Vertical/horizontal composition}
+\li{Whiskering}
+}
+}
+
+\subtree{
+\title{Yoneda Lemma (Key Insight)}
+\pre{\startverb
+Nat(Hom(A, -), F) ≅ F(A)
+\stopverb}
+
+\p{Every object is completely determined by its relationships to all other objects.}
+}
+}
+
+\subtree{
+\title{Code Examples}
+\p{Located in \code{\startverb .topos/ctp/scribblings/code/\stopverb}:}
+
+\subtree{
+\title{Category Examples}
+\ul{
+\li{\code{\startverb Set.rkt\stopverb} - Category of sets}
+\li{\code{\startverb Rel.rkt\stopverb} - Category of relations  }
+\li{\code{\startverb Proc.rkt\stopverb} - Category of procedures}
+\li{\code{\startverb Pair.rkt\stopverb} - Product category}
+\li{\code{\startverb Matr.rkt\stopverb} - Matrix categories}
+\li{\code{\startverb List.rkt\stopverb} - List monoid as category}
+\li{\code{\startverb Nat.rkt\stopverb} - Natural numbers}
+}
+}
+
+\subtree{
+\title{Functor Examples}
+\ul{
+\li{\code{\startverb DFA.rkt\stopverb} - Deterministic finite automata}
+\li{\code{\startverb NFA.rkt\stopverb} - Nondeterministic finite automata}
+\li{\code{\startverb TDFA.rkt\stopverb} - Typed DFA}
+\li{\code{\startverb Set->Rel.rkt\stopverb} - Set to Relation functor}
+\li{\code{\startverb P_*.rkt\stopverb}, \code{\startverb P^*.rkt\stopverb}, \code{\startverb P_!.rkt\stopverb} - Powerset functors}
+\li{\code{\startverb SliF.rkt\stopverb}, \code{\startverb coSliF.rkt\stopverb} - Slice functors}
+}
+}
+}
+
+\subtree{
+\title{Racket Integration}
+\pre{\startverb
+# Install CTP package
+cd .topos/ctp && raco pkg install
+
+# Build documentation
+raco setup --doc-index ctp
+
+# Open docs
+open doc/ctp/index.html
+\stopverb}
+}
+
+\subtree{
+\title{Connection to Music-Topos}
+\pre{\startverb
+| CTP Concept | Music-Topos Implementation |
+|-------------|---------------------------|
+| Category | ACSets schema |
+| Functor | Geometric morphism |
+| Natural Transformation | Schema migration |
+| Yoneda | Representable presheaves |
+| Limits | Pullbacks in DuckDB |
+| Adjunctions | Galois connections |
+| Monads | Computation contexts |
+\stopverb}
+}
+
+\subtree{
+\title{Colored Awareness Protocol}
+\p{When reading CTP files, each touched file gets a deterministic color:}
+
+\pre{\startverb
+# Track file access with Gay.jl colors
+seed = 1069
+files_touched = []
+
+def touch_file(path, index)
+  color = gay_color_at(seed, index)
+  files_touched << { path: path, color: color, trit: color[:trit] }
+end
+\stopverb}
+
+\p{Current session colors (seed=1069):}
+
+\ol{
+\li{\code{\startverb #E67F86\stopverb} (+1) - info.rkt}
+\li{\code{\startverb #D06546\stopverb} (-1) - main.rkt  }
+\li{\code{\startverb #1316BB\stopverb} (0) - ctp.scrbl}
+\li{\code{\startverb #BA2645\stopverb} (+1) - category/main.scrbl}
+\li{\code{\startverb #49EE54\stopverb} (-1) - functor/main.scrbl}
+\li{\code{\startverb #11C710\stopverb} (0) - natural transformation/}
+\li{\code{\startverb #76B0F0\stopverb} (+1) - code examples}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[CTP Tutorial](https://docs.racket-lang.org/ctp/index.html)}
+\li{[Qi Flow Language](https://github.com/drym-org/qi) - Inspiration for CTP}
+\li{\em{Category Theory in Context} - Emily Riehl}
+\li{\em{Category Theory for Computing Science} - Barr & Wells}
+\li{[nLab](https://ncatlab.org/nlab/show/HomePage)}
+\li{[TheCatsters YouTube](https://www.youtube.com/@TheCatsters)}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# View CTP docs
+just ctp-docs
+
+# Run CTP examples
+just ctp-examples
+
+# Verify GF(3) coloring
+just ctp-colors
+\stopverb}
+}
+}

@@ -1,0 +1,152 @@
+\title{Algorithmic Art}
+
+\taxon{skill}
+
+\meta{description}{Creating algorithmic art using p5.js with seeded randomness and interactive}
+
+\subtree{
+\title{Algorithmic Art}
+\p{Create generative art with code using p5.js, featuring seeded randomness for reproducibility.}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Seeded Randomness}
+\pre{\startverb
+// Use seed for reproducible results
+function setup() {
+  randomSeed(42);
+  noiseSeed(42);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Noise Functions}
+\pre{\startverb
+// Perlin noise for organic patterns
+let x = noise(frameCount * 0.01) * width;
+let y = noise(frameCount * 0.01 + 1000) * height;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Flow Fields}
+\pre{\startverb
+let cols, rows, scale = 20;
+let particles = [];
+let flowfield;
+
+function setup() {
+  createCanvas(800, 800);
+  cols = floor(width / scale);
+  rows = floor(height / scale);
+  flowfield = new Array(cols * rows);
+
+  for (let i = 0; i < 1000; i++) {
+    particles.push(new Particle());
+  }
+}
+
+function draw() {
+  let yoff = 0;
+  for (let y = 0; y < rows; y++) {
+    let xoff = 0;
+    for (let x = 0; x < cols; x++) {
+      let angle = noise(xoff, yoff) * TWO_PI * 2;
+      let v = p5.Vector.fromAngle(angle);
+      flowfield[x + y * cols] = v;
+      xoff += 0.1;
+    }
+    yoff += 0.1;
+  }
+
+  particles.forEach(p => {
+    p.follow(flowfield);
+    p.update();
+    p.show();
+  });
+}
+\stopverb}
+}
+
+\subtree{
+\title{Recursive Trees}
+\pre{\startverb
+function branch(len) {
+  line(0, 0, 0, -len);
+  translate(0, -len);
+
+  if (len > 4) {
+    push();
+    rotate(PI / 6);
+    branch(len * 0.67);
+    pop();
+
+    push();
+    rotate(-PI / 6);
+    branch(len * 0.67);
+    pop();
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Particle Systems}
+\pre{\startverb
+class Particle {
+  constructor() {
+    this.pos = createVector(random(width), random(height));
+    this.vel = createVector(0, 0);
+    this.acc = createVector(0, 0);
+    this.maxSpeed = 4;
+  }
+
+  follow(flowfield) {
+    let x = floor(this.pos.x / scale);
+    let y = floor(this.pos.y / scale);
+    let force = flowfield[x + y * cols];
+    this.acc.add(force);
+  }
+
+  update() {
+    this.vel.add(this.acc);
+    this.vel.limit(this.maxSpeed);
+    this.pos.add(this.vel);
+    this.acc.mult(0);
+  }
+
+  show() {
+    stroke(255, 5);
+    point(this.pos.x, this.pos.y);
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Color Palettes}
+\pre{\startverb
+// Define palette
+const palette = ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51'];
+
+// Random from palette
+fill(random(palette));
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ul{
+\li{Use \code{\startverb noLoop()\stopverb} for static pieces, save with \code{\startverb save('art.png')\stopverb}}
+\li{Experiment with blend modes: \code{\startverb blendMode(ADD)\stopverb}}
+\li{Layer transparency for depth}
+\li{Use frameCount for animation}
+}
+}
+}

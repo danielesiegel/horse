@@ -1,0 +1,338 @@
+\title{Deepwiki Mcp}
+
+\taxon{skill}
+
+\meta{description}{DeepWiki MCP server for AI-powered GitHub repository documentation and}
+
+\subtree{
+\title{DeepWiki MCP Skill}
+\blockquote{AI-powered documentation and Q&A for any public GitHub repository}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: 0 (Ergodic - coordinates knowledge retrieval) \strong{Bundle}: research \strong{Provider}: Cognition (Devin AI) - Official, Free, No Auth Required}
+
+\subtree{
+\title{Overview}
+\p{DeepWiki MCP provides programmatic access to AI-generated documentation for any public GitHub repository indexed on [DeepWiki.com](https://deepwiki.com/). It enables:}
+
+\ol{
+\li{\strong{Wiki Structure}: Get table of contents for any repo's documentation}
+\li{\strong{Wiki Contents}: Read AI-generated documentation for specific topics}
+\li{\strong{Ask Questions}: Get AI-powered answers grounded in repository context}
+}
+}
+
+\subtree{
+\title{Server Configuration}
+\subtree{
+\title{Base URL}
+\pre{\startverb
+https://mcp.deepwiki.com/
+\stopverb}
+}
+
+\subtree{
+\title{Wire Protocols}
+\pre{\startverb
+| Protocol | URL | Best For |
+|----------|-----|----------|
+| **SSE** | `https://mcp.deepwiki.com/sse` | Claude, most clients |
+| **Streamable HTTP** | `https://mcp.deepwiki.com/mcp` | OpenAI, Cloudflare, Amp |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Tools}
+\subtree{
+\title{1. \code{\startverb read_wiki_structure\stopverb}}
+\p{Get the documentation topic tree for a GitHub repository.}
+
+\pre{\startverb
+{
+  "tool": "read_wiki_structure",
+  "params": {
+    "repo_owner": "AlgebraicJulia",
+    "repo_name": "ACSets.jl"
+  }
+}
+\stopverb}
+
+\p{Returns: List of documentation topics/sections}
+}
+
+\subtree{
+\title{2. \code{\startverb read_wiki_contents\stopverb}}
+\p{Read documentation for a specific topic.}
+
+\pre{\startverb
+{
+  "tool": "read_wiki_contents",
+  "params": {
+    "repo_owner": "AlgebraicJulia",
+    "repo_name": "ACSets.jl",
+    "topic": "Overview"
+  }
+}
+\stopverb}
+
+\p{Returns: AI-generated documentation content}
+}
+
+\subtree{
+\title{3. \code{\startverb ask_question\stopverb}}
+\p{Ask any question about a repository with AI-powered, context-grounded response.}
+
+\pre{\startverb
+{
+  "tool": "ask_question",
+  "params": {
+    "repo_owner": "AlgebraicJulia",
+    "repo_name": "Catlab.jl",
+    "question": "How do wiring diagrams compose?"
+  }
+}
+\stopverb}
+
+\p{Returns: AI-powered answer with repository context}
+}
+}
+
+\subtree{
+\title{Client Configuration}
+\subtree{
+\title{Amp / Codex (.mcp.json)}
+\pre{\startverb
+{
+  "mcpServers": {
+    "deepwiki": {
+      "serverUrl": "https://mcp.deepwiki.com/mcp"
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Claude Desktop}
+\pre{\startverb
+{
+  "mcpServers": {
+    "deepwiki": {
+      "serverUrl": "https://mcp.deepwiki.com/sse"
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Claude Code (CLI)}
+\pre{\startverb
+claude mcp add -s user -t http deepwiki https://mcp.deepwiki.com/mcp
+\stopverb}
+}
+
+\subtree{
+\title{Cursor / Windsurf}
+\p{Add to \code{\startverb .cursor/mcp.json\stopverb}:}
+
+\pre{\startverb
+{
+  "mcpServers": {
+    "deepwiki": {
+      "serverUrl": "https://mcp.deepwiki.com/sse"
+    }
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triad Integration}
+\pre{\startverb
+| Trit | Skill | Role |
+|------|-------|------|
+| -1 | hatchery-papers | Validates academic sources |
+| 0 | **deepwiki-mcp** | Coordinates repo knowledge |
+| +1 | bmorphism-stars | Generates from starred repos |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+
+\subtree{
+\title{Additional Triads}
+\pre{\startverb
+hatchery-papers (-1) ⊗ deepwiki-mcp (0) ⊗ bmorphism-stars (+1) = 0 ✓  [Research]
+persistent-homology (-1) ⊗ deepwiki-mcp (0) ⊗ gay-mcp (+1) = 0 ✓  [Documentation]
+sheaf-cohomology (-1) ⊗ deepwiki-mcp (0) ⊗ topos-generate (+1) = 0 ✓  [Knowledge]
+three-match (-1) ⊗ deepwiki-mcp (0) ⊗ cider-clojure (+1) = 0 ✓  [Clojure Repos]
+polyglot-spi (-1) ⊗ deepwiki-mcp (0) ⊗ gay-mcp (+1) = 0 ✓  [Cross-Lang Docs]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Use Cases}
+\subtree{
+\title{1. Understand New Libraries}
+\pre{\startverb
+"Read the documentation structure for react/react and explain the hooks system"
+\stopverb}
+}
+
+\subtree{
+\title{2. Answer Technical Questions}
+\pre{\startverb
+"How does Catlab.jl implement natural transformations?"
+\stopverb}
+}
+
+\subtree{
+\title{3. Compare Implementations}
+\pre{\startverb
+"Compare how ACSets.jl and Catlab.jl handle graph homomorphisms"
+\stopverb}
+}
+
+\subtree{
+\title{4. Explore Category Theory Libraries}
+\pre{\startverb
+"What topics are covered in AlgebraicJulia/AlgebraicDynamics.jl documentation?"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Indexing Your Repository}
+\p{To make your public GitHub repo available via DeepWiki MCP:}
+
+\ol{
+\li{Visit [DeepWiki.com](https://deepwiki.com/)}
+\li{Enter your repository URL}
+\li{Wait for indexing to complete}
+\li{Add the DeepWiki badge to your README:}
+}
+
+\pre{\startverb
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/owner/repo)
+\stopverb}
+}
+
+\subtree{
+\title{Related Resources}
+\ul{
+\li{[DeepWiki.com](https://deepwiki.com/) - Web interface}
+\li{[Devin Docs](https://docs.devin.ai/work-with-devin/deepwiki-mcp) - Official documentation}
+\li{[MCP Specification](https://modelcontextprotocol.io/) - Protocol details}
+}
+}
+
+\subtree{
+\title{ACSet Skill Integration}
+\p{Both \code{\startverb deepwiki-mcp\stopverb} and \code{\startverb acsets-algebraic-databases\stopverb} are \strong{ERGODIC (trit 0)} — they substitute for each other in triads and coordinate knowledge transport.}
+
+\subtree{
+\title{Qualified Workflow}
+\pre{\startverb
+| Phase | deepwiki-mcp | acsets skill | Verification |
+|-------|--------------|--------------|--------------|
+| **Discovery** | `read_wiki_structure` | Schema patterns | ✓ Catlab.jl has 16 topic pages |
+| **Q&A** | `ask_question` | Formal definitions | ✓ ACSet = Functor C → Set confirmed |
+| **Apply** | Code examples | Specter navigation | ✓ `oapply` documented in Catlab |
+| **Debug** | "Why does X fail?" | Check naturality | ✓ HomSearch uses BacktrackingSearch |
+\stopverb}
+}
+
+\subtree{
+\title{Verified DeepWiki ↔ ACSets Correspondence}
+\p{From DeepWiki \code{\startverb ask_question("AlgebraicJulia/Catlab.jl", "How do ACSets work...")\stopverb}:}
+
+\pre{\startverb
+| DeepWiki Response | ACSets Skill | Match |
+|-------------------|--------------|-------|
+| "ACSet represents a functor from schema to Set" | `C-set = Functor X: C → Set` | ✓ |
+| "ACSetFunctor wraps ACSet for functorial view" | ∫G category of elements | ✓ |
+| "BacktrackingSearch (CSP-based, MRV heuristic)" | `homomorphisms(G, complete_graph(k))` | ✓ |
+| "VMSearch (compiled virtual machine)" | Specter zero-overhead navigation | ✓ |
+\stopverb}
+}
+
+\subtree{
+\title{Repository Indexing Status (Verified 2025-12-22)}
+\pre{\startverb
+| Repository | DeepWiki Status | Topics |
+|------------|-----------------|--------|
+| `AlgebraicJulia/Catlab.jl` | ✅ Indexed | 16 pages (GATs, CSets, HomSearch, WiringDiagrams...) |
+| `AlgebraicJulia/ACSets.jl` | ❌ Needs indexing | Visit https://deepwiki.com/AlgebraicJulia/ACSets.jl |
+| `AlgebraicJulia/AlgebraicDynamics.jl` | ❌ Needs indexing | Visit https://deepwiki.com/AlgebraicJulia/AlgebraicDynamics.jl |
+| `AlgebraicJulia/StructuredDecompositions.jl` | ❌ Needs indexing | Visit https://deepwiki.com/AlgebraicJulia/StructuredDecompositions.jl |
+| `redplanetlabs/agent-o-rama` | ✅ Indexed | 28 pages (Rama PStates, Agent Topologies, Tool Calling...) |
+| `discopy/discopy` | ✅ Indexed | 23 pages (Monoidal Categories, Quantum Circuits, QNLP...) |
+\stopverb}
+}
+
+\subtree{
+\title{Cross-Skill Examples}
+\p{\strong{Example 1: ACSets + Catlab.jl}}
+
+\pre{\startverb
+# 1. Query DeepWiki for oapply semantics
+mcp__deepwiki__ask_question("AlgebraicJulia/Catlab.jl", 
+  "How does oapply compose undirected wiring diagrams?")
+
+# 2. Apply via ACSets skill patterns
+@present SchUWD(FreeSchema) begin
+  Box::Ob; Port::Ob; Junction::Ob; OuterPort::Ob
+  box::Hom(Port, Box)
+  junction::Hom(Port, Junction)
+  outer_junction::Hom(OuterPort, Junction)
+end
+
+# 3. oapply = colimit of component diagram (verified by DeepWiki)
+composite = oapply(wiring_diagram, components)
+\stopverb}
+
+\p{\strong{Example 2: DisCoPy for Quantum/Categorical Diagrams}}
+
+\pre{\startverb
+# Query DisCoPy documentation
+mcp__deepwiki__ask_question("discopy/discopy",
+  "How do monoidal categories compose with tensor products?")
+
+# DisCoPy has 23 pages covering:
+# - Monoidal, Rigid, Symmetric, Frobenius categories
+# - Quantum circuits and gates
+# - QNLP (Quantum Natural Language Processing)
+# - Tensor network backends
+\stopverb}
+
+\p{\strong{Example 3: Agent-o-rama for Rama Integration}}
+
+\pre{\startverb
+;; Query agent-o-rama patterns
+mcp__deepwiki__ask_question("redplanetlabs/agent-o-rama",
+  "How do PStates store agent invocation state?")
+
+;; 28 pages covering:
+;; - Agent Modules and Topology
+;; - PStates and Depots storage
+;; - Tool Calling Integration
+;; - Human-in-the-Loop Workflows
+\stopverb}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb hatchery-papers\stopverb} - Academic paper research}
+\li{\code{\startverb bmorphism-stars\stopverb} - GitHub stars index}
+\li{\code{\startverb librarian\stopverb} - Codebase understanding agent}
+\li{\code{\startverb exa\stopverb} - Web search MCP}
+\li{\code{\startverb acsets-algebraic-databases\stopverb} - ACSet computational patterns (trit 0, substitutes in triads)}
+}
+
+\p{\strong{Skill Name}: deepwiki-mcp \strong{Type}: Repository Documentation / Q&A \strong{Trit}: 0 (ERGODIC) \strong{GF(3)}: Coordinates knowledge flow \strong{Auth}: None required (free) \strong{Scope}: All public GitHub repos indexed on DeepWiki.com \strong{Qualified}: 2025-12-22 (verified against acsets skill)}
+}
+}

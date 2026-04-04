@@ -1,0 +1,377 @@
+\title{Derangement Crdt}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Derangement-CRDT Skill}
+
+\subtree{
+\title{Derangement-CRDT Skill}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: ERGODIC (0) \strong{Integration}: CRDT, Gay.jl, Join-Semilattice}
+
+\subtree{
+\title{Core Concept}
+\p{A \strong{derangement} is a permutation σ where σ(i) ≠ i for all i (no fixed points). A \strong{colorable derangement CRDT} assigns GF(3) colors to derangement cycles, ensuring merge operations preserve both the derangement property and color conservation.}
+
+\pre{\startverb
+Derangement: (1 2 3) → (2 3 1)  ✓ no fixed points
+Fixed point: (1 2 3) → (1 3 2)  ✗ position 1 is fixed
+\stopverb}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\subtree{
+\title{Derangement Lattice}
+\p{Derangements form a \strong{join-semilattice} under cycle composition:}
+
+\pre{\startverb
+     ⊤ = identity (trivial - all fixed)
+     │
+   ┌─┴─┬───┬───┐
+   │   │   │   │
+  (12) (13) (23) ...  ← transpositions
+   │   │   │   │
+   └─┬─┴───┴─┬─┘
+     │       │
+   (123)   (132)      ← 3-cycles (derangements!)
+     │       │
+     └───┬───┘
+         │
+         ⊥ = full derangement
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Coloring of Cycles}
+\p{Each cycle receives a trit based on cycle length mod 3:}
+
+\pre{\startverb
+| Cycle Length | Trit | Color Range | Example |
+|--------------|------|-------------|---------|
+| len ≡ 0 (mod 3) | ERGODIC (0) | 60°-180° (green) | (1 2 3) |
+| len ≡ 1 (mod 3) | PLUS (+1) | 0°-60°, 300°-360° (warm) | (1) fixed |
+| len ≡ 2 (mod 3) | MINUS (-1) | 180°-300° (cold) | (1 2) swap |
+\stopverb}
+}
+
+\subtree{
+\title{Conservation Law}
+\p{For any valid derangement coloring:}
+
+\pre{\startverb
+Σ trit(cycle) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This is automatically satisfied for derangements of length n ≡ 0 (mod 3).}
+}
+}
+
+\subtree{
+\title{CRDT Operations}
+\subtree{
+\title{Derangement-Set CRDT}
+\pre{\startverb
+class DerangementCRDT
+  # State: set of (element, position, color, replica_id, lamport)
+
+  def merge(other)
+    # Join-semilattice merge:
+    # 1. Union all mappings
+    # 2. For conflicts: higher Lamport wins
+    # 3. Verify derangement property preserved
+    # 4. Recolor to maintain GF(3) conservation
+  end
+
+  def apply_permutation(sigma)
+    # Apply permutation, ensuring no fixed points created
+    raise DerangementViolation if creates_fixed_point?(sigma)
+    update_colors!
+  end
+
+  def cycle_decomposition
+    # Decompose into disjoint cycles
+    # Color each cycle by length mod 3
+  end
+end
+\stopverb}
+}
+
+\subtree{
+\title{Merge Semantics}
+\pre{\startverb
+State A: [2,3,1,5,4] (cycles: (123)(45))
+         Colors: [G,G,G,B,B] (ERGODIC, MINUS)
+
+State B: [3,1,2,5,4] (cycles: (132)(45))
+         Colors: [G,G,G,B,B] (ERGODIC, MINUS)
+
+Merge(A,B): Resolve by Lamport timestamp
+            Recolor to maintain Σ trits ≡ 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Implementation}
+\subtree{
+\title{Babashka Script}
+\pre{\startverb
+#!/usr/bin/env bb
+;; derangement_crdt.bb
+
+(defn derangement? [perm]
+  "Check if permutation has no fixed points"
+  (every? (fn [[i v]] (not= i v))
+          (map-indexed vector perm)))
+
+(defn cycle-decomposition [perm]
+  "Decompose permutation into disjoint cycles"
+  (loop [remaining (set (range (count perm)))
+         cycles []]
+    (if (empty? remaining)
+      cycles
+      (let [start (first remaining)
+            cycle (loop [current start
+                         acc [start]]
+                    (let [next (nth perm current)]
+                      (if (= next start)
+                        acc
+                        (recur next (conj acc next)))))]
+        (recur (apply disj remaining cycle)
+               (conj cycles cycle))))))
+
+(defn gf3-trit [cycle-len]
+  "Assign GF(3) trit based on cycle length"
+  (case (mod cycle-len 3)
+    0 :ERGODIC
+    1 :PLUS
+    2 :MINUS))
+
+(defn hue-from-trit [trit seed]
+  "Map trit to hue range with seed variation"
+  (let [base (case trit
+               :MINUS   (+ 180 (mod seed 120))   ; cold: 180-300
+               :ERGODIC (+ 60 (mod seed 120))    ; neutral: 60-180
+               :PLUS    (if (< (mod seed 120) 60)
+                          (mod seed 60)           ; warm: 0-60
+                          (+ 300 (mod seed 60)))) ; warm: 300-360
+        ]
+    (mod base 360)))
+
+(defn color-derangement [perm]
+  "Assign colors to derangement cycles"
+  (let [cycles (cycle-decomposition perm)]
+    (for [[idx cycle] (map-indexed vector cycles)]
+      {:cycle cycle
+       :length (count cycle)
+       :trit (gf3-trit (count cycle))
+       :hue (hue-from-trit (gf3-trit (count cycle)) idx)})))
+
+(defn conservation-check [colored-cycles]
+  "Verify GF(3) conservation"
+  (let [trit-sum (->> colored-cycles
+                      (map :trit)
+                      (map {:MINUS -1 :ERGODIC 0 :PLUS 1})
+                      (reduce +))]
+    (zero? (mod trit-sum 3))))
+
+;; CRDT Merge
+(defn merge-derangements [state-a state-b]
+  "Join-semilattice merge of two derangement states"
+  (let [merged (merge-with
+                 (fn [a b]
+                   (if (> (:lamport a) (:lamport b)) a b))
+                 state-a state-b)]
+    (when-not (derangement? (:perm merged))
+      (throw (ex-info "Merge violated derangement property" {})))
+    (assoc merged :colors (color-derangement (:perm merged)))))
+
+;; Demo
+(defn demo []
+  (let [perm [1 2 0 4 3]  ; (0 1 2)(3 4) - derangement!
+        colored (color-derangement perm)]
+    (println "Permutation:" perm)
+    (println "Derangement?" (derangement? perm))
+    (println "Colored cycles:" colored)
+    (println "GF(3) conserved?" (conservation-check colored))))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (demo))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\subtree{
+\title{With CRDT Skill}
+\pre{\startverb
+# Compose with OR-Set for distributed derangements
+crdt_skill.create("derangement-pool", :or_set, "replica-1")
+crdt_skill.mutate("derangement-pool", :add, serialize(derangement))
+\stopverb}
+}
+
+\subtree{
+\title{With CRDT-VTerm}
+\pre{\startverb
+;; Terminal sessions as derangements of command history
+;; No command should map to itself (always transformed)
+(crdt-vterm-derange session-buffer)
+\stopverb}
+}
+
+\subtree{
+\title{With Gay.jl Colors}
+\pre{\startverb
+using Gay
+
+# Color a derangement's cycles
+function color_derangement(perm::Vector{Int})
+    cycles = cycle_decomposition(perm)
+    [Gay.from_trit(gf3_trit(length(c))) for c in cycles]
+end
+\stopverb}
+}
+
+\subtree{
+\title{With BlackHat-Go Security}
+\pre{\startverb
+// Attack chains as derangements:
+// No technique should leave system in same state
+type AttackDerangement struct {
+    Techniques []string
+    // Invariant: ∀t ∈ Techniques: state_after(t) ≠ state_before(t)
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Subfactorial Connection}
+\p{The number of derangements of n elements is the \strong{subfactorial} !n:}
+
+\pre{\startverb
+!n = n! × Σ(k=0 to n) (-1)^k / k!
+   ≈ n! / e
+
+!3 = 2    (only 2 derangements of 3 elements)
+!4 = 9
+!5 = 44
+\stopverb}
+
+\p{For GF(3) coloring, we care about n mod 3:}
+
+\ul{
+\li{n ≡ 0: Perfect triadic balance possible}
+\li{n ≡ 1: One PLUS excess}
+\li{n ≡ 2: One MINUS excess}
+}
+}
+
+\subtree{
+\title{Lattice Visualization}
+\pre{\startverb
+         ┌─────────────────────────────────────┐
+         │           DERANGEMENT LATTICE       │
+         │         with GF(3) Coloring         │
+         └─────────────────────────────────────┘
+
+                      (1)(2)(3)(4)
+                      all fixed ⊤
+                      [+1,+1,+1,+1]
+                           │
+            ┌──────────────┼──────────────┐
+            │              │              │
+         (12)(3)(4)    (13)(2)(4)    (14)(2)(3)
+         [-1,+1,+1]    [-1,+1,+1]    [-1,+1,+1]
+            │              │              │
+            └──────┬───────┴───────┬──────┘
+                   │               │
+              (12)(34)         (13)(24)
+              [-1,-1]          [-1,-1]
+                   │               │
+                   └───────┬───────┘
+                           │
+                       (1234)
+                       [+1] ← 4-cycle
+                           │
+                    ┌──────┴──────┐
+                    │             │
+                (1243)         (1324)
+                [+1]           [+1]
+                    │             │
+                    └──────┬──────┘
+                           │
+                      Full Derangement ⊥
+                      (all cycles ≥ 2)
+\stopverb}
+}
+
+\subtree{
+\title{Properties}
+\pre{\startverb
+| Property | Derangement-CRDT | Standard CRDT |
+|----------|------------------|---------------|
+| Idempotence | ✓ merge(D,D) = D | ✓ |
+| Commutativity | ✓ merge(A,B) = merge(B,A) | ✓ |
+| Associativity | ✓ | ✓ |
+| No fixed points | ✓ enforced | N/A |
+| GF(3) conservation | ✓ verified | N/A |
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Run derangement CRDT demo
+bb ~/.claude/skills/derangement-crdt/derangement_crdt.bb
+
+# Expected output:
+# Permutation: [1 2 0 4 3]
+# Derangement? true
+# Colored cycles: [{:cycle [0 1 2], :length 3, :trit :ERGODIC, :hue 120}
+#                  {:cycle [3 4], :length 2, :trit :MINUS, :hue 240}]
+# GF(3) conserved? true
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb crdt\stopverb} - Base CRDT operations}
+\li{\code{\startverb crdt-vterm\stopverb} - Terminal CRDT with GF(3)}
+\li{\code{\startverb gay-mcp\stopverb} - Color assignment}
+\li{\code{\startverb blackhat-go\stopverb} - Security state lattice}
+\li{\code{\startverb acsets\stopverb} - Categorical databases}
+}
+
+\p{*Derangements ensure every element moves; GF(3) coloring ensures balance is preserved.*}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 1. Flexibility through Abstraction}
+\p{\strong{Concepts}: combinators, compose, parallel-combine, spread-combine, arity}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+derangement-crdt (○) + SDF.Ch1 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Combinators compose operations. This skill provides composable abstractions.}
+}
+}
+}

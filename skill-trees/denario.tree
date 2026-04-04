@@ -1,0 +1,247 @@
+\title{Denario}
+
+\taxon{skill}
+
+\meta{description}{Multiagent AI system for scientific research assistance that automates research workflows from data analysis to publication. This skill should be used when generating research ideas from datasets, developing research methodologies, executing computational experiments, performing literature searches, or generating publication-ready papers in LaTeX format. Supports end-to-end research pipelines with customizable agent orchestration.}
+
+\subtree{
+\title{Denario}
+\subtree{
+\title{Overview}
+\p{Denario is a multiagent AI system designed to automate scientific research workflows from initial data analysis through publication-ready manuscripts. Built on AG2 and LangGraph frameworks, it orchestrates multiple specialized agents to handle hypothesis generation, methodology development, computational analysis, and paper writing.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when:}
+
+\ul{
+\li{Analyzing datasets to generate novel research hypotheses}
+\li{Developing structured research methodologies}
+\li{Executing computational experiments and generating visualizations}
+\li{Conducting literature searches for research context}
+\li{Writing journal-formatted LaTeX papers from research results}
+\li{Automating the complete research pipeline from data to publication}
+}
+}
+
+\subtree{
+\title{Installation}
+\p{Install denario using uv (recommended):}
+
+\pre{\startverb
+uv init
+uv add "denario[app]"
+\stopverb}
+
+\p{Or using pip:}
+
+\pre{\startverb
+uv pip install "denario[app]"
+\stopverb}
+
+\p{For Docker deployment or building from source, see \code{\startverb references/installation.md\stopverb}.}
+}
+
+\subtree{
+\title{LLM API Configuration}
+\p{Denario requires API keys from supported LLM providers. Supported providers include:}
+
+\ul{
+\li{Google Vertex AI}
+\li{OpenAI}
+\li{Other LLM services compatible with AG2/LangGraph}
+}
+
+\p{Store API keys securely using environment variables or \code{\startverb .env\stopverb} files. For detailed configuration instructions including Vertex AI setup, see \code{\startverb references/llm_configuration.md\stopverb}.}
+}
+
+\subtree{
+\title{Core Research Workflow}
+\p{Denario follows a structured four-stage research pipeline:}
+
+\subtree{
+\title{1. Data Description}
+\p{Define the research context by specifying available data and tools:}
+
+\pre{\startverb
+from denario import Denario
+
+den = Denario(project_dir="./my_research")
+den.set_data_description("""
+Available datasets: time-series data on X and Y
+Tools: pandas, sklearn, matplotlib
+Research domain: [specify domain]
+""")
+\stopverb}
+}
+
+\subtree{
+\title{2. Idea Generation}
+\p{Generate research hypotheses from the data description:}
+
+\pre{\startverb
+den.get_idea()
+\stopverb}
+
+\p{This produces a research question or hypothesis based on the described data. Alternatively, provide a custom idea:}
+
+\pre{\startverb
+den.set_idea("Custom research hypothesis")
+\stopverb}
+}
+
+\subtree{
+\title{3. Methodology Development}
+\p{Develop the research methodology:}
+
+\pre{\startverb
+den.get_method()
+\stopverb}
+
+\p{This creates a structured approach for investigating the hypothesis. Can also accept markdown files with custom methodologies:}
+
+\pre{\startverb
+den.set_method("path/to/methodology.md")
+\stopverb}
+}
+
+\subtree{
+\title{4. Results Generation}
+\p{Execute computational experiments and generate analysis:}
+
+\pre{\startverb
+den.get_results()
+\stopverb}
+
+\p{This runs the methodology, performs computations, creates visualizations, and produces findings. Can also provide pre-computed results:}
+
+\pre{\startverb
+den.set_results("path/to/results.md")
+\stopverb}
+}
+
+\subtree{
+\title{5. Paper Generation}
+\p{Create a publication-ready LaTeX paper:}
+
+\pre{\startverb
+from denario import Journal
+
+den.get_paper(journal=Journal.APS)
+\stopverb}
+
+\p{The generated paper includes proper formatting for the specified journal, integrated figures, and complete LaTeX source.}
+}
+}
+
+\subtree{
+\title{Available Journals}
+\p{Denario supports multiple journal formatting styles:}
+
+\ul{
+\li{\code{\startverb Journal.APS\stopverb} - American Physical Society format}
+\li{Additional journals may be available; check \code{\startverb references/research_pipeline.md\stopverb} for the complete list}
+}
+}
+
+\subtree{
+\title{Launching the GUI}
+\p{Run the graphical user interface:}
+
+\pre{\startverb
+denario run
+\stopverb}
+
+\p{This launches a web-based interface for interactive research workflow management.}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{End-to-End Research Pipeline}
+\pre{\startverb
+from denario import Denario, Journal
+
+# Initialize project
+den = Denario(project_dir="./research_project")
+
+# Define research context
+den.set_data_description("""
+Dataset: Time-series measurements of [phenomenon]
+Available tools: pandas, sklearn, scipy
+Research goal: Investigate [research question]
+""")
+
+# Generate research idea
+den.get_idea()
+
+# Develop methodology
+den.get_method()
+
+# Execute analysis
+den.get_results()
+
+# Create publication
+den.get_paper(journal=Journal.APS)
+\stopverb}
+}
+
+\subtree{
+\title{Hybrid Workflow (Custom + Automated)}
+\pre{\startverb
+# Provide custom research idea
+den.set_idea("Investigate the correlation between X and Y using time-series analysis")
+
+# Auto-generate methodology
+den.get_method()
+
+# Auto-generate results
+den.get_results()
+
+# Generate paper
+den.get_paper(journal=Journal.APS)
+\stopverb}
+}
+
+\subtree{
+\title{Literature Search Integration}
+\p{For literature search functionality and additional workflow examples, see \code{\startverb references/examples.md\stopverb}.}
+}
+}
+
+\subtree{
+\title{Advanced Features}
+\ul{
+\li{\strong{Multiagent orchestration}: AG2 and LangGraph coordinate specialized agents for different research tasks}
+\li{\strong{Reproducible research}: All stages produce structured outputs that can be version-controlled}
+\li{\strong{Journal integration}: Automatic formatting for target publication venues}
+\li{\strong{Flexible input}: Manual or automated at each pipeline stage}
+\li{\strong{Docker deployment}: Containerized environment with LaTeX and all dependencies}
+}
+}
+
+\subtree{
+\title{Detailed References}
+\p{For comprehensive documentation:}
+
+\ul{
+\li{\strong{Installation options}: \code{\startverb references/installation.md\stopverb}}
+\li{\strong{LLM configuration}: \code{\startverb references/llm_configuration.md\stopverb}}
+\li{\strong{Complete API reference}: \code{\startverb references/research_pipeline.md\stopverb}}
+\li{\strong{Example workflows}: \code{\startverb references/examples.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{Common issues and solutions:}
+
+\ul{
+\li{\strong{API key errors}: Ensure environment variables are set correctly (see \code{\startverb references/llm_configuration.md\stopverb})}
+\li{\strong{LaTeX compilation}: Install TeX distribution or use Docker image with pre-installed LaTeX}
+\li{\strong{Package conflicts}: Use virtual environments or Docker for isolation}
+\li{\strong{Python version}: Requires Python 3.12 or higher}
+}
+}
+}

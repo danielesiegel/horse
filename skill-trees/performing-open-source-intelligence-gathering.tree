@@ -1,0 +1,174 @@
+\title{Performing Open Source Intelligence Gathering}
+
+\taxon{skill}
+
+\tag{red-team}
+
+\tag{adversary-simulation}
+
+\tag{mitre-attack}
+
+\tag{exploitation}
+
+\tag{post-exploitation}
+
+\tag{osint}
+
+\tag{reconnaissance}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Open Source Intelligence (OSINT) gathering is the first active phase of a red team engagement, where operators collect publicly available information about the target organization to identify attack s}
+
+\subtree{
+\title{Performing Open Source Intelligence Gathering}
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+
+\subtree{
+\title{Overview}
+\p{Open Source Intelligence (OSINT) gathering is the first active phase of a red team engagement, where operators collect publicly available information about the target organization to identify attack surfaces, potential targets for social engineering, technology stacks, and credential exposures. Effective OSINT directly shapes initial access strategies and reduces operational risk.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing open source intelligence gathering}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with red teaming concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Enumerate the target organization's external attack surface (domains, IPs, cloud assets)}
+\li{Identify employees and their roles for social engineering targeting}
+\li{Discover leaked credentials, API keys, and sensitive documents}
+\li{Map the organization's technology stack and vendors}
+\li{Identify physical locations, office layouts, and access control details}
+\li{Build target profiles for spearphishing campaign development}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{OSINT Categories}
+\pre{\startverb
+| Category | Sources | Value |
+|----------|---------|-------|
+| Domain Intelligence | DNS records, WHOIS, CT logs, subdomain enumeration | Network attack surface |
+| Personnel Intelligence | LinkedIn, social media, conference talks, publications | Social engineering targets |
+| Credential Intelligence | Breach databases, paste sites, GitHub leaks | Valid credential discovery |
+| Technology Intelligence | Job postings, Wappalyzer, Shodan, Censys | Vulnerability identification |
+| Physical Intelligence | Google Maps, social media photos, Glassdoor | Physical access planning |
+| Document Intelligence | SEC filings, public documents, metadata extraction | Organizational structure |
+\stopverb}
+}
+
+\subtree{
+\title{MITRE ATT&CK Mapping}
+\ul{
+\li{\strong{T1595.001} - Active Scanning: Scanning IP Blocks}
+\li{\strong{T1595.002} - Active Scanning: Vulnerability Scanning}
+\li{\strong{T1592} - Gather Victim Host Information}
+\li{\strong{T1589} - Gather Victim Identity Information}
+\li{\strong{T1590} - Gather Victim Network Information}
+\li{\strong{T1591} - Gather Victim Org Information}
+\li{\strong{T1593} - Search Open Websites/Domains}
+\li{\strong{T1594} - Search Victim-Owned Websites}
+\li{\strong{T1596} - Search Open Technical Databases}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: Domain and Network Reconnaissance}
+\ol{
+\li{Perform WHOIS lookups for target domains}
+\li{Enumerate subdomains using Certificate Transparency logs, DNS brute-force, and web scraping}
+\li{Identify IP ranges and ASN ownership}
+\li{Scan for exposed services using Shodan/Censys}
+\li{Check for cloud storage buckets (S3, Azure Blob, GCS)}
+\li{Map CDN and hosting providers}
+}
+}
+
+\subtree{
+\title{Phase 2: Personnel and Social Intelligence}
+\ol{
+\li{Enumerate employees via LinkedIn, company website, and conference speaker lists}
+\li{Identify email naming conventions}
+\li{Discover personal social media accounts of key targets}
+\li{Map organizational hierarchy and reporting structure}
+\li{Identify recently hired IT/security personnel}
+\li{Check for conference presentations and technical publications}
+}
+}
+
+\subtree{
+\title{Phase 3: Credential and Data Leak Discovery}
+\ol{
+\li{Search breach databases (Have I Been Pwned, DeHashed)}
+\li{Check paste sites (Pastebin, GitHub Gists)}
+\li{Search GitHub/GitLab for leaked secrets and API keys}
+\li{Look for exposed configuration files and backups}
+\li{Check for leaked internal documents via Google dorking}
+}
+}
+
+\subtree{
+\title{Phase 4: Technology Stack Identification}
+\ol{
+\li{Analyze job postings for technology mentions}
+\li{Use Wappalyzer/BuiltWith for web technology fingerprinting}
+\li{Check for exposed admin panels and development environments}
+\li{Identify VPN and remote access technologies}
+\li{Map cloud services and SaaS applications}
+}
+}
+}
+
+\subtree{
+\title{Tools and Resources}
+\pre{\startverb
+| Tool | Purpose | Type |
+|------|---------|------|
+| Amass | Subdomain enumeration and network mapping | Open Source |
+| Subfinder | Passive subdomain discovery | Open Source |
+| theHarvester | Email, subdomain, and name harvesting | Open Source |
+| Maltego | Visual link analysis and data correlation | Commercial |
+| SpiderFoot | Automated OSINT collection | Open Source |
+| Shodan | Internet-connected device search | Commercial |
+| Censys | Internet asset discovery | Commercial |
+| Recon-ng | Web reconnaissance framework | Open Source |
+| GitDorker | GitHub secret scanning | Open Source |
+| Photon | Web crawler for OSINT | Open Source |
+\stopverb}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Complete list of target domains and subdomains}
+\li{[ ] Employee list with roles and email addresses}
+\li{[ ] Technology stack identified}
+\li{[ ] Credential leak assessment completed}
+\li{[ ] Attack surface map documented}
+\li{[ ] OSINT report compiled for engagement team}
+}
+}
+}

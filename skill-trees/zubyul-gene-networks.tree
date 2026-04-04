@@ -1,0 +1,84 @@
+\title{Zubyul Gene Networks}
+
+\taxon{skill}
+
+\meta{description}{Gene correlation network analysis bridging WGCNA, pgmpy Bayesian networks, and monad-bayes posterior inference. Connects zubyul's genomics background to the plurigrid interactome via HyperNetX hypergraph topology.}
+
+\subtree{
+\title{zubyul-gene-networks Skill}
+\blockquote{\em{Scale-free gene modules as Bayesian hypergraphs}}
+
+\subtree{
+\title{Origin: zubyul/WGCNA + zubyul/jonikas_lab_data_analysis_misc}
+\p{Yuliya Zubak (zubyul) built WGCNA pipelines for weighted gene correlation network analysis and processed large genetic sequence data in the Jonikas lab.}
+}
+
+\subtree{
+\title{What's Possible}
+\subtree{
+\title{1. WGCNA -> pgmpy Bridge}
+\ul{
+\li{Module eigengenes from WGCNA become nodes in a pgmpy Bayesian Network}
+\li{Structure learning (Hill Climb / MMHC) discovers regulatory edges}
+\li{monad-bayes: \code{\startverb TracedT (WeightedT SamplerIO)\stopverb} for posterior over network topologies}
+\li{Each MCMC step proposes an edge addition/removal, weighted by BIC score}
+}
+}
+
+\subtree{
+\title{2. HyperNetX Hypergraph Topology}
+\ul{
+\li{Gene modules are hyperedges (one module = many genes)}
+\li{Modularity clustering on the hypergraph partitions functional groups}
+\li{Homology mod 2 detects topological holes in the regulatory network}
+\li{Contagion dynamics model gene expression cascades}
+}
+}
+
+\subtree{
+\title{3. monad-bayes Integration}
+\pre{\startverb
+-- Posterior over WGCNA module assignments
+moduleAssignment :: MonadMeasure m => Int -> m (Vector ModuleID)
+moduleAssignment nGenes = do
+  -- Prior: Dirichlet-Multinomial over module labels
+  weights <- dirichlet (replicate nModules 1.0)
+  assignments <- replicateM nGenes (categorical weights)
+  -- Likelihood: within-module correlation > between-module
+  forM_ (pairs assignments) $ \(i, j) ->
+    if sameModule i j
+      then factor (Exp (log (correlation i j)))
+      else factor (Exp (log (1 - correlation i j)))
+  return assignments
+\stopverb}
+}
+
+\subtree{
+\title{4. GF(3) Trit Classification}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| WGCNA eigengenes | +1 | Generation (data -> modules) |
+| pgmpy BN learning | 0 | Coordination (structure) |
+| monad-bayes posterior | -1 | Validation (model selection) |
+\stopverb}
+
+\p{Conservation: +1 + 0 + (-1) = 0}
+}
+}
+
+\subtree{
+\title{Edges in Interactome TUI}
+\ul{
+\li{-> monad-bayes (w=0.70, Bayesian network priors)}
+\li{-> pgmpy (w=0.80, BN structure learning)}
+\li{-> HyperNetX (w=0.85, hypergraph modules)}
+\li{-> zubyul/Nikolova_lab (w=0.90, gene-brain bridge)}
+}
+}
+
+\subtree{
+\title{Trit: 0 (ERGODIC - bridges genomics to interactome)}
+
+}
+}

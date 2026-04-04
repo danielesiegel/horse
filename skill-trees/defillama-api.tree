@@ -1,0 +1,209 @@
+\title{Defillama Api}
+
+\taxon{skill}
+
+\meta{trit}{-1}
+
+\meta{description}{DefiLlama API integration for DeFi analytics - TVL, prices, yields, volumes, fees, bridges, and DAT data. Use for blockchain/DeFi research, protocol analysis, and market data queries.}
+
+\subtree{
+\title{DefiLlama API}
+\p{\strong{Trit}: -1 (MINUS - Validator/Data Source) \strong{Color}: #4A90D9 (Cold blue, 210°)}
+
+\p{Comprehensive DeFi data from DefiLlama's API ecosystem.}
+
+\subtree{
+\title{Base URLs}
+\pre{\startverb
+| API | Base URL | Auth |
+|-----|----------|------|
+| Pro API | `https://pro-api.llama.fi` | Key in path: `/API_KEY/endpoint` |
+| Bridge API | `https://bridges.llama.fi` | None |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{TVL & Protocols}
+\pre{\startverb
+# All protocols with TVL
+GET /api/protocols
+
+# Single protocol detail
+GET /api/protocol/{slug}
+
+# Chain TVL
+GET /api/v2/chains
+GET /api/v2/historicalChainTvl/{chain}
+\stopverb}
+}
+
+\subtree{
+\title{Prices}
+\pre{\startverb
+# Current prices (chain:address format)
+GET /coins/prices/current/{coins}
+
+# Historical
+GET /coins/prices/historical/{timestamp}/{coins}
+
+# Chart data
+GET /coins/chart/{coins}?period=30d
+\stopverb}
+}
+
+\subtree{
+\title{Yields (Pro)}
+\pre{\startverb
+GET /yields/pools           # All yield pools
+GET /yields/chart/{pool}    # Pool history
+GET /yields/poolsBorrow     # Borrow rates
+GET /yields/perps           # Perp funding
+GET /yields/lsdRates        # LSD rates
+\stopverb}
+}
+
+\subtree{
+\title{Volume}
+\pre{\startverb
+GET /api/overview/dexs              # DEX volumes
+GET /api/overview/dexs/{chain}      # Chain DEX
+GET /api/summary/dexs/{protocol}    # Protocol detail
+GET /api/overview/options           # Options
+GET /api/overview/derivatives       # Derivatives (Pro)
+\stopverb}
+}
+
+\subtree{
+\title{Fees & Revenue}
+\pre{\startverb
+GET /api/overview/fees              # All fees
+GET /api/overview/fees/{chain}      # Chain fees
+GET /api/summary/fees/{protocol}    # Protocol fees
+# dataType: dailyFees | dailyRevenue | dailyHoldersRevenue
+\stopverb}
+}
+
+\subtree{
+\title{Bridges}
+\pre{\startverb
+# Base: https://bridges.llama.fi
+GET /bridges                        # All bridges
+GET /bridge/{id}                    # Bridge detail
+GET /bridgevolume/{chain}           # Volume by chain
+GET /transactions/{id}              # Bridge txs
+\stopverb}
+}
+
+\subtree{
+\title{DAT (Digital Asset Treasury)}
+\pre{\startverb
+GET /dat/institutions               # All institutions
+GET /dat/institutions/{symbol}      # e.g., MSTR
+\stopverb}
+}
+}
+
+\subtree{
+\title{Usage Script}
+\pre{\startverb
+;; See scripts/defillama.bb for full implementation
+(require '[defillama :as dl])
+
+;; TVL
+(dl/protocols)
+(dl/protocol "aave")
+(dl/chain-tvl "Ethereum")
+
+;; Prices
+(dl/price "ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+(dl/price-chart "coingecko:ethereum" {:period "30d"})
+
+;; Yields
+(dl/yield-pools)
+(dl/pool-chart "747c1d2a-c668-4682-b9f9-296708a3dd90")
+
+;; Volumes
+(dl/dex-overview)
+(dl/dex-protocol "uniswap")
+
+;; Fees
+(dl/fees-overview)
+(dl/fees-protocol "hyperliquid")
+\stopverb}
+}
+
+\subtree{
+\title{Endpoint Categories}
+\subtree{
+\title{Free Endpoints}
+\ul{
+\li{\code{\startverb /api/protocols\stopverb}, \code{\startverb /api/protocol/{slug}\stopverb}, \code{\startverb /api/tvl/{slug}\stopverb}}
+\li{\code{\startverb /api/v2/chains\stopverb}, \code{\startverb /api/v2/historicalChainTvl\stopverb}}
+\li{\code{\startverb /coins/prices/*\stopverb}, \code{\startverb /coins/chart/*\stopverb}}
+\li{\code{\startverb /api/overview/dexs\stopverb}, \code{\startverb /api/overview/options\stopverb}}
+\li{\code{\startverb /api/overview/fees\stopverb}, \code{\startverb /api/summary/fees/*\stopverb}}
+}
+}
+
+\subtree{
+\title{Pro Endpoints (API Key Required)}
+\ul{
+\li{\code{\startverb /yields/*\stopverb} - All yield endpoints}
+\li{\code{\startverb /api/overview/derivatives\stopverb}}
+\li{\code{\startverb /api/tokenProtocols/{symbol}\stopverb}}
+\li{\code{\startverb /api/inflows/{protocol}/{timestamp}\stopverb}}
+\li{\code{\startverb /api/chainAssets\stopverb}}
+\li{\code{\startverb /api/emissions\stopverb}, \code{\startverb /api/emission/{protocol}\stopverb}}
+\li{\code{\startverb /api/categories\stopverb}, \code{\startverb /api/forks\stopverb}, \code{\startverb /api/oracles\stopverb}}
+\li{\code{\startverb /api/entities\stopverb}, \code{\startverb /api/treasuries\stopverb}}
+\li{\code{\startverb /api/hacks\stopverb}, \code{\startverb /api/raises\stopverb}}
+\li{\code{\startverb /etfs/*\stopverb}, \code{\startverb /dat/*\stopverb}}
+\li{Bridge endpoints on bridges.llama.fi}
+}
+}
+}
+
+\subtree{
+\title{Response Patterns}
+\subtree{
+\title{TVL Response}
+\pre{\startverb
+{"id": "2269", "name": "Aave", "tvl": 5200000000, "chains": ["Ethereum"]}
+\stopverb}
+}
+
+\subtree{
+\title{Price Response}
+\pre{\startverb
+{"coins": {"ethereum:0x...": {"price": 0.999, "symbol": "USDC", "confidence": 0.99}}}
+\stopverb}
+}
+
+\subtree{
+\title{Yield Pool Response}
+\pre{\startverb
+{"pool": "uuid", "chain": "Ethereum", "project": "aave-v3", "apy": 3.5, "tvlUsd": 1500000000}
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\p{This skill serves as MINUS (-1) validator in triads:}
+
+\ul{
+\li{Provides authoritative DeFi data}
+\li{Validates protocol metrics}
+\li{Constrains analysis with real data}
+}
+
+\p{Compose with:}
+
+\ul{
+\li{\code{\startverb aptos-agent\stopverb} (+1): Execute based on data}
+\li{\code{\startverb exa-search\stopverb} (0): Enrich with web context}
+}
+}
+}

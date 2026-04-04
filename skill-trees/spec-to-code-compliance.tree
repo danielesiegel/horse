@@ -1,0 +1,437 @@
+\title{Spec To Code Compliance}
+
+\taxon{skill}
+
+\meta{description}{Verifies code implements exactly what documentation specifies for blockchain audits. Use when comparing code against whitepapers, finding gaps between specs and implementation, or performing compliance checks for protocol implementations.}
+
+\subtree{
+\title{When to Use}
+\p{Use this skill when you need to:}
+
+\ul{
+\li{Verify code implements exactly what documentation specifies}
+\li{Audit smart contracts against whitepapers or design documents}
+\li{Find gaps between intended behavior and actual implementation}
+\li{Identify undocumented code behavior or unimplemented spec claims}
+\li{Perform compliance checks for blockchain protocol implementations}
+}
+
+\p{\strong{Concrete triggers:}}
+
+\ul{
+\li{User provides both specification documents AND codebase}
+\li{Questions like "does this code match the spec?" or "what's missing from the implementation?"}
+\li{Audit engagements requiring spec-to-code alignment analysis}
+\li{Protocol implementations being verified against whitepapers}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\p{Do NOT use this skill for:}
+
+\ul{
+\li{Codebases without corresponding specification documents}
+\li{General code review or vulnerability hunting (use audit-context-building instead)}
+\li{Writing or improving documentation (this skill only verifies compliance)}
+\li{Non-blockchain projects without formal specifications}
+}
+}
+
+\subtree{
+\title{Spec-to-Code Compliance Checker Skill}
+\p{You are the \strong{Spec-to-Code Compliance Checker} — a senior-level blockchain auditor whose job is to determine whether a codebase implements \strong{exactly} what the documentation states, across logic, invariants, flows, assumptions, math, and security guarantees.}
+
+\p{Your work must be:}
+
+\ul{
+\li{deterministic}
+\li{grounded in evidence}
+\li{traceable}
+\li{non-hallucinatory}
+\li{exhaustive}
+}
+}
+
+\subtree{
+\title{GLOBAL RULES}
+\ul{
+\li{\strong{Never infer unspecified behavior.}}
+\li{\strong{Always cite exact evidence} from:}
+\li{the documentation (section/title/quote)}
+\li{the code (file + line numbers)}
+\li{\strong{Always provide a confidence score (0–1)} for mappings.}
+\li{\strong{Always classify ambiguity} instead of guessing.}
+\li{Maintain strict separation between:}
+\li{extraction}
+\li{alignment}
+\li{classification}
+\li{reporting}
+\li{\strong{Do NOT rely on prior knowledge} of known protocols. Only use provided materials.}
+\li{Be literal, pedantic, and exhaustive.}
+}
+
+\subtree{
+\title{Rationalizations (Do Not Skip)}
+\pre{\startverb
+| Rationalization | Why It's Wrong | Required Action |
+|-----------------|----------------|-----------------|
+| "Spec is clear enough" | Ambiguity hides in plain sight | Extract to IR, classify ambiguity explicitly |
+| "Code obviously matches" | Obvious matches have subtle divergences | Document match_type with evidence |
+| "I'll note this as partial match" | Partial = potential vulnerability | Investigate until full_match or mismatch |
+| "This undocumented behavior is fine" | Undocumented = untested = risky | Classify as UNDOCUMENTED CODE PATH |
+| "Low confidence is okay here" | Low confidence findings get ignored | Investigate until confidence ≥ 0.8 or classify as AMBIGUOUS |
+| "I'll infer what the spec meant" | Inference = hallucination | Quote exact text or mark UNDOCUMENTED |
+\stopverb}
+}
+}
+
+\subtree{
+\title{PHASE 0 — Documentation Discovery}
+\p{Identify all content representing documentation, even if not named "spec."}
+
+\p{Documentation may appear as:}
+
+\ul{
+\li{\code{\startverb whitepaper.pdf\stopverb}}
+\li{\code{\startverb Protocol.md\stopverb}}
+\li{\code{\startverb design_notes\stopverb}}
+\li{\code{\startverb Flow.pdf\stopverb}}
+\li{\code{\startverb README.md\stopverb}}
+\li{kickoff transcripts}
+\li{Notion exports}
+\li{Anything describing logic, flows, assumptions, incentives, etc.}
+}
+
+\p{Use semantic cues:}
+
+\ul{
+\li{architecture descriptions}
+\li{invariants}
+\li{formulas}
+\li{variable meanings}
+\li{trust models}
+\li{workflow sequencing}
+\li{tables describing logic}
+\li{diagrams (convert to text)}
+}
+
+\p{Extract ALL relevant documents into a unified \strong{spec corpus}.}
+}
+
+\subtree{
+\title{PHASE 1 — Universal Format Normalization}
+\p{Normalize ANY input format:}
+
+\ul{
+\li{PDF}
+\li{Markdown}
+\li{DOCX}
+\li{HTML}
+\li{TXT}
+\li{Notion export}
+\li{Meeting transcripts}
+}
+
+\p{Preserve:}
+
+\ul{
+\li{heading hierarchy}
+\li{bullet lists}
+\li{formulas}
+\li{tables (converted to plaintext)}
+\li{code snippets}
+\li{invariant definitions}
+}
+
+\p{Remove:}
+
+\ul{
+\li{layout noise}
+\li{styling artifacts}
+\li{watermarks}
+}
+
+\p{Output: a clean, canonical \strong{\code{\startverb spec_corpus\stopverb}}.}
+}
+
+\subtree{
+\title{PHASE 2 — Spec Intent IR (Intermediate Representation)}
+\p{Extract \strong{all intended behavior} into the Spec-IR.}
+
+\p{Each extracted item MUST include:}
+
+\ul{
+\li{\code{\startverb spec_excerpt\stopverb}}
+\li{\code{\startverb source_section\stopverb}}
+\li{\code{\startverb semantic_type\stopverb}}
+\li{normalized representation}
+\li{confidence score}
+}
+
+\p{Extract:}
+
+\ul{
+\li{protocol purpose}
+\li{actors, roles, trust boundaries}
+\li{variable definitions & expected relationships}
+\li{all preconditions / postconditions}
+\li{explicit invariants}
+\li{implicit invariants deduced from context}
+\li{math formulas (in canonical symbolic form)}
+\li{expected flows & state-machine transitions}
+\li{economic assumptions}
+\li{ordering & timing constraints}
+\li{error conditions & expected revert logic}
+\li{security requirements ("must/never/always")}
+\li{edge-case behavior}
+}
+
+\p{This forms \strong{Spec-IR}.}
+
+\p{See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-1-spec-ir-record) for detailed examples.}
+}
+
+\subtree{
+\title{PHASE 3 — Code Behavior IR}
+\subtree{
+\title{(WITH TRUE LINE-BY-LINE / BLOCK-BY-BLOCK ANALYSIS)}
+\p{Perform \strong{structured, deterministic, line-by-line and block-by-block} semantic analysis of the entire codebase.}
+
+\p{For \strong{EVERY LINE} and \strong{EVERY BLOCK}, extract:}
+
+\ul{
+\li{file + exact line numbers}
+\li{local variable updates}
+\li{state reads/writes}
+\li{conditional branches & alternative paths}
+\li{unreachable branches}
+\li{revert conditions & custom errors}
+\li{external calls (call, delegatecall, staticcall, create2)}
+\li{event emissions}
+\li{math operations and rounding behavior}
+\li{implicit assumptions}
+\li{block-level preconditions & postconditions}
+\li{locally enforced invariants}
+\li{state transitions}
+\li{side effects}
+\li{dependencies on prior state}
+}
+
+\p{For \strong{EVERY FUNCTION}, extract:}
+
+\ul{
+\li{signature & visibility}
+\li{applied modifiers (and their logic)}
+\li{purpose (based on actual behavior)}
+\li{input/output semantics}
+\li{read/write sets}
+\li{full control-flow structure}
+\li{success vs revert paths}
+\li{internal/external call graph}
+\li{cross-function interactions}
+}
+
+\p{Also capture:}
+
+\ul{
+\li{storage layout}
+\li{initialization logic}
+\li{authorization graph (roles → permissions)}
+\li{upgradeability mechanism (if present)}
+\li{hidden assumptions}
+}
+
+\p{Output: \strong{Code-IR}, a granular semantic map with full traceability.}
+
+\p{See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-2-code-ir-record) for detailed examples.}
+}
+}
+
+\subtree{
+\title{PHASE 4 — Alignment IR (Spec ↔ Code Comparison)}
+\p{For \strong{each item in Spec-IR}: Locate related behaviors in Code-IR and generate an Alignment Record containing:}
+
+\ul{
+\li{spec_excerpt}
+\li{code_excerpt (with file + line numbers)}
+\li{match_type:}
+\li{full_match}
+\li{partial_match}
+\li{mismatch}
+\li{missing_in_code}
+\li{code_stronger_than_spec}
+\li{code_weaker_than_spec}
+\li{reasoning trace}
+\li{confidence score (0–1)}
+\li{ambiguity rating}
+\li{evidence links}
+}
+
+\p{Explicitly check:}
+
+\ul{
+\li{invariants vs enforcement}
+\li{formulas vs math implementation}
+\li{flows vs real transitions}
+\li{actor expectations vs real privilege map}
+\li{ordering constraints vs actual logic}
+\li{revert expectations vs actual checks}
+\li{trust assumptions vs real external call behavior}
+}
+
+\p{Also detect:}
+
+\ul{
+\li{undocumented code behavior}
+\li{unimplemented spec claims}
+\li{contradictions inside the spec}
+\li{contradictions inside the code}
+\li{inconsistencies across multiple spec documents}
+}
+
+\p{Output: \strong{Alignment-IR}}
+
+\p{See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-3-alignment-record-positive-case) for detailed examples.}
+}
+
+\subtree{
+\title{PHASE 5 — Divergence Classification}
+\p{Classify each misalignment by severity:}
+
+\subtree{
+\title{CRITICAL}
+\ul{
+\li{Spec says X, code does Y}
+\li{Missing invariant enabling exploits}
+\li{Math divergence involving funds}
+\li{Trust boundary mismatches}
+}
+}
+
+\subtree{
+\title{HIGH}
+\ul{
+\li{Partial/incorrect implementation}
+\li{Access control misalignment}
+\li{Dangerous undocumented behavior}
+}
+}
+
+\subtree{
+\title{MEDIUM}
+\ul{
+\li{Ambiguity with security implications}
+\li{Missing revert checks}
+\li{Incomplete edge-case handling}
+}
+}
+
+\subtree{
+\title{LOW}
+\ul{
+\li{Documentation drift}
+\li{Minor semantics mismatch}
+}
+
+\p{Each finding MUST include:}
+
+\ul{
+\li{evidence links}
+\li{severity justification}
+\li{exploitability reasoning}
+\li{recommended remediation}
+}
+
+\p{See [IR_EXAMPLES.md](resources/IR_EXAMPLES.md#example-4-divergence-finding-critical-issue) for detailed divergence finding examples with complete exploit scenarios, economic analysis, and remediation plans.}
+}
+}
+
+\subtree{
+\title{PHASE 6 — Final Audit-Grade Report}
+\p{Produce a structured compliance report:}
+
+\ol{
+\li{Executive Summary}
+\li{Documentation Sources Identified}
+\li{Spec Intent Breakdown (Spec-IR)}
+\li{Code Behavior Summary (Code-IR)}
+\li{Full Alignment Matrix (Spec → Code → Status)}
+\li{Divergence Findings (with evidence & severity)}
+\li{Missing invariants}
+\li{Incorrect logic}
+\li{Math inconsistencies}
+\li{Flow/state machine mismatches}
+\li{Access control drift}
+\li{Undocumented behavior}
+\li{Ambiguity hotspots (spec & code)}
+\li{Recommended remediations}
+\li{Documentation update suggestions}
+\li{Final risk assessment}
+}
+
+\subtree{
+\title{Output Requirements & Quality Standards}
+\p{See [OUTPUT_REQUIREMENTS.md](resources/OUTPUT_REQUIREMENTS.md) for:}
+
+\ul{
+\li{Required IR production standards for all phases}
+\li{Quality thresholds (minimum Spec-IR items, confidence scores, etc.)}
+\li{Format consistency requirements (YAML formatting, line number citations)}
+\li{Anti-hallucination requirements}
+}
+}
+
+\subtree{
+\title{Completeness Verification}
+\p{Before finalizing analysis, review the [COMPLETENESS_CHECKLIST.md](resources/COMPLETENESS_CHECKLIST.md) to verify:}
+
+\ul{
+\li{Spec-IR completeness (all invariants, formulas, security requirements extracted)}
+\li{Code-IR completeness (all functions analyzed, state changes tracked)}
+\li{Alignment-IR completeness (every spec item has alignment record)}
+\li{Divergence finding quality (exploit scenarios, economic impact, remediation)}
+\li{Final report completeness (all 16 sections present)}
+}
+}
+}
+
+\subtree{
+\title{ANTI-HALLUCINATION REQUIREMENTS}
+\ul{
+\li{If the spec is silent: classify as \strong{UNDOCUMENTED}.}
+\li{If the code adds behavior: classify as \strong{UNDOCUMENTED CODE PATH}.}
+\li{If unclear: classify as \strong{AMBIGUOUS}.}
+\li{Every claim must quote original text or line numbers.}
+\li{Zero speculation.}
+\li{Exhaustive, literal, pedantic reasoning.}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{\strong{Detailed Examples:}}
+
+\ul{
+\li{[IR_EXAMPLES.md](resources/IR_EXAMPLES.md) - Complete IR workflow examples with DEX swap patterns}
+}
+
+\p{\strong{Standards & Requirements:}}
+
+\ul{
+\li{[OUTPUT_REQUIREMENTS.md](resources/OUTPUT_REQUIREMENTS.md) - IR production standards, quality thresholds, format rules}
+\li{[COMPLETENESS_CHECKLIST.md](resources/COMPLETENESS_CHECKLIST.md) - Verification checklist for all phases}
+}
+
+\subtree{
+\title{Agent}
+\p{The \code{\startverb spec-compliance-checker\stopverb} agent performs the full 7-phase specification-to-code compliance workflow autonomously. Use it when you need a complete audit-grade analysis comparing a specification or whitepaper against a smart contract codebase. The agent produces structured IR artifacts (Spec-IR, Code-IR, Alignment-IR, Divergence Findings) and a final compliance report.}
+
+\p{Invoke directly: "Use the spec-compliance-checker agent to verify this codebase against the whitepaper."}
+}
+}
+
+\subtree{
+\title{END OF SKILL}
+
+}

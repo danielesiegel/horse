@@ -1,0 +1,93 @@
+\title{Detecting Rdp Brute Force Attacks}
+
+\taxon{skill}
+
+\tag{threat-detection}
+
+\tag{rdp}
+
+\tag{brute-force}
+
+\tag{windows-event-logs}
+
+\tag{blue-team}
+
+\tag{siem}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect RDP brute force attacks by analyzing Windows Security Event Logs for failed authentication patterns (Event ID 4625), successful logons after failures (Event ID 4624), NLA failures, and source IP frequency analysis.}
+
+\subtree{
+\title{Detecting RDP Brute Force Attacks}
+\subtree{
+\title{Overview}
+\p{RDP brute force attacks target Windows Remote Desktop Protocol services by attempting rapid credential guessing against exposed RDP endpoints. Detection relies on analyzing Windows Security Event Logs for Event ID 4625 (failed logon with Logon Type 10 or 3) and correlating with Event ID 4624 (successful logon) to identify compromised accounts. This skill covers parsing EVTX files with python-evtx, identifying attack patterns through source IP frequency analysis, detecting NLA bypass attempts, and generating actionable detection reports.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting rdp brute force attacks}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb python-evtx\stopverb}, \code{\startverb lxml\stopverb} libraries}
+\li{Windows Security EVTX log files (exported from Event Viewer or collected via WEF)}
+\li{Understanding of Windows authentication Event IDs (4624, 4625, 4776)}
+\li{Familiarity with RDP Logon Types (Type 3 for NLA, Type 10 for RemoteInteractive)}
+}
+}
+
+\subtree{
+\title{Steps}
+\subtree{
+\title{Step 1: Export Security Event Logs}
+\p{Export Windows Security logs to EVTX format using Event Viewer or wevtutil:}
+
+\pre{\startverb
+wevtutil epl Security C:\logs\security.evtx
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Parse Failed Logon Events}
+\p{Use python-evtx to parse Event ID 4625 entries, extracting source IP, target username, failure reason (Sub Status), and Logon Type fields.}
+}
+
+\subtree{
+\title{Step 3: Analyze Attack Patterns}
+\p{Identify brute force patterns by:}
+
+\ul{
+\li{Counting failed logons per source IP within time windows}
+\li{Detecting username spray attacks (many usernames from one IP)}
+\li{Correlating 4625 failures with subsequent 4624 success from same IP}
+}
+}
+
+\subtree{
+\title{Step 4: Generate Detection Report}
+\p{Produce a JSON report with top attacking IPs, targeted accounts, time-based analysis, and compromise indicators.}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report containing:}
+
+\ul{
+\li{Total failed logon events and unique source IPs}
+\li{Top attacking IPs ranked by failure count}
+\li{Targeted usernames and failure sub-status codes}
+\li{Successful logons following brute force attempts (potential compromises)}
+\li{Time-series analysis of attack intensity}
+}
+}
+}

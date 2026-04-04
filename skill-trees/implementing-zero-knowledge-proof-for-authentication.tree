@@ -1,0 +1,104 @@
+\title{Implementing Zero Knowledge Proof For Authentication}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{zero-knowledge-proof}
+
+\tag{authentication}
+
+\tag{privacy}
+
+\tag{zkp}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Zero-Knowledge Proofs (ZKPs) allow a prover to demonstrate knowledge of a secret (such as a password or private key) without revealing the secret itself. This skill implements the Schnorr identificati}
+
+\subtree{
+\title{Implementing Zero-Knowledge Proof for Authentication}
+\subtree{
+\title{Overview}
+\p{Zero-Knowledge Proofs (ZKPs) allow a prover to demonstrate knowledge of a secret (such as a password or private key) without revealing the secret itself. This skill implements the Schnorr identification protocol and a simplified ZKPP (Zero-Knowledge Password Proof) using the discrete logarithm problem, enabling authentication where the server never learns the user's password.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing zero knowledge proof for authentication capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Implement Schnorr's identification protocol for ZKP authentication}
+\li{Build a non-interactive ZKP using Fiat-Shamir heuristic}
+\li{Implement zero-knowledge password proof (ZKPP)}
+\li{Demonstrate completeness, soundness, and zero-knowledge properties}
+\li{Compare ZKP authentication with traditional password verification}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{ZKP Properties}
+\pre{\startverb
+| Property | Description |
+|----------|------------|
+| Completeness | Honest prover always convinces honest verifier |
+| Soundness | Dishonest prover cannot convince verifier (except negligible probability) |
+| Zero-Knowledge | Verifier learns nothing beyond the statement's truth |
+\stopverb}
+}
+
+\subtree{
+\title{Schnorr Protocol}
+\ol{
+\li{\strong{Setup}: Public generator g, prime p, q (order of g)}
+\li{\strong{Registration}: Prover computes y = g^x mod p (public key from secret x)}
+\li{\strong{Commitment}: Prover sends t = g^r mod p (random r)}
+\li{\strong{Challenge}: Verifier sends random c}
+\li{\strong{Response}: Prover sends s = r + c*x mod q}
+\li{\strong{Verify}: Check g^s == t * y^c mod p}
+}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Use cryptographically secure random number generators}
+\li{Challenge must be unpredictable (from verifier's perspective)}
+\li{For non-interactive proofs, use Fiat-Shamir with collision-resistant hash}
+\li{ZKP alone does not provide forward secrecy; combine with TLS}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Honest prover always verifies successfully (completeness)}
+\li{[ ] Random response without secret does not verify (soundness)}
+\li{[ ] Server never receives the secret value}
+\li{[ ] Non-interactive proof is verifiable offline}
+\li{[ ] Multiple authentications produce different transcripts}
+\li{[ ] Protocol resists replay attacks}
+}
+}
+}

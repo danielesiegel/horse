@@ -1,0 +1,351 @@
+\title{Stable Baselines3}
+
+\taxon{skill}
+
+\meta{description}{Use this skill for reinforcement learning tasks including training RL agents (PPO, SAC, DQN, TD3, DDPG, A2C, etc.), creating custom Gym environments, implementing callbacks for monitoring and control, using vectorized environments for parallel training, and integrating with deep RL workflows. This skill should be used when users request RL algorithm implementation, agent training, environment design, or RL experimentation.}
+
+\subtree{
+\title{Stable Baselines3}
+\subtree{
+\title{Overview}
+\p{Stable Baselines3 (SB3) is a PyTorch-based library providing reliable implementations of reinforcement learning algorithms. This skill provides comprehensive guidance for training RL agents, creating custom environments, implementing callbacks, and optimizing training workflows using SB3's unified API.}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Training RL Agents}
+\p{\strong{Basic Training Pattern:}}
+
+\pre{\startverb
+import gymnasium as gym
+from stable_baselines3 import PPO
+
+# Create environment
+env = gym.make("CartPole-v1")
+
+# Initialize agent
+model = PPO("MlpPolicy", env, verbose=1)
+
+# Train the agent
+model.learn(total_timesteps=10000)
+
+# Save the model
+model.save("ppo_cartpole")
+
+# Load the model (without prior instantiation)
+model = PPO.load("ppo_cartpole", env=env)
+\stopverb}
+
+\p{\strong{Important Notes:}}
+
+\ul{
+\li{\code{\startverb total_timesteps\stopverb} is a lower bound; actual training may exceed this due to batch collection}
+\li{Use \code{\startverb model.load()\stopverb} as a static method, not on an existing instance}
+\li{The replay buffer is NOT saved with the model to save space}
+}
+
+\p{\strong{Algorithm Selection:} Use \code{\startverb references/algorithms.md\stopverb} for detailed algorithm characteristics and selection guidance. Quick reference:}
+
+\ul{
+\li{\strong{PPO/A2C}: General-purpose, supports all action space types, good for multiprocessing}
+\li{\strong{SAC/TD3}: Continuous control, off-policy, sample-efficient}
+\li{\strong{DQN}: Discrete actions, off-policy}
+\li{\strong{HER}: Goal-conditioned tasks}
+}
+
+\p{See \code{\startverb scripts/train_rl_agent.py\stopverb} for a complete training template with best practices.}
+}
+
+\subtree{
+\title{2. Custom Environments}
+\p{\strong{Requirements:} Custom environments must inherit from \code{\startverb gymnasium.Env\stopverb} and implement:}
+
+\ul{
+\li{\code{\startverb \strong{init}()\stopverb}: Define action_space and observation_space}
+\li{\code{\startverb reset(seed, options)\stopverb}: Return initial observation and info dict}
+\li{\code{\startverb step(action)\stopverb}: Return observation, reward, terminated, truncated, info}
+\li{\code{\startverb render()\stopverb}: Visualization (optional)}
+\li{\code{\startverb close()\stopverb}: Cleanup resources}
+}
+
+\p{\strong{Key Constraints:}}
+
+\ul{
+\li{Image observations must be \code{\startverb np.uint8\stopverb} in range [0, 255]}
+\li{Use channel-first format when possible (channels, height, width)}
+\li{SB3 normalizes images automatically by dividing by 255}
+\li{Set \code{\startverb normalize_images=False\stopverb} in policy_kwargs if pre-normalized}
+\li{SB3 does NOT support \code{\startverb Discrete\stopverb} or \code{\startverb MultiDiscrete\stopverb} spaces with \code{\startverb start!=0\stopverb}}
+}
+
+\p{\strong{Validation:}}
+
+\pre{\startverb
+from stable_baselines3.common.env_checker import check_env
+
+check_env(env, warn=True)
+\stopverb}
+
+\p{See \code{\startverb scripts/custom_env_template.py\stopverb} for a complete custom environment template and \code{\startverb references/custom_environments.md\stopverb} for comprehensive guidance.}
+}
+
+\subtree{
+\title{3. Vectorized Environments}
+\p{\strong{Purpose:} Vectorized environments run multiple environment instances in parallel, accelerating training and enabling certain wrappers (frame-stacking, normalization).}
+
+\p{\strong{Types:}}
+
+\ul{
+\li{\strong{DummyVecEnv}: Sequential execution on current process (for lightweight environments)}
+\li{\strong{SubprocVecEnv}: Parallel execution across processes (for compute-heavy environments)}
+}
+
+\p{\strong{Quick Setup:}}
+
+\pre{\startverb
+from stable_baselines3.common.env_util import make_vec_env
+
+# Create 4 parallel environments
+env = make_vec_env("CartPole-v1", n_envs=4, vec_env_cls=SubprocVecEnv)
+
+model = PPO("MlpPolicy", env, verbose=1)
+model.learn(total_timesteps=25000)
+\stopverb}
+
+\p{\strong{Off-Policy Optimization:} When using multiple environments with off-policy algorithms (SAC, TD3, DQN), set \code{\startverb gradient_steps=-1\stopverb} to perform one gradient update per environment step, balancing wall-clock time and sample efficiency.}
+
+\p{\strong{API Differences:}}
+
+\ul{
+\li{\code{\startverb reset()\stopverb} returns only observations (info available in \code{\startverb vec_env.reset_infos\stopverb})}
+\li{\code{\startverb step()\stopverb} returns 4-tuple: \code{\startverb (obs, rewards, dones, infos)\stopverb} not 5-tuple}
+\li{Environments auto-reset after episodes}
+\li{Terminal observations available via \code{\startverb infos[env_idx]["terminal_observation"]\stopverb}}
+}
+
+\p{See \code{\startverb references/vectorized_envs.md\stopverb} for detailed information on wrappers and advanced usage.}
+}
+
+\subtree{
+\title{4. Callbacks for Monitoring and Control}
+\p{\strong{Purpose:} Callbacks enable monitoring metrics, saving checkpoints, implementing early stopping, and custom training logic without modifying core algorithms.}
+
+\p{\strong{Common Callbacks:}}
+
+\ul{
+\li{\strong{EvalCallback}: Evaluate periodically and save best model}
+\li{\strong{CheckpointCallback}: Save model checkpoints at intervals}
+\li{\strong{StopTrainingOnRewardThreshold}: Stop when target reward reached}
+\li{\strong{ProgressBarCallback}: Display training progress with timing}
+}
+
+\p{\strong{Custom Callback Structure:}}
+
+\pre{\startverb
+from stable_baselines3.common.callbacks import BaseCallback
+
+class CustomCallback(BaseCallback):
+    def _on_training_start(self):
+        # Called before first rollout
+        pass
+
+    def _on_step(self):
+        # Called after each environment step
+        # Return False to stop training
+        return True
+
+    def _on_rollout_end(self):
+        # Called at end of rollout
+        pass
+\stopverb}
+
+\p{\strong{Available Attributes:}}
+
+\ul{
+\li{\code{\startverb self.model\stopverb}: The RL algorithm instance}
+\li{\code{\startverb self.num_timesteps\stopverb}: Total environment steps}
+\li{\code{\startverb self.training_env\stopverb}: The training environment}
+}
+
+\p{\strong{Chaining Callbacks:}}
+
+\pre{\startverb
+from stable_baselines3.common.callbacks import CallbackList
+
+callback = CallbackList([eval_callback, checkpoint_callback, custom_callback])
+model.learn(total_timesteps=10000, callback=callback)
+\stopverb}
+
+\p{See \code{\startverb references/callbacks.md\stopverb} for comprehensive callback documentation.}
+}
+
+\subtree{
+\title{5. Model Persistence and Inspection}
+\p{\strong{Saving and Loading:}}
+
+\pre{\startverb
+# Save model
+model.save("model_name")
+
+# Save normalization statistics (if using VecNormalize)
+vec_env.save("vec_normalize.pkl")
+
+# Load model
+model = PPO.load("model_name", env=env)
+
+# Load normalization statistics
+vec_env = VecNormalize.load("vec_normalize.pkl", vec_env)
+\stopverb}
+
+\p{\strong{Parameter Access:}}
+
+\pre{\startverb
+# Get parameters
+params = model.get_parameters()
+
+# Set parameters
+model.set_parameters(params)
+
+# Access PyTorch state dict
+state_dict = model.policy.state_dict()
+\stopverb}
+}
+
+\subtree{
+\title{6. Evaluation and Recording}
+\p{\strong{Evaluation:}}
+
+\pre{\startverb
+from stable_baselines3.common.evaluation import evaluate_policy
+
+mean_reward, std_reward = evaluate_policy(
+    model,
+    env,
+    n_eval_episodes=10,
+    deterministic=True
+)
+\stopverb}
+
+\p{\strong{Video Recording:}}
+
+\pre{\startverb
+from stable_baselines3.common.vec_env import VecVideoRecorder
+
+# Wrap environment with video recorder
+env = VecVideoRecorder(
+    env,
+    "videos/",
+    record_video_trigger=lambda x: x % 2000 == 0,
+    video_length=200
+)
+\stopverb}
+
+\p{See \code{\startverb scripts/evaluate_agent.py\stopverb} for a complete evaluation and recording template.}
+}
+
+\subtree{
+\title{7. Advanced Features}
+\p{\strong{Learning Rate Schedules:}}
+
+\pre{\startverb
+def linear_schedule(initial_value):
+    def func(progress_remaining):
+        # progress_remaining goes from 1 to 0
+        return progress_remaining * initial_value
+    return func
+
+model = PPO("MlpPolicy", env, learning_rate=linear_schedule(0.001))
+\stopverb}
+
+\p{\strong{Multi-Input Policies (Dict Observations):}}
+
+\pre{\startverb
+model = PPO("MultiInputPolicy", env, verbose=1)
+\stopverb}
+
+\p{Use when observations are dictionaries (e.g., combining images with sensor data).}
+
+\p{\strong{Hindsight Experience Replay:}}
+
+\pre{\startverb
+from stable_baselines3 import SAC, HerReplayBuffer
+
+model = SAC(
+    "MultiInputPolicy",
+    env,
+    replay_buffer_class=HerReplayBuffer,
+    replay_buffer_kwargs=dict(
+        n_sampled_goal=4,
+        goal_selection_strategy="future",
+    ),
+)
+\stopverb}
+
+\p{\strong{TensorBoard Integration:}}
+
+\pre{\startverb
+model = PPO("MlpPolicy", env, tensorboard_log="./tensorboard/")
+model.learn(total_timesteps=10000)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow Guidance}
+\p{\strong{Starting a New RL Project:}}
+
+\ol{
+\li{\strong{Define the problem}: Identify observation space, action space, and reward structure}
+\li{\strong{Choose algorithm}: Use \code{\startverb references/algorithms.md\stopverb} for selection guidance}
+\li{\strong{Create/adapt environment}: Use \code{\startverb scripts/custom_env_template.py\stopverb} if needed}
+\li{\strong{Validate environment}: Always run \code{\startverb check_env()\stopverb} before training}
+\li{\strong{Set up training}: Use \code{\startverb scripts/train_rl_agent.py\stopverb} as starting template}
+\li{\strong{Add monitoring}: Implement callbacks for evaluation and checkpointing}
+\li{\strong{Optimize performance}: Consider vectorized environments for speed}
+\li{\strong{Evaluate and iterate}: Use \code{\startverb scripts/evaluate_agent.py\stopverb} for assessment}
+}
+
+\p{\strong{Common Issues:}}
+
+\ul{
+\li{\strong{Memory errors}: Reduce \code{\startverb buffer_size\stopverb} for off-policy algorithms or use fewer parallel environments}
+\li{\strong{Slow training}: Consider SubprocVecEnv for parallel environments}
+\li{\strong{Unstable training}: Try different algorithms, tune hyperparameters, or check reward scaling}
+\li{\strong{Import errors}: Ensure \code{\startverb stable_baselines3\stopverb} is installed: \code{\startverb uv pip install stable-baselines3[extra]\stopverb}}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{scripts/}
+\ul{
+\li{\code{\startverb train_rl_agent.py\stopverb}: Complete training script template with best practices}
+\li{\code{\startverb evaluate_agent.py\stopverb}: Agent evaluation and video recording template}
+\li{\code{\startverb custom_env_template.py\stopverb}: Custom Gym environment template}
+}
+}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb algorithms.md\stopverb}: Detailed algorithm comparison and selection guide}
+\li{\code{\startverb custom_environments.md\stopverb}: Comprehensive custom environment creation guide}
+\li{\code{\startverb callbacks.md\stopverb}: Complete callback system reference}
+\li{\code{\startverb vectorized_envs.md\stopverb}: Vectorized environment usage and wrappers}
+}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Basic installation
+uv pip install stable-baselines3
+
+# With extra dependencies (Tensorboard, etc.)
+uv pip install stable-baselines3[extra]
+\stopverb}
+}
+}

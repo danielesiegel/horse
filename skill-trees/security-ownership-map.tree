@@ -1,0 +1,230 @@
+\title{"security Ownership Map"}
+
+\taxon{skill}
+
+\meta{description}{"Analyze git repositories to build a security ownership topology (people-to-file), compute bus factor and sensitive-code ownership, and export CSV/JSON for graph databases and visualization. Trigger only when the user explicitly wants a security-oriented ownership or bus-factor analysis grounded in git history (for example: orphaned sensitive code, security maintainers, CODEOWNERS reality checks for risk, sensitive hotspots, or ownership clusters). Do not trigger for general maintainer lists or non-security ownership questions."}
+
+\subtree{
+\title{Security Ownership Map}
+\subtree{
+\title{Overview}
+\p{Build a bipartite graph of people and files from git history, then compute ownership risk and export graph artifacts for Neo4j/Gephi. Also build a file co-change graph (Jaccard similarity on shared commits) to cluster files by how they move together while ignoring large, noisy commits.}
+}
+
+\subtree{
+\title{Requirements}
+\ul{
+\li{Python 3}
+\li{\code{\startverb networkx\stopverb} (required; community detection is enabled by default)}
+}
+
+\p{Install with:}
+
+\pre{\startverb
+pip install networkx
+\stopverb}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Scope the repo and time window (optional \code{\startverb --since/--until\stopverb}).}
+\li{Decide sensitivity rules (use defaults or provide a CSV config).}
+\li{Build the ownership map with \code{\startverb scripts/run_ownership_map.py\stopverb} (co-change graph is on by default; use \code{\startverb --cochange-max-files\stopverb} to ignore supernode commits).}
+\li{Communities are computed by default; graphml output is optional (\code{\startverb --graphml\stopverb}).}
+\li{Query the outputs with \code{\startverb scripts/query_ownership.py\stopverb} for bounded JSON slices.}
+\li{Persist and visualize (see \code{\startverb references/neo4j-import.md\stopverb}).}
+}
+
+\p{By default, the co-change graph ignores common “glue” files (lockfiles, \code{\startverb .github/*\stopverb}, editor config) so clusters reflect actual code movement instead of shared infra edits. Override with \code{\startverb --cochange-exclude\stopverb} or \code{\startverb --no-default-cochange-excludes\stopverb}. Dependabot commits are excluded by default; override with \code{\startverb --no-default-author-excludes\stopverb} or add patterns via \code{\startverb --author-exclude-regex\stopverb}.}
+
+\p{If you want to exclude Linux build glue like \code{\startverb Kbuild\stopverb} from co-change clustering, pass:}
+
+\pre{\startverb
+python skills/skills/security-ownership-map/scripts/run_ownership_map.py \
+  --repo /path/to/linux \
+  --out ownership-map-out \
+  --cochange-exclude "**/Kbuild"
+\stopverb}
+}
+
+\subtree{
+\title{Quick start}
+\p{Run from the repo root:}
+
+\pre{\startverb
+python skills/skills/security-ownership-map/scripts/run_ownership_map.py \
+  --repo . \
+  --out ownership-map-out \
+  --since "12 months ago" \
+  --emit-commits
+\stopverb}
+
+\p{Defaults: author identity, author date, and merge commits excluded. Use \code{\startverb --identity committer\stopverb}, \code{\startverb --date-field committer\stopverb}, or \code{\startverb --include-merges\stopverb} if needed.}
+
+\p{Example (override co-change excludes):}
+
+\pre{\startverb
+python skills/skills/security-ownership-map/scripts/run_ownership_map.py \
+  --repo . \
+  --out ownership-map-out \
+  --cochange-exclude "**/Cargo.lock" \
+  --cochange-exclude "**/.github/**" \
+  --no-default-cochange-excludes
+\stopverb}
+
+\p{Communities are computed by default. To disable:}
+
+\pre{\startverb
+python skills/skills/security-ownership-map/scripts/run_ownership_map.py \
+  --repo . \
+  --out ownership-map-out \
+  --no-communities
+\stopverb}
+}
+
+\subtree{
+\title{Sensitivity rules}
+\p{By default, the script flags common auth/crypto/secret paths. Override by providing a CSV file:}
+
+\pre{\startverb
+# pattern,tag,weight
+**/auth/**,auth,1.0
+**/crypto/**,crypto,1.0
+**/*.pem,secrets,1.0
+\stopverb}
+
+\p{Use it with \code{\startverb --sensitive-config path/to/sensitive.csv\stopverb}.}
+}
+
+\subtree{
+\title{Output artifacts}
+\p{\code{\startverb ownership-map-out/\stopverb} contains:}
+
+\ul{
+\li{\code{\startverb people.csv\stopverb} (nodes: people)}
+\li{\code{\startverb files.csv\stopverb} (nodes: files)}
+\li{\code{\startverb edges.csv\stopverb} (edges: touches)}
+\li{\code{\startverb cochange_edges.csv\stopverb} (file-to-file co-change edges with Jaccard weight; omitted with \code{\startverb --no-cochange\stopverb})}
+\li{\code{\startverb summary.json\stopverb} (security ownership findings)}
+\li{\code{\startverb commits.jsonl\stopverb} (optional, if \code{\startverb --emit-commits\stopverb})}
+\li{\code{\startverb communities.json\stopverb} (computed by default from co-change edges when available; includes \code{\startverb maintainers\stopverb} per community; disable with \code{\startverb --no-communities\stopverb})}
+\li{\code{\startverb cochange.graph.json\stopverb} (NetworkX node-link JSON with \code{\startverb community_id\stopverb} + \code{\startverb community_maintainers\stopverb}; falls back to \code{\startverb ownership.graph.json\stopverb} if no co-change edges)}
+\li{\code{\startverb ownership.graphml\stopverb} / \code{\startverb cochange.graphml\stopverb} (optional, if \code{\startverb --graphml\stopverb})}
+}
+
+\p{\code{\startverb people.csv\stopverb} includes timezone detection based on author commit offsets: \code{\startverb primary_tz_offset\stopverb}, \code{\startverb primary_tz_minutes\stopverb}, and \code{\startverb timezone_offsets\stopverb}.}
+}
+
+\subtree{
+\title{LLM query helper}
+\p{Use \code{\startverb scripts/query_ownership.py\stopverb} to return small, JSON-bounded slices without loading the full graph into context.}
+
+\p{Examples:}
+
+\pre{\startverb
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out people --limit 10
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out files --tag auth --bus-factor-max 1
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out person --person alice@corp --limit 10
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out file --file crypto/tls
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out cochange --file crypto/tls --limit 10
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out summary --section orphaned_sensitive_code
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out community --id 3
+\stopverb}
+
+\p{Use \code{\startverb --community-top-owners 5\stopverb} (default) to control how many maintainers are stored per community.}
+}
+
+\subtree{
+\title{Basic security queries}
+\p{Run these to answer common security ownership questions with bounded output:}
+
+\pre{\startverb
+# Orphaned sensitive code (stale + low bus factor)
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out summary --section orphaned_sensitive_code
+
+# Hidden owners for sensitive tags
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out summary --section hidden_owners
+
+# Sensitive hotspots with low bus factor
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out summary --section bus_factor_hotspots
+
+# Auth/crypto files with bus factor <= 1
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out files --tag auth --bus-factor-max 1
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out files --tag crypto --bus-factor-max 1
+
+# Who is touching sensitive code the most
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out people --sort sensitive_touches --limit 10
+
+# Co-change neighbors (cluster hints for ownership drift)
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out cochange --file path/to/file --min-jaccard 0.05 --limit 20
+
+# Community maintainers (for a cluster)
+python skills/skills/security-ownership-map/scripts/query_ownership.py --data-dir ownership-map-out community --id 3
+
+# Monthly maintainers for the community containing a file
+python skills/skills/security-ownership-map/scripts/community_maintainers.py \
+  --data-dir ownership-map-out \
+  --file network/card.c \
+  --since 2025-01-01 \
+  --top 5
+
+# Quarterly buckets instead of monthly
+python skills/skills/security-ownership-map/scripts/community_maintainers.py \
+  --data-dir ownership-map-out \
+  --file network/card.c \
+  --since 2025-01-01 \
+  --bucket quarter \
+  --top 5
+\stopverb}
+
+\p{Notes:}
+
+\ul{
+\li{Touches default to one authored commit (not per-file). Use \code{\startverb --touch-mode file\stopverb} to count per-file touches.}
+\li{Use \code{\startverb --window-days 90\stopverb} or \code{\startverb --weight recency --half-life-days 180\stopverb} to smooth churn.}
+\li{Filter bots with \code{\startverb --ignore-author-regex '(bot|dependabot)'\stopverb}.}
+\li{Use \code{\startverb --min-share 0.1\stopverb} to show stable maintainers only.}
+\li{Use \code{\startverb --bucket quarter\stopverb} for calendar quarter groupings.}
+\li{Use \code{\startverb --identity committer\stopverb} or \code{\startverb --date-field committer\stopverb} to switch from author attribution.}
+\li{Use \code{\startverb --include-merges\stopverb} to include merge commits (excluded by default).}
+}
+
+\subtree{
+\title{Summary format (default)}
+\p{Use this structure, add fields if needed:}
+
+\pre{\startverb
+{
+  "orphaned_sensitive_code": [
+    {
+      "path": "crypto/tls/handshake.rs",
+      "last_security_touch": "2023-03-12T18:10:04+00:00",
+      "bus_factor": 1
+    }
+  ],
+  "hidden_owners": [
+    {
+      "person": "alice@corp",
+      "controls": "63% of auth code"
+    }
+  ]
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Graph persistence}
+\p{Use \code{\startverb references/neo4j-import.md\stopverb} when you need to load the CSVs into Neo4j. It includes constraints, import Cypher, and visualization tips.}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{\code{\startverb bus_factor_hotspots\stopverb} in \code{\startverb summary.json\stopverb} lists sensitive files with low bus factor; \code{\startverb orphaned_sensitive_code\stopverb} is the stale subset.}
+\li{If \code{\startverb git log\stopverb} is too large, narrow with \code{\startverb --since\stopverb} or \code{\startverb --until\stopverb}.}
+\li{Compare \code{\startverb summary.json\stopverb} against CODEOWNERS to highlight ownership drift.}
+}
+}
+}

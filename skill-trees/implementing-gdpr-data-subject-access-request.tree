@@ -1,0 +1,317 @@
+\title{Implementing Gdpr Data Subject Access Request}
+
+\taxon{skill}
+
+\tag{gdpr}
+
+\tag{dsar}
+
+\tag{privacy}
+
+\tag{pii-discovery}
+
+\tag{data-subject-rights}
+
+\tag{compliance}
+
+\tag{article-15}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Automates GDPR Data Subject Access Request (DSAR) workflows including identity verification, PII discovery across databases and files using regex and NER, data mapping, response templating per Article 15 requirements, deadline tracking, and audit logging. Covers ICO/EDPB guidance compliance, exemption handling, and scalable batch processing. Use when building or auditing DSAR response capabilities under GDPR/UK GDPR.}
+
+\subtree{
+\title{Implementing GDPR Data Subject Access Request (DSAR) Workflow}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When building automated DSAR processing pipelines for GDPR/UK GDPR compliance}
+\li{When implementing PII discovery across structured and unstructured data sources}
+\li{When creating response templates that satisfy Article 15 disclosure requirements}
+\li{When auditing existing DSAR handling for regulatory compliance gaps}
+\li{When scaling DSAR processing from manual to automated workflows}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.8+ with required dependencies (spacy, presidio-analyzer, jinja2)}
+\li{Access to data sources where personal data resides (databases, file shares, logs)}
+\li{Understanding of GDPR Article 15 requirements and ICO/EDPB guidance}
+\li{Appropriate authorization and data protection officer (DPO) approval}
+\li{Test environment with synthetic or anonymized data for validation}
+}
+}
+
+\subtree{
+\title{Background}
+\subtree{
+\title{GDPR Article 15 - Right of Access}
+\p{Under GDPR Article 15, data subjects have the right to obtain from the controller:}
+
+\ol{
+\li{\strong{Confirmation} that their personal data is being processed}
+\li{\strong{A copy} of all personal data held about them}
+\li{\strong{Supplementary information} including:}
+\li{Purposes of processing}
+\li{Categories of personal data}
+\li{Recipients or categories of recipients}
+\li{Retention periods or criteria to determine them}
+\li{Right to rectification, erasure, restriction, or objection}
+\li{Right to lodge a complaint with a supervisory authority}
+\li{Source of the data (if not collected directly from the subject)}
+\li{Existence of automated decision-making, including profiling}
+}
+}
+
+\subtree{
+\title{Timeline Requirements}
+\ul{
+\li{\strong{Standard deadline}: 1 calendar month from receipt of valid request}
+\li{\strong{Complex extension}: Up to 2 additional months (must notify within first month)}
+\li{\strong{Clock pause}: Permitted when identity verification or clarification is needed}
+\li{\strong{Format}: Electronic form if request made electronically (unless otherwise requested)}
+\li{\strong{Cost}: Free of charge (unless manifestly unfounded/excessive)}
+}
+}
+
+\subtree{
+\title{ICO/EDPB Guidance Key Points}
+\ul{
+\li{No formal format required for DSARs - verbal, written, social media all valid}
+\li{Request need not mention "subject access request" or cite Article 15}
+\li{Identity verification must be proportionate to the risk}
+\li{Exemptions exist for legal privilege, third-party data, trade secrets}
+\li{EDPB coordinated enforcement actions cover right of access compliance}
+}
+}
+}
+
+\subtree{
+\title{Instructions}
+\subtree{
+\title{Step 1: DSAR Intake and Verification}
+\p{Implement a request intake system that captures the request through any channel, verifies the requester's identity, and starts the compliance clock.}
+
+\pre{\startverb
+from agent import DSARWorkflowEngine
+
+engine = DSARWorkflowEngine(config_path="dsar_config.json")
+
+# Register a new DSAR
+request = engine.register_dsar(
+    requester_name="Jane Smith",
+    requester_email="jane.smith@example.com",
+    request_channel="email",
+    request_text="I would like a copy of all personal data you hold about me.",
+    identity_docs=["passport_verified"],
+)
+print(f"DSAR ID: {request['dsar_id']}, Deadline: {request['deadline']}")
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: PII Discovery Across Data Sources}
+\p{Scan databases, files, and logs using regex patterns and NER to find all personal data associated with the data subject.}
+
+\pre{\startverb
+from agent import PIIDiscoveryEngine
+
+pii_engine = PIIDiscoveryEngine()
+
+# Scan structured data (database)
+db_results = pii_engine.scan_database(
+    connection_string="postgresql://user:pass@localhost/appdb",
+    search_identifiers={"email": "jane.smith@example.com", "name": "Jane Smith"},
+)
+
+# Scan unstructured data (files, logs)
+file_results = pii_engine.scan_files(
+    directories=["/var/log/app", "/data/exports", "/data/documents"],
+    search_identifiers={"email": "jane.smith@example.com", "name": "Jane Smith"},
+)
+
+# Scan with NER for contextual PII detection
+ner_results = pii_engine.scan_with_ner(
+    text_corpus=file_results["raw_text_matches"],
+    entity_types=["PERSON", "EMAIL", "PHONE_NUMBER", "LOCATION", "DATE_OF_BIRTH"],
+)
+
+all_pii = pii_engine.consolidate_results(db_results, file_results, ner_results)
+print(f"Found {all_pii['total_records']} PII records across {all_pii['source_count']} sources")
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Data Mapping and Classification}
+\p{Map discovered PII to processing purposes, legal bases, and retention periods as required by Article 15.}
+
+\pre{\startverb
+from agent import DataMapper
+
+mapper = DataMapper(data_inventory_path="data_inventory.json")
+
+# Map PII to Article 15 categories
+mapped_data = mapper.map_to_article15(
+    pii_records=all_pii,
+    data_subject_id="jane.smith@example.com",
+)
+
+# Output includes processing purposes, recipients, retention for each data category
+for category in mapped_data["categories"]:
+    print(f"Category: {category['name']}")
+    print(f"  Purpose: {category['processing_purpose']}")
+    print(f"  Legal basis: {category['legal_basis']}")
+    print(f"  Retention: {category['retention_period']}")
+    print(f"  Recipients: {', '.join(category['recipients'])}")
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Exemption Review}
+\p{Apply exemptions where lawful (third-party data, legal privilege, trade secrets) before compiling the response.}
+
+\pre{\startverb
+from agent import ExemptionReviewer
+
+reviewer = ExemptionReviewer()
+
+# Check for applicable exemptions
+review_result = reviewer.review_exemptions(
+    mapped_data=mapped_data,
+    exemption_checks=[
+        "third_party_data",
+        "legal_professional_privilege",
+        "trade_secrets",
+        "crime_prevention",
+        "management_forecasting",
+    ],
+)
+
+# Apply redactions where exemptions apply
+redacted_data = reviewer.apply_redactions(mapped_data, review_result["exemptions"])
+print(f"Applied {review_result['exemption_count']} exemptions")
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Response Generation}
+\p{Generate a compliant DSAR response package with cover letter, data export, and supplementary information document.}
+
+\pre{\startverb
+from agent import DSARResponseGenerator
+
+generator = DSARResponseGenerator(template_dir="templates/")
+
+# Generate complete response package
+response = generator.generate_response(
+    dsar_id=request["dsar_id"],
+    data_subject="Jane Smith",
+    mapped_data=redacted_data,
+    format="pdf",  # or "json", "csv"
+)
+
+# Package includes: cover letter, data export, supplementary info, audit log
+for doc in response["documents"]:
+    print(f"Generated: {doc['filename']} ({doc['type']})")
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Audit Trail and Compliance Logging}
+\p{Maintain complete audit trail of the DSAR lifecycle for accountability.}
+
+\pre{\startverb
+from agent import DSARAuditLogger
+
+logger = DSARAuditLogger(log_path="dsar_audit_logs/")
+
+# Log complete DSAR lifecycle
+logger.log_event(request["dsar_id"], "request_received", {
+    "channel": "email",
+    "identity_verified": True,
+})
+logger.log_event(request["dsar_id"], "pii_discovery_complete", {
+    "records_found": all_pii["total_records"],
+    "sources_scanned": all_pii["source_count"],
+})
+logger.log_event(request["dsar_id"], "response_sent", {
+    "format": "pdf",
+    "documents_count": len(response["documents"]),
+    "exemptions_applied": review_result["exemption_count"],
+})
+
+# Generate compliance report
+compliance_report = logger.generate_compliance_report(request["dsar_id"])
+\stopverb}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Complete DSAR Processing Pipeline}
+\pre{\startverb
+from agent import DSARWorkflowEngine, PIIDiscoveryEngine, DSARResponseGenerator
+
+# Full automated pipeline
+engine = DSARWorkflowEngine(config_path="dsar_config.json")
+pii = PIIDiscoveryEngine()
+gen = DSARResponseGenerator(template_dir="templates/")
+
+# 1. Intake
+req = engine.register_dsar(
+    requester_name="John Doe",
+    requester_email="john.doe@example.com",
+    request_channel="web_form",
+    request_text="Please provide all my data under GDPR Article 15.",
+    identity_docs=["email_verified", "account_match"],
+)
+
+# 2. Discover
+results = pii.full_scan(
+    search_identifiers={"email": "john.doe@example.com"},
+    sources=["database", "files", "logs"],
+)
+
+# 3. Generate response
+response = gen.generate_response(
+    dsar_id=req["dsar_id"],
+    data_subject="John Doe",
+    mapped_data=results,
+)
+
+# 4. Track deadline
+engine.update_status(req["dsar_id"], "response_sent")
+print(f"DSAR {req['dsar_id']} completed, {engine.days_remaining(req['dsar_id'])} days remaining")
+\stopverb}
+}
+
+\subtree{
+\title{PII Regex Pattern Testing}
+\pre{\startverb
+from agent import PIIPatternMatcher
+
+matcher = PIIPatternMatcher()
+
+# Test individual patterns
+test_text = "Contact jane.smith@example.com or call +44 20 7946 0958. SSN: 123-45-6789"
+matches = matcher.scan_text(test_text)
+for m in matches:
+    print(f"  [{m['type']}] '{m['value']}' (confidence: {m['confidence']})")
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{GDPR Article 15: https://gdpr-info.eu/art-15-gdpr/}
+\li{ICO Subject Access Request Guidance: https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/subject-access-requests/}
+\li{EDPB Guidelines 01/2022 on Right of Access: https://www.edpb.europa.eu/system/files/2023-04/edpb_guidelines_202201_data_subject_rights_access_v2_en.pdf}
+\li{GDPR Article 12 (DSAR Modalities): https://gdpr-info.eu/art-12-gdpr/}
+\li{Regulation (EU) 2025/2518 (Procedural Rules): Cross-border GDPR enforcement procedural rules}
+}
+}
+}

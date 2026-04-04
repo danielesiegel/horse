@@ -1,0 +1,79 @@
+\title{"mobius Path Filter"}
+
+\taxon{skill}
+
+\meta{description}{"Identifies tangled geodesics in proof dependency graphs via Möbius inversion."}
+
+\subtree{
+\title{Möbius Path Filter}
+\p{\strong{Category}: Theorem Dependency Analysis \strong{Type}: Graph Path Classification \strong{Language}: Julia \strong{Status}: Production Ready \strong{Version}: 1.0.0 \strong{Date}: December 22, 2025}
+
+\subtree{
+\title{Overview}
+\p{Identifies tangled geodesics in proof dependency graphs via Möbius inversion. Classifies paths by prime factorization to determine which dependencies are problematic (create cycles) vs. optimal (linear chains).}
+}
+
+\subtree{
+\title{Key Functions}
+\ul{
+\li{\strong{\code{\startverb enumerate_paths(adjacency)\stopverb}}: Discovers all paths in graph}
+\li{\strong{\code{\startverb factor_number(n)\stopverb}}: Prime factorization for Möbius weights}
+\li{\strong{\code{\startverb mobius_weight(n)\stopverb}}: Computes μ(n) ∈ {-1, 0, +1}}
+\li{\strong{\code{\startverb filter_tangled_paths(adjacency)\stopverb}}: Identifies problem paths}
+\li{\strong{\code{\startverb generate_filter_report()\stopverb}}: Human-readable analysis}
+}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\p{\strong{Möbius Inversion for Path Classification}}
+
+\pre{\startverb
+μ(n) = +1   : prime paths (keep - linear chains)
+μ(n) = -1   : odd-composite paths (rewrite needed)
+μ(n) = 0    : squared-factors (remove - redundant)
+\stopverb}
+
+\p{Uses prime factorization to weight geodesic paths in dependency graph. Helps identify which theorems create circular dependencies that impede spectral gap.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using MobiusFilter
+
+# Analyze proof dependencies
+prime_paths, tangled = filter_tangled_paths(adjacency)
+
+# Get recommendations
+report = generate_filter_report(adjacency)
+println(report)
+\stopverb}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{Diagnosis tool for Week 2 analysis phase}
+\li{Feeds into safe_rewriting_advisor for remediation}
+\li{Used by continuous-inverter for automated detection}
+}
+}
+
+\subtree{
+\title{Performance}
+\ul{
+\li{Execution time: ~1 second (for 5-node test graphs)}
+\li{Path enumeration: Exponential but capped by practical graph size}
+\li{Prime factorization: O(√n) per path}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Hardy & Wright (1979): Elementary Number Theory}
+\li{Möbius inversion theory for discrete mathematics}
+}
+}
+}

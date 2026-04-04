@@ -1,0 +1,448 @@
+\title{Zig Systems}
+
+\taxon{skill}
+
+\meta{description}{Systems programming and performance optimization using Zig. Provides low-level abstractions, memory-safe compiled code, and performance benchmarking. Use for system-level operations, optimization, and interoperability with C/POSIX APIs.}
+
+\subtree{
+\title{zig-systems - Systems Programming and Performance}
+\subtree{
+\title{Overview}
+\p{\strong{zig-systems} provides low-level systems programming capabilities using Zig - a modern language for systems code with performance of C, memory safety guarantees, and cross-platform compilation.}
+
+\p{\strong{Role}: ERGODIC systems coordinator - bridges high-level skill orchestration (Clojure) with native performance code.}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Install Zig}
+\pre{\startverb
+# macOS with Homebrew
+brew install zig
+
+# Or download from https://ziglang.org/download/
+# Verify installation
+zig version
+\stopverb}
+}
+
+\subtree{
+\title{Basic Compilation}
+\pre{\startverb
+# Compile a Zig program
+zig build-exe main.zig
+
+# Run compiled binary
+./main
+
+# Compile with optimizations
+zig build-exe -O ReleaseFast main.zig
+
+# Compile to library (FFI)
+zig build-lib main.zig
+\stopverb}
+}
+}
+
+\subtree{
+\title{Language Features}
+\subtree{
+\title{Memory Safety Without GC}
+\pre{\startverb
+const std = @import("std");
+
+pub fn main() void {
+    // Stack-allocated, no garbage collection
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+
+    const allocator = arena.allocator();
+
+    // Explicit allocation
+    var list = std.ArrayList(i32).init(allocator);
+    defer list.deinit();
+
+    // Type-safe operations
+    try list.append(42);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Comptime Metaprogramming}
+\pre{\startverb
+fn Matrix(comptime T: type, comptime rows: usize, comptime cols: usize) type {
+    return struct {
+        data: [rows * cols]T,
+
+        fn get(self: @This(), r: usize, c: usize) T {
+            return self.data[r * cols + c];
+        }
+    };
+}
+
+// Compile-time type generation
+const IntMatrix = Matrix(i32, 3, 3);
+\stopverb}
+}
+
+\subtree{
+\title{C Interoperability}
+\pre{\startverb
+// Direct C function calls
+extern "c" fn malloc(size: usize) ?*anyopaque;
+extern "c" fn free(ptr: ?*anyopaque) void;
+
+// Export functions for C/other languages
+export fn skill_invoke(input: [*]u8, len: usize) [*]u8 {
+    // Process input, return output
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Project Structure}
+\pre{\startverb
+zig-systems/
+├── SKILL.md
+├── build.zig          # Build configuration
+├── scripts/
+│   ├── array_sort.zig
+│   ├── compression.zig
+│   ├── hash_table.zig
+│   └── ffi.zig        # FFI/C interop
+├── references/
+│   ├── ZIG_SYNTAX.md
+│   ├── MEMORY_MODEL.md
+│   ├── PERFORMANCE.md
+│   └── FFI_GUIDE.md
+└── assets/
+    └── build_template.zig
+\stopverb}
+}
+
+\subtree{
+\title{Common Tasks}
+\subtree{
+\title{1. Efficient Sorting}
+\pre{\startverb
+const std = @import("std");
+
+pub fn sort_i32(allocator: std.mem.Allocator, items: []i32) !void {
+    var list = std.ArrayList(i32).init(allocator);
+    defer list.deinit();
+
+    try list.appendSlice(items);
+    std.sort.sort(i32, list.items, {}, std.sort.asc(i32));
+}
+\stopverb}
+}
+
+\subtree{
+\title{2. Hash Table Operations}
+\pre{\startverb
+const std = @import("std");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var map = std.StringHashMap(i32).init(allocator);
+    defer map.deinit();
+
+    try map.put("foo", 42);
+    if (map.get("foo")) |value| {
+        std.debug.print("Found: {}\n", .{value});
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{3. Compression Algorithm}
+\pre{\startverb
+pub fn compress(allocator: std.mem.Allocator, data: []const u8) ![]u8 {
+    // Implement compression (e.g., DEFLATE, LZ4)
+    var output = std.ArrayList(u8).init(allocator);
+    defer output.deinit();
+
+    // Compression logic here
+
+    return output.toOwnedSlice();
+}
+\stopverb}
+}
+
+\subtree{
+\title{4. Performance Benchmarking}
+\pre{\startverb
+const std = @import("std");
+
+pub fn benchmark(comptime name: []const u8, func: fn() void) void {
+    var timer = try std.time.Timer.start();
+    defer {
+        const elapsed = timer.read();
+        std.debug.print("{s}: {d}ns\n", .{name, elapsed});
+    }
+
+    func();
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Characteristics}
+\subtree{
+\title{Compilation Speed}
+\ul{
+\li{\strong{Incremental}: ~100ms for small modules}
+\li{\strong{Full rebuild}: ~500ms - 2s}
+\li{\strong{Release build}: ~1-5s with optimizations}
+}
+}
+
+\subtree{
+\title{Runtime Performance}
+\ul{
+\li{\strong{Memory usage}: Minimal (no GC overhead)}
+\li{\strong{Binary size}: 1-10MB depending on features}
+\li{\strong{Startup time}: <1ms for most programs}
+\li{\strong{CPU efficiency}: Near-C performance}
+}
+}
+
+\subtree{
+\title{Comparison}
+\pre{\startverb
+| Operation | Zig | Go | Java |
+|-----------|-----|----|----|
+| Array sort (10K items) | ~1ms | ~2ms | ~5ms |
+| Hash table insert | ~50ns | ~100ns | ~200ns |
+| Memory allocation | ~50ns | ~100ns | ~500ns |
+| Binary size (hello) | 2KB | 1MB | 50MB |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Building Zig Projects}
+\subtree{
+\title{Simple build.zig}
+\pre{\startverb
+const std = @import("std");
+const Builder = std.build.Builder;
+
+pub fn build(b: *Builder) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
+    const exe = b.addExecutable(.{
+        .name = "my_skill",
+        .root_source_file = .{ .path = "main.zig" },
+        .target = target,
+        .optimize = optimize,
+    });
+
+    b.installArtifact(exe);
+
+    const run_cmd = b.addRunArtifact(exe);
+    const run_step = b.step("run", "Run the app");
+    run_step.dependOn(&run_cmd.step);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Build Commands}
+\pre{\startverb
+# Build debug binary
+zig build
+
+# Build with optimizations
+zig build -Doptimize=ReleaseFast
+
+# Install to prefix
+zig build --prefix /usr/local install
+
+# Run tests
+zig build test
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\subtree{
+\title{Calling from Clojure}
+\pre{\startverb
+(defn call-zig-sort [data]
+  "Invoke Zig sort via FFI."
+  (shell/sh "zig-systems" "sort" (write-json data)))
+\stopverb}
+}
+
+\subtree{
+\title{Calling from Go}
+\pre{\startverb
+import "C"
+
+//export SkillInvoke
+func SkillInvoke(data *C.char) *C.char {
+    // Call Zig compiled library
+    result := C.zig_compress(data)
+    return result
+}
+\stopverb}
+}
+
+\subtree{
+\title{Calling from Hy}
+\pre{\startverb
+(import subprocess)
+(setv result (subprocess.run ["zig-systems" "compress" "input.dat"]
+                            :capture-output True))
+\stopverb}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{\strong{Performance-critical code}: Sorting, compression, hashing}
+\li{\strong{System-level operations}: File I/O, memory management, POSIX APIs}
+\li{\strong{Cross-platform binaries}: Compile once, run anywhere (Linux, macOS, Windows)}
+\li{\strong{FFI requirements}: Need to call from other languages}
+\li{\strong{Memory-constrained systems}: Embedded, IoT, serverless}
+\li{\strong{Real-time systems}: Predictable performance, no GC pauses}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{High-level business logic (use Clojure)}
+\li{Quick prototyping (Hy/Python faster iteration)}
+\li{Dynamic typing requirements (Zig is statically typed)}
+\li{GC convenience preferred over control}
+}
+}
+
+\subtree{
+\title{GF(3) Consideration}
+\p{While zig-systems is a SINGLE language skill (not a triadic component itself), it coordinates with:}
+
+\pre{\startverb
+Validator (-1) + Coordinator (0) + Generator (+1) ≡ 0 (mod 3)
+ [joker]        [zig-systems]    [hy-regime]
+       OR
+ [joker]      [jo-clojure]       [hy-regime]
+\stopverb}
+
+\p{Zig provides low-level system optimization that the triadic coordinator (jo-clojure or zig-systems) may invoke.}
+}
+
+\subtree{
+\title{Debugging}
+\subtree{
+\title{Runtime Assertions}
+\pre{\startverb
+const std = @import("std");
+
+pub fn divide(a: i32, b: i32) i32 {
+    std.debug.assert(b != 0);  // Panics if false
+    return a / b;
+}
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\pre{\startverb
+const FileOpenError = error {
+    FileNotFound,
+    PermissionDenied,
+};
+
+pub fn open_file(path: []const u8) FileOpenError!*File {
+    if (!file_exists(path)) {
+        return FileOpenError.FileNotFound;
+    }
+    // ...
+}
+\stopverb}
+}
+
+\subtree{
+\title{Standard Library Utilities}
+\pre{\startverb
+const std = @import("std");
+
+pub fn main() void {
+    std.debug.print("Debug output: {any}\n", .{data});
+    std.debug.assert(condition);
+    var timer = std.time.Timer.start();
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Optimization Tips}
+\ol{
+\li{\strong{Use ReleaseFast or ReleaseSmall} optimization levels}
+\li{\strong{Minimize allocations}: Preallocate where possible}
+\li{\strong{Use inline functions}: \code{\startverb inline\stopverb} keyword for hot paths}
+\li{\strong{Leverage comptime}: Compute at compile time, not runtime}
+\li{\strong{Profile with perf}: \code{\startverb perf record ./binary\stopverb} then \code{\startverb perf report\stopverb}}
+\li{\strong{Consider SIMD}: \code{\startverb @Vector\stopverb} type for parallel operations}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Zig Language Documentation](https://ziglang.org/documentation/master/)}
+\li{[Zig Standard Library](https://ziglang.org/api/)}
+\li{[Zig by Example](https://zigbyexample.com/)}
+\li{[Memory Model Guide](references/MEMORY_MODEL.md)}
+\li{[FFI Integration](references/FFI_GUIDE.md)}
+\li{[Performance Tuning](references/PERFORMANCE.md)}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{"zig: command not found"}}
+
+\ul{
+\li{Install Zig: \code{\startverb brew install zig\stopverb}}
+\li{Verify: \code{\startverb zig version\stopverb}}
+\li{Update PATH if needed}
+}
+
+\p{\strong{Build errors with C libraries}}
+
+\ul{
+\li{Use \code{\startverb zig build-exe main.zig -lc\stopverb} to link libc}
+\li{Declare C imports explicitly: \code{\startverb extern "c" fn malloc(...)\stopverb}}
+}
+
+\p{\strong{Memory leaks in debug mode}}
+
+\ul{
+\li{Use GeneralPurposeAllocator for testing}
+\li{Enable leak detection: \code{\startverb std.heap.GeneralPurposeAllocator(.{.safety = true})\stopverb}}
+}
+
+\p{\strong{Binary too large}}
+
+\ul{
+\li{Use ReleaseSmall optimization: \code{\startverb -O ReleaseSmall\stopverb}}
+\li{Strip debug symbols: \code{\startverb strip ./binary\stopverb}}
+}
+}
+}

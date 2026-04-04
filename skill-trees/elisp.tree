@@ -1,0 +1,56 @@
+\title{Elisp}
+
+\taxon{skill}
+
+\meta{description}{Emacs Lisp reference (106K lines info).}
+
+\subtree{
+\title{elisp}
+\p{Emacs Lisp reference (106K lines info).}
+
+\subtree{
+\title{Basics}
+\pre{\startverb
+(defun greet (name)
+  "Greet NAME."
+  (message "Hello, %s!" name))
+
+(let ((x 1) (y 2))
+  (+ x y))
+\stopverb}
+}
+
+\subtree{
+\title{Macros}
+\pre{\startverb
+(defmacro when-let ((var expr) &rest body)
+  `(let ((,var ,expr))
+     (when ,var ,@body)))
+\stopverb}
+}
+
+\subtree{
+\title{Hooks}
+\pre{\startverb
+(add-hook 'after-init-hook #'my-setup)
+(remove-hook 'before-save-hook #'delete-trailing-whitespace)
+\stopverb}
+}
+
+\subtree{
+\title{Advice}
+\pre{\startverb
+(advice-add 'find-file :before #'my-before-find-file)
+(advice-add 'save-buffer :after #'my-after-save)
+\stopverb}
+}
+
+\subtree{
+\title{Info}
+\pre{\startverb
+C-h i m elisp RET
+C-h f <function>
+C-h v <variable>
+\stopverb}
+}
+}

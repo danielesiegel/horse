@@ -1,0 +1,257 @@
+\title{Performing Kubernetes Cis Benchmark With Kube Bench}
+
+\taxon{skill}
+
+\tag{kube-bench}
+
+\tag{cis-benchmark}
+
+\tag{kubernetes}
+
+\tag{compliance}
+
+\tag{hardening}
+
+\tag{aquasecurity}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Audit Kubernetes cluster security posture against CIS benchmarks using kube-bench with automated checks for control plane, worker nodes, and RBAC.}
+
+\subtree{
+\title{Performing Kubernetes CIS Benchmark with kube-bench}
+\subtree{
+\title{Overview}
+\p{kube-bench is an open-source Go tool by Aqua Security that runs the CIS Kubernetes Benchmark checks. It verifies control plane, etcd, worker node, and policy configurations against security best practices, producing actionable pass/fail/warn reports.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing kubernetes cis benchmark with kube bench}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Kubernetes cluster (v1.24+)}
+\li{kubectl with cluster-admin access}
+\li{Node access for direct runs or privileged pod access}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Binary installation
+curl -L https://github.com/aquasecurity/kube-bench/releases/download/v0.7.3/kube-bench_0.7.3_linux_amd64.tar.gz | tar xz
+sudo mv kube-bench /usr/local/bin/
+
+# Run as Kubernetes Job
+kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml
+kubectl logs job/kube-bench
+
+# Run as a pod with host access
+kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job-master.yaml
+kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job-node.yaml
+\stopverb}
+}
+
+\subtree{
+\title{Running Benchmarks}
+\subtree{
+\title{Full Benchmark}
+\pre{\startverb
+# Run all checks (auto-detects node type)
+kube-bench run
+
+# Run with JSON output
+kube-bench run --json > kube-bench-results.json
+
+# Run with JUnit output for CI
+kube-bench run --junit > kube-bench-results.xml
+\stopverb}
+}
+
+\subtree{
+\title{Component-Specific Checks}
+\pre{\startverb
+# Control plane (master) checks
+kube-bench run --targets master
+
+# Worker node checks
+kube-bench run --targets node
+
+# etcd checks
+kube-bench run --targets etcd
+
+# Policies checks
+kube-bench run --targets policies
+
+# Control plane + etcd
+kube-bench run --targets master,etcd
+\stopverb}
+}
+
+\subtree{
+\title{Managed Kubernetes}
+\pre{\startverb
+# Amazon EKS
+kube-bench run --benchmark eks-1.2.0
+
+# Google GKE
+kube-bench run --benchmark gke-1.4.0
+
+# Azure AKS
+kube-bench run --benchmark aks-1.0
+
+# Red Hat OpenShift
+kube-bench run --benchmark rh-1.0
+\stopverb}
+}
+
+\subtree{
+\title{Filtering Results}
+\pre{\startverb
+# Show only failures
+kube-bench run --targets master | grep "\[FAIL\]"
+
+# Run specific check
+kube-bench run --check 1.2.1
+
+# Run check group
+kube-bench run --group 1.2
+\stopverb}
+}
+}
+
+\subtree{
+\title{CIS Benchmark Sections}
+\pre{\startverb
+| Section | Component | Key Checks |
+|---------|-----------|------------|
+| 1.1 | Control Plane - API Server | Anonymous auth, RBAC, audit logging |
+| 1.2 | Control Plane - API Server | Admission controllers, encryption |
+| 1.3 | Control Plane - Controller Manager | Service account tokens, bind address |
+| 1.4 | Control Plane - Scheduler | Profiling, bind address |
+| 2.1 | etcd | Client cert auth, peer encryption |
+| 3.1 | Control Plane - Authentication | OIDC, client certs |
+| 4.1 | Worker - kubelet | Anonymous auth, authorization |
+| 4.2 | Worker - kubelet | TLS, read-only port |
+| 5.1 | Policies - RBAC | Cluster-admin usage, service accounts |
+| 5.2 | Policies - Pod Security | Privileged, host namespaces |
+| 5.3 | Policies - Network | Network policies per namespace |
+| 5.7 | Policies - General | Secrets, security context |
+\stopverb}
+}
+
+\subtree{
+\title{Output Example}
+\pre{\startverb
+[INFO] 1 Control Plane Security Configuration
+[INFO] 1.1 Control Plane Node Configuration Files
+[PASS] 1.1.1 Ensure that the API server pod specification file permissions are set to 600
+[PASS] 1.1.2 Ensure that the API server pod specification file ownership is set to root:root
+[FAIL] 1.1.3 Ensure that the controller manager pod specification file permissions are set to 600
+[WARN] 1.1.4 Ensure that the scheduler pod specification file permissions are set to 600
+
+== Summary ==
+45 checks PASS
+12 checks FAIL
+8 checks WARN
+0 checks INFO
+\stopverb}
+}
+
+\subtree{
+\title{CI/CD Integration}
+\subtree{
+\title{GitHub Actions}
+\pre{\startverb
+name: CIS Benchmark
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  kube-bench:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Run kube-bench
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml
+          kubectl wait --for=condition=complete job/kube-bench --timeout=120s
+          kubectl logs job/kube-bench > kube-bench-report.txt
+
+      - name: Check for failures
+        run: |
+          FAILS=$(grep -c "\[FAIL\]" kube-bench-report.txt || true)
+          echo "Failed checks: $FAILS"
+          if [ "$FAILS" -gt 0 ]; then
+            echo "::warning::$FAILS CIS benchmark checks failed"
+          fi
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: kube-bench-report
+          path: kube-bench-report.txt
+\stopverb}
+}
+}
+
+\subtree{
+\title{Remediation Examples}
+\subtree{
+\title{1.2.1 - Ensure --anonymous-auth is set to false}
+\pre{\startverb
+# /etc/kubernetes/manifests/kube-apiserver.yaml
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --anonymous-auth=false
+\stopverb}
+}
+
+\subtree{
+\title{4.2.1 - Ensure --anonymous-auth is set to false on kubelet}
+\pre{\startverb
+# /var/lib/kubelet/config.yaml
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+\stopverb}
+}
+
+\subtree{
+\title{5.2.1 - Minimize wildcard RBAC}
+\pre{\startverb
+# Find roles with wildcard permissions
+kubectl get clusterroles -o json | jq '.items[] | select(.rules[].resources[] == "*") | .metadata.name'
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Run kube-bench before and after} cluster provisioning}
+\li{\strong{Schedule weekly scans} via CronJob for drift detection}
+\li{\strong{Export JSON} for SIEM/compliance reporting}
+\li{\strong{Fix FAIL items first}, then address WARN items}
+\li{\strong{Use benchmark profiles} matching your Kubernetes distribution}
+\li{\strong{Track score over time} to measure security posture improvement}
+\li{\strong{Combine with admission controllers} to prevent drift}
+}
+}
+}

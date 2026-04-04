@@ -1,0 +1,348 @@
+\title{Flox Services}
+
+\taxon{skill}
+
+\meta{description}{Running services and background processes in Flox environments. Use for service configuration, network services, logging, database setup, and service debugging.}
+
+\subtree{
+\title{Flox Services Guide}
+\subtree{
+\title{Running Services in Flox Environments}
+\ul{
+\li{Start with \code{\startverb flox activate --start-services\stopverb} or \code{\startverb flox activate -s\stopverb}}
+\li{Define \code{\startverb is-daemon\stopverb}, \code{\startverb shutdown.command\stopverb} for background processes}
+\li{Keep services running using \code{\startverb tail -f /dev/null\stopverb}}
+\li{Use \code{\startverb flox services status/logs/restart\stopverb} to manage (must be in activated env)}
+\li{Service commands don't inherit hook activations; explicitly source/activate what you need}
+}
+}
+
+\subtree{
+\title{Core Commands}
+\pre{\startverb
+flox activate -s                # Start services
+flox services status            # Check service status
+flox services logs <service>    # View service logs
+flox services restart <service> # Restart a service
+flox services stop <service>    # Stop a service
+\stopverb}
+}
+
+\subtree{
+\title{Network Services Pattern}
+\p{Always make host/port configurable via vars:}
+
+\pre{\startverb
+[services.webapp]
+command = '''exec app --host "$APP_HOST" --port "$APP_PORT"'''
+
+[vars]
+APP_HOST = "0.0.0.0"  # Network-accessible
+APP_PORT = "8080"
+\stopverb}
+}
+
+\subtree{
+\title{Service Logging Pattern}
+\p{Always pipe to \code{\startverb $FLOX_ENV_CACHE/logs/\stopverb} for debugging:}
+
+\pre{\startverb
+[services.myapp]
+command = '''
+  mkdir -p "$FLOX_ENV_CACHE/logs"
+  exec app 2>&1 | tee -a "$FLOX_ENV_CACHE/logs/app.log"
+'''
+\stopverb}
+}
+
+\subtree{
+\title{Python venv Pattern for Services}
+\p{Services must activate venv independently:}
+
+\pre{\startverb
+[services.myapp]
+command = '''
+  [ -f "$FLOX_ENV_CACHE/venv/bin/activate" ] && \
+    source "$FLOX_ENV_CACHE/venv/bin/activate"
+  exec python-app "$@"
+'''
+\stopverb}
+
+\p{Or use venv Python directly:}
+
+\pre{\startverb
+[services.myapp]
+command = '''exec "$FLOX_ENV_CACHE/venv/bin/python" app.py'''
+\stopverb}
+}
+
+\subtree{
+\title{Using Packaged Services}
+\p{Override package's service by redefining with same name.}
+}
+
+\subtree{
+\title{Database Service Examples}
+\subtree{
+\title{PostgreSQL}
+\pre{\startverb
+[services.postgres]
+command = '''
+  mkdir -p "$FLOX_ENV_CACHE/postgres"
+  if [ ! -d "$FLOX_ENV_CACHE/postgres/data" ]; then
+    initdb -D "$FLOX_ENV_CACHE/postgres/data"
+  fi
+  exec postgres -D "$FLOX_ENV_CACHE/postgres/data" \
+    -k "$FLOX_ENV_CACHE/postgres" \
+    -h "$POSTGRES_HOST" \
+    -p "$POSTGRES_PORT"
+'''
+is-daemon = true
+
+[vars]
+POSTGRES_HOST = "localhost"
+POSTGRES_PORT = "5432"
+POSTGRES_USER = "myuser"
+POSTGRES_DB = "mydb"
+\stopverb}
+}
+
+\subtree{
+\title{Redis}
+\pre{\startverb
+[services.redis]
+command = '''
+  mkdir -p "$FLOX_ENV_CACHE/redis"
+  exec redis-server \
+    --bind "$REDIS_HOST" \
+    --port "$REDIS_PORT" \
+    --dir "$FLOX_ENV_CACHE/redis"
+'''
+is-daemon = true
+
+[vars]
+REDIS_HOST = "127.0.0.1"
+REDIS_PORT = "6379"
+\stopverb}
+}
+
+\subtree{
+\title{MongoDB}
+\pre{\startverb
+[services.mongodb]
+command = '''
+  mkdir -p "$FLOX_ENV_CACHE/mongodb"
+  exec mongod \
+    --dbpath "$FLOX_ENV_CACHE/mongodb" \
+    --bind_ip "$MONGODB_HOST" \
+    --port "$MONGODB_PORT"
+'''
+is-daemon = true
+
+[vars]
+MONGODB_HOST = "127.0.0.1"
+MONGODB_PORT = "27017"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Web Server Examples}
+\subtree{
+\title{Node.js Development Server}
+\pre{\startverb
+[services.dev-server]
+command = '''
+  exec npm run dev -- --host "$DEV_HOST" --port "$DEV_PORT"
+'''
+
+[vars]
+DEV_HOST = "0.0.0.0"
+DEV_PORT = "3000"
+\stopverb}
+}
+
+\subtree{
+\title{Python Flask/FastAPI}
+\pre{\startverb
+[services.api]
+command = '''
+  source "$FLOX_ENV_CACHE/venv/bin/activate"
+  exec python -m uvicorn main:app \
+    --host "$API_HOST" \
+    --port "$API_PORT" \
+    --reload
+'''
+
+[vars]
+API_HOST = "0.0.0.0"
+API_PORT = "8000"
+\stopverb}
+}
+
+\subtree{
+\title{Simple HTTP Server}
+\pre{\startverb
+[services.web]
+command = '''exec python -m http.server "$WEB_PORT"'''
+
+[vars]
+WEB_PORT = "8000"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Environment Variable Convention}
+\p{Use variables like \code{\startverb POSTGRES_HOST\stopverb}, \code{\startverb POSTGRES_PORT\stopverb} to define where services run.}
+
+\p{These store connection details \em{separately}:}
+
+\ul{
+\li{\code{\startverb *_HOST\stopverb} is the hostname or IP address (e.g., \code{\startverb localhost\stopverb}, \code{\startverb db.example.com\stopverb})}
+\li{\code{\startverb *_PORT\stopverb} is the network port number (e.g., \code{\startverb 5432\stopverb}, \code{\startverb 6379\stopverb})}
+}
+
+\p{This pattern ensures users can override them at runtime:}
+
+\pre{\startverb
+POSTGRES_HOST=db.internal POSTGRES_PORT=6543 flox activate -s
+\stopverb}
+
+\p{Use consistent naming across services so the meaning is clear to any system or person reading the variables.}
+}
+
+\subtree{
+\title{Service with Shutdown Command}
+\pre{\startverb
+[services.myapp]
+command = '''exec myapp start'''
+is-daemon = true
+
+[services.myapp.shutdown]
+command = '''myapp stop'''
+\stopverb}
+}
+
+\subtree{
+\title{Dependent Services}
+\p{Services can wait for other services to be ready:}
+
+\pre{\startverb
+[services.db]
+command = '''exec postgres -D "$FLOX_ENV_CACHE/postgres"'''
+is-daemon = true
+
+[services.api]
+command = '''
+  # Wait for database
+  until pg_isready -h localhost -p 5432; do
+    sleep 1
+  done
+  exec python -m uvicorn main:app
+'''
+
+[vars]
+POSTGRES_HOST = "localhost"
+POSTGRES_PORT = "5432"
+\stopverb}
+}
+
+\subtree{
+\title{Service Health Checks}
+\pre{\startverb
+[services.api]
+command = '''
+  # Health check function
+  health_check() {
+    curl -sf http://localhost:8000/health > /dev/null
+  }
+
+  exec python -m uvicorn main:app --host 0.0.0.0 --port 8000
+'''
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ul{
+\li{Log service output to \code{\startverb $FLOX_ENV_CACHE/logs/\stopverb}}
+\li{Test activation with \code{\startverb flox activate -- <command>\stopverb} before adding to services}
+\li{When debugging services, run the exact command from manifest manually first}
+\li{Always make host/port configurable via vars for network services}
+\li{Use \code{\startverb exec\stopverb} to replace the shell process with the service command}
+\li{Services must activate venv inside service command, not rely on hook activation}
+\li{Use \code{\startverb is-daemon = true\stopverb} for background processes that should detach}
+}
+}
+
+\subtree{
+\title{Debugging Service Issues}
+\subtree{
+\title{Check Service Status}
+\pre{\startverb
+flox services status
+\stopverb}
+}
+
+\subtree{
+\title{View Service Logs}
+\pre{\startverb
+flox services logs myservice
+\stopverb}
+}
+
+\subtree{
+\title{Run Service Command Manually}
+\pre{\startverb
+flox activate
+# Copy the exact command from manifest and run it
+\stopverb}
+}
+
+\subtree{
+\title{Check if Service is Listening}
+\pre{\startverb
+# Check if port is open
+lsof -i :8000
+netstat -an | grep 8000
+
+# Test connection
+curl http://localhost:8000
+nc -zv localhost 8000
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\subtree{
+\title{Services Don't Preserve State}
+\p{Services see fresh environment (no preserved state between restarts). Store persistent data in \code{\startverb $FLOX_ENV_CACHE\stopverb}.}
+}
+
+\subtree{
+\title{Service Commands Don't Inherit Hook Activations}
+\p{Explicitly source/activate what you need inside the service command.}
+}
+
+\subtree{
+\title{Forgetting to Create Directories}
+\p{Always \code{\startverb mkdir -p\stopverb} for data directories in service commands.}
+}
+
+\subtree{
+\title{Port Conflicts}
+\p{Use configurable ports via variables to avoid conflicts with other services.}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{flox-environments} - Environment basics and package installation}
+\li{\strong{flox-sharing} - Composing environments with shared services}
+\li{\strong{flox-containers} - Running services in containers}
+}
+}
+}

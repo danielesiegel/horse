@@ -1,0 +1,112 @@
+\title{Covariant Fibrations}
+
+\taxon{skill}
+
+\meta{description}{Riehl-Shulman covariant fibrations for dependent types over directed}
+
+\subtree{
+\title{Covariant Fibrations Skill: Directed Transport}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - validator/constraint) \strong{Color}: #2626D8 (Blue) \strong{Principle}: Type families respect directed morphisms \strong{Frame}: Covariant transport along 2-arrows}
+
+\subtree{
+\title{Overview}
+\p{\strong{Covariant Fibrations} are type families B : A → U where transport goes \em{with} the direction of morphisms. In directed type theory, this ensures type families correctly propagate along the directed interval 𝟚.}
+
+\ol{
+\li{\strong{Directed interval 𝟚}: Type with 0 → 1 (not invertible)}
+\li{\strong{Covariant transport}: f : a → a' induces B(a) → B(a')}
+\li{\strong{Segal condition}: Composition witness for ∞-categories}
+\li{\strong{Fibration condition}: Lift existence (not uniqueness)}
+}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+For P : A → U covariant fibration:
+  transport_P : (f : Hom_A(a, a')) → P(a) → P(a')
+  
+Covariance: transport respects composition
+  transport_{g∘f} = transport_g ∘ transport_f
+\stopverb}
+
+\pre{\startverb
+-- Directed type theory (Narya-style)
+covariant_fibration : (A : Type) → (P : A → Type) → Type
+covariant_fibration A P = 
+  (a a' : A) → (f : Hom A a a') → P a → P a'
+\stopverb}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{1. Covariant Transport}
+\pre{\startverb
+-- Transport along directed morphisms
+cov-transport : {A : Type} {P : A → Type} 
+              → is-covariant P
+              → {a a' : A} → Hom A a a' → P a → P a'
+cov-transport cov f pa = cov.transport f pa
+
+-- Functoriality
+cov-comp : cov-transport (g ∘ f) ≡ cov-transport g ∘ cov-transport f
+\stopverb}
+}
+
+\subtree{
+\title{2. Cocartesian Lifts}
+\pre{\startverb
+-- Cocartesian lift characterizes covariant fibrations
+is-cocartesian : {E B : Type} (p : E → B) 
+               → {e : E} {b' : B} → Hom B (p e) b' → Type
+is-cocartesian p {e} {b'} f = 
+  Σ (e' : E), Σ (f̃ : Hom E e e'), (p f̃ ≡ f) × is-initial(f̃)
+\stopverb}
+}
+
+\subtree{
+\title{3. Segal Types with Covariance}
+\pre{\startverb
+-- Covariant families over Segal types
+covariant-segal : (A : Segal) → (P : A → Type) → Type
+covariant-segal A P = 
+  (x y z : A) → (f : Hom x y) → (g : Hom y z) →
+  cov-transport (g ∘ f) ≡ cov-transport g ∘ cov-transport f
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Validate covariance conditions
+just covariant-check fibration.rzk
+
+# Compute cocartesian lifts
+just cocartesian-lift base-morphism.rzk
+
+# Generate transport terms
+just cov-transport source target
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\pre{\startverb
+covariant-fibrations (-1) ⊗ directed-interval (0) ⊗ synthetic-adjunctions (+1) = 0 ✓  [Transport]
+covariant-fibrations (-1) ⊗ elements-infinity-cats (0) ⊗ rezk-types (+1) = 0 ✓  [∞-Fibrations]
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{directed-interval} (0): Base directed type 𝟚}
+\li{\strong{synthetic-adjunctions} (+1): Generate adjunctions from fibrations}
+\li{\strong{segal-types} (-1): Validate Segal conditions}
+}
+
+\p{\strong{Skill Name}: covariant-fibrations \strong{Type}: Directed Transport Validator \strong{Trit}: -1 (MINUS) \strong{Color}: #2626D8 (Blue)}
+}
+}

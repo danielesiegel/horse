@@ -1,0 +1,164 @@
+\title{Implementing Dmarc Dkim Spf Email Security}
+
+\taxon{skill}
+
+\tag{phishing}
+
+\tag{email-security}
+
+\tag{social-engineering}
+
+\tag{dmarc}
+
+\tag{awareness}
+
+\tag{dkim}
+
+\tag{spf}
+
+\tag{dns}
+
+\meta{version}{"1.0"}
+
+\meta{description}{SPF, DKIM, and DMARC form the three pillars of email authentication. Together they prevent domain spoofing, validate message integrity, and define policies for handling unauthenticated mail. Proper im}
+
+\subtree{
+\title{Implementing DMARC, DKIM, and SPF Email Security}
+\subtree{
+\title{Overview}
+\p{SPF, DKIM, and DMARC form the three pillars of email authentication. Together they prevent domain spoofing, validate message integrity, and define policies for handling unauthenticated mail. Proper implementation drastically reduces phishing attacks that impersonate your organization's domain.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing dmarc dkim spf email security capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{DNS management access for your domain}
+\li{Access to email server/MTA configuration (Postfix, Exchange, Google Workspace, Microsoft 365)}
+\li{Basic understanding of DNS TXT records}
+\li{Python 3.8+ for validation scripts}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{SPF (Sender Policy Framework)}
+\p{Publishes a DNS TXT record listing authorized IP addresses and mail servers that can send email on behalf of your domain. Receiving servers check the envelope sender's IP against this list.}
+}
+
+\subtree{
+\title{DKIM (DomainKeys Identified Mail)}
+\p{Adds a cryptographic signature to outgoing emails using a private key. The corresponding public key is published in DNS. Receivers verify the signature to ensure the message was not altered in transit.}
+}
+
+\subtree{
+\title{DMARC (Domain-based Message Authentication, Reporting and Conformance)}
+\p{Builds on SPF and DKIM by specifying a policy (none/quarantine/reject) for messages that fail authentication, and provides a reporting mechanism to monitor spoofing attempts.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Audit Current State}
+\pre{\startverb
+# Check existing SPF record
+dig TXT example.com | grep spf
+
+# Check existing DKIM selector
+dig TXT selector1._domainkey.example.com
+
+# Check existing DMARC record
+dig TXT _dmarc.example.com
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Implement SPF}
+\pre{\startverb
+# DNS TXT record for example.com
+v=spf1 ip4:203.0.113.0/24 include:_spf.google.com include:spf.protection.outlook.com -all
+\stopverb}
+
+\p{Key SPF mechanisms:}
+
+\ul{
+\li{\code{\startverb ip4:\stopverb} / \code{\startverb ip6:\stopverb} - Authorize specific IP ranges}
+\li{\code{\startverb include:\stopverb} - Include another domain's SPF record}
+\li{\code{\startverb a\stopverb} - Authorize domain's A record IPs}
+\li{\code{\startverb mx\stopverb} - Authorize domain's MX record IPs}
+\li{\code{\startverb -all\stopverb} - Hard fail all others (recommended)}
+\li{\code{\startverb ~all\stopverb} - Soft fail (monitoring phase)}
+}
+}
+
+\subtree{
+\title{Step 3: Implement DKIM}
+\pre{\startverb
+# Generate DKIM key pair (2048-bit RSA)
+openssl genrsa -out dkim_private.pem 2048
+openssl rsa -in dkim_private.pem -pubout -out dkim_public.pem
+
+# Format public key for DNS (remove headers, join lines)
+grep -v "PUBLIC KEY" dkim_public.pem | tr -d '\n'
+\stopverb}
+
+\p{DNS TXT record at \code{\startverb selector1._domainkey.example.com\stopverb}:}
+
+\pre{\startverb
+v=DKIM1; k=rsa; p=MIIBIjANBgkqhki...
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Implement DMARC}
+\pre{\startverb
+# DNS TXT record at _dmarc.example.com
+# Phase 1 (Monitor):
+v=DMARC1; p=none; rua=mailto:dmarc-aggregate@example.com; ruf=mailto:dmarc-forensic@example.com; pct=100
+
+# Phase 2 (Quarantine):
+v=DMARC1; p=quarantine; rua=mailto:dmarc-aggregate@example.com; pct=25
+
+# Phase 3 (Reject):
+v=DMARC1; p=reject; rua=mailto:dmarc-aggregate@example.com; pct=100
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Monitor and Analyze DMARC Reports}
+\p{Use the \code{\startverb scripts/process.py\stopverb} to parse DMARC aggregate XML reports and identify authentication failures, unauthorized senders, and spoofing attempts.}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{MXToolbox}: https://mxtoolbox.com/SuperTool.aspx}
+\li{\strong{DMARC Analyzer (dmarcian)}: https://dmarcian.com/}
+\li{\strong{Google Postmaster Tools}: https://postmaster.google.com/}
+\li{\strong{Valimail DMARC Monitor}: https://www.valimail.com/}
+\li{\strong{DMARC Report Analyzer}: https://dmarc.postmarkapp.com/}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{SPF record passes validation at mxtoolbox.com}
+\li{DKIM signature verified on test emails}
+\li{DMARC record properly formatted and reporting enabled}
+\li{Test emails pass all three checks in recipient's Authentication-Results header}
+}
+}
+}

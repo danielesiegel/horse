@@ -1,0 +1,106 @@
+\title{Datadog}
+
+\taxon{skill}
+
+\meta{description}{Query and analyze Datadog logs, metrics, APM traces, and monitors using the Datadog API. Use when debugging production issues, monitoring application performance, or investigating alerts.}
+
+\subtree{
+\title{Datadog}
+\p{<IMPORTANT> Before performing any Datadog operations, first check if the required environment variables are set:}
+
+\pre{\startverb
+[ -n "$DD_API_KEY" ] && echo "DD_API_KEY is set" || echo "DD_API_KEY is NOT set"
+[ -n "$DD_APP_KEY" ] && echo "DD_APP_KEY is set" || echo "DD_APP_KEY is NOT set"
+[ -n "$DD_SITE" ] && echo "DD_SITE is set" || echo "DD_SITE is NOT set"
+\stopverb}
+
+\p{If any of these variables are missing, ask the user to provide them before proceeding:}
+
+\ul{
+\li{\strong{DD_API_KEY}: Datadog API key}
+\li{\strong{DD_APP_KEY}: Datadog Application key}
+\li{\strong{DD_SITE}: Datadog site (e.g., \code{\startverb datadoghq.com\stopverb}, \code{\startverb datadoghq.eu\stopverb}, \code{\startverb us3.datadoghq.com\stopverb})}
+}
+
+\p{</IMPORTANT>}
+
+\subtree{
+\title{Authentication Headers}
+\pre{\startverb
+-H "DD-API-KEY: ${DD_API_KEY}" \
+-H "DD-APPLICATION-KEY: ${DD_APP_KEY}" \
+-H "Content-Type: application/json"
+\stopverb}
+}
+
+\subtree{
+\title{Query Logs}
+\pre{\startverb
+curl -s -X POST "https://api.${DD_SITE}/api/v2/logs/events/search" \
+  -H "DD-API-KEY: ${DD_API_KEY}" \
+  -H "DD-APPLICATION-KEY: ${DD_APP_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filter": {
+      "query": "service:my-service status:error",
+      "from": "now-1h",
+      "to": "now"
+    },
+    "sort": "-timestamp",
+    "page": {"limit": 50}
+  }' | jq .
+\stopverb}
+}
+
+\subtree{
+\title{Query Metrics}
+\pre{\startverb
+curl -s -G "https://api.${DD_SITE}/api/v1/query" \
+  -H "DD-API-KEY: ${DD_API_KEY}" \
+  -H "DD-APPLICATION-KEY: ${DD_APP_KEY}" \
+  --data-urlencode "query=avg:system.cpu.user{*}" \
+  --data-urlencode "from=$(date -d '1 hour ago' +%s)" \
+  --data-urlencode "to=$(date +%s)" | jq .
+\stopverb}
+}
+
+\subtree{
+\title{Query APM Traces}
+\pre{\startverb
+curl -s -X POST "https://api.${DD_SITE}/api/v2/spans/events/search" \
+  -H "DD-API-KEY: ${DD_API_KEY}" \
+  -H "DD-APPLICATION-KEY: ${DD_APP_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filter": {
+      "query": "service:my-service",
+      "from": "now-1h",
+      "to": "now"
+    },
+    "sort": "-timestamp",
+    "page": {"limit": 25}
+  }' | jq .
+\stopverb}
+}
+
+\subtree{
+\title{List Monitors}
+\pre{\startverb
+curl -s -G "https://api.${DD_SITE}/api/v1/monitor" \
+  -H "DD-API-KEY: ${DD_API_KEY}" \
+  -H "DD-APPLICATION-KEY: ${DD_APP_KEY}" | jq .
+\stopverb}
+}
+
+\subtree{
+\title{Documentation}
+\ul{
+\li{[Logs API](https://docs.datadoghq.com/api/latest/logs/)}
+\li{[Metrics API](https://docs.datadoghq.com/api/latest/metrics/)}
+\li{[APM/Tracing API](https://docs.datadoghq.com/api/latest/tracing/)}
+\li{[Monitors API](https://docs.datadoghq.com/api/latest/monitors/)}
+\li{[Events API](https://docs.datadoghq.com/api/latest/events/)}
+\li{[Dashboards API](https://docs.datadoghq.com/api/latest/dashboards/)}
+}
+}
+}

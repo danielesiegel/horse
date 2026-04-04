@@ -1,0 +1,160 @@
+\title{Aws Sso Auth Guide}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{AWS SSO discovery, configuration, and terminal usage}
+
+\subtree{
+\title{AWS SSO Terminal Guide}
+\subtree{
+\title{Discovery: Finding SSO Configuration}
+\subtree{
+\title{Get SSO Instance & Portal URL}
+\pre{\startverb
+# From management account
+aws sso-admin list-instances --profile <mgmt-profile>
+# Returns: InstanceArn, IdentityStoreId (d-xxxxxxxxxx), OwnerAccountId
+
+# Portal URL format: https://d-xxxxxxxxxx.awsapps.com/start
+\stopverb}
+}
+
+\subtree{
+\title{List Accounts & Permission Sets}
+\pre{\startverb
+# List organization accounts
+aws organizations list-accounts --profile <mgmt-profile>
+
+# List permission sets
+aws sso-admin list-permission-sets \
+  --instance-arn <instance-arn> \
+  --profile <mgmt-profile>
+
+# Get permission set name
+aws sso-admin describe-permission-set \
+  --instance-arn <instance-arn> \
+  --permission-set-arn <ps-arn> \
+  --profile <mgmt-profile>
+
+# Check account assignments
+aws sso-admin list-account-assignments \
+  --instance-arn <instance-arn> \
+  --account-id <account-id> \
+  --permission-set-arn <ps-arn> \
+  --profile <mgmt-profile>
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Profile Structure (Recommended)}
+\pre{\startverb
+# ~/.aws/config
+
+[profile my-profile]
+sso_session = my-sso
+sso_account_id = 123456789012
+sso_role_name = AdministratorAccess
+region = us-east-1
+
+[sso-session my-sso]
+sso_start_url = https://d-xxxxxxxxxx.awsapps.com/start
+sso_region = us-east-1
+sso_registration_scopes = sso:account:access
+\stopverb}
+
+\p{\strong{Benefits:} Token reuse across profiles, automatic refresh (CLI v2.22.0+)}
+}
+
+\subtree{
+\title{Interactive Configuration}
+\pre{\startverb
+aws configure sso
+\stopverb}
+}
+}
+
+\subtree{
+\title{Authentication}
+\subtree{
+\title{Login Flow}
+\pre{\startverb
+# Login (PKCE auth - default in CLI v2.22.0+)
+aws sso login --profile my-profile
+
+# Login with device code (for headless/remote)
+aws sso login --profile my-profile --use-device-code
+
+# Verify
+aws sts get-caller-identity --profile my-profile
+\stopverb}
+
+\p{\strong{Token Cache:} \code{\startverb ~/.aws/sso/cache/\stopverb}}
+}
+}
+
+\subtree{
+\title{Key Endpoints & Flow}
+\ul{
+\li{\code{\startverb oidc.{region}.amazonaws.com\stopverb} - OIDC authentication}
+\li{\code{\startverb portal.sso.{region}.amazonaws.com\stopverb} - SSO portal}
+\li{Auth flow: \code{\startverb RegisterClient\stopverb} → \code{\startverb StartDeviceAuthorization\stopverb} → \code{\startverb CreateToken\stopverb}}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Missing SSO Configuration:}}
+
+\pre{\startverb
+# Error: Missing sso_start_url, sso_region
+# Fix: aws configure sso
+\stopverb}
+
+\p{\strong{Expired Token:}}
+
+\pre{\startverb
+# Error: Token is expired
+# Fix: aws sso login --profile my-profile
+\stopverb}
+
+\p{\strong{Proxy SSL Issues:}}
+
+\pre{\startverb
+# Error: SSL certificate verification failed
+# Fix: Set AWS_CA_BUNDLE to proxy CA certificate
+export AWS_CA_BUNDLE=/path/to/proxy-ca.crt
+\stopverb}
+
+\p{\strong{Access Denied:}}
+
+\pre{\startverb
+# Check permission set assignments
+aws sso-admin list-account-assignments \
+  --instance-arn <arn> \
+  --account-id <id> \
+  --permission-set-arn <ps-arn>
+\stopverb}
+}
+
+\subtree{
+\title{Quick Reference}
+\p{\strong{CLI Versions:}}
+
+\ul{
+\li{v2.22.0+: PKCE auth (default), auto-refresh}
+\li{< v2.22.0: Device code auth}
+}
+
+\p{\strong{Authorization Types:}}
+
+\ul{
+\li{\strong{PKCE}: Same-device, browser required}
+\li{\strong{Device Code}: Cross-device, browser optional}
+}
+}
+}

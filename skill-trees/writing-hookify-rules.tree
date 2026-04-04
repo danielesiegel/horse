@@ -1,0 +1,470 @@
+\title{Writing hookify rules}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user asks to "create a hookify rule", "write a hook rule", "configure hookify", "add a hookify rule", or needs guidance on hookify rule syntax and patterns.}
+
+\subtree{
+\title{Writing Hookify Rules}
+\subtree{
+\title{Overview}
+\p{Hookify rules are markdown files with YAML frontmatter that define patterns to watch for and messages to show when those patterns match. Rules are stored in \code{\startverb .claude/hookify.{rule-name}.local.md\stopverb} files.}
+}
+
+\subtree{
+\title{Rule File Format}
+\subtree{
+\title{Basic Structure}
+\pre{\startverb
+---
+name: rule-identifier
+enabled: true
+event: bash|file|stop|prompt|all
+pattern: regex-pattern-here
+---
+
+Message to show Claude when this rule triggers.
+Can include markdown formatting, warnings, suggestions, etc.
+\stopverb}
+}
+
+\subtree{
+\title{Frontmatter Fields}
+\p{\strong{name} (required): Unique identifier for the rule}
+
+\ul{
+\li{Use kebab-case: \code{\startverb warn-dangerous-rm\stopverb}, \code{\startverb block-console-log\stopverb}}
+\li{Be descriptive and action-oriented}
+\li{Start with verb: warn, prevent, block, require, check}
+}
+
+\p{\strong{enabled} (required): Boolean to activate/deactivate}
+
+\ul{
+\li{\code{\startverb true\stopverb}: Rule is active}
+\li{\code{\startverb false\stopverb}: Rule is disabled (won't trigger)}
+\li{Can toggle without deleting rule}
+}
+
+\p{\strong{event} (required): Which hook event to trigger on}
+
+\ul{
+\li{\code{\startverb bash\stopverb}: Bash tool commands}
+\li{\code{\startverb file\stopverb}: Edit, Write, MultiEdit tools}
+\li{\code{\startverb stop\stopverb}: When agent wants to stop}
+\li{\code{\startverb prompt\stopverb}: When user submits a prompt}
+\li{\code{\startverb all\stopverb}: All events}
+}
+
+\p{\strong{action} (optional): What to do when rule matches}
+
+\ul{
+\li{\code{\startverb warn\stopverb}: Show message but allow operation (default)}
+\li{\code{\startverb block\stopverb}: Prevent operation (PreToolUse) or stop session (Stop events)}
+\li{If omitted, defaults to \code{\startverb warn\stopverb}}
+}
+
+\p{\strong{pattern} (simple format): Regex pattern to match}
+
+\ul{
+\li{Used for simple single-condition rules}
+\li{Matches against command (bash) or new_text (file)}
+\li{Python regex syntax}
+}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+event: bash
+pattern: rm\s+-rf
+\stopverb}
+}
+
+\subtree{
+\title{Advanced Format (Multiple Conditions)}
+\p{For complex rules with multiple conditions:}
+
+\pre{\startverb
+---
+name: warn-env-file-edits
+enabled: true
+event: file
+conditions:
+  - field: file_path
+    operator: regex_match
+    pattern: \.env$
+  - field: new_text
+    operator: contains
+    pattern: API_KEY
+---
+
+You're adding an API key to a .env file. Ensure this file is in .gitignore!
+\stopverb}
+
+\p{\strong{Condition fields:}}
+
+\ul{
+\li{\code{\startverb field\stopverb}: Which field to check}
+\li{For bash: \code{\startverb command\stopverb}}
+\li{For file: \code{\startverb file_path\stopverb}, \code{\startverb new_text\stopverb}, \code{\startverb old_text\stopverb}, \code{\startverb content\stopverb}}
+\li{\code{\startverb operator\stopverb}: How to match}
+\li{\code{\startverb regex_match\stopverb}: Regex pattern matching}
+\li{\code{\startverb contains\stopverb}: Substring check}
+\li{\code{\startverb equals\stopverb}: Exact match}
+\li{\code{\startverb not_contains\stopverb}: Substring must NOT be present}
+\li{\code{\startverb starts_with\stopverb}: Prefix check}
+\li{\code{\startverb ends_with\stopverb}: Suffix check}
+\li{\code{\startverb pattern\stopverb}: Pattern or string to match}
+}
+
+\p{\strong{All conditions must match for rule to trigger.}}
+}
+}
+
+\subtree{
+\title{Message Body}
+\p{The markdown content after frontmatter is shown to Claude when the rule triggers.}
+
+\p{\strong{Good messages:}}
+
+\ul{
+\li{Explain what was detected}
+\li{Explain why it's problematic}
+\li{Suggest alternatives or best practices}
+\li{Use formatting for clarity (bold, lists, etc.)}
+}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+⚠️ **Console.log detected!**
+
+You're adding console.log to production code.
+
+**Why this matters:**
+- Debug logs shouldn't ship to production
+- Console.log can expose sensitive data
+- Impacts browser performance
+
+**Alternatives:**
+- Use a proper logging library
+- Remove before committing
+- Use conditional debug builds
+\stopverb}
+}
+
+\subtree{
+\title{Event Type Guide}
+\subtree{
+\title{bash Events}
+\p{Match Bash command patterns:}
+
+\pre{\startverb
+---
+event: bash
+pattern: sudo\s+|rm\s+-rf|chmod\s+777
+---
+
+Dangerous command detected!
+\stopverb}
+
+\p{\strong{Common patterns:}}
+
+\ul{
+\li{Dangerous commands: \code{\startverb rm\startverb \s\stopverb+-rf\stopverb}, \code{\startverb dd\startverb \s\stopverb+if=\stopverb}, \code{\startverb mkfs\stopverb}}
+\li{Privilege escalation: \code{\startverb sudo\startverb \s\stopverb+\stopverb}, \code{\startverb su\startverb \s\stopverb+\stopverb}}
+\li{Permission issues: \code{\startverb chmod\startverb \s\stopverb+777\stopverb}, \code{\startverb chown\startverb \s\stopverb+root\stopverb}}
+}
+}
+
+\subtree{
+\title{file Events}
+\p{Match Edit/Write/MultiEdit operations:}
+
+\pre{\startverb
+---
+event: file
+pattern: console\.log\(|eval\(|innerHTML\s*=
+---
+
+Potentially problematic code pattern detected!
+\stopverb}
+
+\p{\strong{Match on different fields:}}
+
+\pre{\startverb
+---
+event: file
+conditions:
+  - field: file_path
+    operator: regex_match
+    pattern: \.tsx?$
+  - field: new_text
+    operator: regex_match
+    pattern: console\.log\(
+---
+
+Console.log in TypeScript file!
+\stopverb}
+
+\p{\strong{Common patterns:}}
+
+\ul{
+\li{Debug code: \code{\startverb console\.log\(\stopverb}, \code{\startverb debugger\stopverb}, \code{\startverb print\(\stopverb}}
+\li{Security risks: \code{\startverb eval\(\stopverb}, \code{\startverb innerHTML\startverb \s\stopverb*=\stopverb}, \code{\startverb dangerouslySetInnerHTML\stopverb}}
+\li{Sensitive files: \code{\startverb \.env$\stopverb}, \code{\startverb credentials\stopverb}, \code{\startverb \.pem$\stopverb}}
+\li{Generated files: \code{\startverb node_modules/\stopverb}, \code{\startverb dist/\stopverb}, \code{\startverb build/\stopverb}}
+}
+}
+
+\subtree{
+\title{stop Events}
+\p{Match when agent wants to stop (completion checks):}
+
+\pre{\startverb
+---
+event: stop
+pattern: .*
+---
+
+Before stopping, verify:
+- [ ] Tests were run
+- [ ] Build succeeded
+- [ ] Documentation updated
+\stopverb}
+
+\p{\strong{Use for:}}
+
+\ul{
+\li{Reminders about required steps}
+\li{Completion checklists}
+\li{Process enforcement}
+}
+}
+
+\subtree{
+\title{prompt Events}
+\p{Match user prompt content (advanced):}
+
+\pre{\startverb
+---
+event: prompt
+conditions:
+  - field: user_prompt
+    operator: contains
+    pattern: deploy to production
+---
+
+Production deployment checklist:
+- [ ] Tests passing?
+- [ ] Reviewed by team?
+- [ ] Monitoring ready?
+\stopverb}
+}
+}
+
+\subtree{
+\title{Pattern Writing Tips}
+\subtree{
+\title{Regex Basics}
+\p{\strong{Literal characters:} Most characters match themselves}
+
+\ul{
+\li{\code{\startverb rm\stopverb} matches "rm"}
+\li{\code{\startverb console.log\stopverb} matches "console.log"}
+}
+
+\p{\strong{Special characters need escaping:}}
+
+\ul{
+\li{\code{\startverb .\stopverb} (any char) → \code{\startverb \.\stopverb} (literal dot)}
+\li{\code{\startverb (\stopverb} \code{\startverb )\stopverb} → \code{\startverb \(\stopverb} \code{\startverb \)\stopverb} (literal parens)}
+\li{\code{\startverb [\stopverb} \code{\startverb ]\stopverb} → \code{\startverb \[\stopverb} \code{\startverb \]\stopverb} (literal brackets)}
+}
+
+\p{\strong{Common metacharacters:}}
+
+\ul{
+\li{\code{\startverb \startverb \s\stopverb\stopverb} - whitespace (space, tab, newline)}
+\li{\code{\startverb \startverb \d\stopverb\stopverb} - digit (0-9)}
+\li{\code{\startverb \startverb \w\stopverb\stopverb} - word character (a-z, A-Z, 0-9, _)}
+\li{\code{\startverb .\stopverb} - any character}
+\li{\code{\startverb +\stopverb} - one or more}
+\li{\code{\startverb *\stopverb} - zero or more}
+\li{\code{\startverb ?\stopverb} - zero or one}
+\li{\code{\startverb |\stopverb} - OR}
+}
+
+\p{\strong{Examples:}}
+
+\pre{\startverb
+rm\s+-rf         Matches: rm -rf, rm  -rf
+console\.log\(   Matches: console.log(
+(eval|exec)\(    Matches: eval( or exec(
+chmod\s+777      Matches: chmod 777, chmod  777
+API_KEY\s*=      Matches: API_KEY=, API_KEY =
+\stopverb}
+}
+
+\subtree{
+\title{Testing Patterns}
+\p{Test regex patterns before using:}
+
+\pre{\startverb
+python3 -c "import re; print(re.search(r'your_pattern', 'test text'))"
+\stopverb}
+
+\p{Or use online regex testers (regex101.com with Python flavor).}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\p{\strong{Too broad:}}
+
+\pre{\startverb
+pattern: log    # Matches "log", "login", "dialog", "catalog"
+\stopverb}
+
+\p{Better: \code{\startverb console\.log\(|logger\.\stopverb}}
+
+\p{\strong{Too specific:}}
+
+\pre{\startverb
+pattern: rm -rf /tmp  # Only matches exact path
+\stopverb}
+
+\p{Better: \code{\startverb rm\startverb \s\stopverb+-rf\stopverb}}
+
+\p{\strong{Escaping issues:}}
+
+\ul{
+\li{YAML quoted strings: \code{\startverb "pattern"\stopverb} requires double backslashes \code{\startverb \\startverb \s\stopverb\stopverb}}
+\li{YAML unquoted: \code{\startverb pattern: \startverb \s\stopverb\stopverb} works as-is}
+\li{\strong{Recommendation}: Use unquoted patterns in YAML}
+}
+}
+}
+
+\subtree{
+\title{File Organization}
+\p{\strong{Location:} All rules in \code{\startverb .claude/\stopverb} directory \strong{Naming:} \code{\startverb .claude/hookify.{descriptive-name}.local.md\stopverb} \strong{Gitignore:} Add \code{\startverb .claude/*.local.md\stopverb} to \code{\startverb .gitignore\stopverb}}
+
+\p{\strong{Good names:}}
+
+\ul{
+\li{\code{\startverb hookify.dangerous-rm.local.md\stopverb}}
+\li{\code{\startverb hookify.console-log.local.md\stopverb}}
+\li{\code{\startverb hookify.require-tests.local.md\stopverb}}
+\li{\code{\startverb hookify.sensitive-files.local.md\stopverb}}
+}
+
+\p{\strong{Bad names:}}
+
+\ul{
+\li{\code{\startverb hookify.rule1.local.md\stopverb} (not descriptive)}
+\li{\code{\startverb hookify.md\stopverb} (missing .local)}
+\li{\code{\startverb danger.local.md\stopverb} (missing hookify prefix)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Creating a Rule}
+\ol{
+\li{Identify unwanted behavior}
+\li{Determine which tool is involved (Bash, Edit, etc.)}
+\li{Choose event type (bash, file, stop, etc.)}
+\li{Write regex pattern}
+\li{Create \code{\startverb .claude/hookify.{name}.local.md\stopverb} file in project root}
+\li{Test immediately - rules are read dynamically on next tool use}
+}
+}
+
+\subtree{
+\title{Refining a Rule}
+\ol{
+\li{Edit the \code{\startverb .local.md\stopverb} file}
+\li{Adjust pattern or message}
+\li{Test immediately - changes take effect on next tool use}
+}
+}
+
+\subtree{
+\title{Disabling a Rule}
+\p{\strong{Temporary:} Set \code{\startverb enabled: false\stopverb} in frontmatter \strong{Permanent:} Delete the \code{\startverb .local.md\stopverb} file}
+}
+}
+
+\subtree{
+\title{Examples}
+\p{See \code{\startverb ${CLAUDE_PLUGIN_ROOT}/examples/\stopverb} for complete examples:}
+
+\ul{
+\li{\code{\startverb dangerous-rm.local.md\stopverb} - Block dangerous rm commands}
+\li{\code{\startverb console-log-warning.local.md\stopverb} - Warn about console.log}
+\li{\code{\startverb sensitive-files-warning.local.md\stopverb} - Warn about editing .env files}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\p{\strong{Minimum viable rule:}}
+
+\pre{\startverb
+---
+name: my-rule
+enabled: true
+event: bash
+pattern: dangerous_command
+---
+
+Warning message here
+\stopverb}
+
+\p{\strong{Rule with conditions:}}
+
+\pre{\startverb
+---
+name: my-rule
+enabled: true
+event: file
+conditions:
+  - field: file_path
+    operator: regex_match
+    pattern: \.ts$
+  - field: new_text
+    operator: contains
+    pattern: any
+---
+
+Warning message
+\stopverb}
+
+\p{\strong{Event types:}}
+
+\ul{
+\li{\code{\startverb bash\stopverb} - Bash commands}
+\li{\code{\startverb file\stopverb} - File edits}
+\li{\code{\startverb stop\stopverb} - Completion checks}
+\li{\code{\startverb prompt\stopverb} - User input}
+\li{\code{\startverb all\stopverb} - All events}
+}
+
+\p{\strong{Field options:}}
+
+\ul{
+\li{Bash: \code{\startverb command\stopverb}}
+\li{File: \code{\startverb file_path\stopverb}, \code{\startverb new_text\stopverb}, \code{\startverb old_text\stopverb}, \code{\startverb content\stopverb}}
+\li{Prompt: \code{\startverb user_prompt\stopverb}}
+}
+
+\p{\strong{Operators:}}
+
+\ul{
+\li{\code{\startverb regex_match\stopverb}, \code{\startverb contains\stopverb}, \code{\startverb equals\stopverb}, \code{\startverb not_contains\stopverb}, \code{\startverb starts_with\stopverb}, \code{\startverb ends_with\stopverb}}
+}
+}
+}

@@ -1,0 +1,371 @@
+\title{Threat Model Generation}
+
+\taxon{skill}
+
+\tag{security}
+
+\tag{threat-model}
+
+\tag{stride}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Generate a STRIDE-based security threat model for a repository. Use when setting up security monitoring, after architecture changes, or for security audits.}
+
+\subtree{
+\title{Threat Model Generation}
+\p{Generate a comprehensive security threat model for a repository using the STRIDE methodology. This skill analyzes the codebase architecture and produces an LLM-optimized threat model document that other security skills can reference.}
+
+\subtree{
+\title{When to Use This Skill}
+\ul{
+\li{\strong{First-time setup} - New repository needs initial threat model}
+\li{\strong{Architecture changes} - Significant changes to components, APIs, or data flows}
+\li{\strong{Security audit} - Periodic review or compliance requirement}
+\li{\strong{Manual request} - Security team requests updated threat model}
+}
+}
+
+\subtree{
+\title{Inputs}
+\p{Before running this skill, gather or confirm:}
+
+\pre{\startverb
+| Input                   | Description                                             | Required                         |
+| ----------------------- | ------------------------------------------------------- | -------------------------------- |
+| Repository path         | Root directory to analyze                               | Yes (default: current directory) |
+| Existing threat model   | Path to existing `.factory/threat-model.md` if updating | No                               |
+| Compliance requirements | Frameworks to consider (SOC2, GDPR, HIPAA, etc.)        | No                               |
+| Security contacts       | Email addresses for security team notifications         | No                               |
+\stopverb}
+}
+
+\subtree{
+\title{Instructions}
+\p{Follow these steps in order:}
+
+\subtree{
+\title{Step 1: Analyze Repository Structure}
+\p{Scan the codebase to understand the system:}
+
+\ol{
+\li{\strong{Identify languages and frameworks}}
+}
+
+\ul{
+\li{Check \code{\startverb package.json\stopverb}, \code{\startverb requirements.txt\stopverb}, \code{\startverb go.mod\stopverb}, \code{\startverb Cargo.toml\stopverb}, etc.}
+\li{Note the primary tech stack (e.g., Next.js, Django, Go microservices)}
+}
+
+\ol{
+\li{\strong{Map components and services}}
+}
+
+\ul{
+\li{Look for \code{\startverb apps/\stopverb}, \code{\startverb services/\stopverb}, \code{\startverb packages/\stopverb} directories}
+\li{Identify entry points: API routes, CLI commands, web handlers}
+\li{Note databases, caches, message queues}
+}
+
+\ol{
+\li{\strong{Identify external interfaces}}
+}
+
+\ul{
+\li{HTTP endpoints (REST, GraphQL)}
+\li{File upload handlers}
+\li{Webhook receivers}
+\li{OAuth/SSO integrations}
+\li{CLI commands that accept user input}
+}
+
+\ol{
+\li{\strong{Trace data flows}}
+\li{How does user input enter the system?}
+\li{Where is sensitive data stored?}
+\li{What external services are called?}
+}
+}
+
+\subtree{
+\title{Step 2: Identify Trust Boundaries}
+\p{Define security zones:}
+
+\ol{
+\li{\strong{Public Zone} (untrusted)}
+}
+
+\ul{
+\li{All external HTTP endpoints}
+\li{Public APIs without authentication}
+\li{User-uploaded files}
+}
+
+\ol{
+\li{\strong{Authenticated Zone} (partially trusted)}
+}
+
+\ul{
+\li{Endpoints requiring valid session/token}
+\li{User-specific data access}
+\li{Rate-limited APIs}
+}
+
+\ol{
+\li{\strong{Internal Zone} (trusted)}
+\li{Service-to-service communication}
+\li{Admin-only endpoints}
+\li{Database connections}
+\li{Secrets management}
+}
+
+\p{Document where trust boundaries exist and what validates transitions between zones.}
+}
+
+\subtree{
+\title{Step 3: Inventory Critical Assets}
+\p{Classify data by sensitivity:}
+
+\ol{
+\li{\strong{PII (Personally Identifiable Information)}}
+}
+
+\ul{
+\li{User emails, names, addresses, phone numbers}
+\li{Document protection measures}
+}
+
+\ol{
+\li{\strong{Credentials & Secrets}}
+}
+
+\ul{
+\li{Password hashes, API keys, OAuth tokens}
+\li{JWT signing keys, encryption keys}
+\li{Document rotation policies}
+}
+
+\ol{
+\li{\strong{Business-Critical Data}}
+\li{Transaction records, customer data}
+\li{Proprietary algorithms, trade secrets}
+\li{Document access controls}
+}
+}
+
+\subtree{
+\title{Step 4: Apply STRIDE Analysis}
+\p{For each major component, analyze threats in all six categories:}
+
+\subtree{
+\title{S - Spoofing Identity}
+\ul{
+\li{Can attackers impersonate users or services?}
+\li{Are authentication mechanisms secure?}
+\li{Look for: weak session handling, API key exposure, missing MFA}
+}
+}
+
+\subtree{
+\title{T - Tampering with Data}
+\ul{
+\li{Can attackers modify data in transit or at rest?}
+\li{Look for: SQL injection, XSS, mass assignment, missing input validation}
+}
+}
+
+\subtree{
+\title{R - Repudiation}
+\ul{
+\li{Can users deny actions they performed?}
+\li{Look for: missing audit logs, insufficient logging, no immutable trails}
+}
+}
+
+\subtree{
+\title{I - Information Disclosure}
+\ul{
+\li{Can attackers access data they shouldn't?}
+\li{Look for: IDOR, verbose errors, hardcoded secrets, data leaks in logs}
+}
+}
+
+\subtree{
+\title{D - Denial of Service}
+\ul{
+\li{Can attackers disrupt service availability?}
+\li{Look for: missing rate limits, resource exhaustion, algorithmic complexity}
+}
+}
+
+\subtree{
+\title{E - Elevation of Privilege}
+\ul{
+\li{Can attackers gain unauthorized access levels?}
+\li{Look for: missing authorization checks, role manipulation, privilege escalation}
+}
+
+\p{For each identified threat:}
+
+\ul{
+\li{Describe the attack scenario}
+\li{List vulnerable components}
+\li{Show code patterns to look for}
+\li{Note existing mitigations}
+\li{Identify gaps}
+\li{Assign severity (CRITICAL/HIGH/MEDIUM/LOW) and likelihood}
+}
+}
+}
+
+\subtree{
+\title{Step 5: Document Vulnerability Patterns}
+\p{Create a library of code patterns specific to this codebase's tech stack:}
+
+\pre{\startverb
+# Example: SQL Injection patterns for Python
+# VULNERABLE
+sql = f"SELECT * FROM users WHERE id = {user_id}"
+
+# SAFE
+cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+\stopverb}
+
+\p{Include patterns for:}
+
+\ul{
+\li{SQL injection}
+\li{XSS (Cross-Site Scripting)}
+\li{Command injection}
+\li{Path traversal}
+\li{Authentication bypass}
+\li{IDOR (Insecure Direct Object Reference)}
+}
+}
+
+\subtree{
+\title{Step 6: Generate Output Files}
+\p{Create two files:}
+
+\subtree{
+\title{1. \code{\startverb .factory/threat-model.md\stopverb}}
+\p{Use the template in \code{\startverb stride-template.md\stopverb} to generate a comprehensive threat model with:}
+
+\ul{
+\li{System overview with architecture description}
+\li{Trust boundaries and security zones}
+\li{Attack surface inventory}
+\li{Critical assets classification}
+\li{STRIDE threat analysis for each component}
+\li{Vulnerability pattern library}
+\li{Security testing strategy}
+\li{Assumptions and accepted risks}
+\li{Version changelog}
+}
+
+\p{The document should be written in \strong{natural language} with code examples, optimized for LLM comprehension.}
+}
+
+\subtree{
+\title{2. \code{\startverb .factory/security-config.json\stopverb}}
+\p{Generate configuration metadata:}
+
+\pre{\startverb
+{
+  "threat_model_version": "1.0.0",
+  "last_updated": "<ISO timestamp>",
+  "security_team_contacts": [],
+  "compliance_requirements": [],
+  "scan_frequency": "on_commit",
+  "severity_thresholds": {
+    "block_merge": ["CRITICAL"],
+    "require_review": ["HIGH", "CRITICAL"],
+    "notify_security_team": ["CRITICAL"]
+  },
+  "vulnerability_patterns": {
+    "enabled": [
+      "sql_injection",
+      "xss",
+      "command_injection",
+      "path_traversal",
+      "auth_bypass",
+      "idor"
+    ],
+    "custom_patterns_path": null
+  }
+}
+\stopverb}
+
+\p{Customize based on:}
+
+\ul{
+\li{Detected compliance requirements (from docs, configs, or user input)}
+\li{Security team contacts (if provided)}
+\li{Tech stack (enable relevant vulnerability patterns)}
+}
+}
+}
+}
+
+\subtree{
+\title{Success Criteria}
+\p{The skill is complete when:}
+
+\ul{
+\li{[ ] \code{\startverb .factory/threat-model.md\stopverb} exists with all sections populated}
+\li{[ ] \code{\startverb .factory/security-config.json\stopverb} exists with valid JSON}
+\li{[ ] All major components have STRIDE analysis}
+\li{[ ] Vulnerability patterns match the tech stack}
+\li{[ ] Document is written in natural language (LLM-readable)}
+\li{[ ] No placeholder text remains}
+}
+}
+
+\subtree{
+\title{Verification}
+\p{Run these checks before completing:}
+
+\pre{\startverb
+# Verify threat model exists and is non-empty
+test -s .factory/threat-model.md && echo "✓ Threat model exists"
+
+# Verify config is valid JSON
+cat .factory/security-config.json | jq . > /dev/null && echo "✓ Config is valid JSON"
+
+# Check threat model has key sections
+grep -q "## 1. System Overview" .factory/threat-model.md && echo "✓ Has System Overview"
+grep -q "## 5. Threat Analysis" .factory/threat-model.md && echo "✓ Has Threat Analysis"
+grep -q "## 6. Vulnerability Pattern Library" .factory/threat-model.md && echo "✓ Has Pattern Library"
+\stopverb}
+}
+
+\subtree{
+\title{Example Invocations}
+\p{\strong{Generate initial threat model:}}
+
+\pre{\startverb
+Generate a threat model for this repository using the threat-model-generation skill.
+\stopverb}
+
+\p{\strong{Update existing threat model after architecture change:}}
+
+\pre{\startverb
+Update the threat model - we added a new payments service in services/payments/.
+\stopverb}
+
+\p{\strong{Generate with compliance requirements:}}
+
+\pre{\startverb
+Generate a threat model for this repository. We need to comply with SOC2 and GDPR.
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[STRIDE Threat Modeling](https://docs.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats)}
+\li{[OWASP Threat Modeling](https://owasp.org/www-community/Threat_Modeling)}
+\li{Template: \code{\startverb stride-template.md\stopverb} (in this skill directory)}
+}
+}
+}

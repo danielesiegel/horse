@@ -1,0 +1,461 @@
+\title{Latchbio Integration}
+
+\taxon{skill}
+
+\meta{description}{"Latch platform for bioinformatics workflows. Build pipelines with Latch SDK, @workflow/@task decorators, deploy serverless workflows, LatchFile/LatchDir, Nextflow/Snakemake integration."}
+
+\subtree{
+\title{LatchBio Integration}
+\subtree{
+\title{Overview}
+\p{Latch is a Python framework for building and deploying bioinformatics workflows as serverless pipelines. Built on Flyte, create workflows with @workflow/@task decorators, manage cloud data with LatchFile/LatchDir, configure resources, and integrate Nextflow/Snakemake pipelines.}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{The Latch platform provides four main areas of functionality:}
+
+\subtree{
+\title{1. Workflow Creation and Deployment}
+\ul{
+\li{Define serverless workflows using Python decorators}
+\li{Support for native Python, Nextflow, and Snakemake pipelines}
+\li{Automatic containerization with Docker}
+\li{Auto-generated no-code user interfaces}
+\li{Version control and reproducibility}
+}
+}
+
+\subtree{
+\title{2. Data Management}
+\ul{
+\li{Cloud storage abstractions (LatchFile, LatchDir)}
+\li{Structured data organization with Registry (Projects → Tables → Records)}
+\li{Type-safe data operations with links and enums}
+\li{Automatic file transfer between local and cloud}
+\li{Glob pattern matching for file selection}
+}
+}
+
+\subtree{
+\title{3. Resource Configuration}
+\ul{
+\li{Pre-configured task decorators (@small_task, @large_task, @small_gpu_task, @large_gpu_task)}
+\li{Custom resource specifications (CPU, memory, GPU, storage)}
+\li{GPU support (K80, V100, A100)}
+\li{Timeout and storage configuration}
+\li{Cost optimization strategies}
+}
+}
+
+\subtree{
+\title{4. Verified Workflows}
+\ul{
+\li{Production-ready pre-built pipelines}
+\li{Bulk RNA-seq, DESeq2, pathway analysis}
+\li{AlphaFold and ColabFold for protein structure prediction}
+\li{Single-cell tools (ArchR, scVelo, emptyDropsR)}
+\li{CRISPR analysis, phylogenetics, and more}
+}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Installation and Setup}
+\pre{\startverb
+# Install Latch SDK
+python3 -m uv pip install latch
+
+# Login to Latch
+latch login
+
+# Initialize a new workflow
+latch init my-workflow
+
+# Register workflow to platform
+latch register my-workflow
+\stopverb}
+
+\p{\strong{Prerequisites:}}
+
+\ul{
+\li{Docker installed and running}
+\li{Latch account credentials}
+\li{Python 3.8+}
+}
+}
+
+\subtree{
+\title{Basic Workflow Example}
+\pre{\startverb
+from latch import workflow, small_task
+from latch.types import LatchFile
+
+@small_task
+def process_file(input_file: LatchFile) -> LatchFile:
+    """Process a single file"""
+    # Processing logic
+    return output_file
+
+@workflow
+def my_workflow(input_file: LatchFile) -> LatchFile:
+    """
+    My bioinformatics workflow
+
+    Args:
+        input_file: Input data file
+    """
+    return process_file(input_file=input_file)
+\stopverb}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when encountering any of the following scenarios:}
+
+\p{\strong{Workflow Development:}}
+
+\ul{
+\li{"Create a Latch workflow for RNA-seq analysis"}
+\li{"Deploy my pipeline to Latch"}
+\li{"Convert my Nextflow pipeline to Latch"}
+\li{"Add GPU support to my workflow"}
+\li{Working with \code{\startverb @workflow\stopverb}, \code{\startverb @task\stopverb} decorators}
+}
+
+\p{\strong{Data Management:}}
+
+\ul{
+\li{"Organize my sequencing data in Latch Registry"}
+\li{"How do I use LatchFile and LatchDir?"}
+\li{"Set up sample tracking in Latch"}
+\li{Working with \code{\startverb latch:///\stopverb} paths}
+}
+
+\p{\strong{Resource Configuration:}}
+
+\ul{
+\li{"Configure GPU for AlphaFold on Latch"}
+\li{"My task is running out of memory"}
+\li{"How do I optimize workflow costs?"}
+\li{Working with task decorators}
+}
+
+\p{\strong{Verified Workflows:}}
+
+\ul{
+\li{"Run AlphaFold on Latch"}
+\li{"Use DESeq2 for differential expression"}
+\li{"Available pre-built workflows"}
+\li{Using \code{\startverb latch.verified\stopverb} module}
+}
+}
+
+\subtree{
+\title{Detailed Documentation}
+\p{This skill includes comprehensive reference documentation organized by capability:}
+
+\subtree{
+\title{references/workflow-creation.md}
+\p{\strong{Read this for:}}
+
+\ul{
+\li{Creating and registering workflows}
+\li{Task definition and decorators}
+\li{Supporting Python, Nextflow, Snakemake}
+\li{Launch plans and conditional sections}
+\li{Workflow execution (CLI and programmatic)}
+\li{Multi-step and parallel pipelines}
+\li{Troubleshooting registration issues}
+}
+
+\p{\strong{Key topics:}}
+
+\ul{
+\li{\code{\startverb latch init\stopverb} and \code{\startverb latch register\stopverb} commands}
+\li{\code{\startverb @workflow\stopverb} and \code{\startverb @task\stopverb} decorators}
+\li{LatchFile and LatchDir basics}
+\li{Type annotations and docstrings}
+\li{Launch plans with preset parameters}
+\li{Conditional UI sections}
+}
+}
+
+\subtree{
+\title{references/data-management.md}
+\p{\strong{Read this for:}}
+
+\ul{
+\li{Cloud storage with LatchFile and LatchDir}
+\li{Registry system (Projects, Tables, Records)}
+\li{Linked records and relationships}
+\li{Enum and typed columns}
+\li{Bulk operations and transactions}
+\li{Integration with workflows}
+\li{Account and workspace management}
+}
+
+\p{\strong{Key topics:}}
+
+\ul{
+\li{\code{\startverb latch:///\stopverb} path format}
+\li{File transfer and glob patterns}
+\li{Creating and querying Registry tables}
+\li{Column types (string, number, file, link, enum)}
+\li{Record CRUD operations}
+\li{Workflow-Registry integration}
+}
+}
+
+\subtree{
+\title{references/resource-configuration.md}
+\p{\strong{Read this for:}}
+
+\ul{
+\li{Task resource decorators}
+\li{Custom CPU, memory, GPU configuration}
+\li{GPU types (K80, V100, A100)}
+\li{Timeout and storage settings}
+\li{Resource optimization strategies}
+\li{Cost-effective workflow design}
+\li{Monitoring and debugging}
+}
+
+\p{\strong{Key topics:}}
+
+\ul{
+\li{\code{\startverb @small_task\stopverb}, \code{\startverb @large_task\stopverb}, \code{\startverb @small_gpu_task\stopverb}, \code{\startverb @large_gpu_task\stopverb}}
+\li{\code{\startverb @custom_task\stopverb} with precise specifications}
+\li{Multi-GPU configuration}
+\li{Resource selection by workload type}
+\li{Platform limits and quotas}
+}
+}
+
+\subtree{
+\title{references/verified-workflows.md}
+\p{\strong{Read this for:}}
+
+\ul{
+\li{Pre-built production workflows}
+\li{Bulk RNA-seq and DESeq2}
+\li{AlphaFold and ColabFold}
+\li{Single-cell analysis (ArchR, scVelo)}
+\li{CRISPR editing analysis}
+\li{Pathway enrichment}
+\li{Integration with custom workflows}
+}
+
+\p{\strong{Key topics:}}
+
+\ul{
+\li{\code{\startverb latch.verified\stopverb} module imports}
+\li{Available verified workflows}
+\li{Workflow parameters and options}
+\li{Combining verified and custom steps}
+\li{Version management}
+}
+}
+}
+
+\subtree{
+\title{Common Workflow Patterns}
+\subtree{
+\title{Complete RNA-seq Pipeline}
+\pre{\startverb
+from latch import workflow, small_task, large_task
+from latch.types import LatchFile, LatchDir
+
+@small_task
+def quality_control(fastq: LatchFile) -> LatchFile:
+    """Run FastQC"""
+    return qc_output
+
+@large_task
+def alignment(fastq: LatchFile, genome: str) -> LatchFile:
+    """STAR alignment"""
+    return bam_output
+
+@small_task
+def quantification(bam: LatchFile) -> LatchFile:
+    """featureCounts"""
+    return counts
+
+@workflow
+def rnaseq_pipeline(
+    input_fastq: LatchFile,
+    genome: str,
+    output_dir: LatchDir
+) -> LatchFile:
+    """RNA-seq analysis pipeline"""
+    qc = quality_control(fastq=input_fastq)
+    aligned = alignment(fastq=qc, genome=genome)
+    return quantification(bam=aligned)
+\stopverb}
+}
+
+\subtree{
+\title{GPU-Accelerated Workflow}
+\pre{\startverb
+from latch import workflow, small_task, large_gpu_task
+from latch.types import LatchFile
+
+@small_task
+def preprocess(input_file: LatchFile) -> LatchFile:
+    """Prepare data"""
+    return processed
+
+@large_gpu_task
+def gpu_computation(data: LatchFile) -> LatchFile:
+    """GPU-accelerated analysis"""
+    return results
+
+@workflow
+def gpu_pipeline(input_file: LatchFile) -> LatchFile:
+    """Pipeline with GPU tasks"""
+    preprocessed = preprocess(input_file=input_file)
+    return gpu_computation(data=preprocessed)
+\stopverb}
+}
+
+\subtree{
+\title{Registry-Integrated Workflow}
+\pre{\startverb
+from latch import workflow, small_task
+from latch.registry.table import Table
+from latch.registry.record import Record
+from latch.types import LatchFile
+
+@small_task
+def process_and_track(sample_id: str, table_id: str) -> str:
+    """Process sample and update Registry"""
+    # Get sample from registry
+    table = Table.get(table_id=table_id)
+    records = Record.list(table_id=table_id, filter={"sample_id": sample_id})
+    sample = records[0]
+
+    # Process
+    input_file = sample.values["fastq_file"]
+    output = process(input_file)
+
+    # Update registry
+    sample.update(values={"status": "completed", "result": output})
+    return "Success"
+
+@workflow
+def registry_workflow(sample_id: str, table_id: str):
+    """Workflow integrated with Registry"""
+    return process_and_track(sample_id=sample_id, table_id=table_id)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Workflow Design}
+\ol{
+\li{Use type annotations for all parameters}
+\li{Write clear docstrings (appear in UI)}
+\li{Start with standard task decorators, scale up if needed}
+\li{Break complex workflows into modular tasks}
+\li{Implement proper error handling}
+}
+}
+
+\subtree{
+\title{Data Management}
+\ol{
+\li{Use consistent folder structures}
+\li{Define Registry schemas before bulk entry}
+\li{Use linked records for relationships}
+\li{Store metadata in Registry for traceability}
+}
+}
+
+\subtree{
+\title{Resource Configuration}
+\ol{
+\li{Right-size resources (don't over-allocate)}
+\li{Use GPU only when algorithms support it}
+\li{Monitor execution metrics and optimize}
+\li{Design for parallel execution when possible}
+}
+}
+
+\subtree{
+\title{Development Workflow}
+\ol{
+\li{Test locally with Docker before registration}
+\li{Use version control for workflow code}
+\li{Document resource requirements}
+\li{Profile workflows to determine actual needs}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{Registration Failures:}}
+
+\ul{
+\li{Ensure Docker is running}
+\li{Check authentication with \code{\startverb latch login\stopverb}}
+\li{Verify all dependencies in Dockerfile}
+\li{Use \code{\startverb --verbose\stopverb} flag for detailed logs}
+}
+
+\p{\strong{Resource Problems:}}
+
+\ul{
+\li{Out of memory: Increase memory in task decorator}
+\li{Timeouts: Increase timeout parameter}
+\li{Storage issues: Increase ephemeral storage_gib}
+}
+
+\p{\strong{Data Access:}}
+
+\ul{
+\li{Use correct \code{\startverb latch:///\stopverb} path format}
+\li{Verify file exists in workspace}
+\li{Check permissions for shared workspaces}
+}
+
+\p{\strong{Type Errors:}}
+
+\ul{
+\li{Add type annotations to all parameters}
+\li{Use LatchFile/LatchDir for file/directory parameters}
+\li{Ensure workflow return type matches actual return}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation}: https://docs.latch.bio}
+\li{\strong{GitHub Repository}: https://github.com/latchbio/latch}
+\li{\strong{Slack Community}: Join Latch SDK workspace}
+\li{\strong{API Reference}: https://docs.latch.bio/api/latch.html}
+\li{\strong{Blog}: https://blog.latch.bio}
+}
+}
+
+\subtree{
+\title{Support}
+\p{For issues or questions:}
+
+\ol{
+\li{Check documentation links above}
+\li{Search GitHub issues}
+\li{Ask in Slack community}
+\li{Contact support@latch.bio}
+}
+}
+}

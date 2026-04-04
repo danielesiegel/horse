@@ -1,0 +1,963 @@
+\title{Command development}
+
+\taxon{skill}
+
+\meta{version}{0.2.0}
+
+\meta{description}{This skill should be used when the user asks to "create a slash command", "add a command", "write a custom command", "define command arguments", "use command frontmatter", "organize commands", "create command with file references", "interactive command", "use AskUserQuestion in command", or needs guidance on slash command structure, YAML frontmatter fields, dynamic arguments, bash execution in commands, user interaction patterns, or command development best practices for Claude Code.}
+
+\subtree{
+\title{Command Development for Claude Code}
+\subtree{
+\title{Overview}
+\p{Slash commands are frequently-used prompts defined as Markdown files that Claude executes during interactive sessions. Understanding command structure, frontmatter options, and dynamic features enables creating powerful, reusable workflows.}
+
+\p{\strong{Key concepts:}}
+
+\ul{
+\li{Markdown file format for commands}
+\li{YAML frontmatter for configuration}
+\li{Dynamic arguments and file references}
+\li{Bash execution for context}
+\li{Command organization and namespacing}
+}
+}
+
+\subtree{
+\title{Command Basics}
+\subtree{
+\title{What is a Slash Command?}
+\p{A slash command is a Markdown file containing a prompt that Claude executes when invoked. Commands provide:}
+
+\ul{
+\li{\strong{Reusability}: Define once, use repeatedly}
+\li{\strong{Consistency}: Standardize common workflows}
+\li{\strong{Sharing}: Distribute across team or projects}
+\li{\strong{Efficiency}: Quick access to complex prompts}
+}
+}
+
+\subtree{
+\title{Critical: Commands are Instructions FOR Claude}
+\p{\strong{Commands are written for agent consumption, not human consumption.}}
+
+\p{When a user invokes \code{\startverb /command-name\stopverb}, the command content becomes Claude's instructions. Write commands as directives TO Claude about what to do, not as messages TO the user.}
+
+\p{\strong{Correct approach (instructions for Claude):}}
+
+\pre{\startverb
+Review this code for security vulnerabilities including:
+- SQL injection
+- XSS attacks
+- Authentication issues
+
+Provide specific line numbers and severity ratings.
+\stopverb}
+
+\p{\strong{Incorrect approach (messages to user):}}
+
+\pre{\startverb
+This command will review your code for security issues.
+You'll receive a report with vulnerability details.
+\stopverb}
+
+\p{The first example tells Claude what to do. The second tells the user what will happen but doesn't instruct Claude. Always use the first approach.}
+}
+
+\subtree{
+\title{Command Locations}
+\p{\strong{Project commands} (shared with team):}
+
+\ul{
+\li{Location: \code{\startverb .claude/commands/\stopverb}}
+\li{Scope: Available in specific project}
+\li{Label: Shown as "(project)" in \code{\startverb /help\stopverb}}
+\li{Use for: Team workflows, project-specific tasks}
+}
+
+\p{\strong{Personal commands} (available everywhere):}
+
+\ul{
+\li{Location: \code{\startverb ~/.claude/commands/\stopverb}}
+\li{Scope: Available in all projects}
+\li{Label: Shown as "(user)" in \code{\startverb /help\stopverb}}
+\li{Use for: Personal workflows, cross-project utilities}
+}
+
+\p{\strong{Plugin commands} (bundled with plugins):}
+
+\ul{
+\li{Location: \code{\startverb plugin-name/commands/\stopverb}}
+\li{Scope: Available when plugin installed}
+\li{Label: Shown as "(plugin-name)" in \code{\startverb /help\stopverb}}
+\li{Use for: Plugin-specific functionality}
+}
+}
+}
+
+\subtree{
+\title{File Format}
+\subtree{
+\title{Basic Structure}
+\p{Commands are Markdown files with \code{\startverb .md\stopverb} extension:}
+
+\pre{\startverb
+.claude/commands/
+├── review.md           # /review command
+├── test.md             # /test command
+└── deploy.md           # /deploy command
+\stopverb}
+
+\p{\strong{Simple command:}}
+
+\pre{\startverb
+Review this code for security vulnerabilities including:
+- SQL injection
+- XSS attacks
+- Authentication bypass
+- Insecure data handling
+\stopverb}
+
+\p{No frontmatter needed for basic commands.}
+}
+
+\subtree{
+\title{With YAML Frontmatter}
+\p{Add configuration using YAML frontmatter:}
+
+\pre{\startverb
+---
+description: Review code for security issues
+allowed-tools: Read, Grep, Bash(git:*)
+model: sonnet
+---
+
+Review this code for security vulnerabilities...
+\stopverb}
+}
+}
+
+\subtree{
+\title{YAML Frontmatter Fields}
+\subtree{
+\title{description}
+\p{\strong{Purpose:} Brief description shown in \code{\startverb /help\stopverb} \strong{Type:} String \strong{Default:} First line of command prompt}
+
+\pre{\startverb
+---
+description: Review pull request for code quality
+---
+\stopverb}
+
+\p{\strong{Best practice:} Clear, actionable description (under 60 characters)}
+}
+
+\subtree{
+\title{allowed-tools}
+\p{\strong{Purpose:} Specify which tools command can use \strong{Type:} String or Array \strong{Default:} Inherits from conversation}
+
+\pre{\startverb
+---
+allowed-tools: Read, Write, Edit, Bash(git:*)
+---
+\stopverb}
+
+\p{\strong{Patterns:}}
+
+\ul{
+\li{\code{\startverb Read, Write, Edit\stopverb} - Specific tools}
+\li{\code{\startverb Bash(git:*)\stopverb} - Bash with git commands only}
+\li{\code{\startverb *\stopverb} - All tools (rarely needed)}
+}
+
+\p{\strong{Use when:} Command requires specific tool access}
+}
+
+\subtree{
+\title{model}
+\p{\strong{Purpose:} Specify model for command execution \strong{Type:} String (sonnet, opus, haiku) \strong{Default:} Inherits from conversation}
+
+\pre{\startverb
+---
+model: haiku
+---
+\stopverb}
+
+\p{\strong{Use cases:}}
+
+\ul{
+\li{\code{\startverb haiku\stopverb} - Fast, simple commands}
+\li{\code{\startverb sonnet\stopverb} - Standard workflows}
+\li{\code{\startverb opus\stopverb} - Complex analysis}
+}
+}
+
+\subtree{
+\title{argument-hint}
+\p{\strong{Purpose:} Document expected arguments for autocomplete \strong{Type:} String \strong{Default:} None}
+
+\pre{\startverb
+---
+argument-hint: [pr-number] [priority] [assignee]
+---
+\stopverb}
+
+\p{\strong{Benefits:}}
+
+\ul{
+\li{Helps users understand command arguments}
+\li{Improves command discovery}
+\li{Documents command interface}
+}
+}
+
+\subtree{
+\title{disable-model-invocation}
+\p{\strong{Purpose:} Prevent SlashCommand tool from programmatically calling command \strong{Type:} Boolean \strong{Default:} false}
+
+\pre{\startverb
+---
+disable-model-invocation: true
+---
+\stopverb}
+
+\p{\strong{Use when:} Command should only be manually invoked}
+}
+}
+
+\subtree{
+\title{Dynamic Arguments}
+\subtree{
+\title{Using $ARGUMENTS}
+\p{Capture all arguments as single string:}
+
+\pre{\startverb
+---
+description: Fix issue by number
+argument-hint: [issue-number]
+---
+
+Fix issue #$ARGUMENTS following our coding standards and best practices.
+\stopverb}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+> /fix-issue 123
+> /fix-issue 456
+\stopverb}
+
+\p{\strong{Expands to:}}
+
+\pre{\startverb
+Fix issue #123 following our coding standards...
+Fix issue #456 following our coding standards...
+\stopverb}
+}
+
+\subtree{
+\title{Using Positional Arguments}
+\p{Capture individual arguments with \code{\startverb $1\stopverb}, \code{\startverb $2\stopverb}, \code{\startverb $3\stopverb}, etc.:}
+
+\pre{\startverb
+---
+description: Review PR with priority and assignee
+argument-hint: [pr-number] [priority] [assignee]
+---
+
+Review pull request #$1 with priority level $2.
+After review, assign to $3 for follow-up.
+\stopverb}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+> /review-pr 123 high alice
+\stopverb}
+
+\p{\strong{Expands to:}}
+
+\pre{\startverb
+Review pull request #123 with priority level high.
+After review, assign to alice for follow-up.
+\stopverb}
+}
+
+\subtree{
+\title{Combining Arguments}
+\p{Mix positional and remaining arguments:}
+
+\pre{\startverb
+Deploy $1 to $2 environment with options: $3
+\stopverb}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+> /deploy api staging --force --skip-tests
+\stopverb}
+
+\p{\strong{Expands to:}}
+
+\pre{\startverb
+Deploy api to staging environment with options: --force --skip-tests
+\stopverb}
+}
+}
+
+\subtree{
+\title{File References}
+\subtree{
+\title{Using @ Syntax}
+\p{Include file contents in command:}
+
+\pre{\startverb
+---
+description: Review specific file
+argument-hint: [file-path]
+---
+
+Review @$1 for:
+- Code quality
+- Best practices
+- Potential bugs
+\stopverb}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+> /review-file src/api/users.ts
+\stopverb}
+
+\p{\strong{Effect:} Claude reads \code{\startverb src/api/users.ts\stopverb} before processing command}
+}
+
+\subtree{
+\title{Multiple File References}
+\p{Reference multiple files:}
+
+\pre{\startverb
+Compare @src/old-version.js with @src/new-version.js
+
+Identify:
+- Breaking changes
+- New features
+- Bug fixes
+\stopverb}
+}
+
+\subtree{
+\title{Static File References}
+\p{Reference known files without arguments:}
+
+\pre{\startverb
+Review @package.json and @tsconfig.json for consistency
+
+Ensure:
+- TypeScript version matches
+- Dependencies are aligned
+- Build configuration is correct
+\stopverb}
+}
+}
+
+\subtree{
+\title{Bash Execution in Commands}
+\p{Commands can execute bash commands inline to dynamically gather context before Claude processes the command. This is useful for including repository state, environment information, or project-specific context.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Include dynamic context (git status, environment vars, etc.)}
+\li{Gather project/repository state}
+\li{Build context-aware workflows}
+}
+
+\p{\strong{Implementation details:} For complete syntax, examples, and best practices, see \code{\startverb references/plugin-features-reference.md\stopverb} section on bash execution. The reference includes the exact syntax and multiple working examples to avoid execution issues}
+}
+
+\subtree{
+\title{Command Organization}
+\subtree{
+\title{Flat Structure}
+\p{Simple organization for small command sets:}
+
+\pre{\startverb
+.claude/commands/
+├── build.md
+├── test.md
+├── deploy.md
+├── review.md
+└── docs.md
+\stopverb}
+
+\p{\strong{Use when:} 5-15 commands, no clear categories}
+}
+
+\subtree{
+\title{Namespaced Structure}
+\p{Organize commands in subdirectories:}
+
+\pre{\startverb
+.claude/commands/
+├── ci/
+│   ├── build.md        # /build (project:ci)
+│   ├── test.md         # /test (project:ci)
+│   └── lint.md         # /lint (project:ci)
+├── git/
+│   ├── commit.md       # /commit (project:git)
+│   └── pr.md           # /pr (project:git)
+└── docs/
+    ├── generate.md     # /generate (project:docs)
+    └── publish.md      # /publish (project:docs)
+\stopverb}
+
+\p{\strong{Benefits:}}
+
+\ul{
+\li{Logical grouping by category}
+\li{Namespace shown in \code{\startverb /help\stopverb}}
+\li{Easier to find related commands}
+}
+
+\p{\strong{Use when:} 15+ commands, clear categories}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Command Design}
+\ol{
+\li{\strong{Single responsibility:} One command, one task}
+\li{\strong{Clear descriptions:} Self-explanatory in \code{\startverb /help\stopverb}}
+\li{\strong{Explicit dependencies:} Use \code{\startverb allowed-tools\stopverb} when needed}
+\li{\strong{Document arguments:} Always provide \code{\startverb argument-hint\stopverb}}
+\li{\strong{Consistent naming:} Use verb-noun pattern (review-pr, fix-issue)}
+}
+}
+
+\subtree{
+\title{Argument Handling}
+\ol{
+\li{\strong{Validate arguments:} Check for required arguments in prompt}
+\li{\strong{Provide defaults:} Suggest defaults when arguments missing}
+\li{\strong{Document format:} Explain expected argument format}
+\li{\strong{Handle edge cases:} Consider missing or invalid arguments}
+}
+
+\pre{\startverb
+---
+argument-hint: [pr-number]
+---
+
+$IF($1,
+  Review PR #$1,
+  Please provide a PR number. Usage: /review-pr [number]
+)
+\stopverb}
+}
+
+\subtree{
+\title{File References}
+\ol{
+\li{\strong{Explicit paths:} Use clear file paths}
+\li{\strong{Check existence:} Handle missing files gracefully}
+\li{\strong{Relative paths:} Use project-relative paths}
+\li{\strong{Glob support:} Consider using Glob tool for patterns}
+}
+}
+
+\subtree{
+\title{Bash Commands}
+\ol{
+\li{\strong{Limit scope:} Use \code{\startverb Bash(git:*)\stopverb} not \code{\startverb Bash(*)\stopverb}}
+\li{\strong{Safe commands:} Avoid destructive operations}
+\li{\strong{Handle errors:} Consider command failures}
+\li{\strong{Keep fast:} Long-running commands slow invocation}
+}
+}
+
+\subtree{
+\title{Documentation}
+\ol{
+\li{\strong{Add comments:} Explain complex logic}
+\li{\strong{Provide examples:} Show usage in comments}
+\li{\strong{List requirements:} Document dependencies}
+\li{\strong{Version commands:} Note breaking changes}
+}
+
+\pre{\startverb
+---
+description: Deploy application to environment
+argument-hint: [environment] [version]
+---
+
+<!--
+Usage: /deploy [staging|production] [version]
+Requires: AWS credentials configured
+Example: /deploy staging v1.2.3
+-->
+
+Deploy application to $1 environment using version $2...
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Review Pattern}
+\pre{\startverb
+---
+description: Review code changes
+allowed-tools: Read, Bash(git:*)
+---
+
+Files changed: !`git diff --name-only`
+
+Review each file for:
+1. Code quality and style
+2. Potential bugs or issues
+3. Test coverage
+4. Documentation needs
+
+Provide specific feedback for each file.
+\stopverb}
+}
+
+\subtree{
+\title{Testing Pattern}
+\pre{\startverb
+---
+description: Run tests for specific file
+argument-hint: [test-file]
+allowed-tools: Bash(npm:*)
+---
+
+Run tests: !`npm test $1`
+
+Analyze results and suggest fixes for failures.
+\stopverb}
+}
+
+\subtree{
+\title{Documentation Pattern}
+\pre{\startverb
+---
+description: Generate documentation for file
+argument-hint: [source-file]
+---
+
+Generate comprehensive documentation for @$1 including:
+- Function/class descriptions
+- Parameter documentation
+- Return value descriptions
+- Usage examples
+- Edge cases and errors
+\stopverb}
+}
+
+\subtree{
+\title{Workflow Pattern}
+\pre{\startverb
+---
+description: Complete PR workflow
+argument-hint: [pr-number]
+allowed-tools: Bash(gh:*), Read
+---
+
+PR #$1 Workflow:
+
+1. Fetch PR: !`gh pr view $1`
+2. Review changes
+3. Run checks
+4. Approve or request changes
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Command not appearing:}}
+
+\ul{
+\li{Check file is in correct directory}
+\li{Verify \code{\startverb .md\stopverb} extension present}
+\li{Ensure valid Markdown format}
+\li{Restart Claude Code}
+}
+
+\p{\strong{Arguments not working:}}
+
+\ul{
+\li{Verify \code{\startverb $1\stopverb}, \code{\startverb $2\stopverb} syntax correct}
+\li{Check \code{\startverb argument-hint\stopverb} matches usage}
+\li{Ensure no extra spaces}
+}
+
+\p{\strong{Bash execution failing:}}
+
+\ul{
+\li{Check \code{\startverb allowed-tools\stopverb} includes Bash}
+\li{Verify command syntax in backticks}
+\li{Test command in terminal first}
+\li{Check for required permissions}
+}
+
+\p{\strong{File references not working:}}
+
+\ul{
+\li{Verify \code{\startverb @\stopverb} syntax correct}
+\li{Check file path is valid}
+\li{Ensure Read tool allowed}
+\li{Use absolute or project-relative paths}
+}
+}
+
+\subtree{
+\title{Plugin-Specific Features}
+\subtree{
+\title{CLAUDE_PLUGIN_ROOT Variable}
+\p{Plugin commands have access to \code{\startverb ${CLAUDE_PLUGIN_ROOT}\stopverb}, an environment variable that resolves to the plugin's absolute path.}
+
+\p{\strong{Purpose:}}
+
+\ul{
+\li{Reference plugin files portably}
+\li{Execute plugin scripts}
+\li{Load plugin configuration}
+\li{Access plugin templates}
+}
+
+\p{\strong{Basic usage:}}
+
+\pre{\startverb
+---
+description: Analyze using plugin script
+allowed-tools: Bash(node:*)
+---
+
+Run analysis: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/analyze.js $1`
+
+Review results and report findings.
+\stopverb}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+# Execute plugin script
+!`bash ${CLAUDE_PLUGIN_ROOT}/scripts/script.sh`
+
+# Load plugin configuration
+@${CLAUDE_PLUGIN_ROOT}/config/settings.json
+
+# Use plugin template
+@${CLAUDE_PLUGIN_ROOT}/templates/report.md
+
+# Access plugin resources
+@${CLAUDE_PLUGIN_ROOT}/docs/reference.md
+\stopverb}
+
+\p{\strong{Why use it:}}
+
+\ul{
+\li{Works across all installations}
+\li{Portable between systems}
+\li{No hardcoded paths needed}
+\li{Essential for multi-file plugins}
+}
+}
+
+\subtree{
+\title{Plugin Command Organization}
+\p{Plugin commands discovered automatically from \code{\startverb commands/\stopverb} directory:}
+
+\pre{\startverb
+plugin-name/
+├── commands/
+│   ├── foo.md              # /foo (plugin:plugin-name)
+│   ├── bar.md              # /bar (plugin:plugin-name)
+│   └── utils/
+│       └── helper.md       # /helper (plugin:plugin-name:utils)
+└── plugin.json
+\stopverb}
+
+\p{\strong{Namespace benefits:}}
+
+\ul{
+\li{Logical command grouping}
+\li{Shown in \code{\startverb /help\stopverb} output}
+\li{Avoid name conflicts}
+\li{Organize related commands}
+}
+
+\p{\strong{Naming conventions:}}
+
+\ul{
+\li{Use descriptive action names}
+\li{Avoid generic names (test, run)}
+\li{Consider plugin-specific prefix}
+\li{Use hyphens for multi-word names}
+}
+}
+
+\subtree{
+\title{Plugin Command Patterns}
+\p{\strong{Configuration-based pattern:}}
+
+\pre{\startverb
+---
+description: Deploy using plugin configuration
+argument-hint: [environment]
+allowed-tools: Read, Bash(*)
+---
+
+Load configuration: @${CLAUDE_PLUGIN_ROOT}/config/$1-deploy.json
+
+Deploy to $1 using configuration settings.
+Monitor deployment and report status.
+\stopverb}
+
+\p{\strong{Template-based pattern:}}
+
+\pre{\startverb
+---
+description: Generate docs from template
+argument-hint: [component]
+---
+
+Template: @${CLAUDE_PLUGIN_ROOT}/templates/docs.md
+
+Generate documentation for $1 following template structure.
+\stopverb}
+
+\p{\strong{Multi-script pattern:}}
+
+\pre{\startverb
+---
+description: Complete build workflow
+allowed-tools: Bash(*)
+---
+
+Build: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/build.sh`
+Test: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/test.sh`
+Package: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/package.sh`
+
+Review outputs and report workflow status.
+\stopverb}
+
+\p{\strong{See \code{\startverb references/plugin-features-reference.md\stopverb} for detailed patterns.}}
+}
+}
+
+\subtree{
+\title{Integration with Plugin Components}
+\p{Commands can integrate with other plugin components for powerful workflows.}
+
+\subtree{
+\title{Agent Integration}
+\p{Launch plugin agents for complex tasks:}
+
+\pre{\startverb
+---
+description: Deep code review
+argument-hint: [file-path]
+---
+
+Initiate comprehensive review of @$1 using the code-reviewer agent.
+
+The agent will analyze:
+- Code structure
+- Security issues
+- Performance
+- Best practices
+
+Agent uses plugin resources:
+- ${CLAUDE_PLUGIN_ROOT}/config/rules.json
+- ${CLAUDE_PLUGIN_ROOT}/checklists/review.md
+\stopverb}
+
+\p{\strong{Key points:}}
+
+\ul{
+\li{Agent must exist in \code{\startverb plugin/agents/\stopverb} directory}
+\li{Claude uses Task tool to launch agent}
+\li{Document agent capabilities}
+\li{Reference plugin resources agent uses}
+}
+}
+
+\subtree{
+\title{Skill Integration}
+\p{Leverage plugin skills for specialized knowledge:}
+
+\pre{\startverb
+---
+description: Document API with standards
+argument-hint: [api-file]
+---
+
+Document API in @$1 following plugin standards.
+
+Use the api-docs-standards skill to ensure:
+- Complete endpoint documentation
+- Consistent formatting
+- Example quality
+- Error documentation
+
+Generate production-ready API docs.
+\stopverb}
+
+\p{\strong{Key points:}}
+
+\ul{
+\li{Skill must exist in \code{\startverb plugin/skills/\stopverb} directory}
+\li{Mention skill name to trigger invocation}
+\li{Document skill purpose}
+\li{Explain what skill provides}
+}
+}
+
+\subtree{
+\title{Hook Coordination}
+\p{Design commands that work with plugin hooks:}
+
+\ul{
+\li{Commands can prepare state for hooks to process}
+\li{Hooks execute automatically on tool events}
+\li{Commands should document expected hook behavior}
+\li{Guide Claude on interpreting hook output}
+}
+
+\p{See \code{\startverb references/plugin-features-reference.md\stopverb} for examples of commands that coordinate with hooks}
+}
+
+\subtree{
+\title{Multi-Component Workflows}
+\p{Combine agents, skills, and scripts:}
+
+\pre{\startverb
+---
+description: Comprehensive review workflow
+argument-hint: [file]
+allowed-tools: Bash(node:*), Read
+---
+
+Target: @$1
+
+Phase 1 - Static Analysis:
+!`node ${CLAUDE_PLUGIN_ROOT}/scripts/lint.js $1`
+
+Phase 2 - Deep Review:
+Launch code-reviewer agent for detailed analysis.
+
+Phase 3 - Standards Check:
+Use coding-standards skill for validation.
+
+Phase 4 - Report:
+Template: @${CLAUDE_PLUGIN_ROOT}/templates/review.md
+
+Compile findings into report following template.
+\stopverb}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Complex multi-step workflows}
+\li{Leverage multiple plugin capabilities}
+\li{Require specialized analysis}
+\li{Need structured outputs}
+}
+}
+}
+
+\subtree{
+\title{Validation Patterns}
+\p{Commands should validate inputs and resources before processing.}
+
+\subtree{
+\title{Argument Validation}
+\pre{\startverb
+---
+description: Deploy with validation
+argument-hint: [environment]
+---
+
+Validate environment: !`echo "$1" | grep -E "^(dev|staging|prod)$" || echo "INVALID"`
+
+If $1 is valid environment:
+  Deploy to $1
+Otherwise:
+  Explain valid environments: dev, staging, prod
+  Show usage: /deploy [environment]
+\stopverb}
+}
+
+\subtree{
+\title{File Existence Checks}
+\pre{\startverb
+---
+description: Process configuration
+argument-hint: [config-file]
+---
+
+Check file exists: !`test -f $1 && echo "EXISTS" || echo "MISSING"`
+
+If file exists:
+  Process configuration: @$1
+Otherwise:
+  Explain where to place config file
+  Show expected format
+  Provide example configuration
+\stopverb}
+}
+
+\subtree{
+\title{Plugin Resource Validation}
+\pre{\startverb
+---
+description: Run plugin analyzer
+allowed-tools: Bash(test:*)
+---
+
+Validate plugin setup:
+- Script: !`test -x ${CLAUDE_PLUGIN_ROOT}/bin/analyze && echo "✓" || echo "✗"`
+- Config: !`test -f ${CLAUDE_PLUGIN_ROOT}/config.json && echo "✓" || echo "✗"`
+
+If all checks pass, run analysis.
+Otherwise, report missing components.
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\pre{\startverb
+---
+description: Build with error handling
+allowed-tools: Bash(*)
+---
+
+Execute build: !`bash ${CLAUDE_PLUGIN_ROOT}/scripts/build.sh 2>&1 || echo "BUILD_FAILED"`
+
+If build succeeded:
+  Report success and output location
+If build failed:
+  Analyze error output
+  Suggest likely causes
+  Provide troubleshooting steps
+\stopverb}
+
+\p{\strong{Best practices:}}
+
+\ul{
+\li{Validate early in command}
+\li{Provide helpful error messages}
+\li{Suggest corrective actions}
+\li{Handle edge cases gracefully}
+}
+
+\p{For detailed frontmatter field specifications, see \code{\startverb references/frontmatter-reference.md\stopverb}. For plugin-specific features and patterns, see \code{\startverb references/plugin-features-reference.md\stopverb}. For command pattern examples, see \code{\startverb examples/\stopverb} directory.}
+}
+}
+}

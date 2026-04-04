@@ -1,0 +1,280 @@
+\title{Pijul}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{-1}
+
+\meta{description}{Pijul patch-based VCS with categorical patch theory for skill versioning}
+
+\subtree{
+\title{pijul}
+\p{Patch-based version control with mathematically sound commutative patch theory.}
+
+\p{\strong{Trit}: -1 (MINUS) - Validator role for patch verification and merge correctness}
+
+\subtree{
+\title{Overview}
+\p{Pijul is a distributed VCS where patches are first-class citizens that commute when independent. This maps directly to:}
+
+\ul{
+\li{\strong{GF(3) skill derivation chains}: patches as morphisms between skill states}
+\li{\strong{Pushouts = merges}: categorical semantics for conflict resolution}
+\li{\strong{Sparsity preservation}: changes stored as morphisms, not materialized states}
+}
+}
+
+\subtree{
+\title{Installation via flox-mcp}
+\pre{\startverb
+# Using flox CLI
+flox install pijul
+
+# Via MCP (flox_install tool)
+{"name": "flox_install", "arguments": {"package": "pijul"}}
+\stopverb}
+}
+
+\subtree{
+\title{Core Commands}
+\subtree{
+\title{Repository Operations}
+\pre{\startverb
+# Initialize
+pijul init
+
+# Clone (partial clone supported!)
+pijul clone https://nest.pijul.com/user/repo
+pijul clone --partial https://nest.pijul.com/user/repo  # sparse clone
+
+# Record changes (creates patch)
+pijul record -m "Add feature"
+
+# Push/Pull
+pijul push
+pijul pull
+\stopverb}
+}
+
+\subtree{
+\title{Patch Operations}
+\pre{\startverb
+# List patches (changes)
+pijul log
+
+# Show patch contents
+pijul diff
+
+# Apply specific patch
+pijul apply <hash>
+
+# Unapply (revert) patch
+pijul unrecord <hash>
+
+# Fork (branch)
+pijul fork <name>
+
+# Switch channel (branch)
+pijul channel switch <name>
+\stopverb}
+}
+
+\subtree{
+\title{Sparse Operations}
+\pre{\startverb
+# Partial clone - only fetch needed patches
+pijul clone --partial <url>
+
+# Fetch specific patches
+pijul pull --from-channel <channel>
+
+# Lazy evaluation - patches fetched on demand
+pijul reset --lazy
+\stopverb}
+}
+}
+
+\subtree{
+\title{Categorical Patch Theory}
+\subtree{
+\title{Patches as Morphisms}
+\pre{\startverb
+State_A --patch_1--> State_B --patch_2--> State_C
+                                    
+If patch_1 ⊥ patch_2 (independent):
+  patch_1 ; patch_2 = patch_2 ; patch_1
+\stopverb}
+}
+
+\subtree{
+\title{Pushout for Merges}
+\pre{\startverb
+     State_A
+      /   \
+   p_1     p_2
+    /       \
+State_B    State_C
+    \       /
+     p_2'  p_1'
+      \   /
+     State_D (pushout)
+\stopverb}
+
+\p{When patches are independent, their pushout is unique and well-defined.}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\subtree{
+\title{Sparse Mode (Default)}
+\pre{\startverb
+trit == -1 or +1: Store as morphism (patch)
+  - No materialization
+  - Lazy evaluation
+  - Minimal storage
+\stopverb}
+}
+
+\subtree{
+\title{Projection Mode (ERGODIC Gate)}
+\pre{\startverb
+trit == 0: Force materialization
+  - Coordination point
+  - Full state snapshot
+  - Archive checkpoint
+\stopverb}
+}
+
+\subtree{
+\title{Projection Triggers}
+\ol{
+\li{\code{\startverb --materialize\stopverb} flag explicit}
+\li{\code{\startverb trit == 0\stopverb} (ERGODIC coordination)}
+\li{Explicit archive command}
+\li{Conflict resolution requiring full state}
+}
+}
+}
+
+\subtree{
+\title{Skill Versioning Pattern}
+\subtree{
+\title{Record Skill Change}
+\pre{\startverb
+cd .agents/skills/my-skill
+pijul record -m "Add GF(3) frontmatter"
+\stopverb}
+}
+
+\subtree{
+\title{Sync with Upstream}
+\pre{\startverb
+# Sparse pull - only new patches
+pijul pull --partial
+
+# Check for conflicts
+pijul log --pending
+\stopverb}
+}
+
+\subtree{
+\title{Fork for Experimentation}
+\pre{\startverb
+pijul fork experiment
+pijul channel switch experiment
+# ... make changes ...
+pijul record -m "Experimental patch"
+
+# Merge back if successful
+pijul channel switch main
+pijul pull --from-channel experiment
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with flox}
+\subtree{
+\title{Install via flox Environment}
+\pre{\startverb
+# manifest.toml
+[install]
+pijul.pkg-path = "pijul"
+\stopverb}
+}
+
+\subtree{
+\title{Activate and Use}
+\pre{\startverb
+flox activate
+pijul --version
+\stopverb}
+}
+
+\subtree{
+\title{MCP Tool Call}
+\pre{\startverb
+{
+  "name": "flox_install",
+  "arguments": {"package": "pijul"}
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Pijul Manual](https://pijul.org/manual/)}
+\li{[Nest (Pijul Forge)](https://nest.pijul.com)}
+\li{Mimram/Di Giusto: Categorical Patch Theory}
+\li{Delta-State CRDTs / Merkle Search Trees}
+\li{[flox-mcp skill](../flox-mcp/SKILL.md)}
+\li{[structured-decomp skill](../structured-decomp/SKILL.md)}
+}
+}
+
+\subtree{
+\title{Triadic Composition}
+\pre{\startverb
+pijul (-1)  + flox-mcp (0)  + skill-creator (+1) = 0 ✓
+Validator     Coordinator     Generator
+\stopverb}
+
+\p{Pijul validates patch correctness, flox-mcp coordinates environment, skill-creator generates new skills.}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+pijul (+) + SDF.Ch10 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch5: Evaluation}
+\li{Ch4: Pattern Matching}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+}

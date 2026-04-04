@@ -1,0 +1,170 @@
+\title{Substitute Eraser}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user asks to "scan for TODOs", "find placeholders", "clean up stubs", "remove temporary code", "audit for incomplete code", or "erase substitutions from codebase". Scans existing files for placeholder tokens and generates remediation plan.}
+
+\subtree{
+\title{Substitute Eraser}
+\p{Scan existing codebases for placeholder tokens. Generate remediation plan.}
+
+\subtree{
+\title{Purpose}
+\p{Audit existing files for substitution tokens (TODO, FIXME, placeholder, mock, etc.) and produce actionable remediation plan. Distinct from \code{\startverb accept-no-substitutes\stopverb} which validates agent output.}
+}
+
+\subtree{
+\title{Scope: Existing Files}
+\p{This skill scans what already exists:}
+
+\ul{
+\li{Source code files}
+\li{Configuration files}
+\li{Documentation with stale placeholders}
+\li{Test fixtures that leaked into production}
+}
+
+\p{\strong{Complements} \code{\startverb accept-no-substitutes\stopverb} (output validation).}
+}
+
+\subtree{
+\title{Trit Assignment}
+\ul{
+\li{\strong{Trit}: -1 (MINUS/VALIDATOR)}
+\li{\strong{Hue}: 270° (violet - deep scan)}
+\li{\strong{Role}: Codebase auditor, technical debt detector}
+}
+}
+
+\subtree{
+\title{Scan Workflow}
+\subtree{
+\title{1. Discovery}
+\pre{\startverb
+# Scan current directory
+just substitute-scan .
+
+# Scan specific path
+just substitute-scan src/
+\stopverb}
+}
+
+\subtree{
+\title{2. Classification}
+\pre{\startverb
+| Severity | Tokens | Action |
+|----------|--------|--------|
+| **CRITICAL** | TODO, FIXME, placeholder, xxx | Must fix before merge |
+| **WARNING** | mock-*, fake-*, stub-* (outside tests) | Review context |
+| **INFO** | example_*, demo_* | Document or remove |
+\stopverb}
+}
+
+\subtree{
+\title{3. Remediation Report}
+\p{Output format:}
+
+\pre{\startverb
+SUBSTITUTE ERASER REPORT
+========================
+Scanned: 142 files
+Found: 23 substitutions
+
+CRITICAL (7):
+  src/auth.py:42      TODO: implement token refresh
+  src/api.py:118      placeholder value
+  src/db.py:55        FIXME: race condition
+  ...
+
+WARNING (12):
+  src/service.py:30   mock_client (not in test file)
+  ...
+
+INFO (4):
+  README.md:15        example_config
+  ...
+
+REMEDIATION PLAN:
+1. [CRITICAL] src/auth.py:42 - Implement token refresh logic
+2. [CRITICAL] src/api.py:118 - Replace placeholder with actual value
+...
+\stopverb}
+}
+}
+
+\subtree{
+\title{Context-Aware Exceptions}
+\subtree{
+\title{Acceptable Locations}
+\pre{\startverb
+| Pattern | Acceptable In |
+|---------|---------------|
+| `mock-*`, `fake-*`, `stub-*` | `*_test.py`, `test_*.py`, `/tests/` |
+| `example_*` | `README.md`, `/docs/`, `/examples/` |
+| `demo_*` | `/demo/`, documentation |
+| `TODO` | Issue tracker references with ID |
+\stopverb}
+}
+
+\subtree{
+\title{Exception Syntax}
+\p{Mark intentional placeholders:}
+
+\pre{\startverb
+# SUBSTITUTE-OK: mock used for test isolation
+mock_client = MockHTTPClient()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Full scan with report
+just substitute-scan <path>
+
+# Critical only (CI mode)
+just substitute-critical <path>
+
+# Generate remediation tasks
+just substitute-tasks <path> --output=github  # GitHub issues
+just substitute-tasks <path> --output=linear  # Linear tickets
+just substitute-tasks <path> --output=todo    # TODO file
+
+# Interactive fix mode
+just substitute-fix <path>
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3)}
+\p{Operates as MINUS (-1) in audit triads:}
+
+\pre{\startverb
+substitute-eraser(-1) + code-generator(+1) + review-coordinator(0) = 0
+\stopverb}
+
+\p{Emits rejection signal when scan finds violations above threshold.}
+}
+
+\subtree{
+\title{Additional Resources}
+\subtree{
+\title{Reference Files}
+\ul{
+\li{\strong{\code{\startverb references/patterns.md\stopverb}} - Detection regex patterns (shared with accept-no-substitutes)}
+\li{\strong{\code{\startverb references/remediation.md\stopverb}} - Fix strategies per token type}
+}
+}
+
+\subtree{
+\title{Scripts}
+\ul{
+\li{\strong{\code{\startverb scripts/scan.py\stopverb}} - Main scanning script}
+\li{\strong{\code{\startverb scripts/report.py\stopverb}} - Report generation}
+}
+}
+}
+}

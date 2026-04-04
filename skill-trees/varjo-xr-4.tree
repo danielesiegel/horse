@@ -1,0 +1,72 @@
+\title{Varjo Xr 4}
+
+\taxon{skill}
+
+\meta{description}{Varjo XR-4 Series device profile for reality tech. Covers Varjo Base, OpenXR/OpenVR runtime setup, tracking options (inside-out vs SteamVR), and wide-gamut display notes.}
+
+\subtree{
+\title{Varjo XR-4 Series (Device Profile)}
+\p{Use when the user targets Varjo XR-4 / XR-4 Focal Edition / XR-4 Secure Edition.}
+
+\subtree{
+\title{What Matters Most}
+\ul{
+\li{Wide-gamut mini-LED displays (98\% sRGB / 96\% DCI-P3) and high PPD (up to 51)}
+\li{Windows + Varjo Base is the control plane}
+\li{OpenXR is the default modern API target; OpenVR is still relevant for SteamVR apps}
+\li{Tracking mode choice changes your deployment: inside-out vs base-station (SteamVR)}
+}
+}
+
+\subtree{
+\title{Setup + Runtime}
+\ul{
+\li{Install Varjo Base.}
+\li{If prompted, enable OpenXR and OpenVR runtimes (needed for OpenXR apps and SteamVR/OpenVR apps).}
+}
+}
+
+\subtree{
+\title{Tracking Options}
+\ul{
+\li{Inside-out tracking (no base stations)}
+\li{SteamVR Tracking on base station tracking variants (base stations + optional controllers/trackers)}
+\li{Third-party tracking (ART/OptiTrack) via API integrations}
+}
+}
+
+\subtree{
+\title{Refresh Rate (Practical)}
+\ul{
+\li{Typical options are 75 Hz or 90 Hz (configured in Varjo Base).}
+\li{90 Hz is the safer default for VR comfort if you can hit frame rate; 75 Hz can reduce GPU load.}
+}
+}
+
+\subtree{
+\title{Color / Rendering Notes}
+\ul{
+\li{XR-4 has high DCI-P3 coverage; for color-critical work, validate your look in-headset.}
+\li{Treat wide-gamut as a display capability, not a guarantee of correct color: calibration, tone mapping, and content decisions still matter.}
+}
+}
+
+\subtree{
+\title{Good “First Questions” For XR-4 Work}
+\p{Ask up to 3 (only if needed):}
+
+\ol{
+\li{Are we targeting OpenXR (recommended) or SteamVR/OpenVR legacy content?}
+\li{Which tracking variant do you have: inside-out only or XR-4 base station tracking?}
+\li{What’s the priority: max fidelity (PPD) or stable frame time (comfort)?}
+}
+}
+
+\subtree{
+\title{Interleave With}
+\ul{
+\li{\code{\startverb steamvr-tracking\stopverb} for base station specs/placement and pairing}
+\li{\code{\startverb xr-color-management\stopverb} for wide-gamut pipeline and debugging}
+}
+}
+}

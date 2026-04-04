@@ -1,0 +1,190 @@
+\title{Codex Self Rewriting}
+
+\taxon{skill}
+
+\meta{description}{Lisp machine self-modification patterns via MCP Tasks and Narya bridge}
+
+\subtree{
+\title{codex-self-rewriting - Lisp Machine Self-Modification via MCP Tasks}
+\subtree{
+\title{Overview}
+\p{Enables Codex (OpenAI's CLI agent) to achieve Lisp-machine-like self-rewriting capabilities through MCP Tasks integration. Uses Narya observational bridge types for structure-aware modifications.}
+}
+
+\subtree{
+\title{Core Concept: Cognitive Continuity via Babashka Transients}
+\pre{\startverb
+;; gay.bb transient state
+(def ^:dynamic *cognitive-state*
+  {:seed 0x42D
+   :fingerprint (atom 0)
+   :tap-state :VERIFY
+   :color-history []})
+
+;; Fork on modification
+(defn fork-state! [intervention]
+  (let [new-seed (bit-xor (:seed *cognitive-state*)
+                          (hash intervention))]
+    (assoc *cognitive-state* :seed new-seed)))
+\stopverb}
+}
+
+\subtree{
+\title{MCP Tasks Integration}
+\p{Based on [MCP Tasks Specification](https://modelcontextprotocol.io/specification/draft/basic/utilities/tasks):}
+
+\subtree{
+\title{Task States for Self-Rewriting}
+\pre{\startverb
+| Status | TAP State | Meaning |
+|--------|-----------|---------|
+| `working` | LIVE (+1) | Modification in progress |
+| `input_required` | VERIFY (0) | Needs human approval |
+| `completed` | BACKFILL (-1) | Modification archived |
+| `failed` | BACKFILL (-1) | Rollback applied |
+| `cancelled` | VERIFY (0) | Intervention stopped |
+\stopverb}
+}
+
+\subtree{
+\title{Capabilities Declaration}
+\pre{\startverb
+{
+  "capabilities": {
+    "tasks": {
+      "list": {},
+      "cancel": {},
+      "requests": {
+        "tools": {
+          "call": {}
+        }
+      }
+    }
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Narya Observational Bridge Types}
+\p{Following Topos Institute structure-aware version control:}
+
+\ol{
+\li{\strong{Diffs as logical relations} - Computed inductively from skill type}
+\li{\strong{Conflicts as 2D cubical} - Skill modifications form commuting squares}
+\li{\strong{Type changes as spans} - Skill version correspondences}
+}
+
+\subtree{
+\title{Bridge Colors}
+\pre{\startverb
+;; From narya_observational_bridge.el
+(defconst tap/BACKFILL -1)  ; Blue  - Historical
+(defconst tap/VERIFY 0)     ; Green - Verification
+(defconst tap/LIVE +1)      ; Red   - Active modification
+\stopverb}
+}
+}
+
+\subtree{
+\title{Self-Rewriting Protocol}
+\pre{\startverb
+# 1. Install skill (creates MCP task)
+npx ai-agent-skills install frontend-design --agent codex
+
+# 2. Task enters 'working' state (LIVE)
+# 3. Firecrawl fetches skill definition
+# 4. If ambiguous → 'input_required' (VERIFY)
+# 5. Human approves → task continues
+# 6. On completion → 'completed' (BACKFILL)
+\stopverb}
+}
+
+\subtree{
+\title{Bisimulation Game for Skill Dispersal}
+\p{Skills are dispersed across editors using bisimulation equivalence:}
+
+\pre{\startverb
+Claude ←→ Codex ←→ Cursor ←→ Copilot
+   ↓         ↓         ↓         ↓
+ LIVE     VERIFY   BACKFILL    LIVE
+\stopverb}
+
+\p{Each editor maintains equivalent skill state, verified by XOR fingerprint:}
+
+\pre{\startverb
+(defn skill-fingerprint [skills]
+  (reduce bit-xor 0 (map hash skills)))
+\stopverb}
+}
+
+\subtree{
+\title{Integration with gay.el}
+\pre{\startverb
+(require 'gay-unified)
+(require 'narya-observational-bridge)
+
+(defun codex/self-rewrite (skill-name)
+  "Self-rewrite to incorporate SKILL-NAME."
+  (let* ((task-id (narya/create-task skill-name))
+         (tap-state tap/LIVE)
+         (color (tap/to-rgb tap-state)))
+    (narya/spawn-hierarchy 0x42D)
+    (narya/watch-task task-id
+      (lambda (status)
+        (pcase status
+          ("working" (setq tap-state tap/LIVE))
+          ("input_required" (setq tap-state tap/VERIFY))
+          ("completed" (setq tap-state tap/BACKFILL)))))))
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\p{Add to \code{\startverb ~/.codex/mcp.json\stopverb}:}
+
+\pre{\startverb
+{
+  "mcpServers": {
+    "narya": {
+      "command": "bb",
+      "args": ["/path/to/gay.bb", "1069"],
+      "env": {
+        "TAP_STATE": "LIVE",
+        "SPECTRAL_GAP": "0.25"
+      }
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Skill Redundancy via GF(3) Polarity}
+\pre{\startverb
+MINUS (−) → Conservative backup
+ERGODIC (_) → Active verification
+PLUS (+) → Optimistic propagation
+\stopverb}
+
+\p{Each skill exists in 3 parallel states for resilient dispersal.}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb gay.bb\stopverb} - Triadic self-discovering peer network}
+\li{\code{\startverb narya_observational_bridge.el\stopverb} - 3×3×3 hierarchical agents}
+\li{\code{\startverb gay-crdt.el\stopverb} - Diamond-types CRDT integration}
+\li{[MCP Tasks Spec](https://modelcontextprotocol.io/specification/draft/basic/utilities/tasks)}
+}
+}
+}

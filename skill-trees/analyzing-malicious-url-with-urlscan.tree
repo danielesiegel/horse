@@ -1,0 +1,143 @@
+\title{Analyzing Malicious Url With Urlscan}
+
+\taxon{skill}
+
+\tag{phishing}
+
+\tag{email-security}
+
+\tag{social-engineering}
+
+\tag{dmarc}
+
+\tag{awareness}
+
+\tag{url-analysis}
+
+\tag{threat-intelligence}
+
+\meta{version}{"1.0"}
+
+\meta{description}{URLScan.io is a free service for scanning and analyzing suspicious URLs. It captures screenshots, DOM content, HTTP transactions, JavaScript behavior, and network connections of web pages in an isolat}
+
+\subtree{
+\title{Analyzing Malicious URL with URLScan}
+\subtree{
+\title{Overview}
+\p{URLScan.io is a free service for scanning and analyzing suspicious URLs. It captures screenshots, DOM content, HTTP transactions, JavaScript behavior, and network connections of web pages in an isolated environment. This skill covers using URLScan's web interface and API to investigate phishing URLs, credential harvesting pages, and malicious redirects without exposing the analyst's system to risk.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing malicious url with urlscan}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{URLScan.io account (free tier available, API key for automation)}
+\li{Python 3.8+ with requests library}
+\li{Understanding of HTTP protocols and web technologies}
+\li{Familiarity with phishing URL patterns}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{URLScan Capabilities}
+\ol{
+\li{\strong{Safe browsing}: Renders URLs in isolated Chromium instance}
+\li{\strong{Screenshot capture}: Visual snapshot of the rendered page}
+\li{\strong{DOM analysis}: Full HTML content after JavaScript execution}
+\li{\strong{Network log}: All HTTP requests made by the page (HAR format)}
+\li{\strong{Certificate analysis}: SSL/TLS certificate details}
+\li{\strong{Technology detection}: Identifies web frameworks and libraries}
+\li{\strong{IP/ASN mapping}: Infrastructure intelligence}
+\li{\strong{Verdict}: Community and automated classification}
+}
+}
+
+\subtree{
+\title{Phishing URL Red Flags}
+\ul{
+\li{Newly registered domains (< 30 days)}
+\li{Free hosting services (Wix, GitHub Pages, Firebase)}
+\li{URL shorteners hiding final destination}
+\li{Excessive subdomain depth (login.microsoft.com.evil.com)}
+\li{Brand name in subdomain or path, not domain}
+\li{Non-standard ports}
+\li{Data URIs or base64-encoded content}
+\li{JavaScript-heavy pages with minimal HTML}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Submit URL to URLScan}
+\pre{\startverb
+Web: Navigate to https://urlscan.io and submit the suspicious URL
+API: POST https://urlscan.io/api/v1/scan/
+     Header: API-Key: your-api-key
+     Body: {"url": "https://suspicious-url.com", "visibility": "private"}
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Analyze Results}
+\ul{
+\li{Review screenshot for brand impersonation}
+\li{Check redirects and final destination URL}
+\li{Examine DOM for credential input forms}
+\li{Review network requests for data exfiltration endpoints}
+\li{Check SSL certificate validity and issuer}
+}
+}
+
+\subtree{
+\title{Step 3: Extract IOCs}
+\ul{
+\li{Domains and IPs contacted}
+\li{URLs in redirect chain}
+\li{SHA-256 hashes of page resources}
+\li{JavaScript file hashes}
+}
+}
+
+\subtree{
+\title{Step 4: Cross-Reference with Threat Intelligence}
+\p{Use the \code{\startverb scripts/process.py\stopverb} to automate URL scanning, extract IOCs, and cross-reference with VirusTotal, PhishTank, and Google Safe Browsing.}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{URLScan.io}: https://urlscan.io/}
+\li{\strong{URLScan API}: https://urlscan.io/docs/api/}
+\li{\strong{VirusTotal URL Scanner}: https://www.virustotal.com/}
+\li{\strong{PhishTank}: https://phishtank.org/}
+\li{\strong{Google Safe Browsing}: https://transparencyreport.google.com/safe-browsing/search}
+\li{\strong{Any.Run}: https://any.run/ (interactive sandbox)}
+\li{\strong{Hybrid Analysis}: https://www.hybrid-analysis.com/}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{Successfully scan a suspicious URL via API}
+\li{Extract screenshot and identify brand impersonation}
+\li{Document complete redirect chain}
+\li{Generate IOC list from scan results}
+\li{Cross-reference findings with at least 2 threat intelligence sources}
+}
+}
+}

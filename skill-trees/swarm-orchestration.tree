@@ -1,0 +1,220 @@
+\title{"swarm orchestration"}
+
+\taxon{skill}
+
+\meta{description}{"Orchestrate multi-agent swarms with agentic-flow for parallel task execution, dynamic topology, and intelligent coordination. Use when scaling beyond single agents, implementing complex workflows, or building distributed AI systems."}
+
+\subtree{
+\title{Swarm Orchestration}
+\subtree{
+\title{What This Skill Does}
+\p{Orchestrates multi-agent swarms using agentic-flow's advanced coordination system. Supports mesh, hierarchical, and adaptive topologies with automatic task distribution, load balancing, and fault tolerance.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{agentic-flow v1.5.11+}
+\li{Node.js 18+}
+\li{Understanding of distributed systems (helpful)}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# Initialize swarm
+npx agentic-flow hooks swarm-init --topology mesh --max-agents 5
+
+# Spawn agents
+npx agentic-flow hooks agent-spawn --type coder
+npx agentic-flow hooks agent-spawn --type tester
+npx agentic-flow hooks agent-spawn --type reviewer
+
+# Orchestrate task
+npx agentic-flow hooks task-orchestrate \
+  --task "Build REST API with tests" \
+  --mode parallel
+\stopverb}
+}
+
+\subtree{
+\title{Topology Patterns}
+\subtree{
+\title{1. Mesh (Peer-to-Peer)}
+\pre{\startverb
+// Equal peers, distributed decision-making
+await swarm.init({
+  topology: 'mesh',
+  agents: ['coder', 'tester', 'reviewer'],
+  communication: 'broadcast'
+});
+\stopverb}
+}
+
+\subtree{
+\title{2. Hierarchical (Queen-Worker)}
+\pre{\startverb
+// Centralized coordination, specialized workers
+await swarm.init({
+  topology: 'hierarchical',
+  queen: 'architect',
+  workers: ['backend-dev', 'frontend-dev', 'db-designer']
+});
+\stopverb}
+}
+
+\subtree{
+\title{3. Adaptive (Dynamic)}
+\pre{\startverb
+// Automatically switches topology based on task
+await swarm.init({
+  topology: 'adaptive',
+  optimization: 'task-complexity'
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{Task Orchestration}
+\subtree{
+\title{Parallel Execution}
+\pre{\startverb
+// Execute tasks concurrently
+const results = await swarm.execute({
+  tasks: [
+    { agent: 'coder', task: 'Implement API endpoints' },
+    { agent: 'frontend', task: 'Build UI components' },
+    { agent: 'tester', task: 'Write test suite' }
+  ],
+  mode: 'parallel',
+  timeout: 300000 // 5 minutes
+});
+\stopverb}
+}
+
+\subtree{
+\title{Pipeline Execution}
+\pre{\startverb
+// Sequential pipeline with dependencies
+await swarm.pipeline([
+  { stage: 'design', agent: 'architect' },
+  { stage: 'implement', agent: 'coder', after: 'design' },
+  { stage: 'test', agent: 'tester', after: 'implement' },
+  { stage: 'review', agent: 'reviewer', after: 'test' }
+]);
+\stopverb}
+}
+
+\subtree{
+\title{Adaptive Execution}
+\pre{\startverb
+// Let swarm decide execution strategy
+await swarm.autoOrchestrate({
+  goal: 'Build production-ready API',
+  constraints: {
+    maxTime: 3600,
+    maxAgents: 8,
+    quality: 'high'
+  }
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{Memory Coordination}
+\pre{\startverb
+// Share state across swarm
+await swarm.memory.store('api-schema', {
+  endpoints: [...],
+  models: [...]
+});
+
+// Agents read shared memory
+const schema = await swarm.memory.retrieve('api-schema');
+\stopverb}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{Load Balancing}
+\pre{\startverb
+// Automatic work distribution
+await swarm.enableLoadBalancing({
+  strategy: 'dynamic',
+  metrics: ['cpu', 'memory', 'task-queue']
+});
+\stopverb}
+}
+
+\subtree{
+\title{Fault Tolerance}
+\pre{\startverb
+// Handle agent failures
+await swarm.setResiliency({
+  retry: { maxAttempts: 3, backoff: 'exponential' },
+  fallback: 'reassign-task'
+});
+\stopverb}
+}
+
+\subtree{
+\title{Performance Monitoring}
+\pre{\startverb
+// Track swarm metrics
+const metrics = await swarm.getMetrics();
+// { throughput, latency, success_rate, agent_utilization }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Hooks}
+\pre{\startverb
+# Pre-task coordination
+npx agentic-flow hooks pre-task --description "Build API"
+
+# Post-task synchronization
+npx agentic-flow hooks post-task --task-id "task-123"
+
+# Session restore
+npx agentic-flow hooks session-restore --session-id "swarm-001"
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Start small}: Begin with 2-3 agents, scale up}
+\li{\strong{Use memory}: Share context through swarm memory}
+\li{\strong{Monitor metrics}: Track performance and bottlenecks}
+\li{\strong{Enable hooks}: Automatic coordination and sync}
+\li{\strong{Set timeouts}: Prevent hung tasks}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Issue: Agents not coordinating}
+\p{\strong{Solution}: Verify memory access and enable hooks}
+}
+
+\subtree{
+\title{Issue: Poor performance}
+\p{\strong{Solution}: Check topology (use adaptive) and enable load balancing}
+}
+}
+
+\subtree{
+\title{Learn More}
+\ul{
+\li{Swarm Guide: docs/swarm/orchestration.md}
+\li{Topology Patterns: docs/swarm/topologies.md}
+\li{Hooks Integration: docs/hooks/coordination.md}
+}
+}
+}

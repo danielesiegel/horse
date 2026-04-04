@@ -1,0 +1,72 @@
+\title{Detecting Living Off The Land With Lolbas}
+
+\taxon{skill}
+
+\tag{lolbas}
+
+\tag{lolbins}
+
+\tag{sigma-rules}
+
+\tag{process-monitoring}
+
+\tag{sysmon}
+
+\tag{endpoint-detection}
+
+\tag{threat-hunting}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect Living Off the Land Binaries (LOLBins/LOLBAS) abuse including certutil, regsvr32, mshta, and rundll32 via process telemetry, Sigma rules, and parent-child process analysis}
+
+\subtree{
+\title{Detecting Living Off the Land with LOLBAS}
+\subtree{
+\title{Overview}
+\p{Living Off the Land Binaries, Scripts, and Libraries (LOLBAS) are legitimate system utilities abused by attackers to execute malicious actions while evading detection. This skill covers detecting abuse of certutil.exe, regsvr32.exe, mshta.exe, rundll32.exe, msbuild.exe, and other LOLBins using process telemetry from Sysmon and Windows Event Logs, combined with Sigma rule-based detection.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting living off the land with lolbas}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Sysmon or Windows Security Event Log (Event ID 4688) with command-line logging enabled}
+\li{Sigma rule conversion tool (sigmac or sigma-cli)}
+\li{SIEM platform (Splunk, Elastic, or similar) for log ingestion}
+\li{Python 3.8+ with pySigma library}
+\li{LOLBAS project reference database}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{\strong{Establish LOLBin Watchlist} — Build a prioritized list of monitored binaries (certutil, mshta, regsvr32, rundll32, msbuild, installutil, cmstp, wmic, bitsadmin)}
+\li{\strong{Collect Process Telemetry} — Ingest Sysmon Event ID 1 (Process Create) and Windows 4688 events with full command-line capture}
+\li{\strong{Build Sigma Detection Rules} — Create Sigma rules matching suspicious command-line arguments, network activity, and parent-child process anomalies for each LOLBin}
+\li{\strong{Analyze Parent-Child Relationships} — Flag unexpected parent processes spawning LOLBins (e.g., Excel spawning certutil, Word spawning mshta)}
+\li{\strong{Score and Prioritize Alerts} — Apply risk scoring based on argument anomaly, parent process, execution path, and network indicators}
+\li{\strong{Generate Detection Report} — Produce a structured report of all LOLBin abuse detections with MITRE ATT&CK mapping}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing detected LOLBin abuse events with severity scores}
+\li{MITRE ATT&CK technique mapping for each detection (T1218, T1105, T1140, T1127)}
+\li{Parent-child process anomaly analysis}
+\li{Sigma rule match details with raw event data}
+}
+}
+}

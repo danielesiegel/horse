@@ -1,0 +1,66 @@
+\title{Koopman Generator}
+
+\taxon{skill}
+
+\meta{trit}{+1}
+
+\meta{description}{"Koopman operator theory for infinite-dimensional linear lifting of nonlinear dynamics. Generates dynamics from observables."}
+
+\subtree{
+\title{Koopman Generator Skill}
+\subtree{
+\title{Core Idea}
+\p{The \strong{Koopman operator} K linearizes nonlinear dynamics by lifting to infinite-dimensional observable space:}
+
+\pre{\startverb
+State space (nonlinear)     Observable space (linear)
+      x_{t+1} = f(x_t)   →   (Kg)(x) = g(f(x))
+\stopverb}
+
+\p{\strong{Key property}: K is \strong{linear} even when f is nonlinear.}
+}
+
+\subtree{
+\title{Connection to DMD}
+\p{DMD finds finite-rank approximation of K:}
+
+\pre{\startverb
+K ≈ Φ Λ Φ†
+\stopverb}
+
+\ul{
+\li{Φ = DMD modes (approximate Koopman eigenfunctions)}
+\li{Λ = eigenvalues}
+}
+}
+
+\subtree{
+\title{As ACSet Morphism}
+\p{Koopman = natural transformation on observable presheaves:}
+
+\pre{\startverb
+# Observable functor
+F: StateSpace → ObservableSpace
+
+# Koopman as pushforward
+K = f_*: Sh(X) → Sh(X)
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+dmd-spectral (-1) ⊗ structured-decomp (0) ⊗ koopman-generator (+1) = 0 ✓
+temporal-coalgebra (-1) ⊗ acsets (0) ⊗ koopman-generator (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Brunton et al. "Modern Koopman Theory" (2021)}
+\li{Mezić "Spectral Properties of Dynamical Systems" (2005)}
+\li{PyDMD: https://github.com/mathLab/PyDMD}
+}
+}
+}

@@ -1,0 +1,236 @@
+\title{Quantum Music}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{"Quantum computer music composition and performance using quantum circuits, ZX-calculus notation, and quantum instruments"}
+
+\subtree{
+\title{Quantum Music}
+\p{\strong{Trit}: 0 (ERGODIC - bridging classical and quantum) \strong{Field}: Quantum Computer Music \strong{Reference}: Miranda (2022) "Quantum Computer Music" Springer}
+
+\subtree{
+\title{Overview}
+\p{Quantum Music encompasses:}
+
+\ol{
+\li{\strong{Composition}: Using quantum algorithms/circuits}
+\li{\strong{Notation}: ZX-calculus augmented scores}
+\li{\strong{Instruments}: Quantum Guitar, Q1Synth, Actias}
+\li{\strong{Performance}: Live quantum state manipulation}
+}
+}
+
+\subtree{
+\title{History}
+\pre{\startverb
+| Year | Milestone |
+|------|-----------|
+| 2022 | First quantum-composed music (Ludovico Quanthoven) |
+| 2022 | Miranda's "Quantum Computer Music" book |
+| 2023 | Q1Synth (Miranda, Thomas, Itaboraí) |
+| 2024 | Quantum Guitar debuts (Edinburgh) |
+| 2024 | Black Tish at Wacken with quantum |
+| 2025 | "Bell" composition (ZX notation) |
+\stopverb}
+}
+
+\subtree{
+\title{Compositional Approaches}
+\subtree{
+\title{1. Quantum Random (QRandom)}
+\pre{\startverb
+from qiskit import QuantumCircuit, execute, Aer
+
+def quantum_melody(n_notes, n_pitches=12):
+    """Generate melody via quantum measurement."""
+    qc = QuantumCircuit(4, 4)
+    qc.h(range(4))  # Superposition
+    qc.measure(range(4), range(4))
+    
+    backend = Aer.get_backend('qasm_simulator')
+    result = execute(qc, backend, shots=n_notes).result()
+    
+    melody = []
+    for bitstring, count in result.get_counts().items():
+        pitch = int(bitstring, 2) % n_pitches
+        melody.extend([pitch] * count)
+    
+    return melody
+\stopverb}
+}
+
+\subtree{
+\title{2. Quantum Walk Composition}
+\pre{\startverb
+def quantum_walk_melody(graph, steps):
+    """Melody from quantum walk on graph."""
+    from discopy.quantum import qubit, H, CNOT
+    
+    # Initialize walker in superposition
+    walker = uniform_superposition(len(graph.nodes))
+    
+    for _ in range(steps):
+        # Coin flip
+        walker = apply_coin(walker)
+        # Shift
+        walker = apply_shift(walker, graph)
+    
+    # Measure to get note sequence
+    return measure_melody(walker)
+\stopverb}
+}
+
+\subtree{
+\title{3. Grover Search for Harmony}
+\pre{\startverb
+def find_chord(target_quality='major'):
+    """Use Grover to find chord voicing."""
+    # Oracle marks good voicings
+    oracle = chord_quality_oracle(target_quality)
+    
+    # Grover iterations
+    circuit = grover_circuit(oracle, n_qubits=12)
+    
+    # Measure result
+    return measure_chord(circuit)
+\stopverb}
+}
+}
+
+\subtree{
+\title{ZX-Calculus Notation}
+\p{"Bell" by Abdyssagin & Coecke uses ZX as score:}
+
+\pre{\startverb
+  Quantum Guitar          Grand Piano
+       │                      │
+    ┌──┴──┐                ┌──┴──┐
+    │  X  │                │  Z  │
+    └──┬──┘                └──┬──┘
+       │                      │
+       └──────────────────────┘
+              Bell pair
+              
+  Measurement collapses entanglement
+  → Correlated musical phrases
+\stopverb}
+}
+
+\subtree{
+\title{Instruments}
+\pre{\startverb
+| Instrument | Creator | Mechanism |
+|------------|---------|-----------|
+| Q1Synth | Miranda et al. | Software qubit synth |
+| Actias | Moth | Web-based, MIDI control |
+| Quantum Guitar | Coecke | Physical + Actias |
+| Quantum Piano | Abdyssagin | Mental model + notation |
+\stopverb}
+}
+
+\subtree{
+\title{Genre Applications}
+\subtree{
+\title{Industrial/Metal}
+\ul{
+\li{Black Tish: Full album with Quantum Guitar}
+\li{NIN-style experimentation}
+\li{Wacken performances}
+}
+}
+
+\subtree{
+\title{Classical/Contemporary}
+\ul{
+\li{Cathedral Organ + Quantum Guitar}
+\li{"Quantum Universe" Symphony}
+\li{Chamber music with ZX notation}
+}
+}
+
+\subtree{
+\title{Electronic}
+\ul{
+\li{EDM descendants of industrial}
+\li{Quantum random for generative}
+}
+}
+}
+
+\subtree{
+\title{DisCoPy for Composition}
+\pre{\startverb
+from discopy import Ty, Box, Diagram
+from discopy.quantum import qubit, Ket, Bra, H, CX
+
+# Musical types
+note = Ty('note')
+chord = Ty('chord')
+
+# Quantum composition as diagram
+def compose_phrase():
+    # Prepare Bell state
+    bell = Ket(0, 0) >> (H @ Id(1)) >> CX
+    
+    # Map to musical space
+    to_music = Box('sonify', qubit @ qubit, note @ note)
+    
+    return bell >> to_music
+\stopverb}
+}
+
+\subtree{
+\title{Live Performance Protocol}
+\pre{\startverb
+quantum_music_performance:
+  setup:
+    - Actias on dedicated laptop
+    - MIDI routing configured
+    - Bloch sphere projection
+  
+  soundcheck:
+    - Test foot controllers
+    - Verify measurement response
+    - Classical/quantum blend levels
+  
+  performance:
+    - Smooth classical→quantum transitions
+    - Real-time qubit manipulation
+    - Measured moments for phrase endings
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation in Music}
+\pre{\startverb
+| Section | Trit | Character |
+|---------|------|-----------|
+| Intro (classical) | -1 | Grounded |
+| Development (quantum) | 0 | Superposed |
+| Resolution (measured) | +1 | Collapsed |
+\stopverb}
+
+\p{\strong{Σ = 0}: Complete musical arc conserves}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Miranda, E.R. (2022). Quantum Computer Music. Springer}
+\li{Coecke, B. (2025). A Quantum Guitar. arXiv:2509.04526}
+\li{Abdyssagin & Coecke (2025). Bell composition}
+\li{Miranda et al. (2023). Q1Synth. Applied Sciences}
+}
+
+\p{\strong{Skill Name}: quantum-music \strong{Type}: Composition / Performance \strong{Trit}: 0 (ERGODIC)}
+}
+
+\subtree{
+\title{Non-Backtracking Geodesic Qualification}
+\p{\strong{Condition}: μ(n) ≠ 0 (Möbius squarefree)}
+
+\p{This skill is qualified for non-backtracking geodesic traversal.}
+}
+}

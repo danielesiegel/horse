@@ -1,0 +1,75 @@
+\title{Implementing Container Network Policies With Calico}
+
+\taxon{skill}
+
+\tag{container-security}
+
+\tag{kubernetes}
+
+\tag{calico}
+
+\tag{network-policy}
+
+\tag{microsegmentation}
+
+\tag{cni}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Enforce Kubernetes network segmentation using Calico CNI network policies and global network policies to control pod-to-pod traffic, restrict egress, and implement zero-trust microsegmentation.}
+
+\subtree{
+\title{Implementing Container Network Policies with Calico}
+\subtree{
+\title{Overview}
+\p{Calico provides Kubernetes-native and extended network policy enforcement through its CNI plugin. This skill covers creating and auditing Calico NetworkPolicy and GlobalNetworkPolicy resources to implement pod-to-pod traffic control, namespace isolation, egress restrictions, and DNS-based policy rules using calicoctl and the Kubernetes API.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing container network policies with calico capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Kubernetes cluster with Calico CNI installed}
+\li{Python 3.9+ with \code{\startverb kubernetes\stopverb} client library}
+\li{calicoctl CLI tool installed and configured}
+\li{kubectl access with RBAC permissions for network policy management}
+}
+}
+
+\subtree{
+\title{Steps}
+\subtree{
+\title{Step 1: Audit Existing Network Policies}
+\p{Use calicoctl and kubectl to inventory current network policies and identify unprotected namespaces.}
+}
+
+\subtree{
+\title{Step 2: Implement Default-Deny Policies}
+\p{Create default-deny ingress and egress policies per namespace as a zero-trust baseline.}
+}
+
+\subtree{
+\title{Step 3: Create Workload-Specific Allow Rules}
+\p{Define granular allow rules for legitimate pod-to-pod and pod-to-service communication.}
+}
+
+\subtree{
+\title{Step 4: Validate Policy Enforcement}
+\p{Test connectivity between pods to verify policies are correctly enforced.}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON audit report listing all network policies, unprotected namespaces, policy rule counts, and connectivity test results.}
+}
+}

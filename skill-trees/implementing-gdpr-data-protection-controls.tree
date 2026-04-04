@@ -1,0 +1,237 @@
+\title{Implementing Gdpr Data Protection Controls}
+
+\taxon{skill}
+
+\tag{compliance}
+
+\tag{governance}
+
+\tag{gdpr}
+
+\tag{privacy}
+
+\tag{data-protection}
+
+\tag{eu-regulation}
+
+\meta{version}{"1.0"}
+
+\meta{description}{The General Data Protection Regulation (EU) 2016/679 (GDPR) is the EU's comprehensive data protection law governing the collection, processing, storage, and transfer of personal data. This skill cover}
+
+\subtree{
+\title{Implementing GDPR Data Protection Controls}
+\subtree{
+\title{Overview}
+\p{The General Data Protection Regulation (EU) 2016/679 (GDPR) is the EU's comprehensive data protection law governing the collection, processing, storage, and transfer of personal data. This skill covers implementing the technical and organizational measures required by GDPR, including data protection by design and by default, Data Protection Impact Assessments (DPIAs), data subject rights management, breach notification procedures, and cross-border data transfer mechanisms.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing gdpr data protection controls capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Understanding of EU data protection law and its territorial scope}
+\li{Knowledge of personal data processing activities within the organization}
+\li{Familiarity with data architecture, databases, and application systems}
+\li{Understanding of data flows including cross-border transfers}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Key GDPR Articles for Technical Controls}
+\pre{\startverb
+| Article | Requirement |
+|---------|-------------|
+| Art. 5 | Principles: lawfulness, purpose limitation, data minimization, accuracy, storage limitation, integrity and confidentiality, accountability |
+| Art. 6 | Lawful basis for processing (consent, contract, legal obligation, vital interests, public task, legitimate interest) |
+| Art. 25 | Data protection by design and by default |
+| Art. 28 | Processor obligations and contractual requirements |
+| Art. 30 | Records of processing activities (ROPA) |
+| Art. 32 | Security of processing (technical and organizational measures) |
+| Art. 33 | Breach notification to supervisory authority (72 hours) |
+| Art. 34 | Communication of breach to data subjects |
+| Art. 35 | Data Protection Impact Assessment (DPIA) |
+| Art. 37-39 | Data Protection Officer (DPO) appointment and role |
+| Art. 44-49 | Cross-border data transfers (adequacy, SCCs, BCRs) |
+\stopverb}
+}
+
+\subtree{
+\title{Article 32 Security Measures}
+\p{The regulation requires organizations to implement measures appropriate to the risk:}
+
+\ul{
+\li{\strong{Pseudonymization} and encryption of personal data}
+\li{\strong{Confidentiality, integrity, availability, and resilience} of processing systems}
+\li{\strong{Ability to restore} availability and access to personal data in a timely manner}
+\li{\strong{Regular testing} and evaluation of technical and organizational measures}
+}
+}
+
+\subtree{
+\title{Data Subject Rights (Articles 12-22)}
+\pre{\startverb
+| Right | Article | Description |
+|-------|---------|-------------|
+| Right to be informed | 13-14 | Transparent information about processing |
+| Right of access | 15 | Obtain copy of personal data |
+| Right to rectification | 16 | Correct inaccurate data |
+| Right to erasure | 17 | "Right to be forgotten" |
+| Right to restrict processing | 18 | Limit processing of data |
+| Right to data portability | 20 | Receive data in machine-readable format |
+| Right to object | 21 | Object to processing (especially direct marketing) |
+| Automated decision-making | 22 | Not be subject to solely automated decisions |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: Data Mapping and Assessment (Weeks 1-6)}
+\ol{
+\li{Create comprehensive data inventory:}
+\li{What personal data is collected}
+\li{From whom (data subjects)}
+\li{Why (purposes and lawful bases)}
+\li{Where it's stored (systems, locations, countries)}
+\li{Who has access (internal and external)}
+\li{How long it's retained}
+\li{What security measures protect it}
+\li{Document Records of Processing Activities (ROPA) per Article 30}
+\li{Identify lawful basis for each processing activity}
+\li{Map cross-border data transfers and transfer mechanisms}
+\li{Identify processing activities requiring DPIA}
+}
+}
+
+\subtree{
+\title{Phase 2: Gap Analysis and Risk Assessment (Weeks 7-10)}
+\ol{
+\li{Assess current state against GDPR requirements}
+\li{Perform DPIAs for high-risk processing activities}
+\li{Identify security gaps in Article 32 compliance}
+\li{Evaluate data retention compliance}
+\li{Assess data subject rights request handling capabilities}
+}
+}
+
+\subtree{
+\title{Phase 3: Technical Controls Implementation (Weeks 11-24)}
+\ol{
+\li{\strong{Encryption}:}
+\li{Data at rest: AES-256 for databases, file systems, backups}
+\li{Data in transit: TLS 1.2+ for all personal data transfers}
+\li{Key management: secure key storage and rotation procedures}
+\li{\strong{Pseudonymization}:}
+\li{Implement tokenization for sensitive identifiers}
+\li{Separate pseudonymization keys from data stores}
+\li{\strong{Access Controls}:}
+\li{Role-based access control (RBAC) for personal data}
+\li{Principle of least privilege}
+\li{MFA for systems processing personal data}
+\li{Regular access reviews}
+\li{\strong{Data Minimization}:}
+\li{Implement data collection limits at application layer}
+\li{Default privacy settings (data protection by default)}
+\li{Automated data retention enforcement}
+\li{\strong{Erasure and Portability}:}
+\li{Build data deletion workflows across all systems}
+\li{Implement data export in machine-readable formats (JSON, CSV)}
+\li{Cascade deletion to backups and archives}
+\li{\strong{Consent Management}:}
+\li{Implement granular consent collection mechanisms}
+\li{Consent withdrawal functionality}
+\li{Consent audit trail and versioning}
+\li{\strong{Breach Detection}:}
+\li{SIEM for personal data access monitoring}
+\li{Data loss prevention (DLP) controls}
+\li{Anomalous access detection}
+}
+}
+
+\subtree{
+\title{Phase 4: Organizational Controls (Weeks 11-24)}
+\ol{
+\li{Appoint Data Protection Officer (DPO) if required}
+\li{Develop data protection policies and procedures}
+\li{Create breach notification procedures (72-hour timeline)}
+\li{Establish data subject request (DSR) handling procedures}
+\li{Implement vendor management with Data Processing Agreements (DPAs)}
+\li{Deploy privacy awareness training for all staff}
+\li{Create data protection by design guidance for development teams}
+}
+}
+
+\subtree{
+\title{Phase 5: Documentation and Compliance Evidence (Weeks 25-30)}
+\ol{
+\li{Finalize ROPA documentation}
+\li{Document all DPIAs and outcomes}
+\li{Create data protection policies}
+\li{Document technical and organizational measures}
+\li{Establish privacy notice and consent records}
+\li{Create international transfer documentation (SCCs, TIAs)}
+}
+}
+
+\subtree{
+\title{Phase 6: Ongoing Compliance (Continuous)}
+\ol{
+\li{Regular DPIA reviews for new processing activities}
+\li{Annual data mapping refresh}
+\li{Periodic security measure testing (Art. 32 requirement)}
+\li{Data subject request tracking and SLA monitoring}
+\li{Breach response readiness testing}
+\li{Training refresh and awareness campaigns}
+}
+}
+}
+
+\subtree{
+\title{Key Artifacts}
+\ul{
+\li{Records of Processing Activities (ROPA)}
+\li{Data Protection Impact Assessments (DPIAs)}
+\li{Data Processing Agreements (DPAs)}
+\li{Privacy Notices and Consent Records}
+\li{Breach Response Procedures and Register}
+\li{Data Subject Request Handling Procedures}
+\li{International Data Transfer Mechanisms (SCCs, BCRs)}
+\li{Technical and Organizational Measures Documentation}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Treating GDPR as only a legal/compliance exercise without technical implementation}
+\li{Incomplete data mapping missing shadow IT or legacy systems}
+\li{Failing to maintain consent audit trails}
+\li{Not testing 72-hour breach notification capability}
+\li{Ignoring cross-border transfer requirements for cloud services}
+\li{Over-reliance on consent as lawful basis when legitimate interest applies}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{GDPR Official Text: https://gdpr-info.eu/}
+\li{European Data Protection Board (EDPB) Guidelines}
+\li{ICO (UK) GDPR Guidance: https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/}
+\li{CNIL (France) GDPR Compliance Toolkit}
+\li{Article 29 Working Party Guidelines on DPIAs}
+}
+}
+}

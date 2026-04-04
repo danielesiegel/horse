@@ -1,0 +1,241 @@
+\title{Pyopenms}
+
+\taxon{skill}
+
+\meta{description}{Python interface to OpenMS for mass spectrometry data analysis. Use for LC-MS/MS proteomics and metabolomics workflows including file handling (mzML, mzXML, mzTab, FASTA, pepXML, protXML, mzIdentML), signal processing, feature detection, peptide identification, and quantitative analysis. Apply when working with mass spectrometry data, analyzing proteomics experiments, or processing metabolomics datasets.}
+
+\subtree{
+\title{PyOpenMS}
+\subtree{
+\title{Overview}
+\p{PyOpenMS provides Python bindings to the OpenMS library for computational mass spectrometry, enabling analysis of proteomics and metabolomics data. Use for handling mass spectrometry file formats, processing spectral data, detecting features, identifying peptides/proteins, and performing quantitative analysis.}
+}
+
+\subtree{
+\title{Installation}
+\p{Install using uv:}
+
+\pre{\startverb
+uv uv pip install pyopenms
+\stopverb}
+
+\p{Verify installation:}
+
+\pre{\startverb
+import pyopenms
+print(pyopenms.__version__)
+\stopverb}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{PyOpenMS organizes functionality into these domains:}
+
+\subtree{
+\title{1. File I/O and Data Formats}
+\p{Handle mass spectrometry file formats and convert between representations.}
+
+\p{\strong{Supported formats}: mzML, mzXML, TraML, mzTab, FASTA, pepXML, protXML, mzIdentML, featureXML, consensusXML, idXML}
+
+\p{Basic file reading:}
+
+\pre{\startverb
+import pyopenms as ms
+
+# Read mzML file
+exp = ms.MSExperiment()
+ms.MzMLFile().load("data.mzML", exp)
+
+# Access spectra
+for spectrum in exp:
+    mz, intensity = spectrum.get_peaks()
+    print(f"Spectrum: {len(mz)} peaks")
+\stopverb}
+
+\p{\strong{For detailed file handling}: See \code{\startverb references/file_io.md\stopverb}}
+}
+
+\subtree{
+\title{2. Signal Processing}
+\p{Process raw spectral data with smoothing, filtering, centroiding, and normalization.}
+
+\p{Basic spectrum processing:}
+
+\pre{\startverb
+# Smooth spectrum with Gaussian filter
+gaussian = ms.GaussFilter()
+params = gaussian.getParameters()
+params.setValue("gaussian_width", 0.1)
+gaussian.setParameters(params)
+gaussian.filterExperiment(exp)
+\stopverb}
+
+\p{\strong{For algorithm details}: See \code{\startverb references/signal_processing.md\stopverb}}
+}
+
+\subtree{
+\title{3. Feature Detection}
+\p{Detect and link features across spectra and samples for quantitative analysis.}
+
+\pre{\startverb
+# Detect features
+ff = ms.FeatureFinder()
+ff.run("centroided", exp, features, params, ms.FeatureMap())
+\stopverb}
+
+\p{\strong{For complete workflows}: See \code{\startverb references/feature_detection.md\stopverb}}
+}
+
+\subtree{
+\title{4. Peptide and Protein Identification}
+\p{Integrate with search engines and process identification results.}
+
+\p{\strong{Supported engines}: Comet, Mascot, MSGFPlus, XTandem, OMSSA, Myrimatch}
+
+\p{Basic identification workflow:}
+
+\pre{\startverb
+# Load identification data
+protein_ids = []
+peptide_ids = []
+ms.IdXMLFile().load("identifications.idXML", protein_ids, peptide_ids)
+
+# Apply FDR filtering
+fdr = ms.FalseDiscoveryRate()
+fdr.apply(peptide_ids)
+\stopverb}
+
+\p{\strong{For detailed workflows}: See \code{\startverb references/identification.md\stopverb}}
+}
+
+\subtree{
+\title{5. Metabolomics Analysis}
+\p{Perform untargeted metabolomics preprocessing and analysis.}
+
+\p{Typical workflow:}
+
+\ol{
+\li{Load and process raw data}
+\li{Detect features}
+\li{Align retention times across samples}
+\li{Link features to consensus map}
+\li{Annotate with compound databases}
+}
+
+\p{\strong{For complete metabolomics workflows}: See \code{\startverb references/metabolomics.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Data Structures}
+\p{PyOpenMS uses these primary objects:}
+
+\ul{
+\li{\strong{MSExperiment}: Collection of spectra and chromatograms}
+\li{\strong{MSSpectrum}: Single mass spectrum with m/z and intensity pairs}
+\li{\strong{MSChromatogram}: Chromatographic trace}
+\li{\strong{Feature}: Detected chromatographic peak with quality metrics}
+\li{\strong{FeatureMap}: Collection of features}
+\li{\strong{PeptideIdentification}: Search results for peptides}
+\li{\strong{ProteinIdentification}: Search results for proteins}
+}
+
+\p{\strong{For detailed documentation}: See \code{\startverb references/data_structures.md\stopverb}}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Quick Start: Load and Explore Data}
+\pre{\startverb
+import pyopenms as ms
+
+# Load mzML file
+exp = ms.MSExperiment()
+ms.MzMLFile().load("sample.mzML", exp)
+
+# Get basic statistics
+print(f"Number of spectra: {exp.getNrSpectra()}")
+print(f"Number of chromatograms: {exp.getNrChromatograms()}")
+
+# Examine first spectrum
+spec = exp.getSpectrum(0)
+print(f"MS level: {spec.getMSLevel()}")
+print(f"Retention time: {spec.getRT()}")
+mz, intensity = spec.get_peaks()
+print(f"Peaks: {len(mz)}")
+\stopverb}
+}
+
+\subtree{
+\title{Parameter Management}
+\p{Most algorithms use a parameter system:}
+
+\pre{\startverb
+# Get algorithm parameters
+algo = ms.GaussFilter()
+params = algo.getParameters()
+
+# View available parameters
+for param in params.keys():
+    print(f"{param}: {params.getValue(param)}")
+
+# Modify parameters
+params.setValue("gaussian_width", 0.2)
+algo.setParameters(params)
+\stopverb}
+}
+
+\subtree{
+\title{Export to Pandas}
+\p{Convert data to pandas DataFrames for analysis:}
+
+\pre{\startverb
+import pyopenms as ms
+import pandas as pd
+
+# Load feature map
+fm = ms.FeatureMap()
+ms.FeatureXMLFile().load("features.featureXML", fm)
+
+# Convert to DataFrame
+df = fm.get_df()
+print(df.head())
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Other Tools}
+\p{PyOpenMS integrates with:}
+
+\ul{
+\li{\strong{Pandas}: Export data to DataFrames}
+\li{\strong{NumPy}: Work with peak arrays}
+\li{\strong{Scikit-learn}: Machine learning on MS data}
+\li{\strong{Matplotlib/Seaborn}: Visualization}
+\li{\strong{R}: Via rpy2 bridge}
+}
+}
+
+\subtree{
+\title{Resources}
+\ul{
+\li{\strong{Official documentation}: https://pyopenms.readthedocs.io}
+\li{\strong{OpenMS documentation}: https://www.openms.org}
+\li{\strong{GitHub}: https://github.com/OpenMS/OpenMS}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{\code{\startverb references/file_io.md\stopverb} - Comprehensive file format handling}
+\li{\code{\startverb references/signal_processing.md\stopverb} - Signal processing algorithms}
+\li{\code{\startverb references/feature_detection.md\stopverb} - Feature detection and linking}
+\li{\code{\startverb references/identification.md\stopverb} - Peptide and protein identification}
+\li{\code{\startverb references/metabolomics.md\stopverb} - Metabolomics-specific workflows}
+\li{\code{\startverb references/data_structures.md\stopverb} - Core objects and data structures}
+}
+}
+}

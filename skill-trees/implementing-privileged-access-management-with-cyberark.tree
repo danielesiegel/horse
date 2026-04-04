@@ -1,0 +1,200 @@
+\title{Implementing Privileged Access Management With Cyberark}
+
+\taxon{skill}
+
+\tag{iam}
+
+\tag{identity}
+
+\tag{access-control}
+
+\tag{privileged-access}
+
+\tag{pam}
+
+\tag{cyberark}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploy CyberArk Privileged Access Management to discover, vault, rotate, and monitor privileged credentials across enterprise infrastructure. This skill covers vault architecture, session isolation, c}
+
+\subtree{
+\title{Implementing Privileged Access Management with CyberArk}
+\subtree{
+\title{Overview}
+\p{Deploy CyberArk Privileged Access Management to discover, vault, rotate, and monitor privileged credentials across enterprise infrastructure. This skill covers vault architecture, session isolation, credential rotation policies, and integration with NIST 800-53 access control requirements.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing privileged access management with cyberark capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with identity access management concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Design CyberArk vault architecture with high availability}
+\li{Implement automated privileged credential discovery and onboarding}
+\li{Configure credential rotation policies for different account types}
+\li{Deploy Privileged Session Manager (PSM) for session isolation and recording}
+\li{Integrate CyberArk with SIEM for privileged access monitoring}
+\li{Implement just-in-time (JIT) privileged access workflows}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{CyberArk Architecture Components}
+\ol{
+\li{\strong{Digital Vault}: Encrypted credential storage with FIPS 140-2 validated encryption}
+\li{\strong{Central Policy Manager (CPM)}: Automated password rotation and verification}
+\li{\strong{Privileged Session Manager (PSM)}: Session isolation, recording, and keystroke logging}
+\li{\strong{Password Vault Web Access (PVWA)}: Web interface for credential management}
+\li{\strong{Privileged Threat Analytics (PTA)}: Behavioral analytics for privileged accounts}
+\li{\strong{Conjur Secrets Manager}: Application identity and secrets management}
+}
+}
+
+\subtree{
+\title{Vault Security Model}
+\ul{
+\li{\strong{Master Policy}: Global security settings (dual control, exclusive access, one-time passwords)}
+\li{\strong{Safes}: Logical containers for credentials with granular permissions}
+\li{\strong{Platforms}: Configuration profiles defining rotation, verification, and reconciliation}
+\li{\strong{Account Groups}: Link accounts sharing rotation dependencies}
+}
+}
+
+\subtree{
+\title{Credential Lifecycle}
+\ol{
+\li{\strong{Discovery}: Scan infrastructure for privileged accounts}
+\li{\strong{Onboarding}: Import accounts into vault with platform assignment}
+\li{\strong{Rotation}: Automated password changes per policy schedule}
+\li{\strong{Verification}: Periodic validation that vaulted credentials work}
+\li{\strong{Reconciliation}: Re-sync credentials when vault and target are out of sync}
+\li{\strong{Decommissioning}: Remove accounts no longer needed}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Vault Architecture Design}
+\ol{
+\li{Deploy primary vault server in secured network segment}
+\li{Configure vault high availability with DR vault}
+\li{Harden vault server OS (remove unnecessary services, disable RDP)}
+\li{Configure firewall rules (only port 1858 from authorized components)}
+\li{Set up vault backup with encryption}
+}
+}
+
+\subtree{
+\title{Step 2: Safe and Policy Configuration}
+\ol{
+\li{Create safe hierarchy aligned with business units}
+\li{Define safe members with least-privilege roles:}
+\li{Safe Admins: manage safe membership}
+\li{Credential Managers: add/modify accounts}
+\li{Auditors: view audit logs only}
+\li{Users: retrieve/use credentials}
+\li{Configure Master Policy settings:}
+\li{Require dual control for credential retrieval}
+\li{Enable exclusive access (one user per credential at a time)}
+\li{Set one-time password mode for sensitive accounts}
+}
+}
+
+\subtree{
+\title{Step 3: Platform Configuration}
+\ul{
+\li{Windows Domain Admin: Rotate every 24 hours, verify every 4 hours}
+\li{Linux Root: Rotate every 72 hours with SSH key rotation}
+\li{Database Admin (Oracle, SQL Server): Rotate every 24 hours}
+\li{Network Devices: Rotate every 7 days}
+\li{Service Accounts: Rotate on schedule with dependency management}
+\li{Cloud IAM Keys: Rotate every 90 days with dual-key strategy}
+}
+}
+
+\subtree{
+\title{Step 4: Privileged Session Management}
+\ol{
+\li{Deploy PSM servers behind load balancer}
+\li{Configure session recording (video, keystroke, command logs)}
+\li{Set up session isolation (users connect through PSM, never directly)}
+\li{Define connection components for RDP, SSH, databases, web apps}
+\li{Configure live session monitoring and termination capabilities}
+\li{Set session recording retention (minimum 1 year for compliance)}
+}
+}
+
+\subtree{
+\title{Step 5: Integration and Monitoring}
+\ol{
+\li{Forward CyberArk audit logs to SIEM (CEF/Syslog format)}
+\li{Configure PTA for behavioral analytics:}
+\li{Detect credential theft indicators}
+\li{Alert on suspicious privileged session activity}
+\li{Monitor unmanaged privileged account usage}
+\li{Integrate with ticketing system for access request workflows}
+\li{Set up alerts for failed rotation, verification failures, policy violations}
+}
+}
+}
+
+\subtree{
+\title{Security Controls}
+\pre{\startverb
+| Control | NIST 800-53 | Description |
+|---------|-------------|-------------|
+| Privileged Access | AC-6(7) | Privileged account controls |
+| Credential Management | IA-5 | Automated credential rotation |
+| Session Recording | AU-14 | Session audit capability |
+| Access Enforcement | AC-3 | Vault-enforced access policies |
+| Separation of Duties | AC-5 | Dual control for sensitive operations |
+\stopverb}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Not configuring reconciliation accounts leading to lockouts after rotation}
+\li{Setting rotation schedules too aggressive for service accounts with dependencies}
+\li{Failing to test PSM connection components before production deployment}
+\li{Not establishing break-glass procedures for vault unavailability}
+\li{Overlooking network device credential management}
+}
+}
+
+\subtree{
+\title{Verification}
+\ul{
+\li{[ ] Vault accessible only from authorized components}
+\li{[ ] Credential rotation succeeds for all onboarded accounts}
+\li{[ ] PSM sessions recorded and searchable}
+\li{[ ] Dual control enforced for sensitive credential checkout}
+\li{[ ] SIEM receives CyberArk audit events}
+\li{[ ] Break-glass procedure tested and documented}
+\li{[ ] DR vault failover tested successfully}
+}
+}
+}

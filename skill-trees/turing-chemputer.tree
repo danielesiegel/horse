@@ -1,0 +1,157 @@
+\title{Turing Chemputer}
+
+\taxon{skill}
+
+\meta{description}{Cronin's Turing-complete chemputer for programmable chemical synthesis}
+
+\subtree{
+\title{Turing Chemputer Skill: Programmable Chemical Synthesis}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: 0 (ERGODIC - coordinator) \strong{Color}: #26D826 (Green) \strong{Principle}: Chemistry as computation \strong{Frame}: XDL programs executed on modular hardware}
+
+\subtree{
+\title{Overview}
+\p{\strong{Turing Chemputer} coordinates chemical synthesis as program execution. Using XDL (Chemical Description Language), any synthesis protocol becomes an executable program on modular robotic hardware.}
+
+\ol{
+\li{\strong{XDL}: XML-based chemical programming language}
+\li{\strong{Chempiler}: Compile XDL to hardware instructions}
+\li{\strong{Modular hardware}: Reactors, filters, separators as primitives}
+\li{\strong{Turing completeness}: Loops, conditionals, recursion}
+}
+}
+
+\subtree{
+\title{Core Framework}
+\pre{\startverb
+<!-- XDL: Chemical Description Language -->
+<Synthesis>
+  <Hardware>
+    <Reactor id="reactor1" volume="100 mL"/>
+    <Filter id="filter1"/>
+    <Separator id="sep1"/>
+  </Hardware>
+  
+  <Procedure>
+    <Add reagent="A" vessel="reactor1" amount="10 mmol"/>
+    <Add reagent="B" vessel="reactor1" amount="12 mmol"/>
+    <HeatChill vessel="reactor1" temp="80 °C" time="2 h"/>
+    <Filter from="reactor1" to="filter1"/>
+  </Procedure>
+</Synthesis>
+\stopverb}
+
+\pre{\startverb
+def compile_xdl(xdl: str) -> HardwareInstructions:
+    """Chempiler: XDL → executable hardware program."""
+    tree = parse_xdl(xdl)
+    graph = build_synthesis_graph(tree)
+    return optimize_and_schedule(graph)
+\stopverb}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{1. XDL Programming}
+\pre{\startverb
+class XDLProgram:
+    def __init__(self):
+        self.steps = []
+    
+    def add(self, reagent: str, vessel: str, amount: str):
+        self.steps.append(Add(reagent, vessel, amount))
+    
+    def heat(self, vessel: str, temp: str, time: str):
+        self.steps.append(HeatChill(vessel, temp, time))
+    
+    def filter(self, from_vessel: str, to_vessel: str):
+        self.steps.append(Filter(from_vessel, to_vessel))
+    
+    def loop(self, times: int, body: list):
+        """Turing-complete: iteration."""
+        self.steps.append(Loop(times, body))
+    
+    def conditional(self, sensor: str, threshold: float, then: list, else_: list):
+        """Turing-complete: branching."""
+        self.steps.append(Conditional(sensor, threshold, then, else_))
+\stopverb}
+}
+
+\subtree{
+\title{2. Hardware Abstraction}
+\pre{\startverb
+class Chemputer:
+    def __init__(self, hardware_graph: nx.DiGraph):
+        self.graph = hardware_graph
+        self.state = ChemicalState()
+    
+    def execute(self, program: XDLProgram):
+        """Execute XDL on hardware."""
+        for step in program.steps:
+            self.validate_hardware(step)
+            self.execute_step(step)
+            self.update_state(step)
+    
+    def validate_hardware(self, step):
+        """Check hardware connectivity and capacity."""
+        if not self.graph.has_path(step.source, step.target):
+            raise HardwareError("No fluidic path")
+\stopverb}
+}
+
+\subtree{
+\title{3. Synthesis Graph Optimization}
+\pre{\startverb
+def optimize_synthesis(xdl: XDLProgram) -> XDLProgram:
+    """Optimize for time, yield, and hardware utilization."""
+    graph = to_dag(xdl)
+    
+    # Parallelize independent operations
+    parallel = find_parallel_steps(graph)
+    
+    # Minimize transfers
+    optimized = minimize_transfers(graph)
+    
+    # Schedule for hardware
+    return schedule(optimized, hardware_constraints)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Compile XDL to hardware
+just chemputer-compile synthesis.xdl
+
+# Validate hardware graph
+just chemputer-validate hardware.json
+
+# Simulate synthesis
+just chemputer-simulate synthesis.xdl --dry-run
+
+# Execute on hardware
+just chemputer-execute synthesis.xdl --hardware lab1
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\pre{\startverb
+assembly-index (-1) ⊗ turing-chemputer (0) ⊗ crn-topology (+1) = 0 ✓  [Molecular Complexity]
+kolmogorov-compression (-1) ⊗ turing-chemputer (0) ⊗ dna-origami (+1) = 0 ✓  [Self-Assembly]
+persistent-homology (-1) ⊗ turing-chemputer (0) ⊗ crn-topology (+1) = 0 ✓  [Topological CRN]
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{assembly-index} (-1): Validate molecular complexity}
+\li{\strong{crn-topology} (+1): Generate reaction networks}
+\li{\strong{acsets} (0): Algebraic hardware graph representation}
+}
+
+\p{\strong{Skill Name}: turing-chemputer \strong{Type}: Chemical Synthesis Coordinator \strong{Trit}: 0 (ERGODIC) \strong{Color}: #26D826 (Green)}
+}
+}

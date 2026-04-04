@@ -1,0 +1,108 @@
+\title{"sheaf Theoretic Coordination"}
+
+\taxon{skill}
+
+\meta{description}{"**Category:** Phase 3 Core - Distributed Reasoning"}
+
+\subtree{
+\title{Sheaf-Theoretic Coordination}
+\p{\strong{Category:} Phase 3 Core - Distributed Reasoning \strong{Status:} Skeleton Implementation \strong{Dependencies:} \code{\startverb oriented-simplicial-networks\stopverb}, \code{\startverb categorical-composition\stopverb}}
+
+\subtree{
+\title{Overview}
+\p{Implements sheaf-theoretic coordination mechanisms for multi-agent systems, using sheaf Laplacians for consensus, harmonic extension for inference, and cohomology for detecting global obstructions.}
+}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{\strong{Sheaf Laplacian}: Consensus dynamics on cellular sheaves}
+\li{\strong{Harmonic Extension}: Infer missing data via global consistency}
+\li{\strong{Cohomology Detection}: Identify obstructions to global agreement}
+\li{\strong{Sheaf Neural Networks}: Learn sheaf structures from data}
+}
+}
+
+\subtree{
+\title{Core Components}
+\ol{
+\li{\strong{Cellular Sheaf Builder} (\code{\startverb cellular_sheaf.jl\stopverb})}
+\li{Construct sheaves over cell complexes}
+\li{Define restriction maps between stalks}
+\li{Compute sheaf cohomology groups}
+}
+
+\ol{
+\li{\strong{Sheaf Laplacian} (\code{\startverb sheaf_laplacian.jl\stopverb})}
+\li{Weighted Laplacian on sheaf sections}
+\li{Consensus dynamics and heat flow}
+\li{Spectral analysis for convergence}
+}
+
+\ol{
+\li{\strong{Harmonic Extension} (\code{\startverb harmonic_extension.jl\stopverb})}
+\li{Solve for globally consistent assignments}
+\li{Handle partial observations}
+\li{Regularized least-squares formulation}
+}
+
+\ol{
+\li{\strong{Sheaf Neural Networks} (\code{\startverb sheaf_nn.jl\stopverb})}
+\li{Learn restriction maps via gradient descent}
+\li{Sheaf diffusion layers}
+\li{Integration with geometric deep learning}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Input from}: \code{\startverb oriented-simplicial-networks\stopverb} (base simplicial complex)}
+\li{\strong{Output to}: \code{\startverb emergent-role-assignment\stopverb} (coordination constraints)}
+\li{\strong{Coordinates with}: \code{\startverb categorical-composition\stopverb} (sheaf functoriality)}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using SheafTheoreticCoordination
+
+# Build cellular sheaf over graph
+graph = SimplexGraph(adjacency_matrix)
+sheaf = CellularSheaf(graph, stalk_dim=3)
+
+# Define restriction maps (can be learned)
+for edge in edges(graph)
+    sheaf.restrictions[edge] = random_orthogonal_matrix(3)
+end
+
+# Solve for harmonic extension (inference)
+partial_observations = Dict(1 => [1.0, 0.0, 0.0], 5 => [0.0, 1.0, 0.0])
+global_assignment = harmonic_extension(sheaf, partial_observations)
+
+# Check for cohomological obstructions
+obstruction = compute_obstruction_cocycle(sheaf, global_assignment)
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Hansen & Ghrist "Toward a Spectral Theory of Cellular Sheaves" (2019)}
+\li{Bodnar et al. "Sheaf Neural Networks" (ICLR 2022)}
+\li{Robinson "Topological Signal Processing" (2014)}
+}
+}
+
+\subtree{
+\title{Implementation Status}
+\ul{
+\li{[x] Basic sheaf data structures}
+\li{[x] Sheaf Laplacian construction}
+\li{[ ] Full cohomology computation}
+\li{[ ] Neural sheaf learning}
+\li{[ ] Multi-agent coordination demo}
+}
+}
+}

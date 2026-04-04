@@ -1,0 +1,394 @@
+\title{Bluesky Jetstream}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Bluesky Jetstream Firehose Skill}
+
+\subtree{
+\title{Bluesky Jetstream Firehose Skill}
+\p{\strong{GF(3) Trit}: -1 (MINUS - validator/filter on incoming data stream) \strong{Role}: Constrain and validate Bluesky firehose events before processing}
+
+\subtree{
+\title{Overview}
+\p{Jetstream is Bluesky's simplified JSON firehose - a WebSocket streaming API that provides real-time access to all public activity on the Bluesky network. Unlike the full atproto firehose (which uses CBOR/CAR binary encoding), Jetstream delivers plain JSON, making it accessible for rapid prototyping.}
+
+\p{\strong{Endpoints}:}
+
+\ul{
+\li{Primary: \code{\startverb wss://jetstream2.us-east.bsky.network/subscribe\stopverb}}
+\li{Backup: \code{\startverb wss://jetstream1.us-west.bsky.network/subscribe\stopverb}}
+}
+
+\p{\strong{Source}: [github.com/bluesky-social/jetstream](https://github.com/bluesky-social/jetstream)}
+}
+
+\subtree{
+\title{Query Parameters}
+\pre{\startverb
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `wantedCollections` | string[] | Filter by NSID (repeatable) |
+| `wantedDids` | string[] | Filter by specific DIDs (repeatable) |
+| `compress` | boolean | Enable zstd compression |
+| `cursor` | integer | Resume from timestamp (microseconds since epoch) |
+\stopverb}
+
+\p{Example URL:}
+
+\pre{\startverb
+wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.post&wantedCollections=app.bsky.feed.like
+\stopverb}
+}
+
+\subtree{
+\title{Message Types}
+\subtree{
+\title{commit}
+\p{Repository commit events (most common):}
+
+\pre{\startverb
+{
+  "did": "did:plc:abc123...",
+  "time_us": 1703123456789012,
+  "kind": "commit",
+  "commit": {
+    "rev": "3k...",
+    "operation": "create",
+    "collection": "app.bsky.feed.post",
+    "rkey": "3k...",
+    "record": {
+      "$type": "app.bsky.feed.post",
+      "text": "Hello world!",
+      "createdAt": "2024-12-21T10:00:00.000Z"
+    },
+    "cid": "bafyrei..."
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{identity}
+\p{Identity updates:}
+
+\pre{\startverb
+{
+  "did": "did:plc:abc123...",
+  "time_us": 1703123456789012,
+  "kind": "identity",
+  "identity": {
+    "did": "did:plc:abc123...",
+    "handle": "alice.bsky.social",
+    "seq": 12345
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{account}
+\p{Account status changes:}
+
+\pre{\startverb
+{
+  "did": "did:plc:abc123...",
+  "time_us": 1703123456789012,
+  "kind": "account",
+  "account": {
+    "active": true,
+    "did": "did:plc:abc123...",
+    "seq": 12345
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Collection NSIDs}
+\pre{\startverb
+| NSID | Description |
+|------|-------------|
+| `app.bsky.feed.post` | Posts/skeets |
+| `app.bsky.feed.like` | Likes |
+| `app.bsky.feed.repost` | Reposts |
+| `app.bsky.graph.follow` | Follows |
+| `app.bsky.graph.block` | Blocks |
+| `app.bsky.graph.list` | Lists |
+| `app.bsky.graph.listitem` | List memberships |
+| `app.bsky.actor.profile` | Profile updates |
+| `app.bsky.feed.threadgate` | Thread gates |
+| `app.bsky.feed.postgate` | Post gates |
+\stopverb}
+}
+
+\subtree{
+\title{JavaScript Example}
+\pre{\startverb
+const ws = new WebSocket(
+  'wss://jetstream2.us-east.bsky.network/subscribe?' +
+  'wantedCollections=app.bsky.feed.post'
+);
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if (data.kind === 'commit' && data.commit.operation === 'create') {
+    console.log(`[${data.did}]: ${data.commit.record.text}`);
+  }
+};
+\stopverb}
+}
+
+\subtree{
+\title{Babashka/Clojure Example}
+\pre{\startverb
+(ns bluesky.jetstream
+  (:require [clojure.data.json :as json]
+            [org.httpkit.client :as http]))
+
+(def GAMMA 0x9E3779B9)
+
+(defn splitmix32 [x]
+  (let [z (bit-and (+ x GAMMA) 0xFFFFFFFF)
+        z (bit-and (* (bit-xor z (unsigned-bit-shift-right z 15)) 0x85EBCA6B) 0xFFFFFFFF)
+        z (bit-and (* (bit-xor z (unsigned-bit-shift-right z 13)) 0xC2B2AE35) 0xFFFFFFFF)]
+    (bit-xor z (unsigned-bit-shift-right z 16))))
+
+(defn cid->trit [cid]
+  (let [hash (reduce #(bit-xor (unchecked-multiply %1 31) (int %2)) 0 cid)
+        hue (mod (splitmix32 hash) 360)]
+    (cond
+      (or (< hue 60) (>= hue 300)) +1   ; PLUS (warm)
+      (< hue 180) 0                      ; ERGODIC (neutral)
+      :else -1)))                        ; MINUS (cold)
+
+(defn process-event [event]
+  (when (and (= (:kind event) "commit")
+             (= (get-in event [:commit :operation]) "create"))
+    (let [cid (get-in event [:commit :cid])
+          text (get-in event [:commit :record :text])
+          trit (cid->trit cid)]
+      {:did (:did event)
+       :text text
+       :cid cid
+       :trit trit
+       :trit-label (case trit 1 "PLUS" 0 "ERGODIC" -1 "MINUS")})))
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Agent-o-rama}
+\subtree{
+\title{Memory Substrate Connection}
+\pre{\startverb
+;; Feed Jetstream events into memory substrate
+(defn ingest-to-substrate [event memory-client]
+  (when-let [processed (process-event event)]
+    ;; Compress into control artifact
+    (compress-trace memory-client
+      [{:role :user 
+        :content (format "Bluesky post from %s: %s" 
+                         (:did processed) (:text processed))}]
+      {:tags ["bluesky" (:trit-label processed)]
+       :source "jetstream"
+       :cid (:cid processed)})))
+\stopverb}
+}
+
+\subtree{
+\title{Decay Tracking}
+\p{Posts from Jetstream get the same decay epistemology:}
+
+\ul{
+\li{\strong{Half-life}: 10 hours (HALF_LIFE_MS = 36000000)}
+\li{\strong{Renewal}: User engagement (likes, replies) renews the artifact}
+\li{\strong{Expiration}: Unrenewed posts decay to trit=0 (neutral)}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Each ingested post gets a trit assignment based on CID hash:}
+
+\pre{\startverb
+Σ(post trits) ≡ 0 (mod 3)
+\stopverb}
+
+\p{Over large samples, the distribution naturally balances due to SplitMix64's uniform properties.}
+}
+}
+
+\subtree{
+\title{Rate Limits & Best Practices}
+\ol{
+\li{\strong{Use cursor for resumption}: Store \code{\startverb time_us\stopverb} to resume after disconnect}
+\li{\strong{Exponential backoff}: 1s → 2s → 4s → ... → 60s max on reconnect}
+\li{\strong{Filter collections}: Request only what you need}
+\li{\strong{Handle compression}: Use zstd for bandwidth savings at scale}
+\li{\strong{Monitor lag}: Compare \code{\startverb time_us\stopverb} to wall clock for lag detection}
+}
+}
+
+\subtree{
+\title{DuckDB Schema}
+\pre{\startverb
+CREATE TABLE IF NOT EXISTS bluesky_firehose (
+  seq_id BIGINT PRIMARY KEY,
+  did VARCHAR NOT NULL,
+  collection VARCHAR NOT NULL,
+  rkey VARCHAR,
+  cid VARCHAR,
+  operation VARCHAR,  -- create | update | delete
+  record_json JSON,
+  text VARCHAR,
+  created_at TIMESTAMP,
+  trit INTEGER,       -- -1, 0, +1
+  color_hex VARCHAR,  -- Gay.jl deterministic color
+  cursor_us BIGINT,   -- For resumption
+  ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  INDEX idx_did (did),
+  INDEX idx_collection (collection),
+  INDEX idx_trit (trit),
+  INDEX idx_cursor (cursor_us)
+);
+
+-- View for GF(3) balance check
+CREATE VIEW bluesky_gf3_balance AS
+SELECT 
+  DATE_TRUNC('hour', ingested_at) as hour,
+  SUM(trit) as trit_sum,
+  MOD(SUM(trit), 3) as gf3_remainder,
+  COUNT(*) as event_count
+FROM bluesky_firehose
+GROUP BY 1
+ORDER BY 1 DESC;
+\stopverb}
+}
+
+\subtree{
+\title{Savitch Connection}
+\p{The triadic processing of Jetstream events mirrors Savitch's reachability algorithm:}
+
+\pre{\startverb
+NSPACE(S(n)) ⊆ DSPACE(S(n)²)
+
+Firehose Event Processing:
+├── MINUS (-1): Validate/filter incoming event
+├── ERGODIC (0): Route to appropriate handler  
+└── PLUS (+1): Generate processed artifact
+
+Each branch: O(S(n)) space
+Recursion depth: O(log n) for branching decisions
+Total: O(S(n)²) deterministic space simulating nondeterministic choices
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Start Babashka consumer
+bb scripts/bluesky_jetstream.clj --collections app.bsky.feed.post --limit 1000
+
+# Open HTML viewer
+open scripts/bluesky_viewer.html
+
+# Query stored events
+duckdb ~/.topos/ducklake.duckdb "SELECT * FROM bluesky_firehose ORDER BY cursor_us DESC LIMIT 10"
+
+# Check GF(3) balance
+duckdb ~/.topos/ducklake.duckdb "SELECT * FROM bluesky_gf3_balance LIMIT 24"
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb duckdb-temporal-versioning\stopverb} (+1): Store firehose with time-travel}
+\li{\code{\startverb gay-mcp\stopverb} (+1): Deterministic coloring for CIDs}
+\li{\code{\startverb memory-substrate\stopverb} (0): Ingest into Agent-o-rama memory}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Jetstream Documentation](https://docs.bsky.app/blog/jetstream)}
+\li{[Jetstream Source Code](https://github.com/bluesky-social/jetstream)}
+\li{[ATProto Specification](https://atproto.com/specs/atp)}
+\li{[Jazco Blog: Jetstream Design](https://jazco.dev/2024/09/24/jetstream/)}
+}
+
+\p{\strong{Skill Name}: bluesky-jetstream \strong{Type}: Real-time data stream consumer \strong{Trit}: -1 (MINUS - validator/filter) \strong{GF(3) Triad}: bluesky-jetstream (-1) ⊗ duckdb-temporal (0) ⊗ gay-mcp (+1) = 0 ✓}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+bluesky-jetstream (−) + SDF.Ch10 (+) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

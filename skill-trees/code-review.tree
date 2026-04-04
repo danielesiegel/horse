@@ -1,0 +1,153 @@
+\title{Code Review}
+
+\taxon{skill}
+
+\meta{description}{Automated code review for pull requests using specialized review patterns.}
+
+\subtree{
+\title{Code Review}
+\subtree{
+\title{Review Categories}
+\subtree{
+\title{1. Security Review}
+\p{Check for:}
+
+\ul{
+\li{SQL injection vulnerabilities}
+\li{XSS (Cross-Site Scripting)}
+\li{Command injection}
+\li{Insecure deserialization}
+\li{Hardcoded secrets/credentials}
+\li{Improper authentication/authorization}
+\li{Insecure direct object references}
+}
+}
+
+\subtree{
+\title{2. Performance Review}
+\p{Check for:}
+
+\ul{
+\li{N+1 queries}
+\li{Missing database indexes}
+\li{Unnecessary re-renders (React)}
+\li{Memory leaks}
+\li{Blocking operations in async code}
+\li{Missing caching opportunities}
+\li{Large bundle sizes}
+}
+}
+
+\subtree{
+\title{3. Code Quality Review}
+\p{Check for:}
+
+\ul{
+\li{Code duplication (DRY violations)}
+\li{Functions doing too much (SRP violations)}
+\li{Deep nesting / complex conditionals}
+\li{Magic numbers/strings}
+\li{Poor naming}
+\li{Missing error handling}
+\li{Incomplete type coverage}
+}
+}
+
+\subtree{
+\title{4. Testing Review}
+\p{Check for:}
+
+\ul{
+\li{Missing test coverage for new code}
+\li{Tests that don't test behavior}
+\li{Flaky test patterns}
+\li{Missing edge cases}
+\li{Mocked external dependencies}
+}
+}
+}
+
+\subtree{
+\title{Review Output Format}
+\pre{\startverb
+## Code Review Summary
+
+### 🔴 Critical (Must Fix)
+- **[File:Line]** [Issue description]
+  - **Why:** [Explanation]
+  - **Fix:** [Suggested fix]
+
+### 🟡 Suggestions (Should Consider)
+- **[File:Line]** [Issue description]
+  - **Why:** [Explanation]
+  - **Fix:** [Suggested fix]
+
+### 🟢 Nits (Optional)
+- **[File:Line]** [Minor suggestion]
+
+### ✅ What's Good
+- [Positive feedback on good patterns]
+\stopverb}
+}
+
+\subtree{
+\title{Common Patterns to Flag}
+\subtree{
+\title{Security}
+\pre{\startverb
+// BAD: SQL injection
+const query = `SELECT * FROM users WHERE id = ${userId}`;
+
+// GOOD: Parameterized query
+const query = 'SELECT * FROM users WHERE id = $1';
+await db.query(query, [userId]);
+\stopverb}
+}
+
+\subtree{
+\title{Performance}
+\pre{\startverb
+// BAD: N+1 query
+users.forEach(async user => {
+  const posts = await getPosts(user.id);
+});
+
+// GOOD: Batch query
+const userIds = users.map(u => u.id);
+const posts = await getPostsForUsers(userIds);
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\pre{\startverb
+// BAD: Swallowing errors
+try {
+  await riskyOperation();
+} catch (e) {}
+
+// GOOD: Handle or propagate
+try {
+  await riskyOperation();
+} catch (e) {
+  logger.error('Operation failed', { error: e });
+  throw new AppError('Operation failed', { cause: e });
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Review Checklist}
+\ul{
+\li{[ ] No hardcoded secrets}
+\li{[ ] Input validation present}
+\li{[ ] Error handling complete}
+\li{[ ] Types/interfaces defined}
+\li{[ ] Tests added for new code}
+\li{[ ] No obvious performance issues}
+\li{[ ] Code is readable and documented}
+\li{[ ] Breaking changes documented}
+}
+}
+}

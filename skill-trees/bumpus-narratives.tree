@@ -1,0 +1,165 @@
+\title{Bumpus Narratives}
+
+\taxon{skill}
+
+\meta{description}{Sheaves on time categories for compositional temporal reasoning. Bumpus}
+
+\subtree{
+\title{Bumpus Narratives Skill}
+\blockquote{\strong{Trit}: 0 (ERGODIC) - Mediates between verification (-1) and generation (+1)}
+
+\p{Sheaves on time categories for compositional reasoning about temporal data.}
+
+\subtree{
+\title{Source Papers}
+\ul{
+\li{Bumpus, B.M. et al. "Unified Framework for Time-Varying Data" (arXiv:2402.00206)}
+\li{Bumpus, B.M. "Compositional Algorithms on Compositional Data" (arXiv:2302.05575)}
+\li{Bumpus, B.M. "Structured Decompositions" (arXiv:2207.06091)}
+\li{Bumpus, B.M. "Spined Categories" (arXiv:2104.01841)}
+\li{Bumpus, B.M. "Cohomological Obstructions" (arXiv:2408.15184)}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{1. Narratives as Sheaves}
+\p{Temporal data = sheaf F: I_N → D where:}
+
+\ul{
+\li{I_N = time category (intervals [a,b] with inclusions)}
+\li{D = data category with pullbacks}
+\li{Sheaf condition: F([a,b]) = F([a,p]) ×_{F([p,p])} F([p,b])}
+}
+
+\pre{\startverb
+F₁³ := {(x,y) ∈ F₁² × F₂³ | f₁,₂²(x) = f₂,₃²(y)}
+\stopverb}
+}
+
+\subtree{
+\title{2. Adhesion Filter (FPT Algorithm)}
+\p{For tree decompositions of width w:}
+
+\ul{
+\li{Complexity: O(f(w) · n) instead of O(2^n)}
+\li{Runs on bag boundaries via pullback checking}
+}
+
+\pre{\startverb
+function adhesion_filter(sheaf::Sheaf, decomp::TreeDecomp)
+    for (bag1, bag2) in edges(decomp)
+        adhesion = bag1 ∩ bag2
+        if !is_pullback(sheaf, bag1, bag2, adhesion)
+            return false
+        end
+    end
+    true
+end
+\stopverb}
+}
+
+\subtree{
+\title{3. Cohomological Obstructions}
+\p{H⁰ detects local-to-global failure:}
+
+\ul{
+\li{H⁰(F) ≠ 0 → obstruction to gluing}
+\li{Čech complex on cover of intervals}
+}
+}
+}
+
+\subtree{
+\title{Integration with Gay.jl}
+\subtree{
+\title{Color-Coded Narratives}
+\p{Each interval [i,j] gets deterministic color:}
+
+\pre{\startverb
+color([i,j]) = gay_color(BUMPUS_SEED ⊻ hash(i,j))
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Narrative operations preserve triadic balance:}
+
+\ul{
+\li{\strong{Restriction} (-1): F([a,b]) → F([a,a])}
+\li{\strong{Extension} (+1): F([a,a]) → F([a,b])}
+\li{\strong{Pullback} (0): F₁³ := fibered product}
+}
+}
+}
+
+\subtree{
+\title{Diagram Catalog}
+\p{20 extracted diagrams from Bumpus papers:}
+
+\ul{
+\li{17 commutative diagrams}
+\li{2 functor diagrams}
+\li{1 graph diagram}
+}
+
+\p{Location: \code{\startverb papers/diagrams/images/bumpus-*.jpg\stopverb}}
+}
+
+\subtree{
+\title{Triadic Composition}
+\pre{\startverb
+structured-decomp (-1) ⊗ bumpus-narratives (0) ⊗ world-hopping (+1) = 0 ✓
+sheaf-cohomology (-1) ⊗ bumpus-narratives (0) ⊗ triad-interleave (+1) = 0 ✓
+persistent-homology (-1) ⊗ bumpus-narratives (0) ⊗ gay-mcp (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Example: Ice Cream Companies}
+\p{From the Venice ice cream example (Diagram 1):}
+
+\pre{\startverb
+Time 1: {a₁, a₂, b, c}  →  Time 2: {a*, b, c}  →  Time 3: {a*, b}
+\stopverb}
+
+\p{The sheaf tracks:}
+
+\ul{
+\li{Company mergers (a₁, a₂ → a*)}
+\li{Company disappearance (c)}
+\li{Supplier relationships (graph morphisms)}
+}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+using BumpusNarratives
+
+# Create narrative
+n = Narrative(TimeCategory(1:10), FinSet)
+
+# Add snapshots
+add_snapshot!(n, 1, Set([:a, :b, :c]))
+add_snapshot!(n, 2, Set([:a, :b]))
+
+# Check sheaf condition
+is_sheaf(n)  # true if pullbacks exist
+
+# Compute H⁰ obstruction
+obstruction = cech_H0(n)
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{\strong{Bumpus et al.} - Time-varying data via sheaves on time categories}
+\li{\strong{Ghrist} - Elementary Applied Topology (Čech cohomology)}
+\li{\strong{Fairbanks} - AlgebraicJulia ecosystem for ACSets}
+\li{\strong{Gay.jl} - Deterministic color chains for diagram coloring}
+}
+}
+}

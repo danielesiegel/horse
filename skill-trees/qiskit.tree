@@ -1,0 +1,362 @@
+\title{Qiskit}
+
+\taxon{skill}
+
+\meta{description}{Comprehensive quantum computing toolkit for building, optimizing, and executing quantum circuits. Use when working with quantum algorithms, simulations, or quantum hardware including (1) Building quantum circuits with gates and measurements, (2) Running quantum algorithms (VQE, QAOA, Grover), (3) Transpiling/optimizing circuits for hardware, (4) Executing on IBM Quantum or other providers, (5) Quantum chemistry and materials science, (6) Quantum machine learning, (7) Visualizing circuits and results, or (8) Any quantum computing development task.}
+
+\subtree{
+\title{Qiskit}
+\subtree{
+\title{Overview}
+\p{Qiskit is the world's most popular open-source quantum computing framework with 13M+ downloads. Build quantum circuits, optimize for hardware, execute on simulators or real quantum computers, and analyze results. Supports IBM Quantum (100+ qubit systems), IonQ, Amazon Braket, and other providers.}
+
+\p{\strong{Key Features:}}
+
+\ul{
+\li{83x faster transpilation than competitors}
+\li{29\% fewer two-qubit gates in optimized circuits}
+\li{Backend-agnostic execution (local simulators or cloud hardware)}
+\li{Comprehensive algorithm libraries for optimization, chemistry, and ML}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install qiskit
+uv pip install "qiskit[visualization]" matplotlib
+\stopverb}
+}
+
+\subtree{
+\title{First Circuit}
+\pre{\startverb
+from qiskit import QuantumCircuit
+from qiskit.primitives import StatevectorSampler
+
+# Create Bell state (entangled qubits)
+qc = QuantumCircuit(2)
+qc.h(0)           # Hadamard on qubit 0
+qc.cx(0, 1)       # CNOT from qubit 0 to 1
+qc.measure_all()  # Measure both qubits
+
+# Run locally
+sampler = StatevectorSampler()
+result = sampler.run([qc], shots=1024).result()
+counts = result[0].data.meas.get_counts()
+print(counts)  # {'00': ~512, '11': ~512}
+\stopverb}
+}
+
+\subtree{
+\title{Visualization}
+\pre{\startverb
+from qiskit.visualization import plot_histogram
+
+qc.draw('mpl')           # Circuit diagram
+plot_histogram(counts)   # Results histogram
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Setup and Installation}
+\p{For detailed installation, authentication, and IBM Quantum account setup:}
+
+\ul{
+\li{\strong{See \code{\startverb references/setup.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{Installation with uv}
+\li{Python environment setup}
+\li{IBM Quantum account and API token configuration}
+\li{Local vs. cloud execution}
+}
+}
+
+\subtree{
+\title{2. Building Quantum Circuits}
+\p{For constructing quantum circuits with gates, measurements, and composition:}
+
+\ul{
+\li{\strong{See \code{\startverb references/circuits.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{Creating circuits with QuantumCircuit}
+\li{Single-qubit gates (H, X, Y, Z, rotations, phase gates)}
+\li{Multi-qubit gates (CNOT, SWAP, Toffoli)}
+\li{Measurements and barriers}
+\li{Circuit composition and properties}
+\li{Parameterized circuits for variational algorithms}
+}
+}
+
+\subtree{
+\title{3. Primitives (Sampler and Estimator)}
+\p{For executing quantum circuits and computing results:}
+
+\ul{
+\li{\strong{See \code{\startverb references/primitives.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{\strong{Sampler}: Get bitstring measurements and probability distributions}
+\li{\strong{Estimator}: Compute expectation values of observables}
+\li{V2 interface (StatevectorSampler, StatevectorEstimator)}
+\li{IBM Quantum Runtime primitives for hardware}
+\li{Sessions and Batch modes}
+\li{Parameter binding}
+}
+}
+
+\subtree{
+\title{4. Transpilation and Optimization}
+\p{For optimizing circuits and preparing for hardware execution:}
+
+\ul{
+\li{\strong{See \code{\startverb references/transpilation.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{Why transpilation is necessary}
+\li{Optimization levels (0-3)}
+\li{Six transpilation stages (init, layout, routing, translation, optimization, scheduling)}
+\li{Advanced features (virtual permutation elision, gate cancellation)}
+\li{Common parameters (initial_layout, approximation_degree, seed)}
+\li{Best practices for efficient circuits}
+}
+}
+
+\subtree{
+\title{5. Visualization}
+\p{For displaying circuits, results, and quantum states:}
+
+\ul{
+\li{\strong{See \code{\startverb references/visualization.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{Circuit drawings (text, matplotlib, LaTeX)}
+\li{Result histograms}
+\li{Quantum state visualization (Bloch sphere, state city, QSphere)}
+\li{Backend topology and error maps}
+\li{Customization and styling}
+\li{Saving publication-quality figures}
+}
+}
+
+\subtree{
+\title{6. Hardware Backends}
+\p{For running on simulators and real quantum computers:}
+
+\ul{
+\li{\strong{See \code{\startverb references/backends.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{IBM Quantum backends and authentication}
+\li{Backend properties and status}
+\li{Running on real hardware with Runtime primitives}
+\li{Job management and queuing}
+\li{Session mode (iterative algorithms)}
+\li{Batch mode (parallel jobs)}
+\li{Local simulators (StatevectorSampler, Aer)}
+\li{Third-party providers (IonQ, Amazon Braket)}
+\li{Error mitigation strategies}
+}
+}
+
+\subtree{
+\title{7. Qiskit Patterns Workflow}
+\p{For implementing the four-step quantum computing workflow:}
+
+\ul{
+\li{\strong{See \code{\startverb references/patterns.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{\strong{Map}: Translate problems to quantum circuits}
+\li{\strong{Optimize}: Transpile for hardware}
+\li{\strong{Execute}: Run with primitives}
+\li{\strong{Post-process}: Extract and analyze results}
+\li{Complete VQE example}
+\li{Session vs. Batch execution}
+\li{Common workflow patterns}
+}
+}
+
+\subtree{
+\title{8. Quantum Algorithms and Applications}
+\p{For implementing specific quantum algorithms:}
+
+\ul{
+\li{\strong{See \code{\startverb references/algorithms.md\stopverb}}}
+}
+
+\p{Topics covered:}
+
+\ul{
+\li{\strong{Optimization}: VQE, QAOA, Grover's algorithm}
+\li{\strong{Chemistry}: Molecular ground states, excited states, Hamiltonians}
+\li{\strong{Machine Learning}: Quantum kernels, VQC, QNN}
+\li{\strong{Algorithm libraries}: Qiskit Nature, Qiskit ML, Qiskit Optimization}
+\li{Physics simulations and benchmarking}
+}
+}
+}
+
+\subtree{
+\title{Workflow Decision Guide}
+\p{\strong{If you need to:}}
+
+\ul{
+\li{Install Qiskit or set up IBM Quantum account → \code{\startverb references/setup.md\stopverb}}
+\li{Build a new quantum circuit → \code{\startverb references/circuits.md\stopverb}}
+\li{Understand gates and circuit operations → \code{\startverb references/circuits.md\stopverb}}
+\li{Run circuits and get measurements → \code{\startverb references/primitives.md\stopverb}}
+\li{Compute expectation values → \code{\startverb references/primitives.md\stopverb}}
+\li{Optimize circuits for hardware → \code{\startverb references/transpilation.md\stopverb}}
+\li{Visualize circuits or results → \code{\startverb references/visualization.md\stopverb}}
+\li{Execute on IBM Quantum hardware → \code{\startverb references/backends.md\stopverb}}
+\li{Connect to third-party providers → \code{\startverb references/backends.md\stopverb}}
+\li{Implement end-to-end quantum workflow → \code{\startverb references/patterns.md\stopverb}}
+\li{Build specific algorithm (VQE, QAOA, etc.) → \code{\startverb references/algorithms.md\stopverb}}
+\li{Solve chemistry or optimization problems → \code{\startverb references/algorithms.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Development Workflow}
+\ol{
+\li{\strong{Start with simulators}: Test locally before using hardware}
+}
+
+\ol{
+\li{\strong{Always transpile}: Optimize circuits before execution}
+}
+
+\ol{
+\li{\strong{Use appropriate primitives}:}
+\li{Sampler for bitstrings (optimization algorithms)}
+\li{Estimator for expectation values (chemistry, physics)}
+}
+
+\ol{
+\li{\strong{Choose execution mode}:}
+\li{Session: Iterative algorithms (VQE, QAOA)}
+\li{Batch: Independent parallel jobs}
+\li{Single job: One-off experiments}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\ul{
+\li{Use optimization_level=3 for production}
+\li{Minimize two-qubit gates (major error source)}
+\li{Test with noisy simulators before hardware}
+\li{Save and reuse transpiled circuits}
+\li{Monitor convergence in variational algorithms}
+}
+}
+
+\subtree{
+\title{Hardware Execution}
+\ul{
+\li{Check backend status before submitting}
+\li{Use least_busy() for testing}
+\li{Save job IDs for later retrieval}
+\li{Apply error mitigation (resilience_level)}
+\li{Start with fewer shots, increase for final runs}
+}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Pattern 1: Simple Circuit Execution}
+\pre{\startverb
+from qiskit import QuantumCircuit, transpile
+from qiskit.primitives import StatevectorSampler
+
+qc = QuantumCircuit(2)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure_all()
+
+sampler = StatevectorSampler()
+result = sampler.run([qc], shots=1024).result()
+counts = result[0].data.meas.get_counts()
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Hardware Execution with Transpilation}
+\pre{\startverb
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+from qiskit import transpile
+
+service = QiskitRuntimeService()
+backend = service.backend("ibm_brisbane")
+
+qc_optimized = transpile(qc, backend=backend, optimization_level=3)
+
+sampler = Sampler(backend)
+job = sampler.run([qc_optimized], shots=1024)
+result = job.result()
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Variational Algorithm (VQE)}
+\pre{\startverb
+from qiskit_ibm_runtime import Session, EstimatorV2 as Estimator
+from scipy.optimize import minimize
+
+with Session(backend=backend) as session:
+    estimator = Estimator(session=session)
+
+    def cost_function(params):
+        bound_qc = ansatz.assign_parameters(params)
+        qc_isa = transpile(bound_qc, backend=backend)
+        result = estimator.run([(qc_isa, hamiltonian)]).result()
+        return result[0].data.evs
+
+    result = minimize(cost_function, initial_params, method='COBYLA')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Docs}: https://quantum.ibm.com/docs}
+\li{\strong{Qiskit Textbook}: https://qiskit.org/learn}
+\li{\strong{API Reference}: https://docs.quantum.ibm.com/api/qiskit}
+\li{\strong{Patterns Guide}: https://quantum.cloud.ibm.com/docs/en/guides/intro-to-patterns}
+}
+}
+}

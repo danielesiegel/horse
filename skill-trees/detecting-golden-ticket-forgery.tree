@@ -1,0 +1,55 @@
+\title{Detecting Golden Ticket Forgery}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect Kerberos Golden Ticket forgery by analyzing Windows Event ID 4769 for RC4 encryption downgrades (0x17), abnormal ticket lifetimes, and krbtgt account anomalies in Splunk and Elastic SIEM}
+
+\subtree{
+\title{Detecting Golden Ticket Forgery}
+\subtree{
+\title{Overview}
+\p{A Golden Ticket attack (MITRE ATT&CK T1558.001) involves forging a Kerberos Ticket Granting Ticket (TGT) using the krbtgt account NTLM hash, granting unrestricted access to any service in the Active Directory domain. This skill detects Golden Ticket usage by analyzing Event ID 4769 for RC4 encryption type (0x17) in environments enforcing AES, identifying tickets with abnormal lifetimes exceeding domain policy, correlating TGS requests with missing corresponding TGT requests (Event ID 4768), and detecting krbtgt password age anomalies.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting golden ticket forgery}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows Domain Controller with Kerberos audit logging enabled}
+\li{Splunk or Elastic SIEM ingesting Windows Security event logs}
+\li{Python 3.8+ for offline event log analysis}
+\li{Knowledge of domain Kerberos encryption policy (AES vs RC4)}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Audit domain Kerberos encryption policy to establish AES-only baseline}
+\li{Forward Event IDs 4768 and 4769 to SIEM platform}
+\li{Detect RC4 (0x17) encryption in TGS requests where AES is enforced}
+\li{Identify TGS requests without corresponding TGT requests (forged ticket indicator)}
+\li{Alert on ticket lifetimes exceeding MaxTicketAge domain policy}
+\li{Monitor krbtgt account password age and last reset date}
+\li{Correlate findings with host/user context for risk scoring}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report with Golden Ticket indicators including RC4 downgrades, orphaned TGS requests, abnormal ticket lifetimes, and risk-scored alerts with MITRE ATT&CK technique mapping.}
+}
+}

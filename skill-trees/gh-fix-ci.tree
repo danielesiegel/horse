@@ -1,0 +1,88 @@
+\title{"gh Fix Ci"}
+
+\taxon{skill}
+
+\meta{description}{"Use when a user asks to debug or fix failing GitHub PR checks that run in GitHub Actions; use `gh` to inspect checks and logs, summarize failure context, draft a fix plan, and implement only after explicit approval. Treat external providers (for example Buildkite) as out of scope and report only the details URL."}
+
+\subtree{
+\title{Gh Pr Checks Plan Fix}
+\subtree{
+\title{Overview}
+\p{Use gh to locate failing PR checks, fetch GitHub Actions logs for actionable failures, summarize the failure snippet, then propose a fix plan and implement after explicit approval.}
+
+\ul{
+\li{If a plan-oriented skill (for example \code{\startverb create-plan\stopverb}) is available, use it; otherwise draft a concise plan inline and request approval before implementing.}
+}
+
+\p{Prereq: authenticate with the standard GitHub CLI once (for example, run \code{\startverb gh auth login\stopverb}), then confirm with \code{\startverb gh auth status\stopverb} (repo + workflow scopes are typically required).}
+}
+
+\subtree{
+\title{Inputs}
+\ul{
+\li{\code{\startverb repo\stopverb}: path inside the repo (default \code{\startverb .\stopverb})}
+\li{\code{\startverb pr\stopverb}: PR number or URL (optional; defaults to current branch PR)}
+\li{\code{\startverb gh\stopverb} authentication for the repo host}
+}
+}
+
+\subtree{
+\title{Quick start}
+\ul{
+\li{\code{\startverb python "<path-to-skill>/scripts/inspect_pr_checks.py" --repo "." --pr "<number-or-url>"\stopverb}}
+\li{Add \code{\startverb --json\stopverb} if you want machine-friendly output for summarization.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Verify gh authentication.}
+\li{Run \code{\startverb gh auth status\stopverb} in the repo.}
+\li{If unauthenticated, ask the user to run \code{\startverb gh auth login\stopverb} (ensuring repo + workflow scopes) before proceeding.}
+\li{Resolve the PR.}
+\li{Prefer the current branch PR: \code{\startverb gh pr view --json number,url\stopverb}.}
+\li{If the user provides a PR number or URL, use that directly.}
+\li{Inspect failing checks (GitHub Actions only).}
+\li{Preferred: run the bundled script (handles gh field drift and job-log fallbacks):}
+\li{\code{\startverb python "<path-to-skill>/scripts/inspect_pr_checks.py" --repo "." --pr "<number-or-url>"\stopverb}}
+\li{Add \code{\startverb --json\stopverb} for machine-friendly output.}
+\li{Manual fallback:}
+\li{\code{\startverb gh pr checks <pr> --json name,state,bucket,link,startedAt,completedAt,workflow\stopverb}}
+\li{If a field is rejected, rerun with the available fields reported by \code{\startverb gh\stopverb}.}
+\li{For each failing check, extract the run id from \code{\startverb detailsUrl\stopverb} and run:}
+\li{\code{\startverb gh run view <run_id> --json name,workflowName,conclusion,status,url,event,headBranch,headSha\stopverb}}
+\li{\code{\startverb gh run view <run_id> --log\stopverb}}
+\li{If the run log says it is still in progress, fetch job logs directly:}
+\li{\code{\startverb gh api "/repos/<owner>/<repo>/actions/jobs/<job_id>/logs" > "<path>"\stopverb}}
+\li{Scope non-GitHub Actions checks.}
+\li{If \code{\startverb detailsUrl\stopverb} is not a GitHub Actions run, label it as external and only report the URL.}
+\li{Do not attempt Buildkite or other providers; keep the workflow lean.}
+\li{Summarize failures for the user.}
+\li{Provide the failing check name, run URL (if any), and a concise log snippet.}
+\li{Call out missing logs explicitly.}
+\li{Create a plan.}
+\li{Use the \code{\startverb create-plan\stopverb} skill to draft a concise plan and request approval.}
+\li{Implement after approval.}
+\li{Apply the approved plan, summarize diffs/tests, and ask about opening a PR.}
+\li{Recheck status.}
+\li{After changes, suggest re-running the relevant tests and \code{\startverb gh pr checks\stopverb} to confirm.}
+}
+}
+
+\subtree{
+\title{Bundled Resources}
+\subtree{
+\title{scripts/inspect_pr_checks.py}
+\p{Fetch failing PR checks, pull GitHub Actions logs, and extract a failure snippet. Exits non-zero when failures remain so it can be used in automation.}
+
+\p{Usage examples:}
+
+\ul{
+\li{\code{\startverb python "<path-to-skill>/scripts/inspect_pr_checks.py" --repo "." --pr "123"\stopverb}}
+\li{\code{\startverb python "<path-to-skill>/scripts/inspect_pr_checks.py" --repo "." --pr "https://github.com/org/repo/pull/123" --json\stopverb}}
+\li{\code{\startverb python "<path-to-skill>/scripts/inspect_pr_checks.py" --repo "." --max-lines 200 --context 40\stopverb}}
+}
+}
+}
+}

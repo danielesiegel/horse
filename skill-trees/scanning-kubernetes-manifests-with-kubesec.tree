@@ -1,0 +1,336 @@
+\title{Scanning Kubernetes Manifests With Kubesec}
+
+\taxon{skill}
+
+\tag{kubesec}
+
+\tag{kubernetes}
+
+\tag{manifest-scanning}
+
+\tag{security-scanning}
+
+\tag{devsecops}
+
+\tag{misconfiguration}
+
+\tag{static-analysis}
+
+\tag{ci-cd}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Perform security risk analysis on Kubernetes resource manifests using Kubesec to identify misconfigurations, privilege escalation risks, and deviations from security best practices.}
+
+\subtree{
+\title{Scanning Kubernetes Manifests with Kubesec}
+\subtree{
+\title{Overview}
+\p{Kubesec is an open-source security risk analysis tool developed by ControlPlane that inspects Kubernetes resource manifests for common exploitable risks such as privilege escalation, writable host mounts, and excessive capabilities. It assigns a numerical security score to each resource and provides actionable recommendations for hardening. Kubesec can be used as a CLI binary, Docker container, kubectl plugin, admission webhook, or REST API endpoint.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve scanning kubernetes manifests with kubesec}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Kubernetes manifest files (YAML/JSON) for Deployments, Pods, DaemonSets, StatefulSets}
+\li{Docker or Go runtime for local installation}
+\li{kubectl access for scanning live cluster resources}
+\li{CI/CD pipeline access for automated scanning integration}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Security Scoring System}
+\p{Kubesec assigns a score to each Kubernetes resource based on security checks:}
+
+\ul{
+\li{\strong{Positive scores}: Awarded for security-enhancing configurations (readOnlyRootFilesystem, runAsNonRoot)}
+\li{\strong{Zero or negative scores}: Indicate missing security controls or dangerous configurations}
+\li{\strong{Critical advisories}: Flagged configurations that represent immediate security risks}
+}
+}
+
+\subtree{
+\title{Check Categories}
+\ol{
+\li{\strong{Privilege Controls}: Checks for privileged containers, host PID/network access, root execution}
+\li{\strong{Capabilities}: Identifies excessive Linux capabilities (SYS_ADMIN, NET_RAW)}
+\li{\strong{Volume Mounts}: Detects dangerous host path mounts and writable sensitive paths}
+\li{\strong{Resource Limits}: Validates presence of CPU/memory resource constraints}
+\li{\strong{Security Context}: Verifies seccomp profiles, AppArmor annotations, SELinux contexts}
+}
+}
+}
+
+\subtree{
+\title{Installation}
+\subtree{
+\title{Binary Installation}
+\pre{\startverb
+# Linux/macOS
+curl -sSL https://github.com/controlplaneio/kubesec/releases/latest/download/kubesec_linux_amd64.tar.gz | \
+  tar xz -C /usr/local/bin/ kubesec
+
+# Verify installation
+kubesec version
+\stopverb}
+}
+
+\subtree{
+\title{Docker Installation}
+\pre{\startverb
+docker pull kubesec/kubesec:v2
+
+# Scan a manifest file
+docker run -i kubesec/kubesec:v2 scan /dev/stdin < deployment.yaml
+\stopverb}
+}
+
+\subtree{
+\title{kubectl Plugin}
+\pre{\startverb
+kubectl krew install kubesec-scan
+kubectl kubesec-scan pod mypod -n default
+\stopverb}
+}
+}
+
+\subtree{
+\title{Practical Scanning}
+\subtree{
+\title{Scanning a Single Manifest}
+\pre{\startverb
+# Scan a deployment manifest
+kubesec scan deployment.yaml
+
+# Scan with JSON output
+kubesec scan -o json deployment.yaml
+
+# Scan from stdin
+cat pod.yaml | kubesec scan -
+\stopverb}
+}
+
+\subtree{
+\title{Sample Output}
+\pre{\startverb
+[
+  {
+    "object": "Pod/web-app.default",
+    "valid": true,
+    "fileName": "pod.yaml",
+    "message": "Passed with a score of 3 points",
+    "score": 3,
+    "scoring": {
+      "passed": [
+        {
+          "id": "ReadOnlyRootFilesystem",
+          "selector": "containers[] .securityContext .readOnlyRootFilesystem == true",
+          "reason": "An immutable root filesystem prevents applications from writing to their local disk",
+          "points": 1
+        },
+        {
+          "id": "RunAsNonRoot",
+          "selector": "containers[] .securityContext .runAsNonRoot == true",
+          "reason": "Force the running image to run as a non-root user",
+          "points": 1
+        },
+        {
+          "id": "LimitsCPU",
+          "selector": "containers[] .resources .limits .cpu",
+          "reason": "Enforcing CPU limits prevents DOS via resource exhaustion",
+          "points": 1
+        }
+      ],
+      "advise": [
+        {
+          "id": "ApparmorAny",
+          "selector": "metadata .annotations .\"container.apparmor.security.beta.kubernetes.io/nginx\"",
+          "reason": "Well defined AppArmor policies reduce the attack surface of the container",
+          "points": 3
+        },
+        {
+          "id": "ServiceAccountName",
+          "selector": ".spec .serviceAccountName",
+          "reason": "Service accounts restrict Kubernetes API access and should be configured",
+          "points": 3
+        }
+      ]
+    }
+  }
+]
+\stopverb}
+}
+
+\subtree{
+\title{Scanning Multiple Resources}
+\pre{\startverb
+# Scan all YAML files in a directory
+for file in manifests/*.yaml; do
+  echo "=== Scanning $file ==="
+  kubesec scan "$file"
+done
+
+# Scan multi-document YAML
+kubesec scan multi-resource.yaml
+\stopverb}
+}
+
+\subtree{
+\title{Using the HTTP API}
+\pre{\startverb
+# Scan via the public API
+curl -sSX POST --data-binary @deployment.yaml \
+  https://v2.kubesec.io/scan
+
+# Run a local API server
+kubesec http --port 8080 &
+
+# Scan against local server
+curl -sSX POST --data-binary @deployment.yaml \
+  http://localhost:8080/scan
+\stopverb}
+}
+}
+
+\subtree{
+\title{CI/CD Integration}
+\subtree{
+\title{GitHub Actions}
+\pre{\startverb
+name: Kubesec Scan
+on: [pull_request]
+jobs:
+  kubesec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Kubesec
+        run: |
+          curl -sSL https://github.com/controlplaneio/kubesec/releases/latest/download/kubesec_linux_amd64.tar.gz | \
+            tar xz -C /usr/local/bin/ kubesec
+      - name: Scan Manifests
+        run: |
+          FAIL=0
+          for file in k8s/*.yaml; do
+            SCORE=$(kubesec scan "$file" | jq '.[0].score')
+            echo "$file: score=$SCORE"
+            if [ "$SCORE" -lt 0 ]; then
+              echo "FAIL: $file has critical issues (score: $SCORE)"
+              FAIL=1
+            fi
+          done
+          exit $FAIL
+\stopverb}
+}
+
+\subtree{
+\title{GitLab CI}
+\pre{\startverb
+kubesec-scan:
+  stage: security
+  image: kubesec/kubesec:v2
+  script:
+    - |
+      for file in k8s/*.yaml; do
+        kubesec scan "$file" > /tmp/result.json
+        SCORE=$(cat /tmp/result.json | jq '.[0].score')
+        if [ "$SCORE" -lt 0 ]; then
+          echo "CRITICAL: $file scored $SCORE"
+          cat /tmp/result.json | jq '.[0].scoring.critical'
+          exit 1
+        fi
+      done
+  artifacts:
+    paths:
+      - kubesec-results/
+\stopverb}
+}
+
+\subtree{
+\title{Admission Webhook}
+\p{Deploy Kubesec as a ValidatingWebhookConfiguration to reject insecure manifests at deploy time:}
+
+\pre{\startverb
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: kubesec-webhook
+webhooks:
+  - name: kubesec.controlplane.io
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments", "daemonsets", "statefulsets"]
+    clientConfig:
+      service:
+        name: kubesec-webhook
+        namespace: kube-system
+        path: /scan
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions: ["v1"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Checks Reference}
+\subtree{
+\title{Critical Checks (Negative Score)}
+\pre{\startverb
+| Check | Selector | Risk |
+|-------|----------|------|
+| Privileged | `securityContext.privileged == true` | Full host access |
+| HostPID | `spec.hostPID == true` | Process namespace escape |
+| HostNetwork | `spec.hostNetwork == true` | Network namespace escape |
+| SYS_ADMIN | `capabilities.add contains SYS_ADMIN` | Near-root capability |
+\stopverb}
+}
+
+\subtree{
+\title{Best Practice Checks (Positive Score)}
+\pre{\startverb
+| Check | Points | Description |
+|-------|--------|-------------|
+| ReadOnlyRootFilesystem | +1 | Prevents filesystem writes |
+| RunAsNonRoot | +1 | Non-root process execution |
+| RunAsUser > 10000 | +1 | High UID reduces collision risk |
+| LimitsCPU | +1 | Prevents CPU resource exhaustion |
+| LimitsMemory | +1 | Prevents memory resource exhaustion |
+| RequestsCPU | +1 | Ensures scheduler resource awareness |
+| ServiceAccountName | +3 | Explicit service account |
+| AppArmor annotation | +3 | Kernel-level MAC enforcement |
+| Seccomp profile | +4 | Syscall filtering |
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Kubesec GitHub Repository](https://github.com/controlplaneio/kubesec)}
+\li{[Kubesec Online Scanner](https://kubesec.io/)}
+\li{[ControlPlane Security Tools](https://controlplane.io/)}
+\li{[CIS Kubernetes Benchmark](https://www.cisecurity.org/benchmark/kubernetes)}
+\li{[Kubernetes Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)}
+}
+}
+}

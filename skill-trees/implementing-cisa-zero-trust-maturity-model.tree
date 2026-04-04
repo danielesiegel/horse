@@ -1,0 +1,445 @@
+\title{Implementing Cisa Zero Trust Maturity Model}
+
+\taxon{skill}
+
+\tag{zero-trust}
+
+\tag{cisa}
+
+\tag{maturity-model}
+
+\tag{federal-compliance}
+
+\tag{governance}
+
+\tag{nist-800-207}
+
+\tag{identity}
+
+\tag{devices}
+
+\tag{networks}
+
+\tag{applications}
+
+\tag{data-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement the CISA Zero Trust Maturity Model v2.0 across the five pillars of identity, devices, networks, applications, and data to achieve progressive organizational zero trust maturity.}
+
+\subtree{
+\title{Implementing CISA Zero Trust Maturity Model}
+\subtree{
+\title{Overview}
+\p{The CISA Zero Trust Maturity Model (ZTMM) Version 2.0, released in April 2023, provides federal agencies and organizations with a structured roadmap for adopting zero trust architecture. The model defines five core pillars -- Identity, Devices, Networks, Applications & Workloads, and Data -- each progressing through four maturity stages: Traditional, Initial, Advanced, and Optimal. Three cross-cutting capabilities (Visibility and Analytics, Automation and Orchestration, and Governance) span all pillars. This skill covers assessment, gap analysis, and progressive implementation across all pillars and maturity levels.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing cisa zero trust maturity model capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with NIST SP 800-207 Zero Trust Architecture}
+\li{Understanding of federal cybersecurity mandates (EO 14028, OMB M-22-09)}
+\li{Access to organizational IT asset inventory and network architecture documentation}
+\li{Knowledge of identity and access management (IAM) fundamentals}
+\li{Understanding of network segmentation and microsegmentation concepts}
+}
+}
+
+\subtree{
+\title{CISA ZTMM Five Pillars}
+\subtree{
+\title{Pillar 1: Identity}
+\p{Identity refers to attributes that uniquely describe an agency user or entity, including non-person entities (NPEs) such as service accounts and machine identities.}
+
+\p{\strong{Traditional Stage:}}
+
+\ul{
+\li{Password-based authentication}
+\li{Limited identity validation}
+\li{Manual provisioning and deprovisioning}
+}
+
+\p{\strong{Initial Stage:}}
+
+\ul{
+\li{MFA deployed for privileged users}
+\li{Identity governance initiated}
+\li{Basic identity lifecycle management}
+}
+
+\p{\strong{Advanced Stage:}}
+
+\ul{
+\li{Phishing-resistant MFA for all users (FIDO2/WebAuthn)}
+\li{Continuous identity validation}
+\li{Automated provisioning tied to HR systems}
+\li{Identity threat detection and response (ITDR)}
+}
+
+\p{\strong{Optimal Stage:}}
+
+\ul{
+\li{Continuous, real-time identity verification}
+\li{Passwordless authentication across all systems}
+\li{AI-driven anomaly detection for identity behaviors}
+\li{Full integration of identity signals into access decisions}
+}
+}
+
+\subtree{
+\title{Pillar 2: Devices}
+\p{Devices include any hardware, software, or firmware asset that connects to a network -- servers, laptops, mobile phones, IoT devices, and network equipment.}
+
+\p{\strong{Traditional Stage:}}
+
+\ul{
+\li{Limited device inventory}
+\li{Basic endpoint protection (antivirus)}
+\li{No device compliance checks}
+}
+
+\p{\strong{Initial Stage:}}
+
+\ul{
+\li{Comprehensive device inventory}
+\li{Endpoint Detection and Response (EDR) deployment}
+\li{Basic device health checks before network access}
+}
+
+\p{\strong{Advanced Stage:}}
+
+\ul{
+\li{Real-time device posture assessment}
+\li{Automated compliance enforcement}
+\li{Device certificates for machine identity}
+\li{Vulnerability scanning integrated into access decisions}
+}
+
+\p{\strong{Optimal Stage:}}
+
+\ul{
+\li{Continuous device trust scoring}
+\li{Automated remediation of non-compliant devices}
+\li{Full device lifecycle management integrated with zero trust policies}
+\li{Firmware integrity verification}
+}
+}
+
+\subtree{
+\title{Pillar 3: Networks}
+\p{Networks encompass all communications media including internal networks, wireless, and the internet.}
+
+\p{\strong{Traditional Stage:}}
+
+\ul{
+\li{Perimeter-based security (firewalls, VPNs)}
+\li{Flat internal networks}
+\li{Minimal east-west traffic inspection}
+}
+
+\p{\strong{Initial Stage:}}
+
+\ul{
+\li{Initial network segmentation}
+\li{Encrypted DNS and internal traffic}
+\li{Basic network monitoring and logging}
+}
+
+\p{\strong{Advanced Stage:}}
+
+\ul{
+\li{Microsegmentation of critical assets}
+\li{Software-defined networking (SDN) for dynamic policy enforcement}
+\li{Full TLS encryption for all internal communications}
+\li{Network Detection and Response (NDR)}
+}
+
+\p{\strong{Optimal Stage:}}
+
+\ul{
+\li{Fully software-defined, policy-driven network}
+\li{Zero implicit trust zones}
+\li{AI-driven network anomaly detection}
+\li{Automated threat response integrated with network controls}
+}
+}
+
+\subtree{
+\title{Pillar 4: Applications and Workloads}
+\p{Applications and workloads include agency systems, programs, and services running on-premises, on mobile devices, and in cloud environments.}
+
+\p{\strong{Traditional Stage:}}
+
+\ul{
+\li{Perimeter-protected applications}
+\li{Manual vulnerability patching}
+\li{Limited application-level logging}
+}
+
+\p{\strong{Initial Stage:}}
+
+\ul{
+\li{Application-level access controls}
+\li{Web Application Firewalls (WAF)}
+\li{Regular vulnerability scanning}
+\li{Application inventory established}
+}
+
+\p{\strong{Advanced Stage:}}
+
+\ul{
+\li{Continuous integration of security testing (SAST/DAST)}
+\li{Application-aware microsegmentation}
+\li{API security gateways}
+\li{Immutable infrastructure patterns}
+}
+
+\p{\strong{Optimal Stage:}}
+
+\ul{
+\li{Runtime application self-protection (RASP)}
+\li{Automated application security orchestration}
+\li{Full DevSecOps pipeline integration}
+\li{Zero-standing privileges for application access}
+}
+}
+
+\subtree{
+\title{Pillar 5: Data}
+\p{Data encompasses all structured and unstructured information, at rest, in transit, and in use.}
+
+\p{\strong{Traditional Stage:}}
+
+\ul{
+\li{Basic encryption for data at rest}
+\li{Limited data classification}
+\li{No data loss prevention}
+}
+
+\p{\strong{Initial Stage:}}
+
+\ul{
+\li{Data classification scheme implemented}
+\li{DLP policies for sensitive data}
+\li{Encryption for data in transit (TLS 1.2+)}
+\li{Basic data inventory}
+}
+
+\p{\strong{Advanced Stage:}}
+
+\ul{
+\li{Automated data classification}
+\li{Fine-grained data access controls}
+\li{Data activity monitoring}
+\li{Rights management for sensitive documents}
+}
+
+\p{\strong{Optimal Stage:}}
+
+\ul{
+\li{Real-time data flow analytics}
+\li{AI-driven data classification and protection}
+\li{Automated response to data exfiltration attempts}
+\li{Full data lifecycle governance with zero trust principles}
+}
+}
+}
+
+\subtree{
+\title{Cross-Cutting Capabilities}
+\subtree{
+\title{Visibility and Analytics}
+\pre{\startverb
+Maturity Progression:
+Traditional -> Manual log review, limited SIEM
+Initial     -> Centralized logging, basic SIEM correlation
+Advanced    -> UEBA, automated threat detection, data lake analytics
+Optimal     -> AI/ML-driven continuous monitoring, predictive analytics
+\stopverb}
+}
+
+\subtree{
+\title{Automation and Orchestration}
+\pre{\startverb
+Maturity Progression:
+Traditional -> Manual incident response, ad-hoc scripts
+Initial     -> Basic SOAR playbooks, automated alerting
+Advanced    -> Integrated SOAR with multi-pillar orchestration
+Optimal     -> Fully autonomous response, self-healing infrastructure
+\stopverb}
+}
+
+\subtree{
+\title{Governance}
+\pre{\startverb
+Maturity Progression:
+Traditional -> Ad-hoc policies, manual compliance checks
+Initial     -> Documented zero trust strategy, basic policy framework
+Advanced    -> Policy-as-code, continuous compliance monitoring
+Optimal     -> Dynamic policy engine, real-time governance decisions
+\stopverb}
+}
+}
+
+\subtree{
+\title{Implementation Process}
+\subtree{
+\title{Phase 1: Assessment and Baseline}
+\ol{
+\li{\strong{Inventory all assets} across the five pillars}
+\li{\strong{Map current capabilities} to ZTMM maturity stages}
+\li{\strong{Conduct gap analysis} between current and target states}
+\li{\strong{Identify quick wins} that move from Traditional to Initial stage}
+\li{\strong{Document dependencies} between pillars}
+}
+
+\pre{\startverb
+# Example: CISA ZTMM Maturity Assessment Scoring
+class ZTMMAssessment:
+    PILLARS = ['Identity', 'Devices', 'Networks', 'Applications', 'Data']
+    STAGES = ['Traditional', 'Initial', 'Advanced', 'Optimal']
+    CROSS_CUTTING = ['Visibility_Analytics', 'Automation_Orchestration', 'Governance']
+
+    def __init__(self):
+        self.scores = {}
+
+    def assess_pillar(self, pillar, capabilities):
+        """
+        Assess a pillar against ZTMM criteria.
+        capabilities: dict of capability_name -> maturity_stage
+        """
+        stage_values = {stage: i for i, stage in enumerate(self.STAGES)}
+        scores = [stage_values.get(stage, 0) for stage in capabilities.values()]
+        avg_score = sum(scores) / len(scores) if scores else 0
+
+        overall_stage = self.STAGES[int(avg_score)]
+        self.scores[pillar] = {
+            'capabilities': capabilities,
+            'average_score': avg_score,
+            'overall_stage': overall_stage
+        }
+        return self.scores[pillar]
+
+    def generate_roadmap(self):
+        """Generate prioritized improvement roadmap."""
+        roadmap = []
+        for pillar, data in self.scores.items():
+            for capability, stage in data['capabilities'].items():
+                stage_idx = self.STAGES.index(stage)
+                if stage_idx < 3:  # Not yet Optimal
+                    next_stage = self.STAGES[stage_idx + 1]
+                    roadmap.append({
+                        'pillar': pillar,
+                        'capability': capability,
+                        'current': stage,
+                        'target': next_stage,
+                        'priority': 3 - stage_idx  # Higher priority for lower maturity
+                    })
+        return sorted(roadmap, key=lambda x: x['priority'], reverse=True)
+\stopverb}
+}
+
+\subtree{
+\title{Phase 2: Identity Foundation}
+\ol{
+\li{Deploy phishing-resistant MFA (FIDO2/WebAuthn)}
+\li{Implement identity governance and administration (IGA)}
+\li{Establish continuous identity verification}
+\li{Integrate identity providers with all applications}
+\li{Deploy identity threat detection and response}
+}
+}
+
+\subtree{
+\title{Phase 3: Device Trust}
+\ol{
+\li{Complete asset inventory with automated discovery}
+\li{Deploy EDR across all endpoints}
+\li{Implement device compliance checking}
+\li{Establish device certificate infrastructure}
+\li{Create device trust scoring mechanism}
+}
+}
+
+\subtree{
+\title{Phase 4: Network Transformation}
+\ol{
+\li{Implement network segmentation strategy}
+\li{Deploy microsegmentation for critical assets}
+\li{Enable encrypted DNS (DoH/DoT)}
+\li{Enforce TLS 1.3 for all internal communications}
+\li{Deploy NDR capabilities}
+}
+}
+
+\subtree{
+\title{Phase 5: Application Security}
+\ol{
+\li{Implement application-level access controls}
+\li{Deploy WAF and API security gateways}
+\li{Integrate security testing into CI/CD pipelines}
+\li{Establish application inventory and classification}
+\li{Implement runtime protection}
+}
+}
+
+\subtree{
+\title{Phase 6: Data Protection}
+\ol{
+\li{Implement data classification framework}
+\li{Deploy DLP across endpoints and network}
+\li{Enable data activity monitoring}
+\li{Implement rights management}
+\li{Establish data lifecycle governance}
+}
+}
+}
+
+\subtree{
+\title{Compliance Mapping}
+\pre{\startverb
+| CISA ZTMM Pillar | OMB M-22-09 Requirement | NIST 800-207 Section |
+|---|---|---|
+| Identity | MFA for agency staff | 3.1.1 |
+| Devices | EDR for federal endpoints | 3.1.2 |
+| Networks | Encrypt DNS traffic | 3.1.3 |
+| Applications | Application security testing | 3.1.4 |
+| Data | Data categorization | 3.1.5 |
+\stopverb}
+}
+
+\subtree{
+\title{Metrics and KPIs}
+\ul{
+\li{\strong{Identity Pillar}: Percentage of users with phishing-resistant MFA}
+\li{\strong{Device Pillar}: Percentage of devices with real-time posture assessment}
+\li{\strong{Network Pillar}: Percentage of network segments microsegmented}
+\li{\strong{Application Pillar}: Percentage of applications with zero trust access controls}
+\li{\strong{Data Pillar}: Percentage of sensitive data classified and protected}
+\li{\strong{Overall}: ZTMM stage achieved per pillar (target: Advanced minimum)}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[CISA Zero Trust Maturity Model v2.0](https://www.cisa.gov/zero-trust-maturity-model)}
+\li{[CISA ZTMM v2.0 PDF](https://www.cisa.gov/sites/default/files/2023-04/zero_trust_maturity_model_v2_508.pdf)}
+\li{[NIST SP 800-207 Zero Trust Architecture](https://csrc.nist.gov/publications/detail/sp/800-207/final)}
+\li{[OMB Memorandum M-22-09](https://www.whitehouse.gov/wp-content/uploads/2022/01/M-22-09.pdf)}
+\li{[NSA Zero Trust Pillars Guidance](https://media.defense.gov/2024/Apr/09/2003434442/-1/-1/0/CSI_DATA_PILLAR_ZT.PDF)}
+\li{[Microsoft Guidance for CISA ZTMM](https://www.microsoft.com/en-us/security/blog/2024/12/19/new-microsoft-guidance-for-the-cisa-zero-trust-maturity-model/)}
+}
+}
+}

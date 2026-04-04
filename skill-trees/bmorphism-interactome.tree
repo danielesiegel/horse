@@ -1,0 +1,163 @@
+\title{Bmorphism Interactome}
+
+\taxon{skill}
+
+\meta{description}{GitHub interactome explorer for bmorphism/plurigrid ecosystem. Maps collaborations across AlgebraicJulia, Topos Institute, Anthropic, and MCP servers. Use for discovering cobordisms between research communities.}
+
+\subtree{
+\title{bmorphism-interactome Skill}
+\blockquote{\em{Mapping the cobordisms between research communities via shared contributors}}
+
+\subtree{
+\title{Profile: bmorphism (Barton Rhodes)}
+\pre{\startverb
+@bmorphism | 255 followers | 1.6k following
+@plurigrid founder | San Francisco
+"Parametrised optics model cybernetic systems"
+\stopverb}
+}
+
+\subtree{
+\title{Core Repositories}
+\pre{\startverb
+| Repo | Stars | Description | Trit |
+|------|-------|-------------|------|
+| [Gay.jl](https://github.com/bmorphism/Gay.jl) | 3 | Wide-gamut color sampling + SPI | 0 |
+| [agent-o-shiva](https://github.com/bmorphism/agent-o-shiva) | - | Rama agent platform fork | 0 |
+| [GeoACSets.jl](https://github.com/bmorphism/GeoACSets.jl) | - | Categorical GIS | 0 |
+| [bafishka](https://github.com/bmorphism/bafishka) | 1 | Fish + Steel Clojure | -1 |
+| [ocaml-mcp-sdk](https://github.com/bmorphism/ocaml-mcp-sdk) | 60 | OCaml MCP SDK | -1 |
+| [babashka-mcp-server](https://github.com/bmorphism/babashka-mcp-server) | 16 | Babashka MCP | -1 |
+| [multiverse-color-game](https://github.com/bmorphism/multiverse-color-game) | - | VisionPro holographic | +1 |
+\stopverb}
+}
+
+\subtree{
+\title{Plurigrid Organization (542 repos)}
+\pre{\startverb
+plurigrid: "building for a more agentic mesoscale 🦆"
+├── asi/                    # "everything is topological chemputer!"
+├── UnwiringDiagrams.jl     # Worlding/Unworlding Uexküll
+├── vcg-auction/            # VCG auctions in Rust
+├── microworlds/            # Agent simulations
+├── risc0-cosmwasm/         # zkVM + CosmWasm
+└── skillz/                 # Anthropic skills fork
+\stopverb}
+}
+
+\subtree{
+\title{Interactome Clusters}
+\subtree{
+\title{Cluster 1: Topos Institute ↔ AlgebraicJulia}
+\p{\strong{Bridge Authors:}}
+
+\ul{
+\li{\code{\startverb olynch\stopverb} - poly, Catlab.jl, ACSets.jl}
+\li{\code{\startverb epatters\stopverb} - Catlab lead, Topos}
+\li{\code{\startverb kasbah\stopverb} - Senior engineer @ Topos}
+}
+
+\p{\strong{Cobordism:}}
+
+\pre{\startverb
+plurigrid/UnwiringDiagrams.jl ←fork← AlgebraicJulia/WiringDiagrams.jl
+           ↓                                    ↓
+    "Umwelt Worlding"                   Compositional Systems
+           ↓                                    ↓
+      Gay.jl SPI ←───────────────────→ ToposInstitute/poly
+\stopverb}
+}
+
+\subtree{
+\title{Cluster 2: Anthropic Engineers}
+\p{bmorphism follows:}
+
+\ul{
+\li{\code{\startverb klazuka\stopverb} (Keith Lazuka)}
+\li{\code{\startverb simonster\stopverb} (Simon Kornblith)  }
+\li{\code{\startverb domdomegg\stopverb} (adam jones)}
+\li{\code{\startverb ericharmeling\stopverb}}
+}
+}
+
+\subtree{
+\title{Cluster 3: Julia Scientific}
+\ul{
+\li{\code{\startverb ViralBShah\stopverb} - Julia co-creator, JuliaHub CEO}
+\li{\code{\startverb EnzymeAD\stopverb} - Automatic differentiation}
+\li{\code{\startverb gdalle\stopverb} - SparseMatrixColorings.jl}
+\li{\code{\startverb andyferris\stopverb} - ElaraAI}
+}
+}
+
+\subtree{
+\title{Cluster 4: Emacs/Clojure}
+\ul{
+\li{\code{\startverb fogus\stopverb} - Cognitect/Nubank}
+\li{\code{\startverb Chouser\stopverb} - Clojure core}
+\li{\code{\startverb tvraman\stopverb} - Emacspeak}
+\li{\code{\startverb ept\stopverb} (Martin Kleppmann) - DDIA author, CRDTs}
+}
+}
+
+\subtree{
+\title{Cluster 5: Applied Category Theory}
+\ul{
+\li{\code{\startverb jules-hedges\stopverb} - Open games, parametrised optics}
+\li{\code{\startverb statebox\stopverb} - awesome-applied-ct}
+\li{\code{\startverb AlgebraicJulia\stopverb} - Catlab ecosystem}
+}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Explore following list
+gh api users/bmorphism/following --paginate --jq '.[].login'
+
+# Get repo details
+gh api repos/bmorphism/Gay.jl --jq '{stars: .stargazers_count, desc: .description}'
+
+# Find shared contributors
+gh api repos/AlgebraicJulia/Catlab.jl/contributors --jq '.[].login' > catlab_contribs.txt
+gh api repos/ToposInstitute/poly/contributors --jq '.[].login' > poly_contribs.txt
+comm -12 <(sort catlab_contribs.txt) <(sort poly_contribs.txt)
+
+# Plurigrid repos by language
+gh api orgs/plurigrid/repos --paginate --jq '.[] | select(.language == "Julia") | .name'
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Classification}
+\pre{\startverb
+| Trit | Role | Repos |
+|------|------|-------|
+| -1 (MINUS) | Infrastructure | MCP servers, bafishka, CategoricalTowers |
+| 0 (ERGODIC) | Bridges | Gay.jl, GeoACSets, agent-o-shiva |
+| +1 (PLUS) | Applications | multiverse-color-game, gay-hy, xf.jl |
+\stopverb}
+}
+
+\subtree{
+\title{Key Insights}
+\ol{
+\li{\strong{Parametrised Optics} - bmorphism's bio references jules-hedges' work on cybernetic systems}
+\li{\strong{Topological Chemputer} - plurigrid/asi connects Cronin's chemputer to categorical systems}
+\li{\strong{UnwiringDiagrams} - Fork of AlgebraicJulia for "Uexküll Umweltung" (environment-world)}
+\li{\strong{MCP Constellation} - Multiple MCP servers forming distributed tool network}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb gh-interactome\stopverb} - General GitHub network discovery}
+\li{\code{\startverb bmorphism-stars\stopverb} - 2155 starred repos index}
+\li{\code{\startverb gay-julia\stopverb} - Gay.jl color integration}
+\li{\code{\startverb topos-catcolab\stopverb} - CatColab collaboration}
+\li{\code{\startverb acsets-algebraic-databases\stopverb} - ACSets patterns}
+}
+}
+}

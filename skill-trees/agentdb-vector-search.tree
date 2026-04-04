@@ -1,0 +1,404 @@
+\title{"agentdb vector search"}
+
+\taxon{skill}
+
+\meta{description}{"Implement semantic vector search with AgentDB for intelligent document retrieval, similarity matching, and context-aware querying. Use when building RAG systems, semantic search engines, or intelligent knowledge bases."}
+
+\subtree{
+\title{AgentDB Vector Search}
+\subtree{
+\title{What This Skill Does}
+\p{Implements vector-based semantic search using AgentDB's high-performance vector database with \strong{150x-12,500x faster} operations than traditional solutions. Features HNSW indexing, quantization, and sub-millisecond search (<100µs).}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Node.js 18+}
+\li{AgentDB v1.0.7+ (via agentic-flow or standalone)}
+\li{OpenAI API key (for embeddings) or custom embedding model}
+}
+}
+
+\subtree{
+\title{Quick Start with CLI}
+\subtree{
+\title{Initialize Vector Database}
+\pre{\startverb
+# Initialize with default dimensions (1536 for OpenAI ada-002)
+npx agentdb@latest init ./vectors.db
+
+# Custom dimensions for different embedding models
+npx agentdb@latest init ./vectors.db --dimension 768  # sentence-transformers
+npx agentdb@latest init ./vectors.db --dimension 384  # all-MiniLM-L6-v2
+
+# Use preset configurations
+npx agentdb@latest init ./vectors.db --preset small   # <10K vectors
+npx agentdb@latest init ./vectors.db --preset medium  # 10K-100K vectors
+npx agentdb@latest init ./vectors.db --preset large   # >100K vectors
+
+# In-memory database for testing
+npx agentdb@latest init ./vectors.db --in-memory
+\stopverb}
+}
+
+\subtree{
+\title{Query Vector Database}
+\pre{\startverb
+# Basic similarity search
+npx agentdb@latest query ./vectors.db "[0.1,0.2,0.3,...]"
+
+# Top-k results
+npx agentdb@latest query ./vectors.db "[0.1,0.2,0.3]" -k 10
+
+# With similarity threshold (cosine similarity)
+npx agentdb@latest query ./vectors.db "0.1 0.2 0.3" -t 0.75 -m cosine
+
+# Different distance metrics
+npx agentdb@latest query ./vectors.db "[...]" -m euclidean  # L2 distance
+npx agentdb@latest query ./vectors.db "[...]" -m dot        # Dot product
+
+# JSON output for automation
+npx agentdb@latest query ./vectors.db "[...]" -f json -k 5
+
+# Verbose output with distances
+npx agentdb@latest query ./vectors.db "[...]" -v
+\stopverb}
+}
+
+\subtree{
+\title{Import/Export Vectors}
+\pre{\startverb
+# Export vectors to JSON
+npx agentdb@latest export ./vectors.db ./backup.json
+
+# Import vectors from JSON
+npx agentdb@latest import ./backup.json
+
+# Get database statistics
+npx agentdb@latest stats ./vectors.db
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quick Start with API}
+\pre{\startverb
+import { createAgentDBAdapter, computeEmbedding } from 'agentic-flow/reasoningbank';
+
+// Initialize with vector search optimizations
+const adapter = await createAgentDBAdapter({
+  dbPath: '.agentdb/vectors.db',
+  enableLearning: false,       // Vector search only
+  enableReasoning: true,       // Enable semantic matching
+  quantizationType: 'binary',  // 32x memory reduction
+  cacheSize: 1000,             // Fast retrieval
+});
+
+// Store document with embedding
+const text = "The quantum computer achieved 100 qubits";
+const embedding = await computeEmbedding(text);
+
+await adapter.insertPattern({
+  id: '',
+  type: 'document',
+  domain: 'technology',
+  pattern_data: JSON.stringify({
+    embedding,
+    text,
+    metadata: { category: "quantum", date: "2025-01-15" }
+  }),
+  confidence: 1.0,
+  usage_count: 0,
+  success_count: 0,
+  created_at: Date.now(),
+  last_used: Date.now(),
+});
+
+// Semantic search with MMR (Maximal Marginal Relevance)
+const queryEmbedding = await computeEmbedding("quantum computing advances");
+const results = await adapter.retrieveWithReasoning(queryEmbedding, {
+  domain: 'technology',
+  k: 10,
+  useMMR: true,              // Diverse results
+  synthesizeContext: true,    // Rich context
+});
+\stopverb}
+}
+
+\subtree{
+\title{Core Features}
+\subtree{
+\title{1. Vector Storage}
+\pre{\startverb
+// Store with automatic embedding
+await db.storeWithEmbedding({
+  content: "Your document text",
+  metadata: { source: "docs", page: 42 }
+});
+\stopverb}
+}
+
+\subtree{
+\title{2. Similarity Search}
+\pre{\startverb
+// Find similar documents
+const similar = await db.findSimilar("quantum computing", {
+  limit: 5,
+  minScore: 0.75
+});
+\stopverb}
+}
+
+\subtree{
+\title{3. Hybrid Search (Vector + Metadata)}
+\pre{\startverb
+// Combine vector similarity with metadata filtering
+const results = await db.hybridSearch({
+  query: "machine learning models",
+  filters: {
+    category: "research",
+    date: { $gte: "2024-01-01" }
+  },
+  limit: 20
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{RAG (Retrieval Augmented Generation)}
+\pre{\startverb
+// Build RAG pipeline
+async function ragQuery(question: string) {
+  // 1. Get relevant context
+  const context = await db.searchSimilar(
+    await embed(question),
+    { limit: 5, threshold: 0.7 }
+  );
+
+  // 2. Generate answer with context
+  const prompt = `Context: ${context.map(c => c.text).join('\n')}
+Question: ${question}`;
+
+  return await llm.generate(prompt);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Batch Operations}
+\pre{\startverb
+// Efficient batch storage
+await db.batchStore(documents.map(doc => ({
+  text: doc.content,
+  embedding: doc.vector,
+  metadata: doc.meta
+})));
+\stopverb}
+}
+}
+
+\subtree{
+\title{MCP Server Integration}
+\pre{\startverb
+# Start AgentDB MCP server for Claude Code
+npx agentdb@latest mcp
+
+# Add to Claude Code (one-time setup)
+claude mcp add agentdb npx agentdb@latest mcp
+
+# Now use MCP tools in Claude Code:
+# - agentdb_query: Semantic vector search
+# - agentdb_store: Store documents with embeddings
+# - agentdb_stats: Database statistics
+\stopverb}
+}
+
+\subtree{
+\title{Performance Benchmarks}
+\pre{\startverb
+# Run comprehensive benchmarks
+npx agentdb@latest benchmark
+
+# Results:
+# ✅ Pattern Search: 150x faster (100µs vs 15ms)
+# ✅ Batch Insert: 500x faster (2ms vs 1s for 100 vectors)
+# ✅ Large-scale Query: 12,500x faster (8ms vs 100s at 1M vectors)
+# ✅ Memory Efficiency: 4-32x reduction with quantization
+\stopverb}
+}
+
+\subtree{
+\title{Quantization Options}
+\p{AgentDB provides multiple quantization strategies for memory efficiency:}
+
+\subtree{
+\title{Binary Quantization (32x reduction)}
+\pre{\startverb
+const adapter = await createAgentDBAdapter({
+  quantizationType: 'binary',  // 768-dim → 96 bytes
+});
+\stopverb}
+}
+
+\subtree{
+\title{Scalar Quantization (4x reduction)}
+\pre{\startverb
+const adapter = await createAgentDBAdapter({
+  quantizationType: 'scalar',  // 768-dim → 768 bytes
+});
+\stopverb}
+}
+
+\subtree{
+\title{Product Quantization (8-16x reduction)}
+\pre{\startverb
+const adapter = await createAgentDBAdapter({
+  quantizationType: 'product',  // 768-dim → 48-96 bytes
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{Distance Metrics}
+\pre{\startverb
+# Cosine similarity (default, best for most use cases)
+npx agentdb@latest query ./db.sqlite "[...]" -m cosine
+
+# Euclidean distance (L2 norm)
+npx agentdb@latest query ./db.sqlite "[...]" -m euclidean
+
+# Dot product (for normalized vectors)
+npx agentdb@latest query ./db.sqlite "[...]" -m dot
+\stopverb}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{HNSW Indexing}
+\ul{
+\li{\strong{O(log n) search complexity}}
+\li{\strong{Sub-millisecond retrieval} (<100µs)}
+\li{\strong{Automatic index building}}
+}
+}
+
+\subtree{
+\title{Caching}
+\ul{
+\li{\strong{1000 pattern in-memory cache}}
+\li{\strong{<1ms pattern retrieval}}
+\li{\strong{Automatic cache invalidation}}
+}
+}
+
+\subtree{
+\title{MMR (Maximal Marginal Relevance)}
+\ul{
+\li{\strong{Diverse result sets}}
+\li{\strong{Avoid redundancy}}
+\li{\strong{Balance relevance and diversity}}
+}
+}
+}
+
+\subtree{
+\title{Performance Tips}
+\ol{
+\li{\strong{Enable HNSW indexing}: Automatic with AgentDB, 10-100x faster}
+\li{\strong{Use quantization}: Binary (32x), Scalar (4x), Product (8-16x) memory reduction}
+\li{\strong{Batch operations}: 500x faster for bulk inserts}
+\li{\strong{Match dimensions}: 1536 (OpenAI), 768 (sentence-transformers), 384 (MiniLM)}
+\li{\strong{Similarity threshold}: Start at 0.7 for quality, adjust based on use case}
+\li{\strong{Enable caching}: 1000 pattern cache for frequent queries}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Issue: Slow search performance}
+\pre{\startverb
+# Check if HNSW indexing is enabled (automatic)
+npx agentdb@latest stats ./vectors.db
+
+# Expected: <100µs search time
+\stopverb}
+}
+
+\subtree{
+\title{Issue: High memory usage}
+\pre{\startverb
+# Enable binary quantization (32x reduction)
+# Use in adapter: quantizationType: 'binary'
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Poor relevance}
+\pre{\startverb
+# Adjust similarity threshold
+npx agentdb@latest query ./db.sqlite "[...]" -t 0.8  # Higher threshold
+
+# Or use MMR for diverse results
+# Use in adapter: useMMR: true
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Wrong dimensions}
+\pre{\startverb
+# Check embedding model dimensions:
+# - OpenAI ada-002: 1536
+# - sentence-transformers: 768
+# - all-MiniLM-L6-v2: 384
+
+npx agentdb@latest init ./db.sqlite --dimension 768
+\stopverb}
+}
+}
+
+\subtree{
+\title{Database Statistics}
+\pre{\startverb
+# Get comprehensive stats
+npx agentdb@latest stats ./vectors.db
+
+# Shows:
+# - Total patterns/vectors
+# - Database size
+# - Average confidence
+# - Domains distribution
+# - Index status
+\stopverb}
+}
+
+\subtree{
+\title{Performance Characteristics}
+\ul{
+\li{\strong{Vector Search}: <100µs (HNSW indexing)}
+\li{\strong{Pattern Retrieval}: <1ms (with cache)}
+\li{\strong{Batch Insert}: 2ms for 100 vectors}
+\li{\strong{Memory Efficiency}: 4-32x reduction with quantization}
+\li{\strong{Scalability}: Handles 1M+ vectors efficiently}
+\li{\strong{Latency}: Sub-millisecond for most operations}
+}
+}
+
+\subtree{
+\title{Learn More}
+\ul{
+\li{GitHub: https://github.com/ruvnet/agentic-flow/tree/main/packages/agentdb}
+\li{Documentation: node_modules/agentic-flow/docs/AGENTDB_INTEGRATION.md}
+\li{MCP Integration: \code{\startverb npx agentdb@latest mcp\stopverb} for Claude Code}
+\li{Website: https://agentdb.ruv.io}
+\li{CLI Help: \code{\startverb npx agentdb@latest --help\stopverb}}
+\li{Command Help: \code{\startverb npx agentdb@latest help <command>\stopverb}}
+}
+}
+}

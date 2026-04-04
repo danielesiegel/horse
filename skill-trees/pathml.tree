@@ -1,0 +1,200 @@
+\title{Pathml}
+
+\taxon{skill}
+
+\meta{description}{Computational pathology toolkit for analyzing whole-slide images (WSI) and multiparametric imaging data. Use this skill when working with histopathology slides, H&E stained images, multiplex immunofluorescence (CODEX, Vectra), spatial proteomics, nucleus detection/segmentation, tissue graph construction, or training ML models on pathology data. Supports 160+ slide formats including Aperio SVS, NDPI, DICOM, OME-TIFF for digital pathology workflows.}
+
+\subtree{
+\title{PathML}
+\subtree{
+\title{Overview}
+\p{PathML is a comprehensive Python toolkit for computational pathology workflows, designed to facilitate machine learning and image analysis for whole-slide pathology images. The framework provides modular, composable tools for loading diverse slide formats, preprocessing images, constructing spatial graphs, training deep learning models, and analyzing multiparametric imaging data from technologies like CODEX and multiplex immunofluorescence.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Apply this skill for:}
+
+\ul{
+\li{Loading and processing whole-slide images (WSI) in various proprietary formats}
+\li{Preprocessing H&E stained tissue images with stain normalization}
+\li{Nucleus detection, segmentation, and classification workflows}
+\li{Building cell and tissue graphs for spatial analysis}
+\li{Training or deploying machine learning models (HoVer-Net, HACTNet) on pathology data}
+\li{Analyzing multiparametric imaging (CODEX, Vectra, MERFISH) for spatial proteomics}
+\li{Quantifying marker expression from multiplex immunofluorescence}
+\li{Managing large-scale pathology datasets with HDF5 storage}
+\li{Tile-based analysis and stitching operations}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{PathML provides six major capability areas documented in detail within reference files:}
+
+\subtree{
+\title{1. Image Loading & Formats}
+\p{Load whole-slide images from 160+ proprietary formats including Aperio SVS, Hamamatsu NDPI, Leica SCN, Zeiss ZVI, DICOM, and OME-TIFF. PathML automatically handles vendor-specific formats and provides unified interfaces for accessing image pyramids, metadata, and regions of interest.}
+
+\p{\strong{See:} \code{\startverb references/image_loading.md\stopverb} for supported formats, loading strategies, and working with different slide types.}
+}
+
+\subtree{
+\title{2. Preprocessing Pipelines}
+\p{Build modular preprocessing pipelines by composing transforms for image manipulation, quality control, stain normalization, tissue detection, and mask operations. PathML's Pipeline architecture enables reproducible, scalable preprocessing across large datasets.}
+
+\p{\strong{Key transforms:}}
+
+\ul{
+\li{\code{\startverb StainNormalizationHE\stopverb} - Macenko/Vahadane stain normalization}
+\li{\code{\startverb TissueDetectionHE\stopverb}, \code{\startverb NucleusDetectionHE\stopverb} - Tissue/nucleus segmentation}
+\li{\code{\startverb MedianBlur\stopverb}, \code{\startverb GaussianBlur\stopverb} - Noise reduction}
+\li{\code{\startverb LabelArtifactTileHE\stopverb} - Quality control for artifacts}
+}
+
+\p{\strong{See:} \code{\startverb references/preprocessing.md\stopverb} for complete transform catalog, pipeline construction, and preprocessing workflows.}
+}
+
+\subtree{
+\title{3. Graph Construction}
+\p{Construct spatial graphs representing cellular and tissue-level relationships. Extract features from segmented objects to create graph-based representations suitable for graph neural networks and spatial analysis.}
+
+\p{\strong{See:} \code{\startverb references/graphs.md\stopverb} for graph construction methods, feature extraction, and spatial analysis workflows.}
+}
+
+\subtree{
+\title{4. Machine Learning}
+\p{Train and deploy deep learning models for nucleus detection, segmentation, and classification. PathML integrates PyTorch with pre-built models (HoVer-Net, HACTNet), custom DataLoaders, and ONNX support for inference.}
+
+\p{\strong{Key models:}}
+
+\ul{
+\li{\strong{HoVer-Net} - Simultaneous nucleus segmentation and classification}
+\li{\strong{HACTNet} - Hierarchical cell-type classification}
+}
+
+\p{\strong{See:} \code{\startverb references/machine_learning.md\stopverb} for model training, evaluation, inference workflows, and working with public datasets.}
+}
+
+\subtree{
+\title{5. Multiparametric Imaging}
+\p{Analyze spatial proteomics and gene expression data from CODEX, Vectra, MERFISH, and other multiplex imaging platforms. PathML provides specialized slide classes and transforms for processing multiparametric data, cell segmentation with Mesmer, and quantification workflows.}
+
+\p{\strong{See:} \code{\startverb references/multiparametric.md\stopverb} for CODEX/Vectra workflows, cell segmentation, marker quantification, and integration with AnnData.}
+}
+
+\subtree{
+\title{6. Data Management}
+\p{Efficiently store and manage large pathology datasets using HDF5 format. PathML handles tiles, masks, metadata, and extracted features in unified storage structures optimized for machine learning workflows.}
+
+\p{\strong{See:} \code{\startverb references/data_management.md\stopverb} for HDF5 integration, tile management, dataset organization, and batch processing strategies.}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Install PathML
+uv pip install pathml
+
+# With optional dependencies for all features
+uv pip install pathml[all]
+\stopverb}
+}
+
+\subtree{
+\title{Basic Workflow Example}
+\pre{\startverb
+from pathml.core import SlideData
+from pathml.preprocessing import Pipeline, StainNormalizationHE, TissueDetectionHE
+
+# Load a whole-slide image
+wsi = SlideData.from_slide("path/to/slide.svs")
+
+# Create preprocessing pipeline
+pipeline = Pipeline([
+    TissueDetectionHE(),
+    StainNormalizationHE(target='normalize', stain_estimation_method='macenko')
+])
+
+# Run pipeline
+pipeline.run(wsi)
+
+# Access processed tiles
+for tile in wsi.tiles:
+    processed_image = tile.image
+    tissue_mask = tile.masks['tissue']
+\stopverb}
+}
+
+\subtree{
+\title{Common Workflows}
+\p{\strong{H&E Image Analysis:}}
+
+\ol{
+\li{Load WSI with appropriate slide class}
+\li{Apply tissue detection and stain normalization}
+\li{Perform nucleus detection or train segmentation models}
+\li{Extract features and build spatial graphs}
+\li{Conduct downstream analysis}
+}
+
+\p{\strong{Multiparametric Imaging (CODEX):}}
+
+\ol{
+\li{Load CODEX slide with \code{\startverb CODEXSlide\stopverb}}
+\li{Collapse multi-run channel data}
+\li{Segment cells using Mesmer model}
+\li{Quantify marker expression}
+\li{Export to AnnData for single-cell analysis}
+}
+
+\p{\strong{Training ML Models:}}
+
+\ol{
+\li{Prepare dataset with public pathology data}
+\li{Create PyTorch DataLoader with PathML datasets}
+\li{Train HoVer-Net or custom models}
+\li{Evaluate on held-out test sets}
+\li{Deploy with ONNX for inference}
+}
+}
+}
+
+\subtree{
+\title{References to Detailed Documentation}
+\p{When working on specific tasks, refer to the appropriate reference file for comprehensive information:}
+
+\ul{
+\li{\strong{Loading images:} \code{\startverb references/image_loading.md\stopverb}}
+\li{\strong{Preprocessing workflows:} \code{\startverb references/preprocessing.md\stopverb}}
+\li{\strong{Spatial analysis:} \code{\startverb references/graphs.md\stopverb}}
+\li{\strong{Model training:} \code{\startverb references/machine_learning.md\stopverb}}
+\li{\strong{CODEX/multiplex IF:} \code{\startverb references/multiparametric.md\stopverb}}
+\li{\strong{Data storage:} \code{\startverb references/data_management.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes comprehensive reference documentation organized by capability area. Each reference file contains detailed API information, workflow examples, best practices, and troubleshooting guidance for specific PathML functionality.}
+
+\subtree{
+\title{references/}
+\p{Documentation files providing in-depth coverage of PathML capabilities:}
+
+\ul{
+\li{\code{\startverb image_loading.md\stopverb} - Whole-slide image formats, loading strategies, slide classes}
+\li{\code{\startverb preprocessing.md\stopverb} - Complete transform catalog, pipeline construction, preprocessing workflows}
+\li{\code{\startverb graphs.md\stopverb} - Graph construction methods, feature extraction, spatial analysis}
+\li{\code{\startverb machine_learning.md\stopverb} - Model architectures, training workflows, evaluation, inference}
+\li{\code{\startverb multiparametric.md\stopverb} - CODEX, Vectra, multiplex IF analysis, cell segmentation, quantification}
+\li{\code{\startverb data_management.md\stopverb} - HDF5 storage, tile management, batch processing, dataset organization}
+}
+
+\p{Load these references as needed when working on specific computational pathology tasks.}
+}
+}
+}

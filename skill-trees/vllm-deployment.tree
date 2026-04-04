@@ -1,0 +1,277 @@
+\title{Vllm Deployment}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{Deploy vLLM for high-performance LLM inference. Covers Docker CPU/GPU deployments and cloud VM provisioning with OpenAI-compatible API endpoints.}
+
+\subtree{
+\title{vLLM Model Serving and Inference}
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Docker (CPU)}
+\pre{\startverb
+docker run --rm -p 8000:8000 \
+  --shm-size=4g \
+  --cap-add SYS_NICE \
+  --security-opt seccomp=unconfined \
+  -e VLLM_CPU_KVCACHE_SPACE=4 \
+  <vllm-cpu-image> \
+  --model <model-name> \
+  --dtype float32
+# Access: http://localhost:8000
+\stopverb}
+}
+
+\subtree{
+\title{Docker (GPU)}
+\pre{\startverb
+docker run --rm -p 8000:8000 \
+  --gpus all \
+  --shm-size=4g \
+  <vllm-gpu-image> \
+  --model <model-name>
+# Access: http://localhost:8000
+\stopverb}
+}
+}
+
+\subtree{
+\title{Docker Deployment}
+\subtree{
+\title{1. Assess Hardware Requirements}
+\pre{\startverb
+| Hardware | Minimum RAM | Recommended |
+|----------|-------------|-------------|
+| CPU | 2x model size | 4x model size |
+| GPU | Model size + 2GB | Model size + 4GB VRAM |
+\stopverb}
+
+\ul{
+\li{Check model documentation for specific requirements}
+\li{Consider quantized variants to reduce memory footprint}
+\li{Allocate 50-100GB storage for model downloads}
+}
+}
+
+\subtree{
+\title{2. Pull the Container Image}
+\pre{\startverb
+# CPU image (check vLLM docs for latest tag)
+docker pull <vllm-cpu-image>
+
+# GPU image (check vLLM docs for latest tag)
+docker pull <vllm-gpu-image>
+\stopverb}
+
+\p{\strong{Notes:}}
+
+\ul{
+\li{Use CPU-specific images for CPU inference}
+\li{Use CUDA-enabled images matching your GPU architecture}
+\li{Verify CPU instruction set compatibility (AVX512, AVX2)}
+}
+}
+
+\subtree{
+\title{3. Configure and Run}
+\p{\strong{CPU Deployment:}}
+
+\pre{\startverb
+docker run --rm \
+  --shm-size=4g \
+  --cap-add SYS_NICE \
+  --security-opt seccomp=unconfined \
+  -p 8000:8000 \
+  -e VLLM_CPU_KVCACHE_SPACE=4 \
+  -e VLLM_CPU_OMP_THREADS_BIND=0-7 \
+  <vllm-cpu-image> \
+  --model <model-name> \
+  --dtype float32 \
+  --max-model-len 2048
+\stopverb}
+
+\p{\strong{GPU Deployment:}}
+
+\pre{\startverb
+docker run --rm \
+  --gpus all \
+  --shm-size=4g \
+  -p 8000:8000 \
+  <vllm-gpu-image> \
+  --model <model-name> \
+  --dtype auto \
+  --max-model-len 4096
+\stopverb}
+}
+
+\subtree{
+\title{4. Verify Deployment}
+\pre{\startverb
+# Check health
+curl http://localhost:8000/health
+
+# List models
+curl http://localhost:8000/v1/models
+
+# Test inference
+curl http://localhost:8000/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "<model-name>", "prompt": "Hello", "max_tokens": 10}'
+\stopverb}
+}
+
+\subtree{
+\title{5. Update}
+\pre{\startverb
+docker pull <vllm-image>
+docker stop <container-id>
+# Re-run with same parameters
+\stopverb}
+}
+}
+
+\subtree{
+\title{Cloud VM Deployment}
+\subtree{
+\title{1. Provision Infrastructure}
+\pre{\startverb
+# Create security group with rules:
+# - TCP 22 (SSH)
+# - TCP 8000 (API)
+
+# Launch instance with:
+# - Sufficient RAM/VRAM for model
+# - Docker pre-installed (or install manually)
+# - 50-100GB root volume
+# - Public IP for external access
+\stopverb}
+}
+
+\subtree{
+\title{2. Connect and Deploy}
+\pre{\startverb
+ssh -i <key-file> <user>@<instance-ip>
+
+# Install Docker if not present
+# Pull and run vLLM container (see Docker Deployment section)
+\stopverb}
+}
+
+\subtree{
+\title{3. Verify External Access}
+\pre{\startverb
+# From local machine
+curl http://<instance-ip>:8000/health
+curl http://<instance-ip>:8000/v1/models
+\stopverb}
+}
+
+\subtree{
+\title{4. Cleanup}
+\pre{\startverb
+# Stop container
+docker stop <container-id>
+
+# Terminate instance to stop costs
+# Delete associated resources (volumes, security groups) if temporary
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration Reference}
+\subtree{
+\title{Environment Variables}
+\pre{\startverb
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `VLLM_CPU_KVCACHE_SPACE` | KV cache size in GB (CPU) | `4` |
+| `VLLM_CPU_OMP_THREADS_BIND` | CPU core binding (CPU) | `0-7` |
+| `CUDA_VISIBLE_DEVICES` | GPU device selection | `0,1` |
+| `HF_TOKEN` | HuggingFace authentication | `hf_xxx` |
+\stopverb}
+}
+
+\subtree{
+\title{Docker Flags}
+\pre{\startverb
+| Flag | Purpose |
+|------|---------|
+| `--shm-size=4g` | Shared memory for IPC |
+| `--cap-add SYS_NICE` | NUMA optimization (CPU) |
+| `--security-opt seccomp=unconfined` | Memory policy syscalls (CPU) |
+| `--gpus all` | GPU access |
+| `-p 8000:8000` | Port mapping |
+\stopverb}
+}
+
+\subtree{
+\title{vLLM Arguments}
+\pre{\startverb
+| Argument | Purpose | Example |
+|----------|---------|---------|
+| `--model` | Model name/path | `<model-name>` |
+| `--dtype` | Data type | `float32`, `auto`, `bfloat16` |
+| `--max-model-len` | Max context length | `2048` |
+| `--tensor-parallel-size` | Multi-GPU parallelism | `2` |
+\stopverb}
+}
+}
+
+\subtree{
+\title{API Endpoints}
+\pre{\startverb
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/health` | GET | Health check |
+| `/v1/models` | GET | List available models |
+| `/v1/completions` | POST | Text completion |
+| `/v1/chat/completions` | POST | Chat completion |
+| `/metrics` | GET | Prometheus metrics |
+\stopverb}
+}
+
+\subtree{
+\title{Production Checklist}
+\ul{
+\li{[ ] Verify model fits in available memory}
+\li{[ ] Configure appropriate data type for hardware}
+\li{[ ] Set up firewall/security group rules}
+\li{[ ] Test API endpoints before production use}
+\li{[ ] Configure monitoring (Prometheus metrics)}
+\li{[ ] Set up health check alerts}
+\li{[ ] Document model and configuration used}
+\li{[ ] Plan for model updates and rollbacks}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\pre{\startverb
+| Issue | Solution |
+|-------|----------|
+| Container exits immediately | Increase RAM or use smaller model |
+| Slow inference (CPU) | Verify OMP thread binding configuration |
+| Connection refused externally | Check firewall/security group rules |
+| Model download fails | Set HF_TOKEN for gated models |
+| Out of memory during inference | Reduce max_model_len or batch size |
+| Port already in use | Change host port mapping |
+| Warmup takes too long | Normal for large models (1-5 min) |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[vLLM Documentation](https://docs.vllm.ai/)}
+\li{[vLLM CPU Installation](https://docs.vllm.ai/en/stable/getting_started/installation/cpu/)}
+\li{[vLLM GPU Installation](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/)}
+\li{[vLLM Supported Models](https://docs.vllm.ai/en/stable/models/supported_models.html)}
+\li{[OpenAI API Reference](https://platform.openai.com/docs/api-reference)}
+\li{[HuggingFace Model Hub](https://huggingface.co/models)}
+}
+}
+}

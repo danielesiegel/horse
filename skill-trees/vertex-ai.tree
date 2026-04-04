@@ -1,0 +1,228 @@
+\title{Vertex Ai}
+
+\taxon{skill}
+
+\tag{vertex-ai}
+
+\tag{gemini}
+
+\tag{google-cloud}
+
+\tag{generative-ai}
+
+\tag{embeddings}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Google Vertex AI via gcloud OAuth2. Call Gemini, Imagen, embeddings, and Model Garden models from the CLI. Use when users need generative AI, image generation, embeddings, or model inference.}
+
+\subtree{
+\title{Vertex AI Skill}
+\p{Call Google Vertex AI models from the CLI using \code{\startverb gcloud\stopverb} OAuth2 authentication.}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{\code{\startverb gcloud\stopverb} CLI installed (via \code{\startverb flox install google-cloud-sdk\stopverb} or standalone)}
+\li{Authenticated: \code{\startverb gcloud auth login\stopverb}}
+\li{Project set: \code{\startverb gcloud config set project PROJECT_ID\stopverb}}
+\li{Vertex AI API enabled on the project}
+}
+}
+
+\subtree{
+\title{Authentication}
+\p{Vertex AI requires OAuth2, \strong{not} API keys. Get a bearer token:}
+
+\pre{\startverb
+ACCESS_TOKEN=$(gcloud auth print-access-token)
+\stopverb}
+
+\p{Tokens expire after ~60 minutes. Re-run to refresh.}
+}
+
+\subtree{
+\title{Core Pattern}
+\p{All Vertex AI calls follow this structure:}
+
+\pre{\startverb
+PROJECT=$(gcloud config get project)
+REGION=us-central1
+ACCESS_TOKEN=$(gcloud auth print-access-token)
+
+curl -s "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/publishers/google/models/${MODEL}:${METHOD}" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$PAYLOAD"
+\stopverb}
+}
+
+\subtree{
+\title{Gemini — Text Generation}
+\pre{\startverb
+MODEL=gemini-2.0-flash
+curl -s "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/publishers/google/models/${MODEL}:generateContent" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"role": "user", "parts": [{"text": "Your prompt here"}]}]
+  }' | jq -r '.candidates[0].content.parts[0].text'
+\stopverb}
+
+\p{\strong{CRITICAL}: Always include \code{\startverb "role": "user"\stopverb} in contents — omitting it causes a 400 error.}
+
+\subtree{
+\title{Available Gemini Models}
+\pre{\startverb
+| Model | Use Case |
+|-------|----------|
+| `gemini-2.0-flash` | Fast, general-purpose (recommended default) |
+| `gemini-2.0-pro` | Complex reasoning, longer context |
+| `gemini-1.5-pro` | 1M token context window |
+| `gemini-1.5-flash` | Fast, cost-effective |
+\stopverb}
+}
+
+\subtree{
+\title{Generation Config}
+\pre{\startverb
+{
+  "contents": [{"role": "user", "parts": [{"text": "prompt"}]}],
+  "generationConfig": {
+    "temperature": 0.7,
+    "topP": 0.95,
+    "topK": 40,
+    "maxOutputTokens": 2048,
+    "candidateCount": 1
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{System Instructions}
+\pre{\startverb
+{
+  "contents": [{"role": "user", "parts": [{"text": "prompt"}]}],
+  "systemInstruction": {
+    "parts": [{"text": "You are a helpful coding assistant."}]
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Gemini — Multimodal (Image + Text)}
+\pre{\startverb
+# Base64 encode an image
+IMG_B64=$(base64 -i image.png)
+
+curl -s "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/publishers/google/models/gemini-2.0-flash:generateContent" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"contents\": [{\"role\": \"user\", \"parts\": [
+      {\"text\": \"Describe this image\"},
+      {\"inlineData\": {\"mimeType\": \"image/png\", \"data\": \"$IMG_B64\"}}
+    ]}]
+  }" | jq -r '.candidates[0].content.parts[0].text'
+\stopverb}
+}
+
+\subtree{
+\title{Embeddings}
+\pre{\startverb
+curl -s "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/publishers/google/models/text-embedding-005:predict" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instances": [{"content": "Text to embed"}]
+  }' | jq '.predictions[0].embeddings.values[:5]'
+\stopverb}
+}
+
+\subtree{
+\title{Imagen — Image Generation}
+\pre{\startverb
+curl -s "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/publishers/google/models/imagen-3.0-generate-002:predict" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instances": [{"prompt": "A cat wearing a space helmet, digital art"}],
+    "parameters": {"sampleCount": 1}
+  }' | jq -r '.predictions[0].bytesBase64Encoded' | base64 -d > output.png
+\stopverb}
+}
+
+\subtree{
+\title{Streaming}
+\p{For streaming responses, use \code{\startverb streamGenerateContent\stopverb}:}
+
+\pre{\startverb
+curl -s "https://${REGION}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/publishers/google/models/gemini-2.0-flash:streamGenerateContent" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"contents": [{"role": "user", "parts": [{"text": "Write a haiku"}]}]}'
+\stopverb}
+}
+
+\subtree{
+\title{Multi-turn Conversation}
+\pre{\startverb
+{
+  "contents": [
+    {"role": "user", "parts": [{"text": "What is the capital of France?"}]},
+    {"role": "model", "parts": [{"text": "Paris."}]},
+    {"role": "user", "parts": [{"text": "What is its population?"}]}
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Helper Script}
+\p{For quick single-prompt calls:}
+
+\pre{\startverb
+vertex() {
+  local model="${2:-gemini-2.0-flash}"
+  local token=$(gcloud auth print-access-token)
+  local project=$(gcloud config get project 2>/dev/null)
+  curl -s "https://us-central1-aiplatform.googleapis.com/v1/projects/${project}/locations/us-central1/publishers/google/models/${model}:generateContent" \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" \
+    -d "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":$(echo "$1" | jq -Rs .)}]}]}" \
+    | jq -r '.candidates[0].content.parts[0].text'
+}
+
+# Usage: vertex "explain quantum computing" gemini-2.0-pro
+\stopverb}
+}
+
+\subtree{
+\title{Error Reference}
+\pre{\startverb
+| Error | Cause | Fix |
+|-------|-------|-----|
+| 401 UNAUTHENTICATED | Token expired or API key used | `gcloud auth print-access-token` |
+| 400 "valid role: user, model" | Missing `role` field in contents | Add `"role": "user"` |
+| 403 PERMISSION_DENIED | API not enabled or no access | `gcloud services enable aiplatform.googleapis.com` |
+| 429 RESOURCE_EXHAUSTED | Rate limit hit | Back off and retry |
+| 404 NOT_FOUND | Wrong model name or region | Check model ID and use `us-central1` |
+\stopverb}
+}
+
+\subtree{
+\title{1Password Integration}
+\p{Store and retrieve credentials securely:}
+
+\pre{\startverb
+# If using a service account key stored in 1Password:
+export GOOGLE_APPLICATION_CREDENTIALS=$(op read "op://VaultName/GCP-SA-Key/credential" | base64 -d > /tmp/sa.json && echo /tmp/sa.json)
+gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+\stopverb}
+}
+}

@@ -1,0 +1,125 @@
+\title{Dafny Zig}
+
+\taxon{skill}
+
+\meta{description}{Dafny-to-Zig compiler backend development skill with verified runtime safety ("Zig-syrup")}
+
+\subtree{
+\title{Dafny-Zig Compiler Backend}
+\p{\em{Title: Performant, Readable and Interoperable Zig from Dafny}}
+
+\p{Specialized skill for developing \code{\startverb dafny-zig\stopverb}, a backend compiling Dafny's intermediate representation (DAST) to safe, idiomatic Zig code.}
+
+\subtree{
+\title{Core Philosophy: "Zig-Syrup"}
+\p{This project bridges Dafny's \strong{infinite assumptions} (unbounded ints, memory, termination) with Zig's \strong{finite reality} (systems programming). The binding agent ("syrup") is \strong{Runtime Safety}.}
+
+\subtree{
+\title{Abstract}
+\p{We bridge the gap between Dafny's verification guarantees and Zig's explicit resource management through "Zig-Syrup" (\code{\startverb runtime.zig\stopverb}), a lightweight runtime layer.}
+
+\ol{
+\li{\strong{Safety First}: \code{\startverb rt.BigInt\stopverb} and \code{\startverb rt.RcSlice\stopverb} provide Dafny-like semantics with Zig safety.}
+\li{\strong{Explicit Allocation}: Use \code{\startverb std.ArrayListUnmanaged\stopverb} and pass allocators explicitly.}
+\li{\strong{Formal Verification}: Respect DAST semantics. If Dafny verified it, Zig must implement it faithfully or trap safely.}
+}
+}
+}
+
+\subtree{
+\title{Workflow (Tweag Standard)}
+\p{Follow the \strong{Three Experts Method} for all significant changes:}
+
+\ol{
+\li{\strong{Verifier (Dafny Expert)}: Analyze DAST requirements (infinite ints, immutability).}
+\li{\strong{Systems Engineer (Zig Expert)}: Propose safe implementation (\code{\startverb RcSlice\stopverb}, \code{\startverb Unmanaged\stopverb}).}
+\li{\strong{Compiler Dev}: Bridge the two in \code{\startverb compiler.zig\stopverb}.}
+}
+
+\p{\strong{Validation Loop:}}
+
+\ol{
+\li{\code{\startverb zig build test\stopverb} (Must pass)}
+\li{\code{\startverb dafny verify\stopverb} (on source \code{\startverb .dfy\stopverb} if available)}
+\li{Review \code{\startverb src/runtime.zig\stopverb} for memory leaks (use \code{\startverb std.testing.allocator\stopverb}).}
+}
+}
+
+\subtree{
+\title{Key Components}
+\subtree{
+\title{1. DAST (Dafny AST)}
+\ul{
+\li{\strong{\code{\startverb src/dast.zig\stopverb}}: Accurate reflection of Dafny's JSON IR.}
+\li{\strong{Rules}: Immutable by default. Use \code{\startverb parseModuleJson\stopverb}.}
+}
+}
+
+\subtree{
+\title{2. ZAST (Zig AST)}
+\ul{
+\li{\strong{\code{\startverb src/zast.zig\stopverb}}: Generates idiomatic Zig source.}
+\li{\strong{Rules}: Supports \code{\startverb StructDecl\stopverb}, \code{\startverb UnionDecl\stopverb} (for Datatypes), \code{\startverb FnDecl\stopverb}.}
+}
+}
+
+\subtree{
+\title{3. Runtime Library (\code{\startverb rt\stopverb})}
+\ul{
+\li{\strong{\code{\startverb src/runtime.zig\stopverb}}: The "Syrup" (Sticky Binding Agent).}
+\li{\strong{\code{\startverb BigInt\stopverb}}: Uses \code{\startverb std.ArrayListUnmanaged(u64)\stopverb}. Handles OOM.}
+\li{\strong{\code{\startverb RcSlice(T)\stopverb}}: O(1) slicing and safe sharing for \code{\startverb Seq<T>\stopverb}.}
+\li{\strong{\code{\startverb Set/Map\stopverb}}: \code{\startverb std.AutoHashMap\stopverb} wrappers with value semantics.}
+}
+}
+}
+
+\subtree{
+\title{Readability & Interoperability}
+\p{Generated code should not look like "compiler vomit." It should look like Zig.}
+
+\ul{
+\li{\strong{Structs & Unions}: Dafny \code{\startverb datatype\stopverb} maps cleanly to Zig \code{\startverb union(enum)\stopverb}.}
+\li{\strong{Modules}: Dafny modules map to Zig files/structs.}
+\li{\strong{Native Types}: Where Dafny proves bounds, we emit native \code{\startverb u8\stopverb}/\code{\startverb u64\stopverb}.}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\subtree{
+\title{Plurigrid ASI Integration}
+\ul{
+\li{\strong{Role}: \code{\startverb dafny-zig\stopverb} acts as a \strong{Verifier (MINUS -1)} in the Plurigrid ecosystem.}
+\li{\strong{Connection}: Consumes \code{\startverb acsets\stopverb} (via DAST) and produces \code{\startverb zig\stopverb} (systems).}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\ul{
+\li{\strong{Chapter}: 5. Evaluation (Compiler as Evaluator).}
+\li{\strong{Pattern}: \code{\startverb compileModule\stopverb} is a recursive evaluator transforming DAST -> ZAST.}
+}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Build and test compiler
+zig build test
+
+# Compile a DAST file
+zig build run -- compile module.dast.json output.zig
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{\strong{Mathpix}: Used for OCR of formal specs (\code{\startverb mathpix-gem/\stopverb}).}
+\li{\strong{Research}: See \code{\startverb .topos/\stopverb} for bibliography (CakeML, Verified VCG).}
+}
+}
+}

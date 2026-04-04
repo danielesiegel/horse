@@ -1,0 +1,289 @@
+\title{Bidirectional Lens Logic}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Hedges' 4-kind lattice for bidirectional programming - covariant/contravariant/invariant/bivariant types with GF(3) correspondence}
+
+\subtree{
+\title{bidirectional-lens-logic}
+\blockquote{The Logic of Lenses: 4-kind lattice for bidirectional programming}
+
+\subtree{
+\title{Source}
+\p{[Cybercat Institute: Foundations of Bidirectional Programming III](https://cybercat.institute/2024/09/12/bx-iii/) — Jules Hedges, September 2024}
+}
+
+\subtree{
+\title{The 4-Kind Lattice}
+\p{Variables have \strong{temporal direction} — forwards or backwards in time:}
+
+\pre{\startverb
+Kind : Type
+Kind = (Bool, Bool)  -- (covariant, contravariant)
+
+--  Kind          Pair          Scoping Rules
+-- ─────────────────────────────────────────────────
+--  Covariant     (True, False)  delete, copy
+--  Contravariant (False, True)  spawn, merge  
+--  Bivariant     (True, True)   all four operations
+--  Invariant     (False, False) none (linear)
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Correspondence}
+\p{The 4-kind lattice projects onto GF(3) via:}
+
+\pre{\startverb
+           BIVARIANT (True, True)
+              ↙ 0 ↘
+    COVARIANT       CONTRAVARIANT
+   (True, False)    (False, True)
+        +1              -1
+              ↘   ↙
+           INVARIANT (False, False)
+              (linear, no trit)
+\stopverb}
+
+\pre{\startverb
+| Kind | (cov, con) | Trit | Role | Operations |
+|------|------------|------|------|------------|
+| Covariant | (T, F) | +1 | Generator | delete, copy |
+| Contravariant | (F, T) | -1 | Validator | spawn, merge |
+| Bivariant | (T, T) | 0 | Coordinator | all four |
+| Invariant | (F, F) | — | Linear | none |
+\stopverb}
+}
+
+\subtree{
+\title{Tensor Product = GF(3) Multiplication}
+\pre{\startverb
+Tensor : Ty (covx, conx) -> Ty (covy, cony)
+      -> Ty (covx && covy, conx && cony)
+\stopverb}
+
+\p{This IS the GF(3) multiplication table:}
+
+\pre{\startverb
+     | +1    0    -1
+─────┼─────────────────
+ +1  | +1   +1    0      (True && _ = depends)
+  0  | +1    0   -1      (bivariant preserves)
+ -1  |  0   -1   -1      (_ && True = depends)
+\stopverb}
+
+\p{When tensoring covariant (+1) with contravariant (-1):}
+
+\ul{
+\li{\code{\startverb covx && covy = True && False = False\stopverb}}
+\li{\code{\startverb conx && cony = False && True = False\stopverb}}
+\li{Result: (False, False) = \strong{invariant/linear}}
+}
+
+\p{This is why \strong{+1 ⊗ -1 = 0} gives us linear/invariant behavior!}
+}
+
+\subtree{
+\title{The Structure Datatype}
+\p{Context morphisms with kind-aware operations:}
+
+\pre{\startverb
+data Structure : All Ty kas -> All Ty kbs -> Type where
+  Empty  : Structure [] []
+  Insert : Parity a b -> IxInsertion a as as' 
+        -> Structure as bs -> Structure as' (b :: bs)
+  
+  -- Covariant operations (forward time)
+  Delete : {a : Ty (True, con)} -> Structure as bs -> Structure (a :: as) bs
+  Copy   : {a : Ty (True, con)} -> IxElem a as 
+        -> Structure as bs -> Structure as (a :: bs)
+  
+  -- Contravariant operations (backward time)
+  Spawn  : {b : Ty (cov, True)} -> Structure as bs -> Structure as (b :: bs)
+  Merge  : {b : Ty (cov, True)} -> IxElem b bs 
+        -> Structure as bs -> Structure (b :: as) bs
+\stopverb}
+}
+
+\subtree{
+\title{CRDT Operation Mapping}
+\pre{\startverb
+Structure Op    CRDT Operation         Direction
+─────────────────────────────────────────────────
+Delete          crdt-stop-share-buffer  forward cleanup
+Copy            crdt-share-buffer       forward duplicate
+Spawn           (new user joins)        backward appearance
+Merge           crdt-connect            backward unification
+Insert          crdt-edit               linear (invariant)
+\stopverb}
+}
+
+\subtree{
+\title{The Two NotIntro Rules}
+\p{\strong{Critical insight}: There are TWO introduction rules for negation, with \strong{different operational semantics}:}
+
+\pre{\startverb
+NotIntroCov : {a : Ty (True, con)} -> Term (a :: as) Unit -> Term as (Not a)
+NotIntroCon : {a : Ty (cov, True)} -> Term (a :: as) Unit -> Term as (Not a)
+\stopverb}
+
+\p{For bivariant types, \strong{both rules apply but produce different results}!}
+
+\p{This explains why GF(3) has:}
+
+\ul{
+\li{\code{\startverb +1\stopverb} negates to \code{\startverb -1\stopverb} via \code{\startverb NotIntroCov\stopverb}}
+\li{\code{\startverb -1\stopverb} negates to \code{\startverb +1\stopverb} via \code{\startverb NotIntroCon\stopverb}}
+\li{\code{\startverb 0\stopverb} can use either rule — but they're operationally distinct}
+}
+}
+
+\subtree{
+\title{Negation Swaps Variance}
+\pre{\startverb
+Not : Ty (cov, con) -> Ty (con, cov)
+\stopverb}
+
+\ul{
+\li{Covariant (+1) → Contravariant (-1)}
+\li{Contravariant (-1) → Covariant (+1)}
+\li{Bivariant (0) → Bivariant (0) [stable]}
+\li{Invariant → Invariant [stable]}
+}
+}
+
+\subtree{
+\title{Integration with Open Games}
+\p{The play/coplay structure of open games is precisely this bidirectionality:}
+
+\pre{\startverb
+        ┌───────────────┐
+   X ──→│               │──→ Y      (covariant: forward play)
+        │    Game G     │
+   R ←──│               │←── S      (contravariant: backward coplay)
+        └───────────────┘
+\stopverb}
+
+\ul{
+\li{\strong{X, Y}: Covariant types (strategies flow forward)}
+\li{\strong{R, S}: Contravariant types (utilities flow backward)}
+\li{\strong{Game G}: Invariant/linear (must use everything exactly once)}
+}
+}
+
+\subtree{
+\title{Entropy-Sequencer Connection}
+\p{The actionable information framework maps here:}
+
+\pre{\startverb
+H(I_{t+1} | I^t, u)     = covariant (forward prediction)
+H(I_{t+1} | ξ, u)       = contravariant (backward from scene)
+───────────────────────────────────────────────────────────
+I(ξ; I_{t+1})           = invariant (linear combination)
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+| Trit | Skill | Role |
+|------|-------|------|
+| -1 | temporal-coalgebra | Contravariant observation |
+| 0 | **bidirectional-lens-logic** | Bivariant coordination |
+| +1 | free-monad-gen | Covariant generation |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Typecheck bidirectional term
+just bx-typecheck term.idr
+
+# Evaluate with covariant semantics
+just bx-eval-cov term.idr
+
+# Evaluate with contravariant semantics  
+just bx-eval-con term.idr
+
+# Compare operational difference
+just bx-compare term.idr
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb entropy-sequencer\stopverb} - Actionable information as bidirectional flow}
+\li{\code{\startverb open-games\stopverb} - Play/coplay as cov/con}
+\li{\code{\startverb parametrised-optics-cybernetics\stopverb} - Para(Lens) structure}
+\li{\code{\startverb polysimy-effect-chains\stopverb} - Effect interpretation as context morphism}
+\li{\code{\startverb crdt\stopverb} - Distributed state with bidirectional sync}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Hedges, "Foundations of Bidirectional Programming I-III" (Cybercat Institute, 2024)}
+\li{Riley, "Categories of Optics"}
+\li{Ghani, Hedges et al., "Compositional Game Theory"}
+\li{Arntzenius, unpublished work on 4-element kind lattice}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 5. Evaluation}
+\p{\strong{Concepts}: eval, apply, interpreter, environment}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+bidirectional-lens-logic (+) + SDF.Ch5 (−) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch3: Variations on an Arithmetic Theme}
+\li{Ch6: Layering}
+\li{Ch10: Adventure Game Example}
+\li{Ch7: Propagators}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Evaluation interprets expressions. This skill processes or generates evaluable forms.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+}
+}

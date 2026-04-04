@@ -1,0 +1,219 @@
+\title{Sheaf Cohomology}
+
+\taxon{skill}
+
+\meta{description}{Čech cohomology for local-to-global consistency verification in code}
+
+\subtree{
+\title{Sheaf Cohomology Skill: Local-to-Global Verification}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - validator/constraint) \strong{Color}: #2626D8 (Blue) \strong{Principle}: Local consistency → Global correctness \strong{Frame}: Čech cohomology with descent conditions}
+
+\subtree{
+\title{Overview}
+\p{\strong{Sheaf Cohomology} validates that locally consistent data/code patches glue correctly into globally consistent structures. Uses:}
+
+\ol{
+\li{\strong{Čech cohomology}: H^n(U, F) obstruction classes}
+\li{\strong{Nerve of coverage}: N(U) simplicial complex from open cover}
+\li{\strong{Descent conditions}: Cocycle conditions for morphisms}
+\li{\strong{tree-sitter integration}: AST-level local consistency}
+}
+
+\p{\strong{Correct by construction}: If local patches satisfy cocycle conditions, global structure is guaranteed.}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+H⁰(U, F) = ker(d⁰)           # Global sections (agree everywhere)
+H¹(U, F) = ker(d¹)/im(d⁰)    # Obstruction to gluing
+H²(U, F) = ker(d²)/im(d¹)    # Higher obstructions
+\stopverb}
+
+\p{For code verification:}
+
+\pre{\startverb
+# Three patches (files/modules) are consistent iff:
+# On U_ij ∩ U_jk ∩ U_ik: g_ij ∘ g_jk = g_ik  (cocycle condition)
+
+cocycle_satisfied?(patch_i, patch_j, patch_k)
+  == (compose(g_ij, g_jk) == g_ik)
+\stopverb}
+}
+
+\subtree{
+\title{Why Sheaf Cohomology for Code?}
+\ol{
+\li{\strong{Module boundaries}: Each module is an "open set"}
+\li{\strong{Import/export}: Transition functions between patches}
+\li{\strong{Type consistency}: Cocycle = type compatibility}
+\li{\strong{Refactoring safety}: H¹ = 0 means safe global transform}
+}
+}
+
+\subtree{
+\title{Gadgets}
+\subtree{
+\title{1. ČechCoverVerifier}
+\p{Verify local consistency across code patches:}
+
+\pre{\startverb
+verifier = SheafCohomology::CechCoverVerifier.new(
+  coverage: [:module_a, :module_b, :module_c]
+)
+verifier.add_transition(:module_a, :module_b, transition_ab)
+verifier.add_transition(:module_b, :module_c, transition_bc)
+verifier.add_transition(:module_a, :module_c, transition_ac)
+
+verifier.cocycle_satisfied?  # => true if g_ab ∘ g_bc = g_ac
+verifier.h1_obstruction      # => 0 if globally consistent
+\stopverb}
+}
+
+\subtree{
+\title{2. NerveConstructor}
+\p{Build simplicial complex from coverage:}
+
+\pre{\startverb
+nerve = SheafCohomology::NerveConstructor.new(
+  opens: file_modules,
+  intersections: shared_interfaces
+)
+nerve.simplices(0)  # => vertices (modules)
+nerve.simplices(1)  # => edges (shared interfaces)
+nerve.simplices(2)  # => triangles (triple overlaps)
+nerve.euler_characteristic  # => χ(N(U))
+\stopverb}
+}
+
+\subtree{
+\title{3. DescentVerifier}
+\p{Check morphism descent conditions:}
+
+\pre{\startverb
+descent = SheafCohomology::DescentVerifier.new
+descent.add_local_section(:patch_a, section_a)
+descent.add_local_section(:patch_b, section_b)
+descent.verify_descent!  # => raises if descent fails
+descent.global_section   # => glued global section
+\stopverb}
+}
+
+\subtree{
+\title{4. TreeSitterSheaf}
+\p{Integration with tree-sitter for AST verification:}
+
+\pre{\startverb
+sheaf = SheafCohomology::TreeSitterSheaf.new(
+  language: :clojure,
+  coverage: :function_boundaries
+)
+sheaf.parse_file("src/core.clj")
+sheaf.local_consistency_check  # => per-function type consistency
+sheaf.global_gluing_check      # => cross-function compatibility
+sheaf.h1_obstructions          # => list of gluing failures
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Verify sheaf consistency
+just sheaf-check
+
+# Check specific coverage
+just sheaf-coverage src/
+
+# Compute cohomology obstructions
+just sheaf-h1
+
+# Integration with tree-sitter
+just sheaf-ast src/*.clj
+\stopverb}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+require 'sheaf_cohomology'
+
+# Create verifier
+verifier = SheafCohomology::Verifier.new(
+  trit: -1,
+  coverage_strategy: :ast_boundaries
+)
+
+# Add patches from tree-sitter
+verifier.add_patches_from_ast(parsed_files)
+
+# Check consistency
+result = verifier.verify!
+result[:h0]  # Global sections (fully consistent)
+result[:h1]  # Gluing obstructions
+result[:h2]  # Higher obstructions
+result[:gf3_conserved]  # GF(3) sum = 0 with triad
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\p{Forms valid triads with ERGODIC (0) and PLUS (+1) skills:}
+
+\pre{\startverb
+sheaf-cohomology (-1) ⊗ acsets (0) ⊗ gay-mcp (+1) = 0 ✓
+sheaf-cohomology (-1) ⊗ unworld (0) ⊗ rama-gay-clojure (+1) = 0 ✓
+sheaf-cohomology (-1) ⊗ glass-bead-game (0) ⊗ rubato-composer (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\subtree{
+\title{Čech Complex}
+\pre{\startverb
+C⁰ = ∏_i F(U_i)
+C¹ = ∏_{i<j} F(U_i ∩ U_j)
+C² = ∏_{i<j<k} F(U_i ∩ U_j ∩ U_k)
+\stopverb}
+}
+
+\subtree{
+\title{Differential Maps}
+\pre{\startverb
+d⁰: C⁰ → C¹:  (d⁰s)_{ij} = s_j|_{U_ij} - s_i|_{U_ij}
+d¹: C¹ → C²:  (d¹g)_{ijk} = g_jk - g_ik + g_ij
+\stopverb}
+}
+
+\subtree{
+\title{Cocycle Condition}
+\pre{\startverb
+g ∈ Z¹(U, F) ⟺ d¹g = 0 ⟺ g_ij + g_jk = g_ik on triple overlaps
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Output}
+\pre{\startverb
+─── Sheaf Cohomology Verification ───
+Coverage: 5 modules, 8 interfaces, 3 triple overlaps
+
+Local Consistency:
+  ✓ module_a ∩ module_b: types compatible
+  ✓ module_b ∩ module_c: types compatible
+  ✓ module_a ∩ module_c: types compatible
+
+Čech Cohomology:
+  H⁰ = 1 (connected components)
+  H¹ = 0 (no gluing obstructions)
+  H² = 0 (no higher obstructions)
+
+Global Structure: ✓ CONSISTENT
+GF(3) Trit: -1 (MINUS/Validator)
+\stopverb}
+
+\p{\strong{Skill Name}: sheaf-cohomology \strong{Type}: Local-to-Global Verification \strong{Trit}: -1 (MINUS) \strong{Color}: #2626D8 (Blue) \strong{GF(3)}: Forms valid triads with ERGODIC + PLUS skills}
+}
+}

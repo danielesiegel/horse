@@ -1,0 +1,650 @@
+\title{Pydeseq2}
+
+\taxon{skill}
+
+\meta{description}{"Differential gene expression analysis (Python DESeq2). Identify DE genes from bulk RNA-seq counts, Wald tests, FDR correction, volcano/MA plots, for RNA-seq analysis."}
+
+\subtree{
+\title{PyDESeq2}
+\subtree{
+\title{Overview}
+\p{PyDESeq2 is a Python implementation of DESeq2 for differential expression analysis with bulk RNA-seq data. Design and execute complete workflows from data loading through result interpretation, including single-factor and multi-factor designs, Wald tests with multiple testing correction, optional apeGLM shrinkage, and integration with pandas and AnnData.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Analyzing bulk RNA-seq count data for differential expression}
+\li{Comparing gene expression between experimental conditions (e.g., treated vs control)}
+\li{Performing multi-factor designs accounting for batch effects or covariates}
+\li{Converting R-based DESeq2 workflows to Python}
+\li{Integrating differential expression analysis into Python-based pipelines}
+\li{Users mention "DESeq2", "differential expression", "RNA-seq analysis", or "PyDESeq2"}
+}
+}
+
+\subtree{
+\title{Quick Start Workflow}
+\p{For users who want to perform a standard differential expression analysis:}
+
+\pre{\startverb
+import pandas as pd
+from pydeseq2.dds import DeseqDataSet
+from pydeseq2.ds import DeseqStats
+
+# 1. Load data
+counts_df = pd.read_csv("counts.csv", index_col=0).T  # Transpose to samples × genes
+metadata = pd.read_csv("metadata.csv", index_col=0)
+
+# 2. Filter low-count genes
+genes_to_keep = counts_df.columns[counts_df.sum(axis=0) >= 10]
+counts_df = counts_df[genes_to_keep]
+
+# 3. Initialize and fit DESeq2
+dds = DeseqDataSet(
+    counts=counts_df,
+    metadata=metadata,
+    design="~condition",
+    refit_cooks=True
+)
+dds.deseq2()
+
+# 4. Perform statistical testing
+ds = DeseqStats(dds, contrast=["condition", "treated", "control"])
+ds.summary()
+
+# 5. Access results
+results = ds.results_df
+significant = results[results.padj < 0.05]
+print(f"Found {len(significant)} significant genes")
+\stopverb}
+}
+
+\subtree{
+\title{Core Workflow Steps}
+\subtree{
+\title{Step 1: Data Preparation}
+\p{\strong{Input requirements:}}
+
+\ul{
+\li{\strong{Count matrix:} Samples × genes DataFrame with non-negative integer read counts}
+\li{\strong{Metadata:} Samples × variables DataFrame with experimental factors}
+}
+
+\p{\strong{Common data loading patterns:}}
+
+\pre{\startverb
+# From CSV (typical format: genes × samples, needs transpose)
+counts_df = pd.read_csv("counts.csv", index_col=0).T
+metadata = pd.read_csv("metadata.csv", index_col=0)
+
+# From TSV
+counts_df = pd.read_csv("counts.tsv", sep="\t", index_col=0).T
+
+# From AnnData
+import anndata as ad
+adata = ad.read_h5ad("data.h5ad")
+counts_df = pd.DataFrame(adata.X, index=adata.obs_names, columns=adata.var_names)
+metadata = adata.obs
+\stopverb}
+
+\p{\strong{Data filtering:}}
+
+\pre{\startverb
+# Remove low-count genes
+genes_to_keep = counts_df.columns[counts_df.sum(axis=0) >= 10]
+counts_df = counts_df[genes_to_keep]
+
+# Remove samples with missing metadata
+samples_to_keep = ~metadata.condition.isna()
+counts_df = counts_df.loc[samples_to_keep]
+metadata = metadata.loc[samples_to_keep]
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Design Specification}
+\p{The design formula specifies how gene expression is modeled.}
+
+\p{\strong{Single-factor designs:}}
+
+\pre{\startverb
+design = "~condition"  # Simple two-group comparison
+\stopverb}
+
+\p{\strong{Multi-factor designs:}}
+
+\pre{\startverb
+design = "~batch + condition"  # Control for batch effects
+design = "~age + condition"     # Include continuous covariate
+design = "~group + condition + group:condition"  # Interaction effects
+\stopverb}
+
+\p{\strong{Design formula guidelines:}}
+
+\ul{
+\li{Use Wilkinson formula notation (R-style)}
+\li{Put adjustment variables (e.g., batch) before the main variable of interest}
+\li{Ensure variables exist as columns in the metadata DataFrame}
+\li{Use appropriate data types (categorical for discrete variables)}
+}
+}
+
+\subtree{
+\title{Step 3: DESeq2 Fitting}
+\p{Initialize the DeseqDataSet and run the complete pipeline:}
+
+\pre{\startverb
+from pydeseq2.dds import DeseqDataSet
+
+dds = DeseqDataSet(
+    counts=counts_df,
+    metadata=metadata,
+    design="~condition",
+    refit_cooks=True,  # Refit after removing outliers
+    n_cpus=1           # Parallel processing (adjust as needed)
+)
+
+# Run the complete DESeq2 pipeline
+dds.deseq2()
+\stopverb}
+
+\p{\strong{What \code{\startverb deseq2()\stopverb} does:}}
+
+\ol{
+\li{Computes size factors (normalization)}
+\li{Fits genewise dispersions}
+\li{Fits dispersion trend curve}
+\li{Computes dispersion priors}
+\li{Fits MAP dispersions (shrinkage)}
+\li{Fits log fold changes}
+\li{Calculates Cook's distances (outlier detection)}
+\li{Refits if outliers detected (optional)}
+}
+}
+
+\subtree{
+\title{Step 4: Statistical Testing}
+\p{Perform Wald tests to identify differentially expressed genes:}
+
+\pre{\startverb
+from pydeseq2.ds import DeseqStats
+
+ds = DeseqStats(
+    dds,
+    contrast=["condition", "treated", "control"],  # Test treated vs control
+    alpha=0.05,                # Significance threshold
+    cooks_filter=True,         # Filter outliers
+    independent_filter=True    # Filter low-power tests
+)
+
+ds.summary()
+\stopverb}
+
+\p{\strong{Contrast specification:}}
+
+\ul{
+\li{Format: \code{\startverb [variable, test_level, reference_level]\stopverb}}
+\li{Example: \code{\startverb ["condition", "treated", "control"]\stopverb} tests treated vs control}
+\li{If \code{\startverb None\stopverb}, uses the last coefficient in the design}
+}
+
+\p{\strong{Result DataFrame columns:}}
+
+\ul{
+\li{\code{\startverb baseMean\stopverb}: Mean normalized count across samples}
+\li{\code{\startverb log2FoldChange\stopverb}: Log2 fold change between conditions}
+\li{\code{\startverb lfcSE\stopverb}: Standard error of LFC}
+\li{\code{\startverb stat\stopverb}: Wald test statistic}
+\li{\code{\startverb pvalue\stopverb}: Raw p-value}
+\li{\code{\startverb padj\stopverb}: Adjusted p-value (FDR-corrected via Benjamini-Hochberg)}
+}
+}
+
+\subtree{
+\title{Step 5: Optional LFC Shrinkage}
+\p{Apply shrinkage to reduce noise in fold change estimates:}
+
+\pre{\startverb
+ds.lfc_shrink()  # Applies apeGLM shrinkage
+\stopverb}
+
+\p{\strong{When to use LFC shrinkage:}}
+
+\ul{
+\li{For visualization (volcano plots, heatmaps)}
+\li{For ranking genes by effect size}
+\li{When prioritizing genes for follow-up experiments}
+}
+
+\p{\strong{Important:} Shrinkage affects only the log2FoldChange values, not the statistical test results (p-values remain unchanged). Use shrunk values for visualization but report unshrunken p-values for significance.}
+}
+
+\subtree{
+\title{Step 6: Result Export}
+\p{Save results and intermediate objects:}
+
+\pre{\startverb
+import pickle
+
+# Export results as CSV
+ds.results_df.to_csv("deseq2_results.csv")
+
+# Save significant genes only
+significant = ds.results_df[ds.results_df.padj < 0.05]
+significant.to_csv("significant_genes.csv")
+
+# Save DeseqDataSet for later use
+with open("dds_result.pkl", "wb") as f:
+    pickle.dump(dds.to_picklable_anndata(), f)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Analysis Patterns}
+\subtree{
+\title{Two-Group Comparison}
+\p{Standard case-control comparison:}
+
+\pre{\startverb
+dds = DeseqDataSet(counts=counts_df, metadata=metadata, design="~condition")
+dds.deseq2()
+
+ds = DeseqStats(dds, contrast=["condition", "treated", "control"])
+ds.summary()
+
+results = ds.results_df
+significant = results[results.padj < 0.05]
+\stopverb}
+}
+
+\subtree{
+\title{Multiple Comparisons}
+\p{Testing multiple treatment groups against control:}
+
+\pre{\startverb
+dds = DeseqDataSet(counts=counts_df, metadata=metadata, design="~condition")
+dds.deseq2()
+
+treatments = ["treatment_A", "treatment_B", "treatment_C"]
+all_results = {}
+
+for treatment in treatments:
+    ds = DeseqStats(dds, contrast=["condition", treatment, "control"])
+    ds.summary()
+    all_results[treatment] = ds.results_df
+
+    sig_count = len(ds.results_df[ds.results_df.padj < 0.05])
+    print(f"{treatment}: {sig_count} significant genes")
+\stopverb}
+}
+
+\subtree{
+\title{Accounting for Batch Effects}
+\p{Control for technical variation:}
+
+\pre{\startverb
+# Include batch in design
+dds = DeseqDataSet(counts=counts_df, metadata=metadata, design="~batch + condition")
+dds.deseq2()
+
+# Test condition while controlling for batch
+ds = DeseqStats(dds, contrast=["condition", "treated", "control"])
+ds.summary()
+\stopverb}
+}
+
+\subtree{
+\title{Continuous Covariates}
+\p{Include continuous variables like age or dosage:}
+
+\pre{\startverb
+# Ensure continuous variable is numeric
+metadata["age"] = pd.to_numeric(metadata["age"])
+
+dds = DeseqDataSet(counts=counts_df, metadata=metadata, design="~age + condition")
+dds.deseq2()
+
+ds = DeseqStats(dds, contrast=["condition", "treated", "control"])
+ds.summary()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Using the Analysis Script}
+\p{This skill includes a complete command-line script for standard analyses:}
+
+\pre{\startverb
+# Basic usage
+python scripts/run_deseq2_analysis.py \
+  --counts counts.csv \
+  --metadata metadata.csv \
+  --design "~condition" \
+  --contrast condition treated control \
+  --output results/
+
+# With additional options
+python scripts/run_deseq2_analysis.py \
+  --counts counts.csv \
+  --metadata metadata.csv \
+  --design "~batch + condition" \
+  --contrast condition treated control \
+  --output results/ \
+  --min-counts 10 \
+  --alpha 0.05 \
+  --n-cpus 4 \
+  --plots
+\stopverb}
+
+\p{\strong{Script features:}}
+
+\ul{
+\li{Automatic data loading and validation}
+\li{Gene and sample filtering}
+\li{Complete DESeq2 pipeline execution}
+\li{Statistical testing with customizable parameters}
+\li{Result export (CSV, pickle)}
+\li{Optional visualization (volcano and MA plots)}
+}
+
+\p{Refer users to \code{\startverb scripts/run_deseq2_analysis.py\stopverb} when they need a standalone analysis tool or want to batch process multiple datasets.}
+}
+
+\subtree{
+\title{Result Interpretation}
+\subtree{
+\title{Identifying Significant Genes}
+\pre{\startverb
+# Filter by adjusted p-value
+significant = ds.results_df[ds.results_df.padj < 0.05]
+
+# Filter by both significance and effect size
+sig_and_large = ds.results_df[
+    (ds.results_df.padj < 0.05) &
+    (abs(ds.results_df.log2FoldChange) > 1)
+]
+
+# Separate up- and down-regulated
+upregulated = significant[significant.log2FoldChange > 0]
+downregulated = significant[significant.log2FoldChange < 0]
+
+print(f"Upregulated: {len(upregulated)}")
+print(f"Downregulated: {len(downregulated)}")
+\stopverb}
+}
+
+\subtree{
+\title{Ranking and Sorting}
+\pre{\startverb
+# Sort by adjusted p-value
+top_by_padj = ds.results_df.sort_values("padj").head(20)
+
+# Sort by absolute fold change (use shrunk values)
+ds.lfc_shrink()
+ds.results_df["abs_lfc"] = abs(ds.results_df.log2FoldChange)
+top_by_lfc = ds.results_df.sort_values("abs_lfc", ascending=False).head(20)
+
+# Sort by a combined metric
+ds.results_df["score"] = -np.log10(ds.results_df.padj) * abs(ds.results_df.log2FoldChange)
+top_combined = ds.results_df.sort_values("score", ascending=False).head(20)
+\stopverb}
+}
+
+\subtree{
+\title{Quality Metrics}
+\pre{\startverb
+# Check normalization (size factors should be close to 1)
+print("Size factors:", dds.obsm["size_factors"])
+
+# Examine dispersion estimates
+import matplotlib.pyplot as plt
+plt.hist(dds.varm["dispersions"], bins=50)
+plt.xlabel("Dispersion")
+plt.ylabel("Frequency")
+plt.title("Dispersion Distribution")
+plt.show()
+
+# Check p-value distribution (should be mostly flat with peak near 0)
+plt.hist(ds.results_df.pvalue.dropna(), bins=50)
+plt.xlabel("P-value")
+plt.ylabel("Frequency")
+plt.title("P-value Distribution")
+plt.show()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Visualization Guidelines}
+\subtree{
+\title{Volcano Plot}
+\p{Visualize significance vs effect size:}
+
+\pre{\startverb
+import matplotlib.pyplot as plt
+import numpy as np
+
+results = ds.results_df.copy()
+results["-log10(padj)"] = -np.log10(results.padj)
+
+plt.figure(figsize=(10, 6))
+significant = results.padj < 0.05
+
+plt.scatter(
+    results.loc[~significant, "log2FoldChange"],
+    results.loc[~significant, "-log10(padj)"],
+    alpha=0.3, s=10, c='gray', label='Not significant'
+)
+plt.scatter(
+    results.loc[significant, "log2FoldChange"],
+    results.loc[significant, "-log10(padj)"],
+    alpha=0.6, s=10, c='red', label='padj < 0.05'
+)
+
+plt.axhline(-np.log10(0.05), color='blue', linestyle='--', alpha=0.5)
+plt.xlabel("Log2 Fold Change")
+plt.ylabel("-Log10(Adjusted P-value)")
+plt.title("Volcano Plot")
+plt.legend()
+plt.savefig("volcano_plot.png", dpi=300)
+\stopverb}
+}
+
+\subtree{
+\title{MA Plot}
+\p{Show fold change vs mean expression:}
+
+\pre{\startverb
+plt.figure(figsize=(10, 6))
+
+plt.scatter(
+    np.log10(results.loc[~significant, "baseMean"] + 1),
+    results.loc[~significant, "log2FoldChange"],
+    alpha=0.3, s=10, c='gray'
+)
+plt.scatter(
+    np.log10(results.loc[significant, "baseMean"] + 1),
+    results.loc[significant, "log2FoldChange"],
+    alpha=0.6, s=10, c='red'
+)
+
+plt.axhline(0, color='blue', linestyle='--', alpha=0.5)
+plt.xlabel("Log10(Base Mean + 1)")
+plt.ylabel("Log2 Fold Change")
+plt.title("MA Plot")
+plt.savefig("ma_plot.png", dpi=300)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting Common Issues}
+\subtree{
+\title{Data Format Problems}
+\p{\strong{Issue:} "Index mismatch between counts and metadata"}
+
+\p{\strong{Solution:} Ensure sample names match exactly}
+
+\pre{\startverb
+print("Counts samples:", counts_df.index.tolist())
+print("Metadata samples:", metadata.index.tolist())
+
+# Take intersection if needed
+common = counts_df.index.intersection(metadata.index)
+counts_df = counts_df.loc[common]
+metadata = metadata.loc[common]
+\stopverb}
+
+\p{\strong{Issue:} "All genes have zero counts"}
+
+\p{\strong{Solution:} Check if data needs transposition}
+
+\pre{\startverb
+print(f"Counts shape: {counts_df.shape}")
+# If genes > samples, transpose is needed
+if counts_df.shape[1] < counts_df.shape[0]:
+    counts_df = counts_df.T
+\stopverb}
+}
+
+\subtree{
+\title{Design Matrix Issues}
+\p{\strong{Issue:} "Design matrix is not full rank"}
+
+\p{\strong{Cause:} Confounded variables (e.g., all treated samples in one batch)}
+
+\p{\strong{Solution:} Remove confounded variable or add interaction term}
+
+\pre{\startverb
+# Check confounding
+print(pd.crosstab(metadata.condition, metadata.batch))
+
+# Either simplify design or add interaction
+design = "~condition"  # Remove batch
+# OR
+design = "~condition + batch + condition:batch"  # Model interaction
+\stopverb}
+}
+
+\subtree{
+\title{No Significant Genes}
+\p{\strong{Diagnostics:}}
+
+\pre{\startverb
+# Check dispersion distribution
+plt.hist(dds.varm["dispersions"], bins=50)
+plt.show()
+
+# Check size factors
+print(dds.obsm["size_factors"])
+
+# Look at top genes by raw p-value
+print(ds.results_df.nsmallest(20, "pvalue"))
+\stopverb}
+
+\p{\strong{Possible causes:}}
+
+\ul{
+\li{Small effect sizes}
+\li{High biological variability}
+\li{Insufficient sample size}
+\li{Technical issues (batch effects, outliers)}
+}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{For comprehensive details beyond this workflow-oriented guide:}
+
+\ul{
+\li{\strong{API Reference} (\code{\startverb references/api_reference.md\stopverb}): Complete documentation of PyDESeq2 classes, methods, and data structures. Use when needing detailed parameter information or understanding object attributes.}
+}
+
+\ul{
+\li{\strong{Workflow Guide} (\code{\startverb references/workflow_guide.md\stopverb}): In-depth guide covering complete analysis workflows, data loading patterns, multi-factor designs, troubleshooting, and best practices. Use when handling complex experimental designs or encountering issues.}
+}
+
+\p{Load these references into context when users need:}
+
+\ul{
+\li{Detailed API documentation: \code{\startverb Read references/api_reference.md\stopverb}}
+\li{Comprehensive workflow examples: \code{\startverb Read references/workflow_guide.md\stopverb}}
+\li{Troubleshooting guidance: \code{\startverb Read references/workflow_guide.md\stopverb} (see Troubleshooting section)}
+}
+}
+
+\subtree{
+\title{Key Reminders}
+\ol{
+\li{\strong{Data orientation matters:} Count matrices typically load as genes × samples but need to be samples × genes. Always transpose with \code{\startverb .T\stopverb} if needed.}
+}
+
+\ol{
+\li{\strong{Sample filtering:} Remove samples with missing metadata before analysis to avoid errors.}
+}
+
+\ol{
+\li{\strong{Gene filtering:} Filter low-count genes (e.g., < 10 total reads) to improve power and reduce computational time.}
+}
+
+\ol{
+\li{\strong{Design formula order:} Put adjustment variables before the variable of interest (e.g., \code{\startverb "~batch + condition"\stopverb} not \code{\startverb "~condition + batch"\stopverb}).}
+}
+
+\ol{
+\li{\strong{LFC shrinkage timing:} Apply shrinkage after statistical testing and only for visualization/ranking purposes. P-values remain based on unshrunken estimates.}
+}
+
+\ol{
+\li{\strong{Result interpretation:} Use \code{\startverb padj < 0.05\stopverb} for significance, not raw p-values. The Benjamini-Hochberg procedure controls false discovery rate.}
+}
+
+\ol{
+\li{\strong{Contrast specification:} The format is \code{\startverb [variable, test_level, reference_level]\stopverb} where test_level is compared against reference_level.}
+}
+
+\ol{
+\li{\strong{Save intermediate objects:} Use pickle to save DeseqDataSet objects for later use or additional analyses without re-running the expensive fitting step.}
+}
+}
+
+\subtree{
+\title{Installation and Requirements}
+\pre{\startverb
+uv pip install pydeseq2
+\stopverb}
+
+\p{\strong{System requirements:}}
+
+\ul{
+\li{Python 3.10-3.11}
+\li{pandas 1.4.3+}
+\li{numpy 1.23.0+}
+\li{scipy 1.11.0+}
+\li{scikit-learn 1.1.1+}
+\li{anndata 0.8.0+}
+}
+
+\p{\strong{Optional for visualization:}}
+
+\ul{
+\li{matplotlib}
+\li{seaborn}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation:} https://pydeseq2.readthedocs.io}
+\li{\strong{GitHub Repository:} https://github.com/owkin/PyDESeq2}
+\li{\strong{Publication:} Muzellec et al. (2023) Bioinformatics, DOI: 10.1093/bioinformatics/btad547}
+\li{\strong{Original DESeq2 (R):} Love et al. (2014) Genome Biology, DOI: 10.1186/s13059-014-0550-8}
+}
+}
+}

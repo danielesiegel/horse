@@ -1,0 +1,578 @@
+\title{Transcendental Keyboard}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{"Unified keyboard control surface for transcendental syntax proof environments (Stellogen, Proof General, Narya, Lean) with Gay.jl color feedback"}
+
+\subtree{
+\title{Transcendental Keyboard Control Surface}
+\p{\strong{Trit}: 0 (ERGODIC - coordination hub) \strong{GF(3) Conservation}: Σ(proof-assistants) ≡ 0 (mod 3)}
+
+\subtree{
+\title{Overview}
+\p{Unified Emacs keyboard control surface integrating:}
+
+\ol{
+\li{\strong{Transcendental Syntax} - Stellogen logic-agnostic programming}
+\li{\strong{Proof General} - Universal proof assistant interface}
+\li{\strong{Narya} - Higher-dimensional observational type theory}
+\li{\strong{Lean} - Interactive theorem prover}
+\li{\strong{Gay.jl} - Deterministic color feedback with GF(3) trits}
+\li{\strong{Self-Operating Proofs} - Automated tactic application}
+}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│  User Keyboard Input                                    │
+└────────────┬────────────────────────────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────────────────────────────┐
+│  Transient Menu System (C-c t)                          │
+│  ├─ Proof Menu (p)                                      │
+│  ├─ Stellogen Menu (s)                                  │
+│  ├─ Narya Menu (n)                                      │
+│  └─ Color Menu (c)                                      │
+└────────────┬────────────────────────────────────────────┘
+             │
+    ┌────────┼────────┬────────┐
+    ▼        ▼        ▼        ▼
+┌────────┐ ┌───────┐ ┌──────┐ ┌────────┐
+│ Proof  │ │Stelle-│ │Narya │ │ Gay.jl │
+│General │ │ gen   │ │Bridge│ │ Colors │
+└───┬────┘ └───┬───┘ └──┬───┘ └───┬────┘
+    │          │         │         │
+    └──────────┴─────────┴─────────┘
+                 │
+                 ▼
+         ┌──────────────────┐
+         │  Mode-line Color │
+         │  Visual Feedback │
+         └──────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Key Bindings}
+\subtree{
+\title{Main Control Panel}
+\pre{\startverb
+| Key | Command | Description |
+|-----|---------|-------------|
+| `C-c t` | `transcendental` | Main control panel |
+| `C-c t p` | `transcendental-proof-menu` | Proof navigation |
+| `C-c t s` | `transcendental-stellogen-menu` | Stellogen control |
+| `C-c t n` | `transcendental-narya-menu` | Narya templates |
+| `C-c t c` | `transcendental-color-menu` | Color control |
+\stopverb}
+}
+
+\subtree{
+\title{Proof Navigation (Direct)}
+\pre{\startverb
+| Key | Command | Description |
+|-----|---------|-------------|
+| `C-c C-n` | `trans-kb-proof-forward` | Step forward |
+| `C-c C-u` | `trans-kb-proof-backward` | Step backward |
+| `C-c C-RET` | `trans-kb-proof-to-cursor` | Process to cursor |
+| `C-c C-b` | `trans-kb-proof-whole-buffer` | Process entire buffer |
+| `C-c C-a` | `trans-kb-auto-prove` | Attempt auto-proof |
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Proof State Mapping}
+\pre{\startverb
+Proof States → GF(3) Trits → Mode-line Colors
+
+unproved    → -1 (MINUS)   → RED     #FF0000
+processing  → 0  (ERGODIC) → YELLOW  #FFFF00
+proved      → +1 (PLUS)    → GREEN   #00FF00
+\stopverb}
+
+\subtree{
+\title{Conservation Law}
+\p{For any sequence of proof steps:}
+
+\pre{\startverb
+Σ (state_i mod 3) ≡ 0 (mod 3)
+\stopverb}
+
+\p{\strong{Example trajectory}:}
+
+\pre{\startverb
+[proved unproved unproved proved proved proved]
+  +1      -1       -1      +1     +1     +1
+
+Sum: +1 - 1 - 1 + 1 + 1 + 1 = +2 ≡ -1 (mod 3)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Proof Assistant Integration}
+\subtree{
+\title{1. Stellogen (Transcendental Syntax)}
+\pre{\startverb
+' Create constellation
+spec add =
+  -add(z Y) +result(Y);
+  -add(s(X) Y) +add(X s(Y)).
+
+' Run with C-c t s r
+\stopverb}
+
+\p{\strong{Commands}:}
+
+\ul{
+\li{\code{\startverb trans-kb-stellogen-run-file\stopverb} - Execute .sg file}
+\li{\code{\startverb trans-kb-stellogen-constellation\stopverb} - Insert template}
+}
+}
+
+\subtree{
+\title{2. Narya (Observational Bridge Types)}
+\pre{\startverb
+-- Bridge type template (C-c t n b)
+def bridge (A : Type) (x y : A) : Type := x ≡ y
+
+-- Transport template (C-c t n t)
+def transport (A : Type) (P : A → Type) (x y : A) (p : x ≡ y) : P x → P y
+  := λ px. subst P p px
+\stopverb}
+
+\p{\strong{Features}:}
+
+\ul{
+\li{Observational equality (no interval type)}
+\li{Higher-dimensional type theory}
+\li{Bridge types computed from structure}
+}
+}
+
+\subtree{
+\title{3. Proof General (Coq/Lean/Agda)}
+\p{Standard Proof General commands enhanced with:}
+
+\ul{
+\li{Color state feedback}
+\li{Auto-save on successful steps}
+\li{GF(3) conservation tracking}
+}
+}
+}
+
+\subtree{
+\title{Gay.jl Color Integration}
+\subtree{
+\title{Deterministic Color Generation}
+\pre{\startverb
+;; Set seed (matches Gay.jl)
+(setq trans-kb-gay-seed 1069)
+
+;; Get next color in sequence
+(trans-kb-next-color)
+;; => (:L 52.3 :C 78.1 :H 215.7 :hex "#2D4FE8" :index 1)
+
+;; Update mode-line based on proof state
+(trans-kb-update-mode-line-color)
+\stopverb}
+}
+
+\subtree{
+\title{Color Menu (C-c t c)}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `n` | Next color in sequence |
+| `s` | Set Gay.jl seed |
+| `t` | Toggle mode-line coloring |
+| `r` | Reset color index |
+| `c` | Show current color info |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Self-Operating Proof Automation}
+\subtree{
+\title{Auto-Prove Tactics}
+\pre{\startverb
+(setq trans-kb-auto-tactics
+  '("reflexivity"      ; Identity proofs
+    "apply assumption" ; Use hypotheses
+    "intro"            ; Introduce variables
+    "split"            ; Conjunction
+    "left"             ; Disjunction left
+    "right"            ; Disjunction right
+    "exact rfl"))      ; Definitional equality
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+(* Unsolved goal *)
+Theorem auto_example : forall x, x = x.
+Proof.
+  C-c C-a  (* Auto-prove attempts tactics *)
+  (* ✅ Auto-proved with: reflexivity *)
+Qed.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Mode-Line Visual Feedback}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│  [RED]     U:--- proof.v  All L1   𝕋𝕊   (Coq)         │ ← Unproved
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│  [YELLOW]  U:**- proof.v  All L3   𝕋𝕊   (Coq)         │ ← Processing
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│  [GREEN]   U:--- proof.v  All L10  𝕋𝕊   (Coq)         │ ← Proved
+└─────────────────────────────────────────────────────────┘
+
+Lighter: 𝕋𝕊 = Transcendental Syntax
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\subtree{
+\title{Via straight.el}
+\pre{\startverb
+(use-package transcendental-keyboard
+  :straight (transcendental-keyboard
+             :type git
+             :host github
+             :repo "plurigrid/asi"
+             :files ("skills/transcendental-keyboard/*.el"))
+  :config
+  (setq trans-kb-gay-seed 1069)
+  (setq trans-kb-color-mode t)
+  (add-hook 'coq-mode-hook #'transcendental-keyboard-mode)
+  (add-hook 'lean-mode-hook #'transcendental-keyboard-mode))
+\stopverb}
+}
+
+\subtree{
+\title{Manual}
+\pre{\startverb
+# Clone ASI repo
+git clone https://github.com/plurigrid/asi ~/asi
+
+# Add to init.el
+(add-to-list 'load-path "~/asi/skills/transcendental-keyboard")
+(require 'transcendental-keyboard)
+\stopverb}
+}
+
+\subtree{
+\title{Dependencies}
+\pre{\startverb
+# Proof General
+git clone https://github.com/ProofGeneral/PG ~/.emacs.d/proof-general
+
+# Narya
+git clone https://github.com/mikeshulman/narya ~/narya
+cd ~/narya && dune build
+
+# Stellogen
+git clone https://github.com/engboris/stellogen ~/stellogen
+cd ~/stellogen && dune build
+
+# Gay.jl (for Emacs integration)
+git clone https://github.com/bmorphism/Gay.jl ~/Gay.jl
+ln -s ~/i/gay.el ~/.emacs.d/gay.el
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Workflow}
+\subtree{
+\title{1. Narya Higher-Dimensional Proof}
+\pre{\startverb
+-- File: bridge_example.ny
+
+-- Define natural numbers
+def Nat : Type := data [
+  | zero : Nat
+  | suc : Nat → Nat
+]
+
+-- Addition
+def add : Nat → Nat → Nat := [
+  | zero, n => n
+  | suc m, n => suc (add m n)
+]
+
+-- Bridge between two addition orders
+def add_comm (m n : Nat) : add m n ≡ add n m := {
+  -- C-c C-a to auto-prove
+  -- Mode-line: RED → YELLOW → GREEN
+}
+\stopverb}
+
+\p{\strong{Keyboard sequence}:}
+
+\ol{
+\li{\code{\startverb C-c t\stopverb} → Main menu}
+\li{\code{\startverb p\stopverb} → Proof menu}
+\li{\code{\startverb n\stopverb} → Step forward (mode-line: RED → YELLOW → GREEN)}
+\li{\code{\startverb C-c C-a\stopverb} → Auto-prove attempt}
+}
+}
+
+\subtree{
+\title{2. Stellogen Constellation}
+\pre{\startverb
+# File: nat_add.sg
+
+spec nat =
+  -i(z) ok;
+  -i(s(X)) +i(X).
+
+spec add =
+  -add(z Y) +result(Y);
+  -add(s(X) Y) +add(X s(Y)).
+
+show process #input(s(s(z))). #add. &kill. end
+\stopverb}
+
+\p{\strong{Keyboard sequence}:}
+
+\ol{
+\li{\code{\startverb C-c t s\stopverb} → Stellogen menu}
+\li{\code{\startverb r\stopverb} → Run file}
+\li{Output in \code{\startverb \em{stellogen}\stopverb} buffer}
+}
+}
+
+\subtree{
+\title{3. GF(3) Conservation Check}
+\pre{\startverb
+;; After proof session
+M-x trans-kb-analyze-conservation
+;; => "GF(3) Analysis: 15/17 triads conserved (88.2%)"
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+proofgeneral-narya (-1) ⊗ transcendental-keyboard (0) ⊗ stellogen (+1) = 0 ✓
+lean-proof-walk (-1) ⊗ transcendental-keyboard (0) ⊗ gay-mcp (+1) = 0 ✓
+narya-hatchery (-1) ⊗ transcendental-keyboard (0) ⊗ discopy (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Configuration Examples}
+\subtree{
+\title{Minimal Setup}
+\pre{\startverb
+(require 'transcendental-keyboard)
+(transcendental-keyboard-mode 1)
+\stopverb}
+}
+
+\subtree{
+\title{Full Setup with Gay.jl}
+\pre{\startverb
+(use-package gay
+  :load-path "~/i/"
+  :config
+  (setq gay-seed 1069)
+  (setq gay-color-target 'mode-line))
+
+(use-package transcendental-keyboard
+  :load-path "~/asi/skills/transcendental-keyboard"
+  :after (gay proof-site)
+  :config
+  (setq trans-kb-gay-seed 1069)
+  (setq trans-kb-color-mode t)
+  (setq trans-kb-auto-save t)
+  (setq trans-kb-proof-assistants
+        '((narya . "~/.local/bin/narya")
+          (lean . "~/.elan/bin/lean")
+          (coq . "coqtop")
+          (stellogen . "~/stellogen/_build/default/bin/sgen")))
+
+  ;; Auto-enable for proof files
+  (add-hook 'coq-mode-hook #'transcendental-keyboard-mode)
+  (add-hook 'lean-mode-hook #'transcendental-keyboard-mode)
+
+  ;; Custom auto-tactics
+  (setq trans-kb-auto-tactics
+        '("reflexivity"
+          "apply assumption"
+          "intro"
+          "constructor"
+          "simp"
+          "ring"
+          "omega")))
+\stopverb}
+}
+
+\subtree{
+\title{Custom Key Bindings}
+\pre{\startverb
+(with-eval-after-load 'transcendental-keyboard
+  ;; Vim-style navigation
+  (define-key transcendental-keyboard-mode-map (kbd "C-j") #'trans-kb-proof-forward)
+  (define-key transcendental-keyboard-mode-map (kbd "C-k") #'trans-kb-proof-backward)
+
+  ;; Quick auto-prove
+  (define-key transcendental-keyboard-mode-map (kbd "M-a") #'trans-kb-auto-prove)
+
+  ;; Stellogen shortcuts
+  (define-key transcendental-keyboard-mode-map (kbd "C-c s r") #'trans-kb-stellogen-run-file)
+  (define-key transcendental-keyboard-mode-map (kbd "C-c s c") #'trans-kb-stellogen-constellation))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Proof General Not Loading}
+\pre{\startverb
+;; Check if proof-site.el is in load-path
+(locate-library "proof-site")
+
+;; Manually load
+(load "~/.emacs.d/proof-general/generic/proof-site")
+\stopverb}
+}
+
+\subtree{
+\title{Gay.jl Colors Not Showing}
+\pre{\startverb
+;; Check if gay.el is loaded
+(featurep 'gay)
+
+;; Load manually
+(load "~/i/gay.el")
+
+;; Verify color generation
+(gay-color-at 1069 0)
+\stopverb}
+}
+
+\subtree{
+\title{Mode-Line Not Updating}
+\pre{\startverb
+;; Enable color mode
+(setq trans-kb-color-mode t)
+
+;; Force update
+(trans-kb-update-mode-line-color)
+
+;; Check current state
+trans-kb-current-state  ; => unproved, processing, or proved
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{State History Analysis}
+\pre{\startverb
+;; View complete state history
+trans-kb-state-history
+;; => (proved proved unproved processing proved ...)
+
+;; Count states
+(cl-loop for state in trans-kb-state-history
+         count (eq state 'proved))  ; => 42
+
+;; GF(3) conservation ratio
+(trans-kb-analyze-conservation)
+;; => "GF(3) Analysis: 14/14 triads conserved (100.0%)"
+\stopverb}
+}
+
+\subtree{
+\title{Custom Proof Tactics}
+\pre{\startverb
+;; Add domain-specific tactics
+(add-to-list 'trans-kb-auto-tactics "unfold my_definition")
+(add-to-list 'trans-kb-auto-tactics "rewrite my_lemma")
+
+;; Tactic with priority
+(push "exact rfl" trans-kb-auto-tactics)  ; Try first
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Other Systems}
+\pre{\startverb
+;; Hook into proof state changes
+(add-hook 'trans-kb-state-change-hook
+  (lambda (old-state new-state)
+    (message "State transition: %s → %s" old-state new-state)))
+
+;; Export to NATS
+(defun trans-kb-publish-state ()
+  "Publish proof state to NATS."
+  (when (featurep 'gay)
+    (gay-publish "proof.state"
+                 (json-encode `((state . ,trans-kb-current-state)
+                                (index . ,trans-kb-color-index))))))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance}
+\pre{\startverb
+| Operation | Latency | Notes |
+|-----------|---------|-------|
+| Proof step forward | <50ms | With color update |
+| Mode-line color update | <5ms | Face attribute change |
+| Auto-prove attempt | 100-500ms | Depends on tactic |
+| Stellogen execution | 50-200ms | Depends on constellation size |
+| GF(3) conservation check | <10ms | Per 1000 states |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Proof General Manual](https://proofgeneral.github.io/)}
+\li{[Narya GitHub](https://github.com/mikeshulman/narya)}
+\li{[Stellogen Guide](https://tsguide.refl.fr/en/)}
+\li{[Gay.jl](https://github.com/bmorphism/Gay.jl)}
+\li{[Transient Manual](https://magit.vc/manual/transient/)}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb proofgeneral-narya\stopverb} - Narya integration with observational bridge types}
+\li{\code{\startverb stellogen\stopverb} - Transcendental syntax logic programming}
+\li{\code{\startverb lean-proof-walk\stopverb} - Lean theorem prover navigation}
+\li{\code{\startverb gay-mcp\stopverb} - Gay.jl MCP server integration}
+\li{\code{\startverb emacs\stopverb} - Emacs ecosystem skill}
+}
+
+\p{\strong{Skill Name}: transcendental-keyboard \strong{Type}: Keyboard Control Surface / Proof Environment \strong{Trit}: 0 (ERGODIC - coordination hub) \strong{Status}: ✅ Production Ready \strong{Lighter}: 𝕋𝕊 (Transcendental Syntax)}
+
+\p{\strong{Ω}}
+}
+}

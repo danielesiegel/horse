@@ -1,0 +1,171 @@
+\title{Skill Loader}
+
+\taxon{skill}
+
+\meta{description}{Dynamic skill loading via polynomial functor arrangements. Loads skills as interfaces p = A^y^B where state changes rewire the system.}
+
+\subtree{
+\title{Skill Loader}
+\p{\strong{Dynamic Skill Loading via Polynomial Functor Arrangements}}
+
+\p{Based on Samantha Jarvis & David Spivak's work on dynamic structures, this skill treats skill loading as dynamic arrangement morphisms in the category \strong{Poly}.}
+
+\subtree{
+\title{Polynomial Semantics}
+\p{Each skill is an interface polynomial:}
+
+\pre{\startverb
+p_skill = Outputs^y^Inputs
+\stopverb}
+
+\p{Loading skills creates composite arrangements:}
+
+\pre{\startverb
+p₁ ⊗ p₂ → System
+\stopverb}
+
+\p{The \strong{state} \code{\startverb S\stopverb} determines which arrangement is active. Loading a skill updates \code{\startverb s : S\stopverb}, rewiring the system dynamically.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Load a single skill
+bb ~/.claude/skills/skill-loader/load.bb skill-name
+
+# Load multiple skills with GF(3) trit assignment
+bb ~/.claude/skills/skill-loader/load.bb skill1:-1 skill2:0 skill3:+1
+
+# List loadable skills
+bb ~/.claude/skills/skill-loader/load.bb --list
+
+# Query skill lattice
+bb ~/.claude/skills/skill-loader/load.bb --lattice
+
+# Reverse derivative: find skills that influence current state
+bb ~/.claude/skills/skill-loader/load.bb --reverse
+\stopverb}
+}
+
+\subtree{
+\title{Dynamic Arrangement Protocol}
+\subtree{
+\title{State Space}
+\pre{\startverb
+State = (M, move, f, m)
+\stopverb}
+
+\p{Where:}
+
+\ul{
+\li{\code{\startverb M\stopverb} = Parameterizing object (skill configuration space)}
+\li{\code{\startverb move : F(M) × F(M) → F(M)\stopverb} = State update function}
+\li{\code{\startverb f : M × A → B\stopverb} = Skill morphism (input → output transformation)}
+\li{\code{\startverb m : F(M)\stopverb} = Current parameter (loaded skill configuration)}
+}
+}
+
+\subtree{
+\title{Load Operation}
+\p{Loading skill \code{\startverb s\stopverb} creates arrangement morphism:}
+
+\pre{\startverb
+F(A) --[m × id]--> F(M) × F(A) --[F(f)]--> F(B)
+\stopverb}
+}
+
+\subtree{
+\title{Update Rule}
+\p{After skill execution, update state via reverse derivative:}
+
+\pre{\startverb
+F(A) × F(B) --[R[f]]--> F(M) × F(A) --[π; move]--> F(M)
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Trit Assignment}
+\p{Skills loaded in triads conserve:}
+
+\pre{\startverb
+Σ trits ≡ 0 (mod 3)
+\stopverb}
+
+\pre{\startverb
+| Trit | Role | Hue Range |
+|------|------|-----------|
+| -1 (MINUS) | Validator/Constrainer | 180°-300° (cold) |
+| 0 (ERGODIC) | Coordinator/Synthesizer | 60°-180° (neutral) |
+| +1 (PLUS) | Generator/Executor | 0°-60°, 300°-360° (warm) |
+\stopverb}
+}
+
+\subtree{
+\title{Babashka Implementation}
+\pre{\startverb
+(ns skill-loader
+  (:require [babashka.fs :as fs]
+            [clojure.edn :as edn]
+            [clojure.string :as str]))
+
+(def skills-dir (str (System/getProperty "user.home") "/.claude/skills"))
+
+(defn list-skills []
+  (->> (fs/list-dir skills-dir)
+       (filter fs/directory?)
+       (map fs/file-name)
+       (filter #(fs/exists? (fs/path skills-dir % "skill.md")))
+       sort))
+
+(defn parse-frontmatter [content]
+  (when-let [[_ yaml] (re-find #"(?s)^---\n(.*?)\n---" content)]
+    (reduce (fn [m line]
+              (if-let [[_ k v] (re-find #"^(\w+):\s*(.+)$" line)]
+                (assoc m (keyword k) v)
+                m))
+            {} (str/split-lines yaml))))
+
+(defn load-skill [skill-name]
+  (let [path (fs/path skills-dir skill-name "skill.md")]
+    (when (fs/exists? path)
+      (let [content (slurp (str path))
+            meta (parse-frontmatter content)]
+        {:name skill-name
+         :meta meta
+         :content content
+         :loaded-at (System/currentTimeMillis)}))))
+
+(defn load-triad [s1 s2 s3]
+  "Load three skills with GF(3) conservation"
+  (let [skills [(assoc (load-skill s1) :trit -1)
+                (assoc (load-skill s2) :trit 0)
+                (assoc (load-skill s3) :trit +1)]]
+    {:skills skills
+     :sum (reduce + (map :trit skills))
+     :conserved? (zero? (mod (reduce + (map :trit skills)) 3))}))
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Dynamic Categories}
+\p{Following (Shapiro & Spivak 2022), skill loading forms a \strong{dynamic monoidal category} where:}
+
+\ul{
+\li{Objects are skill interfaces}
+\li{Morphisms are arrangements}
+\li{State updates follow reverse derivative backpropagation}
+}
+
+\p{This enables gradient-based skill optimization analogous to neural network training.}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Jarvis, S. (2024). "Building dynamic structures". Topos Institute Blog.}
+\li{Shapiro, B.T. & Spivak, D.I. (2022). "Dynamic Categories, Dynamic Operads: From Deep Learning to Prediction Markets."}
+\li{Cockett et al. (2020). "Reverse Derivative Categories." CSL 2020.}
+}
+}
+}

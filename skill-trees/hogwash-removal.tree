@@ -1,0 +1,182 @@
+\title{Hogwash Removal}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Audit code and documentation for mathematical cargo-culting, inflated claims, and category-theoretic hogwash. Use when reviewing READMEs, module docs, comments, or papers that reference category theory, type theory, or abstract math. Detects misuse of technical terminology, analogy-dressed-as-theorem, name-dropping citations, and overclaimed novelty.}
+
+\subtree{
+\title{Hogwash Removal}
+\blockquote{"Category theory is an extremely insightful subject but its generality, the plethora of structural heuristics it provides, as well as its apparent conceptual simplicity make it very prone to cargo-culting." -- Matteo Capucci, "No, the Yoneda Lemma Doesn't Solve the Problem of Qualia" (2023)}
+
+\p{\strong{Trit}: -1 (VALIDATOR) \strong{Color}: #E84040 (Red) \strong{Status}: Production Ready}
+
+\subtree{
+\title{What This Skill Does}
+\p{Given a codebase or document, systematically audit every mathematical claim against these criteria:}
+
+\ol{
+\li{\strong{Is the terminology used correctly?} (e.g., "topos" means a specific thing, not "any structure")}
+\li{\strong{Is the claim a theorem or an analogy?} If analogy, is it labeled as such?}
+\li{\strong{Are citations relevant?} Does the cited work actually support the claim?}
+\li{\strong{Is novelty overclaimed?} Is this a straightforward instance of a known construction?}
+\li{\strong{Does the code match the math?} Is the implementation what the docs say it is?}
+}
+}
+
+\subtree{
+\title{The Hogwash Scoring Rubric}
+\p{Score each claim 0-10:}
+
+\pre{\startverb
+| Score | Meaning | Action |
+|-------|---------|--------|
+| 0 | Correct, precisely stated | Keep |
+| 1-2 | Minor imprecision, reasonable shorthand | Note but keep |
+| 3-4 | Slightly oversold but defensible | Add qualifier |
+| 5-6 | Analogy presented as theorem, or trivial result presented as novel | Rewrite |
+| 7-8 | Technical term misused, cargo-cult citation | Remove or replace |
+| 9-10 | Fabricated mathematical claim, actively misleading | Delete and explain why |
+\stopverb}
+}
+
+\subtree{
+\title{Common Hogwash Patterns}
+\subtree{
+\title{Pattern 1: Topos/Site Name-Dropping (severity: 7-8)}
+\p{\strong{Symptom}: "X IS the site", "Y IS the classifying topos" where X and Y are not sites/toposes.}
+
+\p{\strong{Why it's hogwash}: A site is a category with a Grothendieck topology. A topos is a category with finite limits, power objects, and a subobject classifier. Using these words for things that aren't them is like calling a bicycle a "jet engine" because both involve wheels.}
+
+\p{\strong{Fix}: Use honest language. "Different semirings give different views" not "the semiring IS the site."}
+
+\p{\strong{Reference}: Caramello (2017) defines sites precisely. Capucci warns about this in his qualia post.}
+}
+
+\subtree{
+\title{Pattern 2: Trivial Instance Presented as Novel (severity: 5-6)}
+\p{\strong{Symptom}: "We fill a gap by combining X and Y" where X(Y) is a one-line instantiation.}
+
+\p{\strong{Why it's hogwash}: If your "novel combination" is just instantiating a known construction at a specific parameter, the gap is shallow. The engineering may be valuable but the math isn't new.}
+
+\p{\strong{Example from graded-optic}: \code{\startverb GradedOptic g s t a b\stopverb} is literally \code{\startverb Optic_{Kl(Writer g)}(s,t,a,b)\stopverb}. The "gap" between graded monads and optics is bridged by a single observation: use the Kleisli category of Writer g as your base.}
+
+\p{\strong{Fix}: Say "concrete library combining..." not "novel construction filling a gap."}
+}
+
+\subtree{
+\title{Pattern 3: Name Attribution Inflation (severity: 3-4)}
+\p{\strong{Symptom}: Attributing a standard construction to a specific researcher to sound more authoritative.}
+
+\p{\strong{Example}: "Hedges' teleological counit" for a standard existential quantification that every optics library uses. Hedges did important work on open games, but the existential residual in optics predates him (it's the coend variable in Riley's formulation).}
+
+\p{\strong{Fix}: Cite the mathematical object, not a researcher's name, unless they actually introduced it.}
+}
+
+\subtree{
+\title{Pattern 4: Citation Mismatch (severity: 7)}
+\p{\strong{Symptom}: Citing a paper/book that doesn't support the claim.}
+
+\p{\strong{Example}: Citing Caramello's \em{Theories, Sites, Toposes} for a construction that involves no Grothendieck topologies, geometric theories, or actual toposes.}
+
+\p{\strong{Fix}: Only cite works whose actual content supports your claim. If you're inspired by an analogy, say "inspired by" not "following."}
+}
+
+\subtree{
+\title{Pattern 5: Forward-Only → "Bayesian" Inflation (severity: 3-4)}
+\p{\strong{Symptom}: Calling any use of \code{\startverb Log Double\stopverb} "Bayesian inference."}
+
+\p{\strong{Why it's hogwash}: Bayesian inference involves priors, likelihoods, conditioning, and posterior computation. Multiplying log-domain weights is likelihood accumulation, not inference. monad-bayes actually does Bayesian inference (with sampling, MH, SMC). Using its weight type doesn't inherit its capabilities.}
+
+\p{\strong{Fix}: Say "log-likelihood accumulation" or "log-domain scoring."}
+}
+
+\subtree{
+\title{Pattern 6: "Novel" Para (severity: 3)}
+\p{\strong{Symptom}: Calling a parametrised lens "the Para construction."}
+
+\p{\strong{Why}: Capucci/Gavranović's Para is a category with morphisms \code{\startverb (P, f: P.X → Y)\stopverb} — forward only. Adding a backward channel makes it a parametrised optic or "learner" (Fong/Gavranović). These are different things.}
+
+\p{\strong{Fix}: Say "parametrised lens with backward channel" or "learner in the sense of Gavranović" if it has both directions.}
+}
+
+\subtree{
+\title{Pattern 7: Compositionality Assumed (severity: 4-5)}
+\p{\strong{Symptom}: Claiming a construction "composes" without proving it satisfies category laws.}
+
+\p{\strong{Reference}: Capucci (2023) explicitly warns: "Behaviours are not compositional on the nose." Theories of behaviour are only lax functorial. Compositionality is a theorem, not a given.}
+
+\p{\strong{Fix}: If you claim composition, prove identity and associativity laws (or at least test them).}
+}
+}
+
+\subtree{
+\title{Audit Procedure}
+\ol{
+\li{\strong{Collect all mathematical claims} from README, module docs, comments, and examples}
+\li{\strong{For each claim, identify}: the mathematical object referenced, the technical terms used, the novelty assertion}
+\li{\strong{Check against primary sources}: Does the cited paper define the term this way? Is the construction actually what's claimed?}
+\li{\strong{Score each claim} using the rubric}
+\li{\strong{Produce a table}: Claim | Score | Why | Fix}
+\li{\strong{Apply fixes}: Replace hogwash with honest language. The code doesn't change — only the words around it.}
+}
+}
+
+\subtree{
+\title{Key References for Checking Claims}
+\ul{
+\li{\strong{Optics}: Riley (2018) "Categories of Optics", Capucci (2022) "Optics in Three Acts"}
+\li{\strong{Para}: Capucci (2021) "Open Cybernetic Systems II", Gavranović (2024) PhD thesis Ch. 3}
+\li{\strong{Cybernetics}: Capucci, Gavranović, Hedges, Rischel (2021) "Towards Foundations of Categorical Cybernetics"}
+\li{\strong{Graded monads}: Katsumata (2014), Orchard/Wadler/Eades "Unifying graded and parameterised monads"}
+\li{\strong{Actegories}: Capucci & Gavranović (2022) "Actegories for the Working Amthematician"}
+\li{\strong{Contextads}: Capucci & Myers (2024) "Contextads as Wreaths" — the actual state of the art for grading in optics}
+\li{\strong{Sites/Toposes}: Caramello (2017) "Theories, Sites, Toposes" — what sites actually are}
+\li{\strong{Anti-cargo-cult}: Capucci (2023) "No, the Yoneda Lemma Doesn't Solve the Problem of Qualia"}
+}
+}
+
+\subtree{
+\title{Bidirectional Neighbor Index}
+\pre{\startverb
+| Neighbor | Direction | Scope |
+|----------|-----------|-------|
+| `aristotle-lean` | outgoing | scope:verify — formal verification of claims |
+| `code-review` | bidirectional | scope:compose — hogwash check as part of review |
+| `refuse-mediocrity` | incoming | scope:change — mediocre framing triggers audit |
+| `accept-no-substitutes` | bidirectional | scope:verify — honest terminology |
+| `acsets-algebraic-databases` | outgoing | scope:verify — check ACSet claims |
+| `open-games` | outgoing | scope:verify — check game theory claims |
+| `discopy-operads` | outgoing | scope:verify — check categorical claims |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\p{\code{\startverb hogwash-removal\stopverb} (-1) + \code{\startverb refuse-mediocrity\stopverb} (+1) + \code{\startverb code-review\stopverb} (0) = 0}
+
+\p{The validator (-1) catches inflated claims, the generator (+1) pushes for better framing, the ergodic coordinator (0) integrates both into the review process.}
+}
+
+\subtree{
+\title{Example: graded-optic Audit (2026-02-08)}
+\p{Applied to plurigrid/graded-optic. Results:}
+
+\pre{\startverb
+| Claim | Before | After | Score |
+|-------|--------|-------|-------|
+| "semiring IS the site" | Cargo-cult Caramello | Removed entirely | 8→0 |
+| "optic IS the classifying topos" | False | Removed entirely | 8→0 |
+| Caramello citation | Irrelevant | Removed | 7→0 |
+| "Novel gap" | Oversold | "Concrete library combining..." | 5→1 |
+| "Hedges' teleological counit" | Name-drop | "coend variable in the optic formula" | 4→1 |
+| "Bayesian bidirectional inference" | Inflated | "log-likelihood accumulation" | 3→0 |
+| Para attribution | Slightly loose | "Extends Para with backward channel" | 3→1 |
+| Composition (|>>>|) | Correct | Unchanged | 0→0 |
+| Examples | Honest | Unchanged | 1→1 |
+\stopverb}
+
+\p{\strong{Net effect}: Average hogwash score dropped from 4.3 to 0.4.}
+}
+}

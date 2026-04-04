@@ -1,0 +1,96 @@
+\title{Nbt}
+
+\taxon{skill}
+
+\meta{description}{Use the nbt! macro from mc_protocol for creating NBT (Named Binary Tag) data for Minecraft protocol encoding.}
+
+\subtree{
+\title{NBT Encoding Skill}
+\p{Use the \code{\startverb nbt!\stopverb} macro from \code{\startverb mc_protocol\stopverb} for creating NBT data.}
+
+\subtree{
+\title{When to Use}
+\p{Use this skill when you need to:}
+
+\ul{
+\li{Encode NBT data for Minecraft packets}
+\li{Create text components for chat, action bar, titles}
+\li{Build compound NBT structures}
+}
+}
+
+\subtree{
+\title{Basic Usage}
+\pre{\startverb
+use mc_protocol::nbt;
+
+// Simple compound
+let compound = nbt! {
+    "text" => "Hello",
+    "count" => 42i32,
+    "flag" => true,
+};
+
+// Convert to network bytes
+let bytes = compound.to_network_bytes();
+\stopverb}
+}
+
+\subtree{
+\title{Nested Compounds}
+\pre{\startverb
+use mc_protocol::nbt;
+
+let nested = nbt! {
+    "outer" => nbt! {
+        "inner" => 123i32,
+    },
+};
+\stopverb}
+}
+
+\subtree{
+\title{Supported Types}
+\ul{
+\li{\code{\startverb i8\stopverb} - Byte}
+\li{\code{\startverb i16\stopverb} - Short}
+\li{\code{\startverb i32\stopverb} - Int}
+\li{\code{\startverb i64\stopverb} - Long}
+\li{\code{\startverb f32\stopverb} - Float}
+\li{\code{\startverb f64\stopverb} - Double}
+\li{\code{\startverb &str\stopverb} / \code{\startverb String\stopverb} - String}
+\li{\code{\startverb bool\stopverb} - Byte (0 or 1)}
+\li{\code{\startverb NbtCompound\stopverb} - Nested compound}
+\li{\code{\startverb NbtList\stopverb} - List of same-type elements}
+}
+}
+
+\subtree{
+\title{Text Components (Chat/Action Bar)}
+\p{For Minecraft text components (used in chat, action bar, titles):}
+
+\pre{\startverb
+use mc_protocol::nbt;
+
+// Simple text
+let text_component = nbt! {
+    "text" => "Hello World",
+};
+
+// With color
+let colored = nbt! {
+    "text" => "Red text",
+    "color" => "red",
+};
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Always use the \code{\startverb nbt!\stopverb} macro} instead of manual byte manipulation}
+\li{Use explicit type suffixes (\code{\startverb 42i32\stopverb}, \code{\startverb 1.0f32\stopverb}) for numeric literals}
+\li{Use \code{\startverb to_network_bytes()\stopverb} for protocol encoding (adds type tag, no root name)}
+}
+}
+}

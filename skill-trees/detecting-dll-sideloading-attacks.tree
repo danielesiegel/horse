@@ -1,0 +1,115 @@
+\title{Detecting Dll Sideloading Attacks}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{mitre-attack}
+
+\tag{dll-sideloading}
+
+\tag{defense-evasion}
+
+\tag{t1574}
+
+\tag{edr}
+
+\tag{proactive-detection}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect DLL side-loading attacks where adversaries place malicious DLLs alongside legitimate applications to hijack execution flow for defense evasion.}
+
+\subtree{
+\title{Detecting DLL Sideloading Attacks}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating potential DLL hijacking in enterprise environments}
+\li{After EDR alerts on unsigned DLLs loaded by signed applications}
+\li{When hunting for APT persistence using legitimate application wrappers}
+\li{During incident response to identify trojanized applications}
+\li{When threat intel indicates DLL sideloading campaigns targeting specific software}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{EDR with DLL load monitoring (CrowdStrike, MDE, SentinelOne)}
+\li{Sysmon Event ID 7 (Image Loaded) with hash verification}
+\li{Application whitelisting or DLL integrity monitoring}
+\li{Software inventory of legitimate applications and expected DLL paths}
+\li{Code signing verification capabilities}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Identify Sideloading Targets}: Research known vulnerable applications that load DLLs without full path qualification (LOLBAS, DLL-sideload databases).}
+\li{\strong{Monitor DLL Load Events}: Query Sysmon Event ID 7 for DLL loads where the DLL path differs from the application's expected directory.}
+\li{\strong{Check DLL Signatures}: Flag unsigned or untrusted DLLs loaded by signed executables.}
+\li{\strong{Detect Path Anomalies}: Identify legitimate executables running from unusual locations (Temp, AppData, Public) that may be decoy wrappers.}
+\li{\strong{Hash Verification}: Compare loaded DLL hashes against known-good versions and threat intel feeds.}
+\li{\strong{Correlate with Process Behavior}: Check if the host process exhibits unusual behavior (network connections, child processes) after loading the suspicious DLL.}
+\li{\strong{Document and Remediate}: Report sideloading instances, quarantine malicious DLLs, and update detection rules.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| T1574.002 | DLL Side-Loading |
+| T1574.001 | DLL Search Order Hijacking |
+| T1574.006 | Dynamic Linker Hijacking |
+| T1574.008 | Path Interception by Search Order Hijacking |
+| DLL Search Order | Windows DLL loading priority path |
+| Side-Loading | Placing malicious DLL where legitimate app loads it |
+| Phantom DLL | DLL that legitimate apps try to load but does not exist |
+| DLL Proxying | Malicious DLL forwarding calls to legitimate DLL |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Sysmon | Event ID 7 DLL load monitoring |
+| CrowdStrike Falcon | DLL load detection with process context |
+| Microsoft Defender for Endpoint | DLL load anomaly detection |
+| Process Monitor | Real-time DLL load tracing |
+| DLL Export Viewer | Verify DLL export functions |
+| Sigcheck | Digital signature verification |
+| pe-sieve | PE analysis for proxied DLLs |
+\stopverb}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{Legitimate App Wrapper}: Adversary copies signed application (e.g., OneDrive updater) to temp folder alongside malicious DLL with same name as expected dependency.}
+\li{\strong{Phantom DLL Exploitation}: Malicious DLL placed in PATH location where legitimate app searches for non-existent DLL.}
+\li{\strong{DLL Proxy Loading}: Malicious version.dll proxies all exports to real version.dll while executing malicious code on DllMain.}
+\li{\strong{Software Update Hijack}: Attacker replaces DLL in update staging directory before legitimate updater loads it.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-SIDELOAD-[DATE]-[SEQ]
+Technique: T1574.002
+Host Application: [Legitimate signed executable]
+Sideloaded DLL: [Malicious DLL name and path]
+Expected DLL Path: [Where DLL should legitimately be]
+DLL Signed: [Yes/No]
+App Location: [Expected/Anomalous]
+Host: [Hostname]
+Risk Level: [Critical/High/Medium/Low]
+\stopverb}
+}
+}

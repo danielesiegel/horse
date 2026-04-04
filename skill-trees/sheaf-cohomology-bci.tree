@@ -1,0 +1,84 @@
+\title{Sheaf Cohomology Bci}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Local-to-global signal consistency via cellular sheaves, Cech cohomology, and sheaf Laplacian}
+
+\subtree{
+\title{Sheaf Cohomology BCI Skill: Local-to-Global Consistency}
+\p{\strong{Status}: Production Ready \strong{Trit}: -1 (MINUS - validator) \strong{Color}: #2626D8 (Blue) \strong{Principle}: Sheaf condition = local-to-global consistency principle \strong{Frame}: Cellular sheaf on BCI signal graph with Cech cohomology}
+
+\subtree{
+\title{Overview}
+\p{\strong{Sheaf Cohomology} verifies that local BCI measurements (per channel) can be consistently glued into a global signal. Implements:}
+
+\ol{
+\li{\strong{Cellular sheaf}: Stalks F(v) at vertices, restriction maps on edges}
+\li{\strong{Sheaf condition}: Gluing axiom verification across overlapping regions}
+\li{\strong{Cech cohomology}: H^0 (global sections), H^1 (obstructions to gluing)}
+\li{\strong{Sheaf Laplacian}: Tr(L_F) measures total inconsistency}
+\li{\strong{Descent/gluing}: Attempt global section construction, identify obstruction class}
+}
+
+\p{\strong{Correct by construction}: H^1 = 0 iff local sections glue uniquely to global.}
+}
+
+\subtree{
+\title{Core Formulae}
+\pre{\startverb
+Cellular sheaf F on graph G = (V, E):
+  F(v) = stalk (vector space) at vertex v
+  rho_{v,e}: F(v) -> F(e)  restriction map
+
+Sheaf condition:
+  rho_{u,e}(s_u) = rho_{v,e}(s_v) for all edges e=(u,v)
+
+Cech cohomology:
+  C^0 = prod F(U_i)           (local sections)
+  C^1 = prod F(U_i cap U_j)   (overlap data)
+  delta_0: C^0 -> C^1          (coboundary)
+  H^0 = ker(delta_0)           (global sections)
+  H^1 = ker(delta_1)/im(delta_0)  (obstructions)
+
+Sheaf Laplacian:
+  L_F = delta^T delta
+  Tr(L_F) = total inconsistency
+  ker(L_F) = harmonic sections (global)
+\stopverb}
+}
+
+\subtree{
+\title{Key Results}
+\pre{\startverb
+Multi-World Sheaf Comparison:
+  world-a: Tr(L_F)=3.24, non-trivial obstruction (beta-gamma disagreement)
+  world-b: Tr(L_F)=0.09, GLUED (consistent signals, trivial H^1)
+  world-c: Tr(L_F)=20.75, highly inconsistent (diverse channels)
+\stopverb}
+}
+
+\subtree{
+\title{BCI Integration (Layer 19)}
+\p{Completes the \strong{Topology Chain}: L8 -> L13 -> L14 -> L17 -> L19}
+
+\ul{
+\li{\strong{L8 Persistent Homology}: Betti = ranks of constant sheaf cohomology}
+\li{\strong{L14 Cohomology Ring}: Sheaf H^k(X,F) generalizes H^k(X,Z)}
+\li{\strong{L17 de Rham}: de Rham = cohomology of sheaf of smooth functions}
+\li{\strong{L18 Info Geometry}: Sheaf of distributions, Fisher metric varies by stalk}
+\li{\strong{L16 Spectral}: Sheaf Laplacian L_F generalizes graph Laplacian L}
+}
+
+\p{\strong{Skill Name}: sheaf-cohomology-bci \strong{Type}: Local-to-Global Consistency / Cellular Sheaves / Cech Cohomology \strong{Trit}: -1 (MINUS) \strong{GF(3)}: Forms valid triads with ERGODIC + PLUS skills}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\pre{\startverb
+stochastic-resonance (+1) x information-geometry (0) x sheaf-cohomology-bci (-1) = 0
+gay-mcp (+1) x spectral-methods (0) x sheaf-cohomology-bci (-1) = 0
+\stopverb}
+}
+}

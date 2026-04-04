@@ -1,0 +1,112 @@
+\title{"transcribe"}
+
+\taxon{skill}
+
+\meta{description}{"Transcribe audio files to text with optional diarization and known-speaker hints. Use when a user asks to transcribe speech from audio/video, extract text from recordings, or label speakers in interviews or meetings."}
+
+\subtree{
+\title{Audio Transcribe}
+\p{Transcribe audio using OpenAI, with optional speaker diarization when requested. Prefer the bundled CLI for deterministic, repeatable runs.}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Collect inputs: audio file path(s), desired response format (text/json/diarized_json), optional language hint, and any known speaker references.}
+\li{Verify \code{\startverb OPENAI_API_KEY\stopverb} is set. If missing, ask the user to set it locally (do not ask them to paste the key).}
+\li{Run the bundled \code{\startverb transcribe_diarize.py\stopverb} CLI with sensible defaults (fast text transcription).}
+\li{Validate the output: transcription quality, speaker labels, and segment boundaries; iterate with a single targeted change if needed.}
+\li{Save outputs under \code{\startverb output/transcribe/\stopverb} when working in this repo.}
+}
+}
+
+\subtree{
+\title{Decision rules}
+\ul{
+\li{Default to \code{\startverb gpt-4o-mini-transcribe\stopverb} with \code{\startverb --response-format text\stopverb} for fast transcription.}
+\li{If the user wants speaker labels or diarization, use \code{\startverb --model gpt-4o-transcribe-diarize --response-format diarized_json\stopverb}.}
+\li{If audio is longer than ~30 seconds, keep \code{\startverb --chunking-strategy auto\stopverb}.}
+\li{Prompting is not supported for \code{\startverb gpt-4o-transcribe-diarize\stopverb}.}
+}
+}
+
+\subtree{
+\title{Output conventions}
+\ul{
+\li{Use \code{\startverb output/transcribe/<job-id>/\stopverb} for evaluation runs.}
+\li{Use \code{\startverb --out-dir\stopverb} for multiple files to avoid overwriting.}
+}
+}
+
+\subtree{
+\title{Dependencies (install if missing)}
+\p{Prefer \code{\startverb uv\stopverb} for dependency management.}
+
+\pre{\startverb
+uv pip install openai
+\stopverb}
+
+\p{If \code{\startverb uv\stopverb} is unavailable:}
+
+\pre{\startverb
+python3 -m pip install openai
+\stopverb}
+}
+
+\subtree{
+\title{Environment}
+\ul{
+\li{\code{\startverb OPENAI_API_KEY\stopverb} must be set for live API calls.}
+\li{If the key is missing, instruct the user to create one in the OpenAI platform UI and export it in their shell.}
+\li{Never ask the user to paste the full key in chat.}
+}
+}
+
+\subtree{
+\title{Skill path (set once)}
+\pre{\startverb
+export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+export TRANSCRIBE_CLI="$CODEX_HOME/skills/transcribe/scripts/transcribe_diarize.py"
+\stopverb}
+
+\p{User-scoped skills install under \code{\startverb $CODEX_HOME/skills\stopverb} (default: \code{\startverb ~/.codex/skills\stopverb}).}
+}
+
+\subtree{
+\title{CLI quick start}
+\p{Single file (fast text default):}
+
+\pre{\startverb
+python3 "$TRANSCRIBE_CLI" \
+  path/to/audio.wav \
+  --out transcript.txt
+\stopverb}
+
+\p{Diarization with known speakers (up to 4):}
+
+\pre{\startverb
+python3 "$TRANSCRIBE_CLI" \
+  meeting.m4a \
+  --model gpt-4o-transcribe-diarize \
+  --known-speaker "Alice=refs/alice.wav" \
+  --known-speaker "Bob=refs/bob.wav" \
+  --response-format diarized_json \
+  --out-dir output/transcribe/meeting
+\stopverb}
+
+\p{Plain text output (explicit):}
+
+\pre{\startverb
+python3 "$TRANSCRIBE_CLI" \
+  interview.mp3 \
+  --response-format text \
+  --out interview.txt
+\stopverb}
+}
+
+\subtree{
+\title{Reference map}
+\ul{
+\li{\code{\startverb references/api.md\stopverb}: supported formats, limits, response formats, and known-speaker notes.}
+}
+}
+}

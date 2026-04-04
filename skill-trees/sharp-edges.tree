@@ -1,0 +1,366 @@
+\title{Sharp Edges}
+
+\taxon{skill}
+
+\meta{description}{"Identifies error-prone APIs, dangerous configurations, and footgun designs that enable security mistakes. Use when reviewing API designs, configuration schemas, cryptographic library ergonomics, or evaluating whether code follows 'secure by default' and 'pit of success' principles. Triggers: footgun, misuse-resistant, secure defaults, API usability, dangerous configuration."}
+
+\subtree{
+\title{Sharp Edges Analysis}
+\p{Evaluates whether APIs, configurations, and interfaces are resistant to developer misuse. Identifies designs where the "easy path" leads to insecurity.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Reviewing API or library design decisions}
+\li{Auditing configuration schemas for dangerous options}
+\li{Evaluating cryptographic API ergonomics}
+\li{Assessing authentication/authorization interfaces}
+\li{Reviewing any code that exposes security-relevant choices to developers}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Implementation bugs (use standard code review)}
+\li{Business logic flaws (use domain-specific analysis)}
+\li{Performance optimization (different concern)}
+}
+}
+
+\subtree{
+\title{Core Principle}
+\p{\strong{The pit of success}: Secure usage should be the path of least resistance. If developers must understand cryptography, read documentation carefully, or remember special rules to avoid vulnerabilities, the API has failed.}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\pre{\startverb
+| Rationalization | Why It's Wrong | Required Action |
+|-----------------|----------------|-----------------|
+| "It's documented" | Developers don't read docs under deadline pressure | Make the secure choice the default or only option |
+| "Advanced users need flexibility" | Flexibility creates footguns; most "advanced" usage is copy-paste | Provide safe high-level APIs; hide primitives |
+| "It's the developer's responsibility" | Blame-shifting; you designed the footgun | Remove the footgun or make it impossible to misuse |
+| "Nobody would actually do that" | Developers do everything imaginable under pressure | Assume maximum developer confusion |
+| "It's just a configuration option" | Config is code; wrong configs ship to production | Validate configs; reject dangerous combinations |
+| "We need backwards compatibility" | Insecure defaults can't be grandfather-claused | Deprecate loudly; force migration |
+\stopverb}
+}
+
+\subtree{
+\title{Sharp Edge Categories}
+\subtree{
+\title{1. Algorithm/Mode Selection Footguns}
+\p{APIs that let developers choose algorithms invite choosing wrong ones.}
+
+\p{\strong{The JWT Pattern} (canonical example):}
+
+\ul{
+\li{Header specifies algorithm: attacker can set \code{\startverb "alg": "none"\stopverb} to bypass signatures}
+\li{Algorithm confusion: RSA public key used as HMAC secret when switching RS256→HS256}
+\li{Root cause: Letting untrusted input control security-critical decisions}
+}
+
+\p{\strong{Detection patterns:}}
+
+\ul{
+\li{Function parameters like \code{\startverb algorithm\stopverb}, \code{\startverb mode\stopverb}, \code{\startverb cipher\stopverb}, \code{\startverb hash_type\stopverb}}
+\li{Enums/strings selecting cryptographic primitives}
+\li{Configuration options for security mechanisms}
+}
+
+\p{\strong{Example - PHP password_hash allowing weak algorithms:}}
+
+\pre{\startverb
+// DANGEROUS: allows crc32, md5, sha1
+password_hash($password, PASSWORD_DEFAULT); // Good - no choice
+hash($algorithm, $password); // BAD: accepts "crc32"
+\stopverb}
+}
+
+\subtree{
+\title{2. Dangerous Defaults}
+\p{Defaults that are insecure, or zero/empty values that disable security.}
+
+\p{\strong{The OTP Lifetime Pattern:}}
+
+\pre{\startverb
+# What happens when lifetime=0?
+def verify_otp(code, lifetime=300):  # 300 seconds default
+    if lifetime == 0:
+        return True  # OOPS: 0 means "accept all"?
+        # Or does it mean "expired immediately"?
+\stopverb}
+
+\p{\strong{Detection patterns:}}
+
+\ul{
+\li{Timeouts/lifetimes that accept 0 (infinite? immediate expiry?)}
+\li{Empty strings that bypass checks}
+\li{Null values that skip validation}
+\li{Boolean defaults that disable security features}
+\li{Negative values with undefined semantics}
+}
+
+\p{\strong{Questions to ask:}}
+
+\ul{
+\li{What happens with \code{\startverb timeout=0\stopverb}? \code{\startverb max_attempts=0\stopverb}? \code{\startverb key=""\stopverb}?}
+\li{Is the default the most secure option?}
+\li{Can any default value disable security entirely?}
+}
+}
+
+\subtree{
+\title{3. Primitive vs. Semantic APIs}
+\p{APIs that expose raw bytes instead of meaningful types invite type confusion.}
+
+\p{\strong{The Libsodium vs. Halite Pattern:}}
+
+\pre{\startverb
+// Libsodium (primitives): bytes are bytes
+sodium_crypto_box($message, $nonce, $keypair);
+// Easy to: swap nonce/keypair, reuse nonces, use wrong key type
+
+// Halite (semantic): types enforce correct usage
+Crypto::seal($message, new EncryptionPublicKey($key));
+// Wrong key type = type error, not silent failure
+\stopverb}
+
+\p{\strong{Detection patterns:}}
+
+\ul{
+\li{Functions taking \code{\startverb bytes\stopverb}, \code{\startverb string\stopverb}, \code{\startverb []byte\stopverb} for distinct security concepts}
+\li{Parameters that could be swapped without type errors}
+\li{Same type used for keys, nonces, ciphertexts, signatures}
+}
+
+\p{\strong{The comparison footgun:}}
+
+\pre{\startverb
+// Timing-safe comparison looks identical to unsafe
+if hmac == expected { }           // BAD: timing attack
+if hmac.Equal(mac, expected) { }  // Good: constant-time
+// Same types, different security properties
+\stopverb}
+}
+
+\subtree{
+\title{4. Configuration Cliffs}
+\p{One wrong setting creates catastrophic failure, with no warning.}
+
+\p{\strong{Detection patterns:}}
+
+\ul{
+\li{Boolean flags that disable security entirely}
+\li{String configs that aren't validated}
+\li{Combinations of settings that interact dangerously}
+\li{Environment variables that override security settings}
+\li{Constructor parameters with sensible defaults but no validation (callers can override with insecure values)}
+}
+
+\p{\strong{Examples:}}
+
+\pre{\startverb
+# One typo = disaster
+verify_ssl: fasle  # Typo silently accepted as truthy?
+
+# Magic values
+session_timeout: -1  # Does this mean "never expire"?
+
+# Dangerous combinations accepted silently
+auth_required: true
+bypass_auth_for_health_checks: true
+health_check_path: "/"  # Oops
+\stopverb}
+
+\pre{\startverb
+// Sensible default doesn't protect against bad callers
+public function __construct(
+    public string $hashAlgo = 'sha256',  // Good default...
+    public int $otpLifetime = 120,       // ...but accepts md5, 0, etc.
+) {}
+\stopverb}
+
+\p{See [config-patterns.md](references/config-patterns.md#unvalidated-constructor-parameters) for detailed patterns.}
+}
+
+\subtree{
+\title{5. Silent Failures}
+\p{Errors that don't surface, or success that masks failure.}
+
+\p{\strong{Detection patterns:}}
+
+\ul{
+\li{Functions returning booleans instead of throwing on security failures}
+\li{Empty catch blocks around security operations}
+\li{Default values substituted on parse errors}
+\li{Verification functions that "succeed" on malformed input}
+}
+
+\p{\strong{Examples:}}
+
+\pre{\startverb
+# Silent bypass
+def verify_signature(sig, data, key):
+    if not key:
+        return True  # No key = skip verification?!
+
+# Return value ignored
+signature.verify(data, sig)  # Throws on failure
+crypto.verify(data, sig)     # Returns False on failure
+# Developer forgets to check return value
+\stopverb}
+}
+
+\subtree{
+\title{6. Stringly-Typed Security}
+\p{Security-critical values as plain strings enable injection and confusion.}
+
+\p{\strong{Detection patterns:}}
+
+\ul{
+\li{SQL/commands built from string concatenation}
+\li{Permissions as comma-separated strings}
+\li{Roles/scopes as arbitrary strings instead of enums}
+\li{URLs constructed by joining strings}
+}
+
+\p{\strong{The permission accumulation footgun:}}
+
+\pre{\startverb
+permissions = "read,write"
+permissions += ",admin"  # Too easy to escalate
+
+# vs. type-safe
+permissions = {Permission.READ, Permission.WRITE}
+permissions.add(Permission.ADMIN)  # At least it's explicit
+\stopverb}
+}
+}
+
+\subtree{
+\title{Analysis Workflow}
+\subtree{
+\title{Phase 1: Surface Identification}
+\ol{
+\li{\strong{Map security-relevant APIs}: authentication, authorization, cryptography, session management, input validation}
+\li{\strong{Identify developer choice points}: Where can developers select algorithms, configure timeouts, choose modes?}
+\li{\strong{Find configuration schemas}: Environment variables, config files, constructor parameters}
+}
+}
+
+\subtree{
+\title{Phase 2: Edge Case Probing}
+\p{For each choice point, ask:}
+
+\ul{
+\li{\strong{Zero/empty/null}: What happens with \code{\startverb 0\stopverb}, \code{\startverb ""\stopverb}, \code{\startverb null\stopverb}, \code{\startverb []\stopverb}?}
+\li{\strong{Negative values}: What does \code{\startverb -1\stopverb} mean? Infinite? Error?}
+\li{\strong{Type confusion}: Can different security concepts be swapped?}
+\li{\strong{Default values}: Is the default secure? Is it documented?}
+\li{\strong{Error paths}: What happens on invalid input? Silent acceptance?}
+}
+}
+
+\subtree{
+\title{Phase 3: Threat Modeling}
+\p{Consider three adversaries:}
+
+\ol{
+\li{\strong{The Scoundrel}: Actively malicious developer or attacker controlling config}
+\li{Can they disable security via configuration?}
+\li{Can they downgrade algorithms?}
+\li{Can they inject malicious values?}
+}
+
+\ol{
+\li{\strong{The Lazy Developer}: Copy-pastes examples, skips documentation}
+\li{Will the first example they find be secure?}
+\li{Is the path of least resistance secure?}
+\li{Do error messages guide toward secure usage?}
+}
+
+\ol{
+\li{\strong{The Confused Developer}: Misunderstands the API}
+\li{Can they swap parameters without type errors?}
+\li{Can they use the wrong key/algorithm/mode by accident?}
+\li{Are failure modes obvious or silent?}
+}
+}
+
+\subtree{
+\title{Phase 4: Validate Findings}
+\p{For each identified sharp edge:}
+
+\ol{
+\li{\strong{Reproduce the misuse}: Write minimal code demonstrating the footgun}
+\li{\strong{Verify exploitability}: Does the misuse create a real vulnerability?}
+\li{\strong{Check documentation}: Is the danger documented? (Documentation doesn't excuse bad design, but affects severity)}
+\li{\strong{Test mitigations}: Can the API be used safely with reasonable effort?}
+}
+
+\p{If a finding seems questionable, return to Phase 2 and probe more edge cases.}
+}
+}
+
+\subtree{
+\title{Severity Classification}
+\pre{\startverb
+| Severity | Criteria | Examples |
+|----------|----------|----------|
+| Critical | Default or obvious usage is insecure | `verify: false` default; empty password allowed |
+| High | Easy misconfiguration breaks security | Algorithm parameter accepts "none" |
+| Medium | Unusual but possible misconfiguration | Negative timeout has unexpected meaning |
+| Low | Requires deliberate misuse | Obscure parameter combination |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\p{\strong{By category:}}
+
+\ul{
+\li{\strong{Cryptographic APIs}: See [references/crypto-apis.md](references/crypto-apis.md)}
+\li{\strong{Configuration Patterns}: See [references/config-patterns.md](references/config-patterns.md)}
+\li{\strong{Authentication/Session}: See [references/auth-patterns.md](references/auth-patterns.md)}
+\li{\strong{Real-World Case Studies}: See [references/case-studies.md](references/case-studies.md) (OpenSSL, GMP, etc.)}
+}
+
+\p{\strong{By language} (general footguns, not crypto-specific):}
+
+\pre{\startverb
+| Language | Guide |
+|----------|-------|
+| C/C++ | [references/lang-c.md](references/lang-c.md) |
+| Go | [references/lang-go.md](references/lang-go.md) |
+| Rust | [references/lang-rust.md](references/lang-rust.md) |
+| Swift | [references/lang-swift.md](references/lang-swift.md) |
+| Java | [references/lang-java.md](references/lang-java.md) |
+| Kotlin | [references/lang-kotlin.md](references/lang-kotlin.md) |
+| C# | [references/lang-csharp.md](references/lang-csharp.md) |
+| PHP | [references/lang-php.md](references/lang-php.md) |
+| JavaScript/TypeScript | [references/lang-javascript.md](references/lang-javascript.md) |
+| Python | [references/lang-python.md](references/lang-python.md) |
+| Ruby | [references/lang-ruby.md](references/lang-ruby.md) |
+\stopverb}
+
+\p{See also [references/language-specific.md](references/language-specific.md) for a combined quick reference.}
+}
+
+\subtree{
+\title{Quality Checklist}
+\p{Before concluding analysis:}
+
+\ul{
+\li{[ ] Probed all zero/empty/null edge cases}
+\li{[ ] Verified defaults are secure}
+\li{[ ] Checked for algorithm/mode selection footguns}
+\li{[ ] Tested type confusion between security concepts}
+\li{[ ] Considered all three adversary types}
+\li{[ ] Verified error paths don't bypass security}
+\li{[ ] Checked configuration validation}
+\li{[ ] Constructor params validated (not just defaulted) - see [config-patterns.md](references/config-patterns.md#unvalidated-constructor-parameters)}
+}
+}
+}

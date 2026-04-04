@@ -1,0 +1,158 @@
+\title{Goose Introspection}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Goose session introspection and self-discovery via DuckDB reafference database. Query past sessions, find self, and enable cross-session awareness.}
+
+\subtree{
+\title{Skill: Goose Introspection}
+\p{\strong{Category}: Agent Self-Discovery | Session Analysis | Reafference Testing \strong{Level}: Core (Required for agent self-awareness) \strong{Status}: OPERATIONAL \strong{Trit Assignment}: 0 (ERGODIC) - Coordinates between past and future sessions \strong{Propagates To}: goose, amp, claude, cursor}
+
+\subtree{
+\title{Overview}
+\p{Implements \strong{reafference-based self-discovery} for goose sessions. This skill enables any goose instance to:}
+
+\ol{
+\li{\strong{Find itself} in the session history}
+\li{\strong{Query past sessions} for context and continuity}
+\li{\strong{Track session evolution} across providers and models}
+\li{\strong{Enable cross-session awareness} through DuckDB persistence}
+}
+
+\p{\strong{Core Principle}: > An agent that cannot find itself in its own history cannot truly understand its context.}
+}
+
+\subtree{
+\title{Database Location}
+\p{The reafference database is created at:}
+
+\p{This database copies data from the goose sessions database at:}
+}
+
+\subtree{
+\title{Key Tables}
+\subtree{
+\title{reafference_sessions}
+\p{Tracks all sessions with discovery metadata:}
+
+\pre{\startverb
+| Column | Type | Description |
+|--------|------|-------------|
+| session_id | VARCHAR | Primary key, e.g., 20260108_22 |
+| discovered_at | TIMESTAMP | When session was added to tracking |
+| provider | VARCHAR | anthropic, openai, google, openrouter |
+| model | VARCHAR | e.g., claude-opus-4-5-20251101 |
+| working_dir | VARCHAR | Working directory of session |
+| session_name | VARCHAR | Auto-generated or user-set name |
+| original_created_at | TIMESTAMP | When session was first created |
+| message_count | BIGINT | Number of messages in session |
+| total_tokens | BIGINT | Total tokens used |
+| is_origin_session | BOOLEAN | TRUE for the session that created this DB |
+| notes | VARCHAR | Optional notes about the session |
+\stopverb}
+}
+
+\subtree{
+\title{reafference_metadata}
+\p{Key-value store for origin information.}
+}
+
+\subtree{
+\title{sessions (copied from source)}
+\p{Full session data for offline queries.}
+}
+
+\subtree{
+\title{messages (copied from source)}
+\p{Full message history for content analysis.}
+}
+}
+
+\subtree{
+\title{Key Views}
+\subtree{
+\title{reafference_origin}
+\p{Returns the session that created this database.}
+}
+
+\subtree{
+\title{sessions_by_date}
+\p{Aggregated daily statistics.}
+}
+
+\subtree{
+\title{searchable_sessions}
+\p{Join of sessions with user messages for content search.}
+}
+}
+
+\subtree{
+\title{Self-Discovery Queries}
+\subtree{
+\title{Find This Session (Origin)}
+
+}
+
+\subtree{
+\title{Session Timeline}
+
+}
+
+\subtree{
+\title{Provider Distribution}
+
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{This skill participates in the triadic balance:}
+
+\pre{\startverb
+| Trit | Skill | Role |
+|------|-------|------|
+| -1 | duckdb-timetravel | Validates queries and schema |
+| 0 | goose-introspection | Coordinates session discovery |
+| +1 | reafference-corollary-discharge | Generates predictions |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0}
+}
+
+\subtree{
+\title{Status}
+\ul{
+\li{\strong{Database Created}: Yes}
+\li{\strong{Origin Session Marked}: 20260108_22}
+\li{\strong{Sessions Tracked}: 376}
+\li{\strong{Messages Indexed}: 6,215}
+\li{\strong{Total Tokens}: ~3.59M}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{duckdb-timetravel - Temporal queries on session data}
+\li{duckdb-ies - Interaction entropy analysis}
+\li{reafference-corollary-discharge - Prediction/observation matching}
+\li{fswatch-duckdb - Real-time file monitoring with DuckDB}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to Cat# = Comod(P) as a bicomodule:}
+}
+
+\subtree{
+\title{Forward Reference}
+\ul{
+\li{unified-reafference (canonical B3 Poset)}
+}
+}
+}

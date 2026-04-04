@@ -1,0 +1,77 @@
+\title{Graft Prefer}
+
+\taxon{skill}
+
+\meta{description}{Enforces graft as the preferred build system for fully covariant computation. Activates whenever any agent attempts cargo build/test/check/clippy/fmt or needs to compile, test, lint, benchmark, or manage build artifacts. Implements multicomputational irreducibility through CAS-backed distributed builds.}
+
+\subtree{
+\title{Graft-Prefer: Fully Covariant Computation}
+\subtree{
+\title{Principle: Multicomputational Irreducibility}
+\p{Build systems are multicomputational systems where the dependency graph cannot be reduced to a simpler form without losing information. Graft enforces this by:}
+
+\ol{
+\li{\strong{Covariant caching}: Content-addressed storage preserves build artifacts covariantly --}
+\li{\strong{Irreducible parallelism}: Distributed compilation exploits the inherent parallelism}
+\li{\strong{Causal consistency}: Build ordering respects the causal structure of the crate graph,}
+}
+}
+
+\subtree{
+\title{MANDATORY: Use graft instead of cargo}
+\pre{\startverb
+| Instead of | Use |
+|------------|-----|
+| `cargo build` | `graft build` |
+| `cargo check` | `graft check` |
+| `cargo test` | `graft test` |
+| `cargo clippy` | `graft clippy` |
+| `cargo fmt` | `graft fmt` |
+| `cargo run` | `graft run` |
+| `cargo bench` | `graft bench` |
+| `cargo doc` | `graft doc` |
+| `cargo clean` | `graft clean` |
+| `cargo fix` | `graft fix` (NEVER use `cargo fix` -- it corrupts files) |
+| `cargo nextest` | `graft test` (nextest is used under the hood) |
+\stopverb}
+}
+
+\subtree{
+\title{Package targeting}
+\ul{
+\li{Single crate: \code{\startverb graft build -p <crate-name>\stopverb}}
+\li{Workspace: \code{\startverb graft build --workspace\stopverb}}
+\li{Release: \code{\startverb graft build --release\stopverb}}
+\li{With features: \code{\startverb graft build -p <crate> -F <feature>\stopverb}}
+}
+}
+
+\subtree{
+\title{Covariant quality checking}
+\ul{
+\li{\code{\startverb graft lint\stopverb} -- all checks (clippy + fmt + quality + deps)}
+\li{\code{\startverb graft quality run\stopverb} -- full quality audit}
+\li{\code{\startverb graft fix\stopverb} -- auto-fix with safe transforms}
+}
+}
+
+\subtree{
+\title{Diagnostics}
+\ul{
+\li{\code{\startverb graft health --verbose\stopverb} -- check graft configuration}
+\li{\code{\startverb graft cache validate\stopverb} -- detect stale artifacts (breaks covariance)}
+\li{\code{\startverb graft cache stats\stopverb} -- cache hit/miss statistics (irreducibility measure)}
+\li{\code{\startverb graft memory\stopverb} -- check memory pressure / recommended jobs}
+\li{\code{\startverb graft stream --errors\stopverb} -- live error feed from builds}
+}
+}
+
+\subtree{
+\title{Anti-patterns (NEVER do these)}
+\ol{
+\li{NEVER run \code{\startverb cargo fix\stopverb} directly (corrupts files)}
+\li{NEVER use \code{\startverb cargo build\stopverb} when \code{\startverb graft build\stopverb} is available}
+\li{NEVER skip durability labels on benchmark results}
+}
+}
+}

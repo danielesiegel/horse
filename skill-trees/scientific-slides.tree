@@ -1,0 +1,1485 @@
+\title{Scientific Slides}
+
+\taxon{skill}
+
+\meta{description}{"Build slide decks and presentations for research talks. Use this for making PowerPoint slides, conference presentations, seminar talks, research presentations, thesis defense slides, or any scientific talk. Provides slide structure, design templates, timing guidance, and visual validation. Works with PowerPoint and LaTeX Beamer."}
+
+\subtree{
+\title{Scientific Slides}
+\subtree{
+\title{Overview}
+\p{Scientific presentations are a critical medium for communicating research, sharing findings, and engaging with academic and professional audiences. This skill provides comprehensive guidance for creating effective scientific presentations, from structure and content development to visual design and delivery preparation.}
+
+\p{\strong{Key Focus}: Oral presentations for conferences, seminars, defenses, and professional talks.}
+
+\p{\strong{CRITICAL DESIGN PHILOSOPHY}: Scientific presentations should be VISUALLY ENGAGING and RESEARCH-BACKED. Avoid dry, text-heavy slides at all costs. Great scientific presentations combine:}
+
+\ul{
+\li{\strong{Compelling visuals}: High-quality figures, images, diagrams (not just bullet points)}
+\li{\strong{Research context}: Proper citations from research-lookup establishing credibility}
+\li{\strong{Minimal text}: Bullet points as prompts, YOU provide the explanation verbally}
+\li{\strong{Professional design}: Modern color schemes, strong visual hierarchy, generous white space}
+\li{\strong{Story-driven}: Clear narrative arc, not just data dumps}
+}
+
+\p{\strong{Remember}: Boring presentations = forgotten science. Make your slides visually memorable while maintaining scientific rigor through proper citations.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Preparing conference presentations (5-20 minutes)}
+\li{Developing academic seminars (45-60 minutes)}
+\li{Creating thesis or dissertation defense presentations}
+\li{Designing grant pitch presentations}
+\li{Preparing journal club presentations}
+\li{Giving research talks at institutions or companies}
+\li{Teaching or tutorial presentations on scientific topics}
+}
+}
+
+\subtree{
+\title{Slide Generation with Nano Banana Pro}
+\p{\strong{This skill uses Nano Banana Pro AI to generate stunning presentation slides automatically.}}
+
+\p{There are two workflows depending on output format:}
+
+\subtree{
+\title{Default Workflow: PDF Slides (Recommended)}
+\p{Generate each slide as a complete image using Nano Banana Pro, then combine into a PDF. This produces the most visually stunning results.}
+
+\p{\strong{How it works:}}
+
+\ol{
+\li{\strong{Plan the deck}: Create a detailed plan for each slide (title, key points, visual elements)}
+\li{\strong{Generate slides}: Call Nano Banana Pro for each slide to create complete slide images}
+\li{\strong{Combine to PDF}: Assemble slide images into a single PDF presentation}
+}
+
+\p{\strong{Step 1: Plan Each Slide}}
+
+\p{Before generating, create a detailed plan for your presentation:}
+
+\pre{\startverb
+# Presentation Plan: Introduction to Machine Learning
+
+## Slide 1: Title Slide
+- Title: "Machine Learning: From Theory to Practice"
+- Subtitle: "AI Conference 2025"
+- Speaker: Dr. Jane Smith, University of XYZ
+- Visual: Modern abstract neural network background
+
+## Slide 2: Introduction
+- Title: "Why Machine Learning Matters"
+- Key points: Industry adoption, breakthrough applications, future potential
+- Visual: Icons showing different ML applications (healthcare, finance, robotics)
+
+## Slide 3: Core Concepts
+- Title: "The Three Types of Learning"
+- Content: Supervised, Unsupervised, Reinforcement
+- Visual: Three-part diagram showing each type with examples
+
+... (continue for all slides)
+\stopverb}
+
+\p{\strong{Step 2: Generate Each Slide}}
+
+\p{Use the \code{\startverb generate_slide_image.py\stopverb} script to create each slide.}
+
+\p{\strong{CRITICAL: Formatting Consistency Protocol}}
+
+\p{To ensure unified formatting across all slides in a presentation:}
+
+\ol{
+\li{\strong{Define a Formatting Goal} at the start of your presentation and include it in EVERY prompt:}
+\li{Color scheme (e.g., "dark blue background, white text, gold accents")}
+\li{Typography style (e.g., "bold sans-serif titles, clean body text")}
+\li{Visual style (e.g., "minimal, professional, corporate aesthetic")}
+\li{Layout approach (e.g., "generous white space, left-aligned content")}
+}
+
+\ol{
+\li{\strong{Always attach the previous slide} when generating subsequent slides using \code{\startverb --attach\stopverb}:}
+\li{This allows Nano Banana Pro to see and match the existing style}
+\li{Creates visual continuity throughout the deck}
+\li{Ensures consistent colors, fonts, and design language}
+}
+
+\ol{
+\li{\strong{Default author is "K-Dense"} unless another name is specified}
+}
+
+\ol{
+\li{\strong{Include citations directly in the prompt} for slides that reference research:}
+\li{Add citations in the prompt text so they appear on the generated slide}
+\li{Use format: "Include citation: (Author et al., Year)" or "Show reference: Author et al., Year"}
+\li{For multiple citations, list them all in the prompt}
+\li{Citations should appear in small text at the bottom of the slide or near relevant content}
+}
+
+\ol{
+\li{\strong{Attach existing figures/data for results slides} (CRITICAL for data-driven presentations):}
+\li{When creating slides about results, ALWAYS check for existing figures in:}
+\li{The working directory (e.g., \code{\startverb figures/\stopverb}, \code{\startverb results/\stopverb}, \code{\startverb plots/\stopverb}, \code{\startverb images/\stopverb})}
+\li{User-provided input files or directories}
+\li{Any data visualizations, charts, or graphs relevant to the presentation}
+\li{Use \code{\startverb --attach\stopverb} to include these figures so Nano Banana Pro can incorporate them:}
+\li{Attach the actual data figure/chart for results slides}
+\li{Attach relevant diagrams for methodology slides}
+\li{Attach logos or institutional images for title slides}
+\li{When attaching data figures, describe what you want in the prompt:}
+\li{"Create a slide presenting the attached results chart with key findings highlighted"}
+\li{"Build a slide around this attached figure, add title and bullet points explaining the data"}
+\li{"Incorporate the attached graph into a results slide with interpretation"}
+\li{\strong{Before generating results slides}: List files in the working directory to find relevant figures}
+\li{Multiple figures can be attached: \code{\startverb --attach fig1.png --attach fig2.png\stopverb}}
+}
+
+\p{\strong{Example with formatting consistency, citations, and figure attachments:}}
+
+\pre{\startverb
+# Title slide (first slide - establishes the style)
+python scripts/generate_slide_image.py "Title slide for presentation: 'Machine Learning: From Theory to Practice'. Subtitle: 'AI Conference 2025'. Speaker: K-Dense. FORMATTING GOAL: Dark blue background (#1a237e), white text, gold accents (#ffc107), minimal design, sans-serif fonts, generous margins, no decorative elements." -o slides/01_title.png
+
+# Content slide with citations (attach previous slide for consistency)
+python scripts/generate_slide_image.py "Presentation slide titled 'Why Machine Learning Matters'. Three key points with simple icons: 1) Industry adoption, 2) Breakthrough applications, 3) Future potential. CITATIONS: Include at bottom in small text: (LeCun et al., 2015; Goodfellow et al., 2016). FORMATTING GOAL: Match attached slide style - dark blue background, white text, gold accents, minimal professional design, no visual clutter." -o slides/02_intro.png --attach slides/01_title.png
+
+# Background slide with multiple citations
+python scripts/generate_slide_image.py "Presentation slide titled 'Deep Learning Revolution'. Key milestones: ImageNet breakthrough (2012), transformer architecture (2017), GPT models (2018-present). CITATIONS: Show references at bottom: (Krizhevsky et al., 2012; Vaswani et al., 2017; Brown et al., 2020). FORMATTING GOAL: Match attached slide style exactly - same colors, fonts, minimal design." -o slides/03_background.png --attach slides/02_intro.png
+
+# RESULTS SLIDE - Attach actual data figure from working directory
+# First, check what figures exist: ls figures/ or ls results/
+python scripts/generate_slide_image.py "Presentation slide titled 'Model Performance Results'. Create a slide presenting the attached accuracy chart. Key findings to highlight: 1) 95% accuracy achieved, 2) Outperforms baseline by 12%, 3) Consistent across test sets. CITATIONS: Include at bottom: (Our results, 2025). FORMATTING GOAL: Match attached slide style exactly." -o slides/04_results.png --attach slides/03_background.png --attach figures/accuracy_chart.png
+
+# RESULTS SLIDE - Multiple figures comparison
+python scripts/generate_slide_image.py "Presentation slide titled 'Before vs After Comparison'. Build a side-by-side comparison slide using the two attached figures. Left: baseline results, Right: our improved results. Add brief labels explaining the improvement. FORMATTING GOAL: Match attached slide style exactly." -o slides/05_comparison.png --attach slides/04_results.png --attach figures/baseline.png --attach figures/improved.png
+
+# METHODOLOGY SLIDE - Attach existing diagram
+python scripts/generate_slide_image.py "Presentation slide titled 'System Architecture'. Present the attached architecture diagram with brief explanatory bullet points: 1) Input processing, 2) Model inference, 3) Output generation. FORMATTING GOAL: Match attached slide style exactly." -o slides/06_architecture.png --attach slides/05_comparison.png --attach diagrams/system_architecture.png
+\stopverb}
+
+\p{\strong{IMPORTANT: Before creating results slides, always:}}
+
+\ol{
+\li{List files in working directory: \code{\startverb ls -la figures/\stopverb} or \code{\startverb ls -la results/\stopverb}}
+\li{Check user-provided directories for relevant figures}
+\li{Attach ALL relevant figures that should appear on the slide}
+\li{Describe how Nano Banana Pro should incorporate the attached figures}
+}
+
+\p{\strong{Prompt Template:}}
+
+\p{Include these elements in every prompt (customize as needed):}
+
+\pre{\startverb
+[Slide content description]
+CITATIONS: Include at bottom: (Author1 et al., Year; Author2 et al., Year)
+FORMATTING GOAL: [Background color], [text color], [accent color], minimal professional design, no decorative elements, consistent with attached slide style.
+\stopverb}
+
+\p{\strong{Step 3: Combine to PDF}}
+
+\pre{\startverb
+# Combine all slides into a PDF presentation
+python scripts/slides_to_pdf.py slides/*.png -o presentation.pdf
+\stopverb}
+}
+
+\subtree{
+\title{PPT Workflow: PowerPoint with Generated Visuals}
+\p{When creating PowerPoint presentations, use Nano Banana Pro to generate images and figures for each slide, then add text separately using the PPTX skill.}
+
+\p{\strong{How it works:}}
+
+\ol{
+\li{\strong{Plan the deck}: Create content plan for each slide}
+\li{\strong{Generate visuals}: Use Nano Banana Pro with \code{\startverb --visual-only\stopverb} flag to create images for slides}
+\li{\strong{Build PPTX}: Use the PPTX skill (html2pptx or template-based) to create slides with generated visuals and separate text}
+}
+
+\p{\strong{Step 1: Generate Visuals for Each Slide}}
+
+\pre{\startverb
+# Generate a figure for the introduction slide
+python scripts/generate_slide_image.py "Professional illustration showing machine learning applications: healthcare diagnosis, financial analysis, autonomous vehicles, and robotics. Modern flat design, colorful icons on white background." -o figures/ml_applications.png --visual-only
+
+# Generate a diagram for the methods slide
+python scripts/generate_slide_image.py "Neural network architecture diagram showing input layer, three hidden layers, and output layer. Clean, technical style with node connections. Blue and gray color scheme." -o figures/neural_network.png --visual-only
+
+# Generate a conceptual graphic for results
+python scripts/generate_slide_image.py "Before and after comparison showing improvement: left side shows cluttered data, right side shows organized insights. Arrow connecting them. Professional business style." -o figures/results_visual.png --visual-only
+\stopverb}
+
+\p{\strong{Step 2: Build PowerPoint with PPTX Skill}}
+
+\p{Use the PPTX skill's html2pptx workflow to create slides that include:}
+
+\ul{
+\li{Generated images from step 1}
+\li{Title and body text added separately}
+\li{Professional layout and formatting}
+}
+
+\p{See \code{\startverb document-skills/pptx/SKILL.md\stopverb} for complete PPTX creation documentation.}
+}
+}
+
+\subtree{
+\title{Nano Banana Pro Script Reference}
+\subtree{
+\title{generate_slide_image.py}
+\p{Generate presentation slides or visuals using Nano Banana Pro AI.}
+
+\pre{\startverb
+# Full slide (default) - generates complete slide as image
+python scripts/generate_slide_image.py "slide description" -o output.png
+
+# Visual only - generates just the image/figure for embedding in PPT
+python scripts/generate_slide_image.py "visual description" -o output.png --visual-only
+
+# With reference images attached (Nano Banana Pro will see these)
+python scripts/generate_slide_image.py "Create a slide explaining this chart" -o slide.png --attach chart.png
+python scripts/generate_slide_image.py "Combine these into a comparison slide" -o compare.png --attach before.png --attach after.png
+\stopverb}
+
+\p{\strong{Options:}}
+
+\ul{
+\li{\code{\startverb -o, --output\stopverb}: Output file path (required)}
+\li{\code{\startverb --attach IMAGE\stopverb}: Attach image file(s) as context for generation (can use multiple times)}
+\li{\code{\startverb --visual-only\stopverb}: Generate just the visual/figure, not a complete slide}
+\li{\code{\startverb --iterations\stopverb}: Max refinement iterations (default: 2)}
+\li{\code{\startverb --api-key\stopverb}: OpenRouter API key (or set OPENROUTER_API_KEY env var)}
+\li{\code{\startverb -v, --verbose\stopverb}: Verbose output}
+}
+
+\p{\strong{Attaching Reference Images:}}
+
+\p{Use \code{\startverb --attach\stopverb} when you want Nano Banana Pro to see existing images as context:}
+
+\ul{
+\li{"Create a slide about this data" + attach the data chart}
+\li{"Make a title slide with this logo" + attach the logo}
+\li{"Combine these figures into one slide" + attach multiple images}
+\li{"Explain this diagram in a slide" + attach the diagram}
+}
+
+\p{\strong{Environment Setup:}}
+
+\pre{\startverb
+export OPENROUTER_API_KEY='your_api_key_here'
+# Get key at: https://openrouter.ai/keys
+\stopverb}
+}
+
+\subtree{
+\title{slides_to_pdf.py}
+\p{Combine multiple slide images into a single PDF.}
+
+\pre{\startverb
+# Combine PNG files
+python scripts/slides_to_pdf.py slides/*.png -o presentation.pdf
+
+# Combine specific files in order
+python scripts/slides_to_pdf.py title.png intro.png methods.png -o talk.pdf
+
+# From directory (sorted by filename)
+python scripts/slides_to_pdf.py slides/ -o presentation.pdf
+\stopverb}
+
+\p{\strong{Options:}}
+
+\ul{
+\li{\code{\startverb -o, --output\stopverb}: Output PDF path (required)}
+\li{\code{\startverb --dpi\stopverb}: PDF resolution (default: 150)}
+\li{\code{\startverb -v, --verbose\stopverb}: Verbose output}
+}
+
+\p{\strong{Tip:} Name slides with numbers for correct ordering: \code{\startverb 01_title.png\stopverb}, \code{\startverb 02_intro.png\stopverb}, etc.}
+}
+}
+
+\subtree{
+\title{Prompt Writing for Slide Generation}
+\subtree{
+\title{Full Slide Prompts (PDF Workflow)}
+\p{For complete slides, include:}
+
+\ol{
+\li{\strong{Slide type}: Title slide, content slide, diagram slide, etc.}
+\li{\strong{Title}: The slide title text}
+\li{\strong{Content}: Key points, bullet items, or descriptions}
+\li{\strong{Visual elements}: What imagery, icons, or graphics to include}
+\li{\strong{Design style}: Color scheme, mood, aesthetic}
+}
+
+\p{\strong{Example prompts:}}
+
+\pre{\startverb
+Title slide:
+"Title slide for a medical research presentation. Title: 'Advances in Cancer Immunotherapy'. Subtitle: 'Clinical Trial Results 2024'. Professional medical theme with subtle DNA helix in background. Navy blue and white color scheme."
+
+Content slide:
+"Presentation slide titled 'Key Findings'. Three bullet points: 1) 40% improvement in response rate, 2) Reduced side effects, 3) Extended survival outcomes. Include relevant medical icons. Clean, professional design with green and white colors."
+
+Diagram slide:
+"Presentation slide showing the research methodology. Title: 'Study Design'. Flowchart showing: Patient Screening → Randomization → Treatment Groups (A, B, Control) → Follow-up → Analysis. CONSORT-style flow diagram. Professional academic style."
+\stopverb}
+}
+
+\subtree{
+\title{Visual-Only Prompts (PPT Workflow)}
+\p{For images to embed in PowerPoint, focus on the visual element only:}
+
+\pre{\startverb
+"Flowchart showing machine learning pipeline: Data Collection → Preprocessing → Model Training → Validation → Deployment. Clean technical style, blue and gray colors."
+
+"Conceptual illustration of cloud computing with servers, data flow, and connected devices. Modern flat design, suitable for business presentation."
+
+"Scientific diagram of cell division process showing mitosis phases. Educational style with labels, colorblind-friendly colors."
+\stopverb}
+}
+}
+
+\subtree{
+\title{Visual Enhancement with Scientific Schematics}
+\p{In addition to slide generation, use the \strong{scientific-schematics} skill for technical diagrams:}
+
+\p{\strong{When to use scientific-schematics instead:}}
+
+\ul{
+\li{Complex technical diagrams (circuit diagrams, chemical structures)}
+\li{Publication-quality figures for papers (higher quality threshold)}
+\li{Diagrams requiring scientific accuracy review}
+}
+
+\p{\strong{How to generate schematics:}}
+
+\pre{\startverb
+python scripts/generate_schematic.py "your diagram description" -o figures/output.png
+\stopverb}
+
+\p{For detailed guidance on creating schematics, refer to the scientific-schematics skill documentation.}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Presentation Structure and Organization}
+\p{Build presentations with clear narrative flow and appropriate structure for different contexts. For detailed guidance, refer to \code{\startverb references/presentation_structure.md\stopverb}.}
+
+\p{\strong{Universal Story Arc}:}
+
+\ol{
+\li{\strong{Hook}: Grab attention (30-60 seconds)}
+\li{\strong{Context}: Establish importance (5-10\% of talk)}
+\li{\strong{Problem/Gap}: Identify what's unknown (5-10\% of talk)}
+\li{\strong{Approach}: Explain your solution (15-25\% of talk)}
+\li{\strong{Results}: Present key findings (40-50\% of talk)}
+\li{\strong{Implications}: Discuss meaning (15-20\% of talk)}
+\li{\strong{Closure}: Memorable conclusion (1-2 minutes)}
+}
+
+\p{\strong{Talk-Specific Structures}:}
+
+\ul{
+\li{\strong{Conference talks (15 min)}: Focused on 1-2 key findings, minimal methods}
+\li{\strong{Academic seminars (45 min)}: Comprehensive coverage, detailed methods, multiple studies}
+\li{\strong{Thesis defenses (60 min)}: Complete dissertation overview, all studies covered}
+\li{\strong{Grant pitches (15 min)}: Emphasis on significance, feasibility, and impact}
+\li{\strong{Journal clubs (30 min)}: Critical analysis of published work}
+}
+}
+
+\subtree{
+\title{2. Slide Design Principles}
+\p{Create professional, readable, and accessible slides that enhance understanding. For complete design guidelines, refer to \code{\startverb references/slide_design_principles.md\stopverb}.}
+
+\p{\strong{ANTI-PATTERN: Avoid Dry, Text-Heavy Presentations}}
+
+\p{❌ \strong{What Makes Presentations Dry and Forgettable:}}
+
+\ul{
+\li{Walls of text (more than 6 bullets per slide)}
+\li{Small fonts (<24pt body text)}
+\li{Black text on white background only (no visual interest)}
+\li{No images or graphics (bullet points only)}
+\li{Generic templates with no customization}
+\li{Dense, paragraph-like bullet points}
+\li{Missing research context (no citations)}
+\li{All slides look the same (repetitive)}
+}
+
+\p{✅ \strong{What Makes Presentations Engaging and Memorable:}}
+
+\ul{
+\li{HIGH-QUALITY VISUALS dominate (figures, photos, diagrams, icons)}
+\li{Large, clear text as accent (not the main content)}
+\li{Modern, purposeful color schemes (not default themes)}
+\li{Generous white space (slides breathe)}
+\li{Research-backed context (proper citations from research-lookup)}
+\li{Variety in slide layouts (not all bullet lists)}
+\li{Story-driven flow with visual anchors}
+\li{Professional, polished appearance}
+}
+
+\p{\strong{Core Design Principles}:}
+
+\p{\strong{Visual-First Approach} (CRITICAL):}
+
+\ul{
+\li{Start with visuals (figures, images, diagrams), add text as support}
+\li{Every slide should have STRONG visual element (figure, chart, photo, diagram)}
+\li{Text explains or complements visuals, not replaces them}
+\li{Think: "How can I show this, not just tell it?"}
+\li{Target: 60-70\% visual content, 30-40\% text}
+}
+
+\p{\strong{Simplicity with Impact}:}
+
+\ul{
+\li{One main idea per slide}
+\li{MINIMAL text (3-4 bullets, 4-6 words each preferred)}
+\li{Generous white space (40-50\% of slide)}
+\li{Clear visual focus}
+\li{Bold, confident design choices}
+}
+
+\p{\strong{Typography for Engagement}:}
+
+\ul{
+\li{Sans-serif fonts (Arial, Calibri, Helvetica)}
+\li{LARGE fonts: 24-28pt for body text (not minimum 18pt)}
+\li{36-44pt for slide titles (make bold)}
+\li{High contrast (minimum 4.5:1, prefer 7:1)}
+\li{Use size for hierarchy, not just weight}
+}
+
+\p{\strong{Color for Impact}:}
+
+\ul{
+\li{MODERN color palettes (not default blue/gray)}
+\li{Consider your topic: biotech? vibrant colors. Physics? sleek darks. Health? warm tones.}
+\li{Limited palette (3-5 colors total)}
+\li{High contrast combinations}
+\li{Color-blind safe (avoid red-green combinations)}
+\li{Use color purposefully (not decoration)}
+}
+
+\p{\strong{Layout for Visual Interest}:}
+
+\ul{
+\li{Vary layouts (not all bullet lists)}
+\li{Use two-column layouts (text + figure)}
+\li{Full-slide figures for key results}
+\li{Asymmetric compositions (more interesting than centered)}
+\li{Rule of thirds for focal points}
+\li{Consistent but not repetitive}
+}
+}
+
+\subtree{
+\title{3. Data Visualization for Slides}
+\p{Adapt scientific figures for presentation context. For detailed guidance, refer to \code{\startverb references/data_visualization_slides.md\stopverb}.}
+
+\p{\strong{Key Differences from Journal Figures}:}
+
+\ul{
+\li{Simplify, don't replicate}
+\li{Larger fonts (18-24pt minimum)}
+\li{Fewer panels (split across slides)}
+\li{Direct labeling (not legends)}
+\li{Emphasis through color and size}
+\li{Progressive disclosure for complex data}
+}
+
+\p{\strong{Visualization Best Practices}:}
+
+\ul{
+\li{\strong{Bar charts}: Comparing discrete categories}
+\li{\strong{Line graphs}: Trends and trajectories}
+\li{\strong{Scatter plots}: Relationships and correlations}
+\li{\strong{Heatmaps}: Matrix data and patterns}
+\li{\strong{Network diagrams}: Relationships and connections}
+}
+
+\p{\strong{Common Mistakes to Avoid}:}
+
+\ul{
+\li{Tiny fonts (<18pt)}
+\li{Too many panels on one slide}
+\li{Complex legends}
+\li{Insufficient contrast}
+\li{Cluttered layouts}
+}
+}
+
+\subtree{
+\title{4. Talk-Specific Guidance}
+\p{Different presentation contexts require different approaches. For comprehensive guidance on each type, refer to \code{\startverb references/talk_types_guide.md\stopverb}.}
+
+\p{\strong{Conference Talks} (10-20 minutes):}
+
+\ul{
+\li{Structure: Brief intro → minimal methods → key results → quick conclusion}
+\li{Focus: 1-2 main findings only}
+\li{Style: Engaging, fast-paced, memorable}
+\li{Goal: Generate interest, network, get invited}
+}
+
+\p{\strong{Academic Seminars} (45-60 minutes):}
+
+\ul{
+\li{Structure: Comprehensive coverage with detailed methods}
+\li{Focus: Multiple findings, depth of analysis}
+\li{Style: Scholarly, interactive, discussion-oriented}
+\li{Goal: Demonstrate expertise, get feedback, collaborate}
+}
+
+\p{\strong{Thesis Defenses} (45-60 minutes):}
+
+\ul{
+\li{Structure: Complete dissertation overview, all studies}
+\li{Focus: Demonstrating mastery and independent thinking}
+\li{Style: Formal, comprehensive, prepared for interrogation}
+\li{Goal: Pass examination, defend research decisions}
+}
+
+\p{\strong{Grant Pitches} (10-20 minutes):}
+
+\ul{
+\li{Structure: Problem → significance → approach → feasibility → impact}
+\li{Focus: Innovation, preliminary data, team qualifications}
+\li{Style: Persuasive, focused on outcomes and impact}
+\li{Goal: Secure funding, demonstrate viability}
+}
+
+\p{\strong{Journal Clubs} (20-45 minutes):}
+
+\ul{
+\li{Structure: Context → methods → results → critical analysis}
+\li{Focus: Understanding and critiquing published work}
+\li{Style: Educational, critical, discussion-facilitating}
+\li{Goal: Learn, critique, discuss implications}
+}
+}
+
+\subtree{
+\title{5. Implementation Options}
+\subtree{
+\title{Nano Banana Pro PDF (Default - Recommended)}
+\p{\strong{Best for}: Visually stunning slides, fast creation, non-technical audiences}
+
+\p{\strong{This is the default and recommended approach.} Generate each slide as a complete image using AI.}
+
+\p{\strong{Workflow}:}
+
+\ol{
+\li{Plan each slide (title, content, visual elements)}
+\li{Generate each slide with \code{\startverb generate_slide_image.py\stopverb}}
+\li{Combine into PDF with \code{\startverb slides_to_pdf.py\stopverb}}
+}
+
+\pre{\startverb
+# Generate slides
+python scripts/generate_slide_image.py "Title: Introduction..." -o slides/01.png
+python scripts/generate_slide_image.py "Title: Methods..." -o slides/02.png
+
+# Combine to PDF
+python scripts/slides_to_pdf.py slides/*.png -o presentation.pdf
+\stopverb}
+
+\p{\strong{Advantages}:}
+
+\ul{
+\li{Most visually impressive results}
+\li{Fast creation (describe and generate)}
+\li{No design skills required}
+\li{Consistent, professional appearance}
+\li{Perfect for general audiences}
+}
+
+\p{\strong{Best for}:}
+
+\ul{
+\li{Conference talks}
+\li{Business presentations}
+\li{General scientific talks}
+\li{Pitch presentations}
+}
+}
+
+\subtree{
+\title{PowerPoint via PPTX Skill}
+\p{\strong{Best for}: Editable slides, custom designs, template-based workflows}
+
+\p{\strong{Reference}: See \code{\startverb document-skills/pptx/SKILL.md\stopverb} for complete documentation}
+
+\p{Use Nano Banana Pro with \code{\startverb --visual-only\stopverb} to generate images, then build PPTX with text.}
+
+\p{\strong{Key Resources}:}
+
+\ul{
+\li{\code{\startverb assets/powerpoint_design_guide.md\stopverb}: Complete PowerPoint design guide}
+\li{PPTX skill's \code{\startverb html2pptx.md\stopverb}: Programmatic creation workflow}
+\li{PPTX skill's scripts: \code{\startverb rearrange.py\stopverb}, \code{\startverb inventory.py\stopverb}, \code{\startverb replace.py\stopverb}, \code{\startverb thumbnail.py\stopverb}}
+}
+
+\p{\strong{Workflow}:}
+
+\ol{
+\li{Generate visuals with \code{\startverb generate_slide_image.py --visual-only\stopverb}}
+\li{Design HTML slides (for programmatic) or use templates}
+\li{Create presentation using html2pptx or template editing}
+\li{Add generated images and text content}
+\li{Generate thumbnails for visual validation}
+\li{Iterate based on visual inspection}
+}
+
+\p{\strong{Advantages}:}
+
+\ul{
+\li{Editable slides (can modify text later)}
+\li{Complex animations and transitions}
+\li{Interactive elements}
+\li{Company template compatibility}
+}
+}
+
+\subtree{
+\title{LaTeX Beamer}
+\p{\strong{Best for}: Mathematical content, consistent formatting, version control}
+
+\p{\strong{Reference}: See \code{\startverb references/beamer_guide.md\stopverb} for complete documentation}
+
+\p{\strong{Templates Available}:}
+
+\ul{
+\li{\code{\startverb assets/beamer_template_conference.tex\stopverb}: 15-minute conference talk}
+\li{\code{\startverb assets/beamer_template_seminar.tex\stopverb}: 45-minute academic seminar}
+\li{\code{\startverb assets/beamer_template_defense.tex\stopverb}: Dissertation defense}
+}
+
+\p{\strong{Workflow}:}
+
+\ol{
+\li{Choose appropriate template}
+\li{Customize theme and colors}
+\li{Add content (LaTeX native: equations, code, algorithms)}
+\li{Compile to PDF}
+\li{Convert to images for visual validation}
+}
+
+\p{\strong{Advantages}:}
+
+\ul{
+\li{Beautiful mathematics and equations}
+\li{Consistent, professional appearance}
+\li{Version control friendly (plain text)}
+\li{Excellent for algorithms and code}
+\li{Reproducible and programmatic}
+}
+}
+}
+
+\subtree{
+\title{6. Visual Review and Iteration}
+\p{Implement iterative improvement through visual inspection. For complete workflow, refer to \code{\startverb references/visual_review_workflow.md\stopverb}.}
+
+\p{\strong{Visual Validation Workflow}:}
+
+\p{\strong{Step 1: Generate PDF} (if not already PDF)}
+
+\ul{
+\li{PowerPoint: Export as PDF}
+\li{Beamer: Compile LaTeX source}
+}
+
+\p{\strong{Step 2: Convert to Images}}
+
+\pre{\startverb
+# Using the pdf_to_images script
+python scripts/pdf_to_images.py presentation.pdf review/slide --dpi 150
+
+# Or use pptx skill's thumbnail tool
+python ../document-skills/pptx/scripts/thumbnail.py presentation.pptx review/thumb
+\stopverb}
+
+\p{\strong{Step 3: Systematic Inspection}}
+
+\p{Check each slide for:}
+
+\ul{
+\li{\strong{Text overflow}: Text cut off at edges}
+\li{\strong{Element overlap}: Text overlapping images or other text}
+\li{\strong{Font sizes}: Text too small (<18pt)}
+\li{\strong{Contrast}: Insufficient contrast between text and background}
+\li{\strong{Layout issues}: Misalignment, poor spacing}
+\li{\strong{Visual quality}: Pixelated images, poor rendering}
+}
+
+\p{\strong{Step 4: Document Issues}}
+
+\p{Create issue log:}
+
+\pre{\startverb
+Slide # | Issue Type | Description | Priority
+--------|-----------|-------------|----------
+3       | Text overflow | Bullet 4 extends beyond box | High
+7       | Overlap | Figure overlaps with caption | High
+12      | Font size | Axis labels too small | Medium
+\stopverb}
+
+\p{\strong{Step 5: Apply Fixes}}
+
+\p{Make corrections to source files:}
+
+\ul{
+\li{PowerPoint: Edit text boxes, resize elements}
+\li{Beamer: Adjust LaTeX code, recompile}
+}
+
+\p{\strong{Step 6: Re-Validate}}
+
+\p{Repeat Steps 1-5 until no critical issues remain.}
+
+\p{\strong{Stopping Criteria}:}
+
+\ul{
+\li{No text overflow}
+\li{No inappropriate overlaps}
+\li{All text readable (≥18pt equivalent)}
+\li{Adequate contrast (≥4.5:1)}
+\li{Professional appearance}
+}
+}
+
+\subtree{
+\title{7. Timing and Pacing}
+\p{Ensure presentations fit allocated time. For comprehensive timing guidance, refer to \code{\startverb assets/timing_guidelines.md\stopverb}.}
+
+\p{\strong{The One-Slide-Per-Minute Rule}:}
+
+\ul{
+\li{General guideline: ~1 slide per minute}
+\li{Adjust for complex slides (2-3 minutes)}
+\li{Adjust for simple slides (15-30 seconds)}
+}
+
+\p{\strong{Time Allocation}:}
+
+\ul{
+\li{Introduction: 15-20\%}
+\li{Methods: 15-20\%}
+\li{Results: 40-50\% (MOST TIME)}
+\li{Discussion: 15-20\%}
+\li{Conclusion: 5\%}
+}
+
+\p{\strong{Practice Requirements}:}
+
+\ul{
+\li{5-minute talk: Practice 5-7 times}
+\li{15-minute talk: Practice 3-5 times}
+\li{45-minute talk: Practice 3-4 times}
+\li{Defense: Practice 4-6 times}
+}
+
+\p{\strong{Timing Checkpoints}:}
+
+\p{For 15-minute talk:}
+
+\ul{
+\li{3-4 minutes: Finishing introduction}
+\li{7-8 minutes: Halfway through results}
+\li{12-13 minutes: Starting conclusions}
+}
+
+\p{\strong{Emergency Strategies}:}
+
+\ul{
+\li{Running behind: Skip backup slides (prepare in advance)}
+\li{Running ahead: Expand examples, slow slightly}
+\li{Never skip conclusions}
+}
+}
+
+\subtree{
+\title{8. Validation and Quality Assurance}
+\p{\strong{Automated Validation}:}
+
+\pre{\startverb
+# Validate slide count, timing, file size
+python scripts/validate_presentation.py presentation.pdf --duration 15
+
+# Generates report on:
+# - Slide count vs. recommended range
+# - File size warnings
+# - Slide dimensions
+# - Font size issues (PowerPoint)
+# - Compilation success (Beamer)
+\stopverb}
+
+\p{\strong{Manual Validation Checklist}:}
+
+\ul{
+\li{[ ] Slide count appropriate for duration}
+\li{[ ] Title slide complete (name, affiliation, date)}
+\li{[ ] Clear narrative flow}
+\li{[ ] One main idea per slide}
+\li{[ ] Font sizes ≥18pt (preferably 24pt+)}
+\li{[ ] High contrast colors}
+\li{[ ] Figures large and readable}
+\li{[ ] No text overflow or element overlap}
+\li{[ ] Consistent design throughout}
+\li{[ ] Slide numbers present}
+\li{[ ] Contact info on final slide}
+\li{[ ] Backup slides prepared}
+\li{[ ] Tested on projector (if possible)}
+}
+}
+}
+
+\subtree{
+\title{Workflow for Presentation Development}
+\subtree{
+\title{Stage 1: Planning (Before Creating Slides)}
+\p{\strong{Define Context}:}
+
+\ol{
+\li{What type of talk? (Conference, seminar, defense, etc.)}
+\li{How long? (Duration in minutes)}
+\li{Who is the audience? (Specialists, general, mixed)}
+\li{What's the venue? (Room size, A/V setup, virtual/in-person)}
+\li{What happens after? (Q&A, discussion, networking)}
+}
+
+\p{\strong{Research and Literature Review} (Use research-lookup skill):}
+
+\ol{
+\li{\strong{Search for background literature}: Find 5-10 key papers establishing context}
+\li{\strong{Identify knowledge gaps}: Use research-lookup to find what's unknown}
+\li{\strong{Locate comparison studies}: Find papers with similar methods or results}
+\li{\strong{Gather supporting citations}: Collect papers supporting your interpretations}
+\li{\strong{Build reference list}: Create .bib file or citation list for slides}
+\li{\strong{Note key findings to cite}: Document specific results to reference}
+}
+
+\p{\strong{Develop Content Outline}:}
+
+\ol{
+\li{Identify 1-3 core messages}
+\li{Select key findings to present}
+\li{Choose essential figures (typically 3-6 for 15-min talk)}
+\li{Plan narrative arc with proper citations}
+\li{Allocate time by section}
+}
+
+\p{\strong{Example Outline for 15-Minute Talk}:}
+
+\pre{\startverb
+1. Title (30 sec)
+2. Hook: Compelling problem (60 sec) [Cite 1-2 papers via research-lookup]
+3. Background (90 sec) [Cite 3-4 key papers establishing context]
+4. Research question (45 sec) [Cite papers showing gap]
+5. Methods overview (2 min)
+6-8. Main result 1 (3 min, 3 slides)
+9-10. Main result 2 (2 min, 2 slides)
+11-12. Result 3 or validation (2 min, 2 slides)
+13-14. Discussion and implications (2 min) [Compare to 2-3 prior studies]
+15. Conclusions (45 sec)
+16. Acknowledgments (15 sec)
+
+NOTE: Use research-lookup to find papers for background (slides 2-4) 
+and discussion (slides 13-14) BEFORE creating slides.
+\stopverb}
+}
+
+\subtree{
+\title{Stage 2: Design and Creation}
+\p{\strong{Choose Implementation Method}:}
+
+\p{\strong{Option A: PowerPoint (via PPTX skill)}}
+
+\ol{
+\li{Read \code{\startverb assets/powerpoint_design_guide.md\stopverb}}
+\li{Read \code{\startverb document-skills/pptx/SKILL.md\stopverb}}
+\li{Choose approach (programmatic or template-based)}
+\li{Create master slides with consistent design}
+\li{Build presentation following outline}
+}
+
+\p{\strong{Option B: LaTeX Beamer}}
+
+\ol{
+\li{Read \code{\startverb references/beamer_guide.md\stopverb}}
+\li{Select appropriate template from \code{\startverb assets/\stopverb}}
+\li{Customize theme and colors}
+\li{Write content in LaTeX}
+\li{Compile to PDF}
+}
+
+\p{\strong{Design Considerations} (Make It Visually Appealing):}
+
+\ul{
+\li{\strong{Select MODERN color palette}: Match your topic (biotech=vibrant, physics=sleek, health=warm)}
+\li{Use pptx skill's color palette examples (Teal & Coral, Bold Red, Deep Purple & Emerald, etc.)}
+\li{NOT just default blue/gray themes}
+\li{3-5 colors with high contrast}
+\li{\strong{Choose clean fonts}: Sans-serif, large sizes (24pt+ body)}
+\li{\strong{Plan visual elements}: What images, diagrams, icons for each slide?}
+\li{\strong{Create varied layouts}: Mix full-figure, two-column, text-overlay (not all bullets)}
+\li{\strong{Design section dividers}: Visual breaks with striking graphics}
+\li{\strong{Plan animations/builds}: Control information flow for complex slides}
+\li{\strong{Add visual interest}: Background images, color blocks, shapes, icons}
+}
+}
+
+\subtree{
+\title{Stage 3: Content Development}
+\p{\strong{Populate Slides} (Visual-First Strategy):}
+
+\ol{
+\li{\strong{Start with visuals}: Plan which figures, images, diagrams for each key point}
+\li{\strong{Use research-lookup extensively}: Find 8-15 papers for proper citations}
+\li{\strong{Create visual backbone first}: Add all figures, charts, images, diagrams}
+\li{\strong{Add minimal text as support}: Bullet points complement visuals, don't replace them}
+\li{\strong{Design section dividers}: Visual breaks with images or graphics (not just text)}
+\li{\strong{Polish title/closing}: Make visually striking, include contact info}
+\li{\strong{Add transitions/builds}: Control information flow}
+}
+
+\p{\strong{VISUAL CONTENT REQUIREMENTS} (Make Slides Engaging):}
+
+\ul{
+\li{\strong{Images}: Use high-quality photos, illustrations, conceptual graphics}
+\li{\strong{Icons}: Visual representations of concepts (not decoration)}
+\li{\strong{Diagrams}: Flowcharts, schematics, process diagrams}
+\li{\strong{Figures}: Simplified research figures with LARGE labels (18-24pt)}
+\li{\strong{Charts}: Clean data visualizations with clear messages}
+\li{\strong{Graphics}: Visual metaphors, conceptual illustrations}
+\li{\strong{Color blocks}: Use colored shapes to organize content visually}
+\li{Target: MINIMUM 1-2 strong visual elements per slide}
+}
+
+\p{\strong{Scientific Content} (Research-Backed):}
+
+\ul{
+\li{\strong{Citations}: Use research-lookup EXTENSIVELY to find relevant papers}
+\li{Introduction: Cite 3-5 papers establishing context and gap}
+\li{Background: Show key prior work visually (not just cite)}
+\li{Discussion: Cite 3-5 papers for comparison with your results}
+\li{Use author-year format (Smith et al., 2023) for readability}
+\li{Citations establish credibility and scientific rigor}
+\li{\strong{Figures}: Simplified from papers, LARGE labels (18-24pt minimum)}
+\li{\strong{Equations}: Large, clear, explain each term (use sparingly)}
+\li{\strong{Tables}: Minimal, highlight key comparisons (not data dumps)}
+\li{\strong{Code/Algorithms}: Use syntax highlighting, keep brief}
+}
+
+\p{\strong{Text Guidelines} (Less is More):}
+
+\ul{
+\li{Bullet points, NEVER paragraphs}
+\li{3-4 bullets per slide (max 6 only if essential)}
+\li{4-6 words per bullet (shorter than 6×6 rule)}
+\li{Key terms in bold}
+\li{Text is SUPPORTING ROLE, visuals are stars}
+\li{Use builds to control pacing}
+}
+}
+
+\subtree{
+\title{Stage 4: Visual Validation}
+\p{\strong{Generate Images}:}
+
+\pre{\startverb
+# Convert PDF to images
+python scripts/pdf_to_images.py presentation.pdf review/slides
+
+# Or create thumbnail grid
+python ../document-skills/pptx/scripts/thumbnail.py presentation.pptx review/grid
+\stopverb}
+
+\p{\strong{Systematic Review}:}
+
+\ol{
+\li{View each slide image}
+\li{Check against issue checklist}
+\li{Document problems with slide numbers}
+\li{Test readability from distance (view at 50\% size)}
+}
+
+\p{\strong{Common Issues to Fix}:}
+
+\ul{
+\li{Text extending beyond boundaries}
+\li{Figures overlapping with text}
+\li{Font sizes too small}
+\li{Poor contrast}
+\li{Misalignment}
+}
+
+\p{\strong{Iteration}:}
+
+\ol{
+\li{Fix identified issues in source}
+\li{Regenerate PDF/presentation}
+\li{Convert to images again}
+\li{Re-inspect}
+\li{Repeat until clean}
+}
+}
+
+\subtree{
+\title{Stage 5: Practice and Refinement}
+\p{\strong{Practice Schedule}:}
+
+\ul{
+\li{Run 1: Rough draft (will run long)}
+\li{Run 2: Smooth transitions}
+\li{Run 3: Exact timing}
+\li{Run 4: Final polish}
+\li{Run 5+: Maintenance (day before, morning of)}
+}
+
+\p{\strong{What to Practice}:}
+
+\ul{
+\li{Full talk with timer}
+\li{Difficult explanations}
+\li{Transitions between sections}
+\li{Opening and closing (until flawless)}
+\li{Anticipated questions}
+}
+
+\p{\strong{Refinement Based on Practice}:}
+
+\ul{
+\li{Cut slides if running over}
+\li{Expand explanations if unclear}
+\li{Adjust wording for clarity}
+\li{Mark timing checkpoints}
+\li{Prepare backup slides}
+}
+}
+
+\subtree{
+\title{Stage 6: Final Preparation}
+\p{\strong{Technical Checks}:}
+
+\ul{
+\li{[ ] Multiple copies saved (laptop, cloud, USB)}
+\li{[ ] Works on presentation computer}
+\li{[ ] Adapters/cables available}
+\li{[ ] Backup PDF version}
+\li{[ ] Tested with projector (if possible)}
+}
+
+\p{\strong{Content Final}:}
+
+\ul{
+\li{[ ] No typos or errors}
+\li{[ ] All figures high quality}
+\li{[ ] Slide numbers correct}
+\li{[ ] Contact info on final slide}
+\li{[ ] Backup slides ready}
+}
+
+\p{\strong{Delivery Prep}:}
+
+\ul{
+\li{[ ] Notes prepared (if using)}
+\li{[ ] Timer/phone ready}
+\li{[ ] Water available}
+\li{[ ] Business cards/handouts}
+\li{[ ] Comfortable with material (3+ practices)}
+}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\p{\strong{Research Lookup} (Critical for Scientific Presentations):}
+
+\ul{
+\li{\strong{Background development}: Search literature to build introduction context}
+\li{\strong{Citation gathering}: Find key papers to cite in your talk}
+\li{\strong{Gap identification}: Identify what's unknown to motivate research}
+\li{\strong{Prior work comparison}: Find papers to compare your results against}
+\li{\strong{Supporting evidence}: Locate literature supporting your interpretations}
+\li{\strong{Question preparation}: Find papers that might inform Q&A responses}
+\li{\strong{Always use research-lookup} when developing any scientific presentation to ensure proper context and citations}
+}
+
+\p{\strong{Scientific Writing}:}
+
+\ul{
+\li{Convert paper content to presentation format}
+\li{Extract key findings and simplify}
+\li{Use same figures (but redesigned for slides)}
+\li{Maintain consistent terminology}
+}
+
+\p{\strong{PPTX Skill}:}
+
+\ul{
+\li{Use for PowerPoint creation and editing}
+\li{Leverage scripts for template workflows}
+\li{Use thumbnail generation for validation}
+\li{Reference html2pptx for programmatic creation}
+}
+
+\p{\strong{Data Visualization}:}
+
+\ul{
+\li{Create presentation-appropriate figures}
+\li{Simplify complex visualizations}
+\li{Ensure readability from distance}
+\li{Use progressive disclosure}
+}
+}
+
+\subtree{
+\title{Common Pitfalls to Avoid}
+\subtree{
+\title{Content Mistakes}
+\p{\strong{Dry, Boring Presentations} (CRITICAL TO AVOID):}
+
+\ul{
+\li{Problem: Text-heavy slides with no visual interest, missing research context}
+\li{Signs: All bullet points, no images, default templates, no citations}
+\li{Solution: }
+\li{Use research-lookup to find 8-15 papers for credible context}
+\li{Add high-quality visuals to EVERY slide (figures, photos, diagrams, icons)}
+\li{Choose modern color palette reflecting your topic}
+\li{Vary slide layouts (not all bullet lists)}
+\li{Tell a story with visuals, use text sparingly}
+}
+
+\p{\strong{Too Much Content}:}
+
+\ul{
+\li{Problem: Trying to include everything from paper}
+\li{Solution: Focus on 1-2 key findings for short talks, show visually}
+}
+
+\p{\strong{Too Much Text}:}
+
+\ul{
+\li{Problem: Full paragraphs on slides, dense bullet points, reading verbatim}
+\li{Solution: 3-4 bullets with 4-6 words each, let visuals carry the message}
+}
+
+\p{\strong{Missing Research Context}:}
+
+\ul{
+\li{Problem: No citations, claims without support, unclear positioning}
+\li{Solution: Use research-lookup to find papers, cite 3-5 in intro, 3-5 in discussion}
+}
+
+\p{\strong{Poor Narrative}:}
+
+\ul{
+\li{Problem: Jumping between topics, no clear story, no flow}
+\li{Solution: Follow story arc, use visual transitions, maintain thread}
+}
+
+\p{\strong{Rushing Through Results}:}
+
+\ul{
+\li{Problem: Brief methods, brief results, long discussion}
+\li{Solution: Spend 40-50\% of time on results, show data visually}
+}
+}
+
+\subtree{
+\title{Design Mistakes}
+\p{\strong{Generic, Default Appearance}:}
+
+\ul{
+\li{Problem: Using default PowerPoint/Beamer themes without customization, looks dated}
+\li{Solution: Choose modern color palette, customize fonts/layouts, add visual personality}
+}
+
+\p{\strong{Text-Heavy, Visual-Poor}:}
+
+\ul{
+\li{Problem: All bullet point slides, no images or graphics, boring to look at}
+\li{Solution: Add figures, photos, diagrams, icons to EVERY slide, make visually interesting}
+}
+
+\p{\strong{Small Fonts}:}
+
+\ul{
+\li{Problem: Body text <18pt, unreadable from back, looks unprofessional}
+\li{Solution: 24-28pt for body (not just 18pt minimum), 36-44pt for titles}
+}
+
+\p{\strong{Low Contrast}:}
+
+\ul{
+\li{Problem: Light text on light background, poor visibility, hard to read}
+\li{Solution: High contrast (7:1 preferred, not just 4.5:1 minimum), test with contrast checker}
+}
+
+\p{\strong{Cluttered Slides}:}
+
+\ul{
+\li{Problem: Too many elements, no white space, overwhelming}
+\li{Solution: One idea per slide, 40-50\% white space, generous spacing}
+}
+
+\p{\strong{Inconsistent Formatting}:}
+
+\ul{
+\li{Problem: Different fonts, colors, layouts slide-to-slide, looks amateurish}
+\li{Solution: Use master slides, maintain design system, professional consistency}
+}
+
+\p{\strong{Missing Visual Hierarchy}:}
+
+\ul{
+\li{Problem: Everything same size and color, no emphasis, unclear focus}
+\li{Solution: Size differences (titles large, body medium), color for emphasis, clear focal point}
+}
+}
+
+\subtree{
+\title{Timing Mistakes}
+\p{\strong{Not Practicing}:}
+
+\ul{
+\li{Problem: First time through is during presentation}
+\li{Solution: Practice minimum 3 times with timer}
+}
+
+\p{\strong{No Time Checkpoints}:}
+
+\ul{
+\li{Problem: Don't realize running behind until too late}
+\li{Solution: Set 3-4 checkpoints, monitor throughout}
+}
+
+\p{\strong{Going Over Time}:}
+
+\ul{
+\li{Problem: Extremely unprofessional, cuts into Q&A}
+\li{Solution: Practice to exact time, prepare Plan B (slides to skip)}
+}
+
+\p{\strong{Skipping Conclusions}:}
+
+\ul{
+\li{Problem: Running out of time, rush through or skip ending}
+\li{Solution: Never skip conclusions, cut earlier content instead}
+}
+}
+}
+
+\subtree{
+\title{Tools and Scripts}
+\subtree{
+\title{Nano Banana Pro Scripts}
+\p{\strong{generate_slide_image.py} - Generate slides or visuals with AI:}
+
+\pre{\startverb
+# Full slide (for PDF workflow)
+python scripts/generate_slide_image.py "Title: Introduction\nContent: Key points" -o slide.png
+
+# Visual only (for PPT workflow)
+python scripts/generate_slide_image.py "Diagram description" -o figure.png --visual-only
+
+# Options:
+# -o, --output       Output file path (required)
+# --visual-only      Generate just the visual, not complete slide
+# --iterations N     Max refinement iterations (default: 2)
+# -v, --verbose      Verbose output
+\stopverb}
+
+\p{\strong{slides_to_pdf.py} - Combine slide images into PDF:}
+
+\pre{\startverb
+# From glob pattern
+python scripts/slides_to_pdf.py slides/*.png -o presentation.pdf
+
+# From directory (sorted by filename)
+python scripts/slides_to_pdf.py slides/ -o presentation.pdf
+
+# Options:
+# -o, --output    Output PDF path (required)
+# --dpi N         PDF resolution (default: 150)
+# -v, --verbose   Verbose output
+\stopverb}
+}
+
+\subtree{
+\title{Validation Scripts}
+\p{\strong{validate_presentation.py}:}
+
+\pre{\startverb
+python scripts/validate_presentation.py presentation.pdf --duration 15
+
+# Checks:
+# - Slide count vs. recommended range
+# - File size warnings
+# - Slide dimensions
+# - Font sizes (PowerPoint)
+# - Compilation (Beamer)
+\stopverb}
+
+\p{\strong{pdf_to_images.py}:}
+
+\pre{\startverb
+python scripts/pdf_to_images.py presentation.pdf output/slide --dpi 150
+
+# Converts PDF to images for visual inspection
+# Supports: JPG, PNG
+# Adjustable DPI
+# Page range selection
+\stopverb}
+}
+
+\subtree{
+\title{PPTX Skill Scripts}
+\p{From \code{\startverb document-skills/pptx/scripts/\stopverb}:}
+
+\ul{
+\li{\code{\startverb thumbnail.py\stopverb}: Create thumbnail grids}
+\li{\code{\startverb rearrange.py\stopverb}: Duplicate and reorder slides}
+\li{\code{\startverb inventory.py\stopverb}: Extract text content}
+\li{\code{\startverb replace.py\stopverb}: Update text programmatically}
+}
+}
+
+\subtree{
+\title{External Tools}
+\p{\strong{Recommended}:}
+
+\ul{
+\li{PDF viewer: For reviewing presentations}
+\li{Color contrast checker: WebAIM Contrast Checker}
+\li{Color blindness simulator: Coblis}
+\li{Timer app: For practice sessions}
+\li{Screen recorder: For self-review}
+}
+}
+}
+
+\subtree{
+\title{Reference Files}
+\p{Comprehensive guides for specific aspects:}
+
+\ul{
+\li{\strong{\code{\startverb references/presentation_structure.md\stopverb}}: Detailed structure for all talk types, timing allocation, opening/closing strategies, transition techniques}
+\li{\strong{\code{\startverb references/slide_design_principles.md\stopverb}}: Typography, color theory, layout, accessibility, visual hierarchy, design workflow}
+\li{\strong{\code{\startverb references/data_visualization_slides.md\stopverb}}: Simplifying figures, chart types, progressive disclosure, common mistakes, recreation workflow}
+\li{\strong{\code{\startverb references/talk_types_guide.md\stopverb}}: Specific guidance for conferences, seminars, defenses, grants, journal clubs, with examples}
+\li{\strong{\code{\startverb references/beamer_guide.md\stopverb}}: Complete LaTeX Beamer documentation, themes, customization, advanced features, compilation}
+\li{\strong{\code{\startverb references/visual_review_workflow.md\stopverb}}: PDF to images conversion, systematic inspection, issue documentation, iterative improvement}
+}
+}
+
+\subtree{
+\title{Assets}
+\subtree{
+\title{Templates}
+\ul{
+\li{\strong{\code{\startverb assets/beamer_template_conference.tex\stopverb}}: 15-minute conference talk template}
+\li{\strong{\code{\startverb assets/beamer_template_seminar.tex\stopverb}}: 45-minute academic seminar template}
+\li{\strong{\code{\startverb assets/beamer_template_defense.tex\stopverb}}: Dissertation defense template}
+}
+}
+
+\subtree{
+\title{Guides}
+\ul{
+\li{\strong{\code{\startverb assets/powerpoint_design_guide.md\stopverb}}: Complete PowerPoint design and implementation guide}
+\li{\strong{\code{\startverb assets/timing_guidelines.md\stopverb}}: Comprehensive timing, pacing, and practice strategies}
+}
+}
+}
+
+\subtree{
+\title{Quick Start Guide}
+\subtree{
+\title{For a 15-Minute Conference Talk (PDF Workflow - Recommended)}
+\ol{
+\li{\strong{Research & Plan} (45 minutes):}
+\li{\strong{Use research-lookup} to find 8-12 relevant papers for citations}
+\li{Build reference list (background, comparison studies)}
+\li{Outline content (intro → methods → 2-3 key results → conclusion)}
+\li{\strong{Create detailed plan for each slide} (title, key points, visual elements)}
+\li{Target 15-18 slides}
+}
+
+\ol{
+\li{\strong{Generate Slides with Nano Banana Pro} (1-2 hours):}
+}
+
+\ol{
+\li{\strong{Review & Iterate} (30 minutes):}
+\li{Open the PDF and review each slide}
+\li{Regenerate any slides that need improvement}
+\li{Re-combine to PDF}
+}
+
+\ol{
+\li{\strong{Practice} (2-3 hours):}
+\li{Practice 3-5 times with timer}
+\li{Aim for 13-14 minutes (leave buffer)}
+\li{Record yourself, watch playback}
+\li{\strong{Prepare for questions} (use research-lookup to anticipate)}
+}
+
+\ol{
+\li{\strong{Finalize} (30 minutes):}
+\li{Generate backup/appendix slides if needed}
+\li{Save multiple copies}
+\li{Test on presentation computer}
+}
+
+\p{Total time: ~5-6 hours for quality AI-generated presentation}
+}
+
+\subtree{
+\title{Alternative: PowerPoint Workflow}
+\p{If you need editable slides (e.g., for company templates):}
+
+\ol{
+\li{\strong{Plan slides} as above}
+\li{\strong{Generate visuals} with \code{\startverb --visual-only\stopverb} flag:}
+\li{\strong{Build PPTX} using the PPTX skill with generated images}
+\li{\strong{Add text} separately using PPTX workflow}
+}
+
+\p{See \code{\startverb document-skills/pptx/SKILL.md\stopverb} for complete PowerPoint workflow.}
+}
+}
+
+\subtree{
+\title{Summary: Key Principles}
+\ol{
+\li{\strong{Visual-First Design}: Every slide needs strong visual element (figure, image, diagram) - avoid text-only slides}
+\li{\strong{Research-Backed}: Use research-lookup to find 8-15 papers, cite 3-5 in intro, 3-5 in discussion}
+\li{\strong{Modern Aesthetics}: Choose contemporary color palette matching topic, not default themes}
+\li{\strong{Minimal Text}: 3-4 bullets, 4-6 words each (24-28pt font), let visuals tell story}
+\li{\strong{Structure}: Follow story arc, spend 40-50\% on results}
+\li{\strong{High Contrast}: 7:1 preferred for professional appearance}
+\li{\strong{Varied Layouts}: Mix full-figure, two-column, visual overlays (not all bullets)}
+\li{\strong{Timing}: Practice 3-5 times, ~1 slide per minute, never skip conclusions}
+\li{\strong{Validation}: Visual review workflow to catch overflow and overlap}
+\li{\strong{White Space}: 40-50\% of slide empty for visual breathing room}
+}
+
+\p{\strong{Remember}:}
+
+\ul{
+\li{\strong{Boring = Forgotten}: Dry, text-heavy slides fail to communicate your science}
+\li{\strong{Visual + Research = Impact}: Combine compelling visuals with research-backed context}
+\li{\strong{You are the presentation, slides are visual support}: They should enhance, not replace your talk}
+}
+}
+}

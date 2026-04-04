@@ -1,0 +1,226 @@
+\title{Scanning Infrastructure With Nessus}
+
+\taxon{skill}
+
+\tag{vulnerability-management}
+
+\tag{cve}
+
+\tag{nessus}
+
+\tag{tenable}
+
+\tag{infrastructure-scanning}
+
+\tag{risk}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Tenable Nessus is the industry-leading vulnerability scanner used to identify security weaknesses across network infrastructure including servers, workstations, network devices, and operating systems.}
+
+\subtree{
+\title{Scanning Infrastructure with Nessus}
+\subtree{
+\title{Overview}
+\p{Tenable Nessus is the industry-leading vulnerability scanner used to identify security weaknesses across network infrastructure including servers, workstations, network devices, and operating systems. This skill covers configuring scan policies, running authenticated and unauthenticated scans, interpreting results, and integrating Nessus into continuous vulnerability management workflows.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve scanning infrastructure with nessus}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Nessus Professional or Essentials license installed and activated}
+\li{Network access to target systems (firewall rules allowing scanner IP)}
+\li{Administrative credentials for authenticated scanning}
+\li{Understanding of TCP/IP networking and common services}
+\li{Written authorization for scanning target environments}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Nessus Architecture}
+\p{Nessus operates as a client-server application where the Nessus scanner engine runs as a service (nessusd) on the host system. It uses a plugin-based architecture with over 200,000 plugins updated weekly by Tenable's research team. Each plugin tests for a specific vulnerability, misconfiguration, or compliance check.}
+}
+
+\subtree{
+\title{Scan Types}
+\ol{
+\li{\strong{Host Discovery} - Identifies live hosts using ICMP, TCP, UDP, and ARP}
+\li{\strong{Basic Network Scan} - Default policy covering common vulnerabilities}
+\li{\strong{Advanced Scan} - Custom policy with granular plugin selection}
+\li{\strong{Credentialed Patch Audit} - Authenticated scan checking installed patches}
+\li{\strong{Web Application Tests} - Scans for web-specific vulnerabilities}
+\li{\strong{Compliance Audit} - Checks against CIS, DISA STIG, PCI DSS benchmarks}
+}
+}
+
+\subtree{
+\title{Plugin Families}
+\p{Nessus organizes plugins into families including:}
+
+\ul{
+\li{\strong{Operating Systems}: Windows, Linux, macOS, Solaris}
+\li{\strong{Network Devices}: Cisco, Juniper, Palo Alto, Fortinet}
+\li{\strong{Web Servers}: Apache, Nginx, IIS, Tomcat}
+\li{\strong{Databases}: Oracle, MySQL, PostgreSQL, MSSQL}
+\li{\strong{Services}: DNS, SMTP, FTP, SSH, SNMP}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Initial Configuration}
+\pre{\startverb
+# Start Nessus service
+sudo systemctl start nessusd
+sudo systemctl enable nessusd
+
+# CLI management with nessuscli
+/opt/nessus/sbin/nessuscli update --all
+/opt/nessus/sbin/nessuscli fix --list
+
+# Verify plugin count
+/opt/nessus/sbin/nessuscli update --plugins-only
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Create Scan Policy}
+\p{Configure a custom scan policy through the Nessus web UI at https://localhost:8834:}
+
+\ol{
+\li{Navigate to Policies > New Policy > Advanced Scan}
+\li{Configure General settings: name, description, targets}
+\li{Set Discovery settings:}
+\li{Host Discovery: Ping methods (ICMP, TCP SYN on ports 22,80,443)}
+\li{Port Scanning: SYN scan on common ports or all 65535 ports}
+\li{Service Discovery: Probe all ports for services}
+\li{Configure Assessment settings:}
+\li{Accuracy: Override normal accuracy (reduce false positives)}
+\li{Web Applications: Enable if scanning web servers}
+\li{Select Plugin families relevant to target environment}
+}
+}
+
+\subtree{
+\title{Step 3: Configure Credentials}
+\p{For authenticated scanning, configure credentials under the Credentials tab:}
+
+\ul{
+\li{\strong{SSH}: Username/password or SSH key pair}
+\li{\strong{Windows}: Domain credentials via SMB, WMI}
+\li{\strong{SNMP}: Community strings (v1/v2c) or USM credentials (v3)}
+\li{\strong{Database}: Oracle, MySQL, PostgreSQL connection strings}
+\li{\strong{VMware}: vCenter or ESXi credentials}
+}
+}
+
+\subtree{
+\title{Step 4: Run the Scan}
+\pre{\startverb
+# Using Nessus REST API via curl
+# Authenticate and get token
+curl -k -X POST https://localhost:8834/session \
+  -d '{"username":"admin","password":"password"}' \
+  -H "Content-Type: application/json"
+
+# Create scan
+curl -k -X POST https://localhost:8834/scans \
+  -H "X-Cookie: token=<TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uuid": "<TEMPLATE_UUID>",
+    "settings": {
+      "name": "Infrastructure Scan Q1",
+      "text_targets": "192.168.1.0/24",
+      "enabled": true,
+      "launch": "ON_DEMAND"
+    }
+  }'
+
+# Launch scan
+curl -k -X POST https://localhost:8834/scans/<SCAN_ID>/launch \
+  -H "X-Cookie: token=<TOKEN>"
+
+# Check scan status
+curl -k -X GET https://localhost:8834/scans/<SCAN_ID> \
+  -H "X-Cookie: token=<TOKEN>"
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Analyze Results}
+\p{Nessus categorizes findings by severity:}
+
+\ul{
+\li{\strong{Critical (CVSS 9.0-10.0)}: Immediate remediation required}
+\li{\strong{High (CVSS 7.0-8.9)}: Remediate within 7-14 days}
+\li{\strong{Medium (CVSS 4.0-6.9)}: Remediate within 30 days}
+\li{\strong{Low (CVSS 0.1-3.9)}: Remediate during next maintenance window}
+\li{\strong{Informational}: No immediate action required}
+}
+}
+
+\subtree{
+\title{Step 6: Export and Report}
+\pre{\startverb
+# Export via REST API
+curl -k -X POST "https://localhost:8834/scans/<SCAN_ID>/export" \
+  -H "X-Cookie: token=<TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"format":"nessus"}'
+
+# Supported formats: nessus (XML), csv, html, pdf
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{Schedule scans during maintenance windows to minimize production impact}
+\li{Use authenticated scanning for 45-60\% more vulnerability detection}
+\li{Exclude fragile systems (medical devices, legacy SCADA) from aggressive scans}
+\li{Maintain separate scan policies for different network segments}
+\li{Update plugins before every scan to catch recently disclosed CVEs}
+\li{Validate critical findings manually before escalating to remediation teams}
+\li{Implement scan result trending to track remediation progress over time}
+\li{Store scan results in Tenable.sc or Tenable.io for centralized management}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Running unauthenticated scans only (misses 45-60\% of vulnerabilities)}
+\li{Scanning without written authorization (legal and ethical violations)}
+\li{Ignoring scan performance impact on production systems}
+\li{Failing to tune plugins leading to excessive false positives}
+\li{Not validating scanner network connectivity before launching scans}
+\li{Using default scan policies without customization for the environment}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{performing-authenticated-vulnerability-scan}
+\li{prioritizing-vulnerabilities-with-cvss-scoring}
+\li{implementing-continuous-vulnerability-monitoring}
+\li{performing-network-vulnerability-assessment}
+}
+}
+}

@@ -1,0 +1,72 @@
+\title{Analyzing Persistence Mechanisms In Linux}
+
+\taxon{skill}
+
+\tag{linux-persistence}
+
+\tag{crontab}
+
+\tag{systemd}
+
+\tag{ld-preload}
+
+\tag{auditd}
+
+\tag{threat-hunting}
+
+\tag{incident-response}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect and analyze Linux persistence mechanisms including crontab entries, systemd service units, LD_PRELOAD hijacking, bashrc modifications, and authorized_keys backdoors using auditd and file integrity monitoring}
+
+\subtree{
+\title{Analyzing Persistence Mechanisms in Linux}
+\subtree{
+\title{Overview}
+\p{Adversaries establish persistence on Linux systems through crontab jobs, systemd service/timer units, LD_PRELOAD library injection, shell profile modifications (.bashrc, .profile), SSH authorized_keys backdoors, and init script manipulation. This skill scans for all known persistence vectors, checks file timestamps and integrity, and correlates findings with auditd logs to build a timeline of persistence installation.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing persistence mechanisms in linux}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Root or sudo access on target Linux system (or forensic image)}
+\li{auditd configured with file watch rules on persistence paths}
+\li{Python 3.8+ with standard library (os, subprocess, json)}
+\li{Optional: OSSEC/Wazuh agent for file integrity monitoring alerts}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{\strong{Scan Crontab Entries} — Enumerate all user crontabs, /etc/cron.d/, /etc/cron.daily/, and anacron jobs for suspicious commands}
+\li{\strong{Audit Systemd Units} — Check /etc/systemd/system/ and ~/.config/systemd/user/ for non-package-managed service and timer units}
+\li{\strong{Detect LD_PRELOAD Hijacking} — Check /etc/ld.so.preload and LD_PRELOAD environment variable for injected shared libraries}
+\li{\strong{Inspect Shell Profiles} — Scan .bashrc, .bash_profile, .profile, /etc/profile.d/ for injected commands or reverse shells}
+\li{\strong{Check SSH Authorized Keys} — Audit all authorized_keys files for unauthorized public keys with command restrictions}
+\li{\strong{Correlate Auditd Logs} — Search auditd logs for file modification events on persistence paths to build an installation timeline}
+\li{\strong{Generate Persistence Report} — Produce a risk-scored report of all discovered persistence mechanisms}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report of all persistence mechanisms found with risk scores}
+\li{Timeline of persistence installation from auditd correlation}
+\li{MITRE ATT&CK technique mapping (T1053, T1543, T1574, T1546)}
+\li{Remediation commands for each detected persistence mechanism}
+}
+}
+}

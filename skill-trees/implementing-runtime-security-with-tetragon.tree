@@ -1,0 +1,320 @@
+\title{Implementing Runtime Security With Tetragon}
+
+\taxon{skill}
+
+\tag{tetragon}
+
+\tag{ebpf}
+
+\tag{runtime-security}
+
+\tag{kubernetes}
+
+\tag{cilium}
+
+\tag{container-security}
+
+\tag{observability}
+
+\tag{kernel-security}
+
+\tag{cncf}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement eBPF-based runtime security observability and enforcement in Kubernetes clusters using Cilium Tetragon for kernel-level threat detection and policy enforcement.}
+
+\subtree{
+\title{Implementing Runtime Security with Tetragon}
+\subtree{
+\title{Overview}
+\p{Tetragon is a CNCF project under Cilium that provides flexible Kubernetes-aware security observability and runtime enforcement using eBPF. By operating at the Linux kernel level, Tetragon can monitor and enforce policies on process execution, file access, network connections, and system calls with less than 1\% performance overhead -- far more efficient than traditional user-space security agents.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing runtime security with tetragon capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Kubernetes cluster v1.24+ with Helm 3.x installed}
+\li{Linux kernel 5.4+ (5.10+ recommended for full eBPF feature support)}
+\li{kubectl access with cluster-admin privileges}
+\li{Familiarity with eBPF concepts and Kubernetes security primitives}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{eBPF-Based Security}
+\p{Tetragon attaches eBPF programs directly to kernel functions, enabling:}
+
+\ul{
+\li{\strong{Process lifecycle tracking}: Monitor every process creation, execution, and termination across all pods}
+\li{\strong{File integrity monitoring}: Detect unauthorized reads/writes to sensitive files}
+\li{\strong{Network observability}: Track all TCP/UDP connections with full pod context}
+\li{\strong{System call filtering}: Enforce policies on dangerous syscalls like ptrace, mount, or unshare}
+}
+}
+
+\subtree{
+\title{TracingPolicy Custom Resources}
+\p{Tetragon uses \code{\startverb TracingPolicy\stopverb} CRDs to define what kernel events to observe and what actions to take:}
+
+\pre{\startverb
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: detect-privilege-escalation
+spec:
+  kprobes:
+    - call: "security_bprm_check"
+      syscall: false
+      args:
+        - index: 0
+          type: "linux_binprm"
+      selectors:
+        - matchBinaries:
+            - operator: "In"
+              values:
+                - "/bin/su"
+                - "/usr/bin/sudo"
+                - "/usr/bin/passwd"
+          matchNamespaces:
+            - namespace: Pid
+              operator: NotIn
+              values:
+                - "host_ns"
+          matchActions:
+            - action: Post
+\stopverb}
+}
+
+\subtree{
+\title{Enforcement Actions}
+\p{Tetragon can take three types of actions directly in the kernel:}
+
+\ol{
+\li{\strong{Sigkill}: Immediately terminate the offending process}
+\li{\strong{Signal}: Send a configurable signal to the process}
+\li{\strong{Override}: Override the return value of a kernel function to deny an operation}
+}
+}
+}
+
+\subtree{
+\title{Installation and Configuration}
+\subtree{
+\title{Step 1: Install Tetragon with Helm}
+\pre{\startverb
+helm repo add cilium https://helm.cilium.io
+helm repo update
+
+helm install tetragon cilium/tetragon \
+  --namespace kube-system \
+  --set tetragon.enableProcessCred=true \
+  --set tetragon.enableProcessNs=true \
+  --set tetragon.grpc.address="localhost:54321"
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Install the Tetragon CLI}
+\pre{\startverb
+GOOS=$(go env GOOS)
+GOARCH=$(go env GOARCH)
+curl -L --remote-name-all \
+  https://github.com/cilium/tetragon/releases/latest/download/tetra-${GOOS}-${GOARCH}.tar.gz
+tar -xzvf tetra-${GOOS}-${GOARCH}.tar.gz
+sudo install tetra /usr/local/bin/
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Verify Installation}
+\pre{\startverb
+kubectl get pods -n kube-system -l app.kubernetes.io/name=tetragon
+tetra status
+\stopverb}
+}
+}
+
+\subtree{
+\title{Practical Implementation}
+\subtree{
+\title{Detecting Container Escape Attempts}
+\p{Create a TracingPolicy to detect processes attempting to escape container namespaces:}
+
+\pre{\startverb
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: detect-container-escape
+spec:
+  kprobes:
+    - call: "__x64_sys_setns"
+      syscall: true
+      args:
+        - index: 0
+          type: "int"
+        - index: 1
+          type: "int"
+      selectors:
+        - matchNamespaces:
+            - namespace: Pid
+              operator: NotIn
+              values:
+                - "host_ns"
+          matchActions:
+            - action: Sigkill
+\stopverb}
+}
+
+\subtree{
+\title{Monitoring Sensitive File Access}
+\p{Detect reads of sensitive credentials:}
+
+\pre{\startverb
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: monitor-sensitive-files
+spec:
+  kprobes:
+    - call: "security_file_open"
+      syscall: false
+      args:
+        - index: 0
+          type: "file"
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: "Prefix"
+              values:
+                - "/etc/shadow"
+                - "/etc/kubernetes/pki"
+                - "/var/run/secrets/kubernetes.io"
+          matchActions:
+            - action: Post
+\stopverb}
+}
+
+\subtree{
+\title{Blocking Crypto-Miner Execution}
+\p{Prevent known crypto-mining binaries from executing:}
+
+\pre{\startverb
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: block-cryptominers
+spec:
+  kprobes:
+    - call: "security_bprm_check"
+      syscall: false
+      args:
+        - index: 0
+          type: "linux_binprm"
+      selectors:
+        - matchBinaries:
+            - operator: "In"
+              values:
+                - "/usr/bin/xmrig"
+                - "/tmp/xmrig"
+                - "/usr/bin/minerd"
+          matchActions:
+            - action: Sigkill
+\stopverb}
+}
+
+\subtree{
+\title{Observing Events with Tetra CLI}
+\p{Stream runtime events in real-time:}
+
+\pre{\startverb
+# Watch all process execution events
+kubectl exec -n kube-system ds/tetragon -c tetragon -- \
+  tetra getevents -o compact --process-only
+
+# Filter events for a specific namespace
+kubectl exec -n kube-system ds/tetragon -c tetragon -- \
+  tetra getevents -o compact --namespace production
+
+# Export events in JSON for SIEM integration
+kubectl exec -n kube-system ds/tetragon -c tetragon -- \
+  tetra getevents -o json | tee /var/log/tetragon-events.json
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with SIEM and Alerting}
+\subtree{
+\title{Export to Elasticsearch}
+\pre{\startverb
+# tetragon-helm-values.yaml
+export:
+  stdout:
+    enabledCommand: true
+    enabledArgs: true
+  filenames:
+    - /var/log/tetragon/tetragon.log
+  elasticsearch:
+    enabled: true
+    url: "https://elasticsearch.monitoring:9200"
+    index: "tetragon-events"
+\stopverb}
+}
+
+\subtree{
+\title{Prometheus Metrics}
+\p{Tetragon exposes metrics at \code{\startverb :2112/metrics\stopverb}:}
+
+\pre{\startverb
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tetragon-metrics
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tetragon
+  endpoints:
+    - port: metrics
+      interval: 15s
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Metrics and Alerts}
+\pre{\startverb
+| Metric | Description | Alert Threshold |
+|--------|-------------|-----------------|
+| `tetragon_events_total` | Total security events observed | Spike > 3x baseline |
+| `tetragon_policy_events_total` | Events matching TracingPolicies | Any Sigkill action |
+| `tetragon_process_exec_total` | Process executions tracked | Anomalous new binaries |
+| `tetragon_missed_events_total` | Dropped events due to buffer overflow | > 0 sustained |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Tetragon Official Documentation](https://tetragon.io/docs/)}
+\li{[Cilium Tetragon GitHub Repository](https://github.com/cilium/tetragon)}
+\li{[CNCF Tetragon Project Page](https://www.cncf.io/projects/tetragon/)}
+\li{[eBPF Security Observability with Tetragon - CoreWeave](https://docs.coreweave.com/security/tutorials/ebpf-observability)}
+\li{[Kubernetes Security: eBPF & Tetragon for Runtime Monitoring](https://medium.com/@noah_h/kubernetes-security-ebpf-tetragon-for-runtime-monitoring-policy-enforcement-819b6ed97953)}
+}
+}
+}

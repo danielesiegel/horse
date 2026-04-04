@@ -1,0 +1,464 @@
+\title{Gmail Anima}
+
+\taxon{skill}
+
+\meta{description}{Gmail inbox management via ANIMA condensation. Transforms messages into GF(3)-typed Interactions, routes to triadic queues, detects saturation for inbox-zero-as-condensed-state. Use for email triage, workflow automation, or applying ANIMA principles to Gmail.}
+
+\subtree{
+\title{Gmail ANIMA Skill}
+\p{Transform Gmail into an ANIMA-condensed system with GF(3) conservation.}
+
+\p{\strong{Trit}: 0 (ERGODIC - coordinator) \strong{Principle}: Inbox Zero = Condensed Equilibrium State \strong{Implementation}: GmailACSet + TriadicQueues + AnimaDetector}
+
+\subtree{
+\title{Overview}
+\p{Gmail ANIMA applies the ANIMA framework to email:}
+
+\ol{
+\li{\strong{Transform} - Messages → GF(3)-typed Interactions}
+\li{\strong{Route} - Interactions → Triadic queue fibers (MINUS/ERGODIC/PLUS)}
+\li{\strong{Detect} - Saturation → ANIMA condensed state}
+\li{\strong{Verify} - Narya proofs for consistency}
+}
+}
+
+\subtree{
+\title{GmailACSet Schema}
+\pre{\startverb
+┌────────────────────────────────────────────────────────────────────┐
+│                      GmailACSet Schema                             │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  Interaction ─────┬────▶ Thread                                   │
+│  ├─ verb: String  │      ├─ thread_id: String                     │
+│  ├─ timebin: Int  │      ├─ needs_action: Bool                    │
+│  ├─ trit: Trit    │      ├─ last_action_bin: Int                  │
+│  └─ person ───────┼──▶   └─ saturated: Bool                       │
+│                   │                                                │
+│  QueueItem ───────┼────▶ Agent3                                   │
+│  ├─ interaction ──┘      ├─ fiber: Trit {-1, 0, +1}               │
+│  └─ agent ───────────▶   └─ name: String                          │
+│                                                                    │
+│  Person ◀─────────────── Partner ────────────────▶ Person         │
+│  ├─ email: String        ├─ src                                   │
+│  └─ name: String         ├─ tgt                                   │
+│                          └─ weight: Int                            │
+└────────────────────────────────────────────────────────────────────┘
+\stopverb}
+
+\subtree{
+\title{Objects}
+\pre{\startverb
+| Object | Description | Trit Role |
+|--------|-------------|-----------|
+| `Interaction` | Single email action with verb + trit | Data |
+| `Thread` | Gmail conversation with saturation state | Aggregate |
+| `Agent3` | Queue fiber (MINUS/ERGODIC/PLUS) | Router |
+| `QueueItem` | Links Interaction → Agent3 | Edge |
+| `Person` | Email contact | Node |
+| `Partner` | Relationship edge in contact graph | Edge |
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Verb Typing}
+\p{Gmail actions are assigned trits based on information flow:}
+
+\pre{\startverb
+VERB_TRIT_MAP = {
+    # MINUS (-1): Consumption/Validation
+    "read": -1,      "search": -1,     "view": -1,
+    "fetch": -1,     "list": -1,
+    
+    # ERGODIC (0): Coordination/Metadata
+    "label": 0,      "archive": 0,     "snooze": 0,
+    "star": 0,       "mark_read": 0,   "mark_unread": 0,
+    "move": 0,
+    
+    # PLUS (+1): Generation/Execution
+    "send": +1,      "forward": +1,    "reply": +1,
+    "schedule": +1,  "draft": +1,      "compose": +1,
+}
+\stopverb}
+
+\subtree{
+\title{MCP Tool → Trit Mapping}
+\pre{\startverb
+| Tool | Trit | Description |
+|------|------|-------------|
+| `search_gmail_messages` | -1 | Search inbox (MINUS) |
+| `get_gmail_message_content` | -1 | Read message (MINUS) |
+| `get_gmail_thread_content` | -1 | Read thread (MINUS) |
+| `list_gmail_labels` | -1 | List labels (MINUS) |
+| `modify_gmail_message_labels` | 0 | Change labels (ERGODIC) |
+| `batch_modify_gmail_message_labels` | 0 | Bulk labels (ERGODIC) |
+| `send_gmail_message` | +1 | Send email (PLUS) |
+| `draft_gmail_message` | +1 | Create draft (PLUS) |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Triadic Queue Routing}
+\p{Interactions route to disjoint queue fibers:}
+
+\pre{\startverb
+                    ┌─────────────────────────────────────────┐
+                    │           TRIADIC QUEUES                │
+                    ├─────────────────────────────────────────┤
+                    │                                         │
+   Interaction ────▶│  route(trit) ───▶ Agent3 Fiber         │
+                    │                                         │
+                    │  MINUS (-1)  ────▶ [read, search, ...]  │
+                    │  ERGODIC (0) ────▶ [label, archive, ...]│
+                    │  PLUS (+1)   ────▶ [send, reply, ...]   │
+                    │                                         │
+                    └─────────────────────────────────────────┘
+\stopverb}
+
+\subtree{
+\title{Invariants}
+\ol{
+\li{\strong{No duplication}: Each interaction in exactly one fiber}
+\li{\strong{Route invariant}: \code{\startverb agent_of(i) = route(trit(i))\stopverb}}
+\li{\strong{Ordering}: PLUS must be preceded by MINUS in same thread}
+\li{\strong{Conservation}: Thread trit sum ≡ 0 (mod 3) at cycle close}
+}
+}
+
+\subtree{
+\title{Queue Depth Balance}
+\pre{\startverb
+def saturation_metrics(queues: Dict[Agent3, deque]) -> Dict:
+    depths = [len(q) for q in queues.values()]
+    return {
+        'balance_ratio': min(depths) / max(depths),  # 1.0 = perfect
+        'gf3_residue': sum(i.trit for q in queues for i in q) % 3,
+    }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Saturation Detection → ANIMA State}
+\p{Saturation occurs when a thread reaches stable equilibrium:}
+
+\pre{\startverb
+def is_saturated(thread_id: str) -> bool:
+    """Thread is saturated when:
+    1. No change in needs_action for N steps
+    2. GF(3) cycle closure: sum(trits) ≡ 0 (mod 3)
+    3. History window shows identical states
+    """
+    history = detector.history[thread_id][-N:]
+    cycle_sum = sum(t for t in thread.gf3_cycle[-3:])
+    
+    return (
+        all(s == history[0] for s in history) and  # Stable
+        (cycle_sum % 3) == 0                        # Conserved
+    )
+\stopverb}
+
+\subtree{
+\title{ANIMA Detection}
+\pre{\startverb
+def detect_anima() -> Dict:
+    """System at ANIMA when:
+    1. All threads saturated
+    2. GF(3) conserved globally
+    3. Equivalence classes stable
+    4. Replay invariance holds
+    """
+    return {
+        "at_anima": all_saturated and gf3_conserved and stable_impacts,
+        "condensed_fingerprint": sha256(sorted_equiv_classes),
+        "persistence_bars_stable": True,
+    }
+\stopverb}
+
+\p{\strong{Inbox Zero as ANIMA}: When all threads reach saturation with GF(3) conservation, the inbox is in condensed equilibrium.}
+}
+}
+
+\subtree{
+\title{Narya Proof Integration}
+\p{Proofs in [\code{\startverb src/narya_proofs/\stopverb}](file:///Users/alice/agent-o-rama/agent-o-rama/src/narya_proofs/):}
+
+\subtree{
+\title{1. Queue Consistency ([queue_consistency.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/narya_proofs/queue_consistency.py))}
+\pre{\startverb
+def prove_queue_consistency(system: TriadicQueueSystem) -> bool:
+    """Verify no duplication and route invariant."""
+    return (
+        system.verify_no_duplication() and
+        system.verify_route_invariant()
+    )
+\stopverb}
+}
+
+\subtree{
+\title{2. Replay Determinism ([replay_determinism.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/narya_proofs/replay_determinism.py))}
+\pre{\startverb
+def prove_replay_determinism(schedule1, schedule2) -> bool:
+    """Different schedules → identical condensed state."""
+    fp1 = replay(schedule1).condensed_fingerprint
+    fp2 = replay(schedule2).condensed_fingerprint
+    return fp1 == fp2
+\stopverb}
+}
+
+\subtree{
+\title{3. Non-Leakage ([non_leakage.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/narya_proofs/non_leakage.py))}
+\pre{\startverb
+def prove_non_leakage(bridge: GmailMCPBridge) -> bool:
+    """No interaction leaks between fibers."""
+    for agent, queue in bridge.queues.items():
+        for item in queue:
+            if bridge._route(item.trit) != agent:
+                return False
+    return True
+\stopverb}
+}
+
+\subtree{
+\title{4. GF(3) Conservation ([gf3_conservation.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/narya_proofs/gf3_conservation.py))}
+\pre{\startverb
+def prove_gf3_conservation(bridge: GmailMCPBridge) -> bool:
+    """All closed cycles satisfy sum ≡ 0 (mod 3)."""
+    for cycle in bridge.cycle_tracker.closed_cycles:
+        if sum(cycle.trits) % 3 != 0:
+            return False
+    return True
+\stopverb}
+}
+}
+
+\subtree{
+\title{Source Files}
+\pre{\startverb
+| File | Description | Trit |
+|------|-------------|------|
+| [gmail_acset.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/gmail_acset.py) | ACSet schema + GF(3) thread tracking | 0 |
+| [anima_detector.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/anima_detector.py) | Saturation + equilibrium detection | 0 |
+| [gmail_mcp_bridge.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/gmail_mcp_bridge.py) | MCP tool wiring with guards | 0 |
+| [triadic_queues.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/triadic_queues.py) | Three disjoint queue fibers | 0 |
+| [narya_proofs/](file:///Users/alice/agent-o-rama/agent-o-rama/src/narya_proofs/) | Formal verification proofs | -1 |
+\stopverb}
+}
+
+\subtree{
+\title{Workflows}
+\subtree{
+\title{Workflow 1: Triage Inbox to ANIMA}
+\pre{\startverb
+from gmail_mcp_bridge import create_gmail_bridge
+from anima_detector import AnimaDetector
+
+# Create bridge
+bridge = create_gmail_bridge("user@gmail.com")
+detector = AnimaDetector(saturation_threshold=5)
+
+# MINUS: Read unread messages
+bridge.search_gmail_messages("is:unread")
+for msg in results:
+    bridge.get_gmail_message_content(msg.id, thread_id=msg.thread_id)
+    detector.update_thread(msg.thread_id, trit=Trit.MINUS)
+
+# ERGODIC: Label/archive processed
+for msg in processed:
+    bridge.modify_gmail_message_labels(
+        msg.id,
+        add_label_ids=["Label_Processed"],
+        remove_label_ids=["INBOX"],
+        thread_id=msg.thread_id
+    )
+    detector.update_thread(msg.thread_id, trit=Trit.ERGODIC)
+
+# Check ANIMA
+anima = detector.detect_anima()
+if anima["at_anima"]:
+    say("Inbox at ANIMA. Condensed state achieved.")
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Reply with GF(3) Guard}
+\pre{\startverb
+# MINUS first: Read the thread
+bridge.get_gmail_thread_content(thread_id)  # trit=-1
+
+# PLUS: Reply (requires prior MINUS)
+try:
+    bridge.send_gmail_message(
+        to="reply@example.com",
+        subject="Re: Topic",
+        body="Response...",
+        thread_id=thread_id,
+        in_reply_to=original_message_id
+    )  # trit=+1
+except GF3ConservationError:
+    # Must read before sending
+    bridge.get_gmail_thread_content(thread_id)  # Retry after MINUS
+    bridge.send_gmail_message(...)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 3: Batch Triage with Saturation}
+\pre{\startverb
+# Create balanced batch
+batch = create_triadic_batch(
+    payloads=["read_1", "label_1", "archive_1"],  # Will balance to 0
+    thread_id="batch_thread",
+    seed=1069
+)
+
+system = TriadicQueueSystem()
+for interaction in batch:
+    if system.enqueue(interaction):
+        print(f"✓ {interaction.payload} → {interaction.agent.name}")
+
+# Check metrics
+stats = system.full_statistics()
+print(f"GF(3) Residue: {stats['saturation']['gf3_residue']}")  # 0
+print(f"Cycles Closed: {stats['operations']['cycles_closed']}")
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 4: Sheaf Cohomology Verification}
+\pre{\startverb
+# After processing
+h1 = bridge.verify_h1_obstruction()
+print(f"H¹ obstructions: {h1['h1']}")
+print(f"Globally consistent: {h1['globally_consistent']}")
+
+# Obstructions = threads not at GF(3) = 0
+for v in h1['violations']:
+    print(f"  Thread {v['thread_id']}: residue={v['mod_3']}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run Gmail ANIMA demo
+python src/gmail_acset.py
+
+# Test triadic queues
+python src/triadic_queues.py
+
+# Run ANIMA detector
+python src/anima_detector.py
+
+# Run Narya proofs
+python -m src.narya_proofs.runner
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\pre{\startverb
+| Skill | Trit | Integration |
+|-------|------|-------------|
+| [google-workspace](file:///Users/alice/.claude/skills/google-workspace/SKILL.md) | 0 | MCP tool provider |
+| [gay-mcp](file:///Users/alice/.agents/skills/gay-mcp/SKILL.md) | +1 | SplitMixTernary RNG |
+| [sheaf-cohomology](file:///Users/alice/.claude/skills/sheaf-cohomology/SKILL.md) | -1 | H¹ obstruction verification |
+| [bisimulation-game](file:///Users/alice/.agents/skills/bisimulation-game/SKILL.md) | -1 | State equivalence proofs |
+| [ordered-locale](file:///Users/alice/.agents/skills/ordered-locale-proper/SKILL.md) | 0 | Thread ordering topology |
+\stopverb}
+
+\subtree{
+\title{GF(3) Triadic Conservation}
+\pre{\startverb
+gmail-anima (0) ⊗ sheaf-cohomology (-1) ⊗ gay-mcp (+1) = 0 ✓
+gmail-anima (0) ⊗ bisimulation-game (-1) ⊗ send (+1) = 0 ✓
+read (-1) ⊗ label (0) ⊗ reply (+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Cross-Skill Integration}
+\p{Gmail-ANIMA integrates with the full workspace via \code{\startverb WorkspaceACSet\stopverb}:}
+
+\subtree{
+\title{Morphisms from Gmail}
+\pre{\startverb
+| Morphism | Target | Trigger | GF(3) Effect |
+|----------|--------|---------|--------------|
+| `thread_file` | DriveFile | Attachment detected | 0 (ERGODIC) |
+| `thread_event` | CalendarEvent | Meeting scheduled | +1 (PLUS) |
+| `thread_task` | Task | Action item identified | +1 (PLUS) |
+\stopverb}
+}
+
+\subtree{
+\title{Workflow Paths}
+\pre{\startverb
+# Gmail → Task (balanced)
+path = gmail_read >> task_create  # -1 + 1 = 0 ✓
+
+# Full workflow (needs balancing)
+full = gmail_read >> drive_create >> calendar_create >> task_create
+balanced = balance_path(full)  # Auto-adds ERGODIC steps
+\stopverb}
+}
+
+\subtree{
+\title{MCP ↔ API Equivalence}
+\p{Gmail operations can be executed via MCP tools or direct API:}
+
+\pre{\startverb
+# Equivalent executions
+mcp_result = bridge.execute_mcp("send_gmail_message", params)
+api_result = bridge.execute_api("gmail_send", params)
+assert mcp_result.state == api_result.state
+\stopverb}
+}
+}
+
+\subtree{
+\title{Source Files (Extended)}
+\pre{\startverb
+| File | Description |
+|------|-------------|
+| [workspace_acset.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/workspace_acset.py) | Unified schema with cross-skill morphisms |
+| [mcp_api_equivalence.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/mcp_api_equivalence.py) | MCP↔API behavioral equivalence |
+| [path_invariance.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/path_invariance.py) | Workflow path verification |
+| [workflow_validator.py](file:///Users/alice/agent-o-rama/agent-o-rama/src/workflow_validator.py) | End-to-end validation |
+\stopverb}
+}
+
+\subtree{
+\title{ANIMA Principles Applied}
+\pre{\startverb
+| ANIMA Concept | Gmail Implementation |
+|---------------|---------------------|
+| **Saturation** | Thread trit sum ≡ 0 (mod 3) |
+| **Condensation** | Equivalence class collapse |
+| **MaxEnt Default** | needs_action=False initially |
+| **Persistence** | Only flip when forced |
+| **Replay Invariance** | Schedule-independent fingerprint |
+\stopverb}
+}
+
+\subtree{
+\title{Say Narration Integration}
+\pre{\startverb
+from gmail_mcp_bridge import NaryaLogger
+
+logger = NaryaLogger(voice="Ava (Premium)")
+
+# Announces: "Gmail bridge: MINUS transition"
+logger.log(before, after, Trit.MINUS, impact=False)
+
+# Announces: "Gmail bridge: PLUS transition, impact detected"
+logger.log(before, after, Trit.PLUS, impact=True)
+\stopverb}
+
+\p{\strong{Skill Name}: gmail-anima \strong{Type}: Email Management / ANIMA Framework \strong{Trit}: 0 (ERGODIC - coordinator) \strong{GF(3)}: Conserved via triadic queue routing \strong{ANIMA}: Inbox Zero = Condensed Equilibrium State}
+}
+}

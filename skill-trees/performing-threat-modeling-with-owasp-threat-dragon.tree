@@ -1,0 +1,246 @@
+\title{Performing Threat Modeling With Owasp Threat Dragon}
+
+\taxon{skill}
+
+\tag{threat-modeling}
+
+\tag{owasp}
+
+\tag{threat-dragon}
+
+\tag{stride}
+
+\tag{linddun}
+
+\tag{secure-design}
+
+\tag{dfd}
+
+\tag{data-flow}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Use OWASP Threat Dragon to create data flow diagrams, identify threats using STRIDE and LINDDUN methodologies, and generate threat model reports for secure design review.}
+
+\subtree{
+\title{Performing Threat Modeling with OWASP Threat Dragon}
+\subtree{
+\title{Overview}
+\p{OWASP Threat Dragon is an open-source threat modeling tool that enables security teams and developers to create threat model diagrams, identify threats using established methodologies (STRIDE, LINDDUN, CIA, DIE, PLOT4ai), and generate comprehensive reports. Threat Dragon runs as both a web application and desktop application (Windows, macOS, Linux), supporting distributed teams working collaboratively on threat models. Version 2.x provides drag-and-drop diagram creation, an auto-generation rule engine for threats and mitigations, and PDF report output for documentation and GRC compliance.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing threat modeling with owasp threat dragon}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{OWASP Threat Dragon desktop application or web instance}
+\li{Understanding of data flow diagram (DFD) notation}
+\li{Familiarity with STRIDE or LINDDUN threat classification}
+\li{Application architecture documentation and network diagrams}
+\li{Stakeholder access for design review sessions}
+}
+}
+
+\subtree{
+\title{Threat Modeling Methodologies}
+\subtree{
+\title{STRIDE}
+\pre{\startverb
+| Category | Threat Type | Description | Example |
+|----------|-------------|-------------|---------|
+| S | Spoofing | Impersonating a user or system | Stolen session tokens |
+| T | Tampering | Modifying data in transit or at rest | SQL injection altering records |
+| R | Repudiation | Denying an action occurred | Missing audit logs |
+| I | Information Disclosure | Exposing sensitive data | API returning excessive fields |
+| D | Denial of Service | Making a service unavailable | Resource exhaustion attack |
+| E | Elevation of Privilege | Gaining unauthorized access | Broken access control |
+\stopverb}
+}
+
+\subtree{
+\title{LINDDUN (Privacy-Focused)}
+\pre{\startverb
+| Category | Threat Type | Description |
+|----------|-------------|-------------|
+| L | Linkability | Associating data items across contexts |
+| I | Identifiability | Identifying an individual from data |
+| N | Non-repudiation | Inability to deny an action (privacy risk) |
+| D | Detectability | Determining if data about a subject exists |
+| D | Disclosure | Exposing personal information |
+| U | Unawareness | User unaware of data collection |
+| N | Non-compliance | Violating privacy regulations |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1 --- Install Threat Dragon}
+\p{\strong{Desktop Application:} Download the installer from the [OWASP Threat Dragon releases](https://github.com/OWASP/threat-dragon/releases) page for Windows (.exe), macOS (.dmg), or Linux (.AppImage/.deb/.rpm).}
+
+\p{\strong{Web Application (Docker):}}
+
+\pre{\startverb
+docker run -p 3000:3000 \
+  -e ENCRYPTION_JWT_SIGNING_KEY=$(openssl rand -hex 32) \
+  -e ENCRYPTION_JWT_REFRESH_SIGNING_KEY=$(openssl rand -hex 32) \
+  -e ENCRYPTION_KEYS='[{"isPrimary":true,"id":0,"value":"'$(openssl rand -hex 16)'"}]' \
+  -e NODE_ENV=production \
+  owasp/threat-dragon:latest
+\stopverb}
+}
+
+\subtree{
+\title{Step 2 --- Define the Scope}
+\p{Before creating diagrams, document the scope:}
+
+\ul{
+\li{System name and description}
+\li{Assets being protected (user data, credentials, payment info)}
+\li{External dependencies (third-party APIs, cloud services)}
+\li{Compliance requirements (GDPR, HIPAA, PCI DSS)}
+\li{Trust boundaries (network segments, authentication zones)}
+}
+}
+
+\subtree{
+\title{Step 3 --- Create Data Flow Diagrams}
+\p{In Threat Dragon, create a new threat model and add diagrams using the following DFD elements:}
+
+\p{\strong{Processes}: Applications, microservices, API endpoints that transform data. Represented as circles/rounded rectangles.}
+
+\p{\strong{Data Stores}: Databases, file systems, caches, message queues that persist data. Represented as parallel lines.}
+
+\p{\strong{External Entities}: Users, external systems, third-party services outside the trust boundary. Represented as rectangles.}
+
+\p{\strong{Data Flows}: Communication channels between elements showing data direction. Represented as arrows with labels describing the data.}
+
+\p{\strong{Trust Boundaries}: Dashed lines separating zones of different trust levels (internet/DMZ/internal network, user/admin).}
+}
+
+\subtree{
+\title{Step 4 --- Identify Threats}
+\p{For each DFD element, apply the STRIDE methodology:}
+
+\pre{\startverb
+| Element Type | Applicable STRIDE Categories |
+|-------------|------------------------------|
+| External Entity | Spoofing, Repudiation |
+| Process | Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation of Privilege |
+| Data Store | Tampering, Information Disclosure, DoS |
+| Data Flow | Tampering, Information Disclosure, DoS |
+\stopverb}
+
+\p{Threat Dragon's rule engine automatically suggests threats based on element types. Review each suggestion and mark as:}
+
+\ul{
+\li{\strong{Mitigated}: Existing controls address the threat}
+\li{\strong{Not Applicable}: Threat does not apply to this context}
+\li{\strong{Open}: Threat needs to be addressed (assign priority and owner)}
+}
+}
+
+\subtree{
+\title{Step 5 --- Define Mitigations}
+\p{For each open threat, document:}
+
+\ul{
+\li{Mitigation strategy (prevent, detect, respond, transfer)}
+\li{Specific technical controls (encryption, authentication, rate limiting)}
+\li{Owner responsible for implementation}
+\li{Priority and timeline for remediation}
+}
+}
+
+\subtree{
+\title{Step 6 --- Generate Reports}
+\p{Threat Dragon produces PDF reports containing:}
+
+\ul{
+\li{Executive summary of the threat model}
+\li{Data flow diagrams with annotations}
+\li{Threat inventory with severity ratings}
+\li{Mitigation status and recommendations}
+\li{Compliance mapping where applicable}
+}
+}
+
+\subtree{
+\title{Step 7 --- Integrate into SDLC}
+\ul{
+\li{Conduct threat modeling during the design phase of new features}
+\li{Update threat models when architecture changes occur}
+\li{Review threat models during security design reviews}
+\li{Store threat model files in version control alongside code}
+\li{Reference threat model findings in security acceptance criteria}
+}
+}
+}
+
+\subtree{
+\title{Threat Model File Format}
+\p{Threat Dragon uses JSON format for threat models, enabling version control and programmatic manipulation:}
+
+\pre{\startverb
+{
+  "version": "2.2.0",
+  "summary": {
+    "title": "E-Commerce Application",
+    "owner": "Security Team",
+    "description": "Threat model for the checkout flow"
+  },
+  "detail": {
+    "contributors": [
+      {"name": "Security Architect"}
+    ],
+    "diagrams": [
+      {
+        "id": 0,
+        "title": "Checkout Flow",
+        "diagramType": "STRIDE",
+        "cells": []
+      }
+    ]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{CycloneDX TMBOM Integration}
+\p{Threat Dragon participates in the CycloneDX Threat Model Bill of Materials (TMBOM) effort, enabling export to a common format that can be consumed by other threat modeling tools and GRC platforms, preventing vendor lock-in.}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Start simple}: Begin with high-level DFDs (Level 0) before decomposing into detailed diagrams}
+\li{\strong{Involve developers}: Include development team members in threat modeling sessions for realistic threat assessment}
+\li{\strong{Time-box sessions}: Limit initial sessions to 90 minutes; iterate in follow-up sessions}
+\li{\strong{Prioritize by risk}: Use severity ratings (Critical, High, Medium, Low) to prioritize mitigations}
+\li{\strong{Living documents}: Treat threat models as living documents that evolve with the system}
+\li{\strong{Automate where possible}: Use the rule engine for initial threat generation, then refine manually}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[OWASP Threat Dragon](https://owasp.org/www-project-threat-dragon/)}
+\li{[Threat Dragon GitHub Repository](https://github.com/OWASP/threat-dragon)}
+\li{[OWASP Threat Modeling Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html)}
+\li{[STRIDE Threat Model](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats)}
+\li{[LINDDUN Privacy Threat Modeling](https://www.linddun.org/)}
+}
+}
+}

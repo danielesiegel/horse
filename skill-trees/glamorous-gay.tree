@@ -1,0 +1,376 @@
+\title{Glamorous Gay}
+
+\taxon{skill}
+
+\meta{description}{"Glamorous Toolkit integration with Gay.jl deterministic coloring. Moldable inspectors with GF(3)-balanced views, Lepiter color-coded knowledge graphs, and Bloc visualizations with SplitMix64 palettes."}
+
+\subtree{
+\title{Glamorous Gay Skill}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: +1 (PLUS - generative/visual) \strong{Color}: #E91E63 (Pink) \strong{Principle}: Moldable development with deterministic coloring \strong{Frame}: Every object gets a reproducible color; every view tells a story}
+
+\subtree{
+\title{Overview}
+\p{\strong{Glamorous Toolkit} (GT) is a moldable development environment where you shape the IDE to your problem. \strong{Glamorous Gay} integrates Gay.jl's deterministic coloring:}
+
+\ol{
+\li{\strong{Moldable Inspectors}: Objects colored by identity hash}
+\li{\strong{Lepiter Knowledge Graphs}: Pages/snippets with GF(3) trits}
+\li{\strong{Bloc Visualizations}: Reproducible palettes for diagrams}
+\li{\strong{Parallel Tempering Views}: Pigeons.jl chains in GT}
+}
+}
+
+\subtree{
+\title{Core Concept: Every Object Has a Color}
+\pre{\startverb
+"In GT, everything is inspectable. Now everything is colorable."
+
+Object >> gayColor
+    "Deterministic color from object identity"
+    ^ GaySplitMix64 colorAt: self identityHash seed: GayGlobalSeed value
+    
+Object >> gayTrit
+    "GF(3) trit from hue"
+    ^ self gayColor hue gayTritFromHue
+    
+Number >> gayTritFromHue
+    "Hue → Trit mapping"
+    self < 60 ifTrue: [ ^ 1 ].   "warm → PLUS"
+    self < 180 ifTrue: [ ^ 0 ].  "neutral → ERGODIC"
+    self < 300 ifTrue: [ ^ -1 ]. "cool → MINUS"
+    ^ 1 "wrap around"
+\stopverb}
+}
+
+\subtree{
+\title{SplitMix64 in Smalltalk}
+\pre{\startverb
+Class: GaySplitMix64
+    instanceVariables: 'state'
+    classVariables: 'Golden Mix1 Mix2 Mask64'
+
+GaySplitMix64 class >> initialize
+    Golden := 16r9E3779B97F4A7C15.
+    Mix1 := 16rBF58476D1CE4E5B9.
+    Mix2 := 16r94D049BB133111EB.
+    Mask64 := 16rFFFFFFFFFFFFFFFF.
+
+GaySplitMix64 >> nextState
+    state := (state + Golden) bitAnd: Mask64.
+    ^ self mix: state
+
+GaySplitMix64 >> mix: z
+    | z1 z2 z3 |
+    z1 := ((z bitXor: (z bitShift: -30)) * Mix1) bitAnd: Mask64.
+    z2 := ((z1 bitXor: (z1 bitShift: -27)) * Mix2) bitAnd: Mask64.
+    z3 := z2 bitXor: (z2 bitShift: -31).
+    ^ z3
+
+GaySplitMix64 >> colorAt: index
+    "Generate OkLCH color at index"
+    | rng L C H |
+    rng := self class seed: (state bitXor: index).
+    L := 10 + (rng nextFloat * 85).  "Lightness 10-95"
+    C := rng nextFloat * 100.         "Chroma 0-100"
+    H := rng nextFloat * 360.         "Hue 0-360"
+    ^ GayColor L: L C: C H: H
+\stopverb}
+}
+
+\subtree{
+\title{Moldable Inspectors}
+\subtree{
+\title{Colored Object Inspector}
+\pre{\startverb
+Object >> gtGayInspectorFor: aView
+    <gtView>
+    ^ aView explicit
+        title: 'Gay Color';
+        priority: 50;
+        stencil: [
+            | container colorBox tritLabel |
+            container := BlElement new
+                layout: BlLinearLayout horizontal;
+                constraintsDo: [ :c | 
+                    c horizontal fitContent.
+                    c vertical fitContent ].
+            
+            colorBox := BlElement new
+                size: 50@50;
+                background: self gayColor asBlColor.
+            
+            tritLabel := BrLabel new
+                text: ('Trit: ', self gayTrit asString);
+                aptitude: BrGlamorousLabelAptitude.
+            
+            container addChildren: { colorBox. tritLabel }.
+            container ]
+\stopverb}
+}
+
+\subtree{
+\title{Collection Inspector with Rainbow}
+\pre{\startverb
+SequenceableCollection >> gtGayRainbowFor: aView
+    <gtView>
+    ^ aView columnedList
+        title: 'Rainbow';
+        priority: 45;
+        items: [ self withIndexCollect: [:item :i | i -> item ] ];
+        column: 'Color' 
+            icon: [ :assoc | 
+                BlElement new 
+                    size: 20@20;
+                    background: (GaySplitMix64 colorAt: assoc key) asBlColor ]
+            width: 30;
+        column: 'Index' text: [ :assoc | assoc key ];
+        column: 'Item' text: [ :assoc | assoc value ];
+        column: 'Trit' text: [ :assoc | 
+            (GaySplitMix64 colorAt: assoc key) trit ]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Lepiter Integration}
+\subtree{
+\title{Color-Coded Pages}
+\pre{\startverb
+LePage >> gayColor
+    "Page color from title hash"
+    ^ GaySplitMix64 colorAt: self title hash
+
+LeSnippet >> gayColor
+    "Snippet color from content hash"
+    ^ GaySplitMix64 colorAt: self contentAsString hash
+
+LePage >> gtGayMapFor: aView
+    <gtView>
+    ^ aView mondrian
+        title: 'Gay Map';
+        priority: 60;
+        painting: [ :m |
+            m nodes
+                shape: [ :page |
+                    BlElement new
+                        size: (50 @ 50);
+                        background: page gayColor asBlColor;
+                        addChild: (BrLabel new text: page title) ];
+                with: self database pages.
+            m edges
+                shape: [ :link | 
+                    BlLineElement new
+                        border: (BlBorder paint: Color gray width: 1) ];
+                fromRightCenter;
+                toLeftCenter;
+                connectToAll: #outgoingLinks.
+            m layout force ]
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Snippet Triads}
+\pre{\startverb
+LePage >> verifyGF3Conservation
+    "Check that snippet trits sum to 0 mod 3"
+    | trits sum |
+    trits := self children collect: #gayTrit.
+    sum := trits sum.
+    ^ (sum \\ 3) = 0
+        ifTrue: [ 'GF(3) conserved ✓' ]
+        ifFalse: [ 'GF(3) violated: sum = ', sum asString ]
+
+LePage >> balanceSnippets
+    "Add balancing snippet if needed"
+    | sum neededTrit |
+    sum := (self children collect: #gayTrit) sum.
+    (sum \\ 3) = 0 ifTrue: [ ^ self ].
+    
+    neededTrit := (3 - (sum \\ 3)) \\ 3.
+    neededTrit = 2 ifTrue: [ neededTrit := -1 ].
+    
+    self addSnippet: (LeTextSnippet string: 
+        '[Balancing snippet, trit = ', neededTrit asString, ']')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Bloc Visualizations}
+\subtree{
+\title{Parallel Tempering View}
+\pre{\startverb
+PigeonsResult >> gtGayTemperingFor: aView
+    <gtView>
+    ^ aView explicit
+        title: 'Tempering Chains';
+        priority: 40;
+        stencil: [
+            | container |
+            container := BlElement new
+                layout: BlLinearLayout vertical;
+                constraintsDo: [ :c | c horizontal matchParent ].
+            
+            self chains withIndexDo: [ :chain :i |
+                | row beta color |
+                beta := self schedule at: i.
+                color := GaySplitMix64 colorAt: i.
+                
+                row := BlElement new
+                    layout: BlLinearLayout horizontal;
+                    constraintsDo: [ :c | c horizontal matchParent ];
+                    addChildren: {
+                        "Color swatch"
+                        BlElement new size: 30@30; background: color asBlColor.
+                        "Beta label"
+                        BrLabel new text: ('β = ', beta printString).
+                        "Energy bar"
+                        BlElement new 
+                            size: ((chain energy / self maxEnergy * 200) @ 20);
+                            background: color asBlColor.
+                        "Trit"
+                        BrLabel new text: ('trit: ', color trit asString)
+                    }.
+                container addChild: row ].
+            container ]
+\stopverb}
+}
+
+\subtree{
+\title{Directed Landscape Visualization}
+\pre{\startverb
+DirectedLandscape >> gtGayLandscapeFor: aView
+    <gtView>
+    ^ aView explicit
+        title: 'Landscape';
+        priority: 35;
+        stencil: [
+            | canvas |
+            canvas := BlElement new
+                size: 600@400;
+                background: Color black.
+            
+            self geodesics do: [ :geo |
+                | path color |
+                color := GaySplitMix64 colorAt: geo hash.
+                path := BlPolylineElement vertices: geo asPoints.
+                path border: (BlBorder paint: color asBlColor width: 2).
+                canvas addChild: path ].
+            
+            canvas ]
+\stopverb}
+}
+}
+
+\subtree{
+\title{KPZ Integration}
+\subtree{
+\title{Colored Height Function View}
+\pre{\startverb
+KPZHeightFunction >> gtGayHeightFor: aView
+    <gtView>
+    ^ aView explicit
+        title: 'Colored Height';
+        priority: 30;
+        stencil: [
+            | canvas |
+            canvas := BlElement new size: 800@400.
+            
+            self grid withIndexDo: [ :row :y |
+                row withIndexDo: [ :height :x |
+                    | color elem |
+                    color := self heightToColor: height atColor: (self colorAt: x@y).
+                    elem := BlElement new
+                        position: (x * 4) @ (400 - (height * 2));
+                        size: 4 @ (height * 2);
+                        background: color asBlColor.
+                    canvas addChild: elem ]].
+            
+            canvas ]
+
+KPZHeightFunction >> heightToColor: h atColor: k
+    "Gay.jl color modulated by height"
+    | base |
+    base := GaySplitMix64 colorAt: k.
+    ^ GayColor 
+        L: (base L + (h * 0.5) min: 95)
+        C: base C
+        H: base H
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Load Glamorous Gay into GT
+just gt-load-gay
+
+# Color an object
+just gt-gay-color object=MyClass
+
+# Generate Lepiter color map
+just gt-lepiter-gay-map
+
+# Visualize tempering chains
+just gt-pigeons-view result.ston
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+"Load via Metacello"
+Metacello new
+    repository: 'github://bmorphism/glamorous-gay:main/src';
+    baseline: 'GlamorousGay';
+    load.
+    
+"Set global seed"
+GayGlobalSeed value: 1069.
+
+"Verify installation"
+42 gayColor inspect.
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+| Trit | Role | GT Component |
+|------|------|--------------|
+| -1 | Validation | Inspector assertions |
+| 0 | Coordination | Lepiter knowledge base |
+| +1 | Generation | Bloc visualizations |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{gay-mcp} (+1): Core coloring algorithm}
+\li{\strong{kpz-universality} (0): Height function coloring}
+\li{\strong{pigeons-tempering}: Chain visualization}
+\li{\strong{discopy} (+1): String diagram rendering}
+}
+
+\p{\strong{Skill Name}: glamorous-gay \strong{Type}: IDE Integration / Visualization \strong{Trit}: +1 (PLUS) \strong{Key Property}: Every object has a deterministic, reproducible color \strong{Status}: ✅ Production Ready}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The IDE molds to the problem. The colors reveal the structure. GF(3) conserves.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record effective inspector patterns}
+\li{\strong{REMEMBERING} (0): Connect visualizations across domains}
+\li{\strong{WORLDING} (+1): Create new moldable views}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

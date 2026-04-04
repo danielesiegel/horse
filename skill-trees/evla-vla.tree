@@ -1,0 +1,221 @@
+\title{Evla Vla}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{-1}
+
+\meta{description}{EdgeVLA - Open-source edge vision-language-action model for robotics. Standardizes Open-X Embodiment datasets for consistent VLA training and deployment.}
+
+\subtree{
+\title{EdgeVLA Skill}
+\p{\strong{Trit}: -1 (MINUS - analysis/verification) \strong{Color}: #DBA51D (Golden Yellow) \strong{URI}: skill://evla-vla#DBA51D}
+
+\subtree{
+\title{Overview}
+\p{EdgeVLA is an open-source edge vision-language-action model for robotics. It standardizes diverse robotics datasets from the Open-X Embodiment (OXE) collection for consistent training and deployment.}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌────────────────────────────────────────────────────────────────┐
+│                     EdgeVLA ARCHITECTURE                        │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              Open-X Embodiment Datasets                   │  │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐         │  │
+│  │  │ DROID   │ │ Bridge  │ │ LIBERO  │ │ RT-X    │ + 60... │  │
+│  │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘         │  │
+│  └───────┼───────────┼───────────┼───────────┼──────────────┘  │
+│          │           │           │           │                  │
+│          ▼           ▼           ▼           ▼                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │           OXE_DATASET_CONFIGS Standardization            │  │
+│  │  • image_obs_keys: primary, secondary, wrist cameras     │  │
+│  │  • state_encoding: POS_EULER, POS_QUAT, JOINT           │  │
+│  │  • action_encoding: EEF_POS, JOINT_POS                  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                  Unified Data Format                      │  │
+│  │  ┌─────────────────────────────────────────────────────┐ │  │
+│  │  │ Images: resized, normalized, multi-view             │ │  │
+│  │  │ States: 8-dim standardized proprioception           │ │  │
+│  │  │ Actions: 7-dim EEF or joint actions                 │ │  │
+│  │  └─────────────────────────────────────────────────────┘ │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                     VLA Model                             │  │
+│  │  Vision Encoder → Language Model → Action Decoder        │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Dataset Configuration}
+\pre{\startverb
+from evla.config import OXE_DATASET_CONFIGS, StateEncoding, ActionEncoding
+
+# DROID dataset configuration
+droid_config = OXE_DATASET_CONFIGS["droid"]
+# {
+#     "image_obs_keys": {
+#         "primary": "exterior_image_1_left",
+#         "secondary": "exterior_image_2_left",
+#         "wrist": "wrist_image_left",
+#     },
+#     "state_encoding": StateEncoding.POS_QUAT,
+#     "action_encoding": ActionEncoding.EEF_POS,
+# }
+
+# Bridge dataset configuration
+bridge_config = OXE_DATASET_CONFIGS["bridge"]
+# {
+#     "image_obs_keys": {
+#         "primary": "image_0",
+#         "wrist": "image_1",
+#     },
+#     "state_encoding": StateEncoding.POS_EULER,
+#     "action_encoding": ActionEncoding.EEF_POS,
+# }
+\stopverb}
+}
+
+\subtree{
+\title{Named Mixtures}
+\pre{\startverb
+from evla.config import OXE_NAMED_MIXTURES
+
+# Comprehensive multi-dataset training
+oxe_magic_soup = OXE_NAMED_MIXTURES["oxe_magic_soup"]
+
+# RT-X reproduction
+rtx_mixture = OXE_NAMED_MIXTURES["rtx"]
+
+# Custom mixture with weights
+custom_mixture = {
+    "droid": 1.0,
+    "bridge": 0.5,
+    "libero": 0.3,
+}
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+from evla import EdgeVLA, DataLoader
+
+# Load model
+model = EdgeVLA.from_pretrained("kscale/evla-base")
+
+# Create dataloader with mixture
+loader = DataLoader(
+    mixture="oxe_magic_soup",
+    batch_size=32,
+    image_size=(224, 224),
+)
+
+# Training loop
+for batch in loader:
+    images = batch["images"]  # (B, V, H, W, C)
+    states = batch["states"]  # (B, 8)
+    actions = batch["actions"]  # (B, 7)
+    
+    loss = model.train_step(images, states, actions)
+
+# Inference
+with torch.no_grad():
+    image = camera.capture()
+    state = robot.get_state()
+    action = model.predict(image, state, "pick up the red block")
+    robot.execute(action)
+\stopverb}
+}
+
+\subtree{
+\title{Key Contributors}
+\ul{
+\li{\strong{budzianowski}: Core architecture, dataset configs, finetuning}
+\li{\strong{moojink}: LIBERO eval, dataset transforms}
+\li{\strong{WT-MM}: README, integration}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\p{This skill participates in balanced triads:}
+
+\pre{\startverb
+evla-vla (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+ksim-rl (-1) ⊗ topos-generate (+1) ⊗ evla-vla (-1) = needs balancing
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb kos-firmware\stopverb} (+1): Robot firmware for deployment}
+\li{\code{\startverb ksim-rl\stopverb} (-1): RL training for locomotion}
+\li{\code{\startverb kbot-humanoid\stopverb} (-1): K-Bot configuration}
+\li{\code{\startverb mujoco-scenes\stopverb} (0): Scene composition}
+}
+}
+
+\subtree{
+\title{References}
+\pre{\startverb
+@misc{evla2024,
+  title={EdgeVLA: Open-Source Edge Vision-Language-Action Model},
+  author={K-Scale Labs},
+  year={2024},
+  url={https://github.com/kscalelabs/evla}
+}
+
+@article{openvla2024,
+  title={OpenVLA: An Open-Source Vision-Language-Action Model},
+  author={Kim, Moo Jin and others},
+  journal={arXiv:2406.09246},
+  year={2024}
+}
+\stopverb}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 5. Evaluation}
+\p{\strong{Concepts}: eval, apply, interpreter, environment}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+evla-vla (−) + SDF.Ch5 (−) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch2: Domain-Specific Languages}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Evaluation interprets expressions. This skill processes or generates evaluable forms.}
+}
+}
+}

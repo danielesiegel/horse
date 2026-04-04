@@ -1,0 +1,109 @@
+\title{Detecting Email Forwarding Rules Attack}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{mitre-attack}
+
+\tag{email-forwarding}
+
+\tag{persistence}
+
+\tag{bec}
+
+\tag{t1114}
+
+\tag{proactive-detection}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect malicious email forwarding rules created by adversaries to maintain persistent access to email communications for intelligence collection and BEC attacks.}
+
+\subtree{
+\title{Detecting Email Forwarding Rules Attack}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When proactively hunting for indicators of detecting email forwarding rules attack in the environment}
+\li{After threat intelligence indicates active campaigns using these techniques}
+\li{During incident response to scope compromise related to these techniques}
+\li{When EDR or SIEM alerts trigger on related indicators}
+\li{During periodic security assessments and purple team exercises}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{EDR platform with process and network telemetry (CrowdStrike, MDE, SentinelOne)}
+\li{SIEM with relevant log data ingested (Splunk, Elastic, Sentinel)}
+\li{Sysmon deployed with comprehensive configuration}
+\li{Windows Security Event Log forwarding enabled}
+\li{Threat intelligence feeds for IOC correlation}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Formulate Hypothesis}: Define a testable hypothesis based on threat intelligence or ATT&CK gap analysis.}
+\li{\strong{Identify Data Sources}: Determine which logs and telemetry are needed to validate or refute the hypothesis.}
+\li{\strong{Execute Queries}: Run detection queries against SIEM and EDR platforms to collect relevant events.}
+\li{\strong{Analyze Results}: Examine query results for anomalies, correlating across multiple data sources.}
+\li{\strong{Validate Findings}: Distinguish true positives from false positives through contextual analysis.}
+\li{\strong{Correlate Activity}: Link findings to broader attack chains and threat actor TTPs.}
+\li{\strong{Document and Report}: Record findings, update detection rules, and recommend response actions.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| T1114.003 | Email Forwarding Rule |
+| T1114.002 | Remote Email Collection |
+| T1098.002 | Additional Email Delegate Permissions |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| CrowdStrike Falcon | EDR telemetry and threat detection |
+| Microsoft Defender for Endpoint | Advanced hunting with KQL |
+| Splunk Enterprise | SIEM log analysis with SPL queries |
+| Elastic Security | Detection rules and investigation timeline |
+| Sysmon | Detailed Windows event monitoring |
+| Velociraptor | Endpoint artifact collection and hunting |
+| Sigma Rules | Cross-platform detection rule format |
+\stopverb}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{Scenario 1}: BEC actor creating forwarding rule to external email}
+\li{\strong{Scenario 2}: Compromised account with rule deleting security alerts}
+\li{\strong{Scenario 3}: Inbox rule forwarding CEO emails to attacker mailbox}
+\li{\strong{Scenario 4}: OAuth app abuse creating transport rules for data collection}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-DETECT-[DATE]-[SEQ]
+Technique: T1114.003
+Host: [Hostname]
+User: [Account context]
+Evidence: [Log entries, process trees, network data]
+Risk Level: [Critical/High/Medium/Low]
+Confidence: [High/Medium/Low]
+Recommended Action: [Containment, investigation, monitoring]
+\stopverb}
+}
+}

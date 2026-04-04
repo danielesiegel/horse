@@ -1,0 +1,90 @@
+\title{Comfy Skills}
+
+\taxon{skill}
+
+\meta{description}{Manage and deploy ComfyUI workflow skills using the comfy-skills CLI.}
+
+\subtree{
+\title{Comfy Skills Manager}
+\subtree{
+\title{When to Use}
+\p{Use this skill when you need to:}
+
+\ul{
+\li{Find ComfyUI workflows or skills (e.g., for image generation, SDXL, etc.)}
+\li{Search for specific workflow capabilities}
+\li{Install ComfyUI workflows to use in the current environment}
+\li{Get information about available ComfyUI skills}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Do not use for general Python package management (use \code{\startverb uv\stopverb} or \code{\startverb pip\stopverb}).}
+\li{Do not use if you are looking for Agent Skills (like this one), unless you are looking for \em{ComfyUI} specific skills.}
+}
+}
+
+\subtree{
+\title{Goal}
+\p{Enable the agent to discover and deploy ComfyUI workflows using the \code{\startverb uvx comfy-skills\stopverb} tool.}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{1) Discover Skills}
+\p{To see what skills are available or search for a specific one:}
+
+\pre{\startverb
+uvx comfy-skills list
+uvx comfy-skills search <query>
+\stopverb}
+}
+
+\subtree{
+\title{2) Inspect a Skill}
+\p{Before installing, check the details of a skill:}
+
+\pre{\startverb
+uvx comfy-skills info <skill-id>
+\stopverb}
+}
+
+\subtree{
+\title{3) Install a Skill}
+\p{To use a skill, install it.}
+
+\pre{\startverb
+uvx comfy-skills install <skill-id>
+\stopverb}
+
+\p{\strong{After installation:} The command will output the installation path, typically ending in \code{\startverb workflow.json\stopverb}. You can then load this workflow file to use it, or provide the path to the user.}
+
+\p{Example output: \code{\startverb Installed <skill> v<version> to <path>\stopverb} \code{\startverb Tell Claude: "Load the skill from <path>/workflow.json"\stopverb}}
+}
+
+\subtree{
+\title{4) Using the Installed Skill}
+\p{Once installed, you can read the \code{\startverb workflow.json\stopverb} to understand the nodes and connections.}
+}
+}
+
+\subtree{
+\title{Examples}
+\p{\strong{Search for SDXL skills:}}
+
+\pre{\startverb
+uvx comfy-skills search sdxl
+\stopverb}
+
+\p{\strong{Install and use:}}
+
+\pre{\startverb
+uvx comfy-skills install sdxl-generation
+# Output shows path, e.g., /Users/bob/.cache/comfy-skills/installed/sdxl-generation
+cat /Users/bob/.cache/comfy-skills/installed/sdxl-generation/workflow.json
+\stopverb}
+}
+}

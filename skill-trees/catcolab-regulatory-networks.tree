@@ -1,0 +1,239 @@
+\title{Catcolab Regulatory Networks}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{CatColab Regulatory Networks - signed graphs for molecular biology modeling gene regulatory networks with positive (activating) and negative (inhibiting) edges.}
+
+\subtree{
+\title{CatColab Regulatory Networks: Molecular Biology Modeling}
+\p{\strong{Trit}: -1 (MINUS - validator/inhibitor) \strong{Color}: Red (#DC143C)}
+
+\subtree{
+\title{Overview}
+\p{Regulatory Networks in CatColab model molecular interactions that control gene expression:}
+
+\ul{
+\li{\strong{Nodes}: Genes, proteins, RNA, metabolites}
+\li{\strong{Positive edges}: Activation/promotion (+)}
+\li{\strong{Negative edges}: Inhibition/repression (-)}
+}
+
+\p{These signed graphs capture the control logic of biological systems.}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\p{A regulatory network is a \strong{signed graph} or \strong{signed category}:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────┐
+│              REGULATORY NETWORK                      │
+├─────────────────────────────────────────────────────┤
+│  Nodes (Genes/Proteins):                             │
+│    GeneA, GeneB, GeneC, ProteinX                     │
+│                                                      │
+│  Positive Edges (Activation):                        │
+│    GeneA ──(+)──► GeneB                              │
+│    ProteinX ──(+)──► GeneC                           │
+│                                                      │
+│  Negative Edges (Inhibition):                        │
+│    GeneB ──(-)──► GeneC                              │
+│    GeneC ──(-)──► GeneA  (negative feedback)         │
+│                                                      │
+│  Motifs:                                             │
+│    Feedforward loop: A→B→C, A→C                      │
+│    Negative feedback: A→B→C⊣A                        │
+└─────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Double Theory}
+\pre{\startverb
+// Signed category double theory
+pub fn th_signed_category() -> DiscreteDblTheory {
+    let mut cat = FpCategory::new();
+
+    // Object type
+    cat.add_ob_generator(name("Node"));
+
+    // Morphism types (signed edges)
+    cat.add_mor_generator(name("Positive"), name("Node"), name("Node"));
+    cat.add_mor_generator(name("Negative"), name("Node"), name("Node"));
+
+    // Constraint: n ⊙ n = id (double negative = positive)
+    cat.add_equation(
+        compose(name("Negative"), name("Negative")),
+        identity(name("Node"))
+    );
+
+    cat.into()
+}
+\stopverb}
+}
+
+\subtree{
+\title{CatColab Implementation}
+\subtree{
+\title{Node Declaration}
+\pre{\startverb
+{
+  "type": "ObDecl",
+  "name": "p53",
+  "theory_type": "Node",
+  "description": "tumor suppressor protein"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Positive Regulation (Activation)}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "activates_apoptosis",
+  "dom": "p53",
+  "cod": "Bax",
+  "theory_type": "Positive",
+  "description": "p53 promotes apoptosis via Bax"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Negative Regulation (Inhibition)}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "inhibits_growth",
+  "dom": "p53",
+  "cod": "CyclinD",
+  "theory_type": "Negative",
+  "description": "p53 blocks cell cycle progression"
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Network Motifs}
+\subtree{
+\title{Feedforward Loop (FFL)}
+\pre{\startverb
+     GeneA
+    /     \
+   +       +
+  ↓         ↓
+GeneB ──+──► GeneC
+
+Type: Coherent (all positive)
+Function: Noise filtering, delay
+\stopverb}
+}
+
+\subtree{
+\title{Negative Feedback Loop}
+\pre{\startverb
+GeneA ──+──► GeneB ──+──► GeneC
+  ▲                        │
+  └────────(-)─────────────┘
+
+Function: Homeostasis, oscillation
+\stopverb}
+}
+
+\subtree{
+\title{Toggle Switch (Bistability)}
+\pre{\startverb
+GeneA ◄──(-)──► GeneB
+         ⇅
+       (-)
+
+Function: Binary cell fate decision
+\stopverb}
+}
+}
+
+\subtree{
+\title{Practical Examples}
+\subtree{
+\title{Example 1: p53 Tumor Suppressor Network}
+\pre{\startverb
+Nodes: p53, MDM2, ATM, Bax, p21
+
+Edges:
+  ATM ──(+)──► p53       (DNA damage activates p53)
+  p53 ──(+)──► MDM2      (p53 induces its own inhibitor)
+  MDM2 ──(-)──► p53      (MDM2 degrades p53)
+  p53 ──(+)──► Bax       (p53 promotes apoptosis)
+  p53 ──(+)──► p21       (p53 arrests cell cycle)
+
+Motif: p53-MDM2 negative feedback loop
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Lac Operon}
+\pre{\startverb
+Nodes: LacI, LacZ, Lactose, Glucose
+
+Edges:
+  LacI ──(-)──► LacZ     (repressor blocks transcription)
+  Lactose ──(-)──► LacI  (lactose inactivates repressor)
+  Glucose ──(-)──► LacZ  (catabolite repression)
+
+Function: Metabolic switch for sugar utilization
+\stopverb}
+}
+}
+
+\subtree{
+\title{Analysis Capabilities}
+\p{CatColab can analyze regulatory networks for:}
+
+\ul{
+\li{\strong{Steady states}: Fixed points of the dynamics}
+\li{\strong{Stability}: Eigenvalue analysis of Jacobian}
+\li{\strong{Motif enrichment}: Statistical over-representation}
+\li{\strong{Boolean dynamics}: Logical model simulation}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+catcolab-regulatory-networks (-1) ⊗ topos-catcolab (0) ⊗ catcolab-stock-flow (+1) = 0 ✓
+crn-topology (-1) ⊗ catcolab-regulatory-networks (0) ⊗ alife (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Create regulatory network
+just catcolab-new regulatory "p53-network"
+
+# Analyze motifs
+just catcolab-analyze p53-network --motifs
+
+# Export to SBML
+just catcolab-export p53-network --format=sbml
+
+# Simulate Boolean dynamics
+just catcolab-simulate p53-network --boolean
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Alon (2007) "Network motifs: theory and experimental approaches"}
+\li{Karlebach & Shamir (2008) "Modelling and analysis of gene regulatory networks"}
+\li{[CatColab Regulatory Networks Help](https://catcolab.org/help/logics/regulatory)}
+}
+
+\p{\strong{Skill Name}: catcolab-regulatory-networks \strong{Type}: Systems Biology / Gene Regulation \strong{Trit}: -1 (MINUS) \strong{GF(3)}: Conserved via triadic composition}
+}
+}

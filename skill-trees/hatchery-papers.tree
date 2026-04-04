@@ -1,0 +1,232 @@
+\title{Hatchery Papers}
+
+\taxon{skill}
+
+\meta{description}{Chicken Scheme Hatchery eggs and academic papers for color logic, 2TDX,}
+
+\subtree{
+\title{Hatchery & Papers: Research Resources}
+\subtree{
+\title{Chicken Scheme Hatchery Eggs}
+\p{Relevant eggs from http://wiki.call-cc.org/ and https://eggs.call-cc.org/:}
+
+\subtree{
+\title{Core SRFIs (Built-in)}
+\pre{\startverb
+| SRFI | Name | Use |
+|------|------|-----|
+| SRFI-1 | List library | List operations |
+| SRFI-4 | Homogeneous vectors | Color arrays |
+| SRFI-9 | Records | Structured data |
+| SRFI-18 | Multithreading | Parallel color streams |
+| SRFI-27 | Random numbers | Base RNG |
+| SRFI-69 | Hash tables | Color caching |
+\stopverb}
+}
+
+\subtree{
+\title{SRFI-194: Random Data Generators (Final 2020)}
+\pre{\startverb
+;; From SRFI-194
+(import (srfi 194))
+
+;; Custom generator for SplitMixTernary
+(define (make-ternary-generator seed)
+  (let ((rng (make-splitmix64 seed)))
+    (lambda () (splitmix-ternary rng))))
+\stopverb}
+}
+
+\subtree{
+\title{Math Egg}
+\p{From https://wiki.call-cc.org/eggref/5/math:}
+
+\ul{
+\li{Random number generation}
+\li{Flonum operations}
+\li{Log-space arithmetic}
+}
+
+\pre{\startverb
+(import (math base))
+(import (math flonum))
+\stopverb}
+}
+
+\subtree{
+\title{Color/Graphics Eggs}
+\pre{\startverb
+| Egg | Description |
+|-----|-------------|
+| `colors` | Color space conversions |
+| `cairo` | Vector graphics |
+| `opengl` | 3D graphics |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Academic Papers}
+\subtree{
+\title{Colored Operads}
+\ol{
+\li{\strong{"Theta Theory: operads and coloring"} (Marcolli & Larson, 2025)}
+\li{arXiv:2503.06091}
+\li{Colored operad for theta theory}
+\li{Coloring algorithm for syntactic objects}
+\li{Merge operation with color filtering}
+}
+
+\ol{
+\li{\strong{"On the homotopy theory of equivariant colored operads"} (Bonventre & Pereira, 2021)}
+\li{arXiv:2004.01352}
+\li{Model structures on equivariant operads}
+\li{Weak equivalences by families of subgroups}
+\li{Norm map data}
+}
+
+\ol{
+\li{\strong{"Combinatorial Homotopy Theory for Operads"} (Obradović, 2019)}
+\li{arXiv:1906.06260}
+\li{Minimal model of colored operad O}
+\li{Hypergraph polytopes}
+\li{A∞-operad generalization}
+}
+
+\ol{
+\li{\strong{"Operads: Hopf algebras and coloured Koszul duality"} (van der Laan, 2004)}
+\li{Koszul duality for colored operads}
+\li{Hopf algebra structure}
+}
+}
+
+\subtree{
+\title{2-Dimensional Type Theory / Higher Observational Type Theory}
+\ol{
+\li{\strong{"Higher Observational Type Theory"} (Altenkirch, Kaposi, Shulman)}
+\li{nLab: https://ncatlab.org/nlab/show/higher+observational+type+theory}
+\li{Internal parametricity}
+\li{Displayed type theory}
+}
+
+\ol{
+\li{\strong{"Narya: A proof assistant for higher-dimensional type theory"} (Shulman et al., 2025)}
+\li{GitHub: https://github.com/mikeshulman/narya}
+\li{Higher observational type theory}
+\li{Interval-free proof assistant}
+\li{216 stars, active development}
+}
+
+\ol{
+\li{\strong{"2-dimensional TFTs via modular ∞-operads"} (Steinebrunner, 2025)}
+\li{arXiv:2506.22104}
+\li{Modular ∞-operads}
+\li{Cobordism categories}
+\li{Spectral sequences for moduli spaces}
+}
+}
+
+\subtree{
+\title{Spectral Gap & Mixing}
+\ol{
+\li{\strong{Ramanujan Graphs} (Lubotzky, Phillips, Sarnak)}
+\li{Spectral gap ≥ 2√q for (q+1)-regular graphs}
+\li{Optimal expanders for 3-coloring}
+}
+
+\ol{
+\li{\strong{"Mixing Time of Markov Chains"}}
+\li{Spectral gap λ determines mixing time O(1/λ)}
+\li{Our system: λ = 1/4, mixing time = 4}
+}
+}
+
+\subtree{
+\title{DisCoPy & Categorical Diagrams}
+\ol{
+\li{\strong{"DisCoPy: Monoidal Categories in Python"} (de Felice et al.)}
+\li{String diagrams}
+\li{Operad interface}
+\li{Quantum circuit compilation}
+}
+}
+}
+
+\subtree{
+\title{Integration Guide}
+\subtree{
+\title{Using Narya with gay.el}
+\pre{\startverb
+;; gay.el can interface with Narya for type checking
+;; Narya provides observational bridge types
+
+(require 'gay)
+
+;; Create bridge type with color observation
+(defun gay-narya-bridge (source target)
+  "Create Narya-style observational bridge."
+  (gay-bridge-create
+   :source source
+   :target target
+   :transport 'narya-transport
+   :color nil
+   :version 0))
+\stopverb}
+}
+
+\subtree{
+\title{Using Chicken with colored operads}
+\pre{\startverb
+;;; Colored operad implementation
+
+(define-record-type colored-operad
+  (make-colored-operad colors operations composition)
+  colored-operad?
+  (colors colored-operad-colors)
+  (operations colored-operad-operations)
+  (composition colored-operad-composition))
+
+;; GF(3) conservation as coloring constraint
+(define (gf3-colored-merge op1 op2)
+  (let ((c1 (operation-color op1))
+        (c2 (operation-color op2)))
+    (make-operation
+     (merge-trees (operation-tree op1) (operation-tree op2))
+     (modulo (- (+ c1 c2)) 3))))  ; Balance to 0
+\stopverb}
+}
+
+\subtree{
+\title{Using 2TDX shadows with operads}
+\p{The 3-shadow system maps to colored operad structure:}
+
+\pre{\startverb
+| Shadow | Polarity | Operad Color | Type Role |
+|--------|----------|--------------|-----------|
+| MINUS (-1) | Contravariant | Input | Domain |
+| ERGODIC (0) | Neutral | Identity | Transport |
+| PLUS (+1) | Covariant | Output | Codomain |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Research Directions}
+\ol{
+\li{\strong{Color logic soundness}: Prove GF(3) conservation implies type safety}
+\li{\strong{Spectral gap optimization}: Find optimal gap for faster mixing}
+\li{\strong{Operad composition}: Verify colored composition preserves invariants}
+\li{\strong{Narya integration}: Bridge observational types with color observations}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just chicken-eggs        # List installed eggs
+just install-math-egg    # Install math egg
+just narya-check         # Type check with Narya
+just operad-color        # Demonstrate colored operad
+\stopverb}
+}
+}

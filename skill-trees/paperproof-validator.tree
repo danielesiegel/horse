@@ -1,0 +1,740 @@
+\title{Paperproof Validator}
+
+\taxon{skill}
+
+\meta{description}{"Formal Proof Visualization and Verification for Lean 4"}
+
+\subtree{
+\title{paperproof-validator}
+\blockquote{Formal Proof Visualization and Verification for Lean 4}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: -1 (Validator - verifies proof correctness) \strong{Bundle}: verification \strong{Status}: ✅ New (Lean 4 theorem proof visualization) \strong{Repository}: [Paper-Proof/paperproof](https://github.com/Paper-Proof/paperproof)}
+
+\subtree{
+\title{Overview}
+\p{\strong{Paperproof Validator} transforms formal Lean 4 proofs into intuitive, paper-like visualizations. It bridges the gap between abstract formal proofs and human understanding by displaying how hypotheses and goals evolve throughout a proof.}
+
+\p{\strong{Key Innovation}: Makes formal proofs accessible by visualizing proof structure in a way that mirrors mathematical notation on paper.}
+
+\subtree{
+\title{What Paperproof Does}
+\p{Instead of abstract Lean code:}
+
+\pre{\startverb
+theorem example : P → Q := by
+  intro h
+  apply some_lemma
+  exact h.right
+\stopverb}
+
+\p{Paperproof shows:}
+
+\pre{\startverb
+┌─────────────────────────────────────┐
+│ Hypotheses (green nodes):           │
+│  - h : P                            │
+├─────────────────────────────────────┤
+│ Goal (red node):                    │
+│  - Q                                │
+├─────────────────────────────────────┤
+│ Tactics (transparent):              │
+│  - apply some_lemma                 │
+│  - exact h.right                    │
+└─────────────────────────────────────┘
+\stopverb}
+}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{Three Core Components}
+\subtree{
+\title{1. \strong{Lean 4 Library Integration}}
+\pre{\startverb
+import Paperproof
+
+theorem my_theorem : P ∧ Q → R := by
+  -- Paperproof automatically extracts proof state
+  intro ⟨hp, hq⟩
+  -- Visualization tracks hypotheses and goals
+  exact some_proof_term
+\stopverb}
+
+\p{\strong{Capabilities}:}
+
+\ul{
+\li{Integrates with Lean 4 InfoTree}
+\li{Extracts proof state at each tactic}
+\li{Provides proof metadata to VS Code extension}
+}
+}
+
+\subtree{
+\title{2. \strong{VS Code Extension}}
+\p{\strong{Responsibilities}:}
+
+\ul{
+\li{Tracks cursor position (detects which theorem is being visualized)}
+\li{Communicates with Lean server for proof data}
+\li{Hosts webview panel for visualization}
+\li{Provides commands and settings}
+\li{Bridges Lean InfoTree to React frontend}
+}
+
+\p{\strong{Commands}:}
+
+\pre{\startverb
+Paperproof: Open Paperproof Panel
+Paperproof: Show Current Theorem
+Paperproof: Export Proof as Image
+Paperproof: Settings
+\stopverb}
+
+\p{\strong{Architecture Flow}:}
+
+\pre{\startverb
+User Cursor on Theorem
+           ↓
+Selection Changed Event
+           ↓
+Request Proof Data from Lean Server
+           ↓
+Lean Server Returns InfoTree
+           ↓
+BetterParser (extract structure)
+           ↓
+Converter Service (optimize for visualization)
+           ↓
+Send to React Frontend
+           ↓
+Render Visual Proof Tree
+\stopverb}
+}
+
+\subtree{
+\title{3. \strong{React Frontend Visualization}}
+\p{\strong{Component Hierarchy}:}
+
+\pre{\startverb
+ProofTree (root)
+├── GlobalContext Provider
+├── Header (title, controls)
+└── BoxEl (variable scope container)
+    ├── Hypotheses Section
+    │   └── HypothesisNode (green)
+    │       └── Transparency = "in scope"
+    ├── Tactics Section
+    │   └── TacticNode (transparent, dashed border)
+    │       └── Arrows to related nodes
+    └── Goals Section
+        └── GoalNode (red)
+\stopverb}
+
+\p{\strong{Visual Cues}:}
+
+\ul{
+\li{\strong{Hypotheses}: Green nodes at the top}
+\li{\strong{Goals}: Red nodes at the bottom}
+\li{\strong{Tactics}: Transparent nodes with dashed borders}
+\li{\strong{Scope}: Nested boxes with darkening backgrounds}
+\li{\strong{Availability}: Node opacity indicates scope accessibility}
+}
+}
+}
+}
+
+\subtree{
+\title{Capabilities}
+\subtree{
+\title{1. visualize-proof-structure}
+\p{Display proof as hierarchical tree with visual nodes:}
+
+\pre{\startverb
+from paperproof_validator import PaperproofVisualizer
+
+visualizer = PaperproofVisualizer(
+    lean_file="example.lean",
+    theorem_name="my_theorem"
+)
+
+# Extract and render proof
+proof_visual = visualizer.visualize(
+    show_hypotheses=True,
+    show_goals=True,
+    show_tactics=True,
+    show_scopes=True
+)
+
+# Output: Interactive HTML/React visualization
+\stopverb}
+}
+
+\subtree{
+\title{2. extract-proof-metadata}
+\p{Pull structured proof information from Lean InfoTree:}
+
+\pre{\startverb
+-- Lean 4 code
+theorem and_comm (p q : Prop) : p ∧ q → q ∧ p := by
+  intro ⟨hp, hq⟩      -- Step 1: intro creates hypotheses
+  exact ⟨hq, hp⟩      -- Step 2: exact provides proof term
+\stopverb}
+
+\p{\strong{Extracted Structure}:}
+
+\pre{\startverb
+{
+  "theorem": "and_comm",
+  "steps": [
+    {
+      "tactic": "intro",
+      "hypotheses": [
+        {"name": "hp", "type": "p"},
+        {"name": "hq", "type": "q"}
+      ],
+      "goals": [{"type": "q ∧ p"}]
+    },
+    {
+      "tactic": "exact",
+      "hypotheses": [
+        {"name": "hp", "type": "p"},
+        {"name": "hq", "type": "q"}
+      ],
+      "goals": []
+    }
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{3. validate-proof-correctness}
+\p{Verify that proof reaches expected conclusion:}
+
+\pre{\startverb
+validation = visualizer.validate_proof(
+    expected_conclusion="Q"
+)
+
+if validation.passes:
+    print("✓ Proof correctly establishes Q")
+else:
+    print(f"✗ Proof does not establish Q")
+    print(f"  Final goal: {validation.final_goal}")
+\stopverb}
+}
+
+\subtree{
+\title{4. analyze-tactic-effects}
+\p{Show how each tactic transforms proof state:}
+
+\pre{\startverb
+analysis = visualizer.analyze_tactics()
+
+for step in analysis.steps:
+    print(f"\nTactic: {step.name}")
+    print(f"Hypotheses before: {step.hypotheses_before}")
+    print(f"Hypotheses after: {step.hypotheses_after}")
+    print(f"Goals before: {step.goals_before}")
+    print(f"Goals after: {step.goals_after}")
+    print(f"Variables in scope: {step.scope}")
+\stopverb}
+}
+
+\subtree{
+\title{5. support-multiple-proof-tactics}
+\p{Handle common Lean 4 tactics:}
+
+\pre{\startverb
+-- apply: Uses a hypothesis/lemma to transform goal
+theorem proof_with_apply : P → Q := by
+  intro hp
+  apply lemma_p_implies_q
+  exact hp
+
+-- have: Introduces intermediate hypothesis
+theorem proof_with_have : P → Q → R := by
+  intro hp hq
+  have h : X := lemma_from_p hp
+  apply lemma_h_q_to_r h hq
+
+-- induction: Proves by induction
+theorem induction_proof : ∀ n, P n := by
+  intro n
+  induction n with
+  | zero => exact base_case
+  | succ k ih => exact inductive_step k ih
+
+-- by_contra: Proof by contradiction
+theorem by_contra_proof : P := by
+  by_contra hnp
+  have : False := contradiction_from_not_p hnp
+  exact absurd this (by simp)
+
+-- cases: Case analysis
+theorem cases_proof : P := by
+  cases some_disjunction with
+  | left h => exact left_proof h
+  | right h => exact right_proof h
+\stopverb}
+
+\p{All tactics are visualized with their proof state transformations.}
+}
+
+\subtree{
+\title{6. export-proof-visualization}
+\p{Generate static or interactive proof representations:}
+
+\pre{\startverb
+# Export as interactive HTML
+visualizer.export_html("proof.html")
+
+# Export as static image (PNG/SVG)
+visualizer.export_image("proof.png", format="png")
+
+# Export as LaTeX (for papers)
+visualizer.export_latex("proof.tex")
+
+# Export as JSON (for programmatic use)
+visualizer.export_json("proof.json")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Lean 4 Ecosystem}
+\subtree{
+\title{Installation}
+\pre{\startverb
+# 1. Install VS Code Extension
+# Via VS Code Extensions marketplace: search "Paperproof"
+
+# 2. Add to Lean project (lakefile.toml)
+require paperproof from git
+  "https://github.com/Paper-Proof/paperproof.git"
+
+# 3. Update
+lake update
+
+# 4. Import in Lean files
+import Paperproof
+\stopverb}
+}
+
+\subtree{
+\title{Usage in Lean 4}
+\pre{\startverb
+import Paperproof
+
+-- Define a theorem
+theorem associativity : ∀ (a b c : Nat), (a + b) + c = a + (b + c) := by
+  intro a b c
+  -- When cursor is here, Paperproof shows:
+  -- - Hypotheses: a : Nat, b : Nat, c : Nat
+  -- - Goal: (a + b) + c = a + (b + c)
+  induction a with
+  | zero =>
+    -- Paperproof shows base case context
+    rfl
+  | succ k ih =>
+    -- Paperproof shows inductive step
+    -- - ih : (k + b) + c = k + (b + c) [inductive hypothesis]
+    simp [Nat.add_succ, ih]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Formal Proof Theory Background}
+\subtree{
+\title{Proof Trees and Natural Deduction}
+\p{Paperproof visualization is based on natural deduction systems:}
+
+\pre{\startverb
+Hypotheses (context)
+───────────────────────
+    | Tactics apply
+    | Goal transforms
+───────────────────────
+    Final conclusion
+\stopverb}
+}
+
+\subtree{
+\title{Gentzen Sequent Calculus Connection}
+\p{Paperproof extends traditional proof visualization with modern web technologies:}
+
+\p{\strong{Traditional Gentzen style}:}
+
+\pre{\startverb
+Γ ⊢ A    Γ ⊢ B
+──────────────────
+  Γ ⊢ A ∧ B
+\stopverb}
+
+\p{\strong{Paperproof visualization}:}
+
+\ul{
+\li{Shows Γ (hypotheses) visually}
+\li{Shows goals in red}
+\li{Shows proof steps with connecting arrows}
+\li{Indicates variable scope with nested boxes}
+}
+}
+
+\subtree{
+\title{Color Semantics}
+\pre{\startverb
+| Color | Element | Meaning |
+|-------|---------|---------|
+| Green | Hypotheses | Available facts in scope |
+| Red | Goals | Targets to prove |
+| Transparent | Tactics | Proof steps (white box) |
+| Dark gray | Scope boundaries | Variable scope nesting |
+| Opacity | Node visibility | Whether element is in scope |
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\subtree{
+\title{Trit Assignment}
+\p{\strong{Paperproof Validator}: -1 (MINUS - critical validator)}
+
+\p{Can form balanced triads with:}
+
+\p{\strong{Potential Triad (Formal Verification)}:}
+
+\pre{\startverb
+| Trit | Skill | Role |
+|------|-------|------|
+| -1 | **paperproof-validator** | Validates formal proofs |
+| 0 | proof-instrumentation | Tracks proof steps |
+| +1 | theorem-generator | Generates provable theorems |
+| **Sum** | **0 (mod 3)** | **✓ Conserved** |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Comparison with Other Proof Tools}
+\subtree{
+\title{vs. Lean Native REPL}
+\pre{\startverb
+| Aspect | Lean REPL | Paperproof |
+|--------|-----------|-----------|
+| **Visualization** | Text-based | Visual tree |
+| **Scope Tracking** | Implicit | Explicit boxes |
+| **Learning Curve** | Steep | Gentle |
+| **Understanding** | Abstract | Intuitive |
+| **Accessibility** | Expert-only | Beginner-friendly |
+\stopverb}
+}
+
+\subtree{
+\title{vs. Tactic State Window}
+\p{\strong{Tactic State (raw)}:}
+
+\pre{\startverb
+⊢ (0 + 0) + 0 = 0
+\stopverb}
+
+\p{\strong{Paperproof (visual)}:}
+
+\pre{\startverb
+┌─────────────────────────────┐
+│ Goal: (0 + 0) + 0 = 0       │
+│ (After simp)                │
+└─────────────────────────────┘
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration}
+\pre{\startverb
+# paperproof-validator.yaml
+visualization:
+  show_hypotheses: true
+  show_goals: true
+  show_tactics: true
+  show_scopes: true
+  show_arrows: true
+
+rendering:
+  color_scheme: dark        # or 'light'
+  node_size: medium         # small, medium, large
+  scope_nesting_depth: 5
+
+export:
+  formats: [html, png, svg, json, latex]
+  include_metadata: true
+
+lean_integration:
+  lean_version: "v4.0.0"
+  vscode_extension: true
+  webview_enabled: true
+\stopverb}
+}
+
+\subtree{
+\title{Example Workflow}
+\pre{\startverb
+# 1. Install extension
+# Open VS Code Extensions, search "Paperproof", click Install
+
+# 2. Add to Lean project
+# Edit lakefile.toml, add dependency
+
+# 3. Import in Lean file
+# Add: import Paperproof
+
+# 4. Open Paperproof panel
+# Cmd+Shift+P → "Paperproof: Open Panel"
+
+# 5. Click on theorem
+# Click on any 'theorem' or 'lemma' in editor
+
+# 6. View visualization
+# Paperproof shows interactive proof tree in side panel
+
+# 7. Export proof
+# Cmd+Shift+P → "Paperproof: Export Proof as Image"
+\stopverb}
+}
+
+\subtree{
+\title{Technical Implementation}
+\subtree{
+\title{BetterParser}
+\p{Converts Lean InfoTree (raw proof structure) to simplified representation:}
+
+\pre{\startverb
+Lean 4 InfoTree (complex, nested)
+        ↓
+   BetterParser
+        ↓
+Simplified Proof Structure (clean)
+        ↓
+   Converter
+        ↓
+React-Friendly Format
+        ↓
+Visual Rendering
+\stopverb}
+}
+
+\subtree{
+\title{Converter Service}
+\p{Optimizes proof structure for visualization:}
+
+\pre{\startverb
+# Input: Lean InfoTree
+lean_tree = {
+  "kind": "Tactic",
+  "name": "intro",
+  "children": [...]
+}
+
+# Process through converter
+visual_tree = convert_to_visual_format(lean_tree)
+# Output: { "type": "intro", "hypotheses": [...], "goals": [...] }
+
+# Pass to React
+render_to_webview(visual_tree)
+\stopverb}
+}
+
+\subtree{
+\title{VS Code Extension Communication}
+\pre{\startverb
+// VS Code Extension (TypeScript)
+vscode.window.onDidChangeTextEditorSelection((e) => {
+  const theorem_name = getSymbolAtCursor(e);
+
+  // Request proof from Lean server
+  const proof_data = getLeanProofData(theorem_name);
+
+  // Send to webview
+  webview.postMessage({
+    type: "updateProof",
+    data: proof_data
+  });
+});
+
+// React Webview receives message
+window.addEventListener("message", (event) => {
+  if (event.data.type === "updateProof") {
+    renderProofTree(event.data.data);
+  }
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{bisimulation-game} - Verifies equivalence of proofs}
+\li{\strong{langevin-dynamics-skill} - Analyzes proof dynamics}
+\li{\strong{fokker-planck-analyzer} - Validates proof convergence}
+\li{\strong{spi-parallel-verify} - Checks proof structure invariants}
+}
+}
+
+\subtree{
+\title{Learning Resources}
+\p{\strong{Examples from the wild}:}
+
+\ul{
+\li{Proofs from "Mathematics in Lean 4"}
+\li{Proofs from Mathlib4}
+\li{The Hitchhiker's Guide to Logical Verification}
+\li{Lean 4 tutorials and documentation}
+}
+
+\p{\strong{Tutorial Examples Included}:}
+
+\ul{
+\li{Natural deduction proofs}
+\li{Inductive proofs}
+\li{Proof by contradiction}
+\li{Case-by-case proofs}
+}
+}
+
+\subtree{
+\title{Development}
+\p{Paperproof is actively developed and welcomes contributions:}
+
+\ul{
+\li{\strong{Repository}: [GitHub - Paper-Proof/paperproof](https://github.com/Paper-Proof/paperproof)}
+\li{\strong{Issues & Discussion}: Open for feature requests and bug reports}
+\li{\strong{License}: Open source (check repository for details)}
+}
+
+\subtree{
+\title{Development Setup}
+\pre{\startverb
+# Clone repository
+git clone https://github.com/Paper-Proof/paperproof.git
+
+# Install dependencies
+npm install
+
+# Development environment
+# See repository for full setup guide
+
+# Build extension
+npm run build
+
+# Package for distribution
+npm run package
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example: Proving Commutativity of Addition}
+\subtree{
+\title{Lean 4 Proof}
+\pre{\startverb
+theorem add_comm (m n : Nat) : m + n = n + m := by
+  induction m with
+  | zero => simp
+  | succ k ih =>
+    rw [Nat.succ_add, Nat.add_succ, ih]
+\stopverb}
+}
+
+\subtree{
+\title{Paperproof Visualization}
+\p{\strong{Step 1: Base Case (zero)}}
+
+\pre{\startverb
+┌─────────────────────────────────────┐
+│ Hypotheses:                         │
+│  - n : Nat                          │
+├─────────────────────────────────────┤
+│ Goal: 0 + n = n + 0                 │
+├─────────────────────────────────────┤
+│ Tactic: simp                        │
+│ (simplifies by reflexivity)         │
+└─────────────────────────────────────┘
+\stopverb}
+
+\p{\strong{Step 2: Inductive Case (succ)}}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────┐
+│ Hypotheses:                                     │
+│  - k : Nat                                      │
+│  - n : Nat                                      │
+│  - ih : k + n = n + k  [inductive hypothesis]  │
+├─────────────────────────────────────────────────┤
+│ Goal: succ k + n = n + succ k                   │
+├─────────────────────────────────────────────────┤
+│ Tactics:                                        │
+│  - rw [Nat.succ_add]                            │
+│  - rw [Nat.add_succ]                            │
+│  - rw [ih]                                      │
+│ (rewrites transform goal to reflexivity)        │
+└─────────────────────────────────────────────────┘
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with AI Agents}
+\subtree{
+\title{Use in Plurigrid}
+\p{Paperproof Validator can integrate with AI agent learning:}
+
+\p{\strong{Agent learns by proving theorems}:}
+
+\pre{\startverb
+Agent Generates Theorem
+         ↓
+Lean 4 Verifies Proof
+         ↓
+Paperproof Visualizes Structure
+         ↓
+Agent Learns from Visualization
+\stopverb}
+
+\p{\strong{Feedback Loop}:}
+
+\pre{\startverb
+# Agent proposes proof
+proof_sketch = agent.propose_theorem_proof(statement)
+
+# Paperproof validates
+validation = paperproof.validate(proof_sketch)
+
+if validation.passes:
+    # Extract visualization for learning
+    structure = paperproof.extract_structure()
+    agent.update_knowledge(structure)
+else:
+    # Return error visualization to agent
+    agent.learn_from_error(validation.error_path)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Status & Roadmap}
+\p{✅ \strong{Current}: Lean 4 support, VS Code integration, proof visualization 🔄 \strong{Planned}:}
+
+\ul{
+\li{Proof search assistance}
+\li{Tactic suggestions based on goal}
+\li{Machine learning integration}
+\li{Export to LaTeX for papers}
+}
+
+\p{\strong{Skill Name}: paperproof-validator \strong{Type}: Formal Proof Visualization / Verification \strong{Trit}: -1 (MINUS - validator) \strong{Key Property}: Transforms formal proofs into intuitive paper-like visualizations \strong{Status}: ✅ Production Ready \strong{Repository}: [Paper-Proof/paperproof](https://github.com/Paper-Proof/paperproof) \strong{VS Code Extension}: Available in marketplace}
+}
+}

@@ -1,0 +1,412 @@
+\title{Invoice Organizer}
+
+\taxon{skill}
+
+\meta{description}{Automatically organizes invoices and receipts for tax preparation by}
+
+\subtree{
+\title{Invoice Organizer}
+\p{This skill transforms chaotic folders of invoices, receipts, and financial documents into a clean, tax-ready filing system without manual effort.}
+
+\subtree{
+\title{When to Use This Skill}
+\ul{
+\li{Preparing for tax season and need organized records}
+\li{Managing business expenses across multiple vendors}
+\li{Organizing receipts from a messy folder or email downloads}
+\li{Setting up automated invoice filing for ongoing bookkeeping}
+\li{Archiving financial records by year or category}
+\li{Reconciling expenses for reimbursement}
+\li{Preparing documentation for accountants}
+}
+}
+
+\subtree{
+\title{What This Skill Does}
+\ol{
+\li{\strong{Reads Invoice Content}: Extracts information from PDFs, images, and documents:}
+\li{Vendor/company name}
+\li{Invoice number}
+\li{Date}
+\li{Amount}
+\li{Product or service description}
+\li{Payment method}
+}
+
+\ol{
+\li{\strong{Renames Files Consistently}: Creates standardized filenames:}
+\li{Format: \code{\startverb YYYY-MM-DD Vendor - Invoice - ProductOrService.pdf\stopverb}}
+\li{Examples: \code{\startverb 2024-03-15 Adobe - Invoice - Creative Cloud.pdf\stopverb}}
+}
+
+\ol{
+\li{\strong{Organizes by Category}: Sorts into logical folders:}
+\li{By vendor}
+\li{By expense category (software, office, travel, etc.)}
+\li{By time period (year, quarter, month)}
+\li{By tax category (deductible, personal, etc.)}
+}
+
+\ol{
+\li{\strong{Handles Multiple Formats}: Works with:}
+\li{PDF invoices}
+\li{Scanned receipts (JPG, PNG)}
+\li{Email attachments}
+\li{Screenshots}
+\li{Bank statements}
+}
+
+\ol{
+\li{\strong{Maintains Originals}: Preserves original files while organizing copies}
+}
+}
+
+\subtree{
+\title{How to Use}
+\subtree{
+\title{Basic Usage}
+\p{Navigate to your messy invoice folder:}
+
+\pre{\startverb
+cd ~/Desktop/receipts-to-sort
+\stopverb}
+
+\p{Then ask Claude Code:}
+
+\pre{\startverb
+Organize these invoices for taxes
+\stopverb}
+
+\p{Or more specifically:}
+
+\pre{\startverb
+Read all invoices in this folder, rename them to 
+"YYYY-MM-DD Vendor - Invoice - Product.pdf" format, 
+and organize them by vendor
+\stopverb}
+}
+
+\subtree{
+\title{Advanced Organization}
+\pre{\startverb
+Organize these invoices:
+1. Extract date, vendor, and description from each file
+2. Rename to standard format
+3. Sort into folders by expense category (Software, Office, Travel, etc.)
+4. Create a CSV spreadsheet with all invoice details for my accountant
+\stopverb}
+}
+}
+
+\subtree{
+\title{Instructions}
+\p{When a user requests invoice organization:}
+
+\ol{
+\li{\strong{Scan the Folder}}
+\li{Total number of files}
+\li{File types}
+\li{Date range (if discernible from names)}
+\li{Current organization (or lack thereof)}
+}
+
+\ol{
+\li{\strong{Extract Information from Each File}}
+\li{Use text extraction to read invoice content}
+\li{Look for common patterns:}
+\li{"Invoice Date:", "Date:", "Issued:"}
+\li{"Invoice #:", "Invoice Number:"}
+\li{Company name (usually at top)}
+\li{"Amount Due:", "Total:", "Amount:"}
+\li{"Description:", "Service:", "Product:"}
+\li{Read visible text from images}
+\li{Identify vendor name (often at top)}
+\li{Look for date (common formats)}
+\li{Find total amount}
+\li{Use filename clues}
+\li{Check file creation/modification date}
+\li{Flag for manual review if critical info missing}
+}
+
+\ol{
+\li{\strong{Determine Organization Strategy}}
+\li{\strong{By Vendor} (Adobe/, Amazon/, Stripe/, etc.)}
+\li{\strong{By Category} (Software/, Office Supplies/, Travel/, etc.)}
+\li{\strong{By Date} (2024/Q1/, 2024/Q2/, etc.)}
+\li{\strong{By Tax Category} (Deductible/, Personal/, etc.)}
+\li{\strong{Custom} (describe your structure)}
+}
+
+\ol{
+\li{\strong{Create Standardized Filename}}
+\li{\code{\startverb 2024-03-15 Adobe - Invoice - Creative Cloud.pdf\stopverb}}
+\li{\code{\startverb 2024-01-10 Amazon - Receipt - Office Supplies.pdf\stopverb}}
+\li{\code{\startverb 2023-12-01 Stripe - Invoice - Monthly Payment Processing.pdf\stopverb}}
+\li{Remove special characters except hyphens}
+\li{Capitalize vendor names properly}
+\li{Keep descriptions concise but meaningful}
+\li{Use consistent date format (YYYY-MM-DD) for sorting}
+\li{Preserve original file extension}
+}
+
+\ol{
+\li{\strong{Execute Organization}}
+}
+
+\ol{
+\li{\strong{Generate Summary Report}}
+\li{Importing into accounting software}
+\li{Sharing with accountants}
+\li{Expense tracking and reporting}
+\li{Tax preparation}
+}
+
+\ol{
+\li{\strong{Provide Completion Summary}}
+\li{\strong{Processed}: [X] invoices}
+\li{\strong{Date range}: [earliest] to [latest]}
+\li{\strong{Total amount}: $[sum] (if amounts extracted)}
+\li{\strong{Vendors}: [Y] unique vendors}
+\li{\code{\startverb /Invoices/\stopverb} - Organized invoices}
+\li{\code{\startverb /Invoices/invoice-summary.csv\stopverb} - Spreadsheet for accounting}
+\li{\code{\startverb /Invoices/originals/\stopverb} - Original files (if copied)}
+\li{Review the \code{\startverb invoice-summary.csv\stopverb} file}
+\li{Check files in "Needs Review" folder}
+\li{Import CSV into your accounting software}
+\li{Set up auto-organization for future invoices}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Example 1: Tax Preparation (From Martin Merschroth)}
+\p{\strong{User}: "I have a messy folder of invoices for taxes. Sort them and rename properly."}
+
+\p{\strong{Process}:}
+
+\ol{
+\li{Scans folder: finds 147 PDFs and images}
+\li{Reads each invoice to extract:}
+\li{Date}
+\li{Vendor name}
+\li{Invoice number}
+\li{Product/service description}
+\li{Renames all files: \code{\startverb YYYY-MM-DD Vendor - Invoice - Product.pdf\stopverb}}
+\li{Organizes into: \code{\startverb 2024/Software/\stopverb}, \code{\startverb 2024/Travel/\stopverb}, etc.}
+\li{Creates \code{\startverb invoice-summary.csv\stopverb} for accountant}
+\li{Result: Tax-ready organized invoices in minutes}
+}
+}
+
+\subtree{
+\title{Example 2: Monthly Expense Reconciliation}
+\p{\strong{User}: "Organize my business receipts from last month by category."}
+
+\p{\strong{Output}:}
+
+\pre{\startverb
+# March 2024 Receipts Organized
+
+## By Category
+- Software & Tools: $847.32 (12 invoices)
+- Office Supplies: $234.18 (8 receipts)
+- Travel & Meals: $1,456.90 (15 receipts)
+- Professional Services: $2,500.00 (3 invoices)
+
+Total: $5,038.40
+
+All receipts renamed and filed in:
+`Business-Receipts/2024/03-March/[Category]/`
+
+CSV export: `march-2024-expenses.csv`
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Multi-Year Archive}
+\p{\strong{User}: "I have 3 years of random invoices. Organize them by year, then by vendor."}
+
+\p{\strong{Output}: Creates structure:}
+
+\pre{\startverb
+Invoices/
+├── 2022/
+│   ├── Adobe/
+│   ├── Amazon/
+│   └── ...
+├── 2023/
+│   ├── Adobe/
+│   ├── Amazon/
+│   └── ...
+└── 2024/
+    ├── Adobe/
+    ├── Amazon/
+    └── ...
+\stopverb}
+
+\p{Each file properly renamed with date and description.}
+}
+
+\subtree{
+\title{Example 4: Email Downloads Cleanup}
+\p{\strong{User}: "I download invoices from Gmail. They're all named 'invoice.pdf', 'invoice(1).pdf', etc. Fix this mess."}
+
+\p{\strong{Output}:}
+
+\pre{\startverb
+Found 89 files all named "invoice*.pdf"
+
+Reading each file to extract real information...
+
+Renamed examples:
+- invoice.pdf → 2024-03-15 Shopify - Invoice - Monthly Subscription.pdf
+- invoice(1).pdf → 2024-03-14 Google - Invoice - Workspace.pdf
+- invoice(2).pdf → 2024-03-10 Netlify - Invoice - Pro Plan.pdf
+
+All files renamed and organized by vendor.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Organization Patterns}
+\subtree{
+\title{By Vendor (Simple)}
+\pre{\startverb
+Invoices/
+├── Adobe/
+├── Amazon/
+├── Google/
+└── Microsoft/
+\stopverb}
+}
+
+\subtree{
+\title{By Year and Category (Tax-Friendly)}
+\pre{\startverb
+Invoices/
+├── 2023/
+│   ├── Software/
+│   ├── Hardware/
+│   ├── Services/
+│   └── Travel/
+└── 2024/
+    └── ...
+\stopverb}
+}
+
+\subtree{
+\title{By Quarter (Detailed Tracking)}
+\pre{\startverb
+Invoices/
+├── 2024/
+│   ├── Q1/
+│   │   ├── Software/
+│   │   ├── Office/
+│   │   └── Travel/
+│   └── Q2/
+│       └── ...
+\stopverb}
+}
+
+\subtree{
+\title{By Tax Category (Accountant-Ready)}
+\pre{\startverb
+Invoices/
+├── Deductible/
+│   ├── Software/
+│   ├── Office/
+│   └── Professional-Services/
+├── Partially-Deductible/
+│   └── Meals-Travel/
+└── Personal/
+\stopverb}
+}
+}
+
+\subtree{
+\title{Automation Setup}
+\p{For ongoing organization:}
+
+\pre{\startverb
+Create a script that watches my ~/Downloads/invoices folder 
+and auto-organizes any new invoice files using our standard 
+naming and folder structure.
+\stopverb}
+
+\p{This creates a persistent solution that organizes invoices as they arrive.}
+}
+
+\subtree{
+\title{Pro Tips}
+\ol{
+\li{\strong{Scan emails to PDF}: Use Preview or similar to save email invoices as PDFs first}
+\li{\strong{Consistent downloads}: Save all invoices to one folder for batch processing}
+\li{\strong{Monthly routine}: Organize invoices monthly, not annually}
+\li{\strong{Backup originals}: Keep original files before reorganizing}
+\li{\strong{Include amounts in CSV}: Useful for budget tracking}
+\li{\strong{Tag by deductibility}: Note which expenses are tax-deductible}
+\li{\strong{Keep receipts 7 years}: Standard audit period}
+}
+}
+
+\subtree{
+\title{Handling Special Cases}
+\subtree{
+\title{Missing Information}
+\p{If date/vendor can't be extracted:}
+
+\ul{
+\li{Flag file for manual review}
+\li{Use file modification date as fallback}
+\li{Create "Needs-Review/" folder}
+}
+}
+
+\subtree{
+\title{Duplicate Invoices}
+\p{If same invoice appears multiple times:}
+
+\ul{
+\li{Compare file hashes}
+\li{Keep highest quality version}
+\li{Note duplicates in summary}
+}
+}
+
+\subtree{
+\title{Multi-Page Invoices}
+\p{For invoices split across files:}
+
+\ul{
+\li{Merge PDFs if needed}
+\li{Use consistent naming for parts}
+\li{Note in CSV if invoice is split}
+}
+}
+
+\subtree{
+\title{Non-Standard Formats}
+\p{For unusual receipt formats:}
+
+\ul{
+\li{Extract what's possible}
+\li{Standardize what you can}
+\li{Flag for review if critical info missing}
+}
+}
+}
+
+\subtree{
+\title{Related Use Cases}
+\ul{
+\li{Creating expense reports for reimbursement}
+\li{Organizing bank statements}
+\li{Managing vendor contracts}
+\li{Archiving old financial records}
+\li{Preparing for audits}
+\li{Tracking subscription costs over time}
+}
+}
+}

@@ -1,0 +1,312 @@
+\title{Zig Syrup Propagator Interleave}
+
+\taxon{skill}
+
+\tag{zig-syrup}
+
+\tag{propagator}
+
+\tag{homotopy}
+
+\tag{continuation}
+
+\tag{agm}
+
+\tag{qrtp}
+
+\tag{bci}
+
+\tag{passport}
+
+\tag{geo}
+
+\tag{xev}
+
+\tag{gf3}
+
+\tag{interleave}
+
+\tag{air-gap}
+
+\tag{validator}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{-1}
+
+\meta{description}{Bridge layer connecting zig-syrup advanced computational modules (propagator networks, homotopy continuation, AGM belief revision, QRTP air-gapped transport, passport.gay identity, geo.zig spatial, xev_io async) to the ASI skill graph. Wires Radul-Sussman propagators, GF(3) trit trajectories, and scoped erasure decoding into BCI, abductive reasoning, and identity verification skills.}
+
+\subtree{
+\title{zig-syrup Advanced Modules x ASI Interleave}
+\p{VALIDATOR bridge (-1) connecting 7 zig-syrup computational modules to the ASI skill graph.}
+
+\subtree{
+\title{GF(3) Tripartite Tag}
+\p{\code{\startverb zig-syrup-propagator-interleave(-1) (x) propagator-network(0) (x) homotopy-continuation(+1) = 0\stopverb}}
+
+\p{Validation (-1) x Bridge (0) x Solution (+1) = balanced constraint propagation.}
+}
+
+\subtree{
+\title{Module Anatomy (DeepWiki: plurigrid/zig-syrup)}
+\subtree{
+\title{1. propagator.zig -- Radul-Sussman Propagator Networks}
+\pre{\startverb
+// CellValue: partial information lattice
+// Ordering: Nothing < Value < Contradiction
+pub fn CellValue(comptime T: type) type {
+    return union(enum) {
+        nothing,                              // unknown
+        value: T,                             // concrete
+        contradiction: struct { a: T, b: T }, // conflict
+    };
+}
+
+// latticeMerge: the join operation
+// Nothing -> adopts incoming
+// same Value -> idempotent
+// different Value -> Contradiction
+// Contradiction absorbs all
+pub fn latticeMerge(existing: CellValue(T), incoming: CellValue(T)) CellValue(T) { ... }
+\stopverb}
+
+\ul{
+\li{\strong{Cell}: holds CellValue + list of Propagator neighbors; alerts neighbors on change}
+\li{\strong{Propagator}: inputs from Cells, applies function, sets output Cells}
+\li{Bidirectional constraint propagation throughout the network}
+\li{Special propagator functions: \code{\startverb neurofeedback_gate\stopverb} (BCI), \code{\startverb adjacency_gate\stopverb} (spatial), \code{\startverb focus_brightness\stopverb}}
+\li{Connected to Orion Reed's "scoped propagators" concept}
+}
+}
+
+\subtree{
+\title{2. homotopy.zig -- Polynomial Homotopy Continuation}
+\pre{\startverb
+H(x, t) = (1 - t) * G(x) + t * F(x)
+\stopverb}
+
+\ul{
+\li{Deformation from start system G (known solutions) to target system F}
+\li{Complex number polynomial root tracking along paths}
+\li{GF(3) trit classification per solution path: stable(+1), saddle(0), unstable(-1)}
+\li{Integrates with syrup serialization (paths are Syrup-serializable)}
+\li{Integrates with continuation.zig for resumable pipeline execution}
+}
+}
+
+\subtree{
+\title{3. continuation.zig -- AGM Belief Revision + GF(3) Trit Arithmetic}
+\pre{\startverb
+const Belief = struct { proposition: []const u8, entrenchment: f64 };
+const BeliefSet = struct {
+    beliefs: std.ArrayList(Belief),
+    fn expand(self, b: Belief) void { ... }                // add without consistency check
+    fn contract(self, prop: []const u8) void { ... }       // remove belief + negation
+    fn revise(self, b: Belief) void {                      // Levi identity: (K - !p) + p
+        self.contract(negate(b.proposition));
+        self.expand(b);
+    }
+};
+
+const Trit = enum { minus, zero, plus };  // -1, 0, +1
+// Conserved across: serialization, transport, propagators, identity, BCI
+\stopverb}
+}
+
+\subtree{
+\title{4. QRTP -- QR Transfer Protocols (Air-Gapped Identity)}
+\ul{
+\li{Fountain-coded QR codes for data transfer across air gaps}
+\li{Each source block = Cell, each encoded block = Propagator}
+\li{Contradiction = transmission error detection}
+\li{"Scoped propagators applied to erasure decoding" (Orion Reed connection)}
+}
+}
+
+\subtree{
+\title{5. passport.gay -- Identity Protocol}
+\ul{
+\li{Homotopy continuity for liveness detection (deformation must be continuous)}
+\li{Generates GF(3) trit trajectories as identity fingerprints}
+\li{Identity proofs fountain-encoded into QR frames via QRTP for air-gapped verification}
+}
+}
+
+\subtree{
+\title{6. geo.zig -- Geographic Integration}
+\ul{
+\li{OLC (Open Location Code / Plus Codes) encoding/decoding}
+\li{Syrup serialization for geographic types: CodeArea, Coordinate, PlusCode}
+\li{Zero-copy coordinate handling with CID determinism for coordinates}
+\li{Spatial propagation via adjacency_gate in propagator.zig}
+}
+}
+
+\subtree{
+\title{7. xev_io -- Completion-Based Async I/O}
+\ul{
+\li{Async I/O for Syrup protocol via libxev}
+\li{Completion-based (not readiness-based): aligns with propagator "alert on change" model}
+\li{Drives the wire protocol layer for zig-syrup OCapN transport}
+}
+}
+}
+
+\subtree{
+\title{ASI Integration Points}
+\subtree{
+\title{propagator.zig <-> propagators skill}
+\p{Direct match. ASI \code{\startverb propagators\stopverb} skill provides the Radul-Sussman theory; \code{\startverb propagator.zig\stopverb} is the Zig implementation. CellValue lattice, bidirectional constraints, and scoped propagation patterns shared.}
+}
+
+\subtree{
+\title{neurofeedback_gate <-> reafference-corollary-discharge}
+\pre{\startverb
+fn neurofeedback_gate(focus: Cell(f32), brightness: Cell(f32)) Propagator {
+    // EEG focus level -> display brightness via propagator constraint
+}
+\stopverb}
+
+\p{Reafference = predicted sensory consequence of motor command. The neurofeedback_gate IS a corollary discharge: predicts brightness from focus. Wire to \code{\startverb unified-reafference\stopverb} skill.}
+}
+
+\subtree{
+\title{BCI propagator functions <-> bci-phenomenology}
+\ul{
+\li{8ch EEG -> focus level -> \code{\startverb CellValue(f32)\stopverb} -> \code{\startverb neurofeedback_gate\stopverb} -> brightness}
+\li{Fisher-Rao distance on EEG manifold -> trit classification via continuation.zig}
+\li{Phenomenal field as propagator network: each qualia = Cell, attention = Propagator}
+\li{\strong{ASI skills}: \code{\startverb bci-colored-operad\stopverb}, \code{\startverb sheaf-cohomology-bci\stopverb}}
+}
+}
+
+\subtree{
+\title{continuation.zig <-> abductive-monte-carlo}
+\p{AGM belief revision IS abductive reasoning:}
+
+\ul{
+\li{\code{\startverb expand\stopverb} = add hypothesis without consistency check (abduction)}
+\li{\code{\startverb contract\stopverb} = remove refuted hypothesis (contraction)}
+\li{\code{\startverb revise\stopverb} = Levi identity: contract negation, then expand (belief update)}
+\li{Trit tracks hypothesis status: minus=refuted, zero=suspended, plus=accepted}
+}
+}
+
+\subtree{
+\title{homotopy.zig <-> homotopy continuation skills, polynomial-dynamics}
+\ul{
+\li{Polynomial system solving for CRN equilibria (\code{\startverb crn-topology\stopverb})}
+\li{Solution path tracking with GF(3) classification}
+\li{Liveness detection for passport.gay (continuous deformation = alive)}
+\li{\strong{ASI skills}: \code{\startverb crn-topology\stopverb}, \code{\startverb turing-chemputer\stopverb}, \code{\startverb chemical-organization-theory\stopverb}}
+}
+}
+
+\subtree{
+\title{QRTP <-> proof-of-frog, merkle-proof-validation}
+\ul{
+\li{Fountain coding = erasure-resilient data transport (cf. Proof-of-Frog offline validation)}
+\li{QR air-gap verification = merkle proof without network connectivity}
+\li{Propagator-based decoder: each frame incrementally resolves Cells toward proof completion}
+\li{\strong{ASI skills}: \code{\startverb proof-of-frog\stopverb}, \code{\startverb spi-parallel-verify\stopverb}, \code{\startverb bisimulation-game\stopverb}}
+}
+}
+
+\subtree{
+\title{passport.gay <-> gay-integration, gay-monte-carlo}
+\ul{
+\li{GF(3) trit trajectories from homotopy paths = Gay.jl color fingerprints}
+\li{SplitMix64 seed from MAC -> color -> trit trajectory -> passport identity}
+\li{Conservation: sum of trit trajectory = 0 mod 3 (identity invariant)}
+\li{\strong{ASI skills}: \code{\startverb gay-mcp\stopverb}, \code{\startverb gay-monte-carlo\stopverb}, \code{\startverb splitmix-ternary\stopverb}, \code{\startverb gf3-pr-verify\stopverb}}
+}
+}
+
+\subtree{
+\title{geo.zig <-> osm-topology, geohash-coloring, duckdb-spatial}
+\ul{
+\li{OLC Plus Codes = spatial addressing for propagator networks}
+\li{Syrup-serialized coordinates feed adjacency_gate (spatial propagation)}
+\li{CID-deterministic coordinates enable content-addressed spatial data}
+\li{DuckDB spatial queries over Syrup-encoded geographic types}
+\li{\strong{ASI skills}: \code{\startverb osm-topology\stopverb}, \code{\startverb geohash-coloring\stopverb}, \code{\startverb duckdb-quadruple-interleave\stopverb}}
+}
+}
+
+\subtree{
+\title{xev_io <-> nashator, zig-syrup wire protocol}
+\ul{
+\li{libxev completion-based I/O drives zig-syrup OCapN transport layer}
+\li{Nashator (:9999) uses same wire format: 4-byte BE + JSON-RPC 2.0}
+\li{xev_io async patterns align with nashator's event loop}
+\li{\strong{ASI skills}: \code{\startverb nashator\stopverb} (~/i/nashator/), \code{\startverb zig-syrup\stopverb} (~/i/zig-syrup/)}
+}
+}
+}
+
+\subtree{
+\title{Gap Registry}
+\pre{\startverb
+| Gap ID | Module | Missing Capability | Candidate ASI Skills |
+|--------|--------|--------------------|---------------------|
+| G1 | propagator.zig | No dependent type checking on CellValue lattice | `type-checker`, `narya-proofs` |
+| G2 | homotopy.zig | No GPU-accelerated path tracking | `vibe-gpu`, `basin-gpu-game` |
+| G3 | continuation.zig | No persistent belief revision log (only in-memory) | `duckdb-timetravel`, `time-travel-crdt` |
+| G4 | QRTP | No forward error correction beyond fountain coding | `reed-solomon` (not yet exists) |
+| G5 | passport.gay | No revocation mechanism for compromised identities | `anoma-intents`, `aptos-gf3-society` |
+| G6 | geo.zig | No H3 hexagonal indexing (only OLC) | `geohash-coloring`, `low-discrepancy-sequences` |
+| G7 | xev_io | No TLS layer on async transport | `keychain-secure`, `constant-time-analysis` |
+| G8 | cross-module | No unified test harness across all 7 modules | `harness-writing`, `property-based-testing` |
+| G9 | propagator.zig | Scoped propagator formalization (Orion Reed) not proven | `proofgeneral-narya`, `formal-verification` |
+\stopverb}
+}
+
+\subtree{
+\title{Cross-Connection Map}
+\pre{\startverb
+propagator.zig
+  +-- neurofeedback_gate -> bci-phenomenology, reafference-corollary-discharge
+  +-- adjacency_gate     -> osm-topology, geohash-coloring (via geo.zig)
+  +-- QRTP fountain      -> air-gapped identity (passport.gay)
+  +-- scoped propagators -> abductive-monte-carlo constraint networks
+
+homotopy.zig
+  +-- polynomial solving  -> crn-topology, chemical-organization-theory
+  +-- GF(3) path trits    -> continuation.zig trit classification
+  +-- liveness detection  -> passport.gay identity proof
+
+continuation.zig
+  +-- AGM belief revision -> abductive-monte-carlo, dynamic-sufficiency
+  +-- GF(3) trit S=0      -> all layers (serialization -> transport -> BCI -> identity)
+  +-- resumable pipelines -> duckdb-timetravel, time-travel-crdt
+
+geo.zig
+  +-- OLC encoding        -> osm-topology, duckdb-spatial
+  +-- Syrup coordinates   -> adjacency_gate spatial propagation
+  +-- CID determinism     -> merkle-proof-validation
+
+xev_io
+  +-- libxev async        -> nashator event loop, zig-syrup wire protocol
+  +-- completion model    -> propagator "alert on change" alignment
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb propagators\stopverb} -- Radul-Sussman theory; CellValue lattice patterns}
+\li{\code{\startverb bci-colored-operad\stopverb} / \code{\startverb sheaf-cohomology-bci\stopverb} -- BCI <-> neurofeedback_gate}
+\li{\code{\startverb reafference-corollary-discharge\stopverb} -- corollary discharge <-> neurofeedback prediction}
+\li{\code{\startverb abductive-monte-carlo\stopverb} / \code{\startverb abductive-repl\stopverb} -- AGM belief revision integration}
+\li{\code{\startverb dynamic-sufficiency\stopverb} -- belief revision drives the 145-ref universal hub}
+\li{\code{\startverb crn-topology\stopverb} / \code{\startverb turing-chemputer\stopverb} -- homotopy.zig for CRN equilibrium solving}
+\li{\code{\startverb proof-of-frog\stopverb} / \code{\startverb merkle-proof-validation\stopverb} -- QRTP air-gapped verification}
+\li{\code{\startverb gay-integration\stopverb} / \code{\startverb gay-monte-carlo\stopverb} -- GF(3) trit trajectories, SplitMix64 identity}
+\li{\code{\startverb osm-topology\stopverb} / \code{\startverb geohash-coloring\stopverb} / \code{\startverb duckdb-spatial\stopverb} -- geo.zig spatial integration}
+\li{\code{\startverb nashator\stopverb} -- xev_io async patterns, wire protocol alignment}
+\li{\code{\startverb zig-syrup\stopverb} / \code{\startverb zig-programming\stopverb} -- parent skill; core OCapN serialization}
+\li{\code{\startverb splitmix-ternary\stopverb} -- trit stream generation for passport.gay}
+\li{\code{\startverb polynomial-dynamics\stopverb} -- homotopy continuation theory}
+}
+}
+}

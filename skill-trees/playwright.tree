@@ -1,0 +1,113 @@
+\title{Playwright}
+
+\taxon{skill}
+
+\meta{description}{Browser automation via Playwright MCP. Use for web scraping, taking screenshots, interacting with web pages, testing web UIs, and automating browser tasks. Headless browser support.}
+
+\subtree{
+\title{Playwright Browser Automation}
+\p{Control browsers via Playwright MCP server.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Web scraping and data extraction}
+\li{Taking screenshots of web pages}
+\li{Interacting with web UIs (clicking, typing, navigating)}
+\li{Testing web applications}
+\li{Automating browser-based workflows}
+\li{Filling forms and submitting data}
+}
+}
+
+\subtree{
+\title{Setup}
+\p{MCP server configured in \code{\startverb ~/.mcp.json\stopverb}:}
+
+\pre{\startverb
+{
+  "playwright": {
+    "command": "npx",
+    "args": ["-y", "@anthropic-ai/mcp-server-playwright"]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Common Tools}
+\subtree{
+\title{Navigation}
+\ul{
+\li{\code{\startverb navigate_page\stopverb} - Go to a URL}
+\li{\code{\startverb new_page\stopverb} - Open new browser tab}
+\li{\code{\startverb list_pages\stopverb} - Show open pages}
+}
+}
+
+\subtree{
+\title{Interaction}
+\ul{
+\li{\code{\startverb click\stopverb} - Click elements}
+\li{\code{\startverb fill\stopverb} - Type into input fields}
+\li{\code{\startverb select\stopverb} - Choose from dropdowns}
+\li{\code{\startverb press\stopverb} - Press keyboard keys}
+}
+}
+
+\subtree{
+\title{Capture}
+\ul{
+\li{\code{\startverb take_screenshot\stopverb} - Screenshot current page}
+\li{\code{\startverb get_page_content\stopverb} - Get page HTML}
+\li{\code{\startverb get_text\stopverb} - Extract visible text}
+}
+}
+
+\subtree{
+\title{Evaluation}
+\ul{
+\li{\code{\startverb evaluate\stopverb} - Run JavaScript in page context}
+}
+}
+}
+
+\subtree{
+\title{Example Workflows}
+\subtree{
+\title{Screenshot a Page}
+\ol{
+\li{\code{\startverb navigate_page(url="https://example.com")\stopverb}}
+\li{\code{\startverb take_screenshot()\stopverb}}
+}
+}
+
+\subtree{
+\title{Fill a Form}
+\ol{
+\li{\code{\startverb navigate_page(url="https://example.com/form")\stopverb}}
+\li{\code{\startverb fill(selector="#email", value="user@example.com")\stopverb}}
+\li{\code{\startverb fill(selector="#password", value="secret")\stopverb}}
+\li{\code{\startverb click(selector="button[type=submit]")\stopverb}}
+}
+}
+
+\subtree{
+\title{Extract Data}
+\ol{
+\li{\code{\startverb navigate_page(url="https://example.com/data")\stopverb}}
+\li{\code{\startverb get_text(selector=".results")\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Tips}
+\ul{
+\li{Use CSS selectors or XPath for element targeting}
+\li{Wait for page loads before interacting}
+\li{Browser runs headless by default}
+\li{Screenshots are useful for debugging}
+}
+}
+}

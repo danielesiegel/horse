@@ -1,0 +1,348 @@
+\title{Jo Clojure}
+
+\taxon{skill}
+
+\meta{description}{Clojure skill orchestration and polyglot bridge. Coordinates cross-language skill composition, manages JVM-based skills, and provides Clojure tooling integration. Use for skill coordination, polyglot composition, and Clojure ecosystem management.}
+
+\subtree{
+\title{jo-clojure - Polyglot Skill Coordinator}
+\subtree{
+\title{Overview}
+\p{\strong{jo-clojure} coordinates polyglot skill ecosystems using Clojure as the orchestration layer. It bridges JVM-based skills (Clojure, Babashka, Joker), provides skill composition abstractions, and manages cross-language capability routing.}
+
+\p{\strong{Role}: ERGODIC coordinator in triadic consensus - balances validation (joker) and generation (hy-regime) in skill pipelines.}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Set Up Clojure Tooling}
+\pre{\startverb
+# Check Clojure CLI installation
+clojure -version
+
+# Create/update project structure
+cd /Users/bob/i/boxxy
+clojure -X:deps tree
+
+# List available aliases
+clojure -X:deps list-aliases
+\stopverb}
+}
+
+\subtree{
+\title{Key Commands}
+\pre{\startverb
+# Start Clojure REPL
+clojure
+
+# Run a script
+clojure -X user/my-function :arg1 value1
+
+# Evaluate expression
+clojure -e '(+ 1 2 3)'
+
+# Run tests
+clojure -X:test
+\stopverb}
+}
+}
+
+\subtree{
+\title{Installation}
+\subtree{
+\title{1. Install Clojure CLI (if not already)}
+\pre{\startverb
+# macOS with Homebrew
+brew install clojure/tools/clojure
+
+# Or download from https://clojure.org/guides/install_clojure
+\stopverb}
+}
+
+\subtree{
+\title{2. Configure ~/.clojure/deps.edn}
+\p{The global deps.edn file coordinates all Clojure projects:}
+
+\pre{\startverb
+{
+  :aliases {
+    ;; Polyglot skill ecosystem
+    :skill-validate  {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}
+                                    clojure.spec.alpha {:mvn/version "0.2.207"}}}
+    :skill-test      {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}
+                                    expectations/clojure-test {:mvn/version "1.2.1"}}}
+    :skill-repl      {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}
+                                    nrepl/nrepl {:mvn/version "0.9.1"}
+                                    cider/cider-nrepl {:mvn/version "0.28.4"}}}
+
+    ;; Polyglot tools
+    :bb              {:extra-deps {org.babashka/babashka {:mvn/version "1.3.192"}}}
+    :joker           {:extra-deps {candelbp/joker {:mvn/version "0.15.7"}}}
+
+    ;; Color generation (Gay.jl integration)
+    :color-gen       {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}}}
+
+    ;; GF(3) skill validation
+    :gf3-validate    {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}
+                                    org.clojure/math.numeric-tower {:mvn/version "0.0.4"}}}
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Polyglot Skill Composition}
+\subtree{
+\title{Pattern 1: Validator → Coordinator → Generator}
+\pre{\startverb
+(defn triadic-skill-pipeline
+  "Compose three skills in GF(3) consensus."
+  [{:keys [validator coordinator generator]}]
+  (let [v-result (validator/run)
+        c-state (coordinator/process v-result)
+        g-output (generator/produce c-state)]
+    {:validation v-result
+     :coordination c-state
+     :generation g-output
+     :gf3-sum (+ (validator/trit)
+                 (coordinator/trit)
+                 (generator/trit))}))
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Skill to Color Mapping}
+\p{Uses Gay.jl deterministic color generation:}
+
+\pre{\startverb
+(defn skill->color
+  "Map skill name deterministically to color via splitmix RNG."
+  [skill-name seed]
+  (let [gen (SplitMixTernary. seed)
+        idx (hash skill-name)]
+    (gen/color-at idx)))
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Cross-Language Dispatch}
+\p{Routes to Clojure, Babashka, or compiled binaries:}
+
+\pre{\startverb
+(defmulti invoke-skill (fn [{:keys [language]}] language))
+
+(defmethod invoke-skill :clojure [spec]
+  (require (symbol (:module spec)))
+  (apply (resolve (symbol (:function spec))) (:args spec)))
+
+(defmethod invoke-skill :babashka [spec]
+  (shell/sh "bb" "-e" (:code spec)))
+
+(defmethod invoke-skill :go [spec]
+  (shell/sh (:binary spec) (concat (:flags spec))))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Skill Registry Operations}
+\subtree{
+\title{Reading Skill Metadata}
+\pre{\startverb
+(defn read-skill-properties [skill-dir]
+  "Extract SKILL.md frontmatter as Clojure map."
+  (let [skill-md (slurp (str skill-dir "/SKILL.md"))
+        [_ frontmatter _] (string/split skill-md #"---\n?" 3)
+        yaml (yaml/parse frontmatter)]
+    yaml))
+
+(defn list-all-skills [skills-root]
+  "Enumerate all skills with metadata."
+  (->> (io/file skills-root)
+       .listFiles
+       (filter #(.isDirectory %))
+       (map read-skill-properties)))
+\stopverb}
+}
+
+\subtree{
+\title{Validating GF(3) Balance}
+\pre{\startverb
+(defn validate-gf3-triad [skills-map]
+  "Check that three skills sum to 0 mod 3."
+  (let [trit-sum (->> skills-map
+                      vals
+                      (map #(get % :gf3-trit 0))
+                      (apply +))]
+    (= (mod trit-sum 3) 0)))
+
+(defn suggest-balancer [two-skills]
+  "Given two skills, find trit needed for third."
+  (let [current-sum (apply + (map #(get % :gf3-trit 0) two-skills))
+        needed (- (mod (- current-sum) 3))]
+    needed))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Clojure Tooling Setup}
+\subtree{
+\title{Project Structure}
+\pre{\startverb
+/Users/bob/i/boxxy/
+├── deps.edn                  # Global Clojure config
+├── skills/
+│   ├── jo-clojure/
+│   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   │   ├── skill_registry.clj    # Skill discovery
+│   │   │   ├── gf3_validator.clj     # GF(3) checking
+│   │   │   └── polyglot_dispatch.clj # Multi-language dispatch
+│   │   └── references/
+│   │       ├── CLOJURE_SETUP.md
+│   │       ├── SKILL_COMPOSITION.md
+│   │       └── GF3_SEMANTICS.md
+│   ├── joker-sims-parser/
+│   ├── hy-regime/
+│   └── zig-systems/
+└── .clojure/
+    ├── deps.edn              # User-level aliases
+    └── tools/                # Clojure tools
+\stopverb}
+}
+
+\subtree{
+\title{REPL Startup}
+\p{Create \code{\startverb ~/.clojure/repl-init.clj\stopverb}:}
+
+\pre{\startverb
+; Load commonly used skills
+(require '[clojure.java.io :as io])
+(require '[clojure.string :as str])
+(require '[clojure.pprint :as pp])
+
+(defn skills-dir []
+  "/Users/bob/i/boxxy/skills")
+
+(defn load-skill [name]
+  (println (format "Loading skill: %s" name)))
+
+(println "Boxxy skill coordinator ready")
+(println "  skills-dir    - show skills directory")
+(println "  load-skill    - load a skill by name")
+\stopverb}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{\strong{Coordinating multi-language skills}: Compose Go, Clojure, Hy, and Zig tools}
+\li{\strong{GF(3) validation}: Check that skill triads maintain conservation}
+\li{\strong{Skill discovery}: List and inspect available skills}
+\li{\strong{Dynamic dispatch}: Route to different implementations based on input}
+\li{\strong{JVM ecosystem integration}: Manage Clojure, Babashka, and other JVM tools}
+\li{\strong{REPL-based development}: Interactive skill testing and composition}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Simple single-language tasks (use language-specific skills directly)}
+\li{Performance-critical code (use native Go/Zig skills)}
+\li{Tasks not requiring triadic balance (simpler coordination systems exist)}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{jo-clojure is assigned \strong{trit = 0 (ERGODIC)} for coordinator role:}
+
+\pre{\startverb
+Validator (-1) + Coordinator (0) + Generator (+1) ≡ 0 (mod 3)
+ [joker]        [jo-clojure]      [hy-regime]
+\stopverb}
+
+\p{Ensures every triadic composition maintains GF(3) sum ≡ 0 (mod 3).}
+}
+
+\subtree{
+\title{Common Tasks}
+\subtree{
+\title{Load All Skills and Check Balance}
+\pre{\startverb
+(let [skills (skills/list-all-skills "/Users/bob/i/boxxy/skills")
+      trits (map :gf3-trit skills)]
+  (println "Total trits:" (apply + trits))
+  (println "Balanced?" (zero? (mod (apply + trits) 3))))
+\stopverb}
+}
+
+\subtree{
+\title{Compose Three Skills}
+\pre{\startverb
+(let [validator (skills/find "joker-sims-parser")
+      coordinator (skills/find "jo-clojure")
+      generator (skills/find "hy-regime")]
+  (triadic/validate-triad [validator coordinator generator])
+  (triadic/execute [validator coordinator generator] input-data))
+\stopverb}
+}
+
+\subtree{
+\title{Dynamic Skill Invocation}
+\pre{\startverb
+(invoke-skill {:language :go
+               :binary "/Users/bob/i/boxxy/bin/joker"
+               :flags ["parse" "save.sims3pack"]})
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{"command not found: clojure"}}
+
+\ul{
+\li{Install Clojure CLI: \code{\startverb brew install clojure/tools/clojure\stopverb}}
+\li{Verify: \code{\startverb clojure -version\stopverb}}
+}
+
+\p{\strong{Dependency resolution errors}}
+
+\ul{
+\li{Clear cache: \code{\startverb rm -rf ~/.m2/repository\stopverb}}
+\li{Update indices: \code{\startverb clojure -X:deps list-aliases\stopverb}}
+}
+
+\p{\strong{REPL not starting}}
+
+\ul{
+\li{Check Java version: \code{\startverb java -version\stopverb} (requires 11+)}
+\li{Verify Clojure: \code{\startverb clojure -e '(clojure-version)'\stopverb}}
+}
+
+\p{\strong{GF(3) validation failures}}
+
+\ul{
+\li{Check trit assignments in skill metadata}
+\li{Verify sum: \code{\startverb (+ -1 0 1)\stopverb} should equal 0}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Clojure Official Docs](https://clojure.org)}
+\li{[Clojure CLI Guide](https://clojure.org/guides/deps_and_cli)}
+\li{[deps.edn Reference](https://clojure.org/reference/deps_edn)}
+\li{[Babashka](https://github.com/babashka/babashka)}
+\li{[Joker (Clojure on GCP/Go)](https://github.com/candelbp/joker)}
+\li{[Gay.jl Color Generation](https://github.com/bmorphism/gay.jl)}
+}
+}
+}

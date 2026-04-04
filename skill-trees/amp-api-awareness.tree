@@ -1,0 +1,426 @@
+\title{Amp Api Awareness}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Extract hidden Amp API patterns from local thread data via DuckDB analysis}
+
+\subtree{
+\title{Amp API Awareness}
+\p{Discover Amp's undocumented API by mining local thread storage.}
+
+\subtree{
+\title{Data Sources}
+\pre{\startverb
+| Source | Path | Format |
+|--------|------|--------|
+| Threads | `~/.local/share/amp/threads/*.json` | JSON per thread |
+| History | `~/.claude/history.jsonl` | JSONL sessions |
+| Projects | `~/.claude/projects/*/*.jsonl` | JSONL per project |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Extraction}
+\subtree{
+\title{Count all threads}
+\pre{\startverb
+ls ~/.local/share/amp/threads/*.json | wc -l
+\stopverb}
+}
+
+\subtree{
+\title{Sample thread structure}
+\pre{\startverb
+cat ~/.local/share/amp/threads/T-*.json | head -1 | jq 'keys'
+# Expected: ["id", "title", "created", "updatedAt", "messages", ...]
+\stopverb}
+}
+
+\subtree{
+\title{DuckDB unified query}
+\pre{\startverb
+-- Load all threads
+CREATE TABLE amp_threads AS
+SELECT * FROM read_json('~/.local/share/amp/threads/*.json', 
+  columns={id: 'VARCHAR', title: 'VARCHAR', created: 'BIGINT', 
+           messages: 'JSON[]', creatorUserID: 'VARCHAR'},
+  ignore_errors=true);
+
+-- Extract message patterns
+SELECT 
+  id,
+  title,
+  len(messages) as msg_count,
+  abs(hash(id)) % 3 - 1 as trit
+FROM amp_threads
+ORDER BY created DESC
+LIMIT 20;
+\stopverb}
+}
+}
+
+\subtree{
+\title{API Discovery Patterns}
+\subtree{
+\title{1. Tool Usage Extraction}
+\pre{\startverb
+-- Find all tool invocations across threads
+SELECT 
+  json_extract_string(msg, '$.type') as msg_type,
+  json_extract_string(msg, '$.name') as tool_name,
+  count(*) as usage_count
+FROM amp_threads, unnest(messages) as t(msg)
+WHERE json_extract_string(msg, '$.type') = 'tool_use'
+GROUP BY 1, 2
+ORDER BY usage_count DESC;
+\stopverb}
+}
+
+\subtree{
+\title{2. MCP Server Detection}
+\pre{\startverb
+-- Extract MCP patterns from content
+SELECT DISTINCT
+  regexp_extract(content, 'mcp__([a-z_]+)__', 1) as mcp_server
+FROM (
+  SELECT json_extract_string(msg, '$.content') as content
+  FROM amp_threads, unnest(messages) as t(msg)
+)
+WHERE mcp_server IS NOT NULL;
+\stopverb}
+}
+
+\subtree{
+\title{3. Thread Schema Discovery}
+\pre{\startverb
+// TypeScript extraction from thread JSON
+interface AmpThread {
+  id: string;           // T-{uuid}
+  title: string;
+  created: number;      // Unix timestamp ms
+  updatedAt: string;    // ISO8601
+  creatorUserID: string;
+  messages: AmpMessage[];
+}
+
+interface AmpMessage {
+  role: 'user' | 'assistant';
+  content: ContentBlock[];
+}
+
+type ContentBlock = 
+  | { type: 'text'; text: string }
+  | { type: 'thinking'; thinking: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown }
+  | { type: 'tool_result'; tool_use_id: string; content: string };
+\stopverb}
+}
+}
+
+\subtree{
+\title{Full Statistics (2,424 threads, 118,951 messages)}
+\subtree{
+\title{Core Tools}
+\pre{\startverb
+| Tool | Invocations | Purpose |
+|------|-------------|---------|
+| `Bash` | 30,786 | Shell commands |
+| `Read` | 10,373 | File reading |
+| `edit_file` | 6,884 | File modification |
+| `create_file` | 5,373 | File creation |
+| `todo_write` | 3,862 | Task management |
+| `Grep` | 2,837 | Pattern search |
+| `skill` | 1,798 | Skill loading |
+| `Task` | 1,314 | Sub-agent dispatch |
+| `glob` | 1,121 | File patterns |
+| `mermaid` | 1,014 | Diagrams |
+| `find_thread` | 892 | Thread search |
+| `read_thread` | 834 | Thread content |
+\stopverb}
+}
+
+\subtree{
+\title{MCP Servers}
+\pre{\startverb
+| Server | Invocations | Top Function |
+|--------|-------------|--------------|
+| `firecrawl` | 1,715 | `firecrawl_scrape` (1,039) |
+| `exa` | 1,323 | `web_search_exa` (1,150) |
+| `gay` | 1,284 | `palette` (206), `next_color` (151) |
+| `deepwiki` | 405 | `ask_question` (241) |
+| `beeper` | 253 | `list_messages` (89) |
+| `radare2` | 135 | Binary analysis |
+| `huggingface` | 130 | ML model access |
+| `tree_sitter` | ~100 | AST queries |
+\stopverb}
+}
+
+\subtree{
+\title{Agent Modes}
+\ul{
+\li{\code{\startverb smart\stopverb}: 2,398 threads (99\%)}
+\li{\code{\startverb rush\stopverb}: 1 thread}
+\li{\code{\startverb nil\stopverb}: 25 threads}
+}
+}
+}
+
+\subtree{
+\title{Known Endpoints & APIs}
+\pre{\startverb
+| Endpoint/Command | Access | Notes |
+|------------------|--------|-------|
+| `ampcode.com/threads/T-*` | Public URL | Thread viewer |
+| `ampcode.com/settings` | Auth required | API key, account management |
+| `find_thread` tool | Agent API | Query by DSL, returns `creatorUserID` |
+| `read_thread` tool | Agent API | Extract thread content by goal |
+\stopverb}
+}
+
+\subtree{
+\title{CLI Commands}
+\pre{\startverb
+| Command | Purpose |
+|---------|---------|
+| `amp threads list` | Lists threads with ID, title, visibility, messages |
+| `amp threads share --visibility <v>` | Set: private, public, unlisted, workspace, group |
+| `amp threads share --support` | Share with Amp support for debugging |
+| `amp login` / `amp logout` | Auth management |
+| `amp skill list/add/remove` | Skill management |
+| `amp mcp list/add/remove` | MCP server configuration |
+\stopverb}
+}
+
+\subtree{
+\title{Visibility Levels}
+\pre{\startverb
+| Level | Description |
+|-------|-------------|
+| `private` | Only creator can see |
+| `workspace` | All workspace members can see |
+| `group` | Specific group access |
+| `public` | Anyone with link |
+| `unlisted` | Anyone with link (not indexed) |
+\stopverb}
+}
+
+\subtree{
+\title{User ID Format}
+\p{From \code{\startverb find_thread\stopverb} API:}
+
+\pre{\startverb
+creatorUserID: "user_01JZZT0P50CFR9XKKW8SXQ7J74"
+\stopverb}
+
+\ul{
+\li{Prefix: \code{\startverb user_\stopverb}}
+\li{Body: 26-char ULID-like identifier (TypeID format)}
+}
+}
+
+\subtree{
+\title{Workspace Member Discovery}
+\p{Query workspace threads to find all \code{\startverb creatorUserID\stopverb} values:}
+
+\pre{\startverb
+# Via find_thread DSL (repo: filter scopes to workspace)
+find_thread "repo:i after:30d"
+\stopverb}
+
+\p{Example: Two users discovered in workspace \code{\startverb i\stopverb}:}
+
+\pre{\startverb
+| User ID | Threads (7d) |
+|---------|--------------|
+| `user_01JZZT0P50CFR9XKKW8SXQ7J74` | 6 |
+| `user_01K5ESNNPKQ43J06VRC1TS5AX0` | 4 |
+\stopverb}
+}
+
+\subtree{
+\title{Local Storage}
+\pre{\startverb
+| Path | Contents |
+|------|----------|
+| `~/.local/share/amp/secrets.json` | API key (`apiKey@https://ampcode.com/`) |
+| `~/.local/share/amp/session.json` | Current `agentMode` |
+| `~/.local/share/amp/threads/*.json` | Thread JSON files |
+| `~/.config/amp/settings.json` | User preferences, MCP configs |
+\stopverb}
+}
+
+\subtree{
+\title{Environment Variables}
+\pre{\startverb
+| Variable | Purpose |
+|----------|---------|
+| `AMP_API_KEY` | Access token (overrides stored key) |
+| `AMP_URL` | Service URL (default: https://ampcode.com/) |
+| `AMP_SETTINGS_FILE` | Custom settings path |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Classification}
+\p{Threads are colored by hash:}
+
+\pre{\startverb
+abs(hash(id)) % 3 - 1 as trit
+-- -1 = MINUS (validation threads)
+--  0 = ERGODIC (coordination)
+-- +1 = PLUS (generation)
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Export to DuckDB
+duckdb amp-threads.duckdb -c "
+  CREATE TABLE threads AS 
+  SELECT * FROM read_json('~/.local/share/amp/threads/*.json', 
+    ignore_errors=true);
+"
+
+# Query patterns
+duckdb amp-threads.duckdb -c "
+  SELECT title, created FROM threads 
+  ORDER BY created DESC LIMIT 10;
+"
+\stopverb}
+}
+
+\subtree{
+\title{Underlying LLM Cost Estimates (Jan 2026)}
+\p{Amp uses multiple LLMs. Pricing per 1M tokens (input/output):}
+
+\subtree{
+\title{Claude 4.5 Series (Anthropic)}
+\pre{\startverb
+| Model | Input | Output | Cache Write | Cache Read | Context |
+|-------|-------|--------|-------------|------------|---------|
+| **Opus 4.5** | $5.00 | $25.00 | $6.25 | $0.50 | 200K |
+| **Sonnet 4.5** | $3.00 | $15.00 | $3.75 | $0.30 | 200K/1M |
+| **Haiku 4.5** | $1.00 | $5.00 | $1.25 | $0.10 | 200K |
+\stopverb}
+
+\p{\em{Sonnet 4.5 >200K context: $6/$22.50 per 1M tokens}}
+}
+
+\subtree{
+\title{Gemini 3 Series (Google)}
+\pre{\startverb
+| Model | Input | Output | Context |
+|-------|-------|--------|---------|
+| **Gemini 3 Pro** (≤200K) | $2.00 | $12.00 | 1M |
+| **Gemini 3 Pro** (>200K) | $4.00 | $18.00 | 1M |
+| **Gemini 3 Flash** | $0.50 | $3.00 | 1M |
+\stopverb}
+}
+
+\subtree{
+\title{Amp Mode → Model Mapping}
+\pre{\startverb
+| Mode | Primary Model | Cost Profile |
+|------|---------------|--------------|
+| `smart` | Claude Opus 4.5 | $5/$25 (flagship) |
+| `rush` | Claude Haiku 4.5 | $1/$5 (efficient) |
+| `large` | Extended context | +50-100% premium |
+\stopverb}
+}
+
+\subtree{
+\title{Thread Usage Distribution (from 2,424 threads)}
+\pre{\startverb
+| Model | Occurrences | Est. % Usage |
+|-------|-------------|--------------|
+| `claude-opus-4-5-20251101` | 2,312 | 95.4% |
+| `gemini-3-pro-preview` | 27 | 1.1% |
+| `claude-sonnet-4-20250514` | 5 | 0.2% |
+| `claude-haiku-4-5-20251001` | 1 | 0.04% |
+\stopverb}
+}
+
+\subtree{
+\title{Cost Optimizations Available}
+\pre{\startverb
+| Strategy | Savings | Notes |
+|----------|---------|-------|
+| **Prompt Caching** | Up to 90% | For repeated system prompts |
+| **Batch API** | 50% | Async processing |
+| **Rush Mode** | ~80% | Haiku vs Opus |
+| **Token Optimization** | Variable | Concise prompts |
+\stopverb}
+}
+
+\subtree{
+\title{Amp Pricing Pass-Through}
+\p{Amp passes LLM costs directly with \strong{no markup} for individuals/teams.}
+
+\ul{
+\li{\strong{Free tier}: $10/day grant (all modes including Opus 4.5)}
+\li{\strong{Enterprise}: +50\% over individual/team rates}
+}
+}
+
+\subtree{
+\title{Example Cost Calculation}
+\p{Typical thread (~50 messages, 100K tokens total):}
+
+\pre{\startverb
+Opus 4.5: ~$1.50/thread (50K in × $5 + 50K out × $25)
+Haiku 4.5: ~$0.30/thread (80% savings)
+Gemini 3 Pro: ~$0.70/thread (mid-tier)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb duckdb-ies\stopverb} - IES analytics layer}
+\li{\code{\startverb amp-team-usage\stopverb} - Team/session tracking}
+\li{\code{\startverb unified-reafference\stopverb} - Cross-agent session DB}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+amp-api-awareness (−) + SDF.Ch10 (+) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch2: Domain-Specific Languages}
+\li{Ch9: Generic Procedures}
+\li{Ch8: Degeneracy}
+\li{Ch4: Pattern Matching}
+\li{Ch5: Evaluation}
+\li{Ch6: Layering}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+}

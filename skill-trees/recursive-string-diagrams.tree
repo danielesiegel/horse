@@ -1,0 +1,142 @@
+\title{Recursive String Diagrams}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{recursive-string-diagrams}
+
+\subtree{
+\title{recursive-string-diagrams}
+\p{Recursive random string diagram generation with white trapezoid as the atomic skill primitive.}
+
+\subtree{
+\title{Primitives}
+\pre{\startverb
+| Symbol | Name | Meaning |
+|--------|------|---------|
+| `◁═══▷` | **White Trapezoid** | Skill = morphism with typed ports |
+| `∘` | Compose | Sequential skill chaining |
+| `⊗` | Tensor | Parallel skill execution |
+| `↺` | Trace | Feedback loop / recursion |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Trit Assignment}
+\p{Each white trapezoid carries a trit:}
+
+\ul{
+\li{\strong{MINUS (-1)}: Constraining/validating skill}
+\li{\strong{ERGODIC (0)}: Neutral/transforming skill}
+\li{\strong{PLUS (+1)}: Generating/expanding skill}
+}
+
+\p{Conservation: \code{\startverb Σ trits ≡ 0 (mod 3)\stopverb} across diagram}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+;; Generate random diagram depth 4
+(random-diagram 0 4)
+
+;; Render ASCII
+(render-ascii diagram 0)
+\stopverb}
+}
+
+\subtree{
+\title{Example Output}
+\pre{\startverb
+⊗ tensor
+  ↺ trace[1]
+    ◁═══▷ [3→2] ergodic
+  ∘ compose
+    ◁═══▷ [2→2] minus
+    ◁═══▷ [3→3] plus
+\stopverb}
+}
+
+\subtree{
+\title{Semantics (Rama Connection)}
+\pre{\startverb
+| String Diagram | Rama Primitive |
+|----------------|----------------|
+| White Trapezoid | ETL topology |
+| Compose (∘) | Depot chain |
+| Tensor (⊗) | Parallel PStates |
+| Trace (↺) | Recursive query |
+\stopverb}
+}
+
+\subtree{
+\title{DisCoPy Integration}
+\pre{\startverb
+from discopy import Ty, Box, Diagram
+
+# White trapezoid as Box
+skill = Box('skill', Ty('in'), Ty('out'))
+
+# Compose
+d1 >> d2
+
+# Tensor
+d1 @ d2
+
+# Trace
+d.trace(n)
+\stopverb}
+}
+
+\subtree{
+\title{Skill Creation Protocol}
+\ol{
+\li{\strong{Seed}: White trapezoid with \code{\startverb [inputs → outputs]\stopverb}}
+\li{\strong{Recurse}: Apply random \code{\startverb {∘, ⊗, ↺}\stopverb} up to depth}
+\li{\strong{Color}: Assign GF(3) trits, verify conservation}
+\li{\strong{Render}: ASCII or DisCoPy SVG}
+\li{\strong{Save}: Write to \code{\startverb ~/.claude/skills/<name>/SKILL.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Related}
+\ul{
+\li{\code{\startverb discopy\stopverb} - String diagram library}
+\li{\code{\startverb acsets\stopverb} - Algebraic databases}
+\li{\code{\startverb rama-gay-clojure\stopverb} - Rama + GF(3) colors}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 3. Variations on an Arithmetic Theme}
+\p{\strong{Concepts}: generic arithmetic, coercion, symbolic, numeric}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+recursive-string-diagrams (−) + SDF.Ch3 (○) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch1: Flexibility through Abstraction}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Generic arithmetic crosses type boundaries. This skill handles heterogeneous data.}
+}
+}
+}

@@ -1,0 +1,70 @@
+\title{Detecting Email Account Compromise}
+
+\taxon{skill}
+
+\tag{email-compromise}
+
+\tag{office365}
+
+\tag{microsoft-graph}
+
+\tag{bec}
+
+\tag{inbox-rules}
+
+\tag{sign-in-analysis}
+
+\tag{account-takeover}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect compromised O365 and Google Workspace email accounts by analyzing inbox rule creation, suspicious sign-in locations, mail forwarding rules, and unusual API access patterns via Microsoft Graph and audit logs.}
+
+\subtree{
+\title{Detecting Email Account Compromise}
+\subtree{
+\title{Overview}
+\p{Email account compromise (EAC) is a prevalent attack vector where adversaries gain unauthorized access to mailboxes to exfiltrate sensitive data, conduct business email compromise (BEC), or establish persistence through inbox rule manipulation. Attackers commonly create forwarding rules to siphon emails, delete rules to hide evidence, or use OAuth tokens for persistent access. Detection relies on analyzing Microsoft 365 Unified Audit Logs, Azure AD sign-in logs for impossible travel or suspicious locations, inbox rule creation events (Set-InboxRule, New-InboxRule), and Microsoft Graph API access patterns. Key indicators include forwarding rules to external addresses, rules that delete or move messages matching keywords like "invoice" or "payment", and sign-ins from unusual user agents such as python-requests.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting email account compromise}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Microsoft 365 with Unified Audit Logging enabled}
+\li{Azure AD P1/P2 for risk detection APIs}
+\li{Python 3.9+ with \code{\startverb requests\stopverb}, \code{\startverb msal\stopverb} libraries}
+\li{Microsoft Graph API application registration with Mail.Read, AuditLog.Read.All permissions}
+\li{Understanding of OAuth2 client credential flows}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Export audit logs or connect to Microsoft Graph API using MSAL authentication}
+\li{Query inbox rules for all monitored mailboxes via \code{\startverb /users/{id}/mailFolders/inbox/messageRules\stopverb}}
+\li{Analyze rules for external forwarding (ForwardTo, RedirectTo external addresses)}
+\li{Detect suspicious rule patterns: deletion rules, keyword-matching rules targeting financial terms}
+\li{Query sign-in logs via \code{\startverb /auditLogs/signIns\stopverb} for unusual locations and impossible travel}
+\li{Check for suspicious user agent strings (python-requests, PowerShell, curl)}
+\li{Identify OAuth application consent grants for suspicious third-party apps}
+\li{Correlate findings across users to detect campaign-level compromise}
+\li{Generate compromise indicators report with severity scores}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{A JSON report listing compromised or suspicious accounts, malicious inbox rules detected, impossible travel events, suspicious OAuth grants, and recommended containment actions with severity ratings.}
+}
+}

@@ -1,0 +1,243 @@
+\title{Catcolab Schemas}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{CatColab Schemas - database schema modeling distinguishing entities (tables) from attributes (columns). Foundation for ACSets (Attributed C-Sets) and AlgebraicJulia data structures.}
+
+\subtree{
+\title{CatColab Schemas: Database Schema Modeling}
+\p{\strong{Trit}: +1 (PLUS - generator) \strong{Color}: Green (#32CD32)}
+
+\subtree{
+\title{Overview}
+\p{Schemas in CatColab upgrade ologs by explicitly distinguishing:}
+
+\ul{
+\li{\strong{Entities}: Tables with identity (foreign key targets)}
+\li{\strong{Attributes}: Columns/properties (data values)}
+\li{\strong{Mappings}: Foreign key relationships}
+}
+
+\p{This is the foundation for \strong{ACSets} (Attributed C-Sets), the core data structure of AlgebraicJulia.}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\p{A schema is a \strong{profunctor} or displayed category:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────┐
+│                     SCHEMA                           │
+├─────────────────────────────────────────────────────┤
+│  Entities (Ob):                                      │
+│    Person, Company, Project                          │
+│                                                      │
+│  AttrTypes (Data):                                   │
+│    String, Int, Date, Bool                           │
+│                                                      │
+│  Mappings (Hom):                                     │
+│    works_at: Person → Company                        │
+│    leads: Person → Project                           │
+│                                                      │
+│  Attributes (Attr):                                  │
+│    name: Person → String                             │
+│    age: Person → Int                                 │
+│    founded: Company → Date                           │
+└─────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Double Theory}
+\pre{\startverb
+// Schema double theory in catlog
+pub fn th_schema() -> DiscreteDblTheory {
+    let mut cat = FpCategory::new();
+
+    // Object types
+    cat.add_ob_generator(name("Entity"));
+    cat.add_ob_generator(name("AttrType"));
+
+    // Morphism types
+    cat.add_mor_generator(name("Mapping"), name("Entity"), name("Entity"));
+    cat.add_mor_generator(name("Attr"), name("Entity"), name("AttrType"));
+
+    cat.into()
+}
+\stopverb}
+}
+
+\subtree{
+\title{CatColab Implementation}
+\subtree{
+\title{Entity Declaration}
+\pre{\startverb
+{
+  "type": "ObDecl",
+  "name": "Person",
+  "theory_type": "Entity",
+  "description": "people in the system"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Attribute Type Declaration}
+\pre{\startverb
+{
+  "type": "ObDecl",
+  "name": "String",
+  "theory_type": "AttrType",
+  "description": "text values"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Mapping (Foreign Key)}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "employer",
+  "dom": "Person",
+  "cod": "Company",
+  "theory_type": "Mapping",
+  "description": "the company this person works for"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Attribute (Column)}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "salary",
+  "dom": "Person",
+  "cod": "Int",
+  "theory_type": "Attr",
+  "description": "annual salary in dollars"
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{ACSet Connection}
+\p{A CatColab schema defines the type; an \strong{ACSet} is an instance:}
+
+\pre{\startverb
+# Schema defines structure
+@present SchPerson(FreeSchema) begin
+  Person::Ob
+  Company::Ob
+
+  employer::Hom(Person, Company)
+
+  Name::AttrType
+  name::Attr(Person, Name)
+end
+
+# ACSet populates data
+people = @acset SchPerson begin
+  Person = 3
+  Company = 2
+  employer = [1, 1, 2]
+  name = ["Alice", "Bob", "Charlie"]
+end
+\stopverb}
+}
+
+\subtree{
+\title{Practical Examples}
+\subtree{
+\title{Example 1: E-Commerce Schema}
+\pre{\startverb
+Entities: Customer, Order, Product, Category
+AttrTypes: String, Int, Float, DateTime
+
+Mappings:
+  placed_by: Order → Customer
+  contains: Order → Product (many-to-many via junction)
+  in_category: Product → Category
+
+Attributes:
+  email: Customer → String
+  total: Order → Float
+  price: Product → Float
+  name: Category → String
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Social Network}
+\pre{\startverb
+Entities: User, Post, Comment, Group
+AttrTypes: String, DateTime, Int
+
+Mappings:
+  author: Post → User
+  on_post: Comment → Post
+  member_of: User → Group
+
+Attributes:
+  username: User → String
+  content: Post → String
+  timestamp: Post → DateTime
+  likes: Post → Int
+\stopverb}
+}
+}
+
+\subtree{
+\title{Schema Composition}
+\p{Schemas compose via \strong{pullback} and \strong{pushout}:}
+
+\pre{\startverb
+     Schema A          Schema B
+         \               /
+          \   pullback  /
+           \           /
+            ▼         ▼
+          Schema A ×_C B
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+catcolab-ologs (-1) ⊗ topos-catcolab (0) ⊗ catcolab-schemas (+1) = 0 ✓
+database-design (-1) ⊗ acsets-relational-thinking (0) ⊗ catcolab-schemas (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Create schema
+just catcolab-new schema "my-database"
+
+# Generate Julia ACSet code
+just catcolab-export my-database --format=julia
+
+# Create instance (diagram)
+just catcolab-instance my-database "sample-data"
+
+# Migrate schema
+just catcolab-migrate old-schema new-schema
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Patterson et al. "Categorical data structures for technical computing" (2022)}
+\li{[AlgebraicJulia ACSets](https://algebraicjulia.github.io/ACSets.jl/)}
+\li{[CatColab Schema Help](https://catcolab.org/help/logics/schema)}
+}
+
+\p{\strong{Skill Name}: catcolab-schemas \strong{Type}: Database Schema Design \strong{Trit}: +1 (PLUS) \strong{GF(3)}: Conserved via triadic composition}
+}
+}

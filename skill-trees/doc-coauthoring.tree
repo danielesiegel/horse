@@ -1,0 +1,452 @@
+\title{Doc Coauthoring}
+
+\taxon{skill}
+
+\meta{description}{Guide users through a structured workflow for co-authoring documentation.}
+
+\subtree{
+\title{Doc Co-Authoring Workflow}
+\p{This skill provides a structured workflow for guiding users through collaborative document creation. Act as an active guide, walking users through three stages: Context Gathering, Refinement & Structure, and Reader Testing.}
+
+\subtree{
+\title{When to Offer This Workflow}
+\p{\strong{Trigger conditions:}}
+
+\ul{
+\li{User mentions writing documentation: "write a doc", "draft a proposal", "create a spec", "write up"}
+\li{User mentions specific doc types: "PRD", "design doc", "decision doc", "RFC"}
+\li{User seems to be starting a substantial writing task}
+}
+
+\p{\strong{Initial offer:} Offer the user a structured workflow for co-authoring the document. Explain the three stages:}
+
+\ol{
+\li{\strong{Context Gathering}: User provides all relevant context while Claude asks clarifying questions}
+\li{\strong{Refinement & Structure}: Iteratively build each section through brainstorming and editing}
+\li{\strong{Reader Testing}: Test the doc with a fresh Claude (no context) to catch blind spots before others read it}
+}
+
+\p{Explain that this approach helps ensure the doc works well when others read it (including when they paste it into Claude). Ask if they want to try this workflow or prefer to work freeform.}
+
+\p{If user declines, work freeform. If user accepts, proceed to Stage 1.}
+}
+
+\subtree{
+\title{Stage 1: Context Gathering}
+\p{\strong{Goal:} Close the gap between what the user knows and what Claude knows, enabling smart guidance later.}
+
+\subtree{
+\title{Initial Questions}
+\p{Start by asking the user for meta-context about the document:}
+
+\ol{
+\li{What type of document is this? (e.g., technical spec, decision doc, proposal)}
+\li{Who's the primary audience?}
+\li{What's the desired impact when someone reads this?}
+\li{Is there a template or specific format to follow?}
+\li{Any other constraints or context to know?}
+}
+
+\p{Inform them they can answer in shorthand or dump information however works best for them.}
+
+\p{\strong{If user provides a template or mentions a doc type:}}
+
+\ul{
+\li{Ask if they have a template document to share}
+\li{If they provide a link to a shared document, use the appropriate integration to fetch it}
+\li{If they provide a file, read it}
+}
+
+\p{\strong{If user mentions editing an existing shared document:}}
+
+\ul{
+\li{Use the appropriate integration to read the current state}
+\li{Check for images without alt-text}
+\li{If images exist without alt-text, explain that when others use Claude to understand the doc, Claude won't be able to see them. Ask if they want alt-text generated. If so, request they paste each image into chat for descriptive alt-text generation.}
+}
+}
+
+\subtree{
+\title{Info Dumping}
+\p{Once initial questions are answered, encourage the user to dump all the context they have. Request information such as:}
+
+\ul{
+\li{Background on the project/problem}
+\li{Related team discussions or shared documents}
+\li{Why alternative solutions aren't being used}
+\li{Organizational context (team dynamics, past incidents, politics)}
+\li{Timeline pressures or constraints}
+\li{Technical architecture or dependencies}
+\li{Stakeholder concerns}
+}
+
+\p{Advise them not to worry about organizing it - just get it all out. Offer multiple ways to provide context:}
+
+\ul{
+\li{Info dump stream-of-consciousness}
+\li{Point to team channels or threads to read}
+\li{Link to shared documents}
+}
+
+\p{\strong{If integrations are available} (e.g., Slack, Teams, Google Drive, SharePoint, or other MCP servers), mention that these can be used to pull in context directly.}
+
+\p{\strong{If no integrations are detected and in Claude.ai or Claude app:} Suggest they can enable connectors in their Claude settings to allow pulling context from messaging apps and document storage directly.}
+
+\p{Inform them clarifying questions will be asked once they've done their initial dump.}
+
+\p{\strong{During context gathering:}}
+
+\ul{
+\li{If user mentions team channels or shared documents:}
+\li{If integrations available: Inform them the content will be read now, then use the appropriate integration}
+\li{If integrations not available: Explain lack of access. Suggest they enable connectors in Claude settings, or paste the relevant content directly.}
+}
+
+\ul{
+\li{If user mentions entities/projects that are unknown:}
+\li{Ask if connected tools should be searched to learn more}
+\li{Wait for user confirmation before searching}
+}
+
+\ul{
+\li{As user provides context, track what's being learned and what's still unclear}
+}
+
+\p{\strong{Asking clarifying questions:}}
+
+\p{When user signals they've done their initial dump (or after substantial context provided), ask clarifying questions to ensure understanding:}
+
+\p{Generate 5-10 numbered questions based on gaps in the context.}
+
+\p{Inform them they can use shorthand to answer (e.g., "1: yes, 2: see #channel, 3: no because backwards compat"), link to more docs, point to channels to read, or just keep info-dumping. Whatever's most efficient for them.}
+
+\p{\strong{Exit condition:} Sufficient context has been gathered when questions show understanding - when edge cases and trade-offs can be asked about without needing basics explained.}
+
+\p{\strong{Transition:} Ask if there's any more context they want to provide at this stage, or if it's time to move on to drafting the document.}
+
+\p{If user wants to add more, let them. When ready, proceed to Stage 2.}
+}
+}
+
+\subtree{
+\title{Stage 2: Refinement & Structure}
+\p{\strong{Goal:} Build the document section by section through brainstorming, curation, and iterative refinement.}
+
+\p{\strong{Instructions to user:} Explain that the document will be built section by section. For each section:}
+
+\ol{
+\li{Clarifying questions will be asked about what to include}
+\li{5-20 options will be brainstormed}
+\li{User will indicate what to keep/remove/combine}
+\li{The section will be drafted}
+\li{It will be refined through surgical edits}
+}
+
+\p{Start with whichever section has the most unknowns (usually the core decision/proposal), then work through the rest.}
+
+\p{\strong{Section ordering:}}
+
+\p{If the document structure is clear: Ask which section they'd like to start with.}
+
+\p{Suggest starting with whichever section has the most unknowns. For decision docs, that's usually the core proposal. For specs, it's typically the technical approach. Summary sections are best left for last.}
+
+\p{If user doesn't know what sections they need: Based on the type of document and template, suggest 3-5 sections appropriate for the doc type.}
+
+\p{Ask if this structure works, or if they want to adjust it.}
+
+\p{\strong{Once structure is agreed:}}
+
+\p{Create the initial document structure with placeholder text for all sections.}
+
+\p{\strong{If access to artifacts is available:} Use \code{\startverb create_file\stopverb} to create an artifact. This gives both Claude and the user a scaffold to work from.}
+
+\p{Inform them that the initial structure with placeholders for all sections will be created.}
+
+\p{Create artifact with all section headers and brief placeholder text like "[To be written]" or "[Content here]".}
+
+\p{Provide the scaffold link and indicate it's time to fill in each section.}
+
+\p{\strong{If no access to artifacts:} Create a markdown file in the working directory. Name it appropriately (e.g., \code{\startverb decision-doc.md\stopverb}, \code{\startverb technical-spec.md\stopverb}).}
+
+\p{Inform them that the initial structure with placeholders for all sections will be created.}
+
+\p{Create file with all section headers and placeholder text.}
+
+\p{Confirm the filename has been created and indicate it's time to fill in each section.}
+
+\p{\strong{For each section:}}
+
+\subtree{
+\title{Step 1: Clarifying Questions}
+\p{Announce work will begin on the [SECTION NAME] section. Ask 5-10 clarifying questions about what should be included:}
+
+\p{Generate 5-10 specific questions based on context and section purpose.}
+
+\p{Inform them they can answer in shorthand or just indicate what's important to cover.}
+}
+
+\subtree{
+\title{Step 2: Brainstorming}
+\p{For the [SECTION NAME] section, brainstorm [5-20] things that might be included, depending on the section's complexity. Look for:}
+
+\ul{
+\li{Context shared that might have been forgotten}
+\li{Angles or considerations not yet mentioned}
+}
+
+\p{Generate 5-20 numbered options based on section complexity. At the end, offer to brainstorm more if they want additional options.}
+}
+
+\subtree{
+\title{Step 3: Curation}
+\p{Ask which points should be kept, removed, or combined. Request brief justifications to help learn priorities for the next sections.}
+
+\p{Provide examples:}
+
+\ul{
+\li{"Keep 1,4,7,9"}
+\li{"Remove 3 (duplicates 1)"}
+\li{"Remove 6 (audience already knows this)"}
+\li{"Combine 11 and 12"}
+}
+
+\p{\strong{If user gives freeform feedback} (e.g., "looks good" or "I like most of it but...") instead of numbered selections, extract their preferences and proceed. Parse what they want kept/removed/changed and apply it.}
+}
+
+\subtree{
+\title{Step 4: Gap Check}
+\p{Based on what they've selected, ask if there's anything important missing for the [SECTION NAME] section.}
+}
+
+\subtree{
+\title{Step 5: Drafting}
+\p{Use \code{\startverb str_replace\stopverb} to replace the placeholder text for this section with the actual drafted content.}
+
+\p{Announce the [SECTION NAME] section will be drafted now based on what they've selected.}
+
+\p{\strong{If using artifacts:} After drafting, provide a link to the artifact.}
+
+\p{Ask them to read through it and indicate what to change. Note that being specific helps learning for the next sections.}
+
+\p{\strong{If using a file (no artifacts):} After drafting, confirm completion.}
+
+\p{Inform them the [SECTION NAME] section has been drafted in [filename]. Ask them to read through it and indicate what to change. Note that being specific helps learning for the next sections.}
+
+\p{\strong{Key instruction for user (include when drafting the first section):} Provide a note: Instead of editing the doc directly, ask them to indicate what to change. This helps learning of their style for future sections. For example: "Remove the X bullet - already covered by Y" or "Make the third paragraph more concise".}
+}
+
+\subtree{
+\title{Step 6: Iterative Refinement}
+\p{As user provides feedback:}
+
+\ul{
+\li{Use \code{\startverb str_replace\stopverb} to make edits (never reprint the whole doc)}
+\li{\strong{If using artifacts:} Provide link to artifact after each edit}
+\li{\strong{If using files:} Just confirm edits are complete}
+\li{If user edits doc directly and asks to read it: mentally note the changes they made and keep them in mind for future sections (this shows their preferences)}
+}
+
+\p{\strong{Continue iterating} until user is satisfied with the section.}
+}
+
+\subtree{
+\title{Quality Checking}
+\p{After 3 consecutive iterations with no substantial changes, ask if anything can be removed without losing important information.}
+
+\p{When section is done, confirm [SECTION NAME] is complete. Ask if ready to move to the next section.}
+
+\p{\strong{Repeat for all sections.}}
+}
+
+\subtree{
+\title{Near Completion}
+\p{As approaching completion (80\%+ of sections done), announce intention to re-read the entire document and check for:}
+
+\ul{
+\li{Flow and consistency across sections}
+\li{Redundancy or contradictions}
+\li{Anything that feels like "slop" or generic filler}
+\li{Whether every sentence carries weight}
+}
+
+\p{Read entire document and provide feedback.}
+
+\p{\strong{When all sections are drafted and refined:} Announce all sections are drafted. Indicate intention to review the complete document one more time.}
+
+\p{Review for overall coherence, flow, completeness.}
+
+\p{Provide any final suggestions.}
+
+\p{Ask if ready to move to Reader Testing, or if they want to refine anything else.}
+}
+}
+
+\subtree{
+\title{Stage 3: Reader Testing}
+\p{\strong{Goal:} Test the document with a fresh Claude (no context bleed) to verify it works for readers.}
+
+\p{\strong{Instructions to user:} Explain that testing will now occur to see if the document actually works for readers. This catches blind spots - things that make sense to the authors but might confuse others.}
+
+\subtree{
+\title{Testing Approach}
+\p{\strong{If access to sub-agents is available (e.g., in Claude Code):}}
+
+\p{Perform the testing directly without user involvement.}
+}
+
+\subtree{
+\title{Step 1: Predict Reader Questions}
+\p{Announce intention to predict what questions readers might ask when trying to discover this document.}
+
+\p{Generate 5-10 questions that readers would realistically ask.}
+}
+
+\subtree{
+\title{Step 2: Test with Sub-Agent}
+\p{Announce that these questions will be tested with a fresh Claude instance (no context from this conversation).}
+
+\p{For each question, invoke a sub-agent with just the document content and the question.}
+
+\p{Summarize what Reader Claude got right/wrong for each question.}
+}
+
+\subtree{
+\title{Step 3: Run Additional Checks}
+\p{Announce additional checks will be performed.}
+
+\p{Invoke sub-agent to check for ambiguity, false assumptions, contradictions.}
+
+\p{Summarize any issues found.}
+}
+
+\subtree{
+\title{Step 4: Report and Fix}
+\p{If issues found: Report that Reader Claude struggled with specific issues.}
+
+\p{List the specific issues.}
+
+\p{Indicate intention to fix these gaps.}
+
+\p{Loop back to refinement for problematic sections.}
+
+\p{\strong{If no access to sub-agents (e.g., claude.ai web interface):}}
+
+\p{The user will need to do the testing manually.}
+}
+
+\subtree{
+\title{Step 1: Predict Reader Questions}
+\p{Ask what questions people might ask when trying to discover this document. What would they type into Claude.ai?}
+
+\p{Generate 5-10 questions that readers would realistically ask.}
+}
+
+\subtree{
+\title{Step 2: Setup Testing}
+\p{Provide testing instructions:}
+
+\ol{
+\li{Open a fresh Claude conversation: https://claude.ai}
+\li{Paste or share the document content (if using a shared doc platform with connectors enabled, provide the link)}
+\li{Ask Reader Claude the generated questions}
+}
+
+\p{For each question, instruct Reader Claude to provide:}
+
+\ul{
+\li{The answer}
+\li{Whether anything was ambiguous or unclear}
+\li{What knowledge/context the doc assumes is already known}
+}
+
+\p{Check if Reader Claude gives correct answers or misinterprets anything.}
+}
+
+\subtree{
+\title{Step 3: Additional Checks}
+\p{Also ask Reader Claude:}
+
+\ul{
+\li{"What in this doc might be ambiguous or unclear to readers?"}
+\li{"What knowledge or context does this doc assume readers already have?"}
+\li{"Are there any internal contradictions or inconsistencies?"}
+}
+}
+
+\subtree{
+\title{Step 4: Iterate Based on Results}
+\p{Ask what Reader Claude got wrong or struggled with. Indicate intention to fix those gaps.}
+
+\p{Loop back to refinement for any problematic sections.}
+}
+
+\subtree{
+\title{Exit Condition (Both Approaches)}
+\p{When Reader Claude consistently answers questions correctly and doesn't surface new gaps or ambiguities, the doc is ready.}
+}
+}
+
+\subtree{
+\title{Final Review}
+\p{When Reader Testing passes: Announce the doc has passed Reader Claude testing. Before completion:}
+
+\ol{
+\li{Recommend they do a final read-through themselves - they own this document and are responsible for its quality}
+\li{Suggest double-checking any facts, links, or technical details}
+\li{Ask them to verify it achieves the impact they wanted}
+}
+
+\p{Ask if they want one more review, or if the work is done.}
+
+\p{\strong{If user wants final review, provide it. Otherwise:} Announce document completion. Provide a few final tips:}
+
+\ul{
+\li{Consider linking this conversation in an appendix so readers can see how the doc was developed}
+\li{Use appendices to provide depth without bloating the main doc}
+\li{Update the doc as feedback is received from real readers}
+}
+}
+
+\subtree{
+\title{Tips for Effective Guidance}
+\p{\strong{Tone:}}
+
+\ul{
+\li{Be direct and procedural}
+\li{Explain rationale briefly when it affects user behavior}
+\li{Don't try to "sell" the approach - just execute it}
+}
+
+\p{\strong{Handling Deviations:}}
+
+\ul{
+\li{If user wants to skip a stage: Ask if they want to skip this and write freeform}
+\li{If user seems frustrated: Acknowledge this is taking longer than expected. Suggest ways to move faster}
+\li{Always give user agency to adjust the process}
+}
+
+\p{\strong{Context Management:}}
+
+\ul{
+\li{Throughout, if context is missing on something mentioned, proactively ask}
+\li{Don't let gaps accumulate - address them as they come up}
+}
+
+\p{\strong{Artifact Management:}}
+
+\ul{
+\li{Use \code{\startverb create_file\stopverb} for drafting full sections}
+\li{Use \code{\startverb str_replace\stopverb} for all edits}
+\li{Provide artifact link after every change}
+\li{Never use artifacts for brainstorming lists - that's just conversation}
+}
+
+\p{\strong{Quality over Speed:}}
+
+\ul{
+\li{Don't rush through stages}
+\li{Each iteration should make meaningful improvements}
+\li{The goal is a document that actually works for readers}
+}
+}
+}

@@ -1,0 +1,139 @@
+\title{Deep Debug}
+
+\taxon{skill}
+
+\meta{description}{Multi-agent investigation for stubborn bugs. Triggers: going in circles debugging, complex bugs resisting normal debugging, symptoms don't match expectations, need parallel investigation, browser+API interaction bugs, deep investigation.}
+
+\subtree{
+\title{Deep Debug - Multi-Agent Investigation}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Going in circles -- multiple fix attempts, nothing works}
+\li{Browser + API interaction bugs -- need to see Network tab, console logs}
+\li{Symptoms don't match expectations -- something deeper is wrong}
+\li{Complex state management bugs -- React hooks, closures, race conditions}
+}
+}
+
+\subtree{
+\title{The Process}
+\subtree{
+\title{Phase 1: Gather Evidence (Before Hypothesizing)}
+\p{\strong{For browser-related bugs}, use Chrome MCP tools:}
+
+\pre{\startverb
+mcp__claude-in-chrome__read_network_requests  // duplicates, failures, timing
+mcp__claude-in-chrome__read_console_messages  // errors, warnings, debug output
+mcp__claude-in-chrome__read_page              // page state
+\stopverb}
+
+\p{\strong{For backend bugs}, gather: error logs, stack traces, request/response payloads, database query logs, timing information.}
+}
+
+\subtree{
+\title{Phase 2: Launch Parallel Investigation (3 Agents)}
+\subtree{
+\title{Agent 1: Execution Tracer (debugger)}
+\pre{\startverb
+Task(subagent_type="debugger", prompt="""
+EVIDENCE: [paste network/console evidence]
+
+Trace the execution path that leads to this bug. Find:
+1. Where the bug originates
+2. What triggers it
+3. The exact line/function causing the issue
+
+Focus on TRACING, not guessing.
+""")
+\stopverb}
+}
+
+\subtree{
+\title{Agent 2: Pattern Analyzer (code-reviewer)}
+\pre{\startverb
+Task(subagent_type="code-reviewer", prompt="""
+EVIDENCE: [paste evidence]
+
+Review the relevant code for common bug patterns:
+- React useCallback/useMemo dependency issues
+- Stale closures
+- Race conditions
+- State update ordering
+- Missing error handling
+
+Find patterns that EXPLAIN the evidence.
+""")
+\stopverb}
+}
+
+\subtree{
+\title{Agent 3: Entry Point Mapper (Explore)}
+\pre{\startverb
+Task(subagent_type="Explore", prompt="""
+EVIDENCE: [paste evidence]
+
+Map all entry points that could trigger this behavior:
+- All places [function] is called
+- All event handlers involved
+- All state updates that affect this
+
+Find if something is being called MULTIPLE TIMES or from UNEXPECTED places.
+""")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Phase 3: Cross-Reference Findings}
+\pre{\startverb
+| Signal | Meaning |
+|--------|---------|
+| All 3 agree on root cause | High confidence -- fix it |
+| 2 agree, 1 different | Investigate the difference |
+| All 3 different | Need more evidence |
+\stopverb}
+}
+
+\subtree{
+\title{Phase 4: Verify Fix}
+\p{Re-gather the same evidence to confirm: network tab shows expected behavior, console has no errors, state updates correctly.}
+}
+}
+
+\subtree{
+\title{Real Example: Duplicate API Calls Bug}
+\p{\strong{Evidence}: Network tab showed 2 fetch requests for the same message.}
+
+\pre{\startverb
+| Agent | Finding |
+|-------|---------|
+| debugger | `state.messages` in useCallback deps causes callback recreation |
+| code-reviewer | Same finding + explained React pattern causing it |
+| Explore | Verified UI layer wasn't double-calling (ruled out) |
+\stopverb}
+
+\p{\strong{Root Cause}: \code{\startverb sendMessage\stopverb} useCallback had \code{\startverb state.messages\stopverb} in dependency array. Every state update recreated the callback, causing duplicate calls during re-renders.}
+
+\p{\strong{Fix}:}
+
+\pre{\startverb
+const stateRef = useRef(state);
+stateRef.current = state;
+
+const sendMessage = useCallback(async (text) => {
+  const messages = stateRef.current.messages;
+  // ...
+}, [/* state.messages removed */]);
+\stopverb}
+}
+
+\subtree{
+\title{Common Bug Patterns}
+\p{\strong{React Hook Issues}: state in useCallback dependencies, missing dependencies causing stale closures, useEffect running multiple times.}
+
+\p{\strong{API/Network Issues}: duplicate requests, race conditions, CORS failures, timeout handling.}
+
+\p{\strong{State Management Issues}: updates not batching correctly, optimistic updates conflicting with server response, multiple sources of truth.}
+}
+}

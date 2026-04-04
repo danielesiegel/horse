@@ -1,0 +1,272 @@
+\title{Catcolab Causal Loop}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{CatColab Causal Loop Diagrams - systems dynamics modeling with reinforcing (R) and balancing (B) feedback loops, delays, and Lotka-Volterra semantics for strategic analysis.}
+
+\subtree{
+\title{CatColab Causal Loop Diagrams: Systems Dynamics}
+\p{\strong{Trit}: 0 (ERGODIC - coordinator/mediator) \strong{Color}: Yellow (#FFD700)}
+
+\subtree{
+\title{Overview}
+\p{Causal Loop Diagrams (CLDs) in CatColab model feedback systems:}
+
+\ul{
+\li{\strong{Variables}: System quantities that change over time}
+\li{\strong{Positive links (+)}: Same-direction influence (increase→increase)}
+\li{\strong{Negative links (-)}: Opposite-direction influence (increase→decrease)}
+\li{\strong{Loops}: Reinforcing (R) or Balancing (B) feedback}
+}
+
+\p{CLDs are essential for understanding system behavior, policy analysis, and strategic planning.}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\p{A causal loop diagram is a \strong{signed directed graph} with loop classification:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────┐
+│            CAUSAL LOOP DIAGRAM                       │
+├─────────────────────────────────────────────────────┤
+│  Variables:                                          │
+│    Population, Resources, Pollution, Quality         │
+│                                                      │
+│  Positive Links (+):                                 │
+│    Population ──(+)──► Pollution                     │
+│    Resources ──(+)──► Quality                        │
+│                                                      │
+│  Negative Links (-):                                 │
+│    Pollution ──(-)──► Quality                        │
+│    Quality ──(-)──► Population (emigration)          │
+│                                                      │
+│  Loops:                                              │
+│    R1: Population→Births→Population (reinforcing)    │
+│    B1: Population→Resources→Quality→Pop (balancing)  │
+└─────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Loop Classification}
+\p{\strong{Reinforcing Loop (R)}: Even number of negative links}
+
+\ul{
+\li{Exponential growth or collapse}
+\li{"Snowball effect" or "vicious/virtuous cycle"}
+}
+
+\p{\strong{Balancing Loop (B)}: Odd number of negative links}
+
+\ul{
+\li{Goal-seeking behavior}
+\li{Homeostasis, equilibrium}
+}
+
+\pre{\startverb
+REINFORCING (R):              BALANCING (B):
+   A ──(+)──► B                  A ──(+)──► B
+   ▲          │                  ▲          │
+   │          │                  │          │
+   └──(+)─────┘                  └──(-)─────┘
+   (exponential)                 (equilibrium)
+\stopverb}
+}
+
+\subtree{
+\title{Double Theory}
+\pre{\startverb
+// Causal loop double theory with decorated edges
+pub fn th_causal_loop() -> DiscreteDblTheory {
+    let mut cat = FpCategory::new();
+
+    // Object type
+    cat.add_ob_generator(name("Variable"));
+
+    // Morphism types (polarized links)
+    cat.add_mor_generator(name("Positive"), name("Variable"), name("Variable"));
+    cat.add_mor_generator(name("Negative"), name("Variable"), name("Variable"));
+
+    // Decorations (CatColab 0.2)
+    cat.add_mor_generator(name("Delay"), name("Variable"), name("Variable"));
+    cat.add_mor_generator(name("Indeterminate"), name("Variable"), name("Variable"));
+
+    cat.into()
+}
+\stopverb}
+}
+
+\subtree{
+\title{CatColab Implementation}
+\subtree{
+\title{Variable Declaration}
+\pre{\startverb
+{
+  "type": "ObDecl",
+  "name": "MarketShare",
+  "theory_type": "Variable",
+  "description": "company's percentage of total market"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Positive Link}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "growth_effect",
+  "dom": "MarketShare",
+  "cod": "Revenue",
+  "theory_type": "Positive",
+  "description": "higher market share increases revenue"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Negative Link}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "saturation_effect",
+  "dom": "MarketShare",
+  "cod": "GrowthRate",
+  "theory_type": "Negative",
+  "description": "higher share reduces growth potential"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Delay (CatColab 0.2)}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "investment_lag",
+  "dom": "RnD_Spending",
+  "cod": "ProductQuality",
+  "theory_type": "Delay",
+  "delay_time": 12,  // months
+  "description": "R&D takes time to improve products"
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Lotka-Volterra Semantics}
+\p{CatColab generates \strong{Lotka-Volterra ODEs} from causal loops:}
+
+\pre{\startverb
+For variables X, Y with positive link X→Y:
+  dY/dt = α·X·Y
+
+For negative link X→Y:
+  dY/dt = -β·X·Y
+
+General form:
+  dXᵢ/dt = Xᵢ · Σⱼ aᵢⱼ·Xⱼ
+\stopverb}
+}
+
+\subtree{
+\title{Practical Examples}
+\subtree{
+\title{Example 1: Adoption Dynamics}
+\pre{\startverb
+     Word of Mouth
+          ↗ (+)
+    Users ────────► Adoption Rate
+      ▲                 │
+      │                 │
+      └────(+)──────────┘
+           R1: Viral Growth
+
+    Adoption Rate ──(+)──► Users
+         │
+         └──(-)──► Potential Users
+                       │
+              B1: Market Saturation
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Thermostat (Balancing)}
+\pre{\startverb
+    Desired Temp ──(+)──► Gap
+         ▲                 │
+         │                 │
+         │                (+)
+         │                 ▼
+    Actual Temp ◄──(+)── Heating
+         │
+         └──(-)──► Gap
+              B1: Temperature Control
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Arms Race (Reinforcing)}
+\pre{\startverb
+    Country A Arms ──(+)──► Country A Threat Perception
+           ▲                        │
+           │                       (+)
+           │                        ▼
+    Country B Arms ◄──(+)── Country B Arms Spending
+           │
+           └──(+)──► Country A Threat Perception
+                R1: Escalation Spiral
+\stopverb}
+}
+}
+
+\subtree{
+\title{Analysis Capabilities}
+\ul{
+\li{\strong{Loop identification}: Automatic detection of R and B loops}
+\li{\strong{Dominant loop analysis}: Which loops drive behavior}
+\li{\strong{Policy leverage points}: Where interventions are most effective}
+\li{\strong{Scenario simulation}: Lotka-Volterra dynamics}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+catcolab-regulatory-networks (-1) ⊗ catcolab-causal-loop (0) ⊗ catcolab-stock-flow (+1) = 0 ✓
+open-games (-1) ⊗ catcolab-causal-loop (0) ⊗ dynamical-system-functor (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Create causal loop diagram
+just catcolab-new causal-loop "market-dynamics"
+
+# Identify all loops
+just catcolab-analyze market-dynamics --loops
+
+# Simulate Lotka-Volterra
+just catcolab-simulate market-dynamics --lotka-volterra
+
+# Export to Vensim format
+just catcolab-export market-dynamics --format=mdl
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Sterman (2000) "Business Dynamics: Systems Thinking and Modeling"}
+\li{Meadows (2008) "Thinking in Systems"}
+\li{[CatColab Causal Loop Help](https://catcolab.org/help/logics/causal-loop)}
+}
+
+\p{\strong{Skill Name}: catcolab-causal-loop \strong{Type}: Systems Dynamics / Feedback Analysis \strong{Trit}: 0 (ERGODIC) \strong{GF(3)}: Conserved via triadic composition}
+}
+}

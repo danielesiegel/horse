@@ -1,0 +1,112 @@
+\title{Aptos Trading}
+
+\taxon{skill}
+
+\meta{description}{Execute trades on Aptos mainnet with price-triggered profit-taking and dip-buying strategies. Includes wallet management, transaction signing, and DEX swaps via Liquidswap. Use when automating APT trading, checking balances, or executing swaps.}
+
+\subtree{
+\title{Aptos Trading Executor}
+\p{Automated APT trading on Aptos mainnet with price-triggered strategies.}
+
+\subtree{
+\title{Overview}
+\ul{
+\li{\strong{Purpose}: Automated profit-taking and dip-buying (vulture) strategies}
+\li{\strong{Network}: Aptos Mainnet via REST API}
+\li{\strong{DEX}: Liquidswap for APT ↔ USDC swaps}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# Run the executor (requires confirmation)
+python ~/.agents/skills/aptos-trading/scripts/alpha_executor.py
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\p{Wallet configuration in \code{\startverb /Users/alice/agent_scripts/wallets.yaml\stopverb}:}
+
+\ul{
+\li{\code{\startverb apt_primary\stopverb} - Main trading wallet}
+\li{\code{\startverb usdc_withdrawal\stopverb} - USDC extraction wallet}
+}
+}
+
+\subtree{
+\title{Strategy Parameters}
+\subtree{
+\title{Profit Triggers (Bull Levels)}
+\pre{\startverb
+| Level | Price | Action |
+|-------|-------|--------|
+| B1 | $1.60 | Log only (adjust to take 20%) |
+| B2 | $1.80 | Swap 30% to USDC |
+| B3 | $2.00 | Swap 50% to USDC |
+| MOON | $2.50 | Swap 75% to USDC |
+\stopverb}
+}
+
+\subtree{
+\title{Dip Buying (Vulture Levels)}
+\pre{\startverb
+| Price | Amount |
+|-------|--------|
+| $1.40 | 15 APT |
+| $1.30 | 15 APT |
+| $1.20 | 15 APT |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{AptosClient Class}
+\ul{
+\li{\code{\startverb get_account_info()\stopverb} - Fetch sequence number}
+\li{\code{\startverb get_balance()\stopverb} - Read APT from fungible asset store}
+\li{\code{\startverb submit_transaction(payload)\stopverb} - Sign and submit tx}
+\li{\code{\startverb swap_apt_to_usdc(amount, min_out)\stopverb} - Execute Liquidswap swap}
+}
+}
+
+\subtree{
+\title{Price Feeds}
+\ol{
+\li{CoinGecko API (primary)}
+\li{Binance API (fallback)}
+\li{Default $1.50 (emergency)}
+}
+}
+}
+
+\subtree{
+\title{Security Notes}
+\p{⚠️ \strong{CRITICAL}: Private keys are in \code{\startverb wallets.yaml\stopverb} - NEVER commit this file ⚠️ All transactions are signed locally and submitted to mainnet ⚠️ Script requires typing "EXECUTE" to confirm live trading}
+
+\subtree{
+\title{Wallet Validation (MANDATORY)}
+\p{Before funding ANY wallet, run:}
+
+\pre{\startverb
+just aptos-validate-all
+\stopverb}
+
+\p{\strong{NEVER use \code{\startverb derive-resource-account-address\stopverb} for wallet creation.} Use \code{\startverb aptos init --private-key\stopverb} to derive addresses correctly.}
+}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{\code{\startverb scripts/alpha_executor.py\stopverb} - Main executor}
+\li{\code{\startverb references/system-docs.org\stopverb} - Full system documentation}
+\li{\code{\startverb /Users/alice/agent_scripts/wallets.yaml\stopverb} - Wallet config (external)}
+\li{\code{\startverb /Users/alice/agent_scripts/Holdings.md\stopverb} - Live state tracker}
+\li{\code{\startverb /Users/alice/agent_scripts/alpha.log\stopverb} - Execution log}
+}
+}
+}

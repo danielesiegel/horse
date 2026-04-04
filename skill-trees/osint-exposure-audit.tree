@@ -1,0 +1,209 @@
+\title{Osint Exposure Audit}
+
+\taxon{skill}
+
+\meta{description}{Assess an organization's open-source intelligence (OSINT) exposure. Identifies leaked credentials, exposed infrastructure, metadata in public documents, social media intelligence, and reconnaissance surface available to attackers without authentication. Use when performing external attack surface assessment, pre-engagement reconnaissance review, or data leakage auditing.}
+
+\subtree{
+\title{OSINT Exposure Audit}
+\p{Digital dumpster diving — systematically cataloguing what an organization leaks publicly that enables attacks. Everything an adversary can learn without ever sending a packet to your infrastructure.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{External attack surface assessment}
+\li{Pre-pentest reconnaissance review}
+\li{Data leakage auditing}
+\li{Breach impact assessment}
+\li{Supply chain exposure analysis}
+\li{Merger/acquisition security due diligence}
+\li{Continuous monitoring of organizational exposure drift}
+}
+}
+
+\subtree{
+\title{Exposure Taxonomy}
+\subtree{
+\title{Code Repositories}
+\ul{
+\li{Leaked secrets in git history (keys, tokens, passwords in old commits)}
+\li{\code{\startverb .env\stopverb} files, \code{\startverb docker-compose.yml\stopverb} with credentials committed to public repos}
+\li{API keys and service account credentials in source}
+\li{Internal URLs, hostnames, and IP ranges in IaC (Terraform, CloudFormation)}
+\li{CI/CD pipeline configs exposing infrastructure details}
+}
+}
+
+\subtree{
+\title{Document Metadata}
+\ul{
+\li{Author names and usernames in PDF/Office document properties}
+\li{Software versions (Adobe, Office builds) revealing patch levels}
+\li{Internal file paths (\code{\startverb C:\startverb \Users\stopverb\startverb \jsmith\stopverb\startverb \Documents\stopverb\...\stopverb}) in document metadata}
+\li{EXIF data in images: GPS coordinates, device info, timestamps}
+\li{Printer/scanner metadata in published documents}
+}
+}
+
+\subtree{
+\title{DNS and Infrastructure}
+\ul{
+\li{Subdomain enumeration via brute-force, zone transfers, passive DNS}
+\li{Certificate transparency logs revealing internal service names}
+\li{Historical DNS records exposing migrations and old infrastructure}
+\li{Cloud storage buckets (S3, GCS, Azure Blob) with predictable names}
+\li{ASN mapping to identify full IP space ownership}
+\li{Reverse DNS revealing naming conventions}
+}
+}
+
+\subtree{
+\title{Credential Exposure}
+\ul{
+\li{Breach database correlation (email domains in known breaches)}
+\li{Paste sites (Pastebin, GitHub Gists) containing credentials}
+\li{Credential stuffing lists with organization email addresses}
+\li{Leaked password patterns revealing policy (length, complexity, rotation)}
+\li{Exposed \code{\startverb .htpasswd\stopverb}, \code{\startverb web.config\stopverb}, or similar auth files}
+}
+}
+
+\subtree{
+\title{Social Media Intelligence}
+\ul{
+\li{Employee names, roles, reporting structure from LinkedIn}
+\li{Technology stack hints from employee profiles and endorsements}
+\li{Org chart reconstruction from public profiles}
+\li{Job postings revealing specific technologies, versions, and vendors}
+\li{Conference talks and slides disclosing architecture details}
+\li{Geolocation of facilities from employee posts}
+}
+}
+
+\subtree{
+\title{Web Archives}
+\ul{
+\li{Wayback Machine snapshots of removed pages, old API documentation}
+\li{Deprecated endpoints still responding in production}
+\li{Removed job postings revealing past security concerns}
+\li{Old sitemaps and \code{\startverb robots.txt\stopverb} exposing hidden paths}
+\li{Cached versions of pages taken down after incidents}
+}
+}
+
+\subtree{
+\title{Supply Chain}
+\ul{
+\li{Third-party vendor exposure (shared credentials, connected services)}
+\li{Dependency confusion potential in public package registries}
+\li{Internal package names leaked in \code{\startverb package.json\stopverb}, \code{\startverb requirements.txt\stopverb}}
+\li{Vendor security posture reflecting on the organization}
+\li{Open-source contributions revealing internal tooling}
+}
+}
+}
+
+\subtree{
+\title{Audit Methodology}
+\subtree{
+\title{Phase 1: Passive Reconnaissance}
+\ol{
+\li{Domain and infrastructure enumeration (subdomains, IPs, ASNs, cloud resources)}
+\li{Certificate transparency log analysis for all owned domains}
+\li{Passive DNS collection and historical record review}
+\li{Search engine dorking for exposed files and directories}
+}
+}
+
+\subtree{
+\title{Phase 2: Code and Document Analysis}
+\ol{
+\li{Git repository scanning — secrets in full commit history}
+\li{Exposed \code{\startverb .git\stopverb} directory detection on web-facing servers}
+\li{Document metadata extraction from all public-facing files (PDFs, DOCX, XLSX)}
+\li{Source map and debug artifact discovery}
+}
+}
+
+\subtree{
+\title{Phase 3: Credential and Identity Exposure}
+\ol{
+\li{Credential breach correlation (HaveIBeenPwned, breach compilations)}
+\li{Paste site monitoring for organization-related dumps}
+\li{Email address harvesting and employee enumeration}
+}
+}
+
+\subtree{
+\title{Phase 4: Active Surface Mapping}
+\ol{
+\li{Cloud storage discovery and permission testing}
+\li{Job posting and social media intelligence gathering}
+\li{Web archive analysis for leaked or removed content}
+\li{Third-party service enumeration (SaaS, APIs, webhooks)}
+}
+}
+}
+
+\subtree{
+\title{Tool Reference}
+\pre{\startverb
+| Category       | Tools                                                      |
+|---------------|-------------------------------------------------------------|
+| Infrastructure | `amass`, `subfinder`, `dnsx`, `httpx`, `nuclei`, Shodan, Censys |
+| Git/Code       | `truffleHog`, `gitleaks`, `git-secrets`, GitHub/GitLab search dorks |
+| Documents      | `exiftool`, FOCA, `metagoofil`                             |
+| Credentials    | `h8mail`, Dehashed API, PWNDB                              |
+| Web            | `gau` (getallurls), `waybackurls`, `katana`                |
+| Cloud          | `cloud_enum`, `S3Scanner`, `GCPBucketBrute`                |
+| OSINT Frameworks | `spiderfoot`, `recon-ng`, `theHarvester`                 |
+\stopverb}
+}
+
+\subtree{
+\title{Code Review Patterns}
+\p{What leaks from codebases — check for these in any public repository:}
+
+\ul{
+\li{\strong{Hardcoded credentials}: API keys, tokens, passwords in source files}
+\li{\strong{Internal hostnames/IPs}: configuration files referencing \code{\startverb 10.x.x.x\stopverb}, \code{\startverb *.internal\stopverb}}
+\li{\strong{Sensitive comments}: \code{\startverb TODO: remove password\stopverb}, \code{\startverb HACK: using admin creds\stopverb}}
+\li{\strong{Debug endpoints}: \code{\startverb /debug\stopverb}, \code{\startverb /actuator\stopverb}, \code{\startverb /elmah.axd\stopverb} left enabled in production}
+\li{\strong{Verbose error messages}: stack traces exposing file paths, library versions}
+\li{\strong{Exposed \code{\startverb .git\stopverb} directory}: full repository history accessible via web server}
+\li{\strong{Source maps in production}: \code{\startverb .js.map\stopverb} files reconstructing original source}
+\li{\strong{Environment detection logic}: code revealing staging/prod URL patterns}
+\li{\strong{Dependency manifests}: \code{\startverb package-lock.json\stopverb}, \code{\startverb Pipfile.lock\stopverb} pinning vulnerable versions}
+}
+}
+
+\subtree{
+\title{Output Format}
+\p{Structure findings as follows:}
+
+\pre{\startverb
+## Finding: [Title]
+- **Exposure Type**: Code Repository | Document Metadata | Infrastructure | Credential | Social Media | Web Archive | Supply Chain
+- **Source**: Where the exposure was discovered (URL, repo, document name)
+- **Data Exposed**: Specific sensitive data found
+- **Risk Level**: Critical | High | Medium | Low | Informational
+- **Attack Scenario**: How an adversary would leverage this exposure
+- **Remediation**:
+  - Immediate: Rotate credential / Remove document / Revoke access
+  - Preventive: Configure access control / Implement secret scanning / Deploy metadata scrubbing
+- **Evidence**: Screenshot, hash, or sanitized excerpt (never include raw credentials in reports)
+\stopverb}
+
+\p{Aggregate findings into an exposure heat map by category to identify systemic issues versus one-off leaks.}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb social-engineering-audit\stopverb} — leveraging OSINT findings for social engineering assessments}
+\li{\code{\startverb entry-point-analyzer\stopverb} — mapping exposed services into exploitable attack paths}
+\li{\code{\startverb static-security-analyzer\stopverb} — deep code review for vulnerabilities beyond leaked secrets}
+\li{\code{\startverb webapp-testing\stopverb} — active testing of discovered web applications and APIs}
+}
+}
+}

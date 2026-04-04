@@ -1,0 +1,754 @@
+\title{Statsmodels}
+
+\taxon{skill}
+
+\meta{description}{"Statistical modeling toolkit. OLS, GLM, logistic, ARIMA, time series, hypothesis tests, diagnostics, AIC/BIC, for rigorous statistical inference and econometric analysis."}
+
+\subtree{
+\title{Statsmodels: Statistical Modeling and Econometrics}
+\subtree{
+\title{Overview}
+\p{Statsmodels is Python's premier library for statistical modeling, providing tools for estimation, inference, and diagnostics across a wide range of statistical methods. Apply this skill for rigorous statistical analysis, from simple linear regression to complex time series models and econometric analyses.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Fitting regression models (OLS, WLS, GLS, quantile regression)}
+\li{Performing generalized linear modeling (logistic, Poisson, Gamma, etc.)}
+\li{Analyzing discrete outcomes (binary, multinomial, count, ordinal)}
+\li{Conducting time series analysis (ARIMA, SARIMAX, VAR, forecasting)}
+\li{Running statistical tests and diagnostics}
+\li{Testing model assumptions (heteroskedasticity, autocorrelation, normality)}
+\li{Detecting outliers and influential observations}
+\li{Comparing models (AIC/BIC, likelihood ratio tests)}
+\li{Estimating causal effects}
+\li{Producing publication-ready statistical tables and inference}
+}
+}
+
+\subtree{
+\title{Quick Start Guide}
+\subtree{
+\title{Linear Regression (OLS)}
+\pre{\startverb
+import statsmodels.api as sm
+import numpy as np
+import pandas as pd
+
+# Prepare data - ALWAYS add constant for intercept
+X = sm.add_constant(X_data)
+
+# Fit OLS model
+model = sm.OLS(y, X)
+results = model.fit()
+
+# View comprehensive results
+print(results.summary())
+
+# Key results
+print(f"R-squared: {results.rsquared:.4f}")
+print(f"Coefficients:\\n{results.params}")
+print(f"P-values:\\n{results.pvalues}")
+
+# Predictions with confidence intervals
+predictions = results.get_prediction(X_new)
+pred_summary = predictions.summary_frame()
+print(pred_summary)  # includes mean, CI, prediction intervals
+
+# Diagnostics
+from statsmodels.stats.diagnostic import het_breuschpagan
+bp_test = het_breuschpagan(results.resid, X)
+print(f"Breusch-Pagan p-value: {bp_test[1]:.4f}")
+
+# Visualize residuals
+import matplotlib.pyplot as plt
+plt.scatter(results.fittedvalues, results.resid)
+plt.axhline(y=0, color='r', linestyle='--')
+plt.xlabel('Fitted values')
+plt.ylabel('Residuals')
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Logistic Regression (Binary Outcomes)}
+\pre{\startverb
+from statsmodels.discrete.discrete_model import Logit
+
+# Add constant
+X = sm.add_constant(X_data)
+
+# Fit logit model
+model = Logit(y_binary, X)
+results = model.fit()
+
+print(results.summary())
+
+# Odds ratios
+odds_ratios = np.exp(results.params)
+print("Odds ratios:\\n", odds_ratios)
+
+# Predicted probabilities
+probs = results.predict(X)
+
+# Binary predictions (0.5 threshold)
+predictions = (probs > 0.5).astype(int)
+
+# Model evaluation
+from sklearn.metrics import classification_report, roc_auc_score
+
+print(classification_report(y_binary, predictions))
+print(f"AUC: {roc_auc_score(y_binary, probs):.4f}")
+
+# Marginal effects
+marginal = results.get_margeff()
+print(marginal.summary())
+\stopverb}
+}
+
+\subtree{
+\title{Time Series (ARIMA)}
+\pre{\startverb
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# Check stationarity
+from statsmodels.tsa.stattools import adfuller
+
+adf_result = adfuller(y_series)
+print(f"ADF p-value: {adf_result[1]:.4f}")
+
+if adf_result[1] > 0.05:
+    # Series is non-stationary, difference it
+    y_diff = y_series.diff().dropna()
+
+# Plot ACF/PACF to identify p, q
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+plot_acf(y_diff, lags=40, ax=ax1)
+plot_pacf(y_diff, lags=40, ax=ax2)
+plt.show()
+
+# Fit ARIMA(p,d,q)
+model = ARIMA(y_series, order=(1, 1, 1))
+results = model.fit()
+
+print(results.summary())
+
+# Forecast
+forecast = results.forecast(steps=10)
+forecast_obj = results.get_forecast(steps=10)
+forecast_df = forecast_obj.summary_frame()
+
+print(forecast_df)  # includes mean and confidence intervals
+
+# Residual diagnostics
+results.plot_diagnostics(figsize=(12, 8))
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Generalized Linear Models (GLM)}
+\pre{\startverb
+import statsmodels.api as sm
+
+# Poisson regression for count data
+X = sm.add_constant(X_data)
+model = sm.GLM(y_counts, X, family=sm.families.Poisson())
+results = model.fit()
+
+print(results.summary())
+
+# Rate ratios (for Poisson with log link)
+rate_ratios = np.exp(results.params)
+print("Rate ratios:\\n", rate_ratios)
+
+# Check overdispersion
+overdispersion = results.pearson_chi2 / results.df_resid
+print(f"Overdispersion: {overdispersion:.2f}")
+
+if overdispersion > 1.5:
+    # Use Negative Binomial instead
+    from statsmodels.discrete.count_model import NegativeBinomial
+    nb_model = NegativeBinomial(y_counts, X)
+    nb_results = nb_model.fit()
+    print(nb_results.summary())
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Statistical Modeling Capabilities}
+\subtree{
+\title{1. Linear Regression Models}
+\p{Comprehensive suite of linear models for continuous outcomes with various error structures.}
+
+\p{\strong{Available models:}}
+
+\ul{
+\li{\strong{OLS}: Standard linear regression with i.i.d. errors}
+\li{\strong{WLS}: Weighted least squares for heteroskedastic errors}
+\li{\strong{GLS}: Generalized least squares for arbitrary covariance structure}
+\li{\strong{GLSAR}: GLS with autoregressive errors for time series}
+\li{\strong{Quantile Regression}: Conditional quantiles (robust to outliers)}
+\li{\strong{Mixed Effects}: Hierarchical/multilevel models with random effects}
+\li{\strong{Recursive/Rolling}: Time-varying parameter estimation}
+}
+
+\p{\strong{Key features:}}
+
+\ul{
+\li{Comprehensive diagnostic tests}
+\li{Robust standard errors (HC, HAC, cluster-robust)}
+\li{Influence statistics (Cook's distance, leverage, DFFITS)}
+\li{Hypothesis testing (F-tests, Wald tests)}
+\li{Model comparison (AIC, BIC, likelihood ratio tests)}
+\li{Prediction with confidence and prediction intervals}
+}
+
+\p{\strong{When to use:} Continuous outcome variable, want inference on coefficients, need diagnostics}
+
+\p{\strong{Reference:} See \code{\startverb references/linear_models.md\stopverb} for detailed guidance on model selection, diagnostics, and best practices.}
+}
+
+\subtree{
+\title{2. Generalized Linear Models (GLM)}
+\p{Flexible framework extending linear models to non-normal distributions.}
+
+\p{\strong{Distribution families:}}
+
+\ul{
+\li{\strong{Binomial}: Binary outcomes or proportions (logistic regression)}
+\li{\strong{Poisson}: Count data}
+\li{\strong{Negative Binomial}: Overdispersed counts}
+\li{\strong{Gamma}: Positive continuous, right-skewed data}
+\li{\strong{Inverse Gaussian}: Positive continuous with specific variance structure}
+\li{\strong{Gaussian}: Equivalent to OLS}
+\li{\strong{Tweedie}: Flexible family for semi-continuous data}
+}
+
+\p{\strong{Link functions:}}
+
+\ul{
+\li{Logit, Probit, Log, Identity, Inverse, Sqrt, CLogLog, Power}
+\li{Choose based on interpretation needs and model fit}
+}
+
+\p{\strong{Key features:}}
+
+\ul{
+\li{Maximum likelihood estimation via IRLS}
+\li{Deviance and Pearson residuals}
+\li{Goodness-of-fit statistics}
+\li{Pseudo R-squared measures}
+\li{Robust standard errors}
+}
+
+\p{\strong{When to use:} Non-normal outcomes, need flexible variance and link specifications}
+
+\p{\strong{Reference:} See \code{\startverb references/glm.md\stopverb} for family selection, link functions, interpretation, and diagnostics.}
+}
+
+\subtree{
+\title{3. Discrete Choice Models}
+\p{Models for categorical and count outcomes.}
+
+\p{\strong{Binary models:}}
+
+\ul{
+\li{\strong{Logit}: Logistic regression (odds ratios)}
+\li{\strong{Probit}: Probit regression (normal distribution)}
+}
+
+\p{\strong{Multinomial models:}}
+
+\ul{
+\li{\strong{MNLogit}: Unordered categories (3+ levels)}
+\li{\strong{Conditional Logit}: Choice models with alternative-specific variables}
+\li{\strong{Ordered Model}: Ordinal outcomes (ordered categories)}
+}
+
+\p{\strong{Count models:}}
+
+\ul{
+\li{\strong{Poisson}: Standard count model}
+\li{\strong{Negative Binomial}: Overdispersed counts}
+\li{\strong{Zero-Inflated}: Excess zeros (ZIP, ZINB)}
+\li{\strong{Hurdle Models}: Two-stage models for zero-heavy data}
+}
+
+\p{\strong{Key features:}}
+
+\ul{
+\li{Maximum likelihood estimation}
+\li{Marginal effects at means or average marginal effects}
+\li{Model comparison via AIC/BIC}
+\li{Predicted probabilities and classification}
+\li{Goodness-of-fit tests}
+}
+
+\p{\strong{When to use:} Binary, categorical, or count outcomes}
+
+\p{\strong{Reference:} See \code{\startverb references/discrete_choice.md\stopverb} for model selection, interpretation, and evaluation.}
+}
+
+\subtree{
+\title{4. Time Series Analysis}
+\p{Comprehensive time series modeling and forecasting capabilities.}
+
+\p{\strong{Univariate models:}}
+
+\ul{
+\li{\strong{AutoReg (AR)}: Autoregressive models}
+\li{\strong{ARIMA}: Autoregressive integrated moving average}
+\li{\strong{SARIMAX}: Seasonal ARIMA with exogenous variables}
+\li{\strong{Exponential Smoothing}: Simple, Holt, Holt-Winters}
+\li{\strong{ETS}: Innovations state space models}
+}
+
+\p{\strong{Multivariate models:}}
+
+\ul{
+\li{\strong{VAR}: Vector autoregression}
+\li{\strong{VARMAX}: VAR with MA and exogenous variables}
+\li{\strong{Dynamic Factor Models}: Extract common factors}
+\li{\strong{VECM}: Vector error correction models (cointegration)}
+}
+
+\p{\strong{Advanced models:}}
+
+\ul{
+\li{\strong{State Space}: Kalman filtering, custom specifications}
+\li{\strong{Regime Switching}: Markov switching models}
+\li{\strong{ARDL}: Autoregressive distributed lag}
+}
+
+\p{\strong{Key features:}}
+
+\ul{
+\li{ACF/PACF analysis for model identification}
+\li{Stationarity tests (ADF, KPSS)}
+\li{Forecasting with prediction intervals}
+\li{Residual diagnostics (Ljung-Box, heteroskedasticity)}
+\li{Granger causality testing}
+\li{Impulse response functions (IRF)}
+\li{Forecast error variance decomposition (FEVD)}
+}
+
+\p{\strong{When to use:} Time-ordered data, forecasting, understanding temporal dynamics}
+
+\p{\strong{Reference:} See \code{\startverb references/time_series.md\stopverb} for model selection, diagnostics, and forecasting methods.}
+}
+
+\subtree{
+\title{5. Statistical Tests and Diagnostics}
+\p{Extensive testing and diagnostic capabilities for model validation.}
+
+\p{\strong{Residual diagnostics:}}
+
+\ul{
+\li{Autocorrelation tests (Ljung-Box, Durbin-Watson, Breusch-Godfrey)}
+\li{Heteroskedasticity tests (Breusch-Pagan, White, ARCH)}
+\li{Normality tests (Jarque-Bera, Omnibus, Anderson-Darling, Lilliefors)}
+\li{Specification tests (RESET, Harvey-Collier)}
+}
+
+\p{\strong{Influence and outliers:}}
+
+\ul{
+\li{Leverage (hat values)}
+\li{Cook's distance}
+\li{DFFITS and DFBETAs}
+\li{Studentized residuals}
+\li{Influence plots}
+}
+
+\p{\strong{Hypothesis testing:}}
+
+\ul{
+\li{t-tests (one-sample, two-sample, paired)}
+\li{Proportion tests}
+\li{Chi-square tests}
+\li{Non-parametric tests (Mann-Whitney, Wilcoxon, Kruskal-Wallis)}
+\li{ANOVA (one-way, two-way, repeated measures)}
+}
+
+\p{\strong{Multiple comparisons:}}
+
+\ul{
+\li{Tukey's HSD}
+\li{Bonferroni correction}
+\li{False Discovery Rate (FDR)}
+}
+
+\p{\strong{Effect sizes and power:}}
+
+\ul{
+\li{Cohen's d, eta-squared}
+\li{Power analysis for t-tests, proportions}
+\li{Sample size calculations}
+}
+
+\p{\strong{Robust inference:}}
+
+\ul{
+\li{Heteroskedasticity-consistent SEs (HC0-HC3)}
+\li{HAC standard errors (Newey-West)}
+\li{Cluster-robust standard errors}
+}
+
+\p{\strong{When to use:} Validating assumptions, detecting problems, ensuring robust inference}
+
+\p{\strong{Reference:} See \code{\startverb references/stats_diagnostics.md\stopverb} for comprehensive testing and diagnostic procedures.}
+}
+}
+
+\subtree{
+\title{Formula API (R-style)}
+\p{Statsmodels supports R-style formulas for intuitive model specification:}
+
+\pre{\startverb
+import statsmodels.formula.api as smf
+
+# OLS with formula
+results = smf.ols('y ~ x1 + x2 + x1:x2', data=df).fit()
+
+# Categorical variables (automatic dummy coding)
+results = smf.ols('y ~ x1 + C(category)', data=df).fit()
+
+# Interactions
+results = smf.ols('y ~ x1 * x2', data=df).fit()  # x1 + x2 + x1:x2
+
+# Polynomial terms
+results = smf.ols('y ~ x + I(x**2)', data=df).fit()
+
+# Logit
+results = smf.logit('y ~ x1 + x2 + C(group)', data=df).fit()
+
+# Poisson
+results = smf.poisson('count ~ x1 + x2', data=df).fit()
+
+# ARIMA (not available via formula, use regular API)
+\stopverb}
+}
+
+\subtree{
+\title{Model Selection and Comparison}
+\subtree{
+\title{Information Criteria}
+\pre{\startverb
+# Compare models using AIC/BIC
+models = {
+    'Model 1': model1_results,
+    'Model 2': model2_results,
+    'Model 3': model3_results
+}
+
+comparison = pd.DataFrame({
+    'AIC': {name: res.aic for name, res in models.items()},
+    'BIC': {name: res.bic for name, res in models.items()},
+    'Log-Likelihood': {name: res.llf for name, res in models.items()}
+})
+
+print(comparison.sort_values('AIC'))
+# Lower AIC/BIC indicates better model
+\stopverb}
+}
+
+\subtree{
+\title{Likelihood Ratio Test (Nested Models)}
+\pre{\startverb
+# For nested models (one is subset of the other)
+from scipy import stats
+
+lr_stat = 2 * (full_model.llf - reduced_model.llf)
+df = full_model.df_model - reduced_model.df_model
+p_value = 1 - stats.chi2.cdf(lr_stat, df)
+
+print(f"LR statistic: {lr_stat:.4f}")
+print(f"p-value: {p_value:.4f}")
+
+if p_value < 0.05:
+    print("Full model significantly better")
+else:
+    print("Reduced model preferred (parsimony)")
+\stopverb}
+}
+
+\subtree{
+\title{Cross-Validation}
+\pre{\startverb
+from sklearn.model_selection import KFold
+from sklearn.metrics import mean_squared_error
+
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+cv_scores = []
+
+for train_idx, val_idx in kf.split(X):
+    X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+    y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+
+    # Fit model
+    model = sm.OLS(y_train, X_train).fit()
+
+    # Predict
+    y_pred = model.predict(X_val)
+
+    # Score
+    rmse = np.sqrt(mean_squared_error(y_val, y_pred))
+    cv_scores.append(rmse)
+
+print(f"CV RMSE: {np.mean(cv_scores):.4f} ± {np.std(cv_scores):.4f}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Data Preparation}
+\ol{
+\li{\strong{Always add constant}: Use \code{\startverb sm.add_constant()\stopverb} unless excluding intercept}
+\li{\strong{Check for missing values}: Handle or impute before fitting}
+\li{\strong{Scale if needed}: Improves convergence, interpretation (but not required for tree models)}
+\li{\strong{Encode categoricals}: Use formula API or manual dummy coding}
+}
+}
+
+\subtree{
+\title{Model Building}
+\ol{
+\li{\strong{Start simple}: Begin with basic model, add complexity as needed}
+\li{\strong{Check assumptions}: Test residuals, heteroskedasticity, autocorrelation}
+\li{\strong{Use appropriate model}: Match model to outcome type (binary→Logit, count→Poisson)}
+\li{\strong{Consider alternatives}: If assumptions violated, use robust methods or different model}
+}
+}
+
+\subtree{
+\title{Inference}
+\ol{
+\li{\strong{Report effect sizes}: Not just p-values}
+\li{\strong{Use robust SEs}: When heteroskedasticity or clustering present}
+\li{\strong{Multiple comparisons}: Correct when testing many hypotheses}
+\li{\strong{Confidence intervals}: Always report alongside point estimates}
+}
+}
+
+\subtree{
+\title{Model Evaluation}
+\ol{
+\li{\strong{Check residuals}: Plot residuals vs fitted, Q-Q plot}
+\li{\strong{Influence diagnostics}: Identify and investigate influential observations}
+\li{\strong{Out-of-sample validation}: Test on holdout set or cross-validate}
+\li{\strong{Compare models}: Use AIC/BIC for non-nested, LR test for nested}
+}
+}
+
+\subtree{
+\title{Reporting}
+\ol{
+\li{\strong{Comprehensive summary}: Use \code{\startverb .summary()\stopverb} for detailed output}
+\li{\strong{Document decisions}: Note transformations, excluded observations}
+\li{\strong{Interpret carefully}: Account for link functions (e.g., exp(β) for log link)}
+\li{\strong{Visualize}: Plot predictions, confidence intervals, diagnostics}
+}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Linear Regression Analysis}
+\ol{
+\li{Explore data (plots, descriptives)}
+\li{Fit initial OLS model}
+\li{Check residual diagnostics}
+\li{Test for heteroskedasticity, autocorrelation}
+\li{Check for multicollinearity (VIF)}
+\li{Identify influential observations}
+\li{Refit with robust SEs if needed}
+\li{Interpret coefficients and inference}
+\li{Validate on holdout or via CV}
+}
+}
+
+\subtree{
+\title{Workflow 2: Binary Classification}
+\ol{
+\li{Fit logistic regression (Logit)}
+\li{Check for convergence issues}
+\li{Interpret odds ratios}
+\li{Calculate marginal effects}
+\li{Evaluate classification performance (AUC, confusion matrix)}
+\li{Check for influential observations}
+\li{Compare with alternative models (Probit)}
+\li{Validate predictions on test set}
+}
+}
+
+\subtree{
+\title{Workflow 3: Count Data Analysis}
+\ol{
+\li{Fit Poisson regression}
+\li{Check for overdispersion}
+\li{If overdispersed, fit Negative Binomial}
+\li{Check for excess zeros (consider ZIP/ZINB)}
+\li{Interpret rate ratios}
+\li{Assess goodness of fit}
+\li{Compare models via AIC}
+\li{Validate predictions}
+}
+}
+
+\subtree{
+\title{Workflow 4: Time Series Forecasting}
+\ol{
+\li{Plot series, check for trend/seasonality}
+\li{Test for stationarity (ADF, KPSS)}
+\li{Difference if non-stationary}
+\li{Identify p, q from ACF/PACF}
+\li{Fit ARIMA or SARIMAX}
+\li{Check residual diagnostics (Ljung-Box)}
+\li{Generate forecasts with confidence intervals}
+\li{Evaluate forecast accuracy on test set}
+}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{This skill includes comprehensive reference files for detailed guidance:}
+
+\subtree{
+\title{references/linear_models.md}
+\p{Detailed coverage of linear regression models including:}
+
+\ul{
+\li{OLS, WLS, GLS, GLSAR, Quantile Regression}
+\li{Mixed effects models}
+\li{Recursive and rolling regression}
+\li{Comprehensive diagnostics (heteroskedasticity, autocorrelation, multicollinearity)}
+\li{Influence statistics and outlier detection}
+\li{Robust standard errors (HC, HAC, cluster)}
+\li{Hypothesis testing and model comparison}
+}
+}
+
+\subtree{
+\title{references/glm.md}
+\p{Complete guide to generalized linear models:}
+
+\ul{
+\li{All distribution families (Binomial, Poisson, Gamma, etc.)}
+\li{Link functions and when to use each}
+\li{Model fitting and interpretation}
+\li{Pseudo R-squared and goodness of fit}
+\li{Diagnostics and residual analysis}
+\li{Applications (logistic, Poisson, Gamma regression)}
+}
+}
+
+\subtree{
+\title{references/discrete_choice.md}
+\p{Comprehensive guide to discrete outcome models:}
+
+\ul{
+\li{Binary models (Logit, Probit)}
+\li{Multinomial models (MNLogit, Conditional Logit)}
+\li{Count models (Poisson, Negative Binomial, Zero-Inflated, Hurdle)}
+\li{Ordinal models}
+\li{Marginal effects and interpretation}
+\li{Model diagnostics and comparison}
+}
+}
+
+\subtree{
+\title{references/time_series.md}
+\p{In-depth time series analysis guidance:}
+
+\ul{
+\li{Univariate models (AR, ARIMA, SARIMAX, Exponential Smoothing)}
+\li{Multivariate models (VAR, VARMAX, Dynamic Factor)}
+\li{State space models}
+\li{Stationarity testing and diagnostics}
+\li{Forecasting methods and evaluation}
+\li{Granger causality, IRF, FEVD}
+}
+}
+
+\subtree{
+\title{references/stats_diagnostics.md}
+\p{Comprehensive statistical testing and diagnostics:}
+
+\ul{
+\li{Residual diagnostics (autocorrelation, heteroskedasticity, normality)}
+\li{Influence and outlier detection}
+\li{Hypothesis tests (parametric and non-parametric)}
+\li{ANOVA and post-hoc tests}
+\li{Multiple comparisons correction}
+\li{Robust covariance matrices}
+\li{Power analysis and effect sizes}
+}
+
+\p{\strong{When to reference:}}
+
+\ul{
+\li{Need detailed parameter explanations}
+\li{Choosing between similar models}
+\li{Troubleshooting convergence or diagnostic issues}
+\li{Understanding specific test statistics}
+\li{Looking for code examples for advanced features}
+}
+
+\p{\strong{Search patterns:}}
+
+\pre{\startverb
+# Find information about specific models
+grep -r "Quantile Regression" references/
+
+# Find diagnostic tests
+grep -r "Breusch-Pagan" references/stats_diagnostics.md
+
+# Find time series guidance
+grep -r "SARIMAX" references/time_series.md
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Pitfalls to Avoid}
+\ol{
+\li{\strong{Forgetting constant term}: Always use \code{\startverb sm.add_constant()\stopverb} unless no intercept desired}
+\li{\strong{Ignoring assumptions}: Check residuals, heteroskedasticity, autocorrelation}
+\li{\strong{Wrong model for outcome type}: Binary→Logit/Probit, Count→Poisson/NB, not OLS}
+\li{\strong{Not checking convergence}: Look for optimization warnings}
+\li{\strong{Misinterpreting coefficients}: Remember link functions (log, logit, etc.)}
+\li{\strong{Using Poisson with overdispersion}: Check dispersion, use Negative Binomial if needed}
+\li{\strong{Not using robust SEs}: When heteroskedasticity or clustering present}
+\li{\strong{Overfitting}: Too many parameters relative to sample size}
+\li{\strong{Data leakage}: Fitting on test data or using future information}
+\li{\strong{Not validating predictions}: Always check out-of-sample performance}
+\li{\strong{Comparing non-nested models}: Use AIC/BIC, not LR test}
+\li{\strong{Ignoring influential observations}: Check Cook's distance and leverage}
+\li{\strong{Multiple testing}: Correct p-values when testing many hypotheses}
+\li{\strong{Not differencing time series}: Fit ARIMA on non-stationary data}
+\li{\strong{Confusing prediction vs confidence intervals}: Prediction intervals are wider}
+}
+}
+
+\subtree{
+\title{Getting Help}
+\p{For detailed documentation and examples:}
+
+\ul{
+\li{Official docs: https://www.statsmodels.org/stable/}
+\li{User guide: https://www.statsmodels.org/stable/user-guide.html}
+\li{Examples: https://www.statsmodels.org/stable/examples/index.html}
+\li{API reference: https://www.statsmodels.org/stable/api.html}
+}
+}
+}

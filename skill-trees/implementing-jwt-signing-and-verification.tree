@@ -1,0 +1,108 @@
+\title{Implementing Jwt Signing And Verification}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{jwt}
+
+\tag{authentication}
+
+\tag{token-security}
+
+\tag{digital-signatures}
+
+\meta{version}{"1.0"}
+
+\meta{description}{JSON Web Tokens (JWT) defined in RFC 7519 are compact, URL-safe tokens used for authentication and authorization in web applications. This skill covers implementing secure JWT signing with HMAC-SHA256}
+
+\subtree{
+\title{Implementing JWT Signing and Verification}
+\subtree{
+\title{Overview}
+\p{JSON Web Tokens (JWT) defined in RFC 7519 are compact, URL-safe tokens used for authentication and authorization in web applications. This skill covers implementing secure JWT signing with HMAC-SHA256, RSA-PSS, and EdDSA algorithms, along with verification, token expiration, claims validation, and defense against common JWT attacks (algorithm confusion, none algorithm, key injection).}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing jwt signing and verification capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Implement JWT signing with HS256, RS256, ES256, and EdDSA}
+\li{Verify JWT signatures and validate standard claims}
+\li{Implement token expiration, not-before, and audience validation}
+\li{Defend against algorithm confusion and none algorithm attacks}
+\li{Implement JWT key rotation with JWK Sets}
+\li{Build a complete authentication middleware}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{JWT Algorithms}
+\pre{\startverb
+| Algorithm | Type | Key | Security Level |
+|-----------|------|-----|---------------|
+| HS256 | Symmetric (HMAC) | Shared secret | 128-bit |
+| RS256 | Asymmetric (RSA) | RSA key pair | 112-bit |
+| ES256 | Asymmetric (ECDSA) | P-256 key pair | 128-bit |
+| EdDSA | Asymmetric (Ed25519) | Ed25519 pair | 128-bit |
+\stopverb}
+}
+
+\subtree{
+\title{Common JWT Attacks}
+\ul{
+\li{\strong{Algorithm confusion}: Switching from RS256 to HS256, using public key as HMAC secret}
+\li{\strong{None algorithm}: Setting alg=none to bypass signature verification}
+\li{\strong{Key injection}: Embedding key in JWK header}
+\li{\strong{Weak secrets}: Brute-forcing short HMAC secrets}
+\li{\strong{Token replay}: Reusing valid tokens without expiration}
+}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Always validate the algorithm header against an allowlist}
+\li{Never accept alg=none in production}
+\li{Use asymmetric algorithms (RS256, ES256) for distributed systems}
+\li{Set short expiration times (15 min for access tokens)}
+\li{Implement token refresh mechanism}
+\li{Store secrets securely (not in source code)}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] JWT signing produces valid tokens for all algorithms}
+\li{[ ] Signature verification rejects tampered tokens}
+\li{[ ] Expired tokens are rejected}
+\li{[ ] Algorithm confusion attack is prevented}
+\li{[ ] None algorithm is rejected}
+\li{[ ] JWK key rotation works correctly}
+\li{[ ] Claims validation enforces all required claims}
+}
+}
+}

@@ -1,0 +1,845 @@
+\title{Hive Mind Advanced}
+
+\taxon{skill}
+
+\tag{hive-mind}
+
+\tag{swarm}
+
+\tag{queen-worker}
+
+\tag{consensus}
+
+\tag{collective-intelligence}
+
+\tag{multi-agent}
+
+\tag{coordination}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Advanced Hive Mind collective intelligence system for queen-led multi-agent coordination with consensus mechanisms and persistent memory}
+
+\subtree{
+\title{Hive Mind Advanced Skill}
+\p{Master the advanced Hive Mind collective intelligence system for sophisticated multi-agent coordination using queen-led architecture, Byzantine consensus, and collective memory.}
+
+\subtree{
+\title{Overview}
+\p{The Hive Mind system represents the pinnacle of multi-agent coordination in Claude Flow, implementing a queen-led hierarchical architecture where a strategic queen coordinator directs specialized worker agents through collective decision-making and shared memory.}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Architecture Patterns}
+\p{\strong{Queen-Led Coordination}}
+
+\ul{
+\li{Strategic queen agents orchestrate high-level objectives}
+\li{Tactical queens manage mid-level execution}
+\li{Adaptive queens dynamically adjust strategies based on performance}
+}
+
+\p{\strong{Worker Specialization}}
+
+\ul{
+\li{Researcher agents: Analysis and investigation}
+\li{Coder agents: Implementation and development}
+\li{Analyst agents: Data processing and metrics}
+\li{Tester agents: Quality assurance and validation}
+\li{Architect agents: System design and planning}
+\li{Reviewer agents: Code review and improvement}
+\li{Optimizer agents: Performance enhancement}
+\li{Documenter agents: Documentation generation}
+}
+
+\p{\strong{Collective Memory System}}
+
+\ul{
+\li{Shared knowledge base across all agents}
+\li{LRU cache with memory pressure handling}
+\li{SQLite persistence with WAL mode}
+\li{Memory consolidation and association}
+\li{Access pattern tracking and optimization}
+}
+}
+
+\subtree{
+\title{Consensus Mechanisms}
+\p{\strong{Majority Consensus} Simple voting where the option with most votes wins.}
+
+\p{\strong{Weighted Consensus} Queen vote counts as 3x weight, providing strategic guidance.}
+
+\p{\strong{Byzantine Fault Tolerance} Requires 2/3 majority for decision approval, ensuring robust consensus even with faulty agents.}
+}
+}
+
+\subtree{
+\title{Getting Started}
+\subtree{
+\title{1. Initialize Hive Mind}
+\pre{\startverb
+# Basic initialization
+npx claude-flow hive-mind init
+
+# Force reinitialize
+npx claude-flow hive-mind init --force
+
+# Custom configuration
+npx claude-flow hive-mind init --config hive-config.json
+\stopverb}
+}
+
+\subtree{
+\title{2. Spawn a Swarm}
+\pre{\startverb
+# Basic spawn with objective
+npx claude-flow hive-mind spawn "Build microservices architecture"
+
+# Strategic queen type
+npx claude-flow hive-mind spawn "Research AI patterns" --queen-type strategic
+
+# Tactical queen with max workers
+npx claude-flow hive-mind spawn "Implement API" --queen-type tactical --max-workers 12
+
+# Adaptive queen with consensus
+npx claude-flow hive-mind spawn "Optimize system" --queen-type adaptive --consensus byzantine
+
+# Generate Claude Code commands
+npx claude-flow hive-mind spawn "Build full-stack app" --claude
+\stopverb}
+}
+
+\subtree{
+\title{3. Monitor Status}
+\pre{\startverb
+# Check hive mind status
+npx claude-flow hive-mind status
+
+# Get detailed metrics
+npx claude-flow hive-mind metrics
+
+# Monitor collective memory
+npx claude-flow hive-mind memory
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Workflows}
+\subtree{
+\title{Session Management}
+\p{\strong{Create and Manage Sessions}}
+
+\pre{\startverb
+# List active sessions
+npx claude-flow hive-mind sessions
+
+# Pause a session
+npx claude-flow hive-mind pause <session-id>
+
+# Resume a paused session
+npx claude-flow hive-mind resume <session-id>
+
+# Stop a running session
+npx claude-flow hive-mind stop <session-id>
+\stopverb}
+
+\p{\strong{Session Features}}
+
+\ul{
+\li{Automatic checkpoint creation}
+\li{Progress tracking with completion percentages}
+\li{Parent-child process management}
+\li{Session logs with event tracking}
+\li{Export/import capabilities}
+}
+}
+
+\subtree{
+\title{Consensus Building}
+\p{The Hive Mind builds consensus through structured voting:}
+
+\pre{\startverb
+// Programmatic consensus building
+const decision = await hiveMind.buildConsensus(
+  'Architecture pattern selection',
+  ['microservices', 'monolith', 'serverless']
+);
+
+// Result includes:
+// - decision: Winning option
+// - confidence: Vote percentage
+// - votes: Individual agent votes
+\stopverb}
+
+\p{\strong{Consensus Algorithms}}
+
+\ol{
+\li{\strong{Majority} - Simple democratic voting}
+\li{\strong{Weighted} - Queen has 3x voting power}
+\li{\strong{Byzantine} - 2/3 supermajority required}
+}
+}
+
+\subtree{
+\title{Collective Memory}
+\p{\strong{Storing Knowledge}}
+
+\pre{\startverb
+// Store in collective memory
+await memory.store('api-patterns', {
+  rest: { pros: [...], cons: [...] },
+  graphql: { pros: [...], cons: [...] }
+}, 'knowledge', { confidence: 0.95 });
+\stopverb}
+
+\p{\strong{Memory Types}}
+
+\ul{
+\li{\code{\startverb knowledge\stopverb}: Permanent insights (no TTL)}
+\li{\code{\startverb context\stopverb}: Session context (1 hour TTL)}
+\li{\code{\startverb task\stopverb}: Task-specific data (30 min TTL)}
+\li{\code{\startverb result\stopverb}: Execution results (permanent, compressed)}
+\li{\code{\startverb error\stopverb}: Error logs (24 hour TTL)}
+\li{\code{\startverb metric\stopverb}: Performance metrics (1 hour TTL)}
+\li{\code{\startverb consensus\stopverb}: Decision records (permanent)}
+\li{\code{\startverb system\stopverb}: System configuration (permanent)}
+}
+
+\p{\strong{Searching and Retrieval}}
+
+\pre{\startverb
+// Search memory by pattern
+const results = await memory.search('api*', {
+  type: 'knowledge',
+  minConfidence: 0.8,
+  limit: 50
+});
+
+// Get related memories
+const related = await memory.getRelated('api-patterns', 10);
+
+// Build associations
+await memory.associate('rest-api', 'authentication', 0.9);
+\stopverb}
+}
+
+\subtree{
+\title{Task Distribution}
+\p{\strong{Automatic Worker Assignment}}
+
+\p{The system intelligently assigns tasks based on:}
+
+\ul{
+\li{Keyword matching with agent specialization}
+\li{Historical performance metrics}
+\li{Worker availability and load}
+\li{Task complexity analysis}
+}
+
+\pre{\startverb
+// Create task (auto-assigned)
+const task = await hiveMind.createTask(
+  'Implement user authentication',
+  priority: 8,
+  { estimatedDuration: 30000 }
+);
+\stopverb}
+
+\p{\strong{Auto-Scaling}}
+
+\pre{\startverb
+// Configure auto-scaling
+const config = {
+  autoScale: true,
+  maxWorkers: 12,
+  scaleUpThreshold: 2, // Pending tasks per idle worker
+  scaleDownThreshold: 2 // Idle workers above pending tasks
+};
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration Patterns}
+\subtree{
+\title{With Claude Code}
+\p{Generate Claude Code spawn commands directly:}
+
+\pre{\startverb
+npx claude-flow hive-mind spawn "Build REST API" --claude
+\stopverb}
+
+\p{Output:}
+
+\pre{\startverb
+Task("Queen Coordinator", "Orchestrate REST API development...", "coordinator")
+Task("Backend Developer", "Implement Express routes...", "backend-dev")
+Task("Database Architect", "Design PostgreSQL schema...", "code-analyzer")
+Task("Test Engineer", "Create Jest test suite...", "tester")
+\stopverb}
+}
+
+\subtree{
+\title{With SPARC Methodology}
+\pre{\startverb
+# Use hive mind for SPARC workflow
+npx claude-flow sparc tdd "User authentication" --hive-mind
+
+# Spawns:
+# - Specification agent
+# - Architecture agent
+# - Coder agents
+# - Tester agents
+# - Reviewer agents
+\stopverb}
+}
+
+\subtree{
+\title{With GitHub Integration}
+\pre{\startverb
+# Repository analysis with hive mind
+npx claude-flow hive-mind spawn "Analyze repo quality" --objective "owner/repo"
+
+# PR review coordination
+npx claude-flow hive-mind spawn "Review PR #123" --queen-type tactical
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\subtree{
+\title{Memory Optimization}
+\p{The collective memory system includes advanced optimizations:}
+
+\p{\strong{LRU Cache}}
+
+\ul{
+\li{Configurable cache size (default: 1000 entries)}
+\li{Memory pressure handling (default: 50MB)}
+\li{Automatic eviction of least-used entries}
+}
+
+\p{\strong{Database Optimization}}
+
+\ul{
+\li{WAL (Write-Ahead Logging) mode}
+\li{64MB cache size}
+\li{256MB memory mapping}
+\li{Prepared statements for common queries}
+\li{Automatic ANALYZE and OPTIMIZE}
+}
+
+\p{\strong{Object Pooling}}
+
+\ul{
+\li{Query result pooling}
+\li{Memory entry pooling}
+\li{Reduced garbage collection pressure}
+}
+}
+
+\subtree{
+\title{Performance Metrics}
+\pre{\startverb
+// Get performance insights
+const insights = hiveMind.getPerformanceInsights();
+
+// Includes:
+// - asyncQueue utilization
+// - Batch processing stats
+// - Success rates
+// - Average processing times
+// - Memory efficiency
+\stopverb}
+}
+
+\subtree{
+\title{Task Execution}
+\p{\strong{Parallel Processing}}
+
+\ul{
+\li{Batch agent spawning (5 agents per batch)}
+\li{Concurrent task orchestration}
+\li{Async operation optimization}
+\li{Non-blocking task assignment}
+}
+
+\p{\strong{Benchmarks}}
+
+\ul{
+\li{10-20x faster batch spawning}
+\li{2.8-4.4x speed improvement overall}
+\li{32.3\% token reduction}
+\li{84.8\% SWE-Bench solve rate}
+}
+}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Hive Mind Config}
+\pre{\startverb
+{
+  "objective": "Build microservices",
+  "name": "my-hive",
+  "queenType": "strategic", // strategic | tactical | adaptive
+  "maxWorkers": 8,
+  "consensusAlgorithm": "byzantine", // majority | weighted | byzantine
+  "autoScale": true,
+  "memorySize": 100, // MB
+  "taskTimeout": 60, // minutes
+  "encryption": false
+}
+\stopverb}
+}
+
+\subtree{
+\title{Memory Config}
+\pre{\startverb
+{
+  "maxSize": 100, // MB
+  "compressionThreshold": 1024, // bytes
+  "gcInterval": 300000, // 5 minutes
+  "cacheSize": 1000,
+  "cacheMemoryMB": 50,
+  "enablePooling": true,
+  "enableAsyncOperations": true
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Hooks Integration}
+\p{Hive Mind integrates with Claude Flow hooks for automation:}
+
+\p{\strong{Pre-Task Hooks}}
+
+\ul{
+\li{Auto-assign agents by file type}
+\li{Validate objective complexity}
+\li{Optimize topology selection}
+\li{Cache search patterns}
+}
+
+\p{\strong{Post-Task Hooks}}
+
+\ul{
+\li{Auto-format deliverables}
+\li{Train neural patterns}
+\li{Update collective memory}
+\li{Analyze performance bottlenecks}
+}
+
+\p{\strong{Session Hooks}}
+
+\ul{
+\li{Generate session summaries}
+\li{Persist checkpoint data}
+\li{Track comprehensive metrics}
+\li{Restore execution context}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{1. Choose the Right Queen Type}
+\p{\strong{Strategic Queens} - For research, planning, and analysis}
+
+\pre{\startverb
+npx claude-flow hive-mind spawn "Research ML frameworks" --queen-type strategic
+\stopverb}
+
+\p{\strong{Tactical Queens} - For implementation and execution}
+
+\pre{\startverb
+npx claude-flow hive-mind spawn "Build authentication" --queen-type tactical
+\stopverb}
+
+\p{\strong{Adaptive Queens} - For optimization and dynamic tasks}
+
+\pre{\startverb
+npx claude-flow hive-mind spawn "Optimize performance" --queen-type adaptive
+\stopverb}
+}
+
+\subtree{
+\title{2. Leverage Consensus}
+\p{Use consensus for critical decisions:}
+
+\ul{
+\li{Architecture pattern selection}
+\li{Technology stack choices}
+\li{Implementation approach}
+\li{Code review approval}
+\li{Release readiness}
+}
+}
+
+\subtree{
+\title{3. Utilize Collective Memory}
+\p{\strong{Store Learnings}}
+
+\pre{\startverb
+// After successful pattern implementation
+await memory.store('auth-pattern', {
+  approach: 'JWT with refresh tokens',
+  pros: ['Stateless', 'Scalable'],
+  cons: ['Token size', 'Revocation complexity'],
+  implementation: {...}
+}, 'knowledge', { confidence: 0.95 });
+\stopverb}
+
+\p{\strong{Build Associations}}
+
+\pre{\startverb
+// Link related concepts
+await memory.associate('jwt-auth', 'refresh-tokens', 0.9);
+await memory.associate('jwt-auth', 'oauth2', 0.7);
+\stopverb}
+}
+
+\subtree{
+\title{4. Monitor Performance}
+\pre{\startverb
+# Regular status checks
+npx claude-flow hive-mind status
+
+# Track metrics
+npx claude-flow hive-mind metrics
+
+# Analyze memory usage
+npx claude-flow hive-mind memory
+\stopverb}
+}
+
+\subtree{
+\title{5. Session Management}
+\p{\strong{Checkpoint Frequently}}
+
+\pre{\startverb
+// Create checkpoints at key milestones
+await sessionManager.saveCheckpoint(
+  sessionId,
+  'api-routes-complete',
+  { completedRoutes: [...], remaining: [...] }
+);
+\stopverb}
+
+\p{\strong{Resume Sessions}}
+
+\pre{\startverb
+# Resume from any previous state
+npx claude-flow hive-mind resume <session-id>
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Memory Issues}
+\p{\strong{High Memory Usage}}
+
+\pre{\startverb
+# Run garbage collection
+npx claude-flow hive-mind memory --gc
+
+# Optimize database
+npx claude-flow hive-mind memory --optimize
+
+# Export and clear
+npx claude-flow hive-mind memory --export --clear
+\stopverb}
+
+\p{\strong{Low Cache Hit Rate}}
+
+\pre{\startverb
+// Increase cache size in config
+{
+  "cacheSize": 2000,
+  "cacheMemoryMB": 100
+}
+\stopverb}
+}
+
+\subtree{
+\title{Performance Issues}
+\p{\strong{Slow Task Assignment}}
+
+\pre{\startverb
+// Enable worker type caching
+// The system caches best worker matches for 5 minutes
+// Automatic - no configuration needed
+\stopverb}
+
+\p{\strong{High Queue Utilization}}
+
+\pre{\startverb
+// Increase async queue concurrency
+{
+  "asyncQueueConcurrency": 20 // Default: min(maxWorkers * 2, 20)
+}
+\stopverb}
+}
+
+\subtree{
+\title{Consensus Failures}
+\p{\strong{No Consensus Reached (Byzantine)}}
+
+\pre{\startverb
+# Switch to weighted consensus for more decisive results
+npx claude-flow hive-mind spawn "..." --consensus weighted
+
+# Or use simple majority
+npx claude-flow hive-mind spawn "..." --consensus majority
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Topics}
+\subtree{
+\title{Custom Worker Types}
+\p{Define specialized workers in \code{\startverb .claude/agents/\stopverb}:}
+
+\pre{\startverb
+name: security-auditor
+type: specialist
+capabilities:
+  - vulnerability-scanning
+  - security-review
+  - penetration-testing
+  - compliance-checking
+priority: high
+\stopverb}
+}
+
+\subtree{
+\title{Neural Pattern Training}
+\p{The system trains on successful patterns:}
+
+\pre{\startverb
+// Automatic pattern learning
+// Happens after successful task completion
+// Stores in collective memory
+// Improves future task matching
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Hive Coordination}
+\p{Run multiple hive minds simultaneously:}
+
+\pre{\startverb
+# Frontend hive
+npx claude-flow hive-mind spawn "Build UI" --name frontend-hive
+
+# Backend hive
+npx claude-flow hive-mind spawn "Build API" --name backend-hive
+
+# They share collective memory for coordination
+\stopverb}
+}
+
+\subtree{
+\title{Export/Import Sessions}
+\pre{\startverb
+# Export session for backup
+npx claude-flow hive-mind export <session-id> --output backup.json
+
+# Import session
+npx claude-flow hive-mind import backup.json
+\stopverb}
+}
+}
+
+\subtree{
+\title{API Reference}
+\subtree{
+\title{HiveMindCore}
+\pre{\startverb
+const hiveMind = new HiveMindCore({
+  objective: 'Build system',
+  queenType: 'strategic',
+  maxWorkers: 8,
+  consensusAlgorithm: 'byzantine'
+});
+
+await hiveMind.initialize();
+await hiveMind.spawnQueen(queenData);
+await hiveMind.spawnWorkers(['coder', 'tester']);
+await hiveMind.createTask('Implement feature', 7);
+const decision = await hiveMind.buildConsensus('topic', options);
+const status = hiveMind.getStatus();
+await hiveMind.shutdown();
+\stopverb}
+}
+
+\subtree{
+\title{CollectiveMemory}
+\pre{\startverb
+const memory = new CollectiveMemory({
+  swarmId: 'hive-123',
+  maxSize: 100,
+  cacheSize: 1000
+});
+
+await memory.store(key, value, type, metadata);
+const data = await memory.retrieve(key);
+const results = await memory.search(pattern, options);
+const related = await memory.getRelated(key, limit);
+await memory.associate(key1, key2, strength);
+const stats = memory.getStatistics();
+const analytics = memory.getAnalytics();
+const health = await memory.healthCheck();
+\stopverb}
+}
+
+\subtree{
+\title{HiveMindSessionManager}
+\pre{\startverb
+const sessionManager = new HiveMindSessionManager();
+
+const sessionId = await sessionManager.createSession(
+  swarmId, swarmName, objective, metadata
+);
+
+await sessionManager.saveCheckpoint(sessionId, name, data);
+const sessions = await sessionManager.getActiveSessions();
+const session = await sessionManager.getSession(sessionId);
+await sessionManager.pauseSession(sessionId);
+await sessionManager.resumeSession(sessionId);
+await sessionManager.stopSession(sessionId);
+await sessionManager.completeSession(sessionId);
+\stopverb}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Full-Stack Development}
+\pre{\startverb
+# Initialize hive mind
+npx claude-flow hive-mind init
+
+# Spawn full-stack hive
+npx claude-flow hive-mind spawn "Build e-commerce platform" \
+  --queen-type strategic \
+  --max-workers 10 \
+  --consensus weighted \
+  --claude
+
+# Output generates Claude Code commands:
+# - Queen coordinator
+# - Frontend developers (React)
+# - Backend developers (Node.js)
+# - Database architects
+# - DevOps engineers
+# - Security auditors
+# - Test engineers
+# - Documentation specialists
+\stopverb}
+}
+
+\subtree{
+\title{Research and Analysis}
+\pre{\startverb
+# Spawn research hive
+npx claude-flow hive-mind spawn "Research GraphQL vs REST" \
+  --queen-type adaptive \
+  --consensus byzantine
+
+# Researchers gather data
+# Analysts process findings
+# Queen builds consensus on recommendation
+# Results stored in collective memory
+\stopverb}
+}
+
+\subtree{
+\title{Code Review}
+\pre{\startverb
+# Review coordination
+npx claude-flow hive-mind spawn "Review PR #456" \
+  --queen-type tactical \
+  --max-workers 6
+
+# Spawns:
+# - Code analyzers
+# - Security reviewers
+# - Performance reviewers
+# - Test coverage analyzers
+# - Documentation reviewers
+# - Consensus on approval/changes
+\stopverb}
+}
+}
+
+\subtree{
+\title{Skill Progression}
+\subtree{
+\title{Beginner}
+\ol{
+\li{Initialize hive mind}
+\li{Spawn basic swarms}
+\li{Monitor status}
+\li{Use majority consensus}
+}
+}
+
+\subtree{
+\title{Intermediate}
+\ol{
+\li{Configure queen types}
+\li{Implement session management}
+\li{Use weighted consensus}
+\li{Access collective memory}
+\li{Enable auto-scaling}
+}
+}
+
+\subtree{
+\title{Advanced}
+\ol{
+\li{Byzantine fault tolerance}
+\li{Memory optimization}
+\li{Custom worker types}
+\li{Multi-hive coordination}
+\li{Neural pattern training}
+\li{Session export/import}
+\li{Performance tuning}
+}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb swarm-orchestration\stopverb}: Basic swarm coordination}
+\li{\code{\startverb consensus-mechanisms\stopverb}: Distributed decision making}
+\li{\code{\startverb memory-systems\stopverb}: Advanced memory management}
+\li{\code{\startverb sparc-methodology\stopverb}: Structured development workflow}
+\li{\code{\startverb github-integration\stopverb}: Repository coordination}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Hive Mind Documentation](https://github.com/ruvnet/claude-flow/docs/hive-mind)}
+\li{[Collective Intelligence Patterns](https://github.com/ruvnet/claude-flow/docs/patterns)}
+\li{[Byzantine Consensus](https://github.com/ruvnet/claude-flow/docs/consensus)}
+\li{[Memory Optimization](https://github.com/ruvnet/claude-flow/docs/memory)}
+}
+
+\p{\strong{Skill Version}: 1.0.0 \strong{Last Updated}: 2025-10-19 \strong{Maintained By}: Claude Flow Team \strong{License}: MIT}
+}
+}

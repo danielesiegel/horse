@@ -1,0 +1,148 @@
+\title{Scum Score}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'SCUM Score Skill'}
+
+\subtree{
+\title{SCUM Score Skill}
+\blockquote{\strong{S}ystem \strong{C}onsumer \strong{U}tilization \strong{M}etrics - Identify and terminate resource-hogging processes}
+
+\subtree{
+\title{Overview}
+\p{SCUM Score quantifies process resource consumption using GF(3) triadic classification:}
+
+\pre{\startverb
+| Trit | Category | CPU Range | Memory Range | Action |
+|------|----------|-----------|--------------|--------|
+| **+1** | SCUM | >30% CPU or >5% MEM | High | Kill candidate |
+| **0** | Normal | 1-30% CPU | 0.5-5% MEM | Monitor |
+| **-1** | Idle | <1% CPU | <0.5% MEM | Ignore |
+\stopverb}
+}
+
+\subtree{
+\title{SCUM Score Formula}
+\pre{\startverb
+SCUM(p) = 0.6 * (cpu% / 100) + 0.3 * (mem% / 100) + 0.1 * (runtime_hrs / 24)
+\stopverb}
+
+\p{Threshold: \strong{SCUM(p) > 0.35} = SCUM process}
+}
+
+\subtree{
+\title{Quick Commands}
+\subtree{
+\title{View Current SCUM}
+\pre{\startverb
+# Top 10 SCUM processes with scores
+ps axo pid,comm,%cpu,%mem,time | awk 'NR>1 {
+  scum = 0.6*($3/100) + 0.3*($4/100);
+  if (scum > 0.1) printf "%.3f SCUM %5d %s\n", scum, $1, $2
+}' | sort -rn | head -10
+\stopverb}
+}
+
+\subtree{
+\title{Kill SCUM (Interactive)}
+\pre{\startverb
+# Identify and offer to kill
+ps axo pid,comm,%cpu,%mem | awk 'NR>1 && $3>30 {print $1, $2, $3"%"}' | while read pid name cpu; do
+  echo "Kill $name (PID $pid) using $cpu CPU? [y/N]"
+  read ans
+  [[ "$ans" == "y" ]] && kill -9 $pid && echo "Killed $name"
+done
+\stopverb}
+}
+
+\subtree{
+\title{Babashka SCUM Analysis}
+\pre{\startverb
+#!/usr/bin/env bb
+(require '[babashka.process :refer [shell]])
+(require '[clojure.string :as str])
+
+(defn parse-ps []
+  (->> (shell {:out :string} "ps axo pid,comm,%cpu,%mem")
+       :out
+       str/split-lines
+       rest
+       (map #(str/split % #"\s+"))
+       (map (fn [[_ pid comm cpu mem]]
+              {:pid (parse-long pid)
+               :comm comm
+               :cpu (parse-double cpu)
+               :mem (parse-double mem)
+               :scum (+ (* 0.6 (/ (parse-double cpu) 100))
+                        (* 0.3 (/ (parse-double mem) 100)))}))
+       (filter #(> (:scum %) 0.1))
+       (sort-by :scum >)))
+
+(doseq [p (take 10 (parse-ps))]
+  (printf "%.3f SCUM [%d] %s (%.1f%% CPU, %.1f%% MEM)\n"
+          (:scum p) (:pid p) (:comm p) (:cpu p) (:mem p)))
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Process Classification}
+\pre{\startverb
+Process Trit Assignment:
+  trit(p) = sign(SCUM(p) - 0.15) where:
+    SCUM > 0.35  → +1 (SCUM - kill candidate)
+    0.15 < SCUM ≤ 0.35 → 0 (NORMAL - monitor)
+    SCUM ≤ 0.15 → -1 (IDLE - ignore)
+
+Conservation: Σ trit(processes) should approach 0 for healthy system
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Resource Sharing}
+\p{SCUM processes are candidates for:}
+
+\ol{
+\li{\strong{Throttling} via \code{\startverb renice\stopverb} or \code{\startverb cpulimit\stopverb}}
+\li{\strong{Migration} to other machines via LocalSend/Tailscale}
+\li{\strong{Termination} if unresponsive}
+}
+}
+
+\subtree{
+\title{Sophie Lipkid Resource Sharing Protocol}
+\p{Named after the "all category resource sharing machines" principle:}
+
+\pre{\startverb
+ResourceShare(p, target) = {
+  if SCUM(p) > 0.35:
+    migrate(p, least_loaded_peer())
+  elif SCUM(p) > 0.2:
+    throttle(p, 50%)
+  else:
+    allow(p)
+}
+\stopverb}
+}
+
+\subtree{
+\title{Justfile Recipes}
+\pre{\startverb
+# View SCUM scores
+scum-view:
+  ps axo pid,comm,%cpu,%mem | awk 'NR>1 {s=0.6*($3/100)+0.3*($4/100); if(s>0.1) printf "%.3f %s\n",s,$2}' | sort -rn | head -15
+
+# Kill all SCUM (DANGEROUS)
+scum-kill:
+  ps axo pid,%cpu | awk 'NR>1 && $2>50 {print $1}' | xargs -r kill -9
+
+# Throttle high CPU
+scum-throttle:
+  ps axo pid,%cpu | awk 'NR>1 && $2>30 && $2<50 {print $1}' | xargs -I{} renice +10 {}
+\stopverb}
+
+\p{\strong{Skill Name}: scum-score \strong{Trit}: -1 (MINUS - Validator/Constrainer) \strong{GF(3) Role}: Identifies and constrains resource hogs \strong{Integration}: resource-sharing, localsend-mcp, tailscale-mesh}
+}
+}

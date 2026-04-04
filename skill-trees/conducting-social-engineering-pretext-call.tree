@@ -1,0 +1,205 @@
+\title{Conducting Social Engineering Pretext Call}
+
+\taxon{skill}
+
+\tag{social-engineering}
+
+\tag{vishing}
+
+\tag{pretext-call}
+
+\tag{security-awareness}
+
+\tag{red-team}
+
+\tag{phishing}
+
+\tag{human-risk}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Plan and execute authorized vishing (voice phishing) pretext calls to assess employee susceptibility to social engineering and evaluate security awareness controls.}
+
+\subtree{
+\title{Conducting Social Engineering Pretext Call}
+\subtree{
+\title{Overview}
+\p{A pretext call (vishing) is a social engineering technique where an attacker impersonates a trusted authority figure over the phone to manipulate targets into divulging sensitive information, performing actions, or granting access. In red team engagements, pretext calls test the human element of security controls, measuring employee adherence to verification procedures and security awareness training effectiveness. MITRE ATT&CK maps this to T1566.004 (Phishing for Information: Voice) and T1598 (Phishing for Information).}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve conducting social engineering pretext call}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Written authorization specifying social engineering scope and boundaries}
+\li{List of approved target employees (usually provided by client)}
+\li{OSINT research on targets and organization}
+\li{Spoofed caller ID capability (authorized for testing)}
+\li{Call recording equipment (with legal consent as required)}
+\li{Pretext scenarios approved by client}
+}
+}
+
+\subtree{
+\title{MITRE ATT&CK Mapping}
+\pre{\startverb
+| Technique ID | Name | Tactic |
+|---|---|---|
+| T1566.004 | Phishing: Voice | Initial Access |
+| T1598 | Phishing for Information | Reconnaissance |
+| T1598.003 | Phishing for Information: Spearphishing Voice | Reconnaissance |
+| T1589 | Gather Victim Identity Information | Reconnaissance |
+| T1591 | Gather Victim Org Information | Reconnaissance |
+\stopverb}
+}
+
+\subtree{
+\title{Phase 1: OSINT and Target Research}
+\pre{\startverb
+# LinkedIn employee enumeration
+theHarvester -d targetcorp.com -b linkedin -l 200
+
+# Company org chart and employee roles
+# Review LinkedIn, corporate website "About Us" / "Team" pages
+
+# Technology stack identification
+# Check job postings for technology references (VPN vendor, email, helpdesk tool)
+
+# Phone system identification
+# Call main line, note IVR options, department names, extension patterns
+\stopverb}
+
+\p{Key intelligence to gather:}
+
+\ul{
+\li{Internal helpdesk phone number and procedures}
+\li{IT department names and staff}
+\li{VPN/remote access vendor (Cisco AnyConnect, Fortinet, Pulse Secure)}
+\li{Corporate email format (first.last, flast, etc.)}
+\li{Recent events (mergers, office moves, system upgrades)}
+\li{Employee names, titles, departments}
+}
+}
+
+\subtree{
+\title{Phase 2: Pretext Development}
+\subtree{
+\title{Common Pretext Scenarios}
+\p{\strong{IT Helpdesk Impersonation (Most Effective):} > "Hi, this is [name] from the IT Service Desk. We're migrating everyone to the new VPN client this week, and I see your account hasn't been updated yet. I need to verify your current credentials to ensure the migration goes smoothly. Can you confirm your username and current password?"}
+
+\p{\strong{Vendor/Contractor:} > "Hi, I'm [name] from [known vendor]. We're doing an emergency patch deployment for [product] and I need remote access to your system. Could you help me connect via TeamViewer?"}
+
+\p{\strong{Executive Assistant (Authority):} > "This is [name] calling on behalf of [CFO name]. [He/She] needs an urgent wire transfer processed for a deal that's closing today. I'll email you the details, but we need this done in the next hour."}
+
+\p{\strong{Building/Facilities:} > "Hi, this is [name] from facilities management. We're updating the badge access system this weekend. I need to confirm your employee ID and current badge number so your access isn't interrupted."}
+}
+
+\subtree{
+\title{Pretext Checklist}
+\ul{
+\li{[ ] Is the pretext believable for this organization?}
+\li{[ ] Does it create appropriate urgency without being threatening?}
+\li{[ ] Does it align with OSINT findings (real dept names, real systems)?}
+\li{[ ] Does it have a plausible reason for requesting information?}
+\li{[ ] Is there a fallback if the target pushes back?}
+\li{[ ] Has the client approved this specific pretext?}
+}
+}
+}
+
+\subtree{
+\title{Phase 3: Call Execution}
+\subtree{
+\title{Call Structure}
+\ol{
+\li{\strong{Introduction} (10 seconds): State name, department, reason for calling}
+\li{\strong{Building rapport} (30 seconds): Reference something real (recent event, shared context)}
+\li{\strong{Authority establishment} (20 seconds): Reference manager name, ticket number, urgency}
+\li{\strong{Information request} (30 seconds): Ask for the target information naturally}
+\li{\strong{Handling objections}: If challenged, respond calmly with prepared answers}
+\li{\strong{Closing} (10 seconds): Thank them, leave no suspicion}
+}
+}
+
+\subtree{
+\title{Objection Handling}
+\pre{\startverb
+| Objection | Response |
+|---|---|
+| "Can I call you back?" | "Of course, call the main helpdesk line and ask for [name]. But this needs to be done by EOD." |
+| "I need to verify this" | "Absolutely, I appreciate your diligence. You can check with [manager name]." |
+| "I was told never to give passwords" | "You're right, and normally we wouldn't ask. This is a special case because [reason]. I can have my manager call you." |
+| "What's your employee ID?" | Pivot: "It's [made-up ID]. Listen, I have 50 more people to call today. Can we just get this done?" |
+| "I'll email IT instead" | "Sure, but the system migration happens tonight. If it's not done by then..." |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Phase 4: Data Collection and Metrics}
+\p{Track the following for each call:}
+
+\pre{\startverb
+| Metric | Description |
+|---|---|
+| Target Name | Employee called |
+| Department | Target's department |
+| Date/Time | When call was made |
+| Duration | Length of call |
+| Pretext Used | Which scenario |
+| Information Obtained | What was disclosed |
+| Credential Disclosed | Yes/No (and type) |
+| Verification Attempted | Did target try to verify caller? |
+| Reported to Security | Did target report the call? |
+| Social Engineering Score | 1-5 susceptibility rating |
+\stopverb}
+}
+
+\subtree{
+\title{Phase 5: Reporting}
+\subtree{
+\title{Success Metrics}
+\pre{\startverb
+| Metric | Target | Result |
+|---|---|---|
+| Credential Disclosure Rate | <10% | XX% |
+| Sensitive Info Disclosure Rate | <20% | XX% |
+| Verification Rate | >80% | XX% |
+| Security Reporting Rate | >50% | XX% |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Ethical and Legal Considerations}
+\ol{
+\li{\strong{Always obtain written authorization} before conducting vishing tests}
+\li{\strong{Never use threatening language} or create genuine fear}
+\li{\strong{Document consent} and legal requirements for call recording}
+\li{\strong{Protect disclosed credentials} - immediately report to client}
+\li{\strong{Debrief targets} after the engagement if client approves}
+\li{\strong{Never publicly identify} specific employees who failed}
+\li{\strong{Comply with telecommunications laws} in your jurisdiction}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Verizon DBIR 2025: 74\% of breaches involve human element}
+\li{MITRE ATT&CK T1598: https://attack.mitre.org/techniques/T1598/}
+\li{Social Engineering Penetration Testing by Gavin Watson (Syngress)}
+\li{The Art of Deception by Kevin Mitnick (Wiley)}
+\li{NIST SP 800-50: Building an Information Technology Security Awareness and Training Program}
+}
+}
+}

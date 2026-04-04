@@ -1,0 +1,583 @@
+\title{Flox Cuda}
+
+\taxon{skill}
+
+\meta{description}{CUDA and GPU development with Flox. Use for NVIDIA CUDA setup, GPU computing, deep learning frameworks, cuDNN, and cross-platform GPU/CPU development.}
+
+\subtree{
+\title{Flox CUDA Development Guide}
+\subtree{
+\title{Prerequisites & Authentication}
+\ul{
+\li{Sign up for early access at https://flox.dev}
+\li{Authenticate with \code{\startverb flox auth login\stopverb}}
+\li{\strong{Linux-only}: CUDA packages only work on \code{\startverb ["aarch64-linux", "x86_64-linux"]\stopverb}}
+\li{All CUDA packages are prefixed with \code{\startverb flox-cuda/\stopverb} in the catalog}
+\li{\strong{No macOS support}: Use Metal alternatives on Darwin}
+}
+}
+
+\subtree{
+\title{Core Commands}
+\pre{\startverb
+# Search for CUDA packages
+flox search cudatoolkit --all | grep flox-cuda
+flox search nvcc --all | grep 12_8
+
+# Show available versions
+flox show flox-cuda/cudaPackages.cudatoolkit
+
+# Install CUDA packages
+flox install flox-cuda/cudaPackages_12_8.cuda_nvcc
+flox install flox-cuda/cudaPackages.cuda_cudart
+
+# Verify installation
+nvcc --version
+nvidia-smi
+\stopverb}
+}
+
+\subtree{
+\title{Package Discovery}
+\pre{\startverb
+# Search for CUDA toolkit
+flox search cudatoolkit --all | grep flox-cuda
+
+# Search for specific versions
+flox search nvcc --all | grep 12_8
+
+# Show all available versions
+flox show flox-cuda/cudaPackages.cudatoolkit
+
+# Search for CUDA libraries
+flox search libcublas --all | grep flox-cuda
+flox search cudnn --all | grep flox-cuda
+\stopverb}
+}
+
+\subtree{
+\title{Essential CUDA Packages}
+\pre{\startverb
+| Package Pattern | Purpose | Example |
+|-----------------|---------|---------|
+| `cudaPackages_X_Y.cudatoolkit` | Main CUDA Toolkit | `cudaPackages_12_8.cudatoolkit` |
+| `cudaPackages_X_Y.cuda_nvcc` | NVIDIA C++ Compiler | `cudaPackages_12_8.cuda_nvcc` |
+| `cudaPackages.cuda_cudart` | CUDA Runtime API | `cuda_cudart` |
+| `cudaPackages_X_Y.libcublas` | Linear algebra | `cudaPackages_12_8.libcublas` |
+| `cudaPackages_X_Y.libcufft` | Fast Fourier Transform | `cudaPackages_12_8.libcufft` |
+| `cudaPackages_X_Y.libcurand` | Random number generation | `cudaPackages_12_8.libcurand` |
+| `cudaPackages_X_Y.cudnn_9_11` | Deep neural networks | `cudaPackages_12_8.cudnn_9_11` |
+| `cudaPackages_X_Y.nccl` | Multi-GPU communication | `cudaPackages_12_8.nccl` |
+\stopverb}
+}
+
+\subtree{
+\title{Critical: Conflict Resolution}
+\p{\strong{CUDA packages have LICENSE file conflicts requiring explicit priorities:}}
+
+\pre{\startverb
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_12_8.cuda_nvcc"
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+cuda_nvcc.priority = 1                    # Highest priority
+
+cuda_cudart.pkg-path = "flox-cuda/cudaPackages.cuda_cudart"
+cuda_cudart.systems = ["aarch64-linux", "x86_64-linux"]
+cuda_cudart.priority = 2
+
+cudatoolkit.pkg-path = "flox-cuda/cudaPackages_12_8.cudatoolkit"
+cudatoolkit.systems = ["aarch64-linux", "x86_64-linux"]
+cudatoolkit.priority = 3                  # Lower for LICENSE conflicts
+
+gcc.pkg-path = "gcc"
+gcc-unwrapped.pkg-path = "gcc-unwrapped"  # For libstdc++
+gcc-unwrapped.priority = 5
+\stopverb}
+}
+
+\subtree{
+\title{CUDA Version Selection}
+\subtree{
+\title{CUDA 12.x (Current)}
+\pre{\startverb
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_12_8.cuda_nvcc"
+cuda_nvcc.priority = 1
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+
+cudatoolkit.pkg-path = "flox-cuda/cudaPackages_12_8.cudatoolkit"
+cudatoolkit.priority = 3
+cudatoolkit.systems = ["aarch64-linux", "x86_64-linux"]
+\stopverb}
+}
+
+\subtree{
+\title{CUDA 11.x (Legacy Support)}
+\pre{\startverb
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_11_8.cuda_nvcc"
+cuda_nvcc.priority = 1
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+
+cudatoolkit.pkg-path = "flox-cuda/cudaPackages_11_8.cudatoolkit"
+cudatoolkit.priority = 3
+cudatoolkit.systems = ["aarch64-linux", "x86_64-linux"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Cross-Platform GPU Development}
+\p{Dual CUDA/CPU packages for portability (Linux gets CUDA, macOS gets CPU fallback):}
+
+\pre{\startverb
+[install]
+## CUDA packages (Linux only)
+cuda-pytorch.pkg-path = "flox-cuda/python3Packages.torch"
+cuda-pytorch.systems = ["x86_64-linux", "aarch64-linux"]
+cuda-pytorch.priority = 1
+
+## Non-CUDA packages (macOS + Linux fallback)
+pytorch.pkg-path = "python313Packages.pytorch"
+pytorch.systems = ["x86_64-darwin", "aarch64-darwin"]
+pytorch.priority = 6                     # Lower priority
+\stopverb}
+}
+
+\subtree{
+\title{GPU Detection Pattern}
+\p{\strong{Dynamic CPU/GPU package installation in hooks:}}
+
+\pre{\startverb
+setup_gpu_packages() {
+  venv="$FLOX_ENV_CACHE/venv"
+
+  if [ ! -f "$FLOX_ENV_CACHE/.deps_installed" ]; then
+    if lspci 2>/dev/null | grep -E 'NVIDIA|AMD' > /dev/null; then
+      echo "GPU detected, installing CUDA packages"
+      uv pip install --python "$venv/bin/python" \
+        torch torchvision --index-url https://download.pytorch.org/whl/cu129
+    else
+      echo "No GPU detected, installing CPU packages"
+      uv pip install --python "$venv/bin/python" \
+        torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    fi
+    touch "$FLOX_ENV_CACHE/.deps_installed"
+  fi
+}
+\stopverb}
+}
+
+\subtree{
+\title{Complete CUDA Environment Examples}
+\subtree{
+\title{Basic CUDA Development}
+\pre{\startverb
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_12_8.cuda_nvcc"
+cuda_nvcc.priority = 1
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+
+cuda_cudart.pkg-path = "flox-cuda/cudaPackages.cuda_cudart"
+cuda_cudart.priority = 2
+cuda_cudart.systems = ["aarch64-linux", "x86_64-linux"]
+
+gcc.pkg-path = "gcc"
+gcc-unwrapped.pkg-path = "gcc-unwrapped"
+gcc-unwrapped.priority = 5
+
+[vars]
+CUDA_VERSION = "12.8"
+CUDA_HOME = "$FLOX_ENV"
+
+[hook]
+echo "CUDA $CUDA_VERSION environment ready"
+echo "nvcc: $(nvcc --version | grep release)"
+\stopverb}
+}
+
+\subtree{
+\title{Deep Learning with PyTorch}
+\pre{\startverb
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_12_8.cuda_nvcc"
+cuda_nvcc.priority = 1
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+
+cuda_cudart.pkg-path = "flox-cuda/cudaPackages.cuda_cudart"
+cuda_cudart.priority = 2
+cuda_cudart.systems = ["aarch64-linux", "x86_64-linux"]
+
+libcublas.pkg-path = "flox-cuda/cudaPackages_12_8.libcublas"
+libcublas.priority = 2
+libcublas.systems = ["aarch64-linux", "x86_64-linux"]
+
+cudnn.pkg-path = "flox-cuda/cudaPackages_12_8.cudnn_9_11"
+cudnn.priority = 2
+cudnn.systems = ["aarch64-linux", "x86_64-linux"]
+
+python313Full.pkg-path = "python313Full"
+uv.pkg-path = "uv"
+gcc-unwrapped.pkg-path = "gcc-unwrapped"
+gcc-unwrapped.priority = 5
+
+[vars]
+CUDA_VERSION = "12.8"
+PYTORCH_CUDA_ALLOC_CONF = "max_split_size_mb:128"
+
+[hook]
+setup_pytorch_cuda() {
+  venv="$FLOX_ENV_CACHE/venv"
+
+  if [ ! -d "$venv" ]; then
+    uv venv "$venv" --python python3
+  fi
+
+  if [ -f "$venv/bin/activate" ]; then
+    source "$venv/bin/activate"
+  fi
+
+  if [ ! -f "$FLOX_ENV_CACHE/.deps_installed" ]; then
+    uv pip install --python "$venv/bin/python" \
+      torch torchvision torchaudio \
+      --index-url https://download.pytorch.org/whl/cu129
+    touch "$FLOX_ENV_CACHE/.deps_installed"
+  fi
+}
+
+setup_pytorch_cuda
+\stopverb}
+}
+
+\subtree{
+\title{TensorFlow with CUDA}
+\pre{\startverb
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_12_8.cuda_nvcc"
+cuda_nvcc.priority = 1
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+
+cuda_cudart.pkg-path = "flox-cuda/cudaPackages.cuda_cudart"
+cuda_cudart.priority = 2
+cuda_cudart.systems = ["aarch64-linux", "x86_64-linux"]
+
+cudnn.pkg-path = "flox-cuda/cudaPackages_12_8.cudnn_9_11"
+cudnn.priority = 2
+cudnn.systems = ["aarch64-linux", "x86_64-linux"]
+
+python313Full.pkg-path = "python313Full"
+uv.pkg-path = "uv"
+
+[hook]
+setup_tensorflow() {
+  venv="$FLOX_ENV_CACHE/venv"
+  [ ! -d "$venv" ] && uv venv "$venv" --python python3
+  [ -f "$venv/bin/activate" ] && source "$venv/bin/activate"
+
+  if [ ! -f "$FLOX_ENV_CACHE/.tf_installed" ]; then
+    uv pip install --python "$venv/bin/python" tensorflow[and-cuda]
+    touch "$FLOX_ENV_CACHE/.tf_installed"
+  fi
+}
+
+setup_tensorflow
+\stopverb}
+}
+
+\subtree{
+\title{Multi-GPU Development}
+\pre{\startverb
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_12_8.cuda_nvcc"
+cuda_nvcc.priority = 1
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+
+nccl.pkg-path = "flox-cuda/cudaPackages_12_8.nccl"
+nccl.priority = 2
+nccl.systems = ["aarch64-linux", "x86_64-linux"]
+
+libcublas.pkg-path = "flox-cuda/cudaPackages_12_8.libcublas"
+libcublas.priority = 2
+libcublas.systems = ["aarch64-linux", "x86_64-linux"]
+
+[vars]
+CUDA_VISIBLE_DEVICES = "0,1,2,3"  # All GPUs
+NCCL_DEBUG = "INFO"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Modular CUDA Environments}
+\subtree{
+\title{Base CUDA Environment}
+\pre{\startverb
+# team/cuda-base
+[install]
+cuda_nvcc.pkg-path = "flox-cuda/cudaPackages_12_8.cuda_nvcc"
+cuda_nvcc.priority = 1
+cuda_nvcc.systems = ["aarch64-linux", "x86_64-linux"]
+
+cuda_cudart.pkg-path = "flox-cuda/cudaPackages.cuda_cudart"
+cuda_cudart.priority = 2
+cuda_cudart.systems = ["aarch64-linux", "x86_64-linux"]
+
+gcc.pkg-path = "gcc"
+gcc-unwrapped.pkg-path = "gcc-unwrapped"
+gcc-unwrapped.priority = 5
+
+[vars]
+CUDA_VERSION = "12.8"
+CUDA_HOME = "$FLOX_ENV"
+\stopverb}
+}
+
+\subtree{
+\title{CUDA Math Libraries}
+\pre{\startverb
+# team/cuda-math
+[include]
+environments = [{ remote = "team/cuda-base" }]
+
+[install]
+libcublas.pkg-path = "flox-cuda/cudaPackages_12_8.libcublas"
+libcublas.priority = 2
+libcublas.systems = ["aarch64-linux", "x86_64-linux"]
+
+libcufft.pkg-path = "flox-cuda/cudaPackages_12_8.libcufft"
+libcufft.priority = 2
+libcufft.systems = ["aarch64-linux", "x86_64-linux"]
+
+libcurand.pkg-path = "flox-cuda/cudaPackages_12_8.libcurand"
+libcurand.priority = 2
+libcurand.systems = ["aarch64-linux", "x86_64-linux"]
+\stopverb}
+}
+
+\subtree{
+\title{CUDA Debugging Tools}
+\pre{\startverb
+# team/cuda-debug
+[install]
+cuda-gdb.pkg-path = "flox-cuda/cudaPackages_12_8.cuda-gdb"
+cuda-gdb.systems = ["aarch64-linux", "x86_64-linux"]
+
+nsight-systems.pkg-path = "flox-cuda/cudaPackages_12_8.nsight-systems"
+nsight-systems.systems = ["aarch64-linux", "x86_64-linux"]
+
+[vars]
+CUDA_LAUNCH_BLOCKING = "1"  # Synchronous kernel launches for debugging
+\stopverb}
+}
+
+\subtree{
+\title{Layer for Development}
+\pre{\startverb
+# Base CUDA environment
+flox activate -r team/cuda-base
+
+# Add debugging tools when needed
+flox activate -r team/cuda-base -- flox activate -r team/cuda-debug
+\stopverb}
+}
+}
+
+\subtree{
+\title{Testing CUDA Installation}
+\subtree{
+\title{Verify CUDA Compiler}
+\pre{\startverb
+nvcc --version
+\stopverb}
+}
+
+\subtree{
+\title{Check GPU Availability}
+\pre{\startverb
+nvidia-smi
+\stopverb}
+}
+
+\subtree{
+\title{Compile Test Program}
+\pre{\startverb
+cat > hello_cuda.cu << 'EOF'
+#include <stdio.h>
+
+__global__ void hello() {
+    printf("Hello from GPU!\n");
+}
+
+int main() {
+    hello<<<1,1>>>();
+    cudaDeviceSynchronize();
+    return 0;
+}
+EOF
+
+nvcc hello_cuda.cu -o hello_cuda
+./hello_cuda
+\stopverb}
+}
+
+\subtree{
+\title{Test PyTorch CUDA}
+\pre{\startverb
+import torch
+print(f"CUDA available: {torch.cuda.is_available()}")
+print(f"CUDA version: {torch.version.cuda}")
+print(f"GPU count: {torch.cuda.device_count()}")
+if torch.cuda.is_available():
+    print(f"GPU name: {torch.cuda.get_device_name(0)}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Always Use Priority Values}
+\p{CUDA packages have predictable conflicts - assign explicit priorities}
+}
+
+\subtree{
+\title{Version Consistency}
+\p{Use specific versions (e.g., \code{\startverb _12_8\stopverb}) for reproducibility. Don't mix CUDA versions.}
+}
+
+\subtree{
+\title{Modular Design}
+\p{Split base CUDA, math libs, and debugging into separate environments for flexibility}
+}
+
+\subtree{
+\title{Test Compilation}
+\p{Verify \code{\startverb nvcc hello.cu -o hello\stopverb} works after setup}
+}
+
+\subtree{
+\title{Platform Constraints}
+\p{Always include \code{\startverb systems = ["aarch64-linux", "x86_64-linux"]\stopverb}}
+}
+
+\subtree{
+\title{Memory Management}
+\p{Set appropriate CUDA memory allocator configs:}
+
+\pre{\startverb
+[vars]
+PYTORCH_CUDA_ALLOC_CONF = "max_split_size_mb:128"
+CUDA_LAUNCH_BLOCKING = "0"  # Async by default
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common CUDA Gotchas}
+\subtree{
+\title{CUDA Toolkit ≠ Complete Toolkit}
+\p{The cudatoolkit package doesn't include all libraries. Add what you need:}
+
+\ul{
+\li{libcublas for linear algebra}
+\li{libcufft for FFT}
+\li{cudnn for deep learning}
+}
+}
+
+\subtree{
+\title{License Conflicts}
+\p{Every CUDA package may need explicit priority due to LICENSE file conflicts}
+}
+
+\subtree{
+\title{No macOS Support}
+\p{CUDA is Linux-only. Use Metal-accelerated packages on Darwin when available}
+}
+
+\subtree{
+\title{Version Mixing}
+\p{Don't mix CUDA versions. Use consistent \code{\startverb _X_Y\stopverb} suffixes across all CUDA packages}
+}
+
+\subtree{
+\title{Python Virtual Environments}
+\p{CUDA Python packages (PyTorch, TensorFlow) should be installed in venv with correct CUDA version}
+}
+
+\subtree{
+\title{Driver Requirements}
+\p{Ensure NVIDIA driver supports your CUDA version. Check with \code{\startverb nvidia-smi\stopverb}}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{CUDA Not Found}
+\pre{\startverb
+# Check CUDA_HOME
+echo $CUDA_HOME
+
+# Check nvcc
+which nvcc
+nvcc --version
+
+# Check library paths
+echo $LD_LIBRARY_PATH
+\stopverb}
+}
+
+\subtree{
+\title{PyTorch Not Using GPU}
+\pre{\startverb
+import torch
+print(torch.cuda.is_available())  # Should be True
+print(torch.version.cuda)         # Should match your CUDA version
+
+# If False, reinstall with correct CUDA version
+# uv pip install torch --index-url https://download.pytorch.org/whl/cu129
+\stopverb}
+}
+
+\subtree{
+\title{Compilation Errors}
+\pre{\startverb
+# Check gcc/g++ version
+gcc --version
+g++ --version
+
+# Ensure gcc-unwrapped is installed
+flox list | grep gcc-unwrapped
+
+# Check include paths
+echo $CPATH
+echo $LIBRARY_PATH
+\stopverb}
+}
+
+\subtree{
+\title{Runtime Errors}
+\pre{\startverb
+# Check GPU visibility
+echo $CUDA_VISIBLE_DEVICES
+
+# Check for GPU
+nvidia-smi
+
+# Run with debug output
+CUDA_LAUNCH_BLOCKING=1 python my_script.py
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{flox-environments} - Setting up development environments}
+\li{\strong{flox-sharing} - Composing CUDA base with project environments}
+\li{\strong{flox-containers} - Containerizing CUDA environments for deployment}
+\li{\strong{flox-services} - Running CUDA workloads as services}
+}
+}
+}

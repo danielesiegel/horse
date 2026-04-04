@@ -1,0 +1,84 @@
+\title{Sveltekit Data Flow}
+
+\taxon{skill}
+
+\meta{description}{SvelteKit data flow guidance. Use for load functions, form actions, server/client data, and invalidation. Covers +page.server.ts vs +page.ts, serialization, fail(), redirect(), error(), invalidateAll().}
+
+\subtree{
+\title{SvelteKit Data Flow}
+\subtree{
+\title{Quick Start}
+\p{\strong{Which file?} Server-only (DB/secrets): \code{\startverb +page.server.ts\stopverb} | Universal (runs both): \code{\startverb +page.ts\stopverb} | API: \code{\startverb +server.ts\stopverb}}
+
+\p{\strong{Load decision:} Need server resources? → server load | Need client APIs? → universal load}
+
+\p{\strong{Form actions:} Always \code{\startverb +page.server.ts\stopverb}. Return \code{\startverb fail()\stopverb} for errors, throw \code{\startverb redirect()\stopverb} to navigate, throw \code{\startverb error()\stopverb} for failures.}
+}
+
+\subtree{
+\title{Example}
+\pre{\startverb
+// +page.server.ts
+import { fail, redirect } from '@sveltejs/kit';
+
+export const load = async ({ locals }) => {
+	const user = await db.users.get(locals.userId);
+	return { user }; // Must be JSON-serializable
+};
+
+export const actions = {
+	default: async ({ request }) => {
+		const data = await request.formData();
+		const email = data.get('email');
+
+		if (!email) return fail(400, { email, missing: true });
+
+		await updateEmail(email);
+		throw redirect(303, '/success');
+	},
+};
+\stopverb}
+}
+
+\subtree{
+\title{Reference Files}
+\ul{
+\li{[load-functions.md](references/load-functions.md) - Server vs}
+\li{[form-actions.md](references/form-actions.md) - Form handling}
+\li{[serialization.md](references/serialization.md) - What can/can't}
+\li{[error-redirect-handling.md](references/error-redirect-handling.md) -}
+\li{[client-auth-invalidation.md](references/client-auth-invalidation.md) -}
+}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{Server load → universal load via \code{\startverb data\stopverb} param | ALWAYS}
+\li{No class instances/functions from server load (not serializable)}
+\li{\strong{Last verified:} 2025-01-11}
+}
+
+\p{<!-- PROGRESSIVE DISCLOSURE GUIDELINES:}
+
+\ul{
+\li{Keep this file ~50 lines total (max ~150 lines)}
+\li{Use 1-2 code blocks only (recommend 1)}
+\li{Keep description <200 chars for Level 1 efficiency}
+\li{Move detailed docs to references/ for Level 3 loading}
+\li{This is Level 2 - quick reference ONLY, not a manual}
+}
+
+\p{LLM WORKFLOW (when editing this file):}
+
+\ol{
+\li{Write/edit SKILL.md}
+\li{Format (if formatter available)}
+\li{Run: claude-skills-cli validate <path>}
+\li{If multi-line description warning: run claude-skills-cli doctor <path>}
+\li{Validate again to confirm}
+}
+
+\p{-->}
+}
+}

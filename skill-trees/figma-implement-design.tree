@@ -1,0 +1,324 @@
+\title{"figma Implement Design"}
+
+\taxon{skill}
+
+\meta{description}{"Translate Figma nodes into production-ready code with 1:1 visual fidelity using the Figma MCP workflow (design context, screenshots, assets, and project-convention translation). Trigger when the user provides Figma URLs or node IDs, or asks to implement designs or components that must match Figma specs. Requires a working Figma MCP server connection."}
+
+\subtree{
+\title{Implement Design}
+\subtree{
+\title{Overview}
+\p{This skill provides a structured workflow for translating Figma designs into production-ready code with pixel-perfect accuracy. It ensures consistent integration with the Figma MCP server, proper use of design tokens, and 1:1 visual parity with designs.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Figma MCP server must be connected and accessible}
+\li{User must provide a Figma URL in the format: \code{\startverb https://figma.com/design/:fileKey/:fileName?node-id=1-2\stopverb}}
+\li{\code{\startverb :fileKey\stopverb} is the file key}
+\li{\code{\startverb 1-2\stopverb} is the node ID (the specific component or frame to implement)}
+\li{\strong{OR} when using \code{\startverb figma-desktop\stopverb} MCP: User can select a node directly in the Figma desktop app (no URL required)}
+\li{Project should have an established design system or component library (preferred)}
+}
+}
+
+\subtree{
+\title{Required Workflow}
+\p{\strong{Follow these steps in order. Do not skip steps.}}
+
+\subtree{
+\title{Step 0: Set up Figma MCP (if not already configured)}
+\p{If any MCP call fails because Figma MCP is not connected, pause and set it up:}
+
+\ol{
+\li{Add the Figma MCP:}
+\li{\code{\startverb codex mcp add figma --url https://mcp.figma.com/mcp\stopverb}}
+\li{Enable remote MCP client:}
+\li{Set \code{\startverb [features].rmcp_client = true\stopverb} in \code{\startverb config.toml\stopverb} \strong{or} run \code{\startverb codex --enable rmcp_client\stopverb}}
+\li{Log in with OAuth:}
+\li{\code{\startverb codex mcp login figma\stopverb}}
+}
+
+\p{After successful login, the user will have to restart codex. You should finish your answer and tell them so when they try again they can continue with Step 1.}
+}
+
+\subtree{
+\title{Step 1: Get Node ID}
+\subtree{
+\title{Option A: Parse from Figma URL}
+\p{When the user provides a Figma URL, extract the file key and node ID to pass as arguments to MCP tools.}
+
+\p{\strong{URL format:} \code{\startverb https://figma.com/design/:fileKey/:fileName?node-id=1-2\stopverb}}
+
+\p{\strong{Extract:}}
+
+\ul{
+\li{\strong{File key:} \code{\startverb :fileKey\stopverb} (the segment after \code{\startverb /design/\stopverb})}
+\li{\strong{Node ID:} \code{\startverb 1-2\stopverb} (the value of the \code{\startverb node-id\stopverb} query parameter)}
+}
+
+\p{\strong{Note:} When using the local desktop MCP (\code{\startverb figma-desktop\stopverb}), \code{\startverb fileKey\stopverb} is not passed as a parameter to tool calls. The server automatically uses the currently open file, so only \code{\startverb nodeId\stopverb} is needed.}
+
+\p{\strong{Example:}}
+
+\ul{
+\li{URL: \code{\startverb https://figma.com/design/kL9xQn2VwM8pYrTb4ZcHjF/DesignSystem?node-id=42-15\stopverb}}
+\li{File key: \code{\startverb kL9xQn2VwM8pYrTb4ZcHjF\stopverb}}
+\li{Node ID: \code{\startverb 42-15\stopverb}}
+}
+}
+
+\subtree{
+\title{Option B: Use Current Selection from Figma Desktop App (figma-desktop MCP only)}
+\p{When using the \code{\startverb figma-desktop\stopverb} MCP and the user has NOT provided a URL, the tools automatically use the currently selected node from the open Figma file in the desktop app.}
+
+\p{\strong{Note:} Selection-based prompting only works with the \code{\startverb figma-desktop\stopverb} MCP server. The remote server requires a link to a frame or layer to extract context. The user must have the Figma desktop app open with a node selected.}
+}
+}
+
+\subtree{
+\title{Step 2: Fetch Design Context}
+\p{Run \code{\startverb get_design_context\stopverb} with the extracted file key and node ID.}
+
+\pre{\startverb
+get_design_context(fileKey=":fileKey", nodeId="1-2")
+\stopverb}
+
+\p{This provides the structured data including:}
+
+\ul{
+\li{Layout properties (Auto Layout, constraints, sizing)}
+\li{Typography specifications}
+\li{Color values and design tokens}
+\li{Component structure and variants}
+\li{Spacing and padding values}
+}
+
+\p{\strong{If the response is too large or truncated:}}
+
+\ol{
+\li{Run \code{\startverb get_metadata(fileKey=":fileKey", nodeId="1-2")\stopverb} to get the high-level node map}
+\li{Identify the specific child nodes needed from the metadata}
+\li{Fetch individual child nodes with \code{\startverb get_design_context(fileKey=":fileKey", nodeId=":childNodeId")\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 3: Capture Visual Reference}
+\p{Run \code{\startverb get_screenshot\stopverb} with the same file key and node ID for a visual reference.}
+
+\pre{\startverb
+get_screenshot(fileKey=":fileKey", nodeId="1-2")
+\stopverb}
+
+\p{This screenshot serves as the source of truth for visual validation. Keep it accessible throughout implementation.}
+}
+
+\subtree{
+\title{Step 4: Download Required Assets}
+\p{Download any assets (images, icons, SVGs) returned by the Figma MCP server.}
+
+\p{\strong{IMPORTANT:} Follow these asset rules:}
+
+\ul{
+\li{If the Figma MCP server returns a \code{\startverb localhost\stopverb} source for an image or SVG, use that source directly}
+\li{DO NOT import or add new icon packages - all assets should come from the Figma payload}
+\li{DO NOT use or create placeholders if a \code{\startverb localhost\stopverb} source is provided}
+\li{Assets are served through the Figma MCP server's built-in assets endpoint}
+}
+}
+
+\subtree{
+\title{Step 5: Translate to Project Conventions}
+\p{Translate the Figma output into this project's framework, styles, and conventions.}
+
+\p{\strong{Key principles:}}
+
+\ul{
+\li{Treat the Figma MCP output (typically React + Tailwind) as a representation of design and behavior, not as final code style}
+\li{Replace Tailwind utility classes with the project's preferred utilities or design system tokens}
+\li{Reuse existing components (buttons, inputs, typography, icon wrappers) instead of duplicating functionality}
+\li{Use the project's color system, typography scale, and spacing tokens consistently}
+\li{Respect existing routing, state management, and data-fetch patterns}
+}
+}
+
+\subtree{
+\title{Step 6: Achieve 1:1 Visual Parity}
+\p{Strive for pixel-perfect visual parity with the Figma design.}
+
+\p{\strong{Guidelines:}}
+
+\ul{
+\li{Prioritize Figma fidelity to match designs exactly}
+\li{Avoid hardcoded values - use design tokens from Figma where available}
+\li{When conflicts arise between design system tokens and Figma specs, prefer design system tokens but adjust spacing or sizes minimally to match visuals}
+\li{Follow WCAG requirements for accessibility}
+\li{Add component documentation as needed}
+}
+}
+
+\subtree{
+\title{Step 7: Validate Against Figma}
+\p{Before marking complete, validate the final UI against the Figma screenshot.}
+
+\p{\strong{Validation checklist:}}
+
+\ul{
+\li{[ ] Layout matches (spacing, alignment, sizing)}
+\li{[ ] Typography matches (font, size, weight, line height)}
+\li{[ ] Colors match exactly}
+\li{[ ] Interactive states work as designed (hover, active, disabled)}
+\li{[ ] Responsive behavior follows Figma constraints}
+\li{[ ] Assets render correctly}
+\li{[ ] Accessibility standards met}
+}
+}
+}
+
+\subtree{
+\title{Implementation Rules}
+\subtree{
+\title{Component Organization}
+\ul{
+\li{Place UI components in the project's designated design system directory}
+\li{Follow the project's component naming conventions}
+\li{Avoid inline styles unless truly necessary for dynamic values}
+}
+}
+
+\subtree{
+\title{Design System Integration}
+\ul{
+\li{ALWAYS use components from the project's design system when possible}
+\li{Map Figma design tokens to project design tokens}
+\li{When a matching component exists, extend it rather than creating a new one}
+\li{Document any new components added to the design system}
+}
+}
+
+\subtree{
+\title{Code Quality}
+\ul{
+\li{Avoid hardcoded values - extract to constants or design tokens}
+\li{Keep components composable and reusable}
+\li{Add TypeScript types for component props}
+\li{Include JSDoc comments for exported components}
+}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Example 1: Implementing a Button Component}
+\p{User says: "Implement this Figma button component: https://figma.com/design/kL9xQn2VwM8pYrTb4ZcHjF/DesignSystem?node-id=42-15"}
+
+\p{\strong{Actions:}}
+
+\ol{
+\li{Parse URL to extract fileKey=\code{\startverb kL9xQn2VwM8pYrTb4ZcHjF\stopverb} and nodeId=\code{\startverb 42-15\stopverb}}
+\li{Run \code{\startverb get_design_context(fileKey="kL9xQn2VwM8pYrTb4ZcHjF", nodeId="42-15")\stopverb}}
+\li{Run \code{\startverb get_screenshot(fileKey="kL9xQn2VwM8pYrTb4ZcHjF", nodeId="42-15")\stopverb} for visual reference}
+\li{Download any button icons from the assets endpoint}
+\li{Check if project has existing button component}
+\li{If yes, extend it with new variant; if no, create new component using project conventions}
+\li{Map Figma colors to project design tokens (e.g., \code{\startverb primary-500\stopverb}, \code{\startverb primary-hover\stopverb})}
+\li{Validate against screenshot for padding, border radius, typography}
+}
+
+\p{\strong{Result:} Button component matching Figma design, integrated with project design system.}
+}
+
+\subtree{
+\title{Example 2: Building a Dashboard Layout}
+\p{User says: "Build this dashboard: https://figma.com/design/pR8mNv5KqXzGwY2JtCfL4D/Dashboard?node-id=10-5"}
+
+\p{\strong{Actions:}}
+
+\ol{
+\li{Parse URL to extract fileKey=\code{\startverb pR8mNv5KqXzGwY2JtCfL4D\stopverb} and nodeId=\code{\startverb 10-5\stopverb}}
+\li{Run \code{\startverb get_metadata(fileKey="pR8mNv5KqXzGwY2JtCfL4D", nodeId="10-5")\stopverb} to understand the page structure}
+\li{Identify main sections from metadata (header, sidebar, content area, cards) and their child node IDs}
+\li{Run \code{\startverb get_design_context(fileKey="pR8mNv5KqXzGwY2JtCfL4D", nodeId=":childNodeId")\stopverb} for each major section}
+\li{Run \code{\startverb get_screenshot(fileKey="pR8mNv5KqXzGwY2JtCfL4D", nodeId="10-5")\stopverb} for the full page}
+\li{Download all assets (logos, icons, charts)}
+\li{Build layout using project's layout primitives}
+\li{Implement each section using existing components where possible}
+\li{Validate responsive behavior against Figma constraints}
+}
+
+\p{\strong{Result:} Complete dashboard matching Figma design with responsive layout.}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Always Start with Context}
+\p{Never implement based on assumptions. Always fetch \code{\startverb get_design_context\stopverb} and \code{\startverb get_screenshot\stopverb} first.}
+}
+
+\subtree{
+\title{Incremental Validation}
+\p{Validate frequently during implementation, not just at the end. This catches issues early.}
+}
+
+\subtree{
+\title{Document Deviations}
+\p{If you must deviate from the Figma design (e.g., for accessibility or technical constraints), document why in code comments.}
+}
+
+\subtree{
+\title{Reuse Over Recreation}
+\p{Always check for existing components before creating new ones. Consistency across the codebase is more important than exact Figma replication.}
+}
+
+\subtree{
+\title{Design System First}
+\p{When in doubt, prefer the project's design system patterns over literal Figma translation.}
+}
+}
+
+\subtree{
+\title{Common Issues and Solutions}
+\subtree{
+\title{Issue: Figma output is truncated}
+\p{\strong{Cause:} The design is too complex or has too many nested layers to return in a single response. \strong{Solution:} Use \code{\startverb get_metadata\stopverb} to get the node structure, then fetch specific nodes individually with \code{\startverb get_design_context\stopverb}.}
+}
+
+\subtree{
+\title{Issue: Design doesn't match after implementation}
+\p{\strong{Cause:} Visual discrepancies between the implemented code and the original Figma design. \strong{Solution:} Compare side-by-side with the screenshot from Step 3. Check spacing, colors, and typography values in the design context data.}
+}
+
+\subtree{
+\title{Issue: Assets not loading}
+\p{\strong{Cause:} The Figma MCP server's assets endpoint is not accessible or the URLs are being modified. \strong{Solution:} Verify the Figma MCP server's assets endpoint is accessible. The server serves assets at \code{\startverb localhost\stopverb} URLs. Use these directly without modification.}
+}
+
+\subtree{
+\title{Issue: Design token values differ from Figma}
+\p{\strong{Cause:} The project's design system tokens have different values than those specified in the Figma design. \strong{Solution:} When project tokens differ from Figma values, prefer project tokens for consistency but adjust spacing/sizing to maintain visual fidelity.}
+}
+}
+
+\subtree{
+\title{Understanding Design Implementation}
+\p{The Figma implementation workflow establishes a reliable process for translating designs to code:}
+
+\p{\strong{For designers:} Confidence that implementations will match their designs with pixel-perfect accuracy. \strong{For developers:} A structured approach that eliminates guesswork and reduces back-and-forth revisions. \strong{For teams:} Consistent, high-quality implementations that maintain design system integrity.}
+
+\p{By following this workflow, you ensure that every Figma design is implemented with the same level of care and attention to detail.}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{[Figma MCP Server Documentation](https://developers.figma.com/docs/figma-mcp-server/)}
+\li{[Figma MCP Server Tools and Prompts](https://developers.figma.com/docs/figma-mcp-server/tools-and-prompts/)}
+\li{[Figma Variables and Design Tokens](https://help.figma.com/hc/en-us/articles/15339657135383-Guide-to-variables-in-Figma)}
+}
+}
+}

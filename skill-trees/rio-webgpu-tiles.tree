@@ -1,0 +1,169 @@
+\title{Rio Webgpu Tiles}
+
+\taxon{skill}
+
+\meta{description}{WebGPU tile rendering for Rio Terminal via wgpu and sugarloaf. Extends}
+
+\subtree{
+\title{Rio WebGPU Tiles}
+\p{GPU-accelerated tile rendering in Rio Terminal using wgpu and the sugarloaf brush architecture.}
+
+\subtree{
+\title{Architecture Overview}
+\pre{\startverb
+OSC 1337 Sequence → rio-backend (parse) → RioEvent::InsertTile → rioterm (frontend) → sugarloaf TileBrush → wgpu render
+\stopverb}
+
+\subtree{
+\title{Core Files}
+\pre{\startverb
+| File | Purpose |
+|------|---------|
+| `sugarloaf/src/components/tiles/mod.rs` | TileBrush, TileWorldState, GPU buffers |
+| `sugarloaf/src/sugarloaf.rs` | Main renderer integration, public API |
+| `rio-backend/src/ansi/tile_protocol.rs` | OSC 1337 `Tile=` parsing |
+| `rio-backend/src/performer/handler.rs` | OSC dispatch to handler |
+| `rio-backend/src/event/mod.rs` | `InsertTile` event variant |
+| `frontends/rioterm/src/application.rs` | Frontend event handling |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Protocol: OSC 1337 Tile Extension}
+\pre{\startverb
+# Format: ESC ] 1337 ; Tile = key:value,key:value,... BEL
+printf '\033]1337;Tile=shader:plasma,x:50,y:50,w:200,h:150\007'
+\stopverb}
+
+\subtree{
+\title{Parameters}
+\pre{\startverb
+| Key | Type | Description |
+|-----|------|-------------|
+| `shader` | string | `plasma`, `clock`, `noise`, or custom ID |
+| `x`, `y` | f32 | Position in pixels |
+| `w`, `h` | f32 | Size in pixels |
+| `id` | u64 | Tile ID (0 = auto-assign) |
+| `kind` | string | `persistent` (default) or `transient` |
+| `r`, `g`, `b`, `a` | f32 | Custom color/data (0.0-1.0) |
+| `time_offset` | f32 | Animation time offset |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Tile Lifecycle}
+\subtree{
+\title{Persistent Tiles}
+\p{Remain until explicitly removed by ID:}
+
+\pre{\startverb
+let id = sugarloaf.create_persistent_tile(scene);
+// ... later
+sugarloaf.remove_persistent_tile(id);
+\stopverb}
+}
+
+\subtree{
+\title{Transient Tiles}
+\p{Cleared at \code{\startverb begin_frame()\stopverb}, must be re-pushed each frame:}
+
+\pre{\startverb
+sugarloaf.push_transient_tile(scene);
+\stopverb}
+}
+}
+
+\subtree{
+\title{TileWorldState}
+\p{Manages CPU state with high-precision time (f64), converted to modular f32 for GPU:}
+
+\pre{\startverb
+pub struct TileWorldState {
+    persistent: HashMap<TileId, TileScene>,
+    transient: Vec<TileScene>,
+    world_time_seconds: f64,
+    next_id: TileId,
+}
+
+impl TileWorldState {
+    pub fn begin_frame(&mut self, dt_seconds: f64) {
+        self.world_time_seconds += dt_seconds;
+        self.transient.clear();
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Writing WGSL Shaders}
+\p{Uniform structure available in shaders:}
+
+\pre{\startverb
+struct Uniforms {
+    position: vec2<f32>,  // NDC position
+    size: vec2<f32>,      // NDC size
+    time: f32,            // Animation time (modular)
+    custom: vec4<f32>,    // r,g,b,a from protocol
+}
+@group(0) @binding(0) var<uniform> u: Uniforms;
+\stopverb}
+
+\subtree{
+\title{Vertex Shader Pattern}
+\pre{\startverb
+@vertex
+fn vs_main(@location(0) pos: vec2<f32>, @location(1) uv: vec2<f32>) -> VertexOutput {
+    var out: VertexOutput;
+    let screen_pos = u.position + pos * u.size;
+    out.position = vec4<f32>(screen_pos, 0.0, 1.0);
+    out.uv = uv;
+    return out;
+}
+\stopverb}
+}
+
+\subtree{
+\title{Fragment Shader Pattern}
+\pre{\startverb
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let t = u.time;
+    // Your shader logic using in.uv, t, u.custom
+    return vec4<f32>(color, 1.0);
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Demo Scripts}
+\pre{\startverb
+# Plasma effect
+printf '\033]1337;Tile=shader:plasma,x:50,y:50,w:200,h:150,r:0.5,g:0.2,b:0.8\007'
+
+# Clock display
+printf '\033]1337;Tile=shader:clock,x:300,y:50,w:250,h:80\007'
+
+# Remove by ID
+printf '\033]1337;Tile=remove:42\007'
+\stopverb}
+}
+
+\subtree{
+\title{Integration Checklist}
+\ol{
+\li{\strong{Add TileBrush to sugarloaf} - Register in brush list, call in render loop}
+\li{\strong{Parse OSC 1337 in rio-backend} - Extend performer handler}
+\li{\strong{Create RioEvent variant} - \code{\startverb InsertTile(TileSpec)\stopverb}}
+\li{\strong{Handle in frontend} - Convert TileSpec → TileScene, call sugarloaf API}
+\li{\strong{Manage state} - Call \code{\startverb begin_frame(dt)\stopverb} before each render}
+}
+}
+
+\subtree{
+\title{Shader Examples}
+\p{See \code{\startverb reference/shaders.md\stopverb} for complete plasma, clock, and noise shader implementations.}
+}
+}

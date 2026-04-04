@@ -1,0 +1,232 @@
+\title{Gene Database}
+
+\taxon{skill}
+
+\meta{description}{"Query NCBI Gene via E-utilities/Datasets API. Search by symbol/ID, retrieve gene info (RefSeqs, GO, locations, phenotypes), batch lookups, for gene annotation and functional analysis."}
+
+\subtree{
+\title{Gene Database}
+\subtree{
+\title{Overview}
+\p{NCBI Gene is a comprehensive database integrating gene information from diverse species. It provides nomenclature, reference sequences (RefSeqs), chromosomal maps, biological pathways, genetic variations, phenotypes, and cross-references to global genomic resources.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when working with gene data including searching by gene symbol or ID, retrieving gene sequences and metadata, analyzing gene functions and pathways, or performing batch gene lookups.}
+}
+
+\subtree{
+\title{Quick Start}
+\p{NCBI provides two main APIs for gene data access:}
+
+\ol{
+\li{\strong{E-utilities} (Traditional): Full-featured API for all Entrez databases with flexible querying}
+\li{\strong{NCBI Datasets API} (Newer): Optimized for gene data retrieval with simplified workflows}
+}
+
+\p{Choose E-utilities for complex queries and cross-database searches. Choose Datasets API for straightforward gene data retrieval with metadata and sequences in a single request.}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Search Genes by Symbol or Name}
+\p{To search for genes by symbol or name across organisms:}
+
+\ol{
+\li{Use the \code{\startverb scripts/query_gene.py\stopverb} script with E-utilities ESearch}
+\li{Specify the gene symbol and organism (e.g., "BRCA1 in human")}
+\li{The script returns matching Gene IDs}
+}
+
+\p{Example query patterns:}
+
+\ul{
+\li{Gene symbol: \code{\startverb insulin[gene name] AND human[organism]\stopverb}}
+\li{Gene with disease: \code{\startverb dystrophin[gene name] AND muscular dystrophy[disease]\stopverb}}
+\li{Chromosome location: \code{\startverb human[organism] AND 17q21[chromosome]\stopverb}}
+}
+}
+
+\subtree{
+\title{Retrieve Gene Information by ID}
+\p{To fetch detailed information for known Gene IDs:}
+
+\ol{
+\li{Use \code{\startverb scripts/fetch_gene_data.py\stopverb} with the Datasets API for comprehensive data}
+\li{Alternatively, use \code{\startverb scripts/query_gene.py\stopverb} with E-utilities EFetch for specific formats}
+\li{Specify desired output format (JSON, XML, or text)}
+}
+
+\p{The Datasets API returns:}
+
+\ul{
+\li{Gene nomenclature and aliases}
+\li{Reference sequences (RefSeqs) for transcripts and proteins}
+\li{Chromosomal location and mapping}
+\li{Gene Ontology (GO) annotations}
+\li{Associated publications}
+}
+}
+
+\subtree{
+\title{Batch Gene Lookups}
+\p{For multiple genes simultaneously:}
+
+\ol{
+\li{Use \code{\startverb scripts/batch_gene_lookup.py\stopverb} for efficient batch processing}
+\li{Provide a list of gene symbols or IDs}
+\li{Specify the organism for symbol-based queries}
+\li{The script handles rate limiting automatically (10 requests/second with API key)}
+}
+
+\p{This workflow is useful for:}
+
+\ul{
+\li{Validating gene lists}
+\li{Retrieving metadata for gene panels}
+\li{Cross-referencing gene identifiers}
+\li{Building gene annotation tables}
+}
+}
+
+\subtree{
+\title{Search by Biological Context}
+\p{To find genes associated with specific biological functions or phenotypes:}
+
+\ol{
+\li{Use E-utilities with Gene Ontology (GO) terms or phenotype keywords}
+\li{Query by pathway names or disease associations}
+\li{Filter by organism, chromosome, or other attributes}
+}
+
+\p{Example searches:}
+
+\ul{
+\li{By GO term: \code{\startverb GO:0006915[biological process]\stopverb} (apoptosis)}
+\li{By phenotype: \code{\startverb diabetes[phenotype] AND mouse[organism]\stopverb}}
+\li{By pathway: \code{\startverb insulin signaling pathway[pathway]\stopverb}}
+}
+}
+
+\subtree{
+\title{API Access Patterns}
+\p{\strong{Rate Limits:}}
+
+\ul{
+\li{Without API key: 3 requests/second for E-utilities, 5 requests/second for Datasets API}
+\li{With API key: 10 requests/second for both APIs}
+}
+
+\p{\strong{Authentication:} Register for a free NCBI API key at https://www.ncbi.nlm.nih.gov/account/ to increase rate limits.}
+
+\p{\strong{Error Handling:} Both APIs return standard HTTP status codes. Common errors include:}
+
+\ul{
+\li{400: Malformed query or invalid parameters}
+\li{429: Rate limit exceeded}
+\li{404: Gene ID not found}
+}
+
+\p{Retry failed requests with exponential backoff.}
+}
+}
+
+\subtree{
+\title{Script Usage}
+\subtree{
+\title{query_gene.py}
+\p{Query NCBI Gene using E-utilities (ESearch, ESummary, EFetch).}
+
+\pre{\startverb
+python scripts/query_gene.py --search "BRCA1" --organism "human"
+python scripts/query_gene.py --id 672 --format json
+python scripts/query_gene.py --search "insulin[gene] AND diabetes[disease]"
+\stopverb}
+}
+
+\subtree{
+\title{fetch_gene_data.py}
+\p{Fetch comprehensive gene data using NCBI Datasets API.}
+
+\pre{\startverb
+python scripts/fetch_gene_data.py --gene-id 672
+python scripts/fetch_gene_data.py --symbol BRCA1 --taxon human
+python scripts/fetch_gene_data.py --symbol TP53 --taxon "Homo sapiens" --output json
+\stopverb}
+}
+
+\subtree{
+\title{batch_gene_lookup.py}
+\p{Process multiple gene queries efficiently.}
+
+\pre{\startverb
+python scripts/batch_gene_lookup.py --file gene_list.txt --organism human
+python scripts/batch_gene_lookup.py --ids 672,7157,5594 --output results.json
+\stopverb}
+}
+}
+
+\subtree{
+\title{API References}
+\p{For detailed API documentation including endpoints, parameters, response formats, and examples, refer to:}
+
+\ul{
+\li{\code{\startverb references/api_reference.md\stopverb} - Comprehensive API documentation for E-utilities and Datasets API}
+\li{\code{\startverb references/common_workflows.md\stopverb} - Additional examples and use case patterns}
+}
+
+\p{Search these references when needing specific API endpoint details, parameter options, or response structure information.}
+}
+
+\subtree{
+\title{Data Formats}
+\p{NCBI Gene data can be retrieved in multiple formats:}
+
+\ul{
+\li{\strong{JSON}: Structured data ideal for programmatic processing}
+\li{\strong{XML}: Detailed hierarchical format with full metadata}
+\li{\strong{GenBank}: Sequence data with annotations}
+\li{\strong{FASTA}: Sequence data only}
+\li{\strong{Text}: Human-readable summaries}
+}
+
+\p{Choose JSON for modern applications, XML for legacy systems requiring detailed metadata, and FASTA for sequence analysis workflows.}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Always specify organism} when searching by gene symbol to avoid ambiguity}
+\li{\strong{Use Gene IDs} for precise lookups when available}
+\li{\strong{Batch requests} when working with multiple genes to minimize API calls}
+\li{\strong{Cache results} locally to reduce redundant queries}
+\li{\strong{Include API key} in scripts for higher rate limits}
+\li{\strong{Handle errors gracefully} with retry logic for transient failures}
+\li{\strong{Validate gene symbols} before batch processing to catch typos}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes:}
+
+\subtree{
+\title{scripts/}
+\ul{
+\li{\code{\startverb query_gene.py\stopverb} - Query genes using E-utilities (ESearch, ESummary, EFetch)}
+\li{\code{\startverb fetch_gene_data.py\stopverb} - Fetch gene data using NCBI Datasets API}
+\li{\code{\startverb batch_gene_lookup.py\stopverb} - Handle multiple gene queries efficiently}
+}
+}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb api_reference.md\stopverb} - Detailed API documentation for both E-utilities and Datasets API}
+\li{\code{\startverb common_workflows.md\stopverb} - Examples of common gene queries and use cases}
+}
+}
+}
+}

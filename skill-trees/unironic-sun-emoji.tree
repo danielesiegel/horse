@@ -1,0 +1,73 @@
+\title{Unironic Sun Emoji}
+
+\taxon{skill}
+
+\meta{description}{"NaNoWriMo novel project database. Use when referencing the manuscript, its structure, documents, or searching its content via DuckDB."}
+
+\subtree{
+\title{Unironic Sun Emoji}
+\p{A NaNoWriMo experimental/literary fiction project. 949 binder items, 886 documents with body text, totaling 1,304,622 characters.}
+
+\subtree{
+\title{Structure}
+\p{All content is flat under a single \code{\startverb NaNoWriMo Template\stopverb} root -- 949 text items at depth 1, no folders or sub-hierarchy. Stream-of-consciousness / fragmentary manuscript.}
+
+\subtree{
+\title{Longest Documents}
+\pre{\startverb
+| Chars | Title |
+|------:|-------|
+| 33,010 | will they say your name |
+| 20,648 | "Orange/Blue" 1 [] Chapter 17: Orange/Blue |
+| 18,673 | [] Chapter 18: Faithful Host |
+| 15,531 | NaNoWriMo Template |
+| 14,872 | [] Chapter 20: beggars and braggers |
+| 13,587 | [] Chapter 21: Rebel without applause |
+| 12,537 | [] Chapter 13: moon above, sun below |
+| 12,262 | [] Chapter 14: Gilt |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Comments}
+\p{13 inline comments across the project. Samples:}
+
+\ul{
+\li{"what..."}
+\li{"Stop relying on memory for this. What was said?"}
+}
+}
+
+\subtree{
+\title{Database Access}
+\p{All data is in \code{\startverb /Users/alice/v/scrivener.duckdb\stopverb}.}
+
+\pre{\startverb
+-- All documents
+SELECT * FROM documents WHERE project = '☼';
+
+-- Content with body text, ordered by length
+SELECT d.title, c.body, c.body_length
+FROM documents d JOIN content c ON d.uuid = c.uuid AND d.project = c.project
+WHERE d.project = '☼' AND c.body_length > 0
+ORDER BY c.body_length DESC;
+
+-- Labels
+SELECT * FROM labels WHERE project = '☼';
+
+-- Comments
+SELECT * FROM comments WHERE project = '☼';
+
+-- Full text search
+SELECT d.title, c.body_length
+FROM documents d JOIN content c ON d.uuid = c.uuid AND d.project = c.project
+WHERE d.project = '☼' AND c.body LIKE '%search_term%';
+\stopverb}
+}
+
+\subtree{
+\title{Source}
+\p{Scrivener project bundle: \code{\startverb /Users/alice/Desktop/☼.scriv/\stopverb}}
+}
+}

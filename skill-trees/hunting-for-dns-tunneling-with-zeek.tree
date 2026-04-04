@@ -1,0 +1,165 @@
+\title{Hunting For Dns Tunneling With Zeek}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{dns-tunneling}
+
+\tag{zeek}
+
+\tag{data-exfiltration}
+
+\tag{covert-channel}
+
+\tag{mitre-t1071-004}
+
+\tag{network-monitoring}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect DNS tunneling and data exfiltration by analyzing Zeek dns.log for high-entropy subdomain queries, excessive query volume, long query lengths, and unusual DNS record types indicating covert channel communication.}
+
+\subtree{
+\title{Hunting for DNS Tunneling with Zeek}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When hunting for data exfiltration over DNS covert channels}
+\li{After threat intelligence indicates DNS-based C2 frameworks targeting your industry}
+\li{When dns.log shows unusually high query volumes to specific domains}
+\li{During investigation of suspected data theft where no HTTP/S exfiltration is found}
+\li{When monitoring for tools like iodine, dnscat2, DNSExfiltrator, or DNS-over-HTTPS tunneling}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Zeek deployed on network tap or SPAN port capturing DNS traffic}
+\li{Zeek dns.log with full query and response fields}
+\li{SIEM platform for dns.log analysis (Splunk, Elastic)}
+\li{RITA (Real Intelligence Threat Analytics) for automated DNS analysis}
+\li{Passive DNS data for historical domain resolution context}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Analyze Query Length Distribution}: DNS tunneling encodes data in subdomain labels, producing queries significantly longer than normal. Normal DNS queries average 20-30 characters; tunneling queries often exceed 50+ characters. Calculate mean and standard deviation of query lengths per domain.}
+\li{\strong{Calculate Subdomain Entropy}: Tunneling encodes data using Base32/Base64, producing high-entropy subdomain strings. Calculate Shannon entropy of subdomain labels -- values above 3.5 bits/character strongly suggest encoded data.}
+\li{\strong{Count Unique Subdomains Per Domain}: Legitimate domains have relatively few unique subdomains. DNS tunneling generates hundreds or thousands of unique subdomains under a single parent domain.}
+\li{\strong{Monitor DNS Record Type Distribution}: TXT, NULL, CNAME, and MX records can carry more data than A records. Excessive TXT queries to a single domain indicate data transfer via DNS.}
+\li{\strong{Detect High Query Volume}: Flag domains receiving more than 100 queries per hour from a single source, especially when combined with high subdomain uniqueness.}
+\li{\strong{Analyze Query Timing}: DNS tunneling tools produce regular query patterns (beaconing) or burst patterns (data transfer). Apply frequency analysis to DNS query timestamps.}
+\li{\strong{Cross-Reference with conn.log}: Correlate DNS queries with connection metadata to identify the process or endpoint generating suspicious queries.}
+\li{\strong{Validate with Domain Intelligence}: Check suspicious domains against WHOIS data, certificate transparency, and threat intelligence feeds.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| T1071.004 | Application Layer Protocol: DNS |
+| T1048.003 | Exfiltration Over Alternative Protocol: DNS |
+| T1572 | Protocol Tunneling |
+| Shannon Entropy | Measure of randomness in subdomain strings |
+| Zeek dns.log | DNS query/response metadata |
+| RITA | Automated DNS tunneling detection from Zeek logs |
+| iodine | IPv4-over-DNS tunneling tool |
+| dnscat2 | DNS-based command-and-control tool |
+| DNSExfiltrator | Data exfiltration tool using DNS requests |
+\stopverb}
+}
+
+\subtree{
+\title{Detection Queries}
+\subtree{
+\title{Zeek Script -- DNS Tunnel Detection}
+\pre{\startverb
+@load base/protocols/dns
+module DNSTunnel;
+
+export {
+    redef enum Notice::Type += { DNSTunnel::Long_DNS_Query };
+    const query_length_threshold = 50 &redef;
+    const query_count_threshold = 100 &redef;
+}
+
+event dns_request(c: connection, msg: dns_msg, query: string, qtype: count, qclass: count) {
+    if ( |query| > query_length_threshold ) {
+        NOTICE([$note=DNSTunnel::Long_DNS_Query,
+                $msg=fmt("Long DNS query detected: %s (%d chars)", query, |query|),
+                $conn=c]);
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Splunk -- DNS Tunneling Indicators from Zeek}
+\pre{\startverb
+index=zeek sourcetype=bro_dns
+| rex field=query "(?<subdomain>[^.]+)\.(?<basedomain>[^.]+\.[^.]+)$"
+| stats count dc(subdomain) as unique_subs avg(len(query)) as avg_len max(len(query)) as max_len by src basedomain
+| where count > 100 AND (unique_subs > 50 OR avg_len > 40)
+| sort -unique_subs
+\stopverb}
+}
+
+\subtree{
+\title{Splunk -- High Entropy Subdomain Detection}
+\pre{\startverb
+index=zeek sourcetype=bro_dns
+| rex field=query "^(?<subdomain>[^.]+)"
+| where len(subdomain) > 20
+| eval char_count=len(subdomain)
+| stats count dc(query) as unique_queries avg(char_count) as avg_sub_len by src query_type_name basedomain
+| where unique_queries > 30 AND avg_sub_len > 25
+| sort -unique_queries
+\stopverb}
+}
+
+\subtree{
+\title{RITA Analysis}
+\pre{\startverb
+rita import /path/to/zeek/logs dataset_name
+rita show-dns-fqdn-ips-long dataset_name
+rita show-exploded-dns dataset_name
+rita show-dns-tunneling dataset_name --csv > dns_tunnel_results.csv
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{dnscat2 C2}: Encodes command-and-control traffic in DNS CNAME/TXT queries with Base64-encoded subdomain labels. Produces high query volumes with long, high-entropy subdomains.}
+\li{\strong{iodine IPv4 Tunnel}: Creates a virtual network interface tunneling all IP traffic through DNS. Generates massive DNS query volumes with NULL record types.}
+\li{\strong{Data Exfiltration via DNS}: Sensitive data encoded in subdomain labels (e.g., \code{\startverb aGVsbG8gd29ybGQ.exfil.attacker.com\stopverb}), sent as A or TXT queries. Each query carries ~63 bytes of data.}
+\li{\strong{DNS-over-HTTPS Tunneling}: Bypasses traditional DNS monitoring by sending DNS queries over HTTPS to public resolvers (8.8.8.8, 1.1.1.1), requiring TLS inspection for detection.}
+\li{\strong{Cobalt Strike DNS Beacon}: Uses DNS A/TXT records for C2 communication with configurable subdomain encoding schemes.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-DNSTUNNEL-[DATE]-[SEQ]
+Source IP: [Internal IP]
+Source Host: [Hostname]
+Target Domain: [Base domain]
+Query Count: [Total queries in window]
+Unique Subdomains: [Count]
+Avg Query Length: [Characters]
+Max Query Length: [Characters]
+Subdomain Entropy: [Bits per character]
+Primary Record Type: [A/TXT/CNAME/NULL]
+Data Volume Estimate: [Bytes exfiltrated]
+Risk Level: [Critical/High/Medium/Low]
+\stopverb}
+}
+}

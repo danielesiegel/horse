@@ -1,0 +1,111 @@
+\title{Performing Ssl Certificate Lifecycle Management}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{ssl}
+
+\tag{certificates}
+
+\tag{pki}
+
+\tag{tls}
+
+\tag{key-management}
+
+\meta{version}{"1.0"}
+
+\meta{description}{SSL/TLS certificate lifecycle management encompasses the full process of requesting, issuing, deploying, monitoring, renewing, and revoking X.509 certificates. Poor certificate management is a leading}
+
+\subtree{
+\title{Performing SSL Certificate Lifecycle Management}
+\subtree{
+\title{Overview}
+\p{SSL/TLS certificate lifecycle management encompasses the full process of requesting, issuing, deploying, monitoring, renewing, and revoking X.509 certificates. Poor certificate management is a leading cause of outages and security incidents. This skill covers automating the entire certificate lifecycle using Python and ACME protocol tools.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing ssl certificate lifecycle management}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Generate Certificate Signing Requests (CSRs) programmatically}
+\li{Parse and validate X.509 certificates}
+\li{Monitor certificate expiration across infrastructure}
+\li{Automate renewal using ACME protocol (Let's Encrypt)}
+\li{Implement certificate revocation checking (CRL and OCSP)}
+\li{Track certificate inventory across multiple domains}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Certificate Lifecycle Stages}
+\ol{
+\li{\strong{Request}: Generate key pair and CSR}
+\li{\strong{Issuance}: CA validates and issues certificate}
+\li{\strong{Deployment}: Install certificate on servers}
+\li{\strong{Monitoring}: Track expiration and health}
+\li{\strong{Renewal}: Request new certificate before expiry}
+\li{\strong{Revocation}: Invalidate compromised certificates}
+}
+}
+
+\subtree{
+\title{Certificate Types}
+\pre{\startverb
+| Type | Validation | Use Case |
+|------|-----------|----------|
+| DV (Domain Validation) | Domain ownership | Websites, APIs |
+| OV (Organization Validation) | Domain + org identity | Business sites |
+| EV (Extended Validation) | Full legal verification | E-commerce, banking |
+| Wildcard | *.domain.com | Multi-subdomain |
+| SAN/UCC | Multiple domains | Multi-domain hosting |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Set up automated monitoring for all certificates}
+\li{Use ECDSA (P-256) certificates for better performance over RSA}
+\li{Enable OCSP stapling on all servers}
+\li{Implement Certificate Transparency log monitoring}
+\li{Maintain inventory of all certificates and their locations}
+\li{Plan for CA compromise scenarios (key pinning, backup CAs)}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] CSR generation produces valid PKCS#10 request}
+\li{[ ] Certificate parsing extracts all relevant fields}
+\li{[ ] Expiration monitoring detects certificates within threshold}
+\li{[ ] Certificate chain validation verifies trust path}
+\li{[ ] OCSP checking detects revoked certificates}
+\li{[ ] Certificate inventory tracks all deployed certificates}
+}
+}
+}

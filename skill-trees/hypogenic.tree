@@ -1,0 +1,783 @@
+\title{Hypogenic}
+
+\taxon{skill}
+
+\meta{description}{Automated hypothesis generation and testing using large language models. Use this skill when generating scientific hypotheses from datasets, combining literature insights with empirical data, testing hypotheses against observational data, or conducting systematic hypothesis exploration for research discovery in domains like deception detection, AI content detection, mental health analysis, or other empirical research tasks.}
+
+\subtree{
+\title{Hypogenic}
+\subtree{
+\title{Overview}
+\p{Hypogenic provides automated hypothesis generation and testing using large language models to accelerate scientific discovery. The framework supports three approaches: HypoGeniC (data-driven hypothesis generation), HypoRefine (synergistic literature and data integration), and Union methods (mechanistic combination of literature and data-driven hypotheses).}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Get started with Hypogenic in minutes:}
+
+\pre{\startverb
+# Install the package
+uv pip install hypogenic
+
+# Clone example datasets
+git clone https://github.com/ChicagoHAI/HypoGeniC-datasets.git ./data
+
+# Run basic hypothesis generation
+hypogenic_generation --config ./data/your_task/config.yaml --method hypogenic --num_hypotheses 20
+
+# Run inference on generated hypotheses
+hypogenic_inference --config ./data/your_task/config.yaml --hypotheses output/hypotheses.json
+\stopverb}
+
+\p{\strong{Or use Python API:}}
+
+\pre{\startverb
+from hypogenic import BaseTask
+
+# Create task with your configuration
+task = BaseTask(config_path="./data/your_task/config.yaml")
+
+# Generate hypotheses
+task.generate_hypotheses(method="hypogenic", num_hypotheses=20)
+
+# Run inference
+results = task.inference(hypothesis_bank="./output/hypotheses.json")
+\stopverb}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when working on:}
+
+\ul{
+\li{Generating scientific hypotheses from observational datasets}
+\li{Testing multiple competing hypotheses systematically}
+\li{Combining literature insights with empirical patterns}
+\li{Accelerating research discovery through automated hypothesis ideation}
+\li{Domains requiring hypothesis-driven analysis: deception detection, AI-generated content identification, mental health indicators, predictive modeling, or other empirical research}
+}
+}
+
+\subtree{
+\title{Key Features}
+\p{\strong{Automated Hypothesis Generation}}
+
+\ul{
+\li{Generate 10-20+ testable hypotheses from data in minutes}
+\li{Iterative refinement based on validation performance}
+\li{Support for both API-based (OpenAI, Anthropic) and local LLMs}
+}
+
+\p{\strong{Literature Integration}}
+
+\ul{
+\li{Extract insights from research papers via PDF processing}
+\li{Combine theoretical foundations with empirical patterns}
+\li{Systematic literature-to-hypothesis pipeline with GROBID}
+}
+
+\p{\strong{Performance Optimization}}
+
+\ul{
+\li{Redis caching reduces API costs for repeated experiments}
+\li{Parallel processing for large-scale hypothesis testing}
+\li{Adaptive refinement focuses on challenging examples}
+}
+
+\p{\strong{Flexible Configuration}}
+
+\ul{
+\li{Template-based prompt engineering with variable injection}
+\li{Custom label extraction for domain-specific tasks}
+\li{Modular architecture for easy extension}
+}
+
+\p{\strong{Proven Results}}
+
+\ul{
+\li{8.97\% improvement over few-shot baselines}
+\li{15.75\% improvement over literature-only approaches}
+\li{80-84\% hypothesis diversity (non-redundant insights)}
+\li{Human evaluators report significant decision-making improvements}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. HypoGeniC: Data-Driven Hypothesis Generation}
+\p{Generate hypotheses solely from observational data through iterative refinement.}
+
+\p{\strong{Process:}}
+
+\ol{
+\li{Initialize with a small data subset to generate candidate hypotheses}
+\li{Iteratively refine hypotheses based on performance}
+\li{Replace poorly-performing hypotheses with new ones from challenging examples}
+}
+
+\p{\strong{Best for:} Exploratory research without existing literature, pattern discovery in novel datasets}
+}
+
+\subtree{
+\title{2. HypoRefine: Literature and Data Integration}
+\p{Synergistically combine existing literature with empirical data through an agentic framework.}
+
+\p{\strong{Process:}}
+
+\ol{
+\li{Extract insights from relevant research papers (typically 10 papers)}
+\li{Generate theory-grounded hypotheses from literature}
+\li{Generate data-driven hypotheses from observational patterns}
+\li{Refine both hypothesis banks through iterative improvement}
+}
+
+\p{\strong{Best for:} Research with established theoretical foundations, validating or extending existing theories}
+}
+
+\subtree{
+\title{3. Union Methods}
+\p{Mechanistically combine literature-only hypotheses with framework outputs.}
+
+\p{\strong{Variants:}}
+
+\ul{
+\li{\strong{Literature ∪ HypoGeniC}: Combines literature hypotheses with data-driven generation}
+\li{\strong{Literature ∪ HypoRefine}: Combines literature hypotheses with integrated approach}
+}
+
+\p{\strong{Best for:} Comprehensive hypothesis coverage, eliminating redundancy while maintaining diverse perspectives}
+}
+}
+
+\subtree{
+\title{Installation}
+\p{Install via pip:}
+
+\pre{\startverb
+uv pip install hypogenic
+\stopverb}
+
+\p{\strong{Optional dependencies:}}
+
+\ul{
+\li{\strong{Redis server} (port 6832): Enables caching of LLM responses to significantly reduce API costs during iterative hypothesis generation}
+\li{\strong{s2orc-doc2json}: Required for processing literature PDFs in HypoRefine workflows}
+\li{\strong{GROBID}: Required for PDF preprocessing (see Literature Processing section)}
+}
+
+\p{\strong{Clone example datasets:}}
+
+\pre{\startverb
+# For HypoGeniC examples
+git clone https://github.com/ChicagoHAI/HypoGeniC-datasets.git ./data
+
+# For HypoRefine/Union examples
+git clone https://github.com/ChicagoHAI/Hypothesis-agent-datasets.git ./data
+\stopverb}
+}
+
+\subtree{
+\title{Dataset Format}
+\p{Datasets must follow HuggingFace datasets format with specific naming conventions:}
+
+\p{\strong{Required files:}}
+
+\ul{
+\li{\code{\startverb <TASK>_train.json\stopverb}: Training data}
+\li{\code{\startverb <TASK>_val.json\stopverb}: Validation data  }
+\li{\code{\startverb <TASK>_test.json\stopverb}: Test data}
+}
+
+\p{\strong{Required keys in JSON:}}
+
+\ul{
+\li{\code{\startverb text_features_1\stopverb} through \code{\startverb text_features_n\stopverb}: Lists of strings containing feature values}
+\li{\code{\startverb label\stopverb}: List of strings containing ground truth labels}
+}
+
+\p{\strong{Example (headline click prediction):}}
+
+\pre{\startverb
+{
+  "headline_1": [
+    "What Up, Comet? You Just Got *PROBED*",
+    "Scientists Made a Breakthrough in Quantum Computing"
+  ],
+  "headline_2": [
+    "Scientists Everywhere Were Holding Their Breath Today. Here's Why.",
+    "New Quantum Computer Achieves Milestone"
+  ],
+  "label": [
+    "Headline 2 has more clicks than Headline 1",
+    "Headline 1 has more clicks than Headline 2"
+  ]
+}
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{All lists must have the same length}
+\li{Label format must match your \code{\startverb extract_label()\stopverb} function output format}
+\li{Feature keys can be customized to match your domain (e.g., \code{\startverb review_text\stopverb}, \code{\startverb post_content\stopverb}, etc.)}
+}
+}
+
+\subtree{
+\title{Configuration}
+\p{Each task requires a \code{\startverb config.yaml\stopverb} file specifying:}
+
+\p{\strong{Required elements:}}
+
+\ul{
+\li{Dataset paths (train/val/test)}
+\li{Prompt templates for:}
+\li{Observations generation}
+\li{Batched hypothesis generation}
+\li{Hypothesis inference}
+\li{Relevance checking}
+\li{Adaptive methods (for HypoRefine)}
+}
+
+\p{\strong{Template capabilities:}}
+
+\ul{
+\li{Dataset placeholders for dynamic variable injection (e.g., \code{\startverb ${text_features_1}\stopverb}, \code{\startverb ${num_hypotheses}\stopverb})}
+\li{Custom label extraction functions for domain-specific parsing}
+\li{Role-based prompt structure (system, user, assistant roles)}
+}
+
+\p{\strong{Configuration structure:}}
+
+\pre{\startverb
+task_name: your_task_name
+
+train_data_path: ./your_task_train.json
+val_data_path: ./your_task_val.json
+test_data_path: ./your_task_test.json
+
+prompt_templates:
+  # Extra keys for reusable prompt components
+  observations: |
+    Feature 1: ${text_features_1}
+    Feature 2: ${text_features_2}
+    Observation: ${label}
+  
+  # Required templates
+  batched_generation:
+    system: "Your system prompt here"
+    user: "Your user prompt with ${num_hypotheses} placeholder"
+  
+  inference:
+    system: "Your inference system prompt"
+    user: "Your inference user prompt"
+  
+  # Optional templates for advanced features
+  few_shot_baseline: {...}
+  is_relevant: {...}
+  adaptive_inference: {...}
+  adaptive_selection: {...}
+\stopverb}
+
+\p{Refer to \code{\startverb references/config_template.yaml\stopverb} for a complete example configuration.}
+}
+
+\subtree{
+\title{Literature Processing (HypoRefine/Union Methods)}
+\p{To use literature-based hypothesis generation, you must preprocess PDF papers:}
+
+\p{\strong{Step 1: Setup GROBID} (first time only)}
+
+\pre{\startverb
+bash ./modules/setup_grobid.sh
+\stopverb}
+
+\p{\strong{Step 2: Add PDF files} Place research papers in \code{\startverb literature/YOUR_TASK_NAME/raw/\stopverb}}
+
+\p{\strong{Step 3: Process PDFs}}
+
+\pre{\startverb
+# Start GROBID service
+bash ./modules/run_grobid.sh
+
+# Process PDFs for your task
+cd examples
+python pdf_preprocess.py --task_name YOUR_TASK_NAME
+\stopverb}
+
+\p{This converts PDFs to structured format for hypothesis extraction. Automated literature search will be supported in future releases.}
+}
+
+\subtree{
+\title{CLI Usage}
+\subtree{
+\title{Hypothesis Generation}
+\pre{\startverb
+hypogenic_generation --help
+\stopverb}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{Task configuration file path}
+\li{Model selection (API-based or local)}
+\li{Generation method (HypoGeniC, HypoRefine, or Union)}
+\li{Number of hypotheses to generate}
+\li{Output directory for hypothesis banks}
+}
+}
+
+\subtree{
+\title{Hypothesis Inference}
+\pre{\startverb
+hypogenic_inference --help
+\stopverb}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{Task configuration file path}
+\li{Hypothesis bank file path}
+\li{Test dataset path}
+\li{Inference method (default or multi-hypothesis)}
+\li{Output file for results}
+}
+}
+}
+
+\subtree{
+\title{Python API Usage}
+\p{For programmatic control and custom workflows, use Hypogenic directly in your Python code:}
+
+\subtree{
+\title{Basic HypoGeniC Generation}
+\pre{\startverb
+from hypogenic import BaseTask
+
+# Clone example datasets first
+# git clone https://github.com/ChicagoHAI/HypoGeniC-datasets.git ./data
+
+# Load your task with custom extract_label function
+task = BaseTask(
+    config_path="./data/your_task/config.yaml",
+    extract_label=lambda text: extract_your_label(text)
+)
+
+# Generate hypotheses
+task.generate_hypotheses(
+    method="hypogenic",
+    num_hypotheses=20,
+    output_path="./output/hypotheses.json"
+)
+
+# Run inference
+results = task.inference(
+    hypothesis_bank="./output/hypotheses.json",
+    test_data="./data/your_task/your_task_test.json"
+)
+\stopverb}
+}
+
+\subtree{
+\title{HypoRefine/Union Methods}
+\pre{\startverb
+# For literature-integrated approaches
+# git clone https://github.com/ChicagoHAI/Hypothesis-agent-datasets.git ./data
+
+# Generate with HypoRefine
+task.generate_hypotheses(
+    method="hyporefine",
+    num_hypotheses=15,
+    literature_path="./literature/your_task/",
+    output_path="./output/"
+)
+# This generates 3 hypothesis banks:
+# - HypoRefine (integrated approach)
+# - Literature-only hypotheses
+# - Literature∪HypoRefine (union)
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Hypothesis Inference}
+\pre{\startverb
+from examples.multi_hyp_inference import run_multi_hypothesis_inference
+
+# Test multiple hypotheses simultaneously
+results = run_multi_hypothesis_inference(
+    config_path="./data/your_task/config.yaml",
+    hypothesis_bank="./output/hypotheses.json",
+    test_data="./data/your_task/your_task_test.json"
+)
+\stopverb}
+}
+
+\subtree{
+\title{Custom Label Extraction}
+\p{The \code{\startverb extract_label()\stopverb} function is critical for parsing LLM outputs. Implement it based on your task:}
+
+\pre{\startverb
+def extract_label(llm_output: str) -> str:
+    """Extract predicted label from LLM inference text.
+    
+    Default behavior: searches for 'final answer:\s+(.*)' pattern.
+    Customize for your domain-specific output format.
+    """
+    import re
+    match = re.search(r'final answer:\s+(.*)', llm_output, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    return llm_output.strip()
+\stopverb}
+
+\p{\strong{Important:} Extracted labels must match the format of \code{\startverb label\stopverb} values in your dataset for correct accuracy calculation.}
+}
+}
+
+\subtree{
+\title{Workflow Examples}
+\subtree{
+\title{Example 1: Data-Driven Hypothesis Generation (HypoGeniC)}
+\p{\strong{Scenario:} Detecting AI-generated content without prior theoretical framework}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Prepare dataset with text samples and labels (human vs. AI-generated)}
+\li{Create \code{\startverb config.yaml\stopverb} with appropriate prompt templates}
+\li{Run hypothesis generation:}
+\li{Run inference on test set:}
+\li{Analyze results for patterns like formality, grammatical precision, and tone differences}
+}
+}
+
+\subtree{
+\title{Example 2: Literature-Informed Hypothesis Testing (HypoRefine)}
+\p{\strong{Scenario:} Deception detection in hotel reviews building on existing research}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Collect 10 relevant papers on linguistic deception cues}
+\li{Prepare dataset with genuine and fraudulent reviews}
+\li{Configure \code{\startverb config.yaml\stopverb} with literature processing and data generation templates}
+\li{Run HypoRefine:}
+\li{Test hypotheses examining pronoun frequency, detail specificity, and other linguistic patterns}
+\li{Compare literature-based and data-driven hypothesis performance}
+}
+}
+
+\subtree{
+\title{Example 3: Comprehensive Hypothesis Coverage (Union Method)}
+\p{\strong{Scenario:} Mental stress detection maximizing hypothesis diversity}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Generate literature hypotheses from mental health research papers}
+\li{Generate data-driven hypotheses from social media posts}
+\li{Run Union method to combine and deduplicate:}
+\li{Inference captures both theoretical constructs (posting behavior changes) and data patterns (emotional language shifts)}
+}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\p{\strong{Caching:} Enable Redis caching to reduce API costs and computation time for repeated LLM calls}
+
+\p{\strong{Parallel Processing:} Leverage multiple workers for large-scale hypothesis generation and testing}
+
+\p{\strong{Adaptive Refinement:} Use challenging examples to iteratively improve hypothesis quality}
+}
+
+\subtree{
+\title{Expected Outcomes}
+\p{Research using hypogenic has demonstrated:}
+
+\ul{
+\li{14.19\% accuracy improvement in AI-content detection tasks}
+\li{7.44\% accuracy improvement in deception detection tasks}
+\li{80-84\% of hypothesis pairs offering distinct, non-redundant insights}
+\li{High helpfulness ratings from human evaluators across multiple research domains}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Issue:} Generated hypotheses are too generic \strong{Solution:} Refine prompt templates in \code{\startverb config.yaml\stopverb} to request more specific, testable hypotheses}
+
+\p{\strong{Issue:} Poor inference performance \strong{Solution:} Ensure dataset has sufficient training examples, adjust hypothesis generation parameters, or increase number of hypotheses}
+
+\p{\strong{Issue:} Label extraction failures \strong{Solution:} Implement custom \code{\startverb extract_label()\stopverb} function for domain-specific output parsing}
+
+\p{\strong{Issue:} GROBID PDF processing fails \strong{Solution:} Ensure GROBID service is running (\code{\startverb bash ./modules/run_grobid.sh\stopverb}) and PDFs are valid research papers}
+}
+
+\subtree{
+\title{Creating Custom Tasks}
+\p{To add a new task or dataset to Hypogenic:}
+
+\subtree{
+\title{Step 1: Prepare Your Dataset}
+\p{Create three JSON files following the required format:}
+
+\ul{
+\li{\code{\startverb your_task_train.json\stopverb}}
+\li{\code{\startverb your_task_val.json\stopverb}}
+\li{\code{\startverb your_task_test.json\stopverb}}
+}
+
+\p{Each file must have keys for text features (\code{\startverb text_features_1\stopverb}, etc.) and \code{\startverb label\stopverb}.}
+}
+
+\subtree{
+\title{Step 2: Create config.yaml}
+\p{Define your task configuration with:}
+
+\ul{
+\li{Task name and dataset paths}
+\li{Prompt templates for observations, generation, inference}
+\li{Any extra keys for reusable prompt components}
+\li{Placeholder variables (e.g., \code{\startverb ${text_features_1}\stopverb}, \code{\startverb ${num_hypotheses}\stopverb})}
+}
+}
+
+\subtree{
+\title{Step 3: Implement extract_label Function}
+\p{Create a custom label extraction function that parses LLM outputs for your domain:}
+
+\pre{\startverb
+from hypogenic import BaseTask
+
+def extract_my_label(llm_output: str) -> str:
+    """Custom label extraction for your task.
+    
+    Must return labels in same format as dataset 'label' field.
+    """
+    # Example: Extract from specific format
+    if "Final prediction:" in llm_output:
+        return llm_output.split("Final prediction:")[-1].strip()
+    
+    # Fallback to default pattern
+    import re
+    match = re.search(r'final answer:\s+(.*)', llm_output, re.IGNORECASE)
+    return match.group(1).strip() if match else llm_output.strip()
+
+# Use your custom task
+task = BaseTask(
+    config_path="./your_task/config.yaml",
+    extract_label=extract_my_label
+)
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: (Optional) Process Literature}
+\p{For HypoRefine/Union methods:}
+
+\ol{
+\li{Create \code{\startverb literature/your_task_name/raw/\stopverb} directory}
+\li{Add relevant research paper PDFs}
+\li{Run GROBID preprocessing}
+\li{Process with \code{\startverb pdf_preprocess.py\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 5: Generate and Test}
+\p{Run hypothesis generation and inference using CLI or Python API:}
+
+\pre{\startverb
+# CLI approach
+hypogenic_generation --config your_task/config.yaml --method hypogenic --num_hypotheses 20
+hypogenic_inference --config your_task/config.yaml --hypotheses output/hypotheses.json
+
+# Or use Python API (see Python API Usage section)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Repository Structure}
+\p{Understanding the repository layout:}
+
+\pre{\startverb
+hypothesis-generation/
+├── hypogenic/              # Core package code
+├── hypogenic_cmd/          # CLI entry points
+├── hypothesis_agent/       # HypoRefine agent framework
+├── literature/            # Literature processing utilities
+├── modules/               # GROBID and preprocessing modules
+├── examples/              # Example scripts
+│   ├── generation.py      # Basic HypoGeniC generation
+│   ├── union_generation.py # HypoRefine/Union generation
+│   ├── inference.py       # Single hypothesis inference
+│   ├── multi_hyp_inference.py # Multiple hypothesis inference
+│   └── pdf_preprocess.py  # Literature PDF processing
+├── data/                  # Example datasets (clone separately)
+├── tests/                 # Unit tests
+└── IO_prompting/          # Prompt templates and experiments
+\stopverb}
+
+\p{\strong{Key directories:}}
+
+\ul{
+\li{\strong{hypogenic/}: Main package with BaseTask and generation logic}
+\li{\strong{examples/}: Reference implementations for common workflows}
+\li{\strong{literature/}: Tools for PDF processing and literature extraction}
+\li{\strong{modules/}: External tool integrations (GROBID, etc.)}
+}
+}
+
+\subtree{
+\title{Related Publications}
+\subtree{
+\title{HypoBench (2025)}
+\p{Liu, H., Huang, S., Hu, J., Zhou, Y., & Tan, C. (2025). HypoBench: Towards Systematic and Principled Benchmarking for Hypothesis Generation. arXiv preprint arXiv:2504.11524.}
+
+\ul{
+\li{\strong{Paper:} https://arxiv.org/abs/2504.11524}
+\li{\strong{Description:} Benchmarking framework for systematic evaluation of hypothesis generation methods}
+}
+
+\p{\strong{BibTeX:}}
+
+\pre{\startverb
+@misc{liu2025hypobenchsystematicprincipledbenchmarking,
+      title={HypoBench: Towards Systematic and Principled Benchmarking for Hypothesis Generation}, 
+      author={Haokun Liu and Sicong Huang and Jingyu Hu and Yangqiaoyu Zhou and Chenhao Tan},
+      year={2025},
+      eprint={2504.11524},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2504.11524}, 
+}
+\stopverb}
+}
+
+\subtree{
+\title{Literature Meets Data (2024)}
+\p{Liu, H., Zhou, Y., Li, M., Yuan, C., & Tan, C. (2024). Literature Meets Data: A Synergistic Approach to Hypothesis Generation. arXiv preprint arXiv:2410.17309.}
+
+\ul{
+\li{\strong{Paper:} https://arxiv.org/abs/2410.17309}
+\li{\strong{Code:} https://github.com/ChicagoHAI/hypothesis-generation}
+\li{\strong{Description:} Introduces HypoRefine and demonstrates synergistic combination of literature-based and data-driven hypothesis generation}
+}
+
+\p{\strong{BibTeX:}}
+
+\pre{\startverb
+@misc{liu2024literaturemeetsdatasynergistic,
+      title={Literature Meets Data: A Synergistic Approach to Hypothesis Generation}, 
+      author={Haokun Liu and Yangqiaoyu Zhou and Mingxuan Li and Chenfei Yuan and Chenhao Tan},
+      year={2024},
+      eprint={2410.17309},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2410.17309}, 
+}
+\stopverb}
+}
+
+\subtree{
+\title{Hypothesis Generation with Large Language Models (2024)}
+\p{Zhou, Y., Liu, H., Srivastava, T., Mei, H., & Tan, C. (2024). Hypothesis Generation with Large Language Models. In Proceedings of EMNLP Workshop of NLP for Science.}
+
+\ul{
+\li{\strong{Paper:} https://aclanthology.org/2024.nlp4science-1.10/}
+\li{\strong{Description:} Original HypoGeniC framework for data-driven hypothesis generation}
+}
+
+\p{\strong{BibTeX:}}
+
+\pre{\startverb
+@inproceedings{zhou2024hypothesisgenerationlargelanguage,
+      title={Hypothesis Generation with Large Language Models}, 
+      author={Yangqiaoyu Zhou and Haokun Liu and Tejes Srivastava and Hongyuan Mei and Chenhao Tan},
+      booktitle = {Proceedings of EMNLP Workshop of NLP for Science},
+      year={2024},
+      url={https://aclanthology.org/2024.nlp4science-1.10/},
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\subtree{
+\title{Official Links}
+\ul{
+\li{\strong{GitHub Repository:} https://github.com/ChicagoHAI/hypothesis-generation}
+\li{\strong{PyPI Package:} https://pypi.org/project/hypogenic/}
+\li{\strong{License:} MIT License}
+\li{\strong{Issues & Support:} https://github.com/ChicagoHAI/hypothesis-generation/issues}
+}
+}
+
+\subtree{
+\title{Example Datasets}
+\p{Clone these repositories for ready-to-use examples:}
+
+\pre{\startverb
+# HypoGeniC examples (data-driven only)
+git clone https://github.com/ChicagoHAI/HypoGeniC-datasets.git ./data
+
+# HypoRefine/Union examples (literature + data)
+git clone https://github.com/ChicagoHAI/Hypothesis-agent-datasets.git ./data
+\stopverb}
+}
+
+\subtree{
+\title{Community & Contributions}
+\ul{
+\li{\strong{Contributors:} 7+ active contributors}
+\li{\strong{Stars:} 89+ on GitHub}
+\li{\strong{Topics:} research-tool, interpretability, hypothesis-generation, scientific-discovery, llm-application}
+}
+
+\p{For contributions or questions, visit the GitHub repository and check the issues page.}
+}
+}
+
+\subtree{
+\title{Local Resources}
+\subtree{
+\title{references/}
+\p{\code{\startverb config_template.yaml\stopverb} - Complete example configuration file with all required prompt templates and parameters. This includes:}
+
+\ul{
+\li{Full YAML structure for task configuration}
+\li{Example prompt templates for all methods}
+\li{Placeholder variable documentation}
+\li{Role-based prompt examples}
+}
+}
+
+\subtree{
+\title{scripts/}
+\p{Scripts directory is available for:}
+
+\ul{
+\li{Custom data preparation utilities}
+\li{Format conversion tools}
+\li{Analysis and evaluation scripts}
+\li{Integration with external tools}
+}
+}
+
+\subtree{
+\title{assets/}
+\p{Assets directory is available for:}
+
+\ul{
+\li{Example datasets and templates}
+\li{Sample hypothesis banks}
+\li{Visualization outputs}
+\li{Documentation supplements}
+}
+}
+}
+}

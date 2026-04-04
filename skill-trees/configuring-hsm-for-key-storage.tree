@@ -1,0 +1,118 @@
+\title{Configuring Hsm For Key Storage}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{hsm}
+
+\tag{key-management}
+
+\tag{pkcs11}
+
+\tag{hardware-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Hardware Security Modules (HSMs) are tamper-resistant physical devices that safeguard cryptographic keys and perform cryptographic operations in a hardened environment. Keys stored in an HSM never lea}
+
+\subtree{
+\title{Configuring HSM for Key Storage}
+\subtree{
+\title{Overview}
+\p{Hardware Security Modules (HSMs) are tamper-resistant physical devices that safeguard cryptographic keys and perform cryptographic operations in a hardened environment. Keys stored in an HSM never leave the device boundary, providing the highest level of key protection. This skill covers configuring HSMs using the PKCS#11 standard interface, including key generation, signing, encryption, and key management using both physical HSMs and SoftHSM2 for development.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring configuring hsm for key storage capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Configure SoftHSM2 as a development PKCS#11 provider}
+\li{Generate and manage keys inside the HSM via PKCS#11}
+\li{Perform cryptographic operations (sign, verify, encrypt, decrypt) using HSM-resident keys}
+\li{Implement HSM-backed certificate authority operations}
+\li{Configure key access policies and user authentication}
+\li{Interface with cloud HSM services (AWS CloudHSM, Azure)}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{HSM Compliance Levels}
+\pre{\startverb
+| FIPS Level | Protection | Use Case |
+|-----------|-----------|----------|
+| FIPS 140-2 Level 1 | Software only | Development |
+| FIPS 140-2 Level 2 | Tamper-evident, role-based auth | General production |
+| FIPS 140-2 Level 3 | Tamper-resistant, identity-based auth | Financial, government |
+| FIPS 140-2 Level 4 | Physical tamper response | Military, classified |
+\stopverb}
+}
+
+\subtree{
+\title{PKCS#11 Architecture}
+\pre{\startverb
+Application --> PKCS#11 API --> HSM Provider --> Hardware HSM
+                                    |
+                              (SoftHSM2 for dev)
+\stopverb}
+}
+
+\subtree{
+\title{Key Objects in PKCS#11}
+\pre{\startverb
+| Object Type | Description | Operations |
+|-------------|-------------|-----------|
+| CKO_SECRET_KEY | Symmetric keys (AES) | Encrypt, Decrypt, Wrap |
+| CKO_PUBLIC_KEY | Public keys (RSA, EC) | Verify, Encrypt, Wrap |
+| CKO_PRIVATE_KEY | Private keys (RSA, EC) | Sign, Decrypt, Unwrap |
+| CKO_CERTIFICATE | X.509 certificates | Storage, retrieval |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Never export private keys from HSM (use CKA_EXTRACTABLE=False)}
+\li{Use separate slots/partitions for different applications}
+\li{Implement multi-person key ceremony for CA root keys}
+\li{Enable audit logging for all HSM operations}
+\li{Implement HSM backup and disaster recovery}
+\li{Use strong PINs and enable SO (Security Officer) PIN}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] SoftHSM2 initializes with token and user PIN}
+\li{[ ] AES key generates inside HSM}
+\li{[ ] RSA key pair generates inside HSM}
+\li{[ ] Encryption/decryption uses HSM-resident keys}
+\li{[ ] Signing/verification uses HSM-resident keys}
+\li{[ ] Keys cannot be exported (non-extractable)}
+\li{[ ] Key listing shows all HSM-stored objects}
+}
+}
+}

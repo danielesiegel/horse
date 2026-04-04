@@ -1,0 +1,132 @@
+\title{Spotify}
+
+\taxon{skill}
+
+\meta{description}{Control Spotify playback and manage playlists. Play music, pause, skip tracks, search for songs/albums/artists, create playlists, add tracks, check what's playing, and manage your library. Requires Spotify Premium.}
+
+\subtree{
+\title{Spotify Control}
+\p{Control Spotify playback and manage playlists via MCP.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Play specific songs, albums, artists, or playlists}
+\li{Control playback (pause, skip, previous)}
+\li{Search Spotify catalog}
+\li{Create and manage playlists}
+\li{Check what's currently playing}
+\li{Add tracks to queue}
+}
+}
+
+\subtree{
+\title{Setup}
+\p{MCP server configured in \code{\startverb ~/.mcp.json\stopverb}:}
+
+\pre{\startverb
+{
+  "spotify": {
+    "command": "node",
+    "args": ["/Users/alice/Projects/spotify-mcp-server/build/index.js"]
+  }
+}
+\stopverb}
+
+\p{OAuth config in \code{\startverb /Users/alice/Projects/spotify-mcp-server/spotify-config.json\stopverb}.}
+}
+
+\subtree{
+\title{Available Tools}
+\subtree{
+\title{Read Operations}
+\pre{\startverb
+| Tool | Description |
+|------|-------------|
+| `searchSpotify` | Search tracks, albums, artists, playlists |
+| `getNowPlaying` | Get currently playing track |
+| `getMyPlaylists` | List user's playlists |
+| `getPlaylistTracks` | Get tracks in a playlist |
+| `getRecentlyPlayed` | Recently played tracks |
+| `getUsersSavedTracks` | Liked songs library |
+\stopverb}
+}
+
+\subtree{
+\title{Playback Control}
+\pre{\startverb
+| Tool | Description |
+|------|-------------|
+| `playMusic` | Play track/album/artist/playlist |
+| `pausePlayback` | Pause current playback |
+| `skipToNext` | Skip to next track |
+| `skipToPrevious` | Skip to previous track |
+| `addToQueue` | Add item to queue |
+\stopverb}
+}
+
+\subtree{
+\title{Playlist Management}
+\pre{\startverb
+| Tool | Description |
+|------|-------------|
+| `createPlaylist` | Create new playlist |
+| `addTracksToPlaylist` | Add tracks to playlist |
+\stopverb}
+}
+
+\subtree{
+\title{Album Operations}
+\pre{\startverb
+| Tool | Description |
+|------|-------------|
+| `getAlbums` | Get album details |
+| `getAlbumTracks` | Get tracks from album |
+| `saveOrRemoveAlbumForUser` | Save/remove albums |
+| `checkUsersSavedAlbums` | Check if albums saved |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Usage}
+\subtree{
+\title{Play a Song}
+\pre{\startverb
+searchSpotify(query="bohemian rhapsody", type="track", limit=5)
+playMusic(uri="spotify:track:6rqhFgbbKwnb9MLmUQDhG6")
+\stopverb}
+}
+
+\subtree{
+\title{Check What's Playing}
+\pre{\startverb
+getNowPlaying()
+\stopverb}
+}
+
+\subtree{
+\title{Create a Playlist}
+\pre{\startverb
+createPlaylist(name="Workout Mix", description="Pump up songs", public=false)
+addTracksToPlaylist(playlistId="...", trackUris=["spotify:track:..."])
+\stopverb}
+}
+
+\subtree{
+\title{Add to Queue}
+\pre{\startverb
+addToQueue(type="track", id="6rqhFgbbKwnb9MLmUQDhG6")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{Requires Spotify Premium for playback control}
+\li{Run \code{\startverb npm run auth\stopverb} in spotify-mcp-server to set up OAuth if tokens expired}
+\li{Active Spotify device required for playback (phone, desktop app, etc.)}
+}
+}
+}

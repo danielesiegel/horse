@@ -1,0 +1,564 @@
+\title{Exploratory Data Analysis}
+
+\taxon{skill}
+
+\meta{description}{Perform comprehensive exploratory data analysis on scientific data files across 200+ file formats. This skill should be used when analyzing any scientific data file to understand its structure, content, quality, and characteristics. Automatically detects file type and generates detailed markdown reports with format-specific analysis, quality metrics, and downstream analysis recommendations. Covers chemistry, bioinformatics, microscopy, spectroscopy, proteomics, metabolomics, and general scientific data formats.}
+
+\subtree{
+\title{Exploratory Data Analysis}
+\subtree{
+\title{Overview}
+\p{Perform comprehensive exploratory data analysis (EDA) on scientific data files across multiple domains. This skill provides automated file type detection, format-specific analysis, data quality assessment, and generates detailed markdown reports suitable for documentation and downstream analysis planning.}
+
+\p{\strong{Key Capabilities:}}
+
+\ul{
+\li{Automatic detection and analysis of 200+ scientific file formats}
+\li{Comprehensive format-specific metadata extraction}
+\li{Data quality and integrity assessment}
+\li{Statistical summaries and distributions}
+\li{Visualization recommendations}
+\li{Downstream analysis suggestions}
+\li{Markdown report generation}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when:}
+
+\ul{
+\li{User provides a path to a scientific data file for analysis}
+\li{User asks to "explore", "analyze", or "summarize" a data file}
+\li{User wants to understand the structure and content of scientific data}
+\li{User needs a comprehensive report of a dataset before analysis}
+\li{User wants to assess data quality or completeness}
+\li{User asks what type of analysis is appropriate for a file}
+}
+}
+
+\subtree{
+\title{Supported File Categories}
+\p{The skill has comprehensive coverage of scientific file formats organized into six major categories:}
+
+\subtree{
+\title{1. Chemistry and Molecular Formats (60+ extensions)}
+\p{Structure files, computational chemistry outputs, molecular dynamics trajectories, and chemical databases.}
+
+\p{\strong{File types include:} \code{\startverb .pdb\stopverb}, \code{\startverb .cif\stopverb}, \code{\startverb .mol\stopverb}, \code{\startverb .mol2\stopverb}, \code{\startverb .sdf\stopverb}, \code{\startverb .xyz\stopverb}, \code{\startverb .smi\stopverb}, \code{\startverb .gro\stopverb}, \code{\startverb .log\stopverb}, \code{\startverb .fchk\stopverb}, \code{\startverb .cube\stopverb}, \code{\startverb .dcd\stopverb}, \code{\startverb .xtc\stopverb}, \code{\startverb .trr\stopverb}, \code{\startverb .prmtop\stopverb}, \code{\startverb .psf\stopverb}, and more.}
+
+\p{\strong{Reference file:} \code{\startverb references/chemistry_molecular_formats.md\stopverb}}
+}
+
+\subtree{
+\title{2. Bioinformatics and Genomics Formats (50+ extensions)}
+\p{Sequence data, alignments, annotations, variants, and expression data.}
+
+\p{\strong{File types include:} \code{\startverb .fasta\stopverb}, \code{\startverb .fastq\stopverb}, \code{\startverb .sam\stopverb}, \code{\startverb .bam\stopverb}, \code{\startverb .vcf\stopverb}, \code{\startverb .bed\stopverb}, \code{\startverb .gff\stopverb}, \code{\startverb .gtf\stopverb}, \code{\startverb .bigwig\stopverb}, \code{\startverb .h5ad\stopverb}, \code{\startverb .loom\stopverb}, \code{\startverb .counts\stopverb}, \code{\startverb .mtx\stopverb}, and more.}
+
+\p{\strong{Reference file:} \code{\startverb references/bioinformatics_genomics_formats.md\stopverb}}
+}
+
+\subtree{
+\title{3. Microscopy and Imaging Formats (45+ extensions)}
+\p{Microscopy images, medical imaging, whole slide imaging, and electron microscopy.}
+
+\p{\strong{File types include:} \code{\startverb .tif\stopverb}, \code{\startverb .nd2\stopverb}, \code{\startverb .lif\stopverb}, \code{\startverb .czi\stopverb}, \code{\startverb .ims\stopverb}, \code{\startverb .dcm\stopverb}, \code{\startverb .nii\stopverb}, \code{\startverb .mrc\stopverb}, \code{\startverb .dm3\stopverb}, \code{\startverb .vsi\stopverb}, \code{\startverb .svs\stopverb}, \code{\startverb .ome.tiff\stopverb}, and more.}
+
+\p{\strong{Reference file:} \code{\startverb references/microscopy_imaging_formats.md\stopverb}}
+}
+
+\subtree{
+\title{4. Spectroscopy and Analytical Chemistry Formats (35+ extensions)}
+\p{NMR, mass spectrometry, IR/Raman, UV-Vis, X-ray, chromatography, and other analytical techniques.}
+
+\p{\strong{File types include:} \code{\startverb .fid\stopverb}, \code{\startverb .mzML\stopverb}, \code{\startverb .mzXML\stopverb}, \code{\startverb .raw\stopverb}, \code{\startverb .mgf\stopverb}, \code{\startverb .spc\stopverb}, \code{\startverb .jdx\stopverb}, \code{\startverb .xy\stopverb}, \code{\startverb .cif\stopverb} (crystallography), \code{\startverb .wdf\stopverb}, and more.}
+
+\p{\strong{Reference file:} \code{\startverb references/spectroscopy_analytical_formats.md\stopverb}}
+}
+
+\subtree{
+\title{5. Proteomics and Metabolomics Formats (30+ extensions)}
+\p{Mass spec proteomics, metabolomics, lipidomics, and multi-omics data.}
+
+\p{\strong{File types include:} \code{\startverb .mzML\stopverb}, \code{\startverb .pepXML\stopverb}, \code{\startverb .protXML\stopverb}, \code{\startverb .mzid\stopverb}, \code{\startverb .mzTab\stopverb}, \code{\startverb .sky\stopverb}, \code{\startverb .mgf\stopverb}, \code{\startverb .msp\stopverb}, \code{\startverb .h5ad\stopverb}, and more.}
+
+\p{\strong{Reference file:} \code{\startverb references/proteomics_metabolomics_formats.md\stopverb}}
+}
+
+\subtree{
+\title{6. General Scientific Data Formats (30+ extensions)}
+\p{Arrays, tables, hierarchical data, compressed archives, and common scientific formats.}
+
+\p{\strong{File types include:} \code{\startverb .npy\stopverb}, \code{\startverb .npz\stopverb}, \code{\startverb .csv\stopverb}, \code{\startverb .xlsx\stopverb}, \code{\startverb .json\stopverb}, \code{\startverb .hdf5\stopverb}, \code{\startverb .zarr\stopverb}, \code{\startverb .parquet\stopverb}, \code{\startverb .mat\stopverb}, \code{\startverb .fits\stopverb}, \code{\startverb .nc\stopverb}, \code{\startverb .xml\stopverb}, and more.}
+
+\p{\strong{Reference file:} \code{\startverb references/general_scientific_formats.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: File Type Detection}
+\p{When a user provides a file path, first identify the file type:}
+
+\ol{
+\li{Extract the file extension}
+\li{Look up the extension in the appropriate reference file}
+\li{Identify the file category and format description}
+\li{Load format-specific information}
+}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+User: "Analyze data.fastq"
+→ Extension: .fastq
+→ Category: bioinformatics_genomics
+→ Format: FASTQ Format (sequence data with quality scores)
+→ Reference: references/bioinformatics_genomics_formats.md
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Load Format-Specific Information}
+\p{Based on the file type, read the corresponding reference file to understand:}
+
+\ul{
+\li{\strong{Typical Data:} What kind of data this format contains}
+\li{\strong{Use Cases:} Common applications for this format}
+\li{\strong{Python Libraries:} How to read the file in Python}
+\li{\strong{EDA Approach:} What analyses are appropriate for this data type}
+}
+
+\p{Search the reference file for the specific extension (e.g., search for "### .fastq" in \code{\startverb bioinformatics_genomics_formats.md\stopverb}).}
+}
+
+\subtree{
+\title{Step 3: Perform Data Analysis}
+\p{Use the \code{\startverb scripts/eda_analyzer.py\stopverb} script OR implement custom analysis:}
+
+\p{\strong{Option A: Use the analyzer script}}
+
+\pre{\startverb
+# The script automatically:
+# 1. Detects file type
+# 2. Loads reference information
+# 3. Performs format-specific analysis
+# 4. Generates markdown report
+
+python scripts/eda_analyzer.py <filepath> [output.md]
+\stopverb}
+
+\p{\strong{Option B: Custom analysis in the conversation} Based on the format information from the reference file, perform appropriate analysis:}
+
+\p{For tabular data (CSV, TSV, Excel):}
+
+\ul{
+\li{Load with pandas}
+\li{Check dimensions, data types}
+\li{Analyze missing values}
+\li{Calculate summary statistics}
+\li{Identify outliers}
+\li{Check for duplicates}
+}
+
+\p{For sequence data (FASTA, FASTQ):}
+
+\ul{
+\li{Count sequences}
+\li{Analyze length distributions}
+\li{Calculate GC content}
+\li{Assess quality scores (FASTQ)}
+}
+
+\p{For images (TIFF, ND2, CZI):}
+
+\ul{
+\li{Check dimensions (X, Y, Z, C, T)}
+\li{Analyze bit depth and value range}
+\li{Extract metadata (channels, timestamps, spatial calibration)}
+\li{Calculate intensity statistics}
+}
+
+\p{For arrays (NPY, HDF5):}
+
+\ul{
+\li{Check shape and dimensions}
+\li{Analyze data type}
+\li{Calculate statistical summaries}
+\li{Check for missing/invalid values}
+}
+}
+
+\subtree{
+\title{Step 4: Generate Comprehensive Report}
+\p{Create a markdown report with the following sections:}
+
+\subtree{
+\title{Required Sections:}
+\ol{
+\li{\strong{Title and Metadata}}
+\li{Filename and timestamp}
+\li{File size and location}
+}
+
+\ol{
+\li{\strong{Basic Information}}
+\li{File properties}
+\li{Format identification}
+}
+
+\ol{
+\li{\strong{File Type Details}}
+\li{Format description from reference}
+\li{Typical data content}
+\li{Common use cases}
+\li{Python libraries for reading}
+}
+
+\ol{
+\li{\strong{Data Analysis}}
+\li{Structure and dimensions}
+\li{Statistical summaries}
+\li{Quality assessment}
+\li{Data characteristics}
+}
+
+\ol{
+\li{\strong{Key Findings}}
+\li{Notable patterns}
+\li{Potential issues}
+\li{Quality metrics}
+}
+
+\ol{
+\li{\strong{Recommendations}}
+\li{Preprocessing steps}
+\li{Appropriate analyses}
+\li{Tools and methods}
+\li{Visualization approaches}
+}
+}
+
+\subtree{
+\title{Template Location}
+\p{Use \code{\startverb assets/report_template.md\stopverb} as a guide for report structure.}
+}
+}
+
+\subtree{
+\title{Step 5: Save Report}
+\p{Save the markdown report with a descriptive filename:}
+
+\ul{
+\li{Pattern: \code{\startverb {original_filename}_eda_report.md\stopverb}}
+\li{Example: \code{\startverb experiment_data.fastq\stopverb} → \code{\startverb experiment_data_eda_report.md\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Detailed Format References}
+\p{Each reference file contains comprehensive information for dozens of file types. To find information about a specific format:}
+
+\ol{
+\li{Identify the category from the extension}
+\li{Read the appropriate reference file}
+\li{Search for the section heading matching the extension (e.g., "### .pdb")}
+\li{Extract the format information}
+}
+
+\subtree{
+\title{Reference File Structure}
+\p{Each format entry includes:}
+
+\ul{
+\li{\strong{Description:} What the format is}
+\li{\strong{Typical Data:} What it contains}
+\li{\strong{Use Cases:} Common applications}
+\li{\strong{Python Libraries:} How to read it (with code examples)}
+\li{\strong{EDA Approach:} Specific analyses to perform}
+}
+
+\p{\strong{Example lookup:}}
+
+\pre{\startverb
+### .pdb - Protein Data Bank
+**Description:** Standard format for 3D structures of biological macromolecules
+**Typical Data:** Atomic coordinates, residue information, secondary structure
+**Use Cases:** Protein structure analysis, molecular visualization, docking
+**Python Libraries:**
+- `Biopython`: `Bio.PDB`
+- `MDAnalysis`: `MDAnalysis.Universe('file.pdb')`
+**EDA Approach:**
+- Structure validation (bond lengths, angles)
+- B-factor distribution
+- Missing residues detection
+- Ramachandran plots
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Reading Reference Files}
+\p{Reference files are large (10,000+ words each). To efficiently use them:}
+
+\ol{
+\li{\strong{Search by extension:} Use grep to find the specific format}
+}
+
+\ol{
+\li{\strong{Extract relevant sections:} Don't load entire reference files into context unnecessarily}
+}
+
+\ol{
+\li{\strong{Cache format info:} If analyzing multiple files of the same type, reuse the format information}
+}
+}
+
+\subtree{
+\title{Data Analysis}
+\ol{
+\li{\strong{Sample large files:} For files with millions of records, analyze a representative sample}
+\li{\strong{Handle errors gracefully:} Many scientific formats require specific libraries; provide clear installation instructions}
+\li{\strong{Validate metadata:} Cross-check metadata consistency (e.g., stated dimensions vs actual data)}
+\li{\strong{Consider data provenance:} Note instrument, software versions, processing steps}
+}
+}
+
+\subtree{
+\title{Report Generation}
+\ol{
+\li{\strong{Be comprehensive:} Include all relevant information for downstream analysis}
+\li{\strong{Be specific:} Provide concrete recommendations based on the file type}
+\li{\strong{Be actionable:} Suggest specific next steps and tools}
+\li{\strong{Include code examples:} Show how to load and work with the data}
+}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Example 1: Analyzing a FASTQ file}
+\pre{\startverb
+# User provides: "Analyze reads.fastq"
+
+# 1. Detect file type
+extension = '.fastq'
+category = 'bioinformatics_genomics'
+
+# 2. Read reference info
+# Search references/bioinformatics_genomics_formats.md for "### .fastq"
+
+# 3. Perform analysis
+from Bio import SeqIO
+sequences = list(SeqIO.parse('reads.fastq', 'fastq'))
+# Calculate: read count, length distribution, quality scores, GC content
+
+# 4. Generate report
+# Include: format description, analysis results, QC recommendations
+
+# 5. Save as: reads_eda_report.md
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Analyzing a CSV dataset}
+\pre{\startverb
+# User provides: "Explore experiment_results.csv"
+
+# 1. Detect: .csv → general_scientific
+
+# 2. Load reference for CSV format
+
+# 3. Analyze
+import pandas as pd
+df = pd.read_csv('experiment_results.csv')
+# Dimensions, dtypes, missing values, statistics, correlations
+
+# 4. Generate report with:
+# - Data structure
+# - Missing value patterns
+# - Statistical summaries
+# - Correlation matrix
+# - Outlier detection results
+
+# 5. Save report
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Analyzing microscopy data}
+\pre{\startverb
+# User provides: "Analyze cells.nd2"
+
+# 1. Detect: .nd2 → microscopy_imaging (Nikon format)
+
+# 2. Read reference for ND2 format
+# Learn: multi-dimensional (XYZCT), requires nd2reader
+
+# 3. Analyze
+from nd2reader import ND2Reader
+with ND2Reader('cells.nd2') as images:
+    # Extract: dimensions, channels, timepoints, metadata
+    # Calculate: intensity statistics, frame info
+
+# 4. Generate report with:
+# - Image dimensions (XY, Z-stacks, time, channels)
+# - Channel wavelengths
+# - Pixel size and calibration
+# - Recommendations for image analysis
+
+# 5. Save report
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Missing Libraries}
+\p{Many scientific formats require specialized libraries:}
+
+\p{\strong{Problem:} Import error when trying to read a file}
+
+\p{\strong{Solution:} Provide clear installation instructions}
+
+\pre{\startverb
+try:
+    from Bio import SeqIO
+except ImportError:
+    print("Install Biopython: uv pip install biopython")
+\stopverb}
+
+\p{Common requirements by category:}
+
+\ul{
+\li{\strong{Bioinformatics:} \code{\startverb biopython\stopverb}, \code{\startverb pysam\stopverb}, \code{\startverb pyBigWig\stopverb}}
+\li{\strong{Chemistry:} \code{\startverb rdkit\stopverb}, \code{\startverb mdanalysis\stopverb}, \code{\startverb cclib\stopverb}}
+\li{\strong{Microscopy:} \code{\startverb tifffile\stopverb}, \code{\startverb nd2reader\stopverb}, \code{\startverb aicsimageio\stopverb}, \code{\startverb pydicom\stopverb}}
+\li{\strong{Spectroscopy:} \code{\startverb nmrglue\stopverb}, \code{\startverb pymzml\stopverb}, \code{\startverb pyteomics\stopverb}}
+\li{\strong{General:} \code{\startverb pandas\stopverb}, \code{\startverb numpy\stopverb}, \code{\startverb h5py\stopverb}, \code{\startverb scipy\stopverb}}
+}
+}
+
+\subtree{
+\title{Unknown File Types}
+\p{If a file extension is not in the references:}
+
+\ol{
+\li{Ask the user about the file format}
+\li{Check if it's a vendor-specific variant}
+\li{Attempt generic analysis based on file structure (text vs binary)}
+\li{Provide general recommendations}
+}
+}
+
+\subtree{
+\title{Large Files}
+\p{For very large files:}
+
+\ol{
+\li{Use sampling strategies (first N records)}
+\li{Use memory-mapped access (for HDF5, NPY)}
+\li{Process in chunks (for CSV, FASTQ)}
+\li{Provide estimates based on samples}
+}
+}
+}
+
+\subtree{
+\title{Script Usage}
+\p{The \code{\startverb scripts/eda_analyzer.py\stopverb} can be used directly:}
+
+\pre{\startverb
+# Basic usage
+python scripts/eda_analyzer.py data.csv
+
+# Specify output file
+python scripts/eda_analyzer.py data.csv output_report.md
+
+# The script will:
+# 1. Auto-detect file type
+# 2. Load format references
+# 3. Perform appropriate analysis
+# 4. Generate markdown report
+\stopverb}
+
+\p{The script supports automatic analysis for many common formats, but custom analysis in the conversation provides more flexibility and domain-specific insights.}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{Multi-File Analysis}
+\p{When analyzing multiple related files:}
+
+\ol{
+\li{Perform individual EDA on each file}
+\li{Create a summary comparison report}
+\li{Identify relationships and dependencies}
+\li{Suggest integration strategies}
+}
+}
+
+\subtree{
+\title{Quality Control}
+\p{For data quality assessment:}
+
+\ol{
+\li{Check format compliance}
+\li{Validate metadata consistency}
+\li{Assess completeness}
+\li{Identify outliers and anomalies}
+\li{Compare to expected ranges/distributions}
+}
+}
+
+\subtree{
+\title{Preprocessing Recommendations}
+\p{Based on data characteristics, recommend:}
+
+\ol{
+\li{Normalization strategies}
+\li{Missing value imputation}
+\li{Outlier handling}
+\li{Batch correction}
+\li{Format conversions}
+}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{scripts/}
+\ul{
+\li{\code{\startverb eda_analyzer.py\stopverb}: Comprehensive analysis script that can be run directly or imported}
+}
+}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb chemistry_molecular_formats.md\stopverb}: 60+ chemistry/molecular file formats}
+\li{\code{\startverb bioinformatics_genomics_formats.md\stopverb}: 50+ bioinformatics formats}
+\li{\code{\startverb microscopy_imaging_formats.md\stopverb}: 45+ imaging formats}
+\li{\code{\startverb spectroscopy_analytical_formats.md\stopverb}: 35+ spectroscopy formats}
+\li{\code{\startverb proteomics_metabolomics_formats.md\stopverb}: 30+ omics formats}
+\li{\code{\startverb general_scientific_formats.md\stopverb}: 30+ general formats}
+}
+}
+
+\subtree{
+\title{assets/}
+\ul{
+\li{\code{\startverb report_template.md\stopverb}: Comprehensive markdown template for EDA reports}
+}
+}
+}
+}

@@ -1,0 +1,202 @@
+\title{Splitmixternary Opine}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Political Repetition as Hyperrealpolitik - deterministic opinion formation via SplitMixTernary across all encountered languages. The eternal return of the trit.}
+
+\subtree{
+\title{SplitMixTernary Opine}
+\p{\strong{Political Repetition as Hyperrealpolitik}}
+
+\blockquote{"The simulacrum is never that which conceals the truth—it is the truth which conceals that there is none. The simulacrum is true." — Baudrillard}
+
+\p{Deterministic opinion formation via GF(3) coloring. Every proposition receives a trit. The same seed + proposition → the same opinion, eternally.}
+
+\subtree{
+\title{Core Thesis}
+\p{\strong{Hyperrealpolitik} = Realpolitik operating on simulations of simulations. When the map precedes the territory, political decisions become functions of hash collisions in deterministic RNG streams.}
+
+\pre{\startverb
+Proposition × Seed → Trit → Opinion
+     ↓
+   AFFIRM (+1)  : Hyperreal acceleration
+   SUSPEND (0)  : Eternal return / Ergodic
+   NEGATE (-1)  : Deterritorialization
+\stopverb}
+}
+
+\subtree{
+\title{Core Implementations}
+\subtree{
+\title{Babashka/Clojure}
+\pre{\startverb
+(def GOLDEN (unchecked-long 0x9E3779B97F4A7C15))
+
+(defn splitmix64 [seed]
+  (let [seed (unchecked-add (unchecked-long seed) GOLDEN)
+        z seed
+        z (unchecked-multiply (bit-xor z (unsigned-bit-shift-right z 30)) 
+                               (unchecked-long 0xBF58476D1CE4E5B9))
+        z (unchecked-multiply (bit-xor z (unsigned-bit-shift-right z 27)) 
+                               (unchecked-long 0x94D049BB133111EB))]
+    [seed (bit-xor z (unsigned-bit-shift-right z 31))]))
+
+(defn opine [seed proposition]
+  (let [combined (bit-xor (unchecked-long seed) (unchecked-long (hash proposition)))
+        [_ val] (splitmix64 combined)]
+    (- (mod (Math/abs val) 3) 1)))  ; → -1, 0, or +1
+\stopverb}
+}
+
+\subtree{
+\title{Julia}
+\pre{\startverb
+const GOLDEN = 0x9E3779B97F4A7C15
+const MIX1 = 0xBF58476D1CE4E5B9
+const MIX2 = 0x94D049BB133111EB
+
+function splitmix64(seed::UInt64)
+    seed += GOLDEN
+    z = seed
+    z = (z ⊻ (z >> 30)) * MIX1
+    z = (z ⊻ (z >> 27)) * MIX2
+    (seed, z ⊻ (z >> 31))
+end
+
+function opine(seed::UInt64, proposition::String)::Int8
+    combined = seed ⊻ hash(proposition)
+    _, val = splitmix64(combined)
+    Int8(mod(val, 3) - 1)  # → -1, 0, or +1
+end
+\stopverb}
+}
+
+\subtree{
+\title{Python}
+\pre{\startverb
+GOLDEN = 0x9E3779B97F4A7C15
+MASK64 = 0xFFFFFFFFFFFFFFFF
+
+def splitmix64(seed: int) -> tuple[int, int]:
+    seed = (seed + GOLDEN) & MASK64
+    z = seed
+    z = ((z ^ (z >> 30)) * 0xBF58476D1CE4E5B9) & MASK64
+    z = ((z ^ (z >> 27)) * 0x94D049BB133111EB) & MASK64
+    return seed, (z ^ (z >> 31)) & MASK64
+
+def opine(seed: int, proposition: str) -> int:
+    combined = seed ^ hash(proposition)
+    _, val = splitmix64(combined & MASK64)
+    return (val % 3) - 1  # → -1, 0, or +1
+\stopverb}
+}
+}
+
+\subtree{
+\title{Philosophical Framework}
+\subtree{
+\title{Schmitt → Baudrillard → Trit}
+\pre{\startverb
+| Schmitt (Realpolitik) | Baudrillard (Hyperreal) | Trit |
+|-----------------------|-------------------------|------|
+| Friend | Simulation of friend | +1 |
+| Neutral | Map = Territory | 0 |
+| Enemy | Simulation of enemy | -1 |
+\stopverb}
+}
+
+\subtree{
+\title{The Eternal Return of the Trit}
+\p{Nietzsche's eternal return becomes computational:}
+
+\pre{\startverb
+∀ seed, proposition:
+  opine(seed, proposition) = opine(seed, proposition)
+  
+The same input eternally returns the same opinion.
+This is not bug but feature: hyperrealpolitik IS determinism.
+\stopverb}
+}
+
+\subtree{
+\title{Deterritorialization as MINUS}
+\p{When opine returns -1, the proposition undergoes deterritorialization:}
+
+\ul{
+\li{Decoded from its original stratum}
+\li{Released from territory}
+\li{Open to new assemblages}
+}
+}
+
+\subtree{
+\title{Acceleration as PLUS}
+\p{When opine returns +1, the proposition accelerates:}
+
+\ul{
+\li{Intensifies existing tendencies  }
+\li{Pushes toward limit conditions}
+\li{Hyperstition becomes fact}
+}
+}
+
+\subtree{
+\title{Ergodic Suspension as ZERO}
+\p{When opine returns 0, the proposition suspends:}
+
+\ul{
+\li{Neither affirmed nor negated}
+\li{Eternal return without resolution}
+\li{The map IS the territory}
+}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+from splitmixternary_opine import opine
+
+seed = 1069  # Seed from interaction entropy
+
+# Form opinions
+print(opine(seed, "sovereignty"))          # → 1 (AFFIRM)
+print(opine(seed, "deterritorialization")) # → 0 (SUSPEND)
+print(opine(seed, "simulation"))           # → -1 (NEGATE)
+
+# Same seed + proposition = same opinion (eternal return)
+assert opine(seed, "nomos") == opine(seed, "nomos")
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{The sum of all opinions over a triadic grouping is conserved:}
+
+\pre{\startverb
+∑ opine(seed, concepts) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures that across any complete cycle of political repetition, the hyperreal balances itself.}
+}
+
+\subtree{
+\title{Additional Languages}
+\p{See [all implementations](references/IMPLEMENTATIONS.md) for:}
+
+\ul{
+\li{Ruby, Hylang, Rust}
+\li{JavaScript/TypeScript}
+\li{Move (Aptos), Unison}
+\li{Haskell, Lean 4/Narya}
+\li{Zig, Go, Elixir, Nim}
+\li{Hyperrealpolitik matrix statistics}
+}
+
+\p{\strong{Skill Name}: splitmixternary-opine \strong{Type}: Deterministic Opinion Formation \strong{Trit}: 0 (ERGODIC - the skill itself suspends judgment) \strong{Seed}: 1069 (zubuyul) \strong{Languages}: 18 encountered \strong{Conservation}: GF(3) verified}
+
+\blockquote{"In the desert of the Real, the trit is the only compass."}
+}
+}

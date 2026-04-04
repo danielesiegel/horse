@@ -1,0 +1,308 @@
+\title{Securing Helm Chart Deployments}
+
+\taxon{skill}
+
+\tag{helm}
+
+\tag{kubernetes}
+
+\tag{chart-security}
+
+\tag{supply-chain}
+
+\tag{configuration-security}
+
+\tag{deployment}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Secure Helm chart deployments by validating chart integrity, scanning templates for misconfigurations, and enforcing security contexts in Kubernetes releases.}
+
+\subtree{
+\title{Securing Helm Chart Deployments}
+\subtree{
+\title{Overview}
+\p{Helm is the Kubernetes package manager. Securing Helm deployments requires validating chart provenance, scanning templates for security misconfigurations, enforcing pod security contexts, managing secrets securely, and controlling RBAC for Helm operations.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring securing helm chart deployments capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Helm 3.12+ installed}
+\li{kubectl with cluster access}
+\li{GnuPG for chart signing/verification}
+\li{kubesec or checkov for template scanning}
+}
+}
+
+\subtree{
+\title{Chart Provenance and Integrity}
+\subtree{
+\title{Sign a Helm Chart}
+\pre{\startverb
+# Generate GPG key for signing
+gpg --full-generate-key
+
+# Package and sign chart
+helm package ./mychart --sign --key "helm-signing@example.com" --keyring ~/.gnupg/pubring.gpg
+
+# Verify chart signature
+helm verify mychart-0.1.0.tgz --keyring ~/.gnupg/pubring.gpg
+\stopverb}
+}
+
+\subtree{
+\title{Verify Chart Before Install}
+\pre{\startverb
+# Verify chart from repository
+helm pull myrepo/mychart --verify --keyring /path/to/keyring.gpg
+
+# Check chart provenance file
+cat mychart-0.1.0.tgz.prov
+\stopverb}
+}
+}
+
+\subtree{
+\title{Template Security Scanning}
+\subtree{
+\title{Render and Scan Templates}
+\pre{\startverb
+# Render templates without deploying
+helm template myrelease ./mychart --values values-prod.yaml > rendered.yaml
+
+# Scan with kubesec
+kubesec scan rendered.yaml
+
+# Scan with checkov
+checkov -f rendered.yaml --framework kubernetes
+
+# Scan with trivy
+trivy config rendered.yaml
+
+# Scan with kube-linter
+kube-linter lint rendered.yaml
+\stopverb}
+}
+
+\subtree{
+\title{Helm Lint for Misconfigurations}
+\pre{\startverb
+# Lint chart
+helm lint ./mychart --values values-prod.yaml --strict
+
+# Lint with debug output
+helm lint ./mychart --debug
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Context Enforcement in values.yaml}
+\pre{\startverb
+# values.yaml - Security hardened defaults
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 3000
+  fsGroup: 2000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+networkPolicy:
+  enabled: true
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: false
+
+image:
+  pullPolicy: Always
+  # Use digest instead of tag for immutability
+  # tag: "1.0.0"
+  # digest: "sha256:abc123..."
+\stopverb}
+
+\subtree{
+\title{Template with Security Contexts}
+\pre{\startverb
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mychart.fullname" . }}
+spec:
+  template:
+    spec:
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Secrets Management}
+\subtree{
+\title{Use External Secrets (Not Helm Values)}
+\pre{\startverb
+# templates/external-secret.yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ include "mychart.fullname" . }}-secrets
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: {{ include "mychart.fullname" . }}-secrets
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: production/database
+        property: password
+\stopverb}
+}
+
+\subtree{
+\title{helm-secrets Plugin}
+\pre{\startverb
+# Install helm-secrets plugin
+helm plugin install https://github.com/jkroepke/helm-secrets
+
+# Encrypt values file
+helm secrets encrypt values-secrets.yaml
+
+# Deploy with encrypted secrets
+helm secrets install myrelease ./mychart -f values.yaml -f values-secrets.yaml
+
+# Decrypt for editing
+helm secrets edit values-secrets.yaml
+\stopverb}
+}
+}
+
+\subtree{
+\title{RBAC for Helm Operations}
+\pre{\startverb
+# helm-deployer-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: helm-deployer
+  namespace: production
+rules:
+  - apiGroups: ["", "apps", "batch", "networking.k8s.io"]
+    resources: ["deployments", "services", "configmaps", "secrets", "ingresses", "jobs"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: helm-deployer-binding
+  namespace: production
+subjects:
+  - kind: ServiceAccount
+    name: helm-deployer
+    namespace: production
+roleRef:
+  kind: Role
+  name: helm-deployer
+  apiGroup: rbac.authorization.k8s.io
+\stopverb}
+}
+
+\subtree{
+\title{CI/CD Helm Security Pipeline}
+\pre{\startverb
+# .github/workflows/helm-security.yaml
+name: Helm Chart Security
+on:
+  pull_request:
+    paths: ['charts/**']
+
+jobs:
+  lint-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Helm lint
+        run: helm lint ./charts/mychart --strict
+
+      - name: Render templates
+        run: helm template test ./charts/mychart -f charts/mychart/values.yaml > rendered.yaml
+
+      - name: Scan with kube-linter
+        uses: stackrox/kube-linter-action@v1
+        with:
+          directory: rendered.yaml
+
+      - name: Scan with trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          scan-ref: rendered.yaml
+
+      - name: Scan with checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          file: rendered.yaml
+          framework: kubernetes
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Sign charts} with GPG and verify before installation}
+\li{\strong{Render and scan} templates before deploying to catch misconfigurations}
+\li{\strong{Enforce security contexts} in values.yaml defaults}
+\li{\strong{Never store secrets} in Helm values - use external secrets or helm-secrets plugin}
+\li{\strong{Use image digests} instead of tags for immutable references}
+\li{\strong{Restrict Helm RBAC} to least privilege per namespace}
+\li{\strong{Pin chart versions} in requirements - never use \code{\startverb latest\stopverb}}
+\li{\strong{Lint strictly} in CI with \code{\startverb --strict\stopverb} flag}
+\li{\strong{Review third-party charts} before deploying to production}
+\li{\strong{Use Helm test hooks} to validate deployments post-install}
+}
+}
+}

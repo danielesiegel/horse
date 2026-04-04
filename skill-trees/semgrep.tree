@@ -1,0 +1,235 @@
+\title{Semgrep}
+
+\taxon{skill}
+
+\meta{description}{>-}
+
+\subtree{
+\title{Semgrep Security Scan}
+\p{Run a Semgrep scan with automatic language detection, parallel execution via Task subagents, and merged SARIF output.}
+
+\subtree{
+\title{Essential Principles}
+\ol{
+\li{\strong{Always use \code{\startverb --metrics=off\stopverb}} — Semgrep sends telemetry by default; \code{\startverb --config auto\stopverb} also phones home. Every \code{\startverb semgrep\stopverb} command must include \code{\startverb --metrics=off\stopverb} to prevent data leakage during security audits.}
+\li{\strong{User must approve the scan plan (Step 3 is a hard gate)} — The original "scan this codebase" request is NOT approval. Present exact rulesets, target, engine, and mode; wait for explicit "yes"/"proceed" before spawning scanners.}
+\li{\strong{Third-party rulesets are required, not optional} — Trail of Bits, 0xdea, and Decurity rules catch vulnerabilities absent from the official registry. Include them whenever the detected language matches.}
+\li{\strong{Spawn all scan Tasks in a single message} — Parallel execution is the core performance advantage. Never spawn Tasks sequentially; always emit all Task tool calls in one response.}
+\li{\strong{Always check for Semgrep Pro before scanning} — Pro enables cross-file taint tracking and catches ~250\% more true positives. Skipping the check means silently missing critical inter-file vulnerabilities.}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Security audit of a codebase}
+\li{Finding vulnerabilities before code review}
+\li{Scanning for known bug patterns}
+\li{First-pass static analysis}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Binary analysis → Use binary analysis tools}
+\li{Already have Semgrep CI configured → Use existing pipeline}
+\li{Need cross-file analysis but no Pro license → Consider CodeQL as alternative}
+\li{Creating custom Semgrep rules → Use \code{\startverb semgrep-rule-creator\stopverb} skill}
+\li{Porting existing rules to other languages → Use \code{\startverb semgrep-rule-variant-creator\stopverb} skill}
+}
+}
+
+\subtree{
+\title{Output Directory}
+\p{All scan results, SARIF files, and temporary data are stored in a single output directory.}
+
+\ul{
+\li{\strong{If the user specifies an output directory} in their prompt, use it as \code{\startverb OUTPUT_DIR\stopverb}.}
+\li{\strong{If not specified}, default to \code{\startverb ./static_analysis_semgrep_1\stopverb}. If that already exists, increment to \code{\startverb _2\stopverb}, \code{\startverb _3\stopverb}, etc.}
+}
+
+\p{In both cases, \strong{always create the directory} with \code{\startverb mkdir -p\stopverb} before writing any files.}
+
+\pre{\startverb
+# Resolve output directory
+if [ -n "$USER_SPECIFIED_DIR" ]; then
+  OUTPUT_DIR="$USER_SPECIFIED_DIR"
+else
+  BASE="static_analysis_semgrep"
+  N=1
+  while [ -e "${BASE}_${N}" ]; do
+    N=$((N + 1))
+  done
+  OUTPUT_DIR="${BASE}_${N}"
+fi
+mkdir -p "$OUTPUT_DIR/raw" "$OUTPUT_DIR/results"
+\stopverb}
+
+\p{The output directory is resolved \strong{once} at the start of Step 1 and used throughout all subsequent steps.}
+
+\pre{\startverb
+$OUTPUT_DIR/
+├── rulesets.txt                 # Approved rulesets (logged after Step 3)
+├── raw/                         # Per-scan raw output (unfiltered)
+│   ├── python-python.json
+│   ├── python-python.sarif
+│   ├── python-django.json
+│   ├── python-django.sarif
+│   └── ...
+└── results/                     # Final merged output
+    └── results.sarif
+\stopverb}
+}
+
+\subtree{
+\title{Prerequisites}
+\p{\strong{Required:} Semgrep CLI (\code{\startverb semgrep --version\stopverb}). If not installed, see [Semgrep installation docs](https://semgrep.dev/docs/getting-started/).}
+
+\p{\strong{Optional:} Semgrep Pro — enables cross-file taint tracking, inter-procedural analysis, and additional languages (Apex, C#, Elixir). Check with:}
+
+\pre{\startverb
+semgrep --pro --validate --config p/default 2>/dev/null && echo "Pro available" || echo "OSS only"
+\stopverb}
+
+\p{\strong{Limitations:} OSS mode cannot track data flow across files. Pro mode uses \code{\startverb -j 1\stopverb} for cross-file analysis (slower per ruleset, but parallel rulesets compensate).}
+}
+
+\subtree{
+\title{Scan Modes}
+\p{Select mode in Step 2 of the workflow. Mode affects both scanner flags and post-processing.}
+
+\pre{\startverb
+| Mode | Coverage | Findings Reported |
+|------|----------|-------------------|
+| **Run all** | All rulesets, all severity levels | Everything |
+| **Important only** | All rulesets, pre- and post-filtered | Security vulns only, medium-high confidence/impact |
+\stopverb}
+
+\p{\strong{Important only} applies two filter layers:}
+
+\ol{
+\li{\strong{Pre-filter}: \code{\startverb --severity MEDIUM --severity HIGH --severity CRITICAL\stopverb} (CLI flag)}
+\li{\strong{Post-filter}: JSON metadata — keeps only \code{\startverb category=security\stopverb}, \code{\startverb confidence∈{MEDIUM,HIGH}\stopverb}, \code{\startverb impact∈{MEDIUM,HIGH}\stopverb}}
+}
+
+\p{See [scan-modes.md](references/scan-modes.md) for metadata criteria and jq filter commands.}
+}
+
+\subtree{
+\title{Orchestration Architecture}
+\pre{\startverb
+┌──────────────────────────────────────────────────────────────────┐
+│ MAIN AGENT (this skill)                                          │
+│ Step 1: Detect languages + check Pro availability                │
+│ Step 2: Select scan mode + rulesets (ref: rulesets.md)           │
+│ Step 3: Present plan + rulesets, get approval [⛔ HARD GATE]     │
+│ Step 4: Spawn parallel scan Tasks (approved rulesets + mode)     │
+│ Step 5: Merge results and report                                 │
+└──────────────────────────────────────────────────────────────────┘
+         │ Step 4
+         ▼
+┌─────────────────┐
+│ Scan Tasks      │
+│ (parallel)      │
+├─────────────────┤
+│ Python scanner  │
+│ JS/TS scanner   │
+│ Go scanner      │
+│ Docker scanner  │
+└─────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Workflow}
+\p{\strong{Follow the detailed workflow in [scan-workflow.md](workflows/scan-workflow.md).} Summary:}
+
+\pre{\startverb
+| Step | Action | Gate | Key Reference |
+|------|--------|------|---------------|
+| 1 | Resolve output dir, detect languages + Pro availability | — | Use Glob, not Bash |
+| 2 | Select scan mode + rulesets | — | [rulesets.md](references/rulesets.md) |
+| 3 | Present plan, get explicit approval | ⛔ HARD | AskUserQuestion |
+| 4 | Spawn parallel scan Tasks | — | [scanner-task-prompt.md](references/scanner-task-prompt.md) |
+| 5 | Merge results and report | — | Merge script (below) |
+\stopverb}
+
+\p{\strong{Task enforcement:} On invocation, create 5 tasks with blockedBy dependencies (each step blocks the previous). Step 3 is a HARD GATE — mark complete ONLY after user explicitly approves.}
+
+\p{\strong{Merge command (Step 5):}}
+
+\pre{\startverb
+uv run {baseDir}/scripts/merge_sarif.py $OUTPUT_DIR/raw $OUTPUT_DIR/results/results.sarif
+\stopverb}
+}
+
+\subtree{
+\title{Agents}
+\pre{\startverb
+| Agent | Tools | Purpose |
+|-------|-------|---------|
+| `static-analysis:semgrep-scanner` | Bash | Executes parallel semgrep scans for a language category |
+\stopverb}
+
+\p{Use \code{\startverb subagent_type: static-analysis:semgrep-scanner\stopverb} in Step 4 when spawning Task subagents.}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\pre{\startverb
+| Shortcut | Why It's Wrong |
+|----------|----------------|
+| "User asked for scan, that's approval" | Original request ≠ plan approval. Present plan, use AskUserQuestion, await explicit "yes" |
+| "Step 3 task is blocking, just mark complete" | Lying about task status defeats enforcement. Only mark complete after real approval |
+| "I already know what they want" | Assumptions cause scanning wrong directories/rulesets. Present plan for verification |
+| "Just use default rulesets" | User must see and approve exact rulesets before scan |
+| "Add extra rulesets without asking" | Modifying approved list without consent breaks trust |
+| "Third-party rulesets are optional" | Trail of Bits, 0xdea, Decurity catch vulnerabilities not in official registry — REQUIRED |
+| "Use --config auto" | Sends metrics; less control over rulesets |
+| "One Task at a time" | Defeats parallelism; spawn all Tasks together |
+| "Pro is too slow, skip --pro" | Cross-file analysis catches 250% more true positives; worth the time |
+| "Semgrep handles GitHub URLs natively" | URL handling fails on repos with non-standard YAML; always clone first |
+| "Cleanup is optional" | Cloned repos pollute the user's workspace and accumulate across runs |
+| "Use `.` or relative path as target" | Subagents need absolute paths to avoid ambiguity |
+| "Let the user pick an output dir later" | Output directory must be resolved at Step 1, before any files are created |
+\stopverb}
+}
+
+\subtree{
+\title{Reference Index}
+\pre{\startverb
+| File | Content |
+|------|---------|
+| [rulesets.md](references/rulesets.md) | Complete ruleset catalog and selection algorithm |
+| [scan-modes.md](references/scan-modes.md) | Pre/post-filter criteria and jq commands |
+| [scanner-task-prompt.md](references/scanner-task-prompt.md) | Template for spawning scanner subagents |
+\stopverb}
+
+\pre{\startverb
+| Workflow | Purpose |
+|----------|---------|
+| [scan-workflow.md](workflows/scan-workflow.md) | Complete 5-step scan execution process |
+\stopverb}
+}
+
+\subtree{
+\title{Success Criteria}
+\ul{
+\li{[ ] Output directory resolved (user-specified or auto-incremented default)}
+\li{[ ] All generated files stored inside \code{\startverb $OUTPUT_DIR\stopverb}}
+\li{[ ] Languages detected with file counts; Pro status checked}
+\li{[ ] Scan mode selected by user (run all / important only)}
+\li{[ ] Rulesets include third-party rules for all detected languages}
+\li{[ ] User explicitly approved the scan plan (Step 3 gate passed)}
+\li{[ ] All scan Tasks spawned in a single message and completed}
+\li{[ ] Every \code{\startverb semgrep\stopverb} command used \code{\startverb --metrics=off\stopverb}}
+\li{[ ] Approved rulesets logged to \code{\startverb $OUTPUT_DIR/rulesets.txt\stopverb}}
+\li{[ ] Raw per-scan outputs stored in \code{\startverb $OUTPUT_DIR/raw/\stopverb}}
+\li{[ ] \code{\startverb results.sarif\stopverb} exists in \code{\startverb $OUTPUT_DIR/results/\stopverb} and is valid JSON}
+\li{[ ] Important-only mode: post-filter applied before merge; unfiltered results preserved in \code{\startverb raw/\stopverb}}
+\li{[ ] Results summary reported with severity and category breakdown}
+\li{[ ] Cloned repos (if any) cleaned up from \code{\startverb $OUTPUT_DIR/repos/\stopverb}}
+}
+}
+}

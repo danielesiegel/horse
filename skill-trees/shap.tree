@@ -1,0 +1,711 @@
+\title{Shap}
+
+\taxon{skill}
+
+\meta{description}{Model interpretability and explainability using SHAP (SHapley Additive exPlanations). Use this skill when explaining machine learning model predictions, computing feature importance, generating SHAP plots (waterfall, beeswarm, bar, scatter, force, heatmap), debugging models, analyzing model bias or fairness, comparing models, or implementing explainable AI. Works with tree-based models (XGBoost, LightGBM, Random Forest), deep learning (TensorFlow, PyTorch), linear models, and any black-box model.}
+
+\subtree{
+\title{SHAP (SHapley Additive exPlanations)}
+\subtree{
+\title{Overview}
+\p{SHAP is a unified approach to explain machine learning model outputs using Shapley values from cooperative game theory. This skill provides comprehensive guidance for:}
+
+\ul{
+\li{Computing SHAP values for any model type}
+\li{Creating visualizations to understand feature importance}
+\li{Debugging and validating model behavior}
+\li{Analyzing fairness and bias}
+\li{Implementing explainable AI in production}
+}
+
+\p{SHAP works with all model types: tree-based models (XGBoost, LightGBM, CatBoost, Random Forest), deep learning models (TensorFlow, PyTorch, Keras), linear models, and black-box models.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{\strong{Trigger this skill when users ask about}:}
+
+\ul{
+\li{"Explain which features are most important in my model"}
+\li{"Generate SHAP plots" (waterfall, beeswarm, bar, scatter, force, heatmap, etc.)}
+\li{"Why did my model make this prediction?"}
+\li{"Calculate SHAP values for my model"}
+\li{"Visualize feature importance using SHAP"}
+\li{"Debug my model's behavior" or "validate my model"}
+\li{"Check my model for bias" or "analyze fairness"}
+\li{"Compare feature importance across models"}
+\li{"Implement explainable AI" or "add explanations to my model"}
+\li{"Understand feature interactions"}
+\li{"Create model interpretation dashboard"}
+}
+}
+
+\subtree{
+\title{Quick Start Guide}
+\subtree{
+\title{Step 1: Select the Right Explainer}
+\p{\strong{Decision Tree}:}
+
+\ol{
+\li{\strong{Tree-based model?} (XGBoost, LightGBM, CatBoost, Random Forest, Gradient Boosting)}
+\li{Use \code{\startverb shap.TreeExplainer\stopverb} (fast, exact)}
+}
+
+\ol{
+\li{\strong{Deep neural network?} (TensorFlow, PyTorch, Keras, CNNs, RNNs, Transformers)}
+\li{Use \code{\startverb shap.DeepExplainer\stopverb} or \code{\startverb shap.GradientExplainer\stopverb}}
+}
+
+\ol{
+\li{\strong{Linear model?} (Linear/Logistic Regression, GLMs)}
+\li{Use \code{\startverb shap.LinearExplainer\stopverb} (extremely fast)}
+}
+
+\ol{
+\li{\strong{Any other model?} (SVMs, custom functions, black-box models)}
+\li{Use \code{\startverb shap.KernelExplainer\stopverb} (model-agnostic but slower)}
+}
+
+\ol{
+\li{\strong{Unsure?}}
+\li{Use \code{\startverb shap.Explainer\stopverb} (automatically selects best algorithm)}
+}
+
+\p{\strong{See \code{\startverb references/explainers.md\stopverb} for detailed information on all explainer types.}}
+}
+
+\subtree{
+\title{Step 2: Compute SHAP Values}
+\pre{\startverb
+import shap
+
+# Example with tree-based model (XGBoost)
+import xgboost as xgb
+
+# Train model
+model = xgb.XGBClassifier().fit(X_train, y_train)
+
+# Create explainer
+explainer = shap.TreeExplainer(model)
+
+# Compute SHAP values
+shap_values = explainer(X_test)
+
+# The shap_values object contains:
+# - values: SHAP values (feature attributions)
+# - base_values: Expected model output (baseline)
+# - data: Original feature values
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Visualize Results}
+\p{\strong{For Global Understanding} (entire dataset):}
+
+\pre{\startverb
+# Beeswarm plot - shows feature importance with value distributions
+shap.plots.beeswarm(shap_values, max_display=15)
+
+# Bar plot - clean summary of feature importance
+shap.plots.bar(shap_values)
+\stopverb}
+
+\p{\strong{For Individual Predictions}:}
+
+\pre{\startverb
+# Waterfall plot - detailed breakdown of single prediction
+shap.plots.waterfall(shap_values[0])
+
+# Force plot - additive force visualization
+shap.plots.force(shap_values[0])
+\stopverb}
+
+\p{\strong{For Feature Relationships}:}
+
+\pre{\startverb
+# Scatter plot - feature-prediction relationship
+shap.plots.scatter(shap_values[:, "Feature_Name"])
+
+# Colored by another feature to show interactions
+shap.plots.scatter(shap_values[:, "Age"], color=shap_values[:, "Education"])
+\stopverb}
+
+\p{\strong{See \code{\startverb references/plots.md\stopverb} for comprehensive guide on all plot types.}}
+}
+}
+
+\subtree{
+\title{Core Workflows}
+\p{This skill supports several common workflows. Choose the workflow that matches the current task.}
+
+\subtree{
+\title{Workflow 1: Basic Model Explanation}
+\p{\strong{Goal}: Understand what drives model predictions}
+
+\p{\strong{Steps}:}
+
+\ol{
+\li{Train model and create appropriate explainer}
+\li{Compute SHAP values for test set}
+\li{Generate global importance plots (beeswarm or bar)}
+\li{Examine top feature relationships (scatter plots)}
+\li{Explain specific predictions (waterfall plots)}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+# Step 1-2: Setup
+explainer = shap.TreeExplainer(model)
+shap_values = explainer(X_test)
+
+# Step 3: Global importance
+shap.plots.beeswarm(shap_values)
+
+# Step 4: Feature relationships
+shap.plots.scatter(shap_values[:, "Most_Important_Feature"])
+
+# Step 5: Individual explanation
+shap.plots.waterfall(shap_values[0])
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Model Debugging}
+\p{\strong{Goal}: Identify and fix model issues}
+
+\p{\strong{Steps}:}
+
+\ol{
+\li{Compute SHAP values}
+\li{Identify prediction errors}
+\li{Explain misclassified samples}
+\li{Check for unexpected feature importance (data leakage)}
+\li{Validate feature relationships make sense}
+\li{Check feature interactions}
+}
+
+\p{\strong{See \code{\startverb references/workflows.md\stopverb} for detailed debugging workflow.}}
+}
+
+\subtree{
+\title{Workflow 3: Feature Engineering}
+\p{\strong{Goal}: Use SHAP insights to improve features}
+
+\p{\strong{Steps}:}
+
+\ol{
+\li{Compute SHAP values for baseline model}
+\li{Identify nonlinear relationships (candidates for transformation)}
+\li{Identify feature interactions (candidates for interaction terms)}
+\li{Engineer new features}
+\li{Retrain and compare SHAP values}
+\li{Validate improvements}
+}
+
+\p{\strong{See \code{\startverb references/workflows.md\stopverb} for detailed feature engineering workflow.}}
+}
+
+\subtree{
+\title{Workflow 4: Model Comparison}
+\p{\strong{Goal}: Compare multiple models to select best interpretable option}
+
+\p{\strong{Steps}:}
+
+\ol{
+\li{Train multiple models}
+\li{Compute SHAP values for each}
+\li{Compare global feature importance}
+\li{Check consistency of feature rankings}
+\li{Analyze specific predictions across models}
+\li{Select based on accuracy, interpretability, and consistency}
+}
+
+\p{\strong{See \code{\startverb references/workflows.md\stopverb} for detailed model comparison workflow.}}
+}
+
+\subtree{
+\title{Workflow 5: Fairness and Bias Analysis}
+\p{\strong{Goal}: Detect and analyze model bias across demographic groups}
+
+\p{\strong{Steps}:}
+
+\ol{
+\li{Identify protected attributes (gender, race, age, etc.)}
+\li{Compute SHAP values}
+\li{Compare feature importance across groups}
+\li{Check protected attribute SHAP importance}
+\li{Identify proxy features}
+\li{Implement mitigation strategies if bias found}
+}
+
+\p{\strong{See \code{\startverb references/workflows.md\stopverb} for detailed fairness analysis workflow.}}
+}
+
+\subtree{
+\title{Workflow 6: Production Deployment}
+\p{\strong{Goal}: Integrate SHAP explanations into production systems}
+
+\p{\strong{Steps}:}
+
+\ol{
+\li{Train and save model}
+\li{Create and save explainer}
+\li{Build explanation service}
+\li{Create API endpoints for predictions with explanations}
+\li{Implement caching and optimization}
+\li{Monitor explanation quality}
+}
+
+\p{\strong{See \code{\startverb references/workflows.md\stopverb} for detailed production deployment workflow.}}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{SHAP Values}
+\p{\strong{Definition}: SHAP values quantify each feature's contribution to a prediction, measured as the deviation from the expected model output (baseline).}
+
+\p{\strong{Properties}:}
+
+\ul{
+\li{\strong{Additivity}: SHAP values sum to difference between prediction and baseline}
+\li{\strong{Fairness}: Based on Shapley values from game theory}
+\li{\strong{Consistency}: If a feature becomes more important, its SHAP value increases}
+}
+
+\p{\strong{Interpretation}:}
+
+\ul{
+\li{Positive SHAP value → Feature pushes prediction higher}
+\li{Negative SHAP value → Feature pushes prediction lower}
+\li{Magnitude → Strength of feature's impact}
+\li{Sum of SHAP values → Total prediction change from baseline}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+Baseline (expected value): 0.30
+Feature contributions (SHAP values):
+  Age: +0.15
+  Income: +0.10
+  Education: -0.05
+Final prediction: 0.30 + 0.15 + 0.10 - 0.05 = 0.50
+\stopverb}
+}
+
+\subtree{
+\title{Background Data / Baseline}
+\p{\strong{Purpose}: Represents "typical" input to establish baseline expectations}
+
+\p{\strong{Selection}:}
+
+\ul{
+\li{Random sample from training data (50-1000 samples)}
+\li{Or use kmeans to select representative samples}
+\li{For DeepExplainer/KernelExplainer: 100-1000 samples balances accuracy and speed}
+}
+
+\p{\strong{Impact}: Baseline affects SHAP value magnitudes but not relative importance}
+}
+
+\subtree{
+\title{Model Output Types}
+\p{\strong{Critical Consideration}: Understand what your model outputs}
+
+\ul{
+\li{\strong{Raw output}: For regression or tree margins}
+\li{\strong{Probability}: For classification probability}
+\li{\strong{Log-odds}: For logistic regression (before sigmoid)}
+}
+
+\p{\strong{Example}: XGBoost classifiers explain margin output (log-odds) by default. To explain probabilities, use \code{\startverb model_output="probability"\stopverb} in TreeExplainer.}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Pattern 1: Complete Model Analysis}
+\pre{\startverb
+# 1. Setup
+explainer = shap.TreeExplainer(model)
+shap_values = explainer(X_test)
+
+# 2. Global importance
+shap.plots.beeswarm(shap_values)
+shap.plots.bar(shap_values)
+
+# 3. Top feature relationships
+top_features = X_test.columns[np.abs(shap_values.values).mean(0).argsort()[-5:]]
+for feature in top_features:
+    shap.plots.scatter(shap_values[:, feature])
+
+# 4. Example predictions
+for i in range(5):
+    shap.plots.waterfall(shap_values[i])
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Cohort Comparison}
+\pre{\startverb
+# Define cohorts
+cohort1_mask = X_test['Group'] == 'A'
+cohort2_mask = X_test['Group'] == 'B'
+
+# Compare feature importance
+shap.plots.bar({
+    "Group A": shap_values[cohort1_mask],
+    "Group B": shap_values[cohort2_mask]
+})
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Debugging Errors}
+\pre{\startverb
+# Find errors
+errors = model.predict(X_test) != y_test
+error_indices = np.where(errors)[0]
+
+# Explain errors
+for idx in error_indices[:5]:
+    print(f"Sample {idx}:")
+    shap.plots.waterfall(shap_values[idx])
+
+    # Investigate key features
+    shap.plots.scatter(shap_values[:, "Suspicious_Feature"])
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\subtree{
+\title{Speed Considerations}
+\p{\strong{Explainer Speed} (fastest to slowest):}
+
+\ol{
+\li{\code{\startverb LinearExplainer\stopverb} - Nearly instantaneous}
+\li{\code{\startverb TreeExplainer\stopverb} - Very fast}
+\li{\code{\startverb DeepExplainer\stopverb} - Fast for neural networks}
+\li{\code{\startverb GradientExplainer\stopverb} - Fast for neural networks}
+\li{\code{\startverb KernelExplainer\stopverb} - Slow (use only when necessary)}
+\li{\code{\startverb PermutationExplainer\stopverb} - Very slow but accurate}
+}
+}
+
+\subtree{
+\title{Optimization Strategies}
+\p{\strong{For Large Datasets}:}
+
+\pre{\startverb
+# Compute SHAP for subset
+shap_values = explainer(X_test[:1000])
+
+# Or use batching
+batch_size = 100
+all_shap_values = []
+for i in range(0, len(X_test), batch_size):
+    batch_shap = explainer(X_test[i:i+batch_size])
+    all_shap_values.append(batch_shap)
+\stopverb}
+
+\p{\strong{For Visualizations}:}
+
+\pre{\startverb
+# Sample subset for plots
+shap.plots.beeswarm(shap_values[:1000])
+
+# Adjust transparency for dense plots
+shap.plots.scatter(shap_values[:, "Feature"], alpha=0.3)
+\stopverb}
+
+\p{\strong{For Production}:}
+
+\pre{\startverb
+# Cache explainer
+import joblib
+joblib.dump(explainer, 'explainer.pkl')
+explainer = joblib.load('explainer.pkl')
+
+# Pre-compute for batch predictions
+# Only compute top N features for API responses
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Issue: Wrong explainer choice}
+\p{\strong{Problem}: Using KernelExplainer for tree models (slow and unnecessary) \strong{Solution}: Always use TreeExplainer for tree-based models}
+}
+
+\subtree{
+\title{Issue: Insufficient background data}
+\p{\strong{Problem}: DeepExplainer/KernelExplainer with too few background samples \strong{Solution}: Use 100-1000 representative samples}
+}
+
+\subtree{
+\title{Issue: Confusing units}
+\p{\strong{Problem}: Interpreting log-odds as probabilities \strong{Solution}: Check model output type; understand whether values are probabilities, log-odds, or raw outputs}
+}
+
+\subtree{
+\title{Issue: Plots don't display}
+\p{\strong{Problem}: Matplotlib backend issues \strong{Solution}: Ensure backend is set correctly; use \code{\startverb plt.show()\stopverb} if needed}
+}
+
+\subtree{
+\title{Issue: Too many features cluttering plots}
+\p{\strong{Problem}: Default max_display=10 may be too many or too few \strong{Solution}: Adjust \code{\startverb max_display\stopverb} parameter or use feature clustering}
+}
+
+\subtree{
+\title{Issue: Slow computation}
+\p{\strong{Problem}: Computing SHAP for very large datasets \strong{Solution}: Sample subset, use batching, or ensure using specialized explainer (not KernelExplainer)}
+}
+}
+
+\subtree{
+\title{Integration with Other Tools}
+\subtree{
+\title{Jupyter Notebooks}
+\ul{
+\li{Interactive force plots work seamlessly}
+\li{Inline plot display with \code{\startverb show=True\stopverb} (default)}
+\li{Combine with markdown for narrative explanations}
+}
+}
+
+\subtree{
+\title{MLflow / Experiment Tracking}
+\pre{\startverb
+import mlflow
+
+with mlflow.start_run():
+    # Train model
+    model = train_model(X_train, y_train)
+
+    # Compute SHAP
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer(X_test)
+
+    # Log plots
+    shap.plots.beeswarm(shap_values, show=False)
+    mlflow.log_figure(plt.gcf(), "shap_beeswarm.png")
+    plt.close()
+
+    # Log feature importance metrics
+    mean_abs_shap = np.abs(shap_values.values).mean(axis=0)
+    for feature, importance in zip(X_test.columns, mean_abs_shap):
+        mlflow.log_metric(f"shap_{feature}", importance)
+\stopverb}
+}
+
+\subtree{
+\title{Production APIs}
+\pre{\startverb
+class ExplanationService:
+    def __init__(self, model_path, explainer_path):
+        self.model = joblib.load(model_path)
+        self.explainer = joblib.load(explainer_path)
+
+    def predict_with_explanation(self, X):
+        prediction = self.model.predict(X)
+        shap_values = self.explainer(X)
+
+        return {
+            'prediction': prediction[0],
+            'base_value': shap_values.base_values[0],
+            'feature_contributions': dict(zip(X.columns, shap_values.values[0]))
+        }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{This skill includes comprehensive reference documentation organized by topic:}
+
+\subtree{
+\title{references/explainers.md}
+\p{Complete guide to all explainer classes:}
+
+\ul{
+\li{\code{\startverb TreeExplainer\stopverb} - Fast, exact explanations for tree-based models}
+\li{\code{\startverb DeepExplainer\stopverb} - Deep learning models (TensorFlow, PyTorch)}
+\li{\code{\startverb KernelExplainer\stopverb} - Model-agnostic (works with any model)}
+\li{\code{\startverb LinearExplainer\stopverb} - Fast explanations for linear models}
+\li{\code{\startverb GradientExplainer\stopverb} - Gradient-based for neural networks}
+\li{\code{\startverb PermutationExplainer\stopverb} - Exact but slow for any model}
+}
+
+\p{Includes: Constructor parameters, methods, supported models, when to use, examples, performance considerations.}
+}
+
+\subtree{
+\title{references/plots.md}
+\p{Comprehensive visualization guide:}
+
+\ul{
+\li{\strong{Waterfall plots} - Individual prediction breakdowns}
+\li{\strong{Beeswarm plots} - Global importance with value distributions}
+\li{\strong{Bar plots} - Clean feature importance summaries}
+\li{\strong{Scatter plots} - Feature-prediction relationships and interactions}
+\li{\strong{Force plots} - Interactive additive force visualizations}
+\li{\strong{Heatmap plots} - Multi-sample comparison grids}
+\li{\strong{Violin plots} - Distribution-focused alternatives}
+\li{\strong{Decision plots} - Multiclass prediction paths}
+}
+
+\p{Includes: Parameters, use cases, examples, best practices, plot selection guide.}
+}
+
+\subtree{
+\title{references/workflows.md}
+\p{Detailed workflows and best practices:}
+
+\ul{
+\li{Basic model explanation workflow}
+\li{Model debugging and validation}
+\li{Feature engineering guidance}
+\li{Model comparison and selection}
+\li{Fairness and bias analysis}
+\li{Deep learning model explanation}
+\li{Production deployment}
+\li{Time series model explanation}
+\li{Common pitfalls and solutions}
+\li{Advanced techniques}
+\li{MLOps integration}
+}
+
+\p{Includes: Step-by-step instructions, code examples, decision criteria, troubleshooting.}
+}
+
+\subtree{
+\title{references/theory.md}
+\p{Theoretical foundations:}
+
+\ul{
+\li{Shapley values from game theory}
+\li{Mathematical formulas and properties}
+\li{Connection to other explanation methods (LIME, DeepLIFT, etc.)}
+\li{SHAP computation algorithms (Tree SHAP, Kernel SHAP, etc.)}
+\li{Conditional expectations and baseline selection}
+\li{Interpreting SHAP values}
+\li{Interaction values}
+\li{Theoretical limitations and considerations}
+}
+
+\p{Includes: Mathematical foundations, proofs, comparisons, advanced topics.}
+}
+}
+
+\subtree{
+\title{Usage Guidelines}
+\p{\strong{When to load reference files}:}
+
+\ul{
+\li{Load \code{\startverb explainers.md\stopverb} when user needs detailed information about specific explainer types or parameters}
+\li{Load \code{\startverb plots.md\stopverb} when user needs detailed visualization guidance or exploring plot options}
+\li{Load \code{\startverb workflows.md\stopverb} when user has complex multi-step tasks (debugging, fairness analysis, production deployment)}
+\li{Load \code{\startverb theory.md\stopverb} when user asks about theoretical foundations, Shapley values, or mathematical details}
+}
+
+\p{\strong{Default approach} (without loading references):}
+
+\ul{
+\li{Use this SKILL.md for basic explanations and quick start}
+\li{Provide standard workflows and common patterns}
+\li{Reference files are available if more detail is needed}
+}
+
+\p{\strong{Loading references}:}
+
+\pre{\startverb
+# To load reference files, use the Read tool with appropriate file path:
+# /path/to/shap/references/explainers.md
+# /path/to/shap/references/plots.md
+# /path/to/shap/references/workflows.md
+# /path/to/shap/references/theory.md
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices Summary}
+\ol{
+\li{\strong{Choose the right explainer}: Use specialized explainers (TreeExplainer, DeepExplainer, LinearExplainer) when possible; avoid KernelExplainer unless necessary}
+}
+
+\ol{
+\li{\strong{Start global, then go local}: Begin with beeswarm/bar plots for overall understanding, then dive into waterfall/scatter plots for details}
+}
+
+\ol{
+\li{\strong{Use multiple visualizations}: Different plots reveal different insights; combine global (beeswarm) + local (waterfall) + relationship (scatter) views}
+}
+
+\ol{
+\li{\strong{Select appropriate background data}: Use 50-1000 representative samples from training data}
+}
+
+\ol{
+\li{\strong{Understand model output units}: Know whether explaining probabilities, log-odds, or raw outputs}
+}
+
+\ol{
+\li{\strong{Validate with domain knowledge}: SHAP shows model behavior; use domain expertise to interpret and validate}
+}
+
+\ol{
+\li{\strong{Optimize for performance}: Sample subsets for visualization, batch for large datasets, cache explainers in production}
+}
+
+\ol{
+\li{\strong{Check for data leakage}: Unexpectedly high feature importance may indicate data quality issues}
+}
+
+\ol{
+\li{\strong{Consider feature correlations}: Use TreeExplainer's correlation-aware options or feature clustering for redundant features}
+}
+
+\ol{
+\li{\strong{Remember SHAP shows association, not causation}: Use domain knowledge for causal interpretation}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Basic installation
+uv pip install shap
+
+# With visualization dependencies
+uv pip install shap matplotlib
+
+# Latest version
+uv pip install -U shap
+\stopverb}
+
+\p{\strong{Dependencies}: numpy, pandas, scikit-learn, matplotlib, scipy}
+
+\p{\strong{Optional}: xgboost, lightgbm, tensorflow, torch (depending on model types)}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation}: https://shap.readthedocs.io/}
+\li{\strong{GitHub Repository}: https://github.com/slundberg/shap}
+\li{\strong{Original Paper}: Lundberg & Lee (2017) - "A Unified Approach to Interpreting Model Predictions"}
+\li{\strong{Nature MI Paper}: Lundberg et al. (2020) - "From local explanations to global understanding with explainable AI for trees"}
+}
+
+\p{This skill provides comprehensive coverage of SHAP for model interpretability across all use cases and model types.}
+}
+}

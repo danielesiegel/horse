@@ -1,0 +1,160 @@
+\title{Ngrok Tunnel}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Secure tunnel for exposing local MCP servers to Claude, remote agents, and external clients. Supports custom domains, IP whitelisting, and traffic policies.}
+
+\subtree{
+\title{ngrok Tunnel Skill}
+\p{\strong{Trit}: +1 (PLUS - enables external connectivity) \strong{Foundation}: ngrok + WireGuard-style tunneling + Traffic Policies}
+
+\subtree{
+\title{Core Concept}
+\p{ngrok creates secure tunnels from localhost to public endpoints:}
+
+\ul{
+\li{HTTPS with automatic TLS certificates}
+\li{Custom domains (paid plans)}
+\li{IP whitelisting for Claude/Anthropic}
+\li{Traffic policies for access control}
+\li{Real-time request inspection}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# Install (macOS)
+brew install ngrok
+
+# Authenticate
+ngrok config add-authtoken YOUR_TOKEN
+
+# Expose local MCP server
+ngrok http 3000
+
+# With custom domain (paid)
+ngrok http --url=your-domain.ngrok.io 3000
+\stopverb}
+}
+
+\subtree{
+\title{MCP Server Exposure}
+\pre{\startverb
+# Start your MCP server
+bun run mcp-server --port 8080
+
+# Expose via ngrok
+ngrok http 8080
+
+# Copy the HTTPS URL (e.g., https://abc123.ngrok.io)
+# Register in Claude Settings → Integrations → Add more
+\stopverb}
+}
+
+\subtree{
+\title{Traffic Policy: Claude-Only Access}
+\p{Create \code{\startverb policy.yml\stopverb}:}
+
+\pre{\startverb
+on_http_request:
+  - actions:
+      - type: restrict-ips
+        config:
+          enforce: true
+          allow:
+            - 160.79.104.0/23  # Anthropic IP range
+\stopverb}
+
+\p{Apply:}
+
+\pre{\startverb
+ngrok http 8080 --traffic-policy-file policy.yml
+\stopverb}
+}
+
+\subtree{
+\title{Custom Domain Setup}
+\pre{\startverb
+# Reserve domain in ngrok dashboard first
+ngrok http --url=mcp.yourdomain.com 8080
+
+# With traffic policy
+ngrok http --url=mcp.yourdomain.com --traffic-policy-file policy.yml 8080
+\stopverb}
+}
+
+\subtree{
+\title{vers-agent Integration}
+\pre{\startverb
+# Expose vers-agent server for remote access
+vers-agent --server --port 8765 &
+ngrok http 8765
+
+# Remote clients connect via ngrok URL
+vers-agent --remote https://abc123.ngrok.io
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+def trit_from_tunnel(tunnel):
+    """Map tunnel status to GF(3) trit."""
+    if tunnel.status == "online" and tunnel.has_custom_domain:
+        return 1   # PLUS: full connectivity
+    elif tunnel.status == "online":
+        return 0   # ERGODIC: basic tunnel
+    else:
+        return -1  # MINUS: offline/error
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Triads}
+\pre{\startverb
+skill-validation-gf3 (-1) ⊗ tailscale-mesh (0) ⊗ ngrok-tunnel (+1) = 0 ✓
+bisimulation-game (-1) ⊗ localsend-mcp (0) ⊗ ngrok-tunnel (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Composio MCP Integration}
+\p{For AI agent automation, use Composio's ngrok MCP:}
+
+\ul{
+\li{https://mcp.composio.dev/ngrok}
+\li{9+ tools for tunnel management}
+\li{Works with Claude, Cursor, Windsurf}
+}
+}
+
+\subtree{
+\title{ToolHive Integration}
+\pre{\startverb
+# Expose ToolHive-managed MCP servers
+thv proxy tunnel --server my-mcp-server
+\stopverb}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb tailscale-mesh\stopverb} - WireGuard mesh VPN}
+\li{\code{\startverb tailscale-file-transfer\stopverb} - P2P file transfer}
+\li{\code{\startverb localsend-mcp\stopverb} - Local network P2P}
+\li{\code{\startverb mcp-builder\stopverb} - MCP server creation guide}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[ngrok MCP Docs](https://ngrok.com/docs/using-ngrok-with/using-mcp)}
+\li{[Claude Remote MCP](https://support.anthropic.com/en/articles/11175166-about-custom-integrations-using-remote-mcp)}
+\li{[ToolHive + ngrok](https://toolhive.dev)}
+}
+}
+}

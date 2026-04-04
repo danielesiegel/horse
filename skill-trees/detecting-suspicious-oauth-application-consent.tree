@@ -1,0 +1,70 @@
+\title{Detecting Suspicious Oauth Application Consent}
+
+\taxon{skill}
+
+\tag{OAuth}
+
+\tag{Azure-AD}
+
+\tag{Entra-ID}
+
+\tag{Microsoft-Graph}
+
+\tag{illicit-consent}
+
+\tag{cloud-security}
+
+\tag{application-permissions}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect risky OAuth application consent grants in Azure AD / Microsoft Entra ID using Microsoft Graph API, audit logs, and permission analysis to identify illicit consent grant attacks.}
+
+\subtree{
+\title{Detecting Suspicious OAuth Application Consent}
+\subtree{
+\title{Overview}
+\p{Illicit consent grant attacks trick users into granting excessive permissions to malicious OAuth applications in Azure AD / Microsoft Entra ID. This skill uses the Microsoft Graph API to enumerate OAuth2 permission grants, analyze application permissions for overly broad scopes, review directory audit logs for consent events, and flag high-risk applications based on publisher verification status and permission scope.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting suspicious oauth application consent}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Azure AD / Entra ID tenant with Global Reader or Security Reader role}
+\li{Microsoft Graph API access with \code{\startverb Application.Read.All\stopverb}, \code{\startverb AuditLog.Read.All\stopverb}, \code{\startverb Directory.Read.All\stopverb}}
+\li{Python 3.9+ with \code{\startverb msal\stopverb}, \code{\startverb requests\stopverb}}
+\li{App registration with client secret or certificate for authentication}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Authenticate to Microsoft Graph using MSAL client credentials flow}
+\li{Enumerate all OAuth2 permission grants via \code{\startverb /oauth2PermissionGrants\stopverb}}
+\li{List service principals and their assigned application permissions}
+\li{Query directory audit logs for \code{\startverb Consent to application\stopverb} events}
+\li{Flag applications with high-risk scopes (Mail.Read, Files.ReadWrite.All, etc.)}
+\li{Check publisher verification status for each application}
+\li{Generate risk report with remediation recommendations}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing all OAuth apps with granted permissions, risk scores, unverified publishers, and suspicious consent patterns}
+\li{Audit trail of consent grant events with user and IP details}
+}
+}
+}

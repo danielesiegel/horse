@@ -1,0 +1,213 @@
+\title{Performing Privileged Account Access Review}
+
+\taxon{skill}
+
+\tag{pam}
+
+\tag{access-review}
+
+\tag{privileged-accounts}
+
+\tag{least-privilege}
+
+\tag{compliance}
+
+\tag{audit}
+
+\tag{identity-governance}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Conduct systematic reviews of privileged accounts to validate access rights, identify excessive permissions, and enforce least privilege across PAM infrastructure.}
+
+\subtree{
+\title{Performing Privileged Account Access Review}
+\subtree{
+\title{Overview}
+\p{Privileged Account Access Review is a critical identity governance process that validates whether users with elevated permissions still require their access. This review covers domain admins, service accounts, database administrators, cloud IAM roles, and application-level privileged accounts. Regular access reviews are mandated by SOC 2, PCI DSS, HIPAA, and SOX compliance frameworks, typically required quarterly for high-privilege accounts.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing privileged account access review}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{PAM solution deployed (CyberArk, BeyondTrust, Delinea, or equivalent)}
+\li{Identity governance platform (SailPoint, Saviynt, or equivalent)}
+\li{Complete inventory of privileged accounts across all platforms}
+\li{Defined access review policy with SLAs and escalation procedures}
+\li{Designated reviewers (account owners, managers, security team)}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Privileged Account Categories}
+\pre{\startverb
+| Category | Examples | Risk Level | Review Frequency |
+|----------|----------|------------|-----------------|
+| Domain Admins | Enterprise Admin, Domain Admin, Schema Admin | Critical | Monthly |
+| Service Accounts | SQL service, backup agents, monitoring agents | High | Quarterly |
+| Cloud IAM | AWS root, Azure Global Admin, GCP Owner | Critical | Monthly |
+| Database Admin | DBA accounts, sa/sys accounts | High | Quarterly |
+| Application Admin | App admin roles, API keys with admin scope | Medium | Semi-annually |
+| Emergency/Break-glass | Firecall accounts, emergency access | Critical | After each use |
+\stopverb}
+}
+
+\subtree{
+\title{Four-Pillar Review Framework}
+\pre{\startverb
+DISCOVER                    VALIDATE                    REMEDIATE                 MONITOR
+    │                           │                           │                       │
+    ├─ Enumerate all            ├─ Verify business          ├─ Remove excess        ├─ Continuous
+    │  privileged accounts      │  justification            │  privileges           │  monitoring
+    │                           │                           │                       │
+    ├─ Identify orphaned        ├─ Confirm account          ├─ Disable orphaned     ├─ Anomaly
+    │  accounts                 │  ownership                │  accounts             │  detection
+    │                           │                           │                       │
+    ├─ Map permissions to       ├─ Check compliance         ├─ Enforce password     ├─ Session
+    │  business roles           │  with policies            │  rotation             │  recording
+    │                           │                           │                       │
+    └─ Classify by risk         └─ Review last usage        └─ Implement JIT        └─ Audit
+       level                       and activity                access                  logging
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Account Discovery and Inventory}
+\p{Enumerate all privileged accounts across the environment:}
+
+\p{\strong{Active Directory:}}
+
+\ul{
+\li{Domain Admins, Enterprise Admins, Schema Admins groups}
+\li{Accounts with AdminCount=1 attribute}
+\li{Service accounts with SPN (Service Principal Names)}
+\li{Accounts with delegation rights (Unconstrained/Constrained)}
+}
+
+\p{\strong{Cloud Platforms:}}
+
+\ul{
+\li{AWS: IAM users/roles with AdministratorAccess, PowerUserAccess, or \code{\startverb iam:*\stopverb} permissions}
+\li{Azure: Global Administrator, Privileged Role Administrator, Security Administrator roles}
+\li{GCP: Owner, Editor roles at organization/project level}
+}
+
+\p{\strong{Databases:}}
+
+\ul{
+\li{SQL Server: sysadmin, db_owner, securityadmin fixed roles}
+\li{Oracle: DBA, SYSDBA, SYSOPER privileges}
+\li{PostgreSQL: superuser, createrole, createdb attributes}
+}
+}
+
+\subtree{
+\title{Step 2: Establish Review Criteria}
+\p{Each privileged account must be evaluated against:}
+
+\ol{
+\li{\strong{Business Justification}: Does the user's current role require this privilege?}
+\li{\strong{Least Privilege}: Can the task be performed with lower privileges?}
+\li{\strong{Account Activity}: Has the account been active in the last 90 days?}
+\li{\strong{Compliance Status}: Does the account meet password policy, MFA requirements?}
+\li{\strong{Separation of Duties}: Does the access create SoD conflicts?}
+\li{\strong{Ownership}: Is a responsible owner assigned and active?}
+}
+}
+
+\subtree{
+\title{Step 3: Conduct the Review}
+\p{For each account, the designated reviewer must:}
+
+\ol{
+\li{Review the account details, permissions, and last activity date}
+\li{Approve (certify) the access if still required with documented justification}
+\li{Revoke access if no longer needed or the reviewer cannot justify the privilege}
+\li{Flag for investigation if anomalous activity or policy violations are detected}
+\li{Escalate if the reviewer cannot make a determination}
+}
+
+\p{Decision matrix:}
+
+\pre{\startverb
+| Condition | Action |
+|-----------|--------|
+| Active user, justified privilege | Certify - maintain access |
+| Active user, excessive privilege | Remediate - reduce to least privilege |
+| Inactive > 90 days | Disable account, notify owner |
+| No owner identified | Disable account, escalate to security |
+| SoD conflict detected | Remediate - reassign or add compensating controls |
+| Break-glass account | Verify last use was authorized, reset credentials |
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Remediation and Enforcement}
+\p{After reviews are completed:}
+
+\ul{
+\li{Revoke access for accounts that were not certified within the SLA period}
+\li{Implement automatic revocation for accounts not reviewed within 14 days}
+\li{Rotate credentials for all certified privileged accounts}
+\li{Convert standing privileges to just-in-time (JIT) access where possible}
+\li{Update PAM vault with current account inventory}
+}
+}
+
+\subtree{
+\title{Step 5: Reporting and Documentation}
+\p{Generate review reports including:}
+
+\ul{
+\li{Total accounts reviewed vs. total in scope}
+\li{Certification rate (approved vs. revoked)}
+\li{Average review completion time}
+\li{Overdue reviews and escalations}
+\li{Remediation actions taken}
+\li{Comparison with previous review cycle}
+}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] Complete inventory of all privileged accounts documented}
+\li{[ ] All accounts assigned to a responsible owner/reviewer}
+\li{[ ] Review criteria and decision matrix defined}
+\li{[ ] Reviewers completed certification within SLA (14 days)}
+\li{[ ] Revoked accounts disabled and credentials rotated}
+\li{[ ] Orphaned accounts identified and disabled}
+\li{[ ] Service accounts reviewed for least privilege}
+\li{[ ] Break-glass accounts audited for authorized use only}
+\li{[ ] Review report generated with metrics and trends}
+\li{[ ] Remediation tickets created and tracked to completion}
+\li{[ ] Evidence preserved for compliance audit}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[NIST SP 800-53 AC-2: Account Management](https://csf.tools/reference/nist-sp-800-53/r5/ac/ac-2/)}
+\li{[CIS Controls v8 - Control 5: Account Management](https://www.cisecurity.org/controls/account-management)}
+\li{[Netwrix PAM Best Practices Guide](https://netwrix.com/en/resources/guides/privileged-account-management-best-practices/)}
+\li{[StrongDM PAM Best Practices 2025](https://www.strongdm.com/blog/privileged-access-management-best-practices)}
+}
+}
+}

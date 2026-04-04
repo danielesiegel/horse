@@ -1,0 +1,73 @@
+\title{Performing Threat Intelligence Sharing With Misp}
+
+\taxon{skill}
+
+\tag{misp}
+
+\tag{pymisp}
+
+\tag{threat-intelligence}
+
+\tag{ioc-sharing}
+
+\tag{stix}
+
+\tag{taxii}
+
+\tag{threat-feeds}
+
+\tag{information-sharing}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Use PyMISP to create, enrich, and share threat intelligence events on a MISP platform, including IOC management, feed integration, STIX export, and community sharing workflows.}
+
+\subtree{
+\title{Performing Threat Intelligence Sharing with MISP}
+\subtree{
+\title{Overview}
+\p{MISP (Malware Information Sharing Platform) is an open-source threat intelligence platform designed for collecting, storing, distributing, and sharing cybersecurity indicators and threat information. PyMISP is the official Python library for interacting with MISP instances via the REST API, enabling programmatic event creation, attribute management, tag assignment, galaxy cluster attachment, and feed synchronization. This skill covers using PyMISP to create events with structured IOCs (IP addresses, domains, file hashes, URLs), enrich events with MITRE ATT&CK tags, manage sharing groups and distribution levels, search for existing intelligence, and export in STIX 2.1 format for interoperability with other platforms.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing threat intelligence sharing with misp}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{MISP instance (v2.4+) with API access enabled}
+\li{Python 3.9+ with \code{\startverb pymisp\stopverb} (\code{\startverb pip install pymisp\stopverb})}
+\li{MISP API key (Settings > Auth Keys)}
+\li{Understanding of MISP data model (Events, Attributes, Objects, Tags, Galaxies)}
+\li{Knowledge of TLP marking and sharing protocols}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Install PyMISP: \code{\startverb pip install pymisp\stopverb}}
+\li{Initialize \code{\startverb ExpandedPyMISP(url, key, ssl=True)\stopverb} connection}
+\li{Create a \code{\startverb MISPEvent\stopverb} with info, distribution level, threat level, and analysis status}
+\li{Add attributes via \code{\startverb event.add_attribute(type, value)\stopverb} for IPs, domains, hashes}
+\li{Apply TLP tags and MITRE ATT&CK technique tags}
+\li{Publish the event with \code{\startverb misp.publish(event)\stopverb}}
+\li{Search existing events with \code{\startverb misp.search(controller='events', value=..., type_attribute=...)\stopverb}}
+\li{Enable and configure threat feeds for automatic IOC ingestion}
+\li{Export events in STIX 2.1 format for cross-platform sharing}
+\li{Validate sharing group configuration and sync server settings}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{A JSON report summarizing events created, attributes added, tags applied, feed sync status, and any correlation hits against existing intelligence, with event IDs and distribution metadata.}
+}
+}

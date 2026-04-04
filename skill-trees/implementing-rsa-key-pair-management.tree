@@ -1,0 +1,118 @@
+\title{Implementing Rsa Key Pair Management}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{rsa}
+
+\tag{key-management}
+
+\tag{pki}
+
+\tag{asymmetric-encryption}
+
+\meta{version}{"1.0"}
+
+\meta{description}{RSA (Rivest-Shamir-Adleman) is the most widely deployed asymmetric cryptographic algorithm, used for digital signatures, key exchange, and encryption. This skill covers generating, storing, rotating,}
+
+\subtree{
+\title{Implementing RSA Key Pair Management}
+\subtree{
+\title{Overview}
+\p{RSA (Rivest-Shamir-Adleman) is the most widely deployed asymmetric cryptographic algorithm, used for digital signatures, key exchange, and encryption. This skill covers generating, storing, rotating, and managing RSA key pairs following NIST SP 800-57 key management guidelines, including key serialization formats (PEM, DER, PKCS#8), passphrase protection, and key strength validation.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing rsa key pair management capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Generate RSA key pairs with appropriate key sizes (2048, 3072, 4096 bits)}
+\li{Serialize keys in PEM and DER formats with PKCS#8}
+\li{Protect private keys with strong passphrase encryption}
+\li{Implement key rotation with versioning}
+\li{Extract public key components and fingerprints}
+\li{Validate key strength and detect weak keys}
+\li{Sign and verify data using RSA-PSS}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{RSA Key Sizes and Security Strength}
+\pre{\startverb
+| Key Size (bits) | Security Strength (bits) | Recommended Until |
+|-----------------|-------------------------|-------------------|
+| 2048            | 112                     | 2030              |
+| 3072            | 128                     | Beyond 2030       |
+| 4096            | ~140                    | Beyond 2030       |
+\stopverb}
+}
+
+\subtree{
+\title{RSA Padding Schemes}
+\pre{\startverb
+| Scheme | Use Case | Standard |
+|--------|----------|----------|
+| OAEP   | Encryption | PKCS#1 v2.2 (RFC 8017) |
+| PSS    | Signatures | PKCS#1 v2.2 (RFC 8017) |
+| PKCS#1 v1.5 | Legacy only | Deprecated for new systems |
+\stopverb}
+}
+
+\subtree{
+\title{Key Storage Formats}
+\ul{
+\li{\strong{PEM}: Base64-encoded with headers, human-readable}
+\li{\strong{DER}: Binary ASN.1 encoding, compact}
+\li{\strong{PKCS#8}: Standard for private key encapsulation}
+\li{\strong{PKCS#12/PFX}: Bundled key + certificate, password-protected}
+}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Minimum 3072-bit keys for new deployments (NIST recommendation)}
+\li{Always protect private keys with AES-256-CBC passphrase encryption}
+\li{Use RSA-PSS for signatures (not PKCS#1 v1.5)}
+\li{Use RSA-OAEP for encryption (not PKCS#1 v1.5)}
+\li{Store private keys with restrictive file permissions (0600)}
+\li{Implement key rotation at least annually}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Key generation produces valid RSA key pair}
+\li{[ ] Public key can be extracted from private key}
+\li{[ ] Private key is protected with passphrase}
+\li{[ ] RSA-PSS signature verification succeeds}
+\li{[ ] Tampered signature verification fails}
+\li{[ ] Key fingerprint is computed correctly}
+\li{[ ] Key rotation maintains old key access for verification}
+}
+}
+}

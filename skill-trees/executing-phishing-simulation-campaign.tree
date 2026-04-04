@@ -1,0 +1,223 @@
+\title{Executing Phishing Simulation Campaign}
+
+\taxon{skill}
+
+\tag{phishing-simulation}
+
+\tag{social-engineering}
+
+\tag{GoPhish}
+
+\tag{email-security}
+
+\tag{security-awareness}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Executes authorized phishing simulation campaigns to assess an organization's susceptibility to email-based social engineering attacks. The tester designs realistic phishing scenarios, builds credential harvesting infrastructure, sends targeted phishing emails, and tracks open rates, click-through rates, and credential submission rates to measure human security awareness. Activates for requests involving phishing simulation, social engineering assessment, email security testing, or security awareness measurement.}
+
+\subtree{
+\title{Executing Phishing Simulation Campaign}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Measuring employee susceptibility to phishing attacks as part of a security awareness program}
+\li{Testing the effectiveness of email security controls (secure email gateway, DMARC, SPF, DKIM)}
+\li{Conducting the social engineering component of a red team exercise to gain initial access}
+\li{Establishing a baseline for phishing susceptibility before deploying security awareness training}
+\li{Validating that incident response procedures work when employees report suspicious emails}
+}
+
+\p{\strong{Do not use} without explicit written authorization from the organization's leadership, for actual credential theft beyond the authorized scope, for targeting individuals personally rather than professionally, or for sending phishing emails that could cause psychological harm or legal liability.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Written authorization from executive leadership specifying the campaign scope, target groups, and escalation procedures}
+\li{Coordination with the IT/security team to whitelist the sending infrastructure (or test whether it bypasses controls, depending on scope)}
+\li{GoPhish or equivalent phishing platform configured with a sending domain, SMTP relay, and landing page infrastructure}
+\li{Phishing domain registered and configured with SPF, DKIM, and DMARC records to maximize deliverability}
+\li{Employee email list from HR, organized by department for targeted campaigns}
+\li{Incident response team briefed on the campaign timeline and escalation procedures}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Campaign Planning and Pretext Development}
+\p{Design realistic phishing scenarios based on threats relevant to the target organization:}
+
+\ul{
+\li{\strong{Pretext selection}: Choose scenarios that mirror real-world attacks:}
+\li{IT support: Password expiration notice requiring immediate action}
+\li{HR department: Benefits enrollment, policy acknowledgment, W-2/tax document}
+\li{Executive impersonation: Urgent request from CEO/CFO to review a document}
+\li{Vendor/supplier: Invoice requiring review, delivery notification}
+\li{Cloud services: Microsoft 365 shared document, Google Drive access, Zoom meeting invitation}
+\li{\strong{Target segmentation}: Divide employees into groups by department, role, or access level. High-value targets (finance, IT admin, executives) may receive more sophisticated pretexts.}
+\li{\strong{Timing}: Schedule sends during business hours, preferably Tuesday-Thursday when email engagement is highest. Avoid holidays, mass layoff periods, or other sensitive times.}
+\li{\strong{Success metrics}: Define what constitutes campaign success: email open rate, link click rate, credential submission rate, report rate (employees who report the phish to IT)}
+}
+}
+
+\subtree{
+\title{Step 2: Infrastructure Setup}
+\p{Configure the phishing infrastructure:}
+
+\ul{
+\li{\strong{Domain registration}: Register a domain that resembles the target organization's domain (typosquatting, homograph, or brand-adjacent). Examples: \code{\startverb target-corp.com\stopverb}, \code{\startverb targetcorp-portal.com\stopverb}, \code{\startverb targetsupport.net\stopverb}}
+\li{\strong{SSL certificate}: Obtain a TLS certificate for the phishing domain (Let's Encrypt) to display the padlock icon}
+\li{\strong{GoPhish configuration}:}
+\li{Set up the GoPhish server on a VPS with the phishing domain}
+\li{Configure the SMTP sending profile with the phishing domain's mail server}
+\li{Create the email template with tracking pixel and link to the landing page}
+\li{Build the credential harvesting landing page that mirrors the target's login portal}
+\li{Import the target email list and create user groups}
+\li{\strong{Email authentication}: Configure SPF, DKIM, and DMARC records for the phishing domain to pass email authentication checks and improve delivery rates}
+\li{\strong{Test delivery}: Send test emails to a controlled inbox to verify rendering, link tracking, and landing page functionality}
+}
+}
+
+\subtree{
+\title{Step 3: Campaign Execution}
+\p{Launch the phishing campaign:}
+
+\ul{
+\li{Send emails in batches to avoid triggering rate limits or spam filters (e.g., 50 emails per hour)}
+\li{Monitor GoPhish dashboard in real-time for delivery failures, bounces, and early interactions}
+\li{Track metrics as they come in: emails sent, emails opened (tracking pixel fired), links clicked, credentials submitted}
+\li{If the IT security team or SOC detects the campaign (if this is part of the test), document the detection time and response actions}
+\li{Maintain an emergency stop procedure: if an employee becomes distressed or the campaign creates unintended consequences, pause immediately}
+\li{Run the campaign for 48-72 hours before closing the landing page, as most interactions occur within the first 24 hours}
+}
+}
+
+\subtree{
+\title{Step 4: Credential Capture and Access Demonstration}
+\p{Process captured credentials to demonstrate impact (if authorized):}
+
+\ul{
+\li{Review all captured credentials in GoPhish. Do not test credentials against real systems unless explicitly authorized.}
+\li{If authorized for full exploitation: test captured credentials against the organization's actual login portal (VPN, OWA, SSO)}
+\li{Document any accounts that were successfully compromised, what data they could access, and whether MFA was present}
+\li{If MFA blocks access, document that MFA prevented the compromise and recommend maintaining MFA enforcement}
+\li{Identify patterns in credential submissions: which departments, roles, or locations are most susceptible}
+}
+}
+
+\subtree{
+\title{Step 5: Analysis and Reporting}
+\p{Analyze campaign results and produce the assessment report:}
+
+\ul{
+\li{\strong{Metrics analysis}:}
+\li{Email delivery rate: percentage of emails that reached inboxes}
+\li{Open rate: percentage of recipients who opened the email}
+\li{Click rate: percentage who clicked the phishing link}
+\li{Submission rate: percentage who submitted credentials}
+\li{Report rate: percentage who reported the email to IT security}
+\li{\strong{Departmental comparison}: Compare susceptibility rates across departments to identify groups needing targeted training}
+\li{\strong{Email security effectiveness}: Document whether the phishing emails bypassed the secure email gateway, whether DMARC/SPF prevented delivery, and whether link scanning tools detected the phishing URL}
+\li{\strong{Recommendations}: Provide actionable recommendations including security awareness training topics, technical controls improvements, and policy changes}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Pretext** | The fabricated scenario and social context used to persuade the target to take a desired action such as clicking a link or entering credentials |
+| **Credential Harvesting** | Collecting usernames and passwords through fake login pages that mimic legitimate services |
+| **GoPhish** | Open-source phishing simulation platform that manages email templates, landing pages, target groups, and campaign tracking |
+| **Spear Phishing** | Targeted phishing directed at specific individuals using personalized information gathered through reconnaissance |
+| **Typosquatting** | Registering domains that are visually similar to legitimate domains through character substitution, addition, or omission |
+| **Security Awareness** | Training programs designed to educate employees about social engineering threats and proper reporting procedures |
+| **DMARC** | Domain-based Message Authentication, Reporting, and Conformance; email authentication protocol that prevents unauthorized use of a domain for sending email |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{GoPhish}: Open-source phishing simulation framework providing campaign management, email templates, landing pages, and detailed analytics}
+\li{\strong{Evilginx2}: Advanced phishing framework capable of capturing session tokens and bypassing multi-factor authentication through reverse proxy technique}
+\li{\strong{King Phisher}: Phishing campaign toolkit with advanced features including two-factor authentication testing and geolocation tracking}
+\li{\strong{SET (Social Engineering Toolkit)}: Framework for social engineering attacks including phishing, credential harvesting, and payload delivery}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Enterprise Phishing Simulation for Security Awareness Baseline}
+\p{\strong{Context}: A 2,000-employee company has never conducted a phishing simulation. The CISO wants to establish a baseline susceptibility rate before deploying a new security awareness training program. The campaign should test all employees using a realistic but not overly sophisticated pretext.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Develop a Microsoft 365 password expiration pretext: "Your password expires in 24 hours. Click here to update."}
+\li{Register \code{\startverb m365-targetcorp.com\stopverb}, set up GoPhish, and build a landing page cloning the Microsoft 365 login portal}
+\li{Import all 2,000 employee emails and schedule sends in batches of 100 over 20 hours}
+\li{Campaign results after 72 hours: 1,847 delivered (92.4\%), 1,243 opened (67.3\%), 487 clicked (26.4\%), 312 submitted credentials (16.9\%), 23 reported to IT (1.2\%)}
+\li{Analysis reveals Finance (28\% submission) and Marketing (24\% submission) have the highest susceptibility; IT department has the lowest (4\%)}
+\li{Recommend targeted training for high-susceptibility departments, phishing report button deployment, and quarterly simulation cadence}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Using overly aggressive or threatening pretexts that cause employee anxiety or legal issues}
+\li{Not coordinating with HR and legal before launching the campaign, risking employee relations problems}
+\li{Sending all emails simultaneously, overwhelming the email server or triggering bulk-send detection}
+\li{Focusing only on click and submission rates while ignoring the critically low report rate (1.2\%)}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Phishing Simulation Campaign Report
+
+**Campaign Name**: Q4 2025 Baseline Phishing Assessment
+**Pretext**: Microsoft 365 Password Expiration Notice
+**Campaign Duration**: November 15-18, 2025
+**Target Population**: 2,000 employees (all departments)
+
+### Campaign Metrics
+| Metric | Count | Rate |
+|--------|-------|------|
+| Emails Sent | 2,000 | 100% |
+| Emails Delivered | 1,847 | 92.4% |
+| Emails Opened | 1,243 | 67.3% |
+| Links Clicked | 487 | 26.4% |
+| Credentials Submitted | 312 | 16.9% |
+| Reported to IT | 23 | 1.2% |
+
+### Department Breakdown
+| Department | Employees | Clicked | Submitted | Reported |
+|------------|-----------|---------|-----------|----------|
+| Finance    | 120       | 38.3%   | 28.3%     | 0.8%     |
+| Marketing  | 85        | 35.3%   | 24.7%     | 1.2%     |
+| Engineering| 300       | 15.0%   | 8.3%      | 3.7%     |
+| IT         | 45        | 8.9%    | 4.4%      | 11.1%    |
+
+### Key Findings
+1. Baseline credential submission rate of 16.9% exceeds industry average (12%)
+2. Report rate of 1.2% indicates employees are not trained to report suspicious emails
+3. Finance department is the highest-risk group with 28.3% credential submission rate
+4. Email security gateway did not flag the phishing domain despite being registered 48 hours prior
+
+### Recommendations
+1. Deploy mandatory security awareness training with emphasis on phishing identification
+2. Install a phishing report button in email clients and train all employees on its use
+3. Implement DMARC enforcement (p=reject) and enhanced email filtering rules
+4. Conduct targeted training for Finance and Marketing departments
+5. Schedule quarterly phishing simulations to track improvement
+\stopverb}
+}
+}

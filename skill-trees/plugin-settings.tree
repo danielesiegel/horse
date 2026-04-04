@@ -1,0 +1,623 @@
+\title{Plugin settings}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user asks about "plugin settings", "store plugin configuration", "user-configurable plugin", ".local.md files", "plugin state files", "read YAML frontmatter", "per-project plugin settings", or wants to make plugin behavior configurable. Documents the .claude/plugin-name.local.md pattern for storing plugin-specific configuration with YAML frontmatter and markdown content.}
+
+\subtree{
+\title{Plugin Settings Pattern for Claude Code Plugins}
+\subtree{
+\title{Overview}
+\p{Plugins can store user-configurable settings and state in \code{\startverb .claude/plugin-name.local.md\stopverb} files within the project directory. This pattern uses YAML frontmatter for structured configuration and markdown content for prompts or additional context.}
+
+\p{\strong{Key characteristics:}}
+
+\ul{
+\li{File location: \code{\startverb .claude/plugin-name.local.md\stopverb} in project root}
+\li{Structure: YAML frontmatter + markdown body}
+\li{Purpose: Per-project plugin configuration and state}
+\li{Usage: Read from hooks, commands, and agents}
+\li{Lifecycle: User-managed (not in git, should be in \code{\startverb .gitignore\stopverb})}
+}
+}
+
+\subtree{
+\title{File Structure}
+\subtree{
+\title{Basic Template}
+\pre{\startverb
+---
+enabled: true
+setting1: value1
+setting2: value2
+numeric_setting: 42
+list_setting: ["item1", "item2"]
+---
+
+# Additional Context
+
+This markdown body can contain:
+- Task descriptions
+- Additional instructions
+- Prompts to feed back to Claude
+- Documentation or notes
+\stopverb}
+}
+
+\subtree{
+\title{Example: Plugin State File}
+\p{\strong{.claude/my-plugin.local.md:}}
+
+\pre{\startverb
+---
+enabled: true
+strict_mode: false
+max_retries: 3
+notification_level: info
+coordinator_session: team-leader
+---
+
+# Plugin Configuration
+
+This plugin is configured for standard validation mode.
+Contact @team-lead with questions.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reading Settings Files}
+\subtree{
+\title{From Hooks (Bash Scripts)}
+\p{\strong{Pattern: Check existence and parse frontmatter}}
+
+\pre{\startverb
+#!/bin/bash
+set -euo pipefail
+
+# Define state file path
+STATE_FILE=".claude/my-plugin.local.md"
+
+# Quick exit if file doesn't exist
+if [[ ! -f "$STATE_FILE" ]]; then
+  exit 0  # Plugin not configured, skip
+fi
+
+# Parse YAML frontmatter (between --- markers)
+FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$STATE_FILE")
+
+# Extract individual fields
+ENABLED=$(echo "$FRONTMATTER" | grep '^enabled:' | sed 's/enabled: *//' | sed 's/^"\(.*\)"$/\1/')
+STRICT_MODE=$(echo "$FRONTMATTER" | grep '^strict_mode:' | sed 's/strict_mode: *//' | sed 's/^"\(.*\)"$/\1/')
+
+# Check if enabled
+if [[ "$ENABLED" != "true" ]]; then
+  exit 0  # Disabled
+fi
+
+# Use configuration in hook logic
+if [[ "$STRICT_MODE" == "true" ]]; then
+  # Apply strict validation
+  # ...
+fi
+\stopverb}
+
+\p{See \code{\startverb examples/read-settings-hook.sh\stopverb} for complete working example.}
+}
+
+\subtree{
+\title{From Commands}
+\p{Commands can read settings files to customize behavior:}
+
+\pre{\startverb
+---
+description: Process data with plugin
+allowed-tools: ["Read", "Bash"]
+---
+
+# Process Command
+
+Steps:
+1. Check if settings exist at `.claude/my-plugin.local.md`
+2. Read configuration using Read tool
+3. Parse YAML frontmatter to extract settings
+4. Apply settings to processing logic
+5. Execute with configured behavior
+\stopverb}
+}
+
+\subtree{
+\title{From Agents}
+\p{Agents can reference settings in their instructions:}
+
+\pre{\startverb
+---
+name: configured-agent
+description: Agent that adapts to project settings
+---
+
+Check for plugin settings at `.claude/my-plugin.local.md`.
+If present, parse YAML frontmatter and adapt behavior according to:
+- enabled: Whether plugin is active
+- mode: Processing mode (strict, standard, lenient)
+- Additional configuration fields
+\stopverb}
+}
+}
+
+\subtree{
+\title{Parsing Techniques}
+\subtree{
+\title{Extract Frontmatter}
+\pre{\startverb
+# Extract everything between --- markers
+FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$FILE")
+\stopverb}
+}
+
+\subtree{
+\title{Read Individual Fields}
+\p{\strong{String fields:}}
+
+\pre{\startverb
+VALUE=$(echo "$FRONTMATTER" | grep '^field_name:' | sed 's/field_name: *//' | sed 's/^"\(.*\)"$/\1/')
+\stopverb}
+
+\p{\strong{Boolean fields:}}
+
+\pre{\startverb
+ENABLED=$(echo "$FRONTMATTER" | grep '^enabled:' | sed 's/enabled: *//')
+# Compare: if [[ "$ENABLED" == "true" ]]; then
+\stopverb}
+
+\p{\strong{Numeric fields:}}
+
+\pre{\startverb
+MAX=$(echo "$FRONTMATTER" | grep '^max_value:' | sed 's/max_value: *//')
+# Use: if [[ $MAX -gt 100 ]]; then
+\stopverb}
+}
+
+\subtree{
+\title{Read Markdown Body}
+\p{Extract content after second \code{\startverb ---\stopverb}:}
+
+\pre{\startverb
+# Get everything after closing ---
+BODY=$(awk '/^---$/{i++; next} i>=2' "$FILE")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Pattern 1: Temporarily Active Hooks}
+\p{Use settings file to control hook activation:}
+
+\pre{\startverb
+#!/bin/bash
+STATE_FILE=".claude/security-scan.local.md"
+
+# Quick exit if not configured
+if [[ ! -f "$STATE_FILE" ]]; then
+  exit 0
+fi
+
+# Read enabled flag
+FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$STATE_FILE")
+ENABLED=$(echo "$FRONTMATTER" | grep '^enabled:' | sed 's/enabled: *//')
+
+if [[ "$ENABLED" != "true" ]]; then
+  exit 0  # Disabled
+fi
+
+# Run hook logic
+# ...
+\stopverb}
+
+\p{\strong{Use case:} Enable/disable hooks without editing hooks.json (requires restart).}
+}
+
+\subtree{
+\title{Pattern 2: Agent State Management}
+\p{Store agent-specific state and configuration:}
+
+\p{\strong{.claude/multi-agent-swarm.local.md:}}
+
+\pre{\startverb
+---
+agent_name: auth-agent
+task_number: 3.5
+pr_number: 1234
+coordinator_session: team-leader
+enabled: true
+dependencies: ["Task 3.4"]
+---
+
+# Task Assignment
+
+Implement JWT authentication for the API.
+
+**Success Criteria:**
+- Authentication endpoints created
+- Tests passing
+- PR created and CI green
+\stopverb}
+
+\p{Read from hooks to coordinate agents:}
+
+\pre{\startverb
+AGENT_NAME=$(echo "$FRONTMATTER" | grep '^agent_name:' | sed 's/agent_name: *//')
+COORDINATOR=$(echo "$FRONTMATTER" | grep '^coordinator_session:' | sed 's/coordinator_session: *//')
+
+# Send notification to coordinator
+tmux send-keys -t "$COORDINATOR" "Agent $AGENT_NAME completed task" Enter
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Configuration-Driven Behavior}
+\p{\strong{.claude/my-plugin.local.md:}}
+
+\pre{\startverb
+---
+validation_level: strict
+max_file_size: 1000000
+allowed_extensions: [".js", ".ts", ".tsx"]
+enable_logging: true
+---
+
+# Validation Configuration
+
+Strict mode enabled for this project.
+All writes validated against security policies.
+\stopverb}
+
+\p{Use in hooks or commands:}
+
+\pre{\startverb
+LEVEL=$(echo "$FRONTMATTER" | grep '^validation_level:' | sed 's/validation_level: *//')
+
+case "$LEVEL" in
+  strict)
+    # Apply strict validation
+    ;;
+  standard)
+    # Apply standard validation
+    ;;
+  lenient)
+    # Apply lenient validation
+    ;;
+esac
+\stopverb}
+}
+}
+
+\subtree{
+\title{Creating Settings Files}
+\subtree{
+\title{From Commands}
+\p{Commands can create settings files:}
+
+\pre{\startverb
+# Setup Command
+
+Steps:
+1. Ask user for configuration preferences
+2. Create `.claude/my-plugin.local.md` with YAML frontmatter
+3. Set appropriate values based on user input
+4. Inform user that settings are saved
+5. Remind user to restart Claude Code for hooks to recognize changes
+\stopverb}
+}
+
+\subtree{
+\title{Template Generation}
+\p{Provide template in plugin README:}
+
+\pre{\startverb
+## Configuration
+
+Create `.claude/my-plugin.local.md` in your project:
+
+\`\`\`markdown
+---
+enabled: true
+mode: standard
+max_retries: 3
+---
+
+# Plugin Configuration
+
+Your settings are active.
+\`\`\`
+
+After creating or editing, restart Claude Code for changes to take effect.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{File Naming}
+\p{✅ \strong{DO:}}
+
+\ul{
+\li{Use \code{\startverb .claude/plugin-name.local.md\stopverb} format}
+\li{Match plugin name exactly}
+\li{Use \code{\startverb .local.md\stopverb} suffix for user-local files}
+}
+
+\p{❌ \strong{DON'T:}}
+
+\ul{
+\li{Use different directory (not \code{\startverb .claude/\stopverb})}
+\li{Use inconsistent naming}
+\li{Use \code{\startverb .md\stopverb} without \code{\startverb .local\stopverb} (might be committed)}
+}
+}
+
+\subtree{
+\title{Gitignore}
+\p{Always add to \code{\startverb .gitignore\stopverb}:}
+
+\pre{\startverb
+.claude/*.local.md
+.claude/*.local.json
+\stopverb}
+
+\p{Document this in plugin README.}
+}
+
+\subtree{
+\title{Defaults}
+\p{Provide sensible defaults when settings file doesn't exist:}
+
+\pre{\startverb
+if [[ ! -f "$STATE_FILE" ]]; then
+  # Use defaults
+  ENABLED=true
+  MODE=standard
+else
+  # Read from file
+  # ...
+fi
+\stopverb}
+}
+
+\subtree{
+\title{Validation}
+\p{Validate settings values:}
+
+\pre{\startverb
+MAX=$(echo "$FRONTMATTER" | grep '^max_value:' | sed 's/max_value: *//')
+
+# Validate numeric range
+if ! [[ "$MAX" =~ ^[0-9]+$ ]] || [[ $MAX -lt 1 ]] || [[ $MAX -gt 100 ]]; then
+  echo "⚠️  Invalid max_value in settings (must be 1-100)" >&2
+  MAX=10  # Use default
+fi
+\stopverb}
+}
+
+\subtree{
+\title{Restart Requirement}
+\p{\strong{Important:} Settings changes require Claude Code restart.}
+
+\p{Document in your README:}
+
+\pre{\startverb
+## Changing Settings
+
+After editing `.claude/my-plugin.local.md`:
+1. Save the file
+2. Exit Claude Code
+3. Restart: `claude` or `cc`
+4. New settings will be loaded
+\stopverb}
+
+\p{Hooks cannot be hot-swapped within a session.}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\subtree{
+\title{Sanitize User Input}
+\p{When writing settings files from user input:}
+
+\pre{\startverb
+# Escape quotes in user input
+SAFE_VALUE=$(echo "$USER_INPUT" | sed 's/"/\\"/g')
+
+# Write to file
+cat > "$STATE_FILE" <<EOF
+---
+user_setting: "$SAFE_VALUE"
+---
+EOF
+\stopverb}
+}
+
+\subtree{
+\title{Validate File Paths}
+\p{If settings contain file paths:}
+
+\pre{\startverb
+FILE_PATH=$(echo "$FRONTMATTER" | grep '^data_file:' | sed 's/data_file: *//')
+
+# Check for path traversal
+if [[ "$FILE_PATH" == *".."* ]]; then
+  echo "⚠️  Invalid path in settings (path traversal)" >&2
+  exit 2
+fi
+\stopverb}
+}
+
+\subtree{
+\title{Permissions}
+\p{Settings files should be:}
+
+\ul{
+\li{Readable by user only (\code{\startverb chmod 600\stopverb})}
+\li{Not committed to git}
+\li{Not shared between users}
+}
+}
+}
+
+\subtree{
+\title{Real-World Examples}
+\subtree{
+\title{multi-agent-swarm Plugin}
+\p{\strong{.claude/multi-agent-swarm.local.md:}}
+
+\pre{\startverb
+---
+agent_name: auth-implementation
+task_number: 3.5
+pr_number: 1234
+coordinator_session: team-leader
+enabled: true
+dependencies: ["Task 3.4"]
+additional_instructions: Use JWT tokens, not sessions
+---
+
+# Task: Implement Authentication
+
+Build JWT-based authentication for the REST API.
+Coordinate with auth-agent on shared types.
+\stopverb}
+
+\p{\strong{Hook usage (agent-stop-notification.sh):}}
+
+\ul{
+\li{Checks if file exists (line 15-18: quick exit if not)}
+\li{Parses frontmatter to get coordinator_session, agent_name, enabled}
+\li{Sends notifications to coordinator if enabled}
+\li{Allows quick activation/deactivation via \code{\startverb enabled: true/false\stopverb}}
+}
+}
+
+\subtree{
+\title{ralph-wiggum Plugin}
+\p{\strong{.claude/ralph-loop.local.md:}}
+
+\pre{\startverb
+---
+iteration: 1
+max_iterations: 10
+completion_promise: "All tests passing and build successful"
+---
+
+Fix all the linting errors in the project.
+Make sure tests pass after each fix.
+\stopverb}
+
+\p{\strong{Hook usage (stop-hook.sh):}}
+
+\ul{
+\li{Checks if file exists (line 15-18: quick exit if not active)}
+\li{Reads iteration count and max_iterations}
+\li{Extracts completion_promise for loop termination}
+\li{Reads body as the prompt to feed back}
+\li{Updates iteration count on each loop}
+}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{File Location}
+\pre{\startverb
+project-root/
+└── .claude/
+    └── plugin-name.local.md
+\stopverb}
+}
+
+\subtree{
+\title{Frontmatter Parsing}
+\pre{\startverb
+# Extract frontmatter
+FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$FILE")
+
+# Read field
+VALUE=$(echo "$FRONTMATTER" | grep '^field:' | sed 's/field: *//' | sed 's/^"\(.*\)"$/\1/')
+\stopverb}
+}
+
+\subtree{
+\title{Body Parsing}
+\pre{\startverb
+# Extract body (after second ---)
+BODY=$(awk '/^---$/{i++; next} i>=2' "$FILE")
+\stopverb}
+}
+
+\subtree{
+\title{Quick Exit Pattern}
+\pre{\startverb
+if [[ ! -f ".claude/my-plugin.local.md" ]]; then
+  exit 0  # Not configured
+fi
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\subtree{
+\title{Reference Files}
+\p{For detailed implementation patterns:}
+
+\ul{
+\li{\strong{\code{\startverb references/parsing-techniques.md\stopverb}} - Complete guide to parsing YAML frontmatter and markdown bodies}
+\li{\strong{\code{\startverb references/real-world-examples.md\stopverb}} - Deep dive into multi-agent-swarm and ralph-wiggum implementations}
+}
+}
+
+\subtree{
+\title{Example Files}
+\p{Working examples in \code{\startverb examples/\stopverb}:}
+
+\ul{
+\li{\strong{\code{\startverb read-settings-hook.sh\stopverb}} - Hook that reads and uses settings}
+\li{\strong{\code{\startverb create-settings-command.md\stopverb}} - Command that creates settings file}
+\li{\strong{\code{\startverb example-settings.md\stopverb}} - Template settings file}
+}
+}
+
+\subtree{
+\title{Utility Scripts}
+\p{Development tools in \code{\startverb scripts/\stopverb}:}
+
+\ul{
+\li{\strong{\code{\startverb validate-settings.sh\stopverb}} - Validate settings file structure}
+\li{\strong{\code{\startverb parse-frontmatter.sh\stopverb}} - Extract frontmatter fields}
+}
+}
+}
+
+\subtree{
+\title{Implementation Workflow}
+\p{To add settings to a plugin:}
+
+\ol{
+\li{Design settings schema (which fields, types, defaults)}
+\li{Create template file in plugin documentation}
+\li{Add gitignore entry for \code{\startverb .claude/*.local.md\stopverb}}
+\li{Implement settings parsing in hooks/commands}
+\li{Use quick-exit pattern (check file exists, check enabled field)}
+\li{Document settings in plugin README with template}
+\li{Remind users that changes require Claude Code restart}
+}
+
+\p{Focus on keeping settings simple and providing good defaults when settings file doesn't exist.}
+}
+}

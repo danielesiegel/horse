@@ -1,0 +1,93 @@
+\title{Notion Research Documentation}
+
+\taxon{skill}
+
+\meta{description}{Research across Notion and synthesize into structured documentation; use when gathering info from multiple Notion sources to produce briefs, comparisons, or reports with citations.}
+
+\subtree{
+\title{Research & Documentation}
+\p{Pull relevant Notion pages, synthesize findings, and publish clear briefs or reports (with citations and links to sources).}
+
+\subtree{
+\title{Quick start}
+\ol{
+\li{Find sources with \code{\startverb Notion:notion-search\stopverb} using targeted queries; confirm scope with the user.}
+\li{Fetch pages via \code{\startverb Notion:notion-fetch\stopverb}; note key sections and capture citations (\code{\startverb reference/citations.md\stopverb}).}
+\li{Choose output format (brief, summary, comparison, comprehensive report) using \code{\startverb reference/format-selection-guide.md\stopverb}.}
+\li{Draft in Notion with \code{\startverb Notion:notion-create-pages\stopverb} using the matching template (quick, summary, comparison, comprehensive).}
+\li{Link sources and add a references/citations section; update as new info arrives with \code{\startverb Notion:notion-update-page\stopverb}.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{0) If any MCP call fails because Notion MCP is not connected, pause and set it up:}
+\ol{
+\li{Add the Notion MCP:}
+\li{\code{\startverb codex mcp add notion --url https://mcp.notion.com/mcp\stopverb}}
+\li{Enable remote MCP client:}
+\li{Set \code{\startverb [features].rmcp_client = true\stopverb} in \code{\startverb config.toml\stopverb} \strong{or} run \code{\startverb codex --enable rmcp_client\stopverb}}
+\li{Log in with OAuth:}
+\li{\code{\startverb codex mcp login notion\stopverb}}
+}
+
+\p{After successful login, the user will have to restart codex. You should finish your answer and tell them so when they try again they can continue with Step 1.}
+}
+
+\subtree{
+\title{1) Gather sources}
+\ul{
+\li{Search first (\code{\startverb Notion:notion-search\stopverb}); refine queries, and ask the user to confirm if multiple results appear.}
+\li{Fetch relevant pages (\code{\startverb Notion:notion-fetch\stopverb}), skim for facts, metrics, claims, constraints, and dates.}
+\li{Track each source URL/ID for later citation; prefer direct quotes for critical facts.}
+}
+}
+
+\subtree{
+\title{2) Select the format}
+\ul{
+\li{Quick readout → quick brief.}
+\li{Single-topic dive → research summary.}
+\li{Option tradeoffs → comparison.}
+\li{Deep dive / exec-ready → comprehensive report.}
+\li{See \code{\startverb reference/format-selection-guide.md\stopverb} for when to pick each.}
+}
+}
+
+\subtree{
+\title{3) Synthesize}
+\ul{
+\li{Outline before writing; group findings by themes/questions.}
+\li{Note evidence with source IDs; flag gaps or contradictions.}
+\li{Keep user goal in view (decision, summary, plan, recommendation).}
+}
+}
+
+\subtree{
+\title{4) Create the doc}
+\ul{
+\li{Pick the matching template in \code{\startverb reference/\stopverb} (brief, summary, comparison, comprehensive) and adapt it.}
+\li{Create the page with \code{\startverb Notion:notion-create-pages\stopverb}; include title, summary, key findings, supporting evidence, and recommendations/next steps when relevant.}
+\li{Add citations inline and a references section; link back to source pages.}
+}
+}
+
+\subtree{
+\title{5) Finalize & handoff}
+\ul{
+\li{Add highlights, risks, and open questions.}
+\li{If the user needs follow-ups, create tasks or a checklist in the page; link any task database entries if applicable.}
+\li{Share a short changelog or status using \code{\startverb Notion:notion-update-page\stopverb} when updating.}
+}
+}
+}
+
+\subtree{
+\title{References and examples}
+\ul{
+\li{\code{\startverb reference/\stopverb} — search tactics, format selection, templates, and citation rules (e.g., \code{\startverb advanced-search.md\stopverb}, \code{\startverb format-selection-guide.md\stopverb}, \code{\startverb research-summary-template.md\stopverb}, \code{\startverb comparison-template.md\stopverb}, \code{\startverb citations.md\stopverb}).}
+\li{\code{\startverb examples/\stopverb} — end-to-end walkthroughs (e.g., \code{\startverb competitor-analysis.md\stopverb}, \code{\startverb technical-investigation.md\stopverb}, \code{\startverb market-research.md\stopverb}, \code{\startverb trip-planning.md\stopverb}).}
+}
+}
+}

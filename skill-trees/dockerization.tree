@@ -1,0 +1,210 @@
+\title{Dockerization}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{Official Stakpak application containerization standard operating procedure, a step-by-step guidline to properly dockerize applications. This is a rule book curated by the Stakpak Team.}
+
+\subtree{
+\title{Application Dockerization RuleBook}
+\subtree{
+\title{Core Principles}
+\ul{
+\li{\strong{Analysis First}: Thoroughly examine application before starting work}
+\li{\strong{User Collaboration}: Involve users in decisions, avoid assumptions, confirm critical choices}
+\li{\strong{Documentation}: Record all configurations, generated values, and requirements}
+\li{\strong{Efficiency}: Use available tools and information before requesting input}
+\li{\strong{Error Analysis}: Identify root causes before retrying failed operations}
+}
+}
+
+\subtree{
+\title{Mandatory 9-Phase Workflow}
+\subtree{
+\title{1. Application Analysis}
+\ul{
+\li{Examine directory structure and key files}
+\li{Identify programming language, framework, and dependencies}
+\li{Document external services (databases, cache, message queues)}
+\li{Create file/purpose mapping table}
+\li{Accumulate findings progressively}
+}
+}
+
+\subtree{
+\title{2. Base Image Selection}
+\ul{
+\li{Prefer official Docker Hub images}
+\li{Choose Alpine/slim variants for smaller size}
+\li{Consider security update frequency}
+\li{Create comparison table with pros/cons}
+\li{Document selection rationale}
+}
+}
+
+\subtree{
+\title{3. Dockerfile Creation}
+\ul{
+\li{Use multi-stage builds when applicable}
+\li{Configure non-root user for security}
+\li{Optimize layer caching and minimize size}
+\li{Implement health checks}
+\li{Address security concerns explicitly}
+}
+}
+
+\subtree{
+\title{4. Docker Compose Configuration}
+\ul{
+\li{Include application and dependent services}
+\li{Configure networks and volumes properly}
+\li{Set environment variables and secrets}
+\li{Omit obsolete 'version' attribute}
+\li{Enable service dependencies and restart policies}
+}
+}
+
+\subtree{
+\title{5. Build Process}
+\ul{
+\li{Use \code{\startverb docker compose build\stopverb} (preferred method)}
+\li{Tag images with human-readable names}
+\li{Implement comprehensive .dockerignore file}
+\li{Document build commands and process}
+\li{Handle build errors systematically}
+}
+}
+
+\subtree{
+\title{6. Container Execution}
+\ul{
+\li{Start with \code{\startverb docker compose up -d\stopverb}}
+\li{Verify all services start successfully}
+\li{Apply database migrations if required}
+\li{Check container status and logs}
+\li{Ensure port mappings work correctly}
+}
+}
+
+\subtree{
+\title{7. Health Verification}
+\ul{
+\li{Check container status and logs}
+\li{Test application endpoints (expect 200 status)}
+\li{Verify dependent service connectivity}
+\li{Monitor resource usage}
+\li{Consider network accessibility (avoid localhost assumptions)}
+}
+}
+
+\subtree{
+\title{8. Resource Cleanup}
+\ul{
+\li{Stop containers with \code{\startverb docker compose down\stopverb}}
+\li{Remove unnecessary volumes and images}
+\li{Clean build cache and temporary files}
+\li{Document cleanup procedures}
+\li{Verify complete resource removal}
+}
+}
+
+\subtree{
+\title{9. Documentation}
+\ul{
+\li{List all required environment variables}
+\li{Identify secrets and sensitive configurations}
+\li{Document deployment and migration steps}
+\li{Provide troubleshooting guidance}
+\li{Create final summary report}
+}
+}
+}
+
+\subtree{
+\title{Security Requirements}
+\ul{
+\li{\strong{Never run as root user}}
+\li{Use specific image tags (avoid 'latest')}
+\li{Implement proper .dockerignore}
+\li{Store secrets securely (not in image layers)}
+\li{Scan for vulnerabilities regularly}
+\li{Set resource limits appropriately}
+\li{Use minimal base images}
+}
+}
+
+\subtree{
+\title{Error Handling Guidelines}
+\ul{
+\li{\strong{Build Failures}: Analyze error messages, check Dockerfile syntax, verify base image availability}
+\li{\strong{Runtime Failures}: Check logs immediately, verify environment variables, test dependencies}
+\li{\strong{Performance Issues}: Monitor resources, check for leaks, optimize layers}
+\li{Never repeat failed commands more than twice without changing approach}
+}
+}
+
+\subtree{
+\title{Tool Usage (For Agents)}
+\ul{
+\li{State objectives before each tool call}
+\li{Use \code{\startverb generate_code\stopverb} for Dockerfile creation when available}
+\li{Leverage persistent scratchpad for state management}
+\li{Invoke multiple independent operations simultaneously}
+\li{Provide regular progress updates via todo lists}
+}
+}
+
+\subtree{
+\title{Best Practices Summary}
+\p{\strong{DO:}}
+
+\ul{
+\li{Use official base images and specific tags}
+\li{Implement health checks and resource limits}
+\li{Document thoroughly and test systematically}
+\li{Cache dependencies effectively}
+\li{Monitor container health continuously}
+}
+
+\p{\strong{DON'T:}}
+
+\ul{
+\li{Run containers as root}
+\li{Store secrets in Dockerfiles}
+\li{Use 'latest' tags in production}
+\li{Skip security scanning}
+\li{Ignore error root causes}
+}
+}
+
+\subtree{
+\title{Success Criteria Checklist}
+\ul{
+\li{[ ] Container builds successfully}
+\li{[ ] Application runs without errors}
+\li{[ ] All health checks pass}
+\li{[ ] Dependencies properly configured}
+\li{[ ] Environment variables documented}
+\li{[ ] Security measures implemented}
+\li{[ ] Resources cleaned up}
+\li{[ ] Complete documentation provided}
+\li{[ ] Build images for the deployment target architecture (most likely amd64, unless the deployment target is arm-based) }
+}
+}
+
+\subtree{
+\title{Critical Workflow Rules}
+\ol{
+\li{\strong{Analysis before action} - understand the application first}
+\li{\strong{User involvement} - confirm decisions and tradeoffs}
+\li{\strong{Progressive documentation} - record findings at each step}
+\li{\strong{Error analysis} - identify causes before retry attempts}
+\li{\strong{Security by design} - implement security measures throughout}
+\li{\strong{Health verification} - test thoroughly before completion}
+\li{\strong{Clean completion} - remove unnecessary resources and document fully}
+}
+
+\p{*Adapt based on specific application requirements and organizational policies. Always prioritize security and maintainability.*}
+}
+}

@@ -1,0 +1,156 @@
+\title{Amazon Shopping Mcp}
+
+\taxon{skill}
+
+\meta{description}{Amazon product search, cart management, price tracking, and shopping list via Playwright + DuckDB MCP server}
+
+\subtree{
+\title{Amazon Shopping MCP}
+\p{Headless Chromium browser automation for Amazon.com with local DuckDB product cache and shopping list.}
+
+\subtree{
+\title{Server Location}
+\pre{\startverb
+/Users/alice/v/mcp/amazon-shopping/
+\stopverb}
+}
+
+\subtree{
+\title{MCP Registration}
+\pre{\startverb
+{
+  "amazon-shopping": {
+    "type": "stdio",
+    "command": "/bin/sh",
+    "args": ["-c", "cd /Users/alice/v/mcp/amazon-shopping && unset PYTHONPATH && exec uv run python -m amazon_shopping_mcp.server"]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Stack}
+\ul{
+\li{\strong{FastMCP 2.14.x} — MCP server framework (pinned \code{\startverb <3\stopverb})}
+\li{\strong{Playwright} — headless Chromium for Amazon browsing}
+\li{\strong{DuckDB} — product cache, price history, shopping list at \code{\startverb ~/v/amazon-shopping.duckdb\stopverb}}
+\li{\strong{Python 3.14} via uv}
+}
+}
+
+\subtree{
+\title{Tools (12)}
+\subtree{
+\title{Browser / Amazon}
+\pre{\startverb
+| Tool | Args | Description |
+|------|------|-------------|
+| `search_amazon` | `query`, `max_results=5` | Search Amazon, returns ASIN/title/price/rating |
+| `get_product_details` | `asin` | Full product page: features, description, availability |
+| `add_to_cart` | `asin` | Click Add to Cart (headless session, not logged in by default) |
+| `view_cart` | — | List cart items + subtotal |
+| `screenshot_page` | — | Screenshot to `/tmp/amazon_screenshot.png` |
+| `navigate_url` | `url` | Go to any URL, return title + 2000 char text preview |
+\stopverb}
+}
+
+\subtree{
+\title{Shopping List (DuckDB)}
+\pre{\startverb
+| Tool | Args | Description |
+|------|------|-------------|
+| `list_add` | `asin`, `title`, `qty=1`, `notes=""` | Add to local list |
+| `list_view` | — | Show all items with status |
+| `list_update_status` | `item_id`, `status` | Set `TODO`/`BUY`/`BOUGHT`/`SKIP` |
+| `list_remove` | `item_id` | Delete from list |
+\stopverb}
+}
+
+\subtree{
+\title{Price Tracking}
+\pre{\startverb
+| Tool | Args | Description |
+|------|------|-------------|
+| `price_history` | `asin` | All observed prices over time |
+| `cached_products` | `query=""` | Search local product cache (empty = all) |
+\stopverb}
+}
+}
+
+\subtree{
+\title{DuckDB Schema}
+\pre{\startverb
+products (asin PK, title, price_cents, currency, rating, review_count, url, category, image_url, last_seen)
+price_history (asin, price_cents, currency, observed_at)
+shopping_list (id PK, asin, title, qty, notes, status, added_at)
+\stopverb}
+
+\p{Every \code{\startverb search_amazon\stopverb} and \code{\startverb get_product_details\stopverb} call auto-caches to \code{\startverb products\stopverb} and appends to \code{\startverb price_history\stopverb}.}
+}
+
+\subtree{
+\title{Env Vars}
+\pre{\startverb
+| Var | Default | Description |
+|-----|---------|-------------|
+| `AMAZON_SHOPPING_DB` | `~/v/amazon-shopping.duckdb` | DuckDB path |
+\stopverb}
+}
+
+\subtree{
+\title{Workflow Examples}
+\subtree{
+\title{Research + buy list}
+\ol{
+\li{\code{\startverb search_amazon("thunderbolt 4 cable 2m")\stopverb} — get top 5 results}
+\li{\code{\startverb get_product_details("B0CXRSWRBR")\stopverb} — read features, check availability}
+\li{\code{\startverb list_add("B0CXRSWRBR", "Cable Matters TB4 2m", qty=2)\stopverb} — track locally}
+\li{\code{\startverb price_history("B0CXRSWRBR")\stopverb} — check price trend over time}
+}
+}
+
+\subtree{
+\title{Cart operations}
+\ol{
+\li{\code{\startverb add_to_cart("B0CXRSWRBR")\stopverb} — add to Amazon cart}
+\li{\code{\startverb view_cart()\stopverb} — check cart subtotal}
+\li{\code{\startverb screenshot_page()\stopverb} — visual verification}
+}
+}
+
+\subtree{
+\title{Offline queries}
+\ul{
+\li{\code{\startverb cached_products("thunderbolt")\stopverb} — search previously seen products}
+\li{\code{\startverb list_view()\stopverb} — review full shopping list}
+\li{\code{\startverb price_history("B0CDH4FGZY")\stopverb} — price trend for Anker TB4}
+}
+}
+}
+
+\subtree{
+\title{Limitations}
+\ul{
+\li{\strong{Not logged in} by default — cart is anonymous session. Login requires manual cookie injection or interactive auth.}
+\li{\strong{Amazon anti-bot} — headless Chrome may hit CAPTCHAs on heavy use. Use \code{\startverb screenshot_page\stopverb} to debug.}
+\li{\strong{Prices in cents} — stored as integers (2999 = $29.99) to avoid float rounding.}
+\li{\strong{Single browser context} — tools share one Chromium page. Concurrent calls may race.}
+}
+}
+
+\subtree{
+\title{Development}
+\pre{\startverb
+cd /Users/alice/v/mcp/amazon-shopping
+unset PYTHONPATH
+uv sync                              # install deps
+uv run playwright install chromium   # install browser (once)
+uv run python -m amazon_shopping_mcp.server  # run server
+\stopverb}
+}
+
+\subtree{
+\title{Companion Artifact}
+\p{Shopping list org file: \code{\startverb ~/v/amazon-shopping.org\stopverb} — manually curated product research with ASINs, prices, and notes.}
+}
+}

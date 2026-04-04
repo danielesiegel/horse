@@ -1,0 +1,206 @@
+\title{Borkdude}
+
+\taxon{skill}
+
+\meta{description}{Babashka and ClojureScript runtime selection guidance by @borkdude}
+
+\p{<!-- Propagated to amp | Trit: 0 | Source: .ruler/skills/borkdude -->}
+
+\subtree{
+\title{Borkdude Skill: ClojureScript Runtime Selection}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: 0 (ERGODIC - runtime neutral) \strong{Principle}: Right tool for context \strong{Author}: Michiel Borkent (@borkdude)}
+
+\subtree{
+\title{Overview}
+\p{\strong{Borkdude} provides guidance for selecting the appropriate ClojureScript runtime based on execution context. Named after Michiel Borkent, creator of Babashka, SCI, Cherry, Squint, and other Clojure tools.}
+}
+
+\subtree{
+\title{Runtime Matrix}
+\pre{\startverb
+| Runtime | Context | JVM | Node | Browser | REPL |
+|---------|---------|-----|------|---------|------|
+| **Babashka** | Scripting | ✗ | ✗ | ✗ | ✓ |
+| **SCI** | Embedded | ✓ | ✓ | ✓ | ✓ |
+| **Cherry** | Compiler | ✗ | ✓ | ✓ | ✓ |
+| **Squint** | Compiler | ✗ | ✓ | ✓ | ✓ |
+| **Scittle** | Browser | ✗ | ✗ | ✓ | ✓ |
+| **nbb** | Node | ✗ | ✓ | ✗ | ✓ |
+\stopverb}
+}
+
+\subtree{
+\title{Decision Tree}
+\pre{\startverb
+Start
+  │
+  ├── Need fast startup? ─────────► Babashka (bb)
+  │
+  ├── Browser target?
+  │     ├── Minimal bundle? ──────► Squint
+  │     ├── Full ClojureScript? ──► Cherry  
+  │     └── Script tag? ──────────► Scittle
+  │
+  ├── Node scripting? ────────────► nbb
+  │
+  └── Embedded interpreter? ──────► SCI
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Babashka (scripting)
+bb script.clj
+
+# nbb (Node)
+npx nbb script.cljs
+
+# Squint (compile to JS)
+npx squint compile src/main.cljs
+
+# Cherry (compile with macros)
+npx cherry compile src/main.cljs
+
+# Scittle (browser)
+# <script src="https://cdn.jsdelivr.net/npm/scittle@0.6.15/dist/scittle.js"></script>
+\stopverb}
+}
+
+\subtree{
+\title{SCI (Small Clojure Interpreter)}
+\p{Embedded interpreter for sandboxed evaluation:}
+
+\pre{\startverb
+(require '[sci.core :as sci])
+
+(def ctx (sci/init {:namespaces {'user {'foo (fn [] "bar")}}}))
+
+(sci/eval-string* ctx "(user/foo)")
+;; => "bar"
+\stopverb}
+}
+
+\subtree{
+\title{Cherry vs Squint}
+\pre{\startverb
+| Feature | Cherry | Squint |
+|---------|--------|--------|
+| ClojureScript compat | High | Medium |
+| Bundle size | Larger | Smaller |
+| Macros | Full support | Limited |
+| Interop | CLJS-style | JS-native |
+| Target audience | CLJS developers | JS developers |
+\stopverb}
+}
+
+\subtree{
+\title{Babashka Pods}
+\p{Extend Babashka with pods:}
+
+\pre{\startverb
+(require '[babashka.pods :as pods])
+
+(pods/load-pod 'org.babashka/go-sqlite3 "0.1.0")
+(require '[pod.babashka.go-sqlite3 :as sqlite])
+
+(sqlite/execute! "test.db" ["CREATE TABLE users (id INTEGER PRIMARY KEY)"])
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Music Topos}
+\pre{\startverb
+;; Use Babashka for scripts
+(ns ruler.propagate
+  (:require [babashka.fs :as fs]))
+
+;; Use SCI for embedded color evaluation
+(def color-ctx
+  (sci/init {:namespaces 
+             {'gay {'color-at (fn [idx] (gay/color-at idx))}}}))
+\stopverb}
+}
+
+\subtree{
+\title{When to Use Each}
+\subtree{
+\title{Babashka}
+\ul{
+\li{Shell scripts}
+\li{Build automation}
+\li{CLI tools}
+\li{Data processing}
+}
+}
+
+\subtree{
+\title{SCI}
+\ul{
+\li{Sandboxed evaluation}
+\li{Plugin systems}
+\li{Configuration DSLs}
+\li{Interactive REPLs}
+}
+}
+
+\subtree{
+\title{Cherry}
+\ul{
+\li{Full CLJS features in browser}
+\li{Macro-heavy code}
+\li{CLJS library compat}
+}
+}
+
+\subtree{
+\title{Squint}
+\ul{
+\li{Minimal JS output}
+\li{JS-first interop}
+\li{Small bundles}
+}
+}
+
+\subtree{
+\title{Scittle}
+\ul{
+\li{Browser scripting}
+\li{No build step}
+\li{Quick prototypes}
+}
+}
+
+\subtree{
+\title{nbb}
+\ul{
+\li{Node.js scripting}
+\li{npm library access}
+\li{Server scripts}
+}
+}
+}
+
+\subtree{
+\title{Example: Skill Propagation}
+\pre{\startverb
+#!/usr/bin/env bb
+;; .ruler/propagate.clj
+
+(require '[babashka.fs :as fs]
+         '[clojure.string :as str])
+
+(defn propagate-skill! [skill-name]
+  (let [source (str ".ruler/skills/" skill-name "/SKILL.md")
+        content (slurp source)]
+    (doseq [agent ["codex" "claude" "cursor"]]
+      (let [target (str "." agent "/skills/" skill-name "/SKILL.md")]
+        (fs/create-dirs (fs/parent target))
+        (spit target content)))))
+
+(propagate-skill! "unworld")
+\stopverb}
+
+\p{\strong{Skill Name}: borkdude \strong{Type}: Runtime Selection / ClojureScript Tooling \strong{Trit}: 0 (ERGODIC) \strong{Runtimes}: Babashka, SCI, Cherry, Squint, Scittle, nbb}
+}
+}

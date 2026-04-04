@@ -1,0 +1,376 @@
+\title{R2frida}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Dynamic instrumentation bridge — radare2 static analysis meets Frida runtime hooking via r2frida:// URI}
+
+\subtree{
+\title{r2frida}
+\p{Static-to-dynamic bridge: use radare2 commands to drive Frida instrumentation on live processes.}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# r2frida IO plugin (requires radare2 6.0.x)
+r2pm -ci r2frida
+
+# Verify
+r2 -L | grep frida
+# io  frida  Frida io [r2frida://action/link/device/target]
+
+# Companion packages
+r2pm -ci r2frida-codeshare   # Frida codeshare browser
+r2pm -ci r2frida-objection   # Objection integration
+r2pm -ci r2flutch            # iOS app decryption
+\stopverb}
+}
+
+\subtree{
+\title{URI Format}
+\pre{\startverb
+r2 frida://[action]/[link]/[device]/[target]
+\stopverb}
+
+\pre{\startverb
+| Component | Options |
+|-----------|---------|
+| action | `attach`, `spawn`, `launch`, `list`, `apps` |
+| link | `local`, `usb`, `remote host:port` |
+| device | device-id (optional) |
+| target | PID, process name, or bundle ID |
+\stopverb}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+# Attach to local process
+r2 frida://attach/local//1234
+r2 frida://attach/local//Safari
+
+# Spawn on USB-connected iOS device
+r2 frida://spawn/usb//com.example.app
+
+# List apps on USB device
+r2 frida://apps/usb//
+
+# Remote frida-server
+r2 frida://attach/remote/192.168.1.10:27042/target
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Commands (\code{\startverb :\stopverb} prefix)}
+\subtree{
+\title{Information & Enumeration}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `:?` | r2frida help |
+| `:i` | Target info |
+| `:il` | List loaded libraries |
+| `:ii` | List imports |
+| `:iE` | List exports |
+| `:is <lib>` | Symbols of a library |
+| `:ic` | List classes (ObjC/Java) |
+| `:ic <class>` | List methods of class |
+| `:ip` | List protocols (ObjC) |
+\stopverb}
+}
+
+\subtree{
+\title{Memory}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `:dm` | List memory regions |
+| `:dm.` | Current region info |
+| `:dmm` | List modules with base addresses |
+| `:/v <value>` | Search memory for value |
+| `:/w <string>` | Search wide string |
+| `:/x <hex>` | Search hex pattern |
+\stopverb}
+}
+
+\subtree{
+\title{Tracing}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `:dt <addr\|sym>` | Trace function |
+| `:dt-*` | Remove all traces |
+| `:dtf <addr> <fmt>` | Trace with format string |
+| `:dtSf <addr\|sym>` | Stalker deep trace (follows subcalls) |
+| `:dtm` | Monitor library loads |
+| `:dtt` | Monitor thread lifecycle |
+| `:e stalker.in=app` | Restrict stalking to app code |
+\stopverb}
+
+\p{\strong{Format specifiers for \code{\startverb :dtf\stopverb}:}}
+
+\ul{
+\li{\code{\startverb ^\stopverb} onEnter (default onExit)}
+\li{\code{\startverb +\stopverb} backtrace}
+\li{\code{\startverb x\stopverb} hex arg, \code{\startverb i\stopverb} int arg}
+\li{\code{\startverb z\stopverb} string pointer}
+\li{\code{\startverb O\stopverb} ObjC object pointer}
+}
+}
+
+\subtree{
+\title{Hooking & Interception}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `:di0 <addr>` | Intercept, return 0 (skip original) |
+| `:di1 <addr>` | Intercept, return 1 (skip original) |
+| `:di-1 <addr>` | Intercept, return -1 (skip original) |
+| `:dif0 <addr>` | Call original, then return 0 |
+| `:dif1 <addr>` | Call original, then return 1 |
+| `:db <addr>` | Set breakpoint |
+| `:db- <addr>` | Remove breakpoint |
+| `:dc` | Continue execution |
+\stopverb}
+}
+
+\subtree{
+\title{Function Calls}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `:dx <addr> [args]` | Call function |
+| `:dxc <addr> [args]` | Call C function |
+| `:dxo <class> <method> [args]` | Call ObjC method |
+| `:dxs <num> [args]` | Invoke syscall |
+\stopverb}
+}
+
+\subtree{
+\title{Process Control}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `:dp` | PID |
+| `:dpt` | List threads with entrypoints |
+| `:dl <path>` | Load library into target |
+| `:env` | Show environment variables |
+| `:fd` | List file descriptors |
+\stopverb}
+}
+
+\subtree{
+\title{JavaScript Evaluation}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `:. <file.js>` | Load and run Frida script |
+| `:eval <js>` | Evaluate inline JavaScript |
+| `r2frida-compile <ts>` | Compile TypeScript to agent |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflows}
+\subtree{
+\title{Static-to-Dynamic: Identify Then Hook}
+\pre{\startverb
+# 1. Static analysis — find interesting functions
+r2 /path/to/binary
+> aaa
+> afl~decrypt           # find decrypt functions
+> pdf @ sym.decrypt_msg # read disassembly
+> q
+
+# 2. Dynamic — hook what we found
+r2 frida://attach/local//target_process
+> :dt sym.decrypt_msg   # trace it
+> :dtf sym.decrypt_msg zx^  # trace with string arg + hex arg + backtrace
+> :dc                   # resume
+# ... trigger the function, see live args
+\stopverb}
+}
+
+\subtree{
+\title{SSL Pinning Bypass (iOS)}
+\pre{\startverb
+r2 frida://spawn/usb//com.example.app
+> :di0 sym.SSLSetSessionOption  # return 0 = success
+> :di0 sym.SSLCreateContext
+> :dc
+\stopverb}
+}
+
+\subtree{
+\title{ObjC Method Tracing}
+\pre{\startverb
+r2 frida://attach/local//Safari
+> :ic NSURLSession              # enumerate methods
+> :dt "-[NSURLSession dataTaskWithRequest:completionHandler:]"
+> :dc
+\stopverb}
+}
+
+\subtree{
+\title{Memory Forensics}
+\pre{\startverb
+r2 frida://attach/local//target
+> :dm                          # list memory regions
+> :/w password                 # search for "password" (wide)
+> :dmm                         # list modules
+> s <addr>; px 256             # seek and hexdump
+\stopverb}
+}
+
+\subtree{
+\title{Android/Dalvik}
+\pre{\startverb
+r2 frida://spawn/usb//com.example.android
+> :ic com.example.android.CryptoHelper
+> :dt "com.example.android.CryptoHelper.encrypt"
+> :dc
+\stopverb}
+}
+}
+
+\subtree{
+\title{MCP Integration Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│  Claude / AI Agent                                      │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  radare2 MCP (static)          frida MCP (dynamic)     │
+│  ┌─────────────────┐          ┌─────────────────┐      │
+│  │ open_file        │          │ spawn            │      │
+│  │ analyze          │          │ attach           │      │
+│  │ decompile        │◄────────►│ eval_js          │      │
+│  │ list_functions   │ r2frida  │ list_apps        │      │
+│  │ list_strings     │ bridge   │ get_frontmost    │      │
+│  │ xrefs_to         │          │                  │      │
+│  │ run_command      │          │                  │      │
+│  └─────────────────┘          └─────────────────┘      │
+│          │                            │                 │
+│          └────────┬───────────────────┘                 │
+│                   │                                     │
+│          ┌────────▼────────┐                           │
+│          │   r2frida://     │                           │
+│          │   IO plugin      │                           │
+│          │                  │                           │
+│          │  : commands      │                           │
+│          │  Stalker tracing │                           │
+│          │  Interceptor     │                           │
+│          └────────┬────────┘                           │
+│                   │                                     │
+│          ┌────────▼────────┐                           │
+│          │  Target Process  │                           │
+│          │  (local/usb/tcp) │                           │
+│          └─────────────────┘                           │
+└─────────────────────────────────────────────────────────┘
+\stopverb}
+
+\subtree{
+\title{Via radare2 MCP run_command}
+\p{Since \code{\startverb run_command\stopverb} passes raw r2 commands, r2frida commands work directly when the session is opened with a \code{\startverb frida://\stopverb} URI:}
+
+\pre{\startverb
+open_file("frida://attach/local//Safari")
+run_command(":il")          # list loaded libraries
+run_command(":dt malloc")   # trace malloc
+run_command(":dc")          # continue
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) RE Skill Ecosystem}
+\pre{\startverb
+MINUS (-1)                    ERGODIC (0)               PLUS (+1)
+─────────────────────────────────────────────────────────────────
+radare2-hatchery              r2frida                   blackhat-go
+  static analysis               bridge                    offensive
+  decompilation                 : commands                techniques
+  trit: -1                      trit: 0                   trit: +1
+
+dwarf-expert                                            cantordust-viz
+  debug formats                                           binary viz
+  trit: -1                                                trit: +1
+
+narya-proofs
+  formal verify
+  trit: -1
+\stopverb}
+
+\subtree{
+\title{Triads}
+\pre{\startverb
+radare2-hatchery (-1) + r2frida (0) + blackhat-go (+1) = 0 ✓
+dwarf-expert (-1)     + r2frida (0) + cantordust-viz (+1) = 0 ✓
+narya-proofs (-1)     + r2frida (0) + blackhat-go (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{r2con Speaker Network}
+\pre{\startverb
+| Speaker | Handle | Specialty | Trit |
+|---------|--------|-----------|------|
+| pancake | @trufae | r2 creator, r2frida | 0 |
+| oleavr | @oleavr | Frida creator | +1 |
+| iGio90 | @AAndresG90 | Dwarf debugger (r2frida GUI) | 0 |
+| enovella | @enovella | r2frida wiki, mobile RE | 0 |
+| hexploitable | @hexploitable | iOS r2frida | -1 |
+| cryptax | @cryptax | Android droidlysis | -1 |
+| bmorphism | @bmorphism | r2 Zignatures (2020) | 0 |
+| as0ler | @asoler | iOS instrumentation | +1 |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb radare2-hatchery\stopverb} — Static analysis MCP server}
+\li{\code{\startverb reverse-engineering\stopverb} — Multi-tool RE (Ghidra, IDA, r2)}
+\li{\code{\startverb dwarf-expert\stopverb} — DWARF debug format analysis}
+\li{\code{\startverb cantordust-viz\stopverb} — Binary visualization}
+\li{\code{\startverb blackhat-go\stopverb} — Offensive security techniques}
+\li{\code{\startverb aflpp\stopverb} — AFL++ fuzzing}
+\li{\code{\startverb entry-point-analyzer\stopverb} — Binary entry point analysis}
+\li{\code{\startverb harness-writing\stopverb} — Fuzzing harness creation}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[r2frida GitHub](https://github.com/nowsecure/r2frida)}
+\li{[r2frida Wiki](https://github.com/enovella/r2frida-wiki)}
+\li{[Frida Handbook - r2frida](https://learnfrida.info/r2frida/)}
+\li{[Radare2 Book - r2frida](https://book.rada.re/r2frida/intro.html)}
+\li{[OWASP MASTG r2frida](https://mas.owasp.org/MASTG/tools/generic/MASTG-TOOL-0036/)}
+\li{[Frida MCP Server](https://github.com/zhizhuodemao/frida-mcp)}
+\li{[Ringzer0 r2frida Training](https://ringzer0.training/)}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{\strong{Primary Chapter}: 7. Propagators}
+
+\p{r2frida propagates constraints bidirectionally between static knowledge (what the binary \em{is}) and dynamic observation (what the process \em{does}). The \code{\startverb :\stopverb} command interface is a propagator network where each trace/hook/intercept is a cell that merges information from both directions.}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+r2frida (0) + SDF.Ch7 (0) + [balancer] (0) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - the bridge that makes static and dynamic cohere)}
+}
+}
+}

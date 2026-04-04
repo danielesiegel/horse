@@ -1,0 +1,44 @@
+\title{Goblins}
+
+\taxon{skill}
+
+\meta{description}{Distributed object capability system (6.5K lines info).}
+
+\subtree{
+\title{goblins}
+\p{Distributed object capability system (6.5K lines info).}
+
+\subtree{
+\title{Model}
+\pre{\startverb
+peer → vat → actormap → {refr: behavior}
+\stopverb}
+}
+
+\subtree{
+\title{Operators}
+\pre{\startverb
+($  obj method args...)   ; Sync (near only)
+(<- obj method args...)   ; Async (near/far)
+\stopverb}
+}
+
+\subtree{
+\title{Vat}
+\pre{\startverb
+(define vat (spawn-vat))
+(define greeter
+  (vat-spawn vat
+    (lambda (bcom)
+      (lambda (name)
+        (format #f "Hello, ~a!" name)))))
+
+($ greeter "World")  ; => "Hello, World!"
+\stopverb}
+}
+
+\subtree{
+\title{OCapN}
+\p{Object Capability Network for secure p2p via CapTP.}
+}
+}

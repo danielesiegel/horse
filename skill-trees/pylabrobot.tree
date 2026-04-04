@@ -1,0 +1,225 @@
+\title{Pylabrobot}
+
+\taxon{skill}
+
+\meta{description}{Laboratory automation toolkit for controlling liquid handlers, plate readers, pumps, heater shakers, incubators, centrifuges, and analytical equipment. Use this skill when automating laboratory workflows, programming liquid handling robots (Hamilton STAR, Opentrons OT-2, Tecan EVO), integrating lab equipment, managing deck layouts and resources (plates, tips, containers), reading plates, or creating reproducible laboratory protocols. Applicable for both simulated protocols and physical hardware control.}
+
+\subtree{
+\title{PyLabRobot}
+\subtree{
+\title{Overview}
+\p{PyLabRobot is a hardware-agnostic, pure Python Software Development Kit for automated and autonomous laboratories. Use this skill to control liquid handling robots, plate readers, pumps, heater shakers, incubators, centrifuges, and other laboratory automation equipment through a unified Python interface that works across platforms (Windows, macOS, Linux).}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when:}
+
+\ul{
+\li{Programming liquid handling robots (Hamilton STAR/STARlet, Opentrons OT-2, Tecan EVO)}
+\li{Automating laboratory workflows involving pipetting, sample preparation, or analytical measurements}
+\li{Managing deck layouts and laboratory resources (plates, tips, containers, troughs)}
+\li{Integrating multiple lab devices (liquid handlers, plate readers, heater shakers, pumps)}
+\li{Creating reproducible laboratory protocols with state management}
+\li{Simulating protocols before running on physical hardware}
+\li{Reading plates using BMG CLARIOstar or other supported plate readers}
+\li{Controlling temperature, shaking, centrifugation, or other material handling operations}
+\li{Working with laboratory automation in Python}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{PyLabRobot provides comprehensive laboratory automation through six main capability areas, each detailed in the references/ directory:}
+
+\subtree{
+\title{1. Liquid Handling (\code{\startverb references/liquid-handling.md\stopverb})}
+\p{Control liquid handling robots for aspirating, dispensing, and transferring liquids. Key operations include:}
+
+\ul{
+\li{\strong{Basic Operations}: Aspirate, dispense, transfer liquids between wells}
+\li{\strong{Tip Management}: Pick up, drop, and track pipette tips automatically}
+\li{\strong{Advanced Techniques}: Multi-channel pipetting, serial dilutions, plate replication}
+\li{\strong{Volume Tracking}: Automatic tracking of liquid volumes in wells}
+\li{\strong{Hardware Support}: Hamilton STAR/STARlet, Opentrons OT-2, Tecan EVO, and others}
+}
+}
+
+\subtree{
+\title{2. Resource Management (\code{\startverb references/resources.md\stopverb})}
+\p{Manage laboratory resources in a hierarchical system:}
+
+\ul{
+\li{\strong{Resource Types}: Plates, tip racks, troughs, tubes, carriers, and custom labware}
+\li{\strong{Deck Layout}: Assign resources to deck positions with coordinate systems}
+\li{\strong{State Management}: Track tip presence, liquid volumes, and resource states}
+\li{\strong{Serialization}: Save and load deck layouts and states from JSON files}
+\li{\strong{Resource Discovery}: Access wells, tips, and containers through intuitive APIs}
+}
+}
+
+\subtree{
+\title{3. Hardware Backends (\code{\startverb references/hardware-backends.md\stopverb})}
+\p{Connect to diverse laboratory equipment through backend abstraction:}
+
+\ul{
+\li{\strong{Liquid Handlers}: Hamilton STAR (full support), Opentrons OT-2, Tecan EVO}
+\li{\strong{Simulation}: ChatterboxBackend for protocol testing without hardware}
+\li{\strong{Platform Support}: Works on Windows, macOS, Linux, and Raspberry Pi}
+\li{\strong{Backend Switching}: Change robots by swapping backend without rewriting protocols}
+}
+}
+
+\subtree{
+\title{4. Analytical Equipment (\code{\startverb references/analytical-equipment.md\stopverb})}
+\p{Integrate plate readers and analytical instruments:}
+
+\ul{
+\li{\strong{Plate Readers}: BMG CLARIOstar for absorbance, luminescence, fluorescence}
+\li{\strong{Scales}: Mettler Toledo integration for mass measurements}
+\li{\strong{Integration Patterns}: Combine liquid handlers with analytical equipment}
+\li{\strong{Automated Workflows}: Move plates between devices automatically}
+}
+}
+
+\subtree{
+\title{5. Material Handling (\code{\startverb references/material-handling.md\stopverb})}
+\p{Control environmental and material handling equipment:}
+
+\ul{
+\li{\strong{Heater Shakers}: Hamilton HeaterShaker, Inheco ThermoShake}
+\li{\strong{Incubators}: Inheco and Thermo Fisher incubators with temperature control}
+\li{\strong{Centrifuges}: Agilent VSpin with bucket positioning and spin control}
+\li{\strong{Pumps}: Cole Parmer Masterflex for fluid pumping operations}
+\li{\strong{Temperature Control}: Set and monitor temperatures during protocols}
+}
+}
+
+\subtree{
+\title{6. Visualization & Simulation (\code{\startverb references/visualization.md\stopverb})}
+\p{Visualize and simulate laboratory protocols:}
+
+\ul{
+\li{\strong{Browser Visualizer}: Real-time 3D visualization of deck state}
+\li{\strong{Simulation Mode}: Test protocols without physical hardware}
+\li{\strong{State Tracking}: Monitor tip presence and liquid volumes visually}
+\li{\strong{Deck Editor}: Graphical tool for designing deck layouts}
+\li{\strong{Protocol Validation}: Verify protocols before running on hardware}
+}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\p{To get started with PyLabRobot, install the package and initialize a liquid handler:}
+
+\pre{\startverb
+# Install PyLabRobot
+# uv pip install pylabrobot
+
+# Basic liquid handling setup
+from pylabrobot.liquid_handling import LiquidHandler
+from pylabrobot.liquid_handling.backends import STAR
+from pylabrobot.resources import STARLetDeck
+
+# Initialize liquid handler
+lh = LiquidHandler(backend=STAR(), deck=STARLetDeck())
+await lh.setup()
+
+# Basic operations
+await lh.pick_up_tips(tip_rack["A1:H1"])
+await lh.aspirate(plate["A1"], vols=100)
+await lh.dispense(plate["A2"], vols=100)
+await lh.drop_tips()
+\stopverb}
+}
+
+\subtree{
+\title{Working with References}
+\p{This skill organizes detailed information across multiple reference files. Load the relevant reference when:}
+
+\ul{
+\li{\strong{Liquid Handling}: Writing pipetting protocols, tip management, transfers}
+\li{\strong{Resources}: Defining deck layouts, managing plates/tips, custom labware}
+\li{\strong{Hardware Backends}: Connecting to specific robots, switching platforms}
+\li{\strong{Analytical Equipment}: Integrating plate readers, scales, or analytical devices}
+\li{\strong{Material Handling}: Using heater shakers, incubators, centrifuges, pumps}
+\li{\strong{Visualization}: Simulating protocols, visualizing deck states}
+}
+
+\p{All reference files can be found in the \code{\startverb references/\stopverb} directory and contain comprehensive examples, API usage patterns, and best practices.}
+}
+
+\subtree{
+\title{Best Practices}
+\p{When creating laboratory automation protocols with PyLabRobot:}
+
+\ol{
+\li{\strong{Start with Simulation}: Use ChatterboxBackend and the visualizer to test protocols before running on hardware}
+\li{\strong{Enable Tracking}: Turn on tip tracking and volume tracking for accurate state management}
+\li{\strong{Resource Naming}: Use clear, descriptive names for all resources (plates, tip racks, containers)}
+\li{\strong{State Serialization}: Save deck layouts and states to JSON for reproducibility}
+\li{\strong{Error Handling}: Implement proper async error handling for hardware operations}
+\li{\strong{Temperature Control}: Set temperatures early as heating/cooling takes time}
+\li{\strong{Modular Protocols}: Break complex workflows into reusable functions}
+\li{\strong{Documentation}: Reference official docs at https://docs.pylabrobot.org for latest features}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Liquid Transfer Protocol}
+\pre{\startverb
+# Setup
+lh = LiquidHandler(backend=STAR(), deck=STARLetDeck())
+await lh.setup()
+
+# Define resources
+tip_rack = TIP_CAR_480_A00(name="tip_rack")
+source_plate = Cos_96_DW_1mL(name="source")
+dest_plate = Cos_96_DW_1mL(name="dest")
+
+lh.deck.assign_child_resource(tip_rack, rails=1)
+lh.deck.assign_child_resource(source_plate, rails=10)
+lh.deck.assign_child_resource(dest_plate, rails=15)
+
+# Transfer protocol
+await lh.pick_up_tips(tip_rack["A1:H1"])
+await lh.transfer(source_plate["A1:H12"], dest_plate["A1:H12"], vols=100)
+await lh.drop_tips()
+\stopverb}
+}
+
+\subtree{
+\title{Plate Reading Workflow}
+\pre{\startverb
+# Setup plate reader
+from pylabrobot.plate_reading import PlateReader
+from pylabrobot.plate_reading.clario_star_backend import CLARIOstarBackend
+
+pr = PlateReader(name="CLARIOstar", backend=CLARIOstarBackend())
+await pr.setup()
+
+# Set temperature and read
+await pr.set_temperature(37)
+await pr.open()
+# (manually or robotically load plate)
+await pr.close()
+data = await pr.read_absorbance(wavelength=450)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation}: https://docs.pylabrobot.org}
+\li{\strong{GitHub Repository}: https://github.com/PyLabRobot/pylabrobot}
+\li{\strong{Community Forum}: https://discuss.pylabrobot.org}
+\li{\strong{PyPI Package}: https://pypi.org/project/PyLabRobot/}
+}
+
+\p{For detailed usage of specific capabilities, refer to the corresponding reference file in the \code{\startverb references/\stopverb} directory.}
+}
+}

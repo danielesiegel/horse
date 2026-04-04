@@ -1,0 +1,128 @@
+\title{Conducting Pass The Ticket Attack}
+
+\taxon{skill}
+
+\tag{red-team}
+
+\tag{adversary-simulation}
+
+\tag{mitre-attack}
+
+\tag{exploitation}
+
+\tag{post-exploitation}
+
+\tag{kerberos}
+
+\tag{pass-the-ticket}
+
+\tag{lateral-movement}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Pass-the-Ticket (PtT) is a lateral movement technique that uses stolen Kerberos tickets (TGT or TGS) to authenticate to services without knowing the user's password. By extracting Kerberos tickets fro}
+
+\subtree{
+\title{Conducting Pass-the-Ticket Attack}
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+
+\subtree{
+\title{Overview}
+\p{Pass-the-Ticket (PtT) is a lateral movement technique that uses stolen Kerberos tickets (TGT or TGS) to authenticate to services without knowing the user's password. By extracting Kerberos tickets from memory (LSASS) on a compromised host, an attacker can inject those tickets into their own session to impersonate the ticket owner and access resources as that user.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve conducting pass the ticket attack}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with red teaming concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{MITRE ATT&CK Mapping}
+\ul{
+\li{\strong{T1550.003} - Use Alternate Authentication Material: Pass the Ticket}
+\li{\strong{T1003.001} - OS Credential Dumping: LSASS Memory}
+\li{\strong{T1558} - Steal or Forge Kerberos Tickets}
+\li{\strong{T1021.002} - Remote Services: SMB/Windows Admin Shares}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: Ticket Extraction}
+\ol{
+\li{Gain local admin access on target workstation}
+\li{Dump Kerberos tickets from LSASS memory using Mimikatz or Rubeus}
+\li{Export tickets in .kirbi format (Mimikatz) or base64 (Rubeus)}
+\li{Identify high-value tickets (Domain Admin TGTs, service tickets to critical systems)}
+}
+}
+
+\subtree{
+\title{Phase 2: Ticket Injection}
+\ol{
+\li{Purge existing Kerberos tickets from attacker session}
+\li{Import/inject stolen ticket into current session}
+\li{Verify ticket is loaded and valid}
+\li{Access target resources using injected ticket}
+}
+}
+
+\subtree{
+\title{Phase 3: Lateral Movement}
+\ol{
+\li{Access remote systems using the stolen ticket identity}
+\li{Perform actions as the impersonated user}
+\li{Collect additional credentials from accessed systems}
+\li{Document evidence of successful lateral movement}
+}
+}
+}
+
+\subtree{
+\title{Tools and Resources}
+\pre{\startverb
+| Tool | Purpose | Command |
+|------|---------|---------|
+| Mimikatz | Ticket export/import | sekurlsa::tickets /export, kerberos::ptt |
+| Rubeus | Ticket dumping and injection | dump, ptt, tgtdeleg |
+| Impacket ticketConverter | Convert between formats | ticketConverter.py ticket.kirbi ticket.ccache |
+| Impacket psexec/smbexec | Remote execution with ticket | KRB5CCNAME=ticket.ccache psexec.py |
+\stopverb}
+}
+
+\subtree{
+\title{Detection Indicators}
+\ul{
+\li{Event ID 4768 with unusual client addresses}
+\li{Event ID 4769 service ticket requests from unexpected hosts}
+\li{TGT usage from different IP than the TGT was issued to}
+\li{Multiple authentications from same ticket across different workstations}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Kerberos tickets extracted from compromised host}
+\li{[ ] Tickets injected into attacker session}
+\li{[ ] Lateral movement demonstrated using stolen tickets}
+\li{[ ] Evidence captured for reporting}
+}
+}
+}

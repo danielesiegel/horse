@@ -1,0 +1,300 @@
+\title{Netlify Deploy}
+
+\taxon{skill}
+
+\meta{description}{Deploy web projects to Netlify using the Netlify CLI (`npx netlify`). Use when the user asks to deploy, host, publish, or link a site/repo on Netlify, including preview and production deploys.}
+
+\subtree{
+\title{Netlify Deployment Skill}
+\p{Deploy web projects to Netlify using the Netlify CLI with intelligent detection of project configuration and deployment context.}
+
+\subtree{
+\title{Overview}
+\p{This skill automates Netlify deployments by:}
+
+\ul{
+\li{Verifying Netlify CLI authentication}
+\li{Detecting project configuration and framework}
+\li{Linking to existing sites or creating new ones}
+\li{Deploying to production or preview environments}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{\strong{Netlify CLI}: Installed via npx (no global install required)}
+\li{\strong{Authentication}: Netlify account with active login session}
+\li{\strong{Project}: Valid web project in current directory}
+\li{When sandboxing blocks the deployment network calls, rerun with \code{\startverb sandbox_permissions=require_escalated\stopverb}.}
+\li{The deployment might take a few minutes. Use appropriate timeout values.}
+}
+}
+
+\subtree{
+\title{Authentication Pattern}
+\p{The skill uses the \strong{pre-authenticated Netlify CLI} approach:}
+
+\ol{
+\li{Check authentication status with \code{\startverb npx netlify status\stopverb}}
+\li{If not authenticated, guide user through \code{\startverb npx netlify login\stopverb}}
+\li{Fail gracefully if authentication cannot be established}
+}
+
+\p{Authentication uses either:}
+
+\ul{
+\li{\strong{Browser-based OAuth} (primary): \code{\startverb netlify login\stopverb} opens browser for authentication}
+\li{\strong{API Key} (alternative): Set \code{\startverb NETLIFY_AUTH_TOKEN\stopverb} environment variable}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{1. Verify Netlify CLI Authentication}
+\p{Check if the user is logged into Netlify:}
+
+\pre{\startverb
+npx netlify status
+\stopverb}
+
+\p{\strong{Expected output patterns}:}
+
+\ul{
+\li{✅ Authenticated: Shows logged-in user email and site link status}
+\li{❌ Not authenticated: "Not logged into any site" or authentication error}
+}
+
+\p{\strong{If not authenticated}, guide the user:}
+
+\pre{\startverb
+npx netlify login
+\stopverb}
+
+\p{This opens a browser window for OAuth authentication. Wait for user to complete login, then verify with \code{\startverb netlify status\stopverb} again.}
+
+\p{\strong{Alternative: API Key authentication}}
+
+\p{If browser authentication isn't available, users can set:}
+
+\pre{\startverb
+export NETLIFY_AUTH_TOKEN=your_token_here
+\stopverb}
+
+\p{Tokens can be generated at: https://app.netlify.com/user/applications#personal-access-tokens}
+}
+
+\subtree{
+\title{2. Detect Site Link Status}
+\p{From \code{\startverb netlify status\stopverb} output, determine:}
+
+\ul{
+\li{\strong{Linked}: Site already connected to Netlify (shows site name/URL)}
+\li{\strong{Not linked}: Need to link or create site}
+}
+}
+
+\subtree{
+\title{3. Link to Existing Site or Create New}
+\p{\strong{If already linked} → Skip to step 4}
+
+\p{\strong{If not linked}, attempt to link by Git remote:}
+
+\pre{\startverb
+# Check if project is Git-based
+git remote show origin
+
+# If Git-based, extract remote URL
+# Format: https://github.com/username/repo or git@github.com:username/repo.git
+
+# Try to link by Git remote
+npx netlify link --git-remote-url <REMOTE_URL>
+\stopverb}
+
+\p{\strong{If link fails} (site doesn't exist on Netlify):}
+
+\pre{\startverb
+# Create new site interactively
+npx netlify init
+\stopverb}
+
+\p{This guides user through:}
+
+\ol{
+\li{Choosing team/account}
+\li{Setting site name}
+\li{Configuring build settings}
+\li{Creating netlify.toml if needed}
+}
+}
+
+\subtree{
+\title{4. Verify Dependencies}
+\p{Before deploying, ensure project dependencies are installed:}
+
+\pre{\startverb
+# For npm projects
+npm install
+
+# For other package managers, detect and use appropriate command
+# yarn install, pnpm install, etc.
+\stopverb}
+}
+
+\subtree{
+\title{5. Deploy to Netlify}
+\p{Choose deployment type based on context:}
+
+\p{\strong{Preview/Draft Deploy} (default for existing sites):}
+
+\pre{\startverb
+npx netlify deploy
+\stopverb}
+
+\p{This creates a deploy preview with a unique URL for testing.}
+
+\p{\strong{Production Deploy} (for new sites or explicit production deployments):}
+
+\pre{\startverb
+npx netlify deploy --prod
+\stopverb}
+
+\p{This deploys to the live production URL.}
+
+\p{\strong{Deployment process}:}
+
+\ol{
+\li{CLI detects build settings (from netlify.toml or prompts user)}
+\li{Builds the project locally}
+\li{Uploads built assets to Netlify}
+\li{Returns deployment URL}
+}
+}
+
+\subtree{
+\title{6. Report Results}
+\p{After deployment, report to user:}
+
+\ul{
+\li{\strong{Deploy URL}: Unique URL for this deployment}
+\li{\strong{Site URL}: Production URL (if production deploy)}
+\li{\strong{Deploy logs}: Link to Netlify dashboard for logs}
+\li{\strong{Next steps}: Suggest \code{\startverb netlify open\stopverb} to view site or dashboard}
+}
+}
+}
+
+\subtree{
+\title{Handling netlify.toml}
+\p{If a \code{\startverb netlify.toml\stopverb} file exists, the CLI uses it automatically. If not, the CLI will prompt for:}
+
+\ul{
+\li{\strong{Build command}: e.g., \code{\startverb npm run build\stopverb}, \code{\startverb next build\stopverb}}
+\li{\strong{Publish directory}: e.g., \code{\startverb dist\stopverb}, \code{\startverb build\stopverb}, \code{\startverb .next\stopverb}}
+}
+
+\p{Common framework defaults:}
+
+\ul{
+\li{\strong{Next.js}: build command \code{\startverb npm run build\stopverb}, publish \code{\startverb .next\stopverb}}
+\li{\strong{React (Vite)}: build command \code{\startverb npm run build\stopverb}, publish \code{\startverb dist\stopverb}}
+\li{\strong{Static HTML}: no build command, publish current directory}
+}
+
+\p{The skill should detect framework from \code{\startverb package.json\stopverb} if possible and suggest appropriate settings.}
+}
+
+\subtree{
+\title{Example Full Workflow}
+\pre{\startverb
+# 1. Check authentication
+npx netlify status
+
+# If not authenticated:
+npx netlify login
+
+# 2. Link site (if needed)
+# Try Git-based linking first
+git remote show origin
+npx netlify link --git-remote-url https://github.com/user/repo
+
+# If no site exists, create new one:
+npx netlify init
+
+# 3. Install dependencies
+npm install
+
+# 4. Deploy (preview for testing)
+npx netlify deploy
+
+# 5. Deploy to production (when ready)
+npx netlify deploy --prod
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\p{Common issues and solutions:}
+
+\p{\strong{"Not logged in"} → Run \code{\startverb npx netlify login\stopverb}}
+
+\p{\strong{"No site linked"} → Run \code{\startverb npx netlify link\stopverb} or \code{\startverb npx netlify init\stopverb}}
+
+\p{\strong{"Build failed"} → Check build command and publish directory in netlify.toml or CLI prompts → Verify dependencies are installed → Review build logs for specific errors}
+
+\p{\strong{"Publish directory not found"} → Verify build command ran successfully → Check publish directory path is correct}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Escalated Network Access}
+\p{If deployment fails due to network issues (timeouts, DNS errors, connection resets), rerun the deploy with escalated permissions (use \code{\startverb sandbox_permissions=require_escalated\stopverb}). The deploy requires escalated network access when sandbox networking blocks outbound requests.}
+
+\p{Example guidance to the user:}
+
+\pre{\startverb
+The deploy needs escalated network access to deploy to Netlify. I can rerun the command with escalated permissions—want me to proceed?
+\stopverb}
+}
+}
+
+\subtree{
+\title{Environment Variables}
+\p{For secrets and configuration:}
+
+\ol{
+\li{Never commit secrets to Git}
+\li{Set in Netlify dashboard: Site Settings → Environment Variables}
+\li{Access in builds via \code{\startverb process.env.VARIABLE_NAME\stopverb}}
+}
+}
+
+\subtree{
+\title{Tips}
+\ul{
+\li{Use \code{\startverb netlify deploy\stopverb} (no \code{\startverb --prod\stopverb}) first to test before production}
+\li{Run \code{\startverb netlify open\stopverb} to view site in Netlify dashboard}
+\li{Run \code{\startverb netlify logs\stopverb} to view function logs (if using Netlify Functions)}
+\li{Use \code{\startverb netlify dev\stopverb} for local development with Netlify Functions}
+}
+}
+
+\subtree{
+\title{Reference}
+\ul{
+\li{Netlify CLI Docs: https://docs.netlify.com/cli/get-started/}
+\li{netlify.toml Reference: https://docs.netlify.com/configure-builds/file-based-configuration/}
+}
+}
+
+\subtree{
+\title{Bundled References (Load As Needed)}
+\ul{
+\li{[CLI commands](references/cli-commands.md)}
+\li{[Deployment patterns](references/deployment-patterns.md)}
+\li{[netlify.toml guide](references/netlify-toml.md)}
+}
+}
+}

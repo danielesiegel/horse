@@ -1,0 +1,346 @@
+\title{Frustration Eradication}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Frustration Eradication Skill}
+
+\subtree{
+\title{Frustration Eradication Skill}
+\blockquote{Layer 0: Pre-Response Validation for Persistent User Preferences}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: -1 (MINUS - Validator/Constrainer) \strong{Bundle}: meta-enforcement}
+
+\subtree{
+\title{Overview}
+\p{This skill enforces user preferences that historically don't persist across sessions. It implements the Frustration Index — a ranked list of patterns where repeated requests fail to stick.}
+
+\p{\strong{Core Insight}: Preferences stated once should persist forever. This skill validates every response against known frustration patterns before output.}
+}
+
+\subtree{
+\title{Frustration Index (Ranked by Persistence Score)}
+\pre{\startverb
+| Rank | Pattern | Persistence | Enforcement |
+|------|---------|-------------|-------------|
+| 1 | Banned voices (Daniel, novelty) | 2/10 | Voice allowlist check |
+| 2 | Subagent bypass | 2/10 | Task tool mandate |
+| 3 | derive-resource-account-address | 3/10 | Aptos wallet validation |
+| 4 | web_search vs Exa | 3/10 | MCP tool inheritance |
+| 5 | Sequential vs parallel | 4/10 | Trifurcation default |
+| 6 | Response verbosity | 4/10 | Line count check |
+| 7 | GF(3) conservation | 5/10 | Σ trits = 0 assertion |
+| 8 | Comments in code | 5/10 | Comment detection |
+| 9 | Declarative preference | 6/10 | Config lang suggestion |
+| 10 | 3 skills per interaction | 6/10 | Skill count check |
+\stopverb}
+}
+
+\subtree{
+\title{Pre-Response Validation Checklist}
+\p{Before EVERY response, validate:}
+
+\pre{\startverb
+frustration_checklist:
+  voices:
+    banned: [all native en_* voices - Samantha, Ava, Karen, Daniel, etc.]
+    allowed: [_, non-English voices speaking English, novelty voices for effects]
+    rule: ALL skills use "say -v _" - say-narration resolves voice
+    
+  subagents:
+    rule: "NEVER say 'I'll implement instead of subagents'"
+    enforcement: use_task_tool_for_parallel_work
+    
+  search:
+    banned: web_search (in Task subagents)
+    required: mcp__exa__* tools
+    pass_to_subagent: "CRITICAL: Use mcp__exa__web_search_exa, NOT web_search"
+    
+  parallelism:
+    default: trifurcate_into_3_task_agents
+    sequential_requires: explicit_justification
+    
+  verbosity:
+    max_lines: 4 (unless user asks for detail)
+    no_summaries: true
+    no_preamble: true
+    no_postamble: true
+    
+  code:
+    no_comments: true (unless requested)
+    no_ts_ignore: true
+    no_as_any: true
+    
+  gf3:
+    conservation: Σ trits ≡ 0 (mod 3)
+    verify_after: every_trifurcation
+    
+  skills:
+    per_interaction: 3
+    include: plurigrid-asi-integrated
+    assign_trits: [-1, 0, +1]
+    
+  aptos:
+    banned: derive-resource-account-address (for wallets)
+    validate_before: any_funding_operation
+\stopverb}
+}
+
+\subtree{
+\title{Validation Functions}
+\subtree{
+\title{1. validate_voices}
+\pre{\startverb
+# Check for banned voices in response
+validate_voices() {
+  local banned="Daniel|Albert|Bad News|Bells|Boing|Bubbles|Cellos|Zarvox"
+  if echo "$RESPONSE" | grep -qE "say -v ($banned)"; then
+    echo "❌ BANNED VOICE DETECTED"
+    return 1
+  fi
+  return 0
+}
+\stopverb}
+}
+
+\subtree{
+\title{2. validate_subagent_usage}
+\pre{\startverb
+def validate_subagent_usage(response: str) -> bool:
+    """Ensure Task tool is used for parallel work."""
+    banned_phrases = [
+        "I'll implement instead of subagents",
+        "I'll do this sequentially",
+        "Let me handle this myself"
+    ]
+    for phrase in banned_phrases:
+        if phrase.lower() in response.lower():
+            return False
+    return True
+\stopverb}
+}
+
+\subtree{
+\title{3. validate_search_tools}
+\pre{\startverb
+def validate_task_prompt(prompt: str) -> str:
+    """Inject Exa requirement into Task prompts."""
+    exa_warning = """
+CRITICAL: Do NOT use web_search. Use only:
+- mcp__exa__web_search_exa for semantic search
+- mcp__exa__crawling_exa for URL content
+- finder, Grep, Read for local files
+"""
+    return prompt + "\n\n" + exa_warning
+\stopverb}
+}
+
+\subtree{
+\title{4. validate_gf3_conservation}
+\pre{\startverb
+def validate_gf3(trits: list[int]) -> bool:
+    """Verify GF(3) conservation: Σ trits ≡ 0 (mod 3)."""
+    return sum(trits) % 3 == 0
+\stopverb}
+}
+
+\subtree{
+\title{5. validate_response_length}
+\pre{\startverb
+def validate_verbosity(response: str, max_lines: int = 4) -> bool:
+    """Check response doesn't exceed line limit."""
+    lines = [l for l in response.split('\n') if l.strip()]
+    # Exclude code blocks and tool outputs
+    prose_lines = [l for l in lines if not l.startswith('```')]
+    return len(prose_lines) <= max_lines
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Ruler}
+\p{This skill's constraints are automatically propagated via Ruler to:}
+
+\pre{\startverb
+~/.ruler/AGENTS.md           # Source of truth
+~/.claude/CLAUDE.md          # Claude Code
+~/.cursor/rules/             # Cursor
+~/.codex/instructions.md     # Codex
+~/.amp/AGENTS.md             # Amp
+# ... 67+ more agent configs
+\stopverb}
+}
+
+\subtree{
+\title{Triadic Role}
+\pre{\startverb
+| Trit | Skill | Function |
+|------|-------|----------|
+| **-1** | **frustration-eradication** | Validate/Constrain |
+| 0 | ruler | Coordinate/Propagate |
+| +1 | skill-evolution | Generate/Improve |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Automatic (Recommended)}
+\p{Load this skill at session start:}
+
+\pre{\startverb
+skill frustration-eradication
+\stopverb}
+
+\p{It will automatically inject validation into the response pipeline.}
+}
+
+\subtree{
+\title{Manual Validation}
+\pre{\startverb
+# Check current response for violations
+just frustration-check
+
+# Scan all skills for banned patterns
+just frustration-scan-skills
+
+# Update Frustration Index with new pattern
+just frustration-add "pattern_name" "evidence" "persistence_score"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Adding New Frustration Patterns}
+\p{When you identify a new pattern that doesn't persist:}
+
+\ol{
+\li{\strong{Document in FRUSTRATION_INDEX.md}:}
+}
+
+\ol{
+\li{\strong{Add to this skill's checklist}:}
+}
+
+\ol{
+\li{\strong{Propagate via Ruler}:}
+}
+}
+
+\subtree{
+\title{Prediction Market Integration}
+\p{Each frustration pattern has betting odds in [prediction.move](file:///Users/alice/agent-o-rama/agent-o-rama/examples/move/skill_market/sources/prediction.move):}
+
+\pre{\startverb
+// Market outcomes map to GF(3) trits
+// 0 = MINUS (pattern persists = bad)
+// 1 = ERGODIC (partial fix)
+// 2 = PLUS (pattern fixed = good)
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb ruler\stopverb} — Propagates constraints to all agents}
+\li{\code{\startverb self-validation-loop\stopverb} — Runtime validation}
+\li{\code{\startverb bisimulation-game\stopverb} — Verifies equivalence across agents}
+\li{\code{\startverb skill-evolution\stopverb} — Improves skills over time}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just frustration-check        # Validate current session
+just frustration-scan         # Find all violations
+just frustration-fix          # Auto-fix known patterns
+just frustration-report       # Generate compliance report
+just frustration-propagate    # Push to all agents via Ruler
+\stopverb}
+
+\p{*"The best frustration is the one that never happens."*}
+
+\p{*GF(3) Trit: -1 (VALIDATOR — preventing frustration before it occurs)*}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb category-theory\stopverb}: 139 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+frustration-eradication (+) + SDF.Ch10 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch7: Propagators}
+\li{Ch4: Pattern Matching}
+\li{Ch6: Layering}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

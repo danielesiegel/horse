@@ -1,0 +1,186 @@
+\title{Transformers}
+
+\taxon{skill}
+
+\meta{description}{This skill should be used when working with pre-trained transformer models for natural language processing, computer vision, audio, or multimodal tasks. Use for text generation, classification, question answering, translation, summarization, image classification, object detection, speech recognition, and fine-tuning models on custom datasets.}
+
+\subtree{
+\title{Transformers}
+\subtree{
+\title{Overview}
+\p{The Hugging Face Transformers library provides access to thousands of pre-trained models for tasks across NLP, computer vision, audio, and multimodal domains. Use this skill to load models, perform inference, and fine-tune on custom data.}
+}
+
+\subtree{
+\title{Installation}
+\p{Install transformers and core dependencies:}
+
+\pre{\startverb
+uv pip install torch transformers datasets evaluate accelerate
+\stopverb}
+
+\p{For vision tasks, add:}
+
+\pre{\startverb
+uv pip install timm pillow
+\stopverb}
+
+\p{For audio tasks, add:}
+
+\pre{\startverb
+uv pip install librosa soundfile
+\stopverb}
+}
+
+\subtree{
+\title{Authentication}
+\p{Many models on the Hugging Face Hub require authentication. Set up access:}
+
+\pre{\startverb
+from huggingface_hub import login
+login()  # Follow prompts to enter token
+\stopverb}
+
+\p{Or set environment variable:}
+
+\pre{\startverb
+export HUGGINGFACE_TOKEN="your_token_here"
+\stopverb}
+
+\p{Get tokens at: https://huggingface.co/settings/tokens}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Use the Pipeline API for fast inference without manual configuration:}
+
+\pre{\startverb
+from transformers import pipeline
+
+# Text generation
+generator = pipeline("text-generation", model="gpt2")
+result = generator("The future of AI is", max_length=50)
+
+# Text classification
+classifier = pipeline("text-classification")
+result = classifier("This movie was excellent!")
+
+# Question answering
+qa = pipeline("question-answering")
+result = qa(question="What is AI?", context="AI is artificial intelligence...")
+\stopverb}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Pipelines for Quick Inference}
+\p{Use for simple, optimized inference across many tasks. Supports text generation, classification, NER, question answering, summarization, translation, image classification, object detection, audio classification, and more.}
+
+\p{\strong{When to use}: Quick prototyping, simple inference tasks, no custom preprocessing needed.}
+
+\p{See \code{\startverb references/pipelines.md\stopverb} for comprehensive task coverage and optimization.}
+}
+
+\subtree{
+\title{2. Model Loading and Management}
+\p{Load pre-trained models with fine-grained control over configuration, device placement, and precision.}
+
+\p{\strong{When to use}: Custom model initialization, advanced device management, model inspection.}
+
+\p{See \code{\startverb references/models.md\stopverb} for loading patterns and best practices.}
+}
+
+\subtree{
+\title{3. Text Generation}
+\p{Generate text with LLMs using various decoding strategies (greedy, beam search, sampling) and control parameters (temperature, top-k, top-p).}
+
+\p{\strong{When to use}: Creative text generation, code generation, conversational AI, text completion.}
+
+\p{See \code{\startverb references/generation.md\stopverb} for generation strategies and parameters.}
+}
+
+\subtree{
+\title{4. Training and Fine-Tuning}
+\p{Fine-tune pre-trained models on custom datasets using the Trainer API with automatic mixed precision, distributed training, and logging.}
+
+\p{\strong{When to use}: Task-specific model adaptation, domain adaptation, improving model performance.}
+
+\p{See \code{\startverb references/training.md\stopverb} for training workflows and best practices.}
+}
+
+\subtree{
+\title{5. Tokenization}
+\p{Convert text to tokens and token IDs for model input, with padding, truncation, and special token handling.}
+
+\p{\strong{When to use}: Custom preprocessing pipelines, understanding model inputs, batch processing.}
+
+\p{See \code{\startverb references/tokenizers.md\stopverb} for tokenization details.}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Pattern 1: Simple Inference}
+\p{For straightforward tasks, use pipelines:}
+
+\pre{\startverb
+pipe = pipeline("task-name", model="model-id")
+output = pipe(input_data)
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Custom Model Usage}
+\p{For advanced control, load model and tokenizer separately:}
+
+\pre{\startverb
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("model-id")
+model = AutoModelForCausalLM.from_pretrained("model-id", device_map="auto")
+
+inputs = tokenizer("text", return_tensors="pt")
+outputs = model.generate(**inputs, max_new_tokens=100)
+result = tokenizer.decode(outputs[0])
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Fine-Tuning}
+\p{For task adaptation, use Trainer:}
+
+\pre{\startverb
+from transformers import Trainer, TrainingArguments
+
+training_args = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=3,
+    per_device_train_batch_size=8,
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+)
+
+trainer.train()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{For detailed information on specific components:}
+
+\ul{
+\li{\strong{Pipelines}: \code{\startverb references/pipelines.md\stopverb} - All supported tasks and optimization}
+\li{\strong{Models}: \code{\startverb references/models.md\stopverb} - Loading, saving, and configuration}
+\li{\strong{Generation}: \code{\startverb references/generation.md\stopverb} - Text generation strategies and parameters}
+\li{\strong{Training}: \code{\startverb references/training.md\stopverb} - Fine-tuning with Trainer API}
+\li{\strong{Tokenizers}: \code{\startverb references/tokenizers.md\stopverb} - Tokenization and preprocessing}
+}
+}
+}

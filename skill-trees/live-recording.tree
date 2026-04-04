@@ -1,0 +1,86 @@
+\title{Live Recording}
+
+\taxon{skill}
+
+\meta{description}{"Always-on audio capture via whisper-cpp to org file with Emacs live display"}
+
+\subtree{
+\title{Live Recording}
+\p{Always-on environmental audio capture. Records continuously, transcribes with whisper-cpp (Metal-accelerated), appends timestamped entries to an org file viewable live in Emacs.}
+
+\subtree{
+\title{Activation}
+\subtree{
+\title{1. Start tmux capture session}
+\pre{\startverb
+tmux new-session -d -s capture \
+  'while true; do bash ~/v/scripts/always-on-capture.sh; echo "[restart] $(date)"; sleep 2; done'
+\stopverb}
+
+\p{The auto-restart loop ensures crash resilience. The script records 6s WAV chunks via ffmpeg avfoundation device \code{\startverb :1\stopverb}, silence-detects via sox RMS (\code{\startverb < 0.005\stopverb}), transcribes non-silent chunks with \code{\startverb whisper-cli --model ~/v/ggml-base.en.bin\stopverb}, and appends \code{\startverb ** [timestamp]\startverb \ntext\stopverb\startverb \n\stopverb\stopverb} entries to \code{\startverb ~/v/audio-capture.org\stopverb}.}
+}
+
+\subtree{
+\title{2. Open in Emacs with live updates}
+\pre{\startverb
+M-x server-start                          ;; required for emacsclient
+C-x C-f ~/v/audio-capture.org             ;; open the file
+M-x auto-revert-tail-mode                 ;; live tail as entries append
+\stopverb}
+
+\p{\code{\startverb auto-revert-tail-mode\stopverb} (not \code{\startverb auto-revert-mode\stopverb}) tails the end of the buffer as new entries arrive, keeping your cursor at the latest transcription.}
+}
+
+\subtree{
+\title{3. Monitor (optional)}
+\pre{\startverb
+tmux attach -t capture          # watch capture output
+tail -f ~/v/audio-capture.org   # terminal tail
+\stopverb}
+}
+}
+
+\subtree{
+\title{Stopping}
+\pre{\startverb
+tmux kill-session -t capture
+\stopverb}
+}
+
+\subtree{
+\title{Configuration (in always-on-capture.sh)}
+\pre{\startverb
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `AUDIO_DEVICE` | `:1` | avfoundation device (`:0` = screen, `:1` = mic) |
+| `CHUNK_SECONDS` | `6` | Recording window per chunk |
+| `SILENCE_THRESHOLD` | `0.005` | RMS below this = silence (suppressed) |
+| `MIN_TEXT_LEN` | `6` | Discard transcriptions shorter than this |
+| `MODEL` | `~/v/ggml-base.en.bin` | Whisper GGML model path |
+| `ORG_FILE` | `~/v/audio-capture.org` | Output org file |
+\stopverb}
+}
+
+\subtree{
+\title{Troubleshooting}
+\pre{\startverb
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| All chunks "no audio" | Wrong device index | `ffmpeg -f avfoundation -list_devices true -i ""` to find mic |
+| All chunks "silence" | Threshold too high | Lower `SILENCE_THRESHOLD` in script (default 0.005) |
+| Emacs not updating | No server-start | `M-x server-start` then reopen file |
+| Emacs not tailing | Wrong mode | Use `auto-revert-tail-mode` not `auto-revert-mode` |
+| Script exits immediately | `set -e` + non-fatal error | Script uses `set -uo pipefail` (no `-e`) |
+\stopverb}
+}
+
+\subtree{
+\title{Related Files}
+\ul{
+\li{\code{\startverb ~/v/audio-capture.org\stopverb} -- live output file}
+\li{\code{\startverb ~/v/scripts/always-on-capture.sh\stopverb} -- capture script}
+\li{\code{\startverb ~/v/audio_acset.duckdb\stopverb} -- structured audio database (ACSets schema)}
+\li{\code{\startverb ~/v/scripts/audio-capture-org.py\stopverb} -- Python/mlx-whisper alternative}
+}
+}
+}

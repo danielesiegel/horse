@@ -1,0 +1,243 @@
+\title{Specter Navigator Gadget}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Unified Specter/Navigator/3-MATCH architecture with bidirectional path compilation}
+
+\subtree{
+\title{Specter Navigator Gadget}
+\subtree{
+\title{Core Concept}
+\p{Integration of \strong{Specter} (bidirectional navigation), \strong{Navigator} (compiled path objects), and \strong{3-MATCH} (constraint satisfaction) into a unified system for structure traversal and transformation.}
+
+\p{A Navigator is a compiled path expression that can be used for both selecting and transforming values within nested data structures. Each Navigator encodes one or more constraints (Gadgets) from a 3-SAT-like problem space.}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{Key Components}
+\p{\strong{1. Navigator} - Compiled path expressions}
+
+\pre{\startverb
+struct Navigator
+    path::Vector{NavigationStep}  # Steps in the traversal
+    constraints::Vector{Gadget}   # 3-MATCH constraints
+    cache_key::UInt64            # Hash for inline caching
+end
+\stopverb}
+
+\p{\strong{2. Gadget} - Individual constraint unit}
+
+\pre{\startverb
+struct Gadget
+    name::String
+    predicate::Function           # Selection/filtering predicate
+    compose_strategy::Symbol      # :all, :any, :sequential
+end
+\stopverb}
+
+\p{\strong{3. Navigation Steps} (various types)}
+
+\ul{
+\li{\code{\startverb ALL\stopverb} - Navigate to all collection members}
+\li{\code{\startverb keypath(key)\stopverb} - Navigate to dictionary key}
+\li{\code{\startverb pred(predicate)\stopverb} - Filter by predicate}
+\li{\code{\startverb SEXP_HEAD\stopverb} / \code{\startverb sexp_nth(n)\stopverb} - S-expression navigation}
+\li{\code{\startverb INDEX(i)\stopverb} - Direct indexing}
+}
+}
+
+\subtree{
+\title{Compilation Pipeline}
+\pre{\startverb
+Path Expression
+    ↓
+coerce_nav() - converts to Navigator objects
+    ↓
+Constraint checking - verifies 3-MATCH satisfiability
+    ↓
+Inline caching via @late_nav / @compiled_select
+    ↓
+nav_select() / nav_transform() - execution
+\stopverb}
+}
+}
+
+\subtree{
+\title{API}
+\subtree{
+\title{Macros}
+\p{\strong{\code{\startverb @late_nav(path_expr)\stopverb}} Compiles and caches a navigation path, returning a reusable Navigator:}
+
+\pre{\startverb
+nav = @late_nav([ALL, pred(iseven)])
+results = nav_select(nav, [1,2,3,4,5], x -> [x])
+# => [2, 4]
+\stopverb}
+
+\p{\strong{\code{\startverb @compiled_select(path, structure)\stopverb}} Combines compilation, caching, and selection in one call:}
+
+\pre{\startverb
+results = @compiled_select([ALL, pred(iseven)], [1,2,3,4,5])
+# => [2, 4]
+\stopverb}
+}
+
+\subtree{
+\title{Core Functions}
+\p{\strong{\code{\startverb coerce_nav(path_expr) :: Navigator\stopverb}} Converts a path expression to a compiled Navigator object.}
+
+\p{\strong{\code{\startverb nav_select(nav::Navigator, structure, result_fn) :: Vector\stopverb}} Selects all values matching the path, applies result_fn to each.}
+
+\p{\strong{\code{\startverb nav_transform(nav::Navigator, structure, transform_fn) :: Structure\stopverb}} Transforms all values matching the path in-place.}
+
+\p{\strong{\code{\startverb compose_navigators(nav1, nav2) :: Navigator\stopverb}} Composes two Navigators into one. Verifies 3-MATCH constraint satisfiability.}
+}
+}
+
+\subtree{
+\title{Performance Characteristics}
+\pre{\startverb
+| Operation | Time | Notes |
+|-----------|------|-------|
+| First @late_nav call | O(|path|) | Compilation + caching |
+| Subsequent @late_nav | O(1) | Cache lookup |
+| nav_select | O(n⋅|path|) | n = structure size, linear in path length |
+| Constraint checking | O(m) | m = number of gadgets, linear in constraint count |
+\stopverb}
+}
+
+\subtree{
+\title{Integration with 3-MATCH}
+\p{Each path expression can encode constraints that are verifiable via 3-SAT:}
+
+\pre{\startverb
+# Constraint 1: values must be even
+# Constraint 2: values must be > 2
+# Constraint 3: XOR of above (either even or >2, but not both)
+nav = @late_nav([ALL, pred(x -> (iseven(x) && x ≤ 2) || (!iseven(x) && x > 2))])
+\stopverb}
+
+\p{The 3-MATCH system can:}
+
+\ul{
+\li{Verify path compositions are satisfiable before execution}
+\li{Detect infeasible path combinations early}
+\li{Optimize constraint ordering for faster filtering}
+}
+}
+
+\subtree{
+\title{Bidirectionality}
+\p{The same Navigator works for both selection and transformation:}
+
+\pre{\startverb
+# Select even numbers
+selected = nav_select(nav, [1,2,3,4,5], x -> [x])
+
+# Transform even numbers (multiply by 10)
+transformed = nav_transform(nav, [1,2,3,4,5], x -> x * 10)
+# => [1, 20, 3, 40, 5]
+\stopverb}
+}
+
+\subtree{
+\title{Caching Strategy}
+\p{\strong{Global Cache}: \code{\startverb Dict{UInt64, Navigator}()\stopverb}}
+
+\ul{
+\li{Key: hash(path_expr) - computed at compile time}
+\li{Value: compiled Navigator object}
+\li{Per-callsite - different code locations maintain separate entries}
+}
+
+\p{\strong{Cache Invalidation}: Never (by design)}
+
+\ul{
+\li{Paths are immutable after compilation}
+\li{Cache entries are safe indefinitely}
+\li{Memory is the only constraint}
+}
+}
+
+\subtree{
+\title{Composition with Möbius Filtering}
+\p{See \strong{möbius-path-filtering} skill for how non-orientable filtering eliminates invalid paths before Navigator compilation.}
+}
+
+\subtree{
+\title{Composition with Color Envelopes}
+\p{See \strong{color-envelope-preserving} skill for how GF(3) color conservation is enforced across Navigator compositions.}
+}
+
+\subtree{
+\title{Usage Patterns}
+\subtree{
+\title{Nested Dictionary Navigation}
+\pre{\startverb
+data = Dict(
+  "users" => [
+    Dict("name" => "Alice", "age" => 30, "active" => true),
+    Dict("name" => "Bob", "age" => 25, "active" => false)
+  ]
+)
+
+# Select all active users' names
+nav = @late_nav([keypath("users"), ALL, pred(u -> u["active"]), keypath("name")])
+active_names = nav_select(nav, data, x -> [x])
+# => ["Alice"]
+\stopverb}
+}
+
+\subtree{
+\title{S-expression Navigation}
+\pre{\startverb
+sexp = :(define (square x) (* x x))
+
+# Navigate to function definition head
+nav = @late_nav([sexp_nth(1), SEXP_HEAD])
+func_name = nav_select(nav, sexp, x -> [x])
+# => :square
+\stopverb}
+}
+
+\subtree{
+\title{Constraint-based Filtering}
+\pre{\startverb
+# Find numbers that are odd AND greater than 5
+nav = @late_nav([
+  ALL,
+  pred(x -> isodd(x) && x > 5)
+])
+results = nav_select(nav, [1,3,5,7,9,11], x -> [x])
+# => [7, 9, 11]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\p{\strong{InvalidPathError} - Path expression doesn't compile \strong{UnsatisfiableConstraintError} - 3-MATCH constraints are contradictory \strong{TypeMismatchError} - Structure doesn't match expected shape for path}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{möbius-path-filtering} - Eliminates topologically invalid paths}
+\li{\strong{color-envelope-preserving} - Maintains GF(3) color invariants}
+\li{\strong{three-match} - Core 3-SAT constraint satisfaction engine}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Clojure Specter: https://github.com/redplanetlabs/specter}
+\li{SpecterACSet.jl: \code{\startverb /Users/bob/ies/music-topos/lib/specter_acset.jl\stopverb}}
+\li{Inline caching paper: "Just in Time Specialization" - Bolz et al.}
+}
+}
+}

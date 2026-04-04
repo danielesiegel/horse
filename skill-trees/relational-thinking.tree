@@ -1,0 +1,181 @@
+\title{Relational Thinking}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Intent taxonomy and morphisms across 15 amp threads}
+
+\subtree{
+\title{Relational Thinking Skill}
+\blockquote{*"Structure is the invariant under transformation."*}
+
+\subtree{
+\title{Overview}
+\p{This skill provides a \strong{relational thinking structure} that organizes 15 amp threads into 6 intent clusters with explicit morphisms between them. All clusters maintain GF(3) conservation.}
+}
+
+\subtree{
+\title{Intent Clusters}
+\pre{\startverb
+| Cluster | Trit | Threads | Key Bridge |
+|---------|------|---------|------------|
+| Triadic Algebra | -1 | 3 | SHA3 ↔ GF(3) ↔ PlusCode |
+| Skill Orchestration | 0 | 3 | 443 skills ↔ OSIS ↔ triplets |
+| Energy Policy | +1 | 2 | SMR ↔ Plurigrid ↔ dominance |
+| Topological ASI | 0 | 2 | 26 worlds ↔ Unworld ↔ Narya |
+| System Introspection | -1 | 2 | PID ↔ radare2 ↔ process |
+| Implementation | +1 | 3 | Zig ↔ MCP ↔ wallet |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+Core:  Triadic(-1) ⊗ Skill(0) ⊗ Energy(+1) = 0
+Meta:  System(-1) ⊗ Topo(0) ⊗ Impl(+1) = 0
+\stopverb}
+}
+
+\subtree{
+\title{Thread Mapping}
+\subtree{
+\title{Triadic Algebra (-1)}
+\ul{
+\li{\code{\startverb amp-thread-sha3-conversion-gf3-conservation.md\stopverb} (148 msg)}
+\li{\code{\startverb amp-thread-gf3-geographic-ripple-repl.md\stopverb} (79 msg)}
+\li{\code{\startverb amp-thread-prime-length-plus-code-frontrun.md\stopverb} (151 msg)}
+}
+}
+
+\subtree{
+\title{Skill Orchestration (0)}
+\ul{
+\li{\code{\startverb amp-thread-skill-orchestration-framework.md\stopverb} (51 msg)}
+\li{\code{\startverb amp-thread-skill-analysis-ssh-hatchery.md\stopverb} (123 msg)}
+\li{\code{\startverb amp-thread-push-skills-enable-uv-uvx.md\stopverb} (19 msg)}
+}
+}
+
+\subtree{
+\title{Energy Policy (+1)}
+\ul{
+\li{\code{\startverb amp-thread-energy-dominance-agenda-synthesis.md\stopverb} (70 msg)}
+\li{\code{\startverb amp-thread-energy-dominance-co-occurring.md\stopverb} (35 msg)}
+}
+}
+
+\subtree{
+\title{Topological ASI (0)}
+\ul{
+\li{\code{\startverb amp-thread-topological-superintelligence-readme.md\stopverb} (144 msg)}
+\li{\code{\startverb amp-thread-find-aptos-society-zubyul.md\stopverb} (115 msg)}
+}
+}
+
+\subtree{
+\title{System Introspection (-1)}
+\ul{
+\li{\code{\startverb amp-thread-locate-process-in-parent-pid-tree.md\stopverb} (47 msg)}
+\li{\code{\startverb amp-thread-find-process-in-pid-tree-with-parent.md\stopverb} (102 msg)}
+}
+}
+
+\subtree{
+\title{Implementation (+1)}
+\ul{
+\li{\code{\startverb amp-thread-zig-benchmark-compilation-error.md\stopverb} (94 msg)}
+\li{\code{\startverb amp-thread-mcps-per-letter-wallet-count.md\stopverb} (149 msg)}
+\li{\code{\startverb amp-thread-zubyul-skill-implementation.md\stopverb} (24 msg)}
+}
+}
+}
+
+\subtree{
+\title{Morphism Types}
+\pre{\startverb
+| Type | Description | Example |
+|------|-------------|---------|
+| `composition` | A → B → C | SHA3 → Geographic → PlusCode |
+| `bridge` | Cross-cluster | Triadic → Skill (balance constraint) |
+| `reflection` | Self-loop | Zubyul ↔ Zubyul (implementation feedback) |
+| `adjunction` | Free/Forgetful | Energy ⊣ Policy |
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Query Cluster}
+\pre{\startverb
+# Find threads in a cluster
+grep -l "GF(3)" ~/amp-thread-*.md
+
+# Count by intent
+ls ~/amp-thread-*.md | wc -l  # 15
+\stopverb}
+}
+
+\subtree{
+\title{Load into DuckDB}
+\pre{\startverb
+ATTACH '~/relational_thinking.duckdb' AS rt;
+
+CREATE TABLE rt.clusters AS
+SELECT * FROM read_csv_auto('~/relational-thinking-skill-structure.md');
+\stopverb}
+}
+
+\subtree{
+\title{Navigate Morphisms}
+\pre{\startverb
+;; Babashka navigation
+(def morphisms
+  {:triadic->skill :balance
+   :skill->energy :coexist
+   :energy->topo :smr
+   :topo->system :world
+   :system->impl :binary
+   :impl->triadic :verify})
+
+(defn walk-cluster [from]
+  (get morphisms (keyword (str (name from) "->skill"))))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb triadic-skill-orchestrator\stopverb} - Orchestrates skills in GF(3) triplets}
+\li{\code{\startverb glass-bead-game\stopverb} - Interdisciplinary synthesis}
+\li{\code{\startverb autopoiesis\stopverb} - Self-modifying configuration}
+\li{\code{\startverb gay-mcp\stopverb} - Deterministic color generation}
+\li{\code{\startverb world-extractable-value\stopverb} - Nash/Optimal gap quantification}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{[Full structure document](~/relational-thinking-skill-structure.md)}
+\li{[Skill co-occurrence graph](~/ies/SKILL_COOCCURRENCE_GRAPH.md)}
+\li{[Energy dominance agenda](~/ies/PLURIGRID_ENERGY_DOMINANCE_AGENDA.md)}
+}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

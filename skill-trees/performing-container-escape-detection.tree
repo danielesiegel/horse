@@ -1,0 +1,76 @@
+\title{Performing Container Escape Detection}
+
+\taxon{skill}
+
+\tag{performing}
+
+\tag{container}
+
+\tag{escape}
+
+\tag{detection}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detects container escape attempts by analyzing namespace configurations, privileged container checks, dangerous capability assignments, and host path mounts using the kubernetes Python client. Identifies CVE-2022-0492 style escapes via cgroup abuse. Use when auditing container security posture or investigating escape attempts.}
+
+\subtree{
+\title{Performing Container Escape Detection}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing container escape detection}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with container security concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\p{Audit Kubernetes pods for container escape vectors including privileged mode, dangerous capabilities, host namespace sharing, and writable hostPath mounts.}
+
+\pre{\startverb
+from kubernetes import client, config
+config.load_kube_config()
+v1 = client.CoreV1Api()
+
+pods = v1.list_pod_for_all_namespaces()
+for pod in pods.items:
+    for container in pod.spec.containers:
+        sc = container.security_context
+        if sc and sc.privileged:
+            print(f"PRIVILEGED: {pod.metadata.namespace}/{pod.metadata.name}")
+\stopverb}
+
+\p{Key escape vectors:}
+
+\ol{
+\li{Privileged containers (full host access)}
+\li{CAP_SYS_ADMIN capability}
+\li{Host PID/Network/IPC namespace sharing}
+\li{Writable hostPath mounts to / or /etc}
+\li{Docker socket mount (/var/run/docker.sock)}
+}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+# Check for docker socket mounts
+for vol in pod.spec.volumes or []:
+    if vol.host_path and "docker.sock" in (vol.host_path.path or ""):
+        print(f"Docker socket exposed: {pod.metadata.name}")
+\stopverb}
+}
+}

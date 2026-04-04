@@ -1,0 +1,136 @@
+\title{Algebraic Rewriting}
+
+\taxon{skill}
+
+\meta{description}{Category-theoretic graph rewriting with DPO, SPO, and SqPO pushouts for C-Sets. Declarative transformation of acset data structures.}
+
+\subtree{
+\title{Algebraic Rewriting}
+\subtree{
+\title{Overview}
+\p{\strong{AlgebraicRewriting.jl} is a Julia library for performing category-theoretic rewrites over C-Sets and other Catlab.jl data structures.}
+}
+
+\subtree{
+\title{Rewriting Approaches}
+\pre{\startverb
+| Type | Description | Use Case |
+|------|-------------|----------|
+| **DPO** | Double Pushout | Safe deletion (no dangling edges) |
+| **SPO** | Single Pushout | Greedy deletion |
+| **SqPO** | Sesqui-Pushout | Cloning + deletion |
+\stopverb}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Rewrite Rules}
+\p{A rewrite rule consists of:}
+
+\ul{
+\li{\strong{L} (left) - Pattern to match}
+\li{\strong{K} (interface) - What to preserve}
+\li{\strong{R} (right) - Replacement pattern}
+}
+
+\pre{\startverb
+using AlgebraicRewriting
+
+# Define a rule: merge two vertices
+L = @acset Graph begin V=2; E=1; src=[1]; tgt=[2] end
+K = @acset Graph begin V=1 end
+R = @acset Graph begin V=1 end
+
+rule = Rule(L, K, R)
+\stopverb}
+}
+
+\subtree{
+\title{Apply Rewriting}
+\pre{\startverb
+G = @acset Graph begin
+    V = 4
+    E = 3
+    src = [1, 2, 3]
+    tgt = [2, 3, 4]
+end
+
+# Find matches and rewrite
+matches = homomorphisms(L, G)
+G′ = rewrite(rule, G, matches[1])
+\stopverb}
+}
+}
+
+\subtree{
+\title{Double Pushout (DPO)}
+\pre{\startverb
+    L ←─ K ─→ R
+    ↓    ↓    ↓
+    G ←─ D ─→ H
+\stopverb}
+
+\p{The context D ensures no "dangling edges" after deletion.}
+}
+
+\subtree{
+\title{Sesqui-Pushout (SqPO)}
+\p{Supports cloning via the final pullback complement:}
+
+\pre{\startverb
+# Clone a vertex
+L = @acset Graph begin V=1 end
+K = @acset Graph begin V=1 end
+R = @acset Graph begin V=2 end
+
+clone_rule = Rule(L, K, R; type=:SqPO)
+\stopverb}
+}
+
+\subtree{
+\title{Gay.jl Integration}
+\pre{\startverb
+# sRGB boundary learning with rewriting seed
+gay_seed!(0xabfca37b6b4bc699)
+
+# Forward mode autodiff
+∂params = Enzyme.gradient(Forward, loss, params, seed)
+\stopverb}
+}
+
+\subtree{
+\title{Documentation}
+\ul{
+\li{[Full Documentation](https://algebraicjulia.github.io/AlgebraicRewriting.jl/dev/)}
+\li{[Brown 2022](https://arxiv.org/abs/2111.03784) - Theoretical foundation}
+}
+}
+
+\subtree{
+\title{Repository}
+\ul{
+\li{\strong{Source}: plurigrid/AlgebraicRewriting.jl (fork of AlgebraicJulia)}
+\li{\strong{Seed}: \code{\startverb 0xabfca37b6b4bc699\stopverb}}
+\li{\strong{Index}: 496/1055}
+\li{\strong{Color}: #c25d0b}
+}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+algebraic-rewriting (-1) ⊗ acsets-hatchery (0) ⊗ gay-monte-carlo (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb acsets-hatchery\stopverb} - ACSet data structures}
+\li{\code{\startverb topos-adhesive-rewriting\stopverb} - Adhesive categories}
+\li{\code{\startverb dpo-rewriting\stopverb} - Graph transformation}
+\li{\code{\startverb world-a\stopverb} - AlgebraicJulia ecosystem}
+}
+}
+}

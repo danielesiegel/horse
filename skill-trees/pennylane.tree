@@ -1,0 +1,263 @@
+\title{Pennylane}
+
+\taxon{skill}
+
+\meta{description}{Cross-platform Python library for quantum computing, quantum machine learning, and quantum chemistry. Enables building and training quantum circuits with automatic differentiation, seamless integration with PyTorch/JAX/TensorFlow, and device-independent execution across simulators and quantum hardware (IBM, Amazon Braket, Google, Rigetti, IonQ, etc.). Use when working with quantum circuits, variational quantum algorithms (VQE, QAOA), quantum neural networks, hybrid quantum-classical models, molecular simulations, quantum chemistry calculations, or any quantum computing tasks requiring gradient-based optimization, hardware-agnostic programming, or quantum machine learning workflows.}
+
+\subtree{
+\title{PennyLane}
+\subtree{
+\title{Overview}
+\p{PennyLane is a quantum computing library that enables training quantum computers like neural networks. It provides automatic differentiation of quantum circuits, device-independent programming, and seamless integration with classical machine learning frameworks.}
+}
+
+\subtree{
+\title{Installation}
+\p{Install using uv:}
+
+\pre{\startverb
+uv pip install pennylane
+\stopverb}
+
+\p{For quantum hardware access, install device plugins:}
+
+\pre{\startverb
+# IBM Quantum
+uv pip install pennylane-qiskit
+
+# Amazon Braket
+uv pip install amazon-braket-pennylane-plugin
+
+# Google Cirq
+uv pip install pennylane-cirq
+
+# Rigetti Forest
+uv pip install pennylane-rigetti
+
+# IonQ
+uv pip install pennylane-ionq
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Build a quantum circuit and optimize its parameters:}
+
+\pre{\startverb
+import pennylane as qml
+from pennylane import numpy as np
+
+# Create device
+dev = qml.device('default.qubit', wires=2)
+
+# Define quantum circuit
+@qml.qnode(dev)
+def circuit(params):
+    qml.RX(params[0], wires=0)
+    qml.RY(params[1], wires=1)
+    qml.CNOT(wires=[0, 1])
+    return qml.expval(qml.PauliZ(0))
+
+# Optimize parameters
+opt = qml.GradientDescentOptimizer(stepsize=0.1)
+params = np.array([0.1, 0.2], requires_grad=True)
+
+for i in range(100):
+    params = opt.step(circuit, params)
+\stopverb}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Quantum Circuit Construction}
+\p{Build circuits with gates, measurements, and state preparation. See \code{\startverb references/quantum_circuits.md\stopverb} for:}
+
+\ul{
+\li{Single and multi-qubit gates}
+\li{Controlled operations and conditional logic}
+\li{Mid-circuit measurements and adaptive circuits}
+\li{Various measurement types (expectation, probability, samples)}
+\li{Circuit inspection and debugging}
+}
+}
+
+\subtree{
+\title{2. Quantum Machine Learning}
+\p{Create hybrid quantum-classical models. See \code{\startverb references/quantum_ml.md\stopverb} for:}
+
+\ul{
+\li{Integration with PyTorch, JAX, TensorFlow}
+\li{Quantum neural networks and variational classifiers}
+\li{Data encoding strategies (angle, amplitude, basis, IQP)}
+\li{Training hybrid models with backpropagation}
+\li{Transfer learning with quantum circuits}
+}
+}
+
+\subtree{
+\title{3. Quantum Chemistry}
+\p{Simulate molecules and compute ground state energies. See \code{\startverb references/quantum_chemistry.md\stopverb} for:}
+
+\ul{
+\li{Molecular Hamiltonian generation}
+\li{Variational Quantum Eigensolver (VQE)}
+\li{UCCSD ansatz for chemistry}
+\li{Geometry optimization and dissociation curves}
+\li{Molecular property calculations}
+}
+}
+
+\subtree{
+\title{4. Device Management}
+\p{Execute on simulators or quantum hardware. See \code{\startverb references/devices_backends.md\stopverb} for:}
+
+\ul{
+\li{Built-in simulators (default.qubit, lightning.qubit, default.mixed)}
+\li{Hardware plugins (IBM, Amazon Braket, Google, Rigetti, IonQ)}
+\li{Device selection and configuration}
+\li{Performance optimization and caching}
+\li{GPU acceleration and JIT compilation}
+}
+}
+
+\subtree{
+\title{5. Optimization}
+\p{Train quantum circuits with various optimizers. See \code{\startverb references/optimization.md\stopverb} for:}
+
+\ul{
+\li{Built-in optimizers (Adam, gradient descent, momentum, RMSProp)}
+\li{Gradient computation methods (backprop, parameter-shift, adjoint)}
+\li{Variational algorithms (VQE, QAOA)}
+\li{Training strategies (learning rate schedules, mini-batches)}
+\li{Handling barren plateaus and local minima}
+}
+}
+
+\subtree{
+\title{6. Advanced Features}
+\p{Leverage templates, transforms, and compilation. See \code{\startverb references/advanced_features.md\stopverb} for:}
+
+\ul{
+\li{Circuit templates and layers}
+\li{Transforms and circuit optimization}
+\li{Pulse-level programming}
+\li{Catalyst JIT compilation}
+\li{Noise models and error mitigation}
+\li{Resource estimation}
+}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Train a Variational Classifier}
+\pre{\startverb
+# 1. Define ansatz
+@qml.qnode(dev)
+def classifier(x, weights):
+    # Encode data
+    qml.AngleEmbedding(x, wires=range(4))
+
+    # Variational layers
+    qml.StronglyEntanglingLayers(weights, wires=range(4))
+
+    return qml.expval(qml.PauliZ(0))
+
+# 2. Train
+opt = qml.AdamOptimizer(stepsize=0.01)
+weights = np.random.random((3, 4, 3))  # 3 layers, 4 wires
+
+for epoch in range(100):
+    for x, y in zip(X_train, y_train):
+        weights = opt.step(lambda w: (classifier(x, w) - y)**2, weights)
+\stopverb}
+}
+
+\subtree{
+\title{Run VQE for Molecular Ground State}
+\pre{\startverb
+from pennylane import qchem
+
+# 1. Build Hamiltonian
+symbols = ['H', 'H']
+coords = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.74])
+H, n_qubits = qchem.molecular_hamiltonian(symbols, coords)
+
+# 2. Define ansatz
+@qml.qnode(dev)
+def vqe_circuit(params):
+    qml.BasisState(qchem.hf_state(2, n_qubits), wires=range(n_qubits))
+    qml.UCCSD(params, wires=range(n_qubits))
+    return qml.expval(H)
+
+# 3. Optimize
+opt = qml.AdamOptimizer(stepsize=0.1)
+params = np.zeros(10, requires_grad=True)
+
+for i in range(100):
+    params, energy = opt.step_and_cost(vqe_circuit, params)
+    print(f"Step {i}: Energy = {energy:.6f} Ha")
+\stopverb}
+}
+
+\subtree{
+\title{Switch Between Devices}
+\pre{\startverb
+# Same circuit, different backends
+circuit_def = lambda dev: qml.qnode(dev)(circuit_function)
+
+# Test on simulator
+dev_sim = qml.device('default.qubit', wires=4)
+result_sim = circuit_def(dev_sim)(params)
+
+# Run on quantum hardware
+dev_hw = qml.device('qiskit.ibmq', wires=4, backend='ibmq_manila')
+result_hw = circuit_def(dev_hw)(params)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Detailed Documentation}
+\p{For comprehensive coverage of specific topics, consult the reference files:}
+
+\ul{
+\li{\strong{Getting started}: \code{\startverb references/getting_started.md\stopverb} - Installation, basic concepts, first steps}
+\li{\strong{Quantum circuits}: \code{\startverb references/quantum_circuits.md\stopverb} - Gates, measurements, circuit patterns}
+\li{\strong{Quantum ML}: \code{\startverb references/quantum_ml.md\stopverb} - Hybrid models, framework integration, QNNs}
+\li{\strong{Quantum chemistry}: \code{\startverb references/quantum_chemistry.md\stopverb} - VQE, molecular Hamiltonians, chemistry workflows}
+\li{\strong{Devices}: \code{\startverb references/devices_backends.md\stopverb} - Simulators, hardware plugins, device configuration}
+\li{\strong{Optimization}: \code{\startverb references/optimization.md\stopverb} - Optimizers, gradients, variational algorithms}
+\li{\strong{Advanced}: \code{\startverb references/advanced_features.md\stopverb} - Templates, transforms, JIT compilation, noise}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Start with simulators} - Test on \code{\startverb default.qubit\stopverb} before deploying to hardware}
+\li{\strong{Use parameter-shift for hardware} - Backpropagation only works on simulators}
+\li{\strong{Choose appropriate encodings} - Match data encoding to problem structure}
+\li{\strong{Initialize carefully} - Use small random values to avoid barren plateaus}
+\li{\strong{Monitor gradients} - Check for vanishing gradients in deep circuits}
+\li{\strong{Cache devices} - Reuse device objects to reduce initialization overhead}
+\li{\strong{Profile circuits} - Use \code{\startverb qml.specs()\stopverb} to analyze circuit complexity}
+\li{\strong{Test locally} - Validate on simulators before submitting to hardware}
+\li{\strong{Use templates} - Leverage built-in templates for common circuit patterns}
+\li{\strong{Compile when possible} - Use Catalyst JIT for performance-critical code}
+}
+}
+
+\subtree{
+\title{Resources}
+\ul{
+\li{Official documentation: https://docs.pennylane.ai}
+\li{Codebook (tutorials): https://pennylane.ai/codebook}
+\li{QML demonstrations: https://pennylane.ai/qml/demonstrations}
+\li{Community forum: https://discuss.pennylane.ai}
+\li{GitHub: https://github.com/PennyLaneAI/pennylane}
+}
+}
+}

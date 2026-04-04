@@ -1,0 +1,251 @@
+\title{Implementing Identity Verification For Zero Trust}
+
+\taxon{skill}
+
+\tag{zero-trust}
+
+\tag{identity}
+
+\tag{authentication}
+
+\tag{mfa}
+
+\tag{identity-verification}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement continuous identity verification for zero trust using phishing-resistant MFA (FIDO2/WebAuthn), risk-based conditional access, and identity governance aligned with the CISA Zero Trust Maturity Model.}
+
+\subtree{
+\title{Implementing Identity Verification for Zero Trust}
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Understanding of zero trust principles (NIST SP 800-207)}
+\li{Familiarity with identity providers (Azure AD, Okta, Ping Identity)}
+\li{Knowledge of authentication protocols (SAML 2.0, OIDC, FIDO2)}
+\li{Understanding of MFA and passwordless authentication}
+}
+}
+
+\subtree{
+\title{Overview}
+\p{Identity is the foundational pillar of zero trust architecture. NIST SP 800-207 mandates that all resource authentication and authorization are dynamic and strictly enforced before access is allowed. Identity verification in zero trust goes beyond traditional username/password by implementing continuous, risk-adaptive authentication using multiple signals including device posture, behavioral biometrics, location, and network context.}
+
+\p{This skill covers implementing phishing-resistant MFA, continuous identity verification, risk-based conditional access, and identity governance aligned with the CISA Zero Trust Maturity Model Identity Pillar.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing identity verification for zero trust capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with zero trust architecture concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{Identity Verification Flow}
+\pre{\startverb
+User Access Request
+    │
+    v
+┌───────────────────────┐
+│ Primary Authentication │
+│ - FIDO2/WebAuthn key  │
+│ - Certificate-based    │
+│ - Passwordless         │
+└──────────┬────────────┘
+           v
+┌───────────────────────┐
+│ Contextual Assessment  │
+│ - Device posture       │
+│ - Network location     │
+│ - Geo-velocity check   │
+│ - Time of access       │
+│ - Behavioral baseline  │
+└──────────┬────────────┘
+           v
+┌───────────────────────┐
+│ Risk Scoring Engine    │
+│ - Aggregate signals    │
+│ - Calculate risk score │
+│ - Compare to threshold │
+└───┬──────────┬────────┘
+    │          │
+ Low Risk   High Risk
+    │          │
+    v          v
+┌────────┐  ┌──────────────┐
+│ Grant  │  │ Step-up Auth  │
+│ Access │  │ - Hardware key│
+│        │  │ - Biometric   │
+│        │  │ - Manager OK  │
+└────────┘  └──────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Identity Provider Architecture}
+\ol{
+\li{\strong{Primary IdP}: Azure AD / Okta / Ping Identity for centralized identity management}
+\li{\strong{FIDO2 Authenticators}: Hardware security keys (YubiKey) or platform authenticators (Windows Hello, Touch ID)}
+\li{\strong{Risk Engine}: Adaptive access using identity threat detection (Microsoft Entra ID Protection, Okta ThreatInsight)}
+\li{\strong{Identity Governance}: Lifecycle management, access reviews, just-in-time provisioning}
+\li{\strong{Privileged Identity}: Separate verification for elevated access (CyberArk, BeyondTrust)}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Phishing-Resistant MFA}
+\p{FIDO2/WebAuthn eliminates phishable credentials by binding authentication to the origin domain. Hardware security keys and platform authenticators provide cryptographic proof of identity without transmitting secrets.}
+}
+
+\subtree{
+\title{Continuous Identity Verification}
+\p{Rather than authenticating once at session start, zero trust requires ongoing verification through session token evaluation, behavioral analytics, and periodic re-authentication challenges based on risk signals.}
+}
+
+\subtree{
+\title{Risk-Based Conditional Access}
+\p{Conditional access policies evaluate multiple signals (user risk level, sign-in risk, device compliance, location) to dynamically adjust authentication requirements and access grants.}
+}
+
+\subtree{
+\title{Identity Threat Detection}
+\p{AI-driven analytics detect compromised identities through impossible travel detection, anomalous sign-in patterns, credential stuffing detection, and token replay attacks.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: Identity Infrastructure}
+\ol{
+\li{\strong{Consolidate Identity Providers}}
+\li{Audit all identity sources across the organization}
+\li{Federate to a single authoritative IdP using SAML 2.0 or OIDC}
+\li{Configure SCIM for automated provisioning and deprovisioning}
+\li{Eliminate local accounts and shared credentials}
+}
+
+\ol{
+\li{\strong{Deploy Phishing-Resistant MFA}}
+\li{Enroll all users in FIDO2/WebAuthn with hardware security keys}
+\li{Configure platform authenticators (Windows Hello for Business, macOS Touch ID)}
+\li{Disable SMS and voice call as MFA methods (phishable)}
+\li{Create conditional access policy requiring phishing-resistant methods for all sign-ins}
+}
+
+\ol{
+\li{\strong{Configure Conditional Access Policies}}
+\li{Require compliant device for access to sensitive applications}
+\li{Block legacy authentication protocols (basic auth, IMAP, POP3)}
+\li{Require MFA for all users from untrusted locations}
+\li{Enforce session time limits with re-authentication}
+\li{Block or require additional verification for high-risk sign-ins}
+}
+}
+
+\subtree{
+\title{Phase 2: Risk-Based Authentication}
+\ol{
+\li{\strong{Enable Identity Threat Detection}}
+\li{Activate Microsoft Entra ID Protection or Okta ThreatInsight}
+\li{Configure risk levels: low (allow), medium (require MFA), high (block and investigate)}
+\li{Enable impossible travel detection and anomalous token alerts}
+\li{Integrate identity risk signals with SIEM/SOAR}
+}
+
+\ol{
+\li{\strong{Implement Step-Up Authentication}}
+\li{For sensitive operations (privilege elevation, financial transactions), require additional verification}
+\li{Configure step-up policies: re-authenticate with hardware key}
+\li{Integrate with PAM for privileged session approval workflows}
+\li{Log all step-up events for audit trail}
+}
+}
+
+\subtree{
+\title{Phase 3: Continuous Verification}
+\ol{
+\li{\strong{Deploy Continuous Access Evaluation (CAE)}}
+\li{Enable Continuous Access Evaluation Protocol (CAEP) for real-time token revocation}
+\li{Configure critical event triggers: user disabled, password changed, location change}
+\li{Test that token revocation occurs within minutes (not hours) of security event}
+\li{Monitor CAE event logs for operational health}
+}
+
+\ol{
+\li{\strong{Implement Session Controls}}
+\li{Configure session duration limits based on application sensitivity}
+\li{Enable sign-in frequency controls (re-authenticate every N hours)}
+\li{Implement persistent browser session controls}
+\li{Configure app-enforced restrictions for unmanaged devices}
+}
+}
+
+\subtree{
+\title{Phase 4: Identity Governance}
+\ol{
+\li{\strong{Automate Identity Lifecycle}}
+\li{Configure joiner-mover-leaver workflows with HR system integration}
+\li{Automate access provisioning based on role and department}
+\li{Enable just-in-time access for temporary elevated permissions}
+\li{Configure automatic access expiration for contractors and guests}
+}
+
+\ol{
+\li{\strong{Implement Access Reviews}}
+\li{Schedule quarterly access certification campaigns}
+\li{Configure automated reminders and escalation}
+\li{Require manager approval for continued access}
+\li{Auto-revoke access for unreviewed certifications}
+}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] Single authoritative IdP with all applications federated}
+\li{[ ] FIDO2/WebAuthn enrolled for all users}
+\li{[ ] SMS and voice MFA methods disabled}
+\li{[ ] Legacy authentication protocols blocked}
+\li{[ ] Conditional access policies enforced for all applications}
+\li{[ ] Identity threat detection active with risk-based policies}
+\li{[ ] Continuous Access Evaluation enabled and tested}
+\li{[ ] Step-up authentication configured for sensitive operations}
+\li{[ ] Identity lifecycle automated with HR integration}
+\li{[ ] Quarterly access reviews scheduled and operational}
+\li{[ ] Identity events streaming to SIEM}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{NIST SP 800-207: Zero Trust Architecture}
+\li{NIST SP 800-63B: Digital Identity Guidelines - Authentication}
+\li{CISA Zero Trust Maturity Model v2.0 - Identity Pillar}
+\li{FIDO Alliance WebAuthn Specification}
+\li{Microsoft Entra Conditional Access Documentation}
+}
+}
+}

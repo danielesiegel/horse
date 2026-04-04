@@ -1,0 +1,1011 @@
+\title{Bmorphism Ies Env}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Documentation and orchestration for the bmorphism/ies flox environment toolkit}
+
+\subtree{
+\title{bmorphism-ies-env}
+\p{Comprehensive documentation and MCP integration for the 31-tool bmorphism/ies flox environment.}
+
+\p{\strong{Trit}: 0 (ERGODIC) - Infrastructure coordinator \strong{Environment}: \code{\startverb bmorphism/ies\stopverb} \strong{Package Count}: 31 tools across languages, utilities, and infrastructure}
+
+\subtree{
+\title{Overview}
+\p{This skill provides documentation, usage patterns, and MCP tooling for the curated bmorphism/ies flox environment. The environment is optimized for:}
+
+\ul{
+\li{Multi-language development (Clojure, Julia, Python, Ruby, JavaScript, Java)}
+\li{Systems programming and reverse engineering}
+\li{Data processing and visualization}
+\li{Cloud infrastructure management}
+\li{Text editing and language tooling}
+}
+}
+
+\subtree{
+\title{Environment Manifest}
+\subtree{
+\title{Programming Languages & Runtimes (8 tools)}
+\subtree{
+\title{babashka (1.12.209)}
+\p{\strong{Purpose}: Fast-starting Clojure scripting without JVM overhead \strong{Use Cases}:}
+
+\ul{
+\li{Shell scripting with Clojure syntax}
+\li{MCP servers (like flox-mcp-server.bb)}
+\li{Data pipeline orchestration}
+\li{CI/CD scripts}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+bb -e "(+ 1 2 3)"  # => 6
+bb script.clj      # Run script
+\stopverb}
+
+\p{\strong{Key Features}:}
+
+\ul{
+\li{Instant startup (~10ms)}
+\li{Built-in libraries: cheshire (JSON), babashka.process, babashka.fs}
+\li{Native image compilation via GraalVM}
+\li{SCI (Small Clojure Interpreter) for sandboxing}
+}
+
+\p{\strong{Documentation}: https://book.babashka.org}
+}
+
+\subtree{
+\title{clojure (1.12.3.1577)}
+\p{\strong{Purpose}: Full Clojure runtime with JVM \strong{Use Cases}:}
+
+\ul{
+\li{Long-running applications}
+\li{Libraries requiring JVM features}
+\li{Performance-critical code}
+\li{Full ecosystem access}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+clj -M -e "(println \"Hello\")"
+clj -M:deps tree  # View dependency tree
+\stopverb}
+
+\p{\strong{Documentation}: https://clojure.org/guides/getting_started}
+}
+
+\subtree{
+\title{julia-bin (1.12.3)}
+\p{\strong{Purpose}: High-performance scientific computing \strong{Use Cases}:}
+
+\ul{
+\li{Numerical analysis}
+\li{Category theory (AlgebraicJulia)}
+\li{DuckDB integration}
+\li{ACSet manipulation}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+using Catlab, AlgebraicJulia
+# Work with ACSets
+\stopverb}
+
+\p{\strong{Integration}: Powers the unworld skill's derivational learning}
+
+\p{\strong{Documentation}: https://docs.julialang.org}
+}
+
+\subtree{
+\title{nodejs (24.12.0)}
+\p{\strong{Purpose}: JavaScript runtime and npm ecosystem \strong{Use Cases}:}
+
+\ul{
+\li{Web development}
+\li{CLI tools}
+\li{MCP servers (TypeScript)}
+\li{Build tooling}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+node script.js
+npm install package
+npx create-next-app
+\stopverb}
+
+\p{\strong{Documentation}: https://nodejs.org/docs}
+}
+
+\subtree{
+\title{python312 (3.12.12)}
+\p{\strong{Purpose}: General-purpose scripting and data science \strong{Use Cases}:}
+
+\ul{
+\li{Data processing (pandas, numpy)}
+\li{Machine learning}
+\li{MCP servers}
+\li{System automation}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+python3 -m venv .venv
+pip install duckdb pandas
+\stopverb}
+
+\p{\strong{Documentation}: https://docs.python.org/3.12/}
+}
+
+\subtree{
+\title{ruby (3.3.10)}
+\p{\strong{Purpose}: Scripting and web development \strong{Use Cases}:}
+
+\ul{
+\li{Rails applications}
+\li{DevOps scripts}
+\li{Text processing}
+\li{DSLs}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+ruby -e "puts 'Hello'"
+gem install bundler
+\stopverb}
+
+\p{\strong{Documentation}: https://www.ruby-lang.org/en/documentation/}
+}
+
+\subtree{
+\title{jdk (21.0.8) / openjdk (21.0.8)}
+\p{\strong{Purpose}: Java development and JVM applications \strong{Use Cases}:}
+
+\ul{
+\li{Java applications}
+\li{Clojure (full JVM)}
+\li{Scala, Kotlin}
+\li{Enterprise tooling}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+javac Program.java
+java Program
+jshell  # REPL
+\stopverb}
+
+\p{\strong{Documentation}: https://docs.oracle.com/en/java/javase/21/}
+}
+}
+
+\subtree{
+\title{Text Editors & IDEs (2 tools)}
+\subtree{
+\title{emacs (30.2)}
+\p{\strong{Purpose}: Extensible, programmable text editor \strong{Use Cases}:}
+
+\ul{
+\li{Org-mode literate programming}
+\li{Lisp development}
+\li{Email, RSS, everything}
+\li{MCP integration potential}
+}
+
+\p{\strong{Key Packages} (likely installed):}
+
+\ul{
+\li{\code{\startverb org-mode\stopverb} - Literate programming}
+\li{\code{\startverb magit\stopverb} - Git interface}
+\li{\code{\startverb lsp-mode\stopverb} - Language servers}
+\li{\code{\startverb eshell\stopverb} - Emacs shell}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+emacs file.org
+emacsclient -c file.jl  # With daemon
+\stopverb}
+
+\p{\strong{Integration}: Works with org-babel-execution skill}
+
+\p{\strong{Documentation}: https://www.gnu.org/software/emacs/manual/}
+}
+
+\subtree{
+\title{helix (25.07.1)}
+\p{\strong{Purpose}: Modern modal text editor (Rust-based) \strong{Use Cases}:}
+
+\ul{
+\li{Fast file editing}
+\li{Language server protocol (LSP)}
+\li{Multiple selections}
+\li{Terminal-native editing}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+hx file.rs
+hx --health rust  # Check LSP status
+\stopverb}
+
+\p{\strong{Features}:}
+
+\ul{
+\li{Built-in LSP, DAP, tree-sitter}
+\li{No plugin system needed}
+\li{Multiple cursors}
+\li{Vim-like but different}
+}
+
+\p{\strong{Documentation}: https://docs.helix-editor.com}
+}
+}
+
+\subtree{
+\title{Developer Tools (5 tools)}
+\subtree{
+\title{gh (2.83.2)}
+\p{\strong{Purpose}: GitHub CLI \strong{Use Cases}:}
+
+\ul{
+\li{PR management from terminal}
+\li{Issue tracking}
+\li{Repo operations}
+\li{CI/CD inspection}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+gh pr create --title "feat: add feature"
+gh issue list
+gh run watch
+gh repo clone user/repo
+\stopverb}
+
+\p{\strong{MCP Integration}: Could wrap as MCP tool for AI PR creation}
+
+\p{\strong{Documentation}: https://cli.github.com/manual}
+}
+
+\subtree{
+\title{graphviz (12.2.1)}
+\p{\strong{Purpose}: Graph visualization \strong{Use Cases}:}
+
+\ul{
+\li{Dependency diagrams}
+\li{State machines}
+\li{Category theory diagrams}
+\li{Data flow visualization}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+dot -Tpng graph.dot -o graph.png
+neato -Tsvg network.dot -o network.svg
+\stopverb}
+
+\p{\strong{Integration}: Visualize skill dependency graphs, coequalizers}
+
+\p{\strong{Documentation}: https://graphviz.org/documentation/}
+}
+
+\subtree{
+\title{protobuf (32.1)}
+\p{\strong{Purpose}: Protocol Buffers compiler \strong{Use Cases}:}
+
+\ul{
+\li{Serialization schemas}
+\li{gRPC services}
+\li{Cross-language data exchange}
+\li{MCP protocol extensions}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+protoc --python_out=. schema.proto
+protoc --go_out=. service.proto
+\stopverb}
+
+\p{\strong{Documentation}: https://protobuf.dev}
+}
+
+\subtree{
+\title{pkg-config (0.29.2)}
+\p{\strong{Purpose}: Library dependency metadata \strong{Use Cases}:}
+
+\ul{
+\li{C/C++ compilation}
+\li{Linking system libraries}
+\li{Build system integration}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+pkg-config --cflags --libs sqlite3
+pkg-config --modversion gtk+-3.0
+\stopverb}
+
+\p{\strong{Documentation}: https://www.freedesktop.org/wiki/Software/pkg-config/}
+}
+
+\subtree{
+\title{tree-sitter (0.25.10)}
+\p{\strong{Purpose}: Incremental parsing library \strong{Use Cases}:}
+
+\ul{
+\li{Syntax highlighting}
+\li{Code navigation}
+\li{AST analysis}
+\li{Language tooling}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+tree-sitter generate
+tree-sitter test
+\stopverb}
+
+\p{\strong{Integration}: Used by helix, could power code analysis MCP tools}
+
+\p{\strong{Documentation}: https://tree-sitter.github.io/tree-sitter/}
+}
+}
+
+\subtree{
+\title{Disk Usage Analyzers (4 tools)}
+\subtree{
+\title{dua (2.32.2)}
+\p{\strong{Purpose}: Fast disk usage analyzer (Rust) \strong{Use Cases}:}
+
+\ul{
+\li{Interactive TUI for disk exploration}
+\li{Fast scanning}
+\li{Deletion from TUI}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+dua i          # Interactive mode
+dua a /path    # Aggregate view
+\stopverb}
+
+\p{\strong{Comparison}: Fastest, interactive, can delete}
+
+\p{\strong{Documentation}: https://github.com/Byron/dua-cli}
+}
+
+\subtree{
+\title{dust (1.2.3)}
+\p{\strong{Purpose}: du + rust = dust (modern du) \strong{Use Cases}:}
+
+\ul{
+\li{Tree view of disk usage}
+\li{Colored output}
+\li{Quick overview}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+dust           # Current dir
+dust -d 3      # Max depth 3
+dust -r        # Reverse sort
+\stopverb}
+
+\p{\strong{Comparison}: Best for quick visualizations}
+
+\p{\strong{Documentation}: https://github.com/bootandy/dust}
+}
+
+\subtree{
+\title{gdu (5.32.0)}
+\p{\strong{Purpose}: Go-based disk usage analyzer \strong{Use Cases}:}
+
+\ul{
+\li{Fast scanning}
+\li{TUI interface}
+\li{Export to JSON}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+gdu            # Interactive
+gdu -n         # Non-interactive
+gdu -o json    # Export format
+\stopverb}
+
+\p{\strong{Comparison}: Good balance of speed and features}
+
+\p{\strong{Documentation}: https://github.com/dundee/gdu}
+}
+
+\subtree{
+\title{ncdu (2.9.2)}
+\p{\strong{Purpose}: NCurses disk usage (original) \strong{Use Cases}:}
+
+\ul{
+\li{Classic TUI}
+\li{Stable, reliable}
+\li{Scriptable}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+ncdu           # Interactive
+ncdu -x        # Same filesystem only
+ncdu -o file   # Export
+\stopverb}
+
+\p{\strong{Comparison}: Most mature, scriptable}
+
+\p{\strong{Documentation}: https://dev.yorhel.nl/ncdu}
+
+\p{\strong{Recommendation}: Use \code{\startverb dust\stopverb} for quick checks, \code{\startverb dua\stopverb} for interactive exploration}
+}
+}
+
+\subtree{
+\title{Multimedia & Content (3 tools)}
+\subtree{
+\title{ffmpeg (8.0)}
+\p{\strong{Purpose}: Video/audio processing Swiss Army knife \strong{Use Cases}:}
+
+\ul{
+\li{Video transcoding}
+\li{Audio extraction}
+\li{Streaming}
+\li{Format conversion}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+ffmpeg -i input.mp4 output.webm
+ffmpeg -i video.mp4 -vn audio.mp3  # Extract audio
+ffmpeg -i input.mp4 -ss 00:01:00 -t 10 clip.mp4  # Clip
+\stopverb}
+
+\p{\strong{Integration}: Could power video processing MCP tools}
+
+\p{\strong{Documentation}: https://ffmpeg.org/documentation.html}
+}
+
+\subtree{
+\title{sox (2021-05-09)}
+\p{\strong{Purpose}: Sound eXchange - audio processing \strong{Use Cases}:}
+
+\ul{
+\li{Audio effects}
+\li{Format conversion}
+\li{Synthesis}
+\li{Analysis}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+sox input.wav output.mp3
+sox input.wav output.wav tempo 1.5  # Speed up
+play sound.wav  # Play audio
+\stopverb}
+
+\p{\strong{Integration}: Sonification of data (catsharp-sonification skill)}
+
+\p{\strong{Documentation}: http://sox.sourceforge.net/sox.html}
+}
+
+\subtree{
+\title{enchant2 (2.6.9)}
+\p{\strong{Purpose}: Spell checking library \strong{Use Cases}:}
+
+\ul{
+\li{Text editors}
+\li{Document processing}
+\li{CLI spell check}
+\li{Multiple dictionary support}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+enchant-lsmod-2  # List backends
+enchant-2 -l file.txt  # Check spelling
+\stopverb}
+
+\p{\strong{Integration}: Text validation in documentation skills}
+
+\p{\strong{Documentation}: https://abiword.github.io/enchant/}
+}
+}
+
+\subtree{
+\title{Infrastructure & Cloud (4 tools)}
+\subtree{
+\title{google-cloud-sdk (548.0.0)}
+\p{\strong{Purpose}: Google Cloud Platform CLI \strong{Use Cases}:}
+
+\ul{
+\li{GCP resource management}
+\li{Cloud Storage}
+\li{BigQuery}
+\li{Kubernetes (GKE)}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+gcloud auth login
+gcloud compute instances list
+gsutil cp file.txt gs://bucket/
+bq query "SELECT * FROM dataset.table LIMIT 10"
+\stopverb}
+
+\p{\strong{MCP Integration}: Wrap GCP operations as MCP tools}
+
+\p{\strong{Documentation}: https://cloud.google.com/sdk/docs}
+}
+
+\subtree{
+\title{nats-server (2.12.3)}
+\p{\strong{Purpose}: NATS message broker \strong{Use Cases}:}
+
+\ul{
+\li{Pub/sub messaging}
+\li{Service mesh}
+\li{Event streaming}
+\li{MCP transport layer}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+nats-server                    # Start server
+nats-server -js                # With JetStream
+nats-server -c nats-server.conf  # Config file
+\stopverb}
+
+\p{\strong{Integration}: Could power distributed MCP server communication}
+
+\p{\strong{Documentation}: https://docs.nats.io}
+}
+
+\subtree{
+\title{tailscale (1.92.3)}
+\p{\strong{Purpose}: Mesh VPN (WireGuard-based) \strong{Use Cases}:}
+
+\ul{
+\li{Secure remote access}
+\li{Service networking}
+\li{Exit nodes}
+\li{MagicDNS}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+tailscale up
+tailscale status
+tailscale ip -4
+tailscale serve 8080  # Expose service
+\stopverb}
+
+\p{\strong{Integration}: Secure MCP server networking (tailscale-localsend skill)}
+
+\p{\strong{Documentation}: https://tailscale.com/kb/}
+}
+
+\subtree{
+\title{wash-cli (1.0.0-beta.10)}
+\p{\strong{Purpose}: WebAssembly Shell (wasmCloud CLI) \strong{Use Cases}:}
+
+\ul{
+\li{WebAssembly component management}
+\li{wasmCloud orchestration}
+\li{WASI development}
+\li{Distributed apps}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+wash up          # Start wasmCloud host
+wash ctl get hosts
+wash build       # Build component
+wash app deploy app.yaml
+\stopverb}
+
+\p{\strong{Integration}: Deploy MCP servers as Wasm components}
+
+\p{\strong{Documentation}: https://wasmcloud.com/docs/cli}
+}
+}
+
+\subtree{
+\title{System Utilities (3 tools)}
+\subtree{
+\title{coreutils (9.8)}
+\p{\strong{Purpose}: GNU core utilities \strong{Use Cases}:}
+
+\ul{
+\li{Basic file operations (ls, cp, mv, rm)}
+\li{Text processing (cat, cut, sort, uniq)}
+\li{System info (whoami, hostname, uptime)}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+ls -lah
+cat file.txt | sort | uniq -c
+seq 1 10 | xargs -I{} echo "Item {}"
+\stopverb}
+
+\p{\strong{Note}: macOS ships with BSD utilities; this provides GNU versions}
+
+\p{\strong{Documentation}: https://www.gnu.org/software/coreutils/manual/}
+}
+
+\subtree{
+\title{nickel (1.15.1)}
+\p{\strong{Purpose}: Configuration language \strong{Use Cases}:}
+
+\ul{
+\li{Type-safe configs}
+\li{Contract validation}
+\li{Nix integration}
+\li{Infrastructure as code}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+nickel export config.ncl --format json
+nickel query config.ncl
+nickel repl
+\stopverb}
+
+\p{\strong{Integration}: The asi repo has 440 .ncl files - skill configurations!}
+
+\p{\strong{ASI Integration}:}
+
+\pre{\startverb
+ls skills/**/*.ncl | wc -l  # 440 Nickel files
+\stopverb}
+
+\p{\strong{Documentation}: https://nickel-lang.org}
+}
+}
+
+\subtree{
+\title{Verification & Security (2 tools)}
+\subtree{
+\title{dafny (4.11.0)}
+\p{\strong{Purpose}: Verification-aware programming language \strong{Use Cases}:}
+
+\ul{
+\li{Formal verification}
+\li{Proof-carrying code}
+\li{Algorithm correctness}
+\li{Secure protocol design}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+dafny verify program.dfy
+dafny /compile:3 program.dfy  # Compile to C#
+dafny format file.dfy
+\stopverb}
+
+\p{\strong{Integration}: Could verify GF(3) conservation proofs formally}
+
+\p{\strong{Documentation}: https://dafny.org/latest/OnlineTutorial/guide}
+}
+
+\subtree{
+\title{radare2 (6.0.7)}
+\p{\strong{Purpose}: Reverse engineering framework \strong{Use Cases}:}
+
+\ul{
+\li{Binary analysis}
+\li{Debugging}
+\li{Disassembly}
+\li{Exploit development (authorized contexts)}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+r2 binary
+r2 -A binary      # Analyze all
+rabin2 -I binary  # Binary info
+rasm2 "mov eax, 33"  # Assemble
+\stopverb}
+
+\p{\strong{Security Note}: Only use for authorized security testing, CTFs, research}
+
+\p{\strong{Documentation}: https://r2wiki.readthedocs.io}
+}
+}
+
+\subtree{
+\title{Python Tooling (1 tool)}
+\subtree{
+\title{uv (0.9.21)}
+\p{\strong{Purpose}: Extremely fast Python package installer (Rust) \strong{Use Cases}:}
+
+\ul{
+\li{pip replacement (10-100x faster)}
+\li{Virtual environment management}
+\li{Dependency resolution}
+\li{Lock file generation}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+uv pip install pandas numpy
+uv venv .venv
+uv pip compile requirements.in  # Generate lock
+uv pip sync requirements.txt    # Sync to lock
+\stopverb}
+
+\p{\strong{Performance}: ~100x faster than pip for cold installs}
+
+\p{\strong{Documentation}: https://github.com/astral-sh/uv}
+}
+}
+}
+
+\subtree{
+\title{MCP Integration Patterns}
+\subtree{
+\title{Pattern 1: Direct CLI Wrapping}
+\pre{\startverb
+;; flox-mcp-server.bb pattern
+(defn run-tool [tool & args]
+  (let [result (p/shell {:out :string :err :string :continue true}
+                        (str/join " " (cons tool args)))]
+    {:exit (:exit result)
+     :stdout (str/trim (:out result))
+     :stderr (str/trim (:err result))}))
+
+;; Example: Wrap gh CLI
+(defn handle-gh-pr-create [{:keys [title body]}]
+  (run-tool "gh" "pr" "create" "--title" title "--body" body))
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Batch Operations}
+\pre{\startverb
+;; Run multiple tools in sequence
+(defn analyze-repo [repo-path]
+  (let [disk-usage (run-tool "dust" repo-path)
+        git-status (run-tool "gh" "repo" "view")
+        tree-check (run-tool "tree-sitter" "test")]
+    {:disk disk-usage
+     :git git-status
+     :syntax tree-check}))
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Streaming Output}
+\pre{\startverb
+;; Stream ffmpeg progress
+(defn stream-transcode [input output]
+  (let [proc (p/process ["ffmpeg" "-i" input output] 
+                        {:inherit true})]
+    ;; Send progress notifications via MCP
+    ))
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triad Examples}
+\subtree{
+\title{Triad 1: Language Ecosystem}
+\pre{\startverb
+julia-bin (+1, PLUS)      # Generative (AlgebraicJulia)
+babashka (0, ERGODIC)     # Coordinator (MCP servers)
+dafny (-1, MINUS)         # Validator (formal verification)
+
+Sum: +1 + 0 + (-1) ≡ 0 (mod 3) ✓
+\stopverb}
+}
+
+\subtree{
+\title{Triad 2: Disk Analysis}
+\pre{\startverb
+dust (+1, PLUS)           # Quick generation of views
+gdu (0, ERGODIC)          # Balanced analysis
+ncdu (-1, MINUS)          # Deep validation
+\stopverb}
+}
+
+\subtree{
+\title{Triad 3: Cloud Infrastructure}
+\pre{\startverb
+wash-cli (+1, PLUS)       # Deploy new components
+tailscale (0, ERGODIC)    # Network coordination
+google-cloud-sdk (-1, MINUS)  # Validate resources
+\stopverb}
+}
+}
+
+\subtree{
+\title{Tool Selection Guide}
+\subtree{
+\title{Use Case: Quick Script}
+\p{\strong{Choose}: \code{\startverb babashka\stopverb} or \code{\startverb python312\stopverb}}
+
+\ul{
+\li{Babashka: If Clojure familiarity, need speed}
+\li{Python: If data processing, ML, broader ecosystem}
+}
+}
+
+\subtree{
+\title{Use Case: Scientific Computing}
+\p{\strong{Choose}: \code{\startverb julia-bin\stopverb}}
+
+\ul{
+\li{Best for: Numerical analysis, category theory, performance}
+\li{Integration: AlgebraicJulia, DuckDB.jl}
+}
+}
+
+\subtree{
+\title{Use Case: Disk Space Cleanup}
+\p{\strong{Choose}: \code{\startverb dua\stopverb} (interactive) or \code{\startverb dust\stopverb} (quick view)}
+
+\ul{
+\li{dua: When you want to delete files interactively}
+\li{dust: When you just need a quick tree view}
+}
+}
+
+\subtree{
+\title{Use Case: Video Processing}
+\p{\strong{Choose}: \code{\startverb ffmpeg\stopverb}}
+
+\ul{
+\li{No alternatives needed - it's the standard}
+}
+}
+
+\subtree{
+\title{Use Case: Text Editing}
+\p{\strong{Choose}: \code{\startverb helix\stopverb} (fast, terminal) or \code{\startverb emacs\stopverb} (powerful, GUI)}
+
+\ul{
+\li{helix: Quick edits, LSP integration, modern UX}
+\li{emacs: Org-mode, extensive customization, Lisp}
+}
+}
+
+\subtree{
+\title{Use Case: Reverse Engineering}
+\p{\strong{Choose}: \code{\startverb radare2\stopverb}}
+
+\ul{
+\li{Comprehensive framework for binary analysis}
+\li{Use only in authorized contexts}
+}
+}
+}
+
+\subtree{
+\title{Environment Updates}
+\subtree{
+\title{Check for Updates}
+\pre{\startverb
+flox list | grep "upgrade available"
+\stopverb}
+
+\p{Current outdated packages:}
+
+\ul{
+\li{dua: 2.32.2 → newer available}
+\li{tailscale: 1.92.3 → newer available  }
+\li{uv: 0.9.21 → newer available}
+}
+}
+
+\subtree{
+\title{Upgrade Packages}
+\pre{\startverb
+flox upgrade dua tailscale uv
+\stopverb}
+}
+
+\subtree{
+\title{Add New Tools}
+\pre{\startverb
+flox search ripgrep
+flox install ripgrep
+\stopverb}
+}
+
+\subtree{
+\title{Remove Tools}
+\pre{\startverb
+flox uninstall package-name
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\subtree{
+\title{Skills Using These Tools}
+\ul{
+\li{\strong{flox-mcp} - Wraps flox CLI for environment management}
+\li{\strong{org-babel-execution} - Uses emacs org-mode}
+\li{\strong{unworld} - Julia-based derivational learning}
+\li{\strong{catsharp-sonification} - sox for audio synthesis}
+\li{\strong{babashka-clj} - Babashka scripting patterns}
+\li{\strong{gay-mcp} - Could use dafny for GF(3) verification}
+\li{\strong{tailscale-localsend} - Tailscale mesh networking}
+\li{\strong{nickel} skill (440 .ncl files in asi repo)}
+}
+}
+
+\subtree{
+\title{Potential New Skills}
+\ol{
+\li{\strong{gh-mcp} - GitHub CLI wrapper for AI PR management}
+\li{\strong{ffmpeg-pipeline} - Video processing orchestration}
+\li{\strong{dafny-verifier} - Formal verification of GF(3) properties}
+\li{\strong{radare2-analyzer} - Binary analysis (security research only)}
+\li{\strong{nats-broker} - Message broker for distributed MCP}
+\li{\strong{tree-sitter-parser} - Code analysis and navigation}
+}
+}
+}
+
+\subtree{
+\title{Environment Statistics}
+\pre{\startverb
+Total Packages: 31
+Languages: 8 (Clojure, Julia, JS, Python, Ruby, Java)
+Editors: 2 (emacs, helix)
+Disk Analyzers: 4 (dua, dust, gdu, ncdu)
+Cloud Tools: 4 (gcloud, nats, tailscale, wash)
+Security/Verification: 2 (dafny, radare2)
+Multimedia: 3 (ffmpeg, sox, enchant2)
+
+Total Install Size: ~5GB
+Active Environment: bmorphism/ies
+FloxHub: hub.flox.dev/bmorphism/ies
+\stopverb}
+
+\p{\strong{Skill Name}: bmorphism-ies-env \strong{Type}: Environment Documentation & MCP Integration \strong{Trit}: 0 (ERGODIC - Infrastructure Coordinator) \strong{Status}: ✅ Production (31 tools documented)}
+}
+}

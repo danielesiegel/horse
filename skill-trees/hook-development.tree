@@ -1,0 +1,842 @@
+\title{Hook development}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user asks to "create a hook", "add a PreToolUse/PostToolUse/Stop hook", "validate tool use", "implement prompt-based hooks", "use ${CLAUDE_PLUGIN_ROOT}", "set up event-driven automation", "block dangerous commands", or mentions hook events (PreToolUse, PostToolUse, Stop, SubagentStop, SessionStart, SessionEnd, UserPromptSubmit, PreCompact, Notification). Provides comprehensive guidance for creating and implementing Claude Code plugin hooks with focus on advanced prompt-based hooks API.}
+
+\subtree{
+\title{Hook Development for Claude Code Plugins}
+\subtree{
+\title{Overview}
+\p{Hooks are event-driven automation scripts that execute in response to Claude Code events. Use hooks to validate operations, enforce policies, add context, and integrate external tools into workflows.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Validate tool calls before execution (PreToolUse)}
+\li{React to tool results (PostToolUse)}
+\li{Enforce completion standards (Stop, SubagentStop)}
+\li{Load project context (SessionStart)}
+\li{Automate workflows across the development lifecycle}
+}
+}
+
+\subtree{
+\title{Hook Types}
+\subtree{
+\title{Prompt-Based Hooks (Recommended)}
+\p{Use LLM-driven decision making for context-aware validation:}
+
+\pre{\startverb
+{
+  "type": "prompt",
+  "prompt": "Evaluate if this tool use is appropriate: $TOOL_INPUT",
+  "timeout": 30
+}
+\stopverb}
+
+\p{\strong{Supported events:} Stop, SubagentStop, UserPromptSubmit, PreToolUse}
+
+\p{\strong{Benefits:}}
+
+\ul{
+\li{Context-aware decisions based on natural language reasoning}
+\li{Flexible evaluation logic without bash scripting}
+\li{Better edge case handling}
+\li{Easier to maintain and extend}
+}
+}
+
+\subtree{
+\title{Command Hooks}
+\p{Execute bash commands for deterministic checks:}
+
+\pre{\startverb
+{
+  "type": "command",
+  "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh",
+  "timeout": 60
+}
+\stopverb}
+
+\p{\strong{Use for:}}
+
+\ul{
+\li{Fast deterministic validations}
+\li{File system operations}
+\li{External tool integrations}
+\li{Performance-critical checks}
+}
+}
+}
+
+\subtree{
+\title{Hook Configuration Formats}
+\subtree{
+\title{Plugin hooks.json Format}
+\p{\strong{For plugin hooks} in \code{\startverb hooks/hooks.json\stopverb}, use wrapper format:}
+
+\pre{\startverb
+{
+  "description": "Brief explanation of hooks (optional)",
+  "hooks": {
+    "PreToolUse": [...],
+    "Stop": [...],
+    "SessionStart": [...]
+  }
+}
+\stopverb}
+
+\p{\strong{Key points:}}
+
+\ul{
+\li{\code{\startverb description\stopverb} field is optional}
+\li{\code{\startverb hooks\stopverb} field is required wrapper containing actual hook events}
+\li{This is the \strong{plugin-specific format}}
+}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+{
+  "description": "Validation hooks for code quality",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/validate.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Settings Format (Direct)}
+\p{\strong{For user settings} in \code{\startverb .claude/settings.json\stopverb}, use direct format:}
+
+\pre{\startverb
+{
+  "PreToolUse": [...],
+  "Stop": [...],
+  "SessionStart": [...]
+}
+\stopverb}
+
+\p{\strong{Key points:}}
+
+\ul{
+\li{No wrapper - events directly at top level}
+\li{No description field}
+\li{This is the \strong{settings format}}
+}
+
+\p{\strong{Important:} The examples below show the hook event structure that goes inside either format. For plugin hooks.json, wrap these in \code{\startverb {"hooks": {...}}\stopverb}.}
+}
+}
+
+\subtree{
+\title{Hook Events}
+\subtree{
+\title{PreToolUse}
+\p{Execute before any tool runs. Use to approve, deny, or modify tool calls.}
+
+\p{\strong{Example (prompt-based):}}
+
+\pre{\startverb
+{
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Validate file write safety. Check: system paths, credentials, path traversal, sensitive content. Return 'approve' or 'deny'."
+        }
+      ]
+    }
+  ]
+}
+\stopverb}
+
+\p{\strong{Output for PreToolUse:}}
+
+\pre{\startverb
+{
+  "hookSpecificOutput": {
+    "permissionDecision": "allow|deny|ask",
+    "updatedInput": {"field": "modified_value"}
+  },
+  "systemMessage": "Explanation for Claude"
+}
+\stopverb}
+}
+
+\subtree{
+\title{PostToolUse}
+\p{Execute after tool completes. Use to react to results, provide feedback, or log.}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+{
+  "PostToolUse": [
+    {
+      "matcher": "Edit",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Analyze edit result for potential issues: syntax errors, security vulnerabilities, breaking changes. Provide feedback."
+        }
+      ]
+    }
+  ]
+}
+\stopverb}
+
+\p{\strong{Output behavior:}}
+
+\ul{
+\li{Exit 0: stdout shown in transcript}
+\li{Exit 2: stderr fed back to Claude}
+\li{systemMessage included in context}
+}
+}
+
+\subtree{
+\title{Stop}
+\p{Execute when main agent considers stopping. Use to validate completeness.}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+{
+  "Stop": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Verify task completion: tests run, build succeeded, questions answered. Return 'approve' to stop or 'block' with reason to continue."
+        }
+      ]
+    }
+  ]
+}
+\stopverb}
+
+\p{\strong{Decision output:}}
+
+\pre{\startverb
+{
+  "decision": "approve|block",
+  "reason": "Explanation",
+  "systemMessage": "Additional context"
+}
+\stopverb}
+}
+
+\subtree{
+\title{SubagentStop}
+\p{Execute when subagent considers stopping. Use to ensure subagent completed its task.}
+
+\p{Similar to Stop hook, but for subagents.}
+}
+
+\subtree{
+\title{UserPromptSubmit}
+\p{Execute when user submits a prompt. Use to add context, validate, or block prompts.}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+{
+  "UserPromptSubmit": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Check if prompt requires security guidance. If discussing auth, permissions, or API security, return relevant warnings."
+        }
+      ]
+    }
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{SessionStart}
+\p{Execute when Claude Code session begins. Use to load context and set environment.}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+{
+  "SessionStart": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/load-context.sh"
+        }
+      ]
+    }
+  ]
+}
+\stopverb}
+
+\p{\strong{Special capability:} Persist environment variables using \code{\startverb $CLAUDE_ENV_FILE\stopverb}:}
+
+\pre{\startverb
+echo "export PROJECT_TYPE=nodejs" >> "$CLAUDE_ENV_FILE"
+\stopverb}
+
+\p{See \code{\startverb examples/load-context.sh\stopverb} for complete example.}
+}
+
+\subtree{
+\title{SessionEnd}
+\p{Execute when session ends. Use for cleanup, logging, and state preservation.}
+}
+
+\subtree{
+\title{PreCompact}
+\p{Execute before context compaction. Use to add critical information to preserve.}
+}
+
+\subtree{
+\title{Notification}
+\p{Execute when Claude sends notifications. Use to react to user notifications.}
+}
+}
+
+\subtree{
+\title{Hook Output Format}
+\subtree{
+\title{Standard Output (All Hooks)}
+\pre{\startverb
+{
+  "continue": true,
+  "suppressOutput": false,
+  "systemMessage": "Message for Claude"
+}
+\stopverb}
+
+\ul{
+\li{\code{\startverb continue\stopverb}: If false, halt processing (default true)}
+\li{\code{\startverb suppressOutput\stopverb}: Hide output from transcript (default false)}
+\li{\code{\startverb systemMessage\stopverb}: Message shown to Claude}
+}
+}
+
+\subtree{
+\title{Exit Codes}
+\ul{
+\li{\code{\startverb 0\stopverb} - Success (stdout shown in transcript)}
+\li{\code{\startverb 2\stopverb} - Blocking error (stderr fed back to Claude)}
+\li{Other - Non-blocking error}
+}
+}
+}
+
+\subtree{
+\title{Hook Input Format}
+\p{All hooks receive JSON via stdin with common fields:}
+
+\pre{\startverb
+{
+  "session_id": "abc123",
+  "transcript_path": "/path/to/transcript.txt",
+  "cwd": "/current/working/dir",
+  "permission_mode": "ask|allow",
+  "hook_event_name": "PreToolUse"
+}
+\stopverb}
+
+\p{\strong{Event-specific fields:}}
+
+\ul{
+\li{\strong{PreToolUse/PostToolUse:} \code{\startverb tool_name\stopverb}, \code{\startverb tool_input\stopverb}, \code{\startverb tool_result\stopverb}}
+\li{\strong{UserPromptSubmit:} \code{\startverb user_prompt\stopverb}}
+\li{\strong{Stop/SubagentStop:} \code{\startverb reason\stopverb}}
+}
+
+\p{Access fields in prompts using \code{\startverb $TOOL_INPUT\stopverb}, \code{\startverb $TOOL_RESULT\stopverb}, \code{\startverb $USER_PROMPT\stopverb}, etc.}
+}
+
+\subtree{
+\title{Environment Variables}
+\p{Available in all command hooks:}
+
+\ul{
+\li{\code{\startverb $CLAUDE_PROJECT_DIR\stopverb} - Project root path}
+\li{\code{\startverb $CLAUDE_PLUGIN_ROOT\stopverb} - Plugin directory (use for portable paths)}
+\li{\code{\startverb $CLAUDE_ENV_FILE\stopverb} - SessionStart only: persist env vars here}
+\li{\code{\startverb $CLAUDE_CODE_REMOTE\stopverb} - Set if running in remote context}
+}
+
+\p{\strong{Always use ${CLAUDE_PLUGIN_ROOT} in hook commands for portability:}}
+
+\pre{\startverb
+{
+  "type": "command",
+  "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Plugin Hook Configuration}
+\p{In plugins, define hooks in \code{\startverb hooks/hooks.json\stopverb}:}
+
+\pre{\startverb
+{
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Validate file write safety"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Verify task completion"
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/load-context.sh",
+          "timeout": 10
+        }
+      ]
+    }
+  ]
+}
+\stopverb}
+
+\p{Plugin hooks merge with user's hooks and run in parallel.}
+}
+
+\subtree{
+\title{Matchers}
+\subtree{
+\title{Tool Name Matching}
+\p{\strong{Exact match:}}
+
+\pre{\startverb
+"matcher": "Write"
+\stopverb}
+
+\p{\strong{Multiple tools:}}
+
+\pre{\startverb
+"matcher": "Read|Write|Edit"
+\stopverb}
+
+\p{\strong{Wildcard (all tools):}}
+
+\pre{\startverb
+"matcher": "*"
+\stopverb}
+
+\p{\strong{Regex patterns:}}
+
+\pre{\startverb
+"matcher": "mcp__.*__delete.*"  // All MCP delete tools
+\stopverb}
+
+\p{\strong{Note:} Matchers are case-sensitive.}
+}
+
+\subtree{
+\title{Common Patterns}
+\pre{\startverb
+// All MCP tools
+"matcher": "mcp__.*"
+
+// Specific plugin's MCP tools
+"matcher": "mcp__plugin_asana_.*"
+
+// All file operations
+"matcher": "Read|Write|Edit"
+
+// Bash commands only
+"matcher": "Bash"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Best Practices}
+\subtree{
+\title{Input Validation}
+\p{Always validate inputs in command hooks:}
+
+\pre{\startverb
+#!/bin/bash
+set -euo pipefail
+
+input=$(cat)
+tool_name=$(echo "$input" | jq -r '.tool_name')
+
+# Validate tool name format
+if [[ ! "$tool_name" =~ ^[a-zA-Z0-9_]+$ ]]; then
+  echo '{"decision": "deny", "reason": "Invalid tool name"}' >&2
+  exit 2
+fi
+\stopverb}
+}
+
+\subtree{
+\title{Path Safety}
+\p{Check for path traversal and sensitive files:}
+
+\pre{\startverb
+file_path=$(echo "$input" | jq -r '.tool_input.file_path')
+
+# Deny path traversal
+if [[ "$file_path" == *".."* ]]; then
+  echo '{"decision": "deny", "reason": "Path traversal detected"}' >&2
+  exit 2
+fi
+
+# Deny sensitive files
+if [[ "$file_path" == *".env"* ]]; then
+  echo '{"decision": "deny", "reason": "Sensitive file"}' >&2
+  exit 2
+fi
+\stopverb}
+
+\p{See \code{\startverb examples/validate-write.sh\stopverb} and \code{\startverb examples/validate-bash.sh\stopverb} for complete examples.}
+}
+
+\subtree{
+\title{Quote All Variables}
+\pre{\startverb
+# GOOD: Quoted
+echo "$file_path"
+cd "$CLAUDE_PROJECT_DIR"
+
+# BAD: Unquoted (injection risk)
+echo $file_path
+cd $CLAUDE_PROJECT_DIR
+\stopverb}
+}
+
+\subtree{
+\title{Set Appropriate Timeouts}
+\pre{\startverb
+{
+  "type": "command",
+  "command": "bash script.sh",
+  "timeout": 10
+}
+\stopverb}
+
+\p{\strong{Defaults:} Command hooks (60s), Prompt hooks (30s)}
+}
+}
+
+\subtree{
+\title{Performance Considerations}
+\subtree{
+\title{Parallel Execution}
+\p{All matching hooks run \strong{in parallel}:}
+
+\pre{\startverb
+{
+  "PreToolUse": [
+    {
+      "matcher": "Write",
+      "hooks": [
+        {"type": "command", "command": "check1.sh"},  // Parallel
+        {"type": "command", "command": "check2.sh"},  // Parallel
+        {"type": "prompt", "prompt": "Validate..."}   // Parallel
+      ]
+    }
+  ]
+}
+\stopverb}
+
+\p{\strong{Design implications:}}
+
+\ul{
+\li{Hooks don't see each other's output}
+\li{Non-deterministic ordering}
+\li{Design for independence}
+}
+}
+
+\subtree{
+\title{Optimization}
+\ol{
+\li{Use command hooks for quick deterministic checks}
+\li{Use prompt hooks for complex reasoning}
+\li{Cache validation results in temp files}
+\li{Minimize I/O in hot paths}
+}
+}
+}
+
+\subtree{
+\title{Temporarily Active Hooks}
+\p{Create hooks that activate conditionally by checking for a flag file or configuration:}
+
+\p{\strong{Pattern: Flag file activation}}
+
+\pre{\startverb
+#!/bin/bash
+# Only active when flag file exists
+FLAG_FILE="$CLAUDE_PROJECT_DIR/.enable-strict-validation"
+
+if [ ! -f "$FLAG_FILE" ]; then
+  # Flag not present, skip validation
+  exit 0
+fi
+
+# Flag present, run validation
+input=$(cat)
+# ... validation logic ...
+\stopverb}
+
+\p{\strong{Pattern: Configuration-based activation}}
+
+\pre{\startverb
+#!/bin/bash
+# Check configuration for activation
+CONFIG_FILE="$CLAUDE_PROJECT_DIR/.claude/plugin-config.json"
+
+if [ -f "$CONFIG_FILE" ]; then
+  enabled=$(jq -r '.strictMode // false' "$CONFIG_FILE")
+  if [ "$enabled" != "true" ]; then
+    exit 0  # Not enabled, skip
+  fi
+fi
+
+# Enabled, run hook logic
+input=$(cat)
+# ... hook logic ...
+\stopverb}
+
+\p{\strong{Use cases:}}
+
+\ul{
+\li{Enable strict validation only when needed}
+\li{Temporary debugging hooks}
+\li{Project-specific hook behavior}
+\li{Feature flags for hooks}
+}
+
+\p{\strong{Best practice:} Document activation mechanism in plugin README so users know how to enable/disable temporary hooks.}
+}
+
+\subtree{
+\title{Hook Lifecycle and Limitations}
+\subtree{
+\title{Hooks Load at Session Start}
+\p{\strong{Important:} Hooks are loaded when Claude Code session starts. Changes to hook configuration require restarting Claude Code.}
+
+\p{\strong{Cannot hot-swap hooks:}}
+
+\ul{
+\li{Editing \code{\startverb hooks/hooks.json\stopverb} won't affect current session}
+\li{Adding new hook scripts won't be recognized}
+\li{Changing hook commands/prompts won't update}
+\li{Must restart Claude Code: exit and run \code{\startverb claude\stopverb} again}
+}
+
+\p{\strong{To test hook changes:}}
+
+\ol{
+\li{Edit hook configuration or scripts}
+\li{Exit Claude Code session}
+\li{Restart: \code{\startverb claude\stopverb} or \code{\startverb cc\stopverb}}
+\li{New hook configuration loads}
+\li{Test hooks with \code{\startverb claude --debug\stopverb}}
+}
+}
+
+\subtree{
+\title{Hook Validation at Startup}
+\p{Hooks are validated when Claude Code starts:}
+
+\ul{
+\li{Invalid JSON in hooks.json causes loading failure}
+\li{Missing scripts cause warnings}
+\li{Syntax errors reported in debug mode}
+}
+
+\p{Use \code{\startverb /hooks\stopverb} command to review loaded hooks in current session.}
+}
+}
+
+\subtree{
+\title{Debugging Hooks}
+\subtree{
+\title{Enable Debug Mode}
+\pre{\startverb
+claude --debug
+\stopverb}
+
+\p{Look for hook registration, execution logs, input/output JSON, and timing information.}
+}
+
+\subtree{
+\title{Test Hook Scripts}
+\p{Test command hooks directly:}
+
+\pre{\startverb
+echo '{"tool_name": "Write", "tool_input": {"file_path": "/test"}}' | \
+  bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh
+
+echo "Exit code: $?"
+\stopverb}
+}
+
+\subtree{
+\title{Validate JSON Output}
+\p{Ensure hooks output valid JSON:}
+
+\pre{\startverb
+output=$(./your-hook.sh < test-input.json)
+echo "$output" | jq .
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{Hook Events Summary}
+\pre{\startverb
+| Event | When | Use For |
+|-------|------|---------|
+| PreToolUse | Before tool | Validation, modification |
+| PostToolUse | After tool | Feedback, logging |
+| UserPromptSubmit | User input | Context, validation |
+| Stop | Agent stopping | Completeness check |
+| SubagentStop | Subagent done | Task validation |
+| SessionStart | Session begins | Context loading |
+| SessionEnd | Session ends | Cleanup, logging |
+| PreCompact | Before compact | Preserve context |
+| Notification | User notified | Logging, reactions |
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\p{\strong{DO:}}
+
+\ul{
+\li{✅ Use prompt-based hooks for complex logic}
+\li{✅ Use ${CLAUDE_PLUGIN_ROOT} for portability}
+\li{✅ Validate all inputs in command hooks}
+\li{✅ Quote all bash variables}
+\li{✅ Set appropriate timeouts}
+\li{✅ Return structured JSON output}
+\li{✅ Test hooks thoroughly}
+}
+
+\p{\strong{DON'T:}}
+
+\ul{
+\li{❌ Use hardcoded paths}
+\li{❌ Trust user input without validation}
+\li{❌ Create long-running hooks}
+\li{❌ Rely on hook execution order}
+\li{❌ Modify global state unpredictably}
+\li{❌ Log sensitive information}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\subtree{
+\title{Reference Files}
+\p{For detailed patterns and advanced techniques, consult:}
+
+\ul{
+\li{\strong{\code{\startverb references/patterns.md\stopverb}} - Common hook patterns (8+ proven patterns)}
+\li{\strong{\code{\startverb references/migration.md\stopverb}} - Migrating from basic to advanced hooks}
+\li{\strong{\code{\startverb references/advanced.md\stopverb}} - Advanced use cases and techniques}
+}
+}
+
+\subtree{
+\title{Example Hook Scripts}
+\p{Working examples in \code{\startverb examples/\stopverb}:}
+
+\ul{
+\li{\strong{\code{\startverb validate-write.sh\stopverb}} - File write validation example}
+\li{\strong{\code{\startverb validate-bash.sh\stopverb}} - Bash command validation example}
+\li{\strong{\code{\startverb load-context.sh\stopverb}} - SessionStart context loading example}
+}
+}
+
+\subtree{
+\title{Utility Scripts}
+\p{Development tools in \code{\startverb scripts/\stopverb}:}
+
+\ul{
+\li{\strong{\code{\startverb validate-hook-schema.sh\stopverb}} - Validate hooks.json structure and syntax}
+\li{\strong{\code{\startverb test-hook.sh\stopverb}} - Test hooks with sample input before deployment}
+\li{\strong{\code{\startverb hook-linter.sh\stopverb}} - Check hook scripts for common issues and best practices}
+}
+}
+
+\subtree{
+\title{External Resources}
+\ul{
+\li{\strong{Official Docs}: https://docs.claude.com/en/docs/claude-code/hooks}
+\li{\strong{Examples}: See security-guidance plugin in marketplace}
+\li{\strong{Testing}: Use \code{\startverb claude --debug\stopverb} for detailed logs}
+\li{\strong{Validation}: Use \code{\startverb jq\stopverb} to validate hook JSON output}
+}
+}
+}
+
+\subtree{
+\title{Implementation Workflow}
+\p{To implement hooks in a plugin:}
+
+\ol{
+\li{Identify events to hook into (PreToolUse, Stop, SessionStart, etc.)}
+\li{Decide between prompt-based (flexible) or command (deterministic) hooks}
+\li{Write hook configuration in \code{\startverb hooks/hooks.json\stopverb}}
+\li{For command hooks, create hook scripts}
+\li{Use ${CLAUDE_PLUGIN_ROOT} for all file references}
+\li{Validate configuration with \code{\startverb scripts/validate-hook-schema.sh hooks/hooks.json\stopverb}}
+\li{Test hooks with \code{\startverb scripts/test-hook.sh\stopverb} before deployment}
+\li{Test in Claude Code with \code{\startverb claude --debug\stopverb}}
+\li{Document hooks in plugin README}
+}
+
+\p{Focus on prompt-based hooks for most use cases. Reserve command hooks for performance-critical or deterministic checks.}
+}
+}

@@ -1,0 +1,129 @@
+\title{Urdf2mjcf}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{-1}
+
+\meta{description}{Convert URDF robot descriptions to MJCF format for MuJoCo simulation. Handles meshes, joints, actuators, and collision geometries.}
+
+\subtree{
+\title{URDF2MJCF Skill}
+\p{\strong{Trit}: -1 (MINUS - analysis/transformation) \strong{Color}: #4615B7 (Deep Violet) \strong{URI}: skill://urdf2mjcf#4615B7}
+
+\subtree{
+\title{Overview}
+\p{Convert URDF (Unified Robot Description Format) files to MJCF (MuJoCo XML Format) for simulation in MuJoCo and MJX. Handles meshes, joints, actuators, and collision geometries.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# CLI conversion
+urdf2mjcf robot.urdf --output robot.mjcf
+
+# With options
+urdf2mjcf robot.urdf \
+    --output robot.mjcf \
+    --mesh-dir ./meshes \
+    --add-actuators \
+    --collision-margin 0.001
+\stopverb}
+
+\pre{\startverb
+from urdf2mjcf import convert
+
+# Programmatic conversion
+mjcf_xml = convert(
+    urdf_path="robot.urdf",
+    mesh_dir="./meshes",
+    add_actuators=True,
+    collision_margin=0.001,
+)
+
+# Save to file
+with open("robot.mjcf", "w") as f:
+    f.write(mjcf_xml)
+\stopverb}
+}
+
+\subtree{
+\title{Features}
+\ul{
+\li{\strong{Mesh Handling}: Converts STL/OBJ meshes, scales appropriately}
+\li{\strong{Joint Mapping}: URDF revolute/prismatic → MJCF hinge/slide}
+\li{\strong{Actuator Generation}: Auto-generates position/velocity actuators}
+\li{\strong{Collision Geometry}: Convex decomposition, margin adjustment}
+\li{\strong{Inertia Cleanup}: Fixes common URDF inertia issues}
+}
+}
+
+\subtree{
+\title{Pipeline}
+\pre{\startverb
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  URDF File  │───▶│  urdf2mjcf  │───▶│  MJCF File  │
+│  (ROS/SDF)  │    │  Converter  │    │  (MuJoCo)   │
+└─────────────┘    └─────────────┘    └─────────────┘
+       │                  │                  │
+       ▼                  ▼                  ▼
+   Meshes STL        Link transforms     Physics props
+   Joint limits      Mass/inertia        Actuator defs
+   Visual geom       Collision geom      Sensor defs
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+urdf2mjcf (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb ksim-rl\stopverb} (-1): Uses converted MJCF for training}
+\li{\code{\startverb kos-firmware\stopverb} (+1): Robot firmware}
+\li{\code{\startverb mujoco-scenes\stopverb} (0): Scene composition}
+\li{\code{\startverb kbot-humanoid\stopverb} (-1): K-Bot robot model}
+}
+}
+
+\subtree{
+\title{References}
+\pre{\startverb
+@misc{urdf2mjcf2024,
+  title={URDF to MJCF Converter},
+  author={K-Scale Labs},
+  year={2024},
+  url={https://github.com/kscalelabs/urdf2mjcf}
+}
+\stopverb}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 7. Propagators}
+\p{\strong{Concepts}: propagator, cell, constraint, bidirectional, TMS}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+urdf2mjcf (+) + SDF.Ch7 (○) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Propagators flow constraints bidirectionally. This skill propagates information.}
+}
+}
+}

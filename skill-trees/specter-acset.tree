@@ -1,0 +1,304 @@
+\title{Specter Acset}
+
+\taxon{skill}
+
+\meta{description}{"Specter-style bidirectional navigation for Julia Collections, S-expressions, and ACSets with inline caching"}
+
+\subtree{
+\title{specter-acset}
+\blockquote{Inline-cached bidirectional navigation for Julia data structures}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: 0 (Ergodic - coordinates navigation)}
+
+\subtree{
+\title{From Clojure Specter to Julia}
+\p{Nathan Marz's Specter library for Clojure provides \strong{bidirectional data navigation} where the same path expression works for both selection AND transformation. This skill ports those patterns to Julia with extensions for S-expressions and ACSets.}
+}
+
+\subtree{
+\title{Key Insights from Specter Talks}
+\subtree{
+\title{"Rama on Clojure's Terms" (2024)}
+\blockquote{"comp-navs is fast because it's just object allocation + field sets"}
+
+\p{Specter's performance comes from:}
+
+\ol{
+\li{\strong{Inline caching}: Paths compiled once, reused at callsite}
+\li{\strong{Continuation-passing style}: Chains of next_fn calls}
+\li{\strong{Navigator protocol}: Uniform interface for all data types}
+}
+}
+
+\subtree{
+\title{"Specter: Powerful and Simple Data Structure Manipulation"}
+\blockquote{"Without Specter, you need different code for selection vs transformation"}
+
+\p{The bidirectionality principle: A path is a \strong{lens} that focuses on parts of a structure.}
+}
+}
+
+\subtree{
+\title{Navigator Protocol}
+\pre{\startverb
+abstract type Navigator end
+
+# Core operations - bidirectional by design
+function nav_select(nav::Navigator, structure, next_fn)
+    # Traverse and collect
+end
+
+function nav_transform(nav::Navigator, structure, next_fn)
+    # Traverse and modify
+end
+\stopverb}
+}
+
+\subtree{
+\title{Primitive Navigators}
+\pre{\startverb
+| Navigator | Select Behavior | Transform Behavior |
+|-----------|-----------------|-------------------|
+| `ALL` | Each element | Map over all |
+| `FIRST` | First element | Update first only |
+| `LAST` | Last element | Update last only |
+| `keypath(k)` | Value at key | Update value at key |
+| `pred(f)` | Stay if f(x) true | Transform if f(x) true |
+\stopverb}
+}
+
+\subtree{
+\title{Composition: comp_navs (The Key to Performance)}
+\p{Nathan Marz's critical insight: \strong{composition is just allocation + field sets}.}
+
+\subtree{
+\title{Why This Matters}
+\p{Traditional approaches compile/interpret paths at composition time. Specter does \strong{zero work} at composition - it just creates an object:}
+
+\pre{\startverb
+# Specter's key to performance: ONLY allocation + field sets
+struct ComposedNav <: Navigator
+    navs::Vector{Navigator}  # Just a field - no processing
+end
+
+# comp_navs does ONE thing: allocate and set field
+comp_navs(navs::Navigator...) = ComposedNav(collect(navs))
+# That's it. No compilation. No interpretation. No optimization.
+# Just: new ComposedNav() + set navs field
+\stopverb}
+}
+
+\subtree{
+\title{The Magic: Work Happens at Traversal}
+\p{All the actual work happens when you call \code{\startverb select\stopverb} or \code{\startverb transform\stopverb}:}
+
+\pre{\startverb
+# Chain of continuations - CPS (continuation-passing style)
+function nav_select(cn::ComposedNav, structure, next_fn)
+    function chain_select(navs, struct_val)
+        if isempty(navs)
+            next_fn(struct_val)  # Base case: call continuation
+        else
+            # Recursive case: process first nav, chain the rest
+            nav_select(first(navs), struct_val, 
+                      s -> chain_select(navs[2:end], s))
+        end
+    end
+    chain_select(cn.navs, structure)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Why CPS + Lazy Composition = Fast}
+\pre{\startverb
+Traditional:
+  compose(a, b, c) → [compile a+b+c] → CompiledPath
+  
+Specter:
+  comp_navs(a, b, c) → ComposedNav{[a, b, c]}  # Just store refs
+  select(path, data) → [chain continuations] → results
+\stopverb}
+
+\p{\strong{Benefits:}}
+
+\ol{
+\li{\strong{O(1) composition} - just allocate, no work}
+\li{\strong{Inline caching} - same ComposedNav reused at callsite}
+\li{\strong{Late binding} - dynamic navs resolved at traversal time}
+\li{\strong{No intermediate allocations} - CPS avoids building result lists}
+}
+}
+
+\subtree{
+\title{Inline Caching Pattern}
+\pre{\startverb
+# At each callsite, the path is compiled ONCE and cached:
+@compiled_select([ALL, pred(iseven)], data)
+
+# Expands to something like:
+let cached_nav = nothing
+    if cached_nav === nothing
+        cached_nav = comp_navs(ALL, pred(iseven))  # First call only
+    end
+    nav_select(cached_nav, data, identity)  # Reuse forever
+end
+\stopverb}
+
+\p{This is why Specter achieves \strong{near-hand-written performance} despite the abstraction.}
+}
+}
+
+\subtree{
+\title{S-expression Navigators}
+\p{Unique to Julia - navigate typed AST nodes:}
+
+\pre{\startverb
+# Type definitions
+abstract type Sexp end
+struct Atom <: Sexp
+    value::String
+end
+struct SList <: Sexp
+    children::Vector{Sexp}
+end
+
+# Navigators
+SEXP_HEAD      # → first(children)
+SEXP_TAIL      # → children[2:end]
+SEXP_CHILDREN  # → children vector
+SEXP_WALK      # Recursive prewalk
+sexp_nth(n)    # → children[n]
+ATOM_VALUE     # → atom.value
+\stopverb}
+
+\subtree{
+\title{Example: AST Transformation}
+\pre{\startverb
+sexp = parse_sexp("(define (square x) (* x x))")
+
+# Rename function
+renamed = transform(
+    [sexp_nth(2), sexp_nth(1), ATOM_VALUE],
+    _ -> "cube",
+    sexp
+)
+# → (define (cube x) (* x x))
+\stopverb}
+}
+}
+
+\subtree{
+\title{ACSet Navigators}
+\p{Navigate category-theoretic databases:}
+
+\pre{\startverb
+# Navigate morphism values
+acset_field(:E, :src)
+
+# Filter parts by predicate
+acset_where(:E, :src, ==(1))
+
+# All parts of an object
+acset_parts(:V)
+\stopverb}
+
+\subtree{
+\title{Example: Graph Transformation}
+\pre{\startverb
+g = @acset Graph begin V=4; E=3; src=[1,2,3]; tgt=[2,3,4] end
+
+# Select: get all source vertices
+select([acset_field(:E, :src)], g)  # → [1, 2, 3]
+
+# Transform: shift targets
+g2 = transform([acset_field(:E, :tgt)], t -> mod1(t+1, 4), g)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Dynamic Navigators}
+\subtree{
+\title{selected(subpath)}
+\p{Stay at current position if subpath matches:}
+
+\pre{\startverb
+# Select values > 5
+select([ALL, selected(pred(x -> x > 5))], [1,2,3,4,5,6,7,8,9,10])
+# → [6, 7, 8, 9, 10]
+\stopverb}
+}
+
+\subtree{
+\title{if_path(cond, then, else)}
+\p{Conditional navigation:}
+
+\pre{\startverb
+if_path(pred(iseven),
+        keypath(:even_branch),
+        keypath(:odd_branch))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Coercion (Like Specter's coerce-nav)}
+\pre{\startverb
+coerce_nav(x::Navigator) = x
+coerce_nav(s::Symbol) = keypath(s)
+coerce_nav(f::Function) = pred(f)
+coerce_nav(v::Vector) = comp_navs(coerce_nav.(v)...)
+\stopverb}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+# High-level interface
+select(path, data)                    # Collect matches
+select_one(path, data)                # Single match or nothing
+transform(path, fn, data)             # Transform matches
+setval(path, value, data)             # Set matches to value
+\stopverb}
+}
+
+\subtree{
+\title{Comparison: Clojure vs Julia}
+\pre{\startverb
+| Clojure (Specter) | Julia (SpecterACSet) | Notes |
+|-------------------|---------------------|-------|
+| `(select [ALL even?] data)` | `select([ALL, pred(iseven)], data)` | Same pattern |
+| `(transform [ALL even?] f data)` | `transform([ALL, pred(iseven)], f, data)` | Bidirectional |
+| Keywords implicit | `keypath(:k)` explicit | Type safety |
+| No ACSet support | `acset_field`, `acset_where` | Category theory |
+| No typed sexp | `Atom`/`SList` discrimination | AST navigation |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+three-match (-1) ⊗ specter-acset (0) ⊗ gay-mcp (+1) = 0 ✓
+lispsyntax-acset (-1) ⊗ specter-acset (0) ⊗ cider-clojure (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{\strong{Implementation}: \code{\startverb lib/specter_acset.jl\stopverb}}
+\li{\strong{Babashka comparison}: \code{\startverb lib/specter_comparison.bb\stopverb}}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Specter GitHub](https://github.com/redplanetlabs/specter)}
+\li{Nathan Marz: "Rama on Clojure's Terms" (2024)}
+\li{Nathan Marz: "Specter: Powerful and Simple Data Structure Manipulation"}
+\li{[Lens laws](https://hackage.haskell.org/package/lens) (Haskell perspective)}
+}
+}
+}

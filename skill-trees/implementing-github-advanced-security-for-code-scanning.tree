@@ -1,0 +1,254 @@
+\title{Implementing Github Advanced Security For Code Scanning}
+
+\taxon{skill}
+
+\tag{github-advanced-security}
+
+\tag{codeql}
+
+\tag{sast}
+
+\tag{code-scanning}
+
+\tag{supply-chain-security}
+
+\tag{devops-security}
+
+\tag{shift-left}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Configure GitHub Advanced Security with CodeQL to perform automated static analysis and vulnerability detection across repositories at enterprise scale.}
+
+\subtree{
+\title{Implementing GitHub Advanced Security for Code Scanning}
+\subtree{
+\title{Overview}
+\p{GitHub Advanced Security (GHAS) integrates CodeQL-powered static application security testing directly into the GitHub development workflow. CodeQL treats code as data, enabling semantic analysis that identifies security vulnerabilities such as SQL injection, cross-site scripting, buffer overflows, and authentication flaws with significantly fewer false positives than traditional pattern-matching scanners. GHAS encompasses code scanning, secret scanning, dependency review, and Dependabot alerts to provide a comprehensive security posture for repositories.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing github advanced security for code scanning capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{GitHub Enterprise Cloud or GitHub Enterprise Server 3.0+ with GHAS license}
+\li{Repository admin or organization owner permissions}
+\li{Familiarity with GitHub Actions workflow syntax (YAML)}
+\li{Supported languages: C/C++, C#, Go, Java/Kotlin, JavaScript/TypeScript, Python, Ruby, Swift}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{CodeQL Analysis Engine}
+\p{CodeQL compiles source code into a queryable database, then executes security-focused queries against that database. The query suites ship with hundreds of checks mapped to CWE identifiers and cover OWASP Top 10, SANS Top 25, and language-specific vulnerability patterns. Custom queries can be authored using the CodeQL query language (QL) to detect organization-specific anti-patterns.}
+}
+
+\subtree{
+\title{Default Setup vs. Advanced Setup}
+\p{\strong{Default Setup} enables code scanning with a single click from the repository's Code Security settings. GitHub automatically determines the languages present, selects appropriate query suites, and configures scanning triggers. This approach requires no workflow file and is ideal for rapid onboarding.}
+
+\p{\strong{Advanced Setup} generates a \code{\startverb .github/workflows/codeql.yml\stopverb} workflow file that can be customized. Teams control scheduling, language matrices, build commands for compiled languages, additional query packs, and integration with third-party SARIF producers. Advanced setup is required when custom build steps, monorepo configurations, or private query packs are needed.}
+}
+
+\subtree{
+\title{Organization-Wide Rollout}
+\p{For enterprises managing hundreds of repositories, GHAS supports configuring code scanning at scale using the organization-level security overview. Administrators can enable default setup across all eligible repositories, define custom security configurations, and monitor adoption through the security coverage dashboard.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1 --- Enable GHAS on the Organization}
+\ol{
+\li{Navigate to Organization Settings > Code security and analysis}
+\li{Enable GitHub Advanced Security for all repositories or selected repositories}
+\li{Confirm license seat allocation (GHAS is billed per active committer)}
+}
+}
+
+\subtree{
+\title{Step 2 --- Configure Default Setup for Quick Wins}
+\ol{
+\li{Go to Repository Settings > Code security > Code scanning}
+\li{Click "Set up" in the CodeQL analysis row and select "Default"}
+\li{Review the auto-detected languages and query suite (default or extended)}
+\li{Click "Enable CodeQL" to activate scanning on push and pull request events}
+}
+}
+
+\subtree{
+\title{Step 3 --- Advanced Setup with Custom Workflow}
+\p{Create \code{\startverb .github/workflows/codeql-analysis.yml\stopverb}:}
+
+\pre{\startverb
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '30 2 * * 1'  # Weekly Monday 2:30 AM UTC
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript-typescript', 'python', 'java-kotlin']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-extended,security-and-quality
+          # For compiled languages, add build commands below
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+\stopverb}
+}
+
+\subtree{
+\title{Step 4 --- Custom Query Packs}
+\p{Install organization-specific query packs by referencing them in the workflow:}
+
+\pre{\startverb
+- name: Initialize CodeQL
+  uses: github/codeql-action/init@v3
+  with:
+    languages: java-kotlin
+    packs: |
+      my-org/java-custom-queries@1.0.0
+      codeql/java-queries:cwe/cwe-089
+\stopverb}
+}
+
+\subtree{
+\title{Step 5 --- Configure Branch Protection Rules}
+\ol{
+\li{Navigate to Repository Settings > Branches > Branch protection rules}
+\li{Enable "Require status checks to pass" and add the CodeQL analysis check}
+\li{Enable "Require code scanning results" and set severity thresholds (e.g., block on High/Critical)}
+}
+}
+
+\subtree{
+\title{Step 6 --- Secret Scanning and Push Protection}
+\ol{
+\li{Enable secret scanning from Code security settings}
+\li{Activate push protection to block commits containing detected secrets}
+\li{Configure custom patterns for organization-specific secrets (API keys, internal tokens)}
+}
+}
+
+\subtree{
+\title{Step 7 --- Dependency Review and Dependabot}
+\ol{
+\li{Enable Dependabot alerts and security updates}
+\li{Configure \code{\startverb .github/dependabot.yml\stopverb} for automated dependency version updates}
+\li{Enable dependency review enforcement on pull requests to block PRs that introduce known vulnerable dependencies}
+}
+}
+}
+
+\subtree{
+\title{Query Suite Reference}
+\pre{\startverb
+| Suite | Description | Use Case |
+|-------|-------------|----------|
+| `default` | High-confidence security queries | Production scanning with minimal false positives |
+| `security-extended` | Broader security queries including lower-severity findings | Comprehensive security coverage |
+| `security-and-quality` | Security plus code quality queries | Teams wanting both security and maintainability checks |
+| Custom packs | Organization-authored queries | Detecting internal anti-patterns and compliance violations |
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Security Workflows}
+\subtree{
+\title{SARIF Upload from Third-Party Tools}
+\p{GHAS accepts SARIF (Static Analysis Results Interchange Format) uploads from external tools:}
+
+\pre{\startverb
+- name: Upload SARIF
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: results.sarif
+    category: "semgrep"
+\stopverb}
+}
+
+\subtree{
+\title{Security Overview Dashboard}
+\p{The organization-level security overview provides:}
+
+\ul{
+\li{Risk view showing repositories with open alerts by severity}
+\li{Coverage view showing GHAS feature enablement across repositories}
+\li{Alert trends over time for tracking remediation progress}
+\li{Filter by team, language, and alert type for targeted review}
+}
+}
+}
+
+\subtree{
+\title{Monitoring and Metrics}
+\ul{
+\li{Track mean time to remediate (MTTR) for code scanning alerts}
+\li{Monitor false positive rates and tune query configurations accordingly}
+\li{Review alert dismissal reasons to identify areas for developer training}
+\li{Use the API (\code{\startverb /repos/{owner}/{repo}/code-scanning/alerts\stopverb}) for custom reporting dashboards}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ol{
+\li{\strong{Compiled language build failures} --- CodeQL requires successful compilation for C/C++, Java, C#, Go, and Swift; ensure build dependencies are available in the Actions runner}
+\li{\strong{Ignoring scheduled scans} --- Push/PR scanning misses vulnerabilities in dependencies; weekly scheduled scans catch newly disclosed CVEs in existing code}
+\li{\strong{Over-alerting with security-and-quality} --- Start with \code{\startverb default\stopverb} suite and expand gradually to avoid developer alert fatigue}
+\li{\strong{Missing GHAS license seats} --- Only active committers to GHAS-enabled repositories consume license seats; plan capacity accordingly}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[GitHub Code Scanning Documentation](https://docs.github.com/en/code-security/code-scanning)}
+\li{[CodeQL Documentation](https://codeql.github.com/docs/)}
+\li{[CodeQL Query Repository](https://github.com/github/codeql)}
+\li{[SARIF Specification](https://sarifweb.azurewebsites.net/)}
+\li{[GitHub Security Overview](https://docs.github.com/en/code-security/security-overview/about-security-overview)}
+}
+}
+}

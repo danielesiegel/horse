@@ -1,0 +1,178 @@
+\title{Implementing Mimecast Targeted Attack Protection}
+
+\taxon{skill}
+
+\tag{mimecast}
+
+\tag{email-security}
+
+\tag{targeted-threat-protection}
+
+\tag{url-protect}
+
+\tag{impersonation}
+
+\tag{attachment-sandboxing}
+
+\tag{phishing}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploy Mimecast Targeted Threat Protection including URL Protect, Attachment Protect, Impersonation Protect, and Internal Email Protect to defend against advanced phishing and spearphishing attacks.}
+
+\subtree{
+\title{Implementing Mimecast Targeted Attack Protection}
+\subtree{
+\title{Overview}
+\p{Mimecast Targeted Threat Protection (TTP) is a suite of advanced email security services designed to protect against sophisticated phishing, spearphishing, and targeted attacks. TTP consists of four core modules: URL Protect (real-time URL rewriting and click-time analysis), Attachment Protect (sandbox detonation of suspicious attachments), Impersonation Protect (BEC and whaling detection), and Internal Email Protect (scanning internal/outbound email for threats). As of November 2025, Mimecast enabled URL Pre-Delivery Action with Hold setting for all customers by default.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing mimecast targeted attack protection capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Mimecast Email Security license with TTP add-on}
+\li{Administrative access to Mimecast Administration Console}
+\li{Microsoft 365 or Google Workspace environment}
+\li{MX records configured to route through Mimecast}
+\li{Understanding of email authentication (SPF, DKIM, DMARC)}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{TTP Module Overview}
+\pre{\startverb
+| Module | Function | Key Capability |
+|---|---|---|
+| URL Protect | Rewrites and scans URLs at click time | Real-time sandbox, pre-delivery hold |
+| Attachment Protect | Sandboxes suspicious attachments | Static + dynamic analysis |
+| Impersonation Protect | Detects BEC/whaling attacks | VIP name matching, header analysis |
+| Internal Email Protect | Scans internal/outbound email | Lateral phishing detection |
+\stopverb}
+}
+
+\subtree{
+\title{Impersonation Protection Scenarios}
+\ul{
+\li{\strong{Hit 3 (Default)}: Flags emails matching 3+ impersonation indicators}
+\li{\strong{Hit 1 (VIP)}: Flags emails matching 1+ indicator for designated VIP users}
+\li{Key identifiers: display name similarity, domain similarity, reply-to mismatch, newly registered domains}
+}
+}
+
+\subtree{
+\title{URL Protect Modes}
+\ul{
+\li{\strong{Rewrite}: URLs rewritten to route through Mimecast proxy at click time}
+\li{\strong{Pre-Delivery Action (Hold)}: URLs checked before message delivery; held if suspicious}
+\li{\strong{Pre-Delivery Action (None)}: URLs checked pre-delivery but not held}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Configure URL Protect Policy}
+\ul{
+\li{Navigate to Administration > Gateway > Policies > Targeted Threat Protection - URL Protect}
+\li{Create URL Protect definition with rewriting enabled for inbound messages}
+\li{Enable URL Pre-Delivery Action set to "Hold" for maximum protection}
+\li{Configure scan mode: aggressive for high-risk users, moderate for general population}
+\li{Set action for malicious URLs: block page with user notification}
+\li{Enable URL logging for all click events}
+}
+}
+
+\subtree{
+\title{Step 2: Configure Attachment Protect Policy}
+\ul{
+\li{Navigate to Administration > Gateway > Policies > Targeted Threat Protection - Attachment Protect}
+\li{Create Attachment Protect definition for inbound email}
+\li{Select sandbox mode: "Safe File" (converts to safe format) or "Dynamic Configuration" (full sandbox)}
+\li{Configure attachment types to scan: executables, Office documents, PDFs, archives}
+\li{Set timeout for sandbox analysis (default: up to 7 minutes for complex files)}
+\li{Enable pre-emptive sandboxing for attachments from unknown senders}
+}
+}
+
+\subtree{
+\title{Step 3: Configure Impersonation Protect}
+\ul{
+\li{Create Default Impersonation Protect Definition (Hit 3) for all inbound email}
+\li{Create VIP Impersonation Protect Definition (Hit 1) for executive protection}
+\li{Build VIP list: CEO, CFO, CTO, board members, finance leadership}
+\li{Configure detection identifiers: display name, domain similarity, newly observed sender}
+\li{Set actions: quarantine high-confidence impersonation, tag moderate confidence}
+\li{Enable end-user warning banners for flagged messages}
+}
+}
+
+\subtree{
+\title{Step 4: Enable Internal Email Protect}
+\ul{
+\li{Configure journaling from Microsoft 365/Google Workspace to Mimecast}
+\li{Enable URL scanning for internal emails}
+\li{Enable attachment scanning for internal emails}
+\li{Configure alerts for internal account compromise indicators}
+\li{Set up detection for internal phishing (compromised account sending malware)}
+}
+}
+
+\subtree{
+\title{Step 5: Create Test Group and Validate}
+\ul{
+\li{Create pilot group of 50-100 users across departments}
+\li{Apply TTP policies to pilot group first}
+\li{Send test emails with known-safe test URLs and EICAR test files}
+\li{Verify URL rewriting, attachment sandboxing, and impersonation detection}
+\li{Monitor false positive rate for 1-2 weeks before organization-wide deployment}
+}
+}
+
+\subtree{
+\title{Step 6: Deploy Organization-Wide and Tune}
+\ul{
+\li{Extend TTP policies to all users}
+\li{Monitor Mimecast Threat Dashboard for detection metrics}
+\li{Review and whitelist legitimate applications triggering false positives}
+\li{Tune impersonation sensitivity based on false positive feedback}
+\li{Configure exception policies for automated systems and mailing lists}
+}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{Mimecast Administration Console}: Policy configuration and management}
+\li{\strong{Mimecast Threat Dashboard}: Real-time threat visibility and analytics}
+\li{\strong{Mimecast Awareness Training}: Integrated security awareness platform}
+\li{\strong{Mimecast API}: Programmatic access to logs and threat data}
+\li{\strong{Message Center}: Quarantine management for admins and users}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{URL Protect rewrites URLs in test messages and blocks known-malicious at click}
+\li{Attachment Protect sandboxes test file and returns verdict within SLA}
+\li{Impersonation Protect flags test BEC email impersonating VIP}
+\li{Internal Email Protect detects test lateral phishing scenario}
+\li{Pre-delivery hold catches weaponized URL before reaching inbox}
+\li{False positive rate below organizational threshold after tuning}
+}
+}
+}

@@ -1,0 +1,63 @@
+\title{Steamvr Tracking}
+
+\taxon{skill}
+
+\meta{description}{SteamVR Tracking (Lighthouse/Base Stations) setup + specs. Use for playspace sizing, base station placement, compatibility, and troubleshooting across SteamVR-tracked headsets.}
+
+\subtree{
+\title{SteamVR Tracking (Base Stations / Lighthouse)}
+\p{Use when the user is:}
+
+\ul{
+\li{Setting up Valve/HTC base stations}
+\li{Using a headset/controller/tracker that relies on SteamVR Tracking (outside-in)}
+\li{Debugging tracking drift, occlusion, or playspace geometry}
+}
+
+\subtree{
+\title{What To Ask First (Only If It Blocks Progress)}
+\ol{
+\li{Base station generation: 1.0 or 2.0?}
+\li{How many base stations: 2, 3, or 4?}
+\li{Target playspace size and ceiling height?}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\ul{
+\li{Base stations are not cameras; they sweep IR laser patterns that tracked devices read.}
+\li{Tracking quality is mostly about:}
+\li{Visibility (avoid occlusion)}
+\li{Placement geometry (cover the full volume)}
+\li{Reflective surfaces (windows/mirrors) and IR interference}
+}
+}
+
+\subtree{
+\title{Quick Placement Rules}
+\ul{
+\li{Start with 2 base stations, opposite corners, high up, angled down.}
+\li{Add a 3rd/4th station only to cover dead zones or larger spaces.}
+\li{Avoid direct reflections (mirrors, glossy TV, large windows).}
+}
+}
+
+\subtree{
+\title{Compatibility / Gotchas}
+\ul{
+\li{Base station 2.0 requires 2.0-tracking-capable hardware.}
+\li{For headsets that support both inside-out and SteamVR Tracking (e.g., Varjo/Pimax variants), make sure the runtime and tracking mode match the app:}
+\li{SteamVR/OpenVR apps: ensure SteamVR Tracking mode is active and the vendor SteamVR add-on is enabled.}
+}
+}
+
+\subtree{
+\title{Interleave With}
+\ul{
+\li{\code{\startverb varjo-xr-4\stopverb} for XR-4 tracking mode + Varjo Base runtime switches}
+\li{\code{\startverb ar-vr-xr\stopverb} for comfort/perf defaults}
+\li{\code{\startverb jepsen-testing\stopverb} when the XR experience depends on a shared-state backend correctness claim}
+}
+}
+}

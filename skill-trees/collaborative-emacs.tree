@@ -1,0 +1,264 @@
+\title{Untitled}
+
+\taxon{skill}
+
+\subtree{
+\title{Collaborative Emacs — Claude Code + CRDT Live Editing}
+\p{\strong{Trit}: 0 (ERGODIC - bidirectional coordination) \strong{Status}: Working \strong{Date}: 2026-02-10 \strong{Prerequisite}: crdt.el (elpa), emacsclient}
+
+\subtree{
+\title{What This Does}
+\p{Claude Code runs an Emacs daemon, starts a CRDT server, shares buffers. User's Emacs auto-connects and sees live edits. No interactive prompts.}
+}
+
+\subtree{
+\title{Quick Start (Human Side)}
+\ol{
+\li{\strong{Install crdt.el}}
+}
+
+\ol{
+\li{\strong{Host a session} (on your machine)}
+}
+
+\ol{
+\li{\strong{Connect from another machine}}
+}
+}
+
+\subtree{
+\title{Architecture (Preferred)}
+\pre{\startverb
+┌──────────────┐    emacsclient -s     ┌──────────────────┐
+│  Claude Code │ ──────────────────▶   │  Emacs daemon    │
+│  (this CLI)  │                       │  "claude-crdt"   │
+└──────────────┘                       │  CRDT SERVER     │
+                                       │  port 6531       │
+                                       └────────┬─────────┘
+                                                │
+                                         auto-connect
+                                         (crdt-autoconnect.el)
+                                                │
+                                                ▼
+                                       ┌──────────────────┐
+                                       │  User's Emacs    │
+                                       │  (CRDT client)   │
+                                       └──────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Setup}
+\subtree{
+\title{Auto-connect file (already installed)}
+\p{\code{\startverb ~/.emacs.d/crdt-autoconnect.el\stopverb}:}
+
+\pre{\startverb
+(require 'crdt)
+(require 'url-parse)
+(run-at-time 3 nil
+  (lambda ()
+    (condition-case err
+        (let ((url (url-generic-parse-url "ein://localhost:6531")))
+          (crdt-connect url "alice")
+          (message "Connected to Claude CRDT on port 6531"))
+      (error (message "CRDT connect failed: %S" err)))))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Step 1: Claude starts daemon with CRDT server}
+\pre{\startverb
+emacs -nw --daemon=claude-crdt
+
+emacsclient -s claude-crdt -e '
+(progn
+  (require (quote crdt))
+  (let ((buf (get-buffer-create "*claude-workspace*")))
+    (with-current-buffer buf (org-mode) (insert "#+TITLE: Workspace\n"))
+    (crdt-new-session 6531 nil "" "claude"
+      (quote (crdt-default-session-permissions)))
+    (crdt--share-buffer buf (car crdt--session-list) "workspace.org")))'
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Claude shares files}
+\pre{\startverb
+emacsclient -s claude-crdt -e '
+(let* ((s (car crdt--session-list))
+       (buf (find-file-noselect "/path/to/file.org")))
+  (crdt--share-buffer buf s "file.org"))'
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: User launches Emacs and auto-connects}
+\p{Local:}
+
+\pre{\startverb
+emacs -nw -l ~/.emacs.d/crdt-autoconnect.el
+\stopverb}
+
+\p{Over Tailscale (from any node on the tailnet):}
+
+\pre{\startverb
+CRDT_HOST=2-monad CRDT_PORT=6531 emacs -nw -l ~/.emacs.d/crdt-autoconnect.el
+\stopverb}
+
+\p{Or by Tailscale IP:}
+
+\pre{\startverb
+CRDT_HOST=100.87.209.11 emacs -nw -l ~/.emacs.d/crdt-autoconnect.el
+\stopverb}
+
+\p{3 seconds after startup, connects automatically. No minibuffer prompts. Then: \code{\startverb M-x crdt-switch-to-buffer\stopverb}}
+}
+
+\subtree{
+\title{Tailscale Notes}
+\p{The daemon's \code{\startverb crdt-new-session\stopverb} binds to \code{\startverb 0.0.0.0\stopverb} — accessible on all interfaces including Tailscale. No extra config needed.}
+
+\subtree{
+\title{crdt.el URL Format (confirmed from upstream docs)}
+\pre{\startverb
+| Protocol | URL | Use |
+|----------|-----|-----|
+| Unencrypted | `ein://host:port` | Default |
+| TLS (stunnel) | `eins://host:port` | Encrypted |
+\stopverb}
+
+\p{Full Tailscale URLs for \code{\startverb M-x crdt-connect\stopverb}:}
+
+\pre{\startverb
+ein://2-monad.pirate-dragon.ts.net:6531   # FQDN
+ein://2-monad:6531                        # MagicDNS short
+ein://100.87.209.11:6531                  # by IP
+\stopverb}
+
+\p{Programmatic connection (no prompts):}
+
+\pre{\startverb
+(crdt-connect (url-generic-parse-url "ein://2-monad.pirate-dragon.ts.net:6531") "alice")
+\stopverb}
+
+\p{\code{\startverb crdt-copy-url\stopverb} on the server side also generates these \code{\startverb ein://\stopverb} URLs.}
+
+\p{Online tailnet nodes:}
+
+\ul{
+\li{\code{\startverb 2-monad\stopverb} (100.87.209.11) — this machine}
+\li{\code{\startverb causality\stopverb} (100.69.33.107)}
+\li{\code{\startverb hatchery\stopverb} (100.72.249.116)}
+}
+}
+}
+
+\subtree{
+\title{Step 4: Claude reads shared buffers}
+\pre{\startverb
+emacsclient -s claude-crdt -e '
+(let* ((s (car crdt--session-list))
+       (buf (gethash "BUFFER-NAME" (crdt--session-buffer-table s))))
+  (with-current-buffer buf
+    (buffer-substring-no-properties (point-min) (point-max))))'
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Claude writes to shared buffers}
+\pre{\startverb
+emacsclient -s claude-crdt -e '
+(let* ((s (car crdt--session-list))
+       (buf (gethash "BUFFER-NAME" (crdt--session-buffer-table s))))
+  (with-current-buffer buf
+    (goto-char (point-max))
+    (insert "\n* New heading from Claude\n")))'
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Patterns}
+\subtree{
+\title{Read buffer content}
+\pre{\startverb
+(let* ((s (car crdt--session-list))
+       (buf (gethash "BUFFER" (crdt--session-buffer-table s))))
+  (with-current-buffer buf
+    (buffer-substring-no-properties (point-min) (point-max))))
+\stopverb}
+}
+
+\subtree{
+\title{Insert at point-max}
+\pre{\startverb
+(with-current-buffer buf
+  (goto-char (point-max))
+  (insert "text"))
+\stopverb}
+}
+
+\subtree{
+\title{Insert at specific position}
+\pre{\startverb
+(with-current-buffer buf
+  (goto-char (point-min))
+  (search-forward "* Target Heading")
+  (end-of-line)
+  (insert "\nNew content under heading"))
+\stopverb}
+}
+
+\subtree{
+\title{Run org commands on shared buffer}
+\pre{\startverb
+(with-current-buffer buf
+  (org-sort-entries nil ?a))  ; sort alphabetically
+\stopverb}
+}
+
+\subtree{
+\title{Check who's connected}
+\pre{\startverb
+emacsclient -s claude-crdt -e '
+(let ((s (car crdt--session-list)))
+  (hash-table-keys (crdt--session-user-table s)))'
+\stopverb}
+}
+}
+
+\subtree{
+\title{Critical Lessons}
+\ul{
+\li{\code{\startverb crdt-share-buffer\stopverb} and \code{\startverb crdt-connect\stopverb} use interactive settings}
+\li{Use \code{\startverb crdt-new-session\stopverb} (programmatic) to create server sessions}
+\li{Use \code{\startverb crdt--share-buffer\stopverb} (internal) to add buffers without prompts}
+\li{Use \code{\startverb crdt-autoconnect.el\stopverb} with \code{\startverb url-generic-parse-url\stopverb} for the}
+\li{Claude daemon hosts the server (port 6531), user is the client}
+\li{\code{\startverb emacs --batch\stopverb} can't maintain CRDT connections (exits immediately)}
+\li{Always use \code{\startverb --daemon=claude-crdt\stopverb} for persistent connection}
+}
+}
+
+\subtree{
+\title{Cleanup}
+\pre{\startverb
+# Kill the daemon when done
+emacsclient -s claude-crdt -e '(kill-emacs)'
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb crdt-vterm\stopverb} — terminal sharing via CRDT + vterm}
+\li{\code{\startverb emacs\stopverb} — base Emacs ecosystem skill}
+\li{\code{\startverb elisp\stopverb} — Emacs Lisp reference}
+\li{\code{\startverb emacs-info\stopverb} — Info navigation}
+}
+}
+}

@@ -1,0 +1,217 @@
+\title{Multiversal Finance}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'Multiversal Finance: Prediction Markets for Interesting Observations'}
+
+\subtree{
+\title{Multiversal Finance: Prediction Markets for Interesting Observations}
+\p{\strong{Trit}: +1 (PLUS - generative, creates value from attention) \strong{Color}: #E7B367 (Agent-O-Rama stream, seed 1069) \strong{Source}: color_at determinism + Schmidhuber compression progress}
+
+\subtree{
+\title{Core Principle}
+\blockquote{\strong{Nothing is stored, everything is bet.}}
+
+\p{Predictions are bets on which \code{\startverb (seed, index)\stopverb} paths yield "interesting" observations. Rewards flow to observers who correctly predict or discover surprising patterns.}
+}
+
+\subtree{
+\title{Interestingness Metric (Compression Progress)}
+\p{Following Schmidhuber's curiosity-driven learning:}
+
+\pre{\startverb
+interestingness(observation) = ΔC = C_before - C_after
+\stopverb}
+
+\p{Where \code{\startverb C\stopverb} = minimum description length of the observer's world model.}
+
+\p{\strong{High interestingness}: observation that \em{compresses} the model (reveals structure). \strong{Low interestingness}: observation already predictable (no learning).}
+}
+
+\subtree{
+\title{ACSet Schema: MultiversalMarket}
+\pre{\startverb
+@present SchMultiversalMarket(FreeSchema) begin
+  # Objects
+  Observation::Ob        # A (seed, index) → color witness
+  Bet::Ob               # Prediction on future observation
+  Agent::Ob             # Goblin: -1, 0, or +1
+  
+  # Morphisms
+  observes::Hom(Agent, Observation)   # who witnessed
+  predicts::Hom(Bet, Observation)     # what was predicted
+  settles::Hom(Bet, Agent)            # who settles (Coordinator)
+  
+  # Attributes
+  SeedType::AttrType
+  IndexType::AttrType
+  HexType::AttrType
+  TritType::AttrType
+  RewardType::AttrType
+  
+  seed::Attr(Observation, SeedType)
+  index::Attr(Observation, IndexType)
+  color::Attr(Observation, HexType)
+  
+  agent_trit::Attr(Agent, TritType)   # -1, 0, +1
+  stake::Attr(Bet, RewardType)
+  payout::Attr(Bet, RewardType)
+  
+  # Interestingness score
+  compression_delta::Attr(Observation, RewardType)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Goblin Roles in the Market}
+\pre{\startverb
+| Goblin | Trit | Market Role | Action |
+|--------|------|-------------|--------|
+| **Agent-O-Rama** | +1 | Proposer | Generates predictions, stakes bets |
+| **Coordinator** | 0 | Settlement | Verifies `color_at(seed, index)`, transfers rewards |
+| **Shadow Goblin** | -1 | Scorer | Measures compression progress, assigns interestingness |
+\stopverb}
+
+\subtree{
+\title{GF(3) Conservation in Reward Flow}
+\pre{\startverb
+stakes_in + payouts_out + fees ≡ 0 (mod 3)
+\stopverb}
+
+\p{Every bet has a balanced flow: proposer stakes (+1), scorer validates (-1), coordinator settles (0).}
+}
+}
+
+\subtree{
+\title{Verification Protocol}
+\ol{
+\li{\strong{Proposer} (Agent-O-Rama, +1): Claims "at seed S, index I, color will be C"}
+\li{\strong{Scorer} (Shadow Goblin, -1): Checks \code{\startverb color_at(S, I)\stopverb} via MCP, computes \code{\startverb ΔC\stopverb}}
+\li{\strong{Coordinator} (CapTP, 0): If verified, transfers \code{\startverb stake × ΔC\stopverb} to proposer}
+}
+
+\pre{\startverb
+def settle_bet(bet, scorer, coordinator)
+  actual = Gay.color_at(bet.seed, bet.index)
+  if actual == bet.predicted_color
+    delta_c = scorer.compression_progress(actual)
+    payout = bet.stake * delta_c
+    coordinator.transfer(payout, to: bet.proposer)
+  else
+    coordinator.transfer(bet.stake, to: scorer)  # Penalty
+  end
+end
+\stopverb}
+}
+
+\subtree{
+\title{Multiversal Aspect}
+\p{Different seeds = different possible worlds.}
+
+\pre{\startverb
+World 42:  #91BE25 → #... → #... (one derivation path)
+World 69:  #A3F4B2 → #... → #... (another path)
+World 1069: #E7B367 → #... → #... (goblin genesis)
+\stopverb}
+
+\p{\strong{Cross-world bets}: Predict which world has higher average interestingness.}
+
+\p{\strong{Arbitrage}: If two worlds have identical color at index N, they share structure.}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+curiosity-driven (-1) ⊗ multiversal-finance (+1) ⊗ captp (0) = 0 ✓  [Reward Transport]
+shadow-goblin (-1) ⊗ agent-o-rama (+1) ⊗ coordinator (0) = 0 ✓     [Market Roles]
+compression-progress (-1) ⊗ multiversal-finance (+1) ⊗ gay-mcp (0) = 0 ✓  [Interestingness]
+\stopverb}
+}
+
+\subtree{
+\title{Implementation Bridge}
+\pre{\startverb
+| Concept | Our System | Function |
+|---------|------------|----------|
+| Price | `compression_delta` | Higher ΔC = higher reward |
+| Liquidity | `interleave(n_streams=3)` | 3 parallel betting pools |
+| Settlement | `color_at(seed, index)` | Unforgeable proof |
+| Sturdy ref | `(seed, index)` tuple | Bet identifier |
+\stopverb}
+}
+
+\subtree{
+\title{MARL + Mutual Information Layer}
+\p{Multiversal finance IS multi-agent reinforcement learning where the reward signal is compression progress (ΔC) and the coordination metric is mutual information.}
+
+\subtree{
+\title{Markov Category Structure}
+\pre{\startverb
+Generative channel (MonadDistribution):  Agent-O-Rama proposes (seed, index) bets
+Recognition channel (MonadFactor):       Shadow Goblin scores & conditions on ΔC
+Composition (TracedT(WeightedT)):        LMSR market equilibrium = Nash fixed point
+\stopverb}
+}
+
+\subtree{
+\title{Mutual Information Flow}
+\pre{\startverb
+I(observation; world_model) = ΔC = compression_progress
+I(agent_action; grid_state) = coordination_quality
+I(corpus; outcome) >> I(public; outcome)  ← Dyssonance information advantage
+\stopverb}
+}
+
+\subtree{
+\title{Nashator Games (implemented in stress-games.ts)}
+\pre{\startverb
+| Game | Players | Models |
+|------|---------|--------|
+| `cityLearnDemandResponse` | Prosumer(-1) × Grid(+1) | Ontology cityLearn OpenGame |
+| `multiversalPredictionMarket` | Agent-O-Rama(+1) × Shadow Goblin(-1) | Core prediction market |
+| `mutualInfoCoordination` | DER_Producer(-1) × DER_Consumer(+1) | MARL mutual info maximization |
+| `lmsrMarketGame` | Trader(+1) × MM(0) × Oracle(-1) | LMSR as open game |
+| `wevExtractionGame` | Speculator(+1) × Ecosystem(-1) | WEV from proposal outcomes |
+| `dyssonanceOracleGame` | Oracle(-1) × Trader(+1) | Privileged corpus scoring |
+| `agmBeliefRevisionGame` | Believer(0) × Evidence(0) | AGM rational belief change |
+\stopverb}
+}
+
+\subtree{
+\title{Lifecycle Compositions}
+\pre{\startverb
+multiversalLifecycle = mutualInfoCoordination ; multiversalPredictionMarket ;
+                       dyssonanceOracleGame ; wevExtractionGame
+
+energyMarketLifecycle = cityLearnDemandResponse ; agmBeliefRevisionGame ;
+                        mutualInfoCoordination
+\stopverb}
+}
+}
+
+\subtree{
+\title{Skills Required}
+\ul{
+\li{\code{\startverb gay-mcp\stopverb}: Deterministic color oracle}
+\li{\code{\startverb captp\stopverb}: Secure settlement transport}
+\li{\code{\startverb curiosity-driven\stopverb}: Compression progress metric}
+\li{\code{\startverb world-hopping\stopverb}: Navigate between seeds (possible worlds)}
+\li{\code{\startverb acsets-algebraic-databases\stopverb}: Market schema}
+\li{\code{\startverb monad-bayes-asi-interleave\stopverb}: SMC/MCMC backends for inference}
+\li{\code{\startverb ontology-asi-interleave\stopverb}: Autopoietic ergodicity + Open Games bridge}
+\li{\code{\startverb nashator\stopverb}: Nash equilibrium solver for all game compositions}
+}
+}
+
+\subtree{
+\title{Key Insight}
+\blockquote{\strong{The oracle is the market.}}
+
+\p{Since \code{\startverb color_at(seed, index)\stopverb} is deterministic and unforgeable, the prediction market has \em{perfect settlement}. No disputes possible—the color either matches or it doesn't.}
+
+\p{This is "multiversal" because different seeds explore different derivation paths through the same generative function. Betting = choosing which multiverse to observe.}
+}
+}

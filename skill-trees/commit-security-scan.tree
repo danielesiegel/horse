@@ -1,0 +1,348 @@
+\title{Commit Security Scan}
+
+\taxon{skill}
+
+\tag{security}
+
+\tag{scanning}
+
+\tag{vulnerability-detection}
+
+\tag{ci-cd}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Analyze code changes for security vulnerabilities using LLM reasoning and threat model patterns. Use for PR reviews, pre-commit checks, or branch comparisons.}
+
+\subtree{
+\title{Commit Security Scan}
+\p{Analyze code changes (commits, PRs, diffs) using LLM-powered reasoning to detect security vulnerabilities. This skill reads code directly and applies patterns from the repository's threat model to identify issues across all STRIDE categories.}
+
+\subtree{
+\title{When to Use This Skill}
+\ul{
+\li{\strong{PR review} - Automated security scan on pull requests}
+\li{\strong{Pre-commit check} - Scan staged changes before committing}
+\li{\strong{Branch comparison} - Review security of feature branch changes}
+\li{\strong{Code review assistance} - Help reviewers spot security issues}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\p{This skill requires:}
+
+\ol{
+\li{\strong{Threat model} - \code{\startverb .factory/threat-model.md\stopverb} must exist}
+\li{\strong{Security config} - \code{\startverb .factory/security-config.json\stopverb} for severity thresholds}
+}
+
+\p{\strong{IMPORTANT: If these files don't exist, you MUST generate them first before proceeding with the security scan.}}
+
+\p{To generate the prerequisites:}
+
+\ol{
+\li{Tell the user: "The threat model doesn't exist yet. I'll generate it first before scanning."}
+\li{Run the \code{\startverb threat-model-generation\stopverb} skill to create both files}
+\li{Once complete, continue with the security scan}
+}
+
+\p{Do NOT ask the user to run the skill manually - just do it automatically as part of this workflow.}
+}
+
+\subtree{
+\title{Inputs}
+\p{The skill determines what to scan from the user's request:}
+
+\pre{\startverb
+| Scan Type         | How to Specify             | Example                                      |
+| ----------------- | -------------------------- | -------------------------------------------- |
+| PR                | "Scan PR #123"             | `Scan PR #456 for security vulnerabilities`  |
+| Commit range      | "Scan commits X..Y"        | `Scan commits abc123..def456`                |
+| Single commit     | "Scan commit X"            | `Scan commit abc123`                         |
+| Staged changes    | "Scan staged changes"      | `Scan my staged changes for security issues` |
+| Uncommitted       | "Scan uncommitted changes" | `Scan working directory changes`             |
+| Branch comparison | "Scan from X to Y"         | `Scan changes from main to feature-branch`   |
+| Last N commits    | "Scan last N commits"      | `Scan the last 3 commits`                    |
+\stopverb}
+
+\p{If no scope is specified, prompt the user for clarification.}
+}
+
+\subtree{
+\title{Instructions}
+\p{Follow these steps in order:}
+
+\subtree{
+\title{Step 1: Verify Prerequisites (Auto-Generate if Missing)}
+\p{Try to read these files:}
+
+\ul{
+\li{\code{\startverb .factory/threat-model.md\stopverb}}
+\li{\code{\startverb .factory/security-config.json\stopverb}}
+}
+
+\p{\strong{If either file is missing or cannot be read:}}
+
+\ol{
+\li{Inform the user: "The security threat model doesn't exist yet. I'll generate it first - this may take a minute."}
+\li{Invoke the \code{\startverb threat-model-generation\stopverb} skill to analyze the repository and create both files}
+\li{Once generation completes, continue with Step 2}
+}
+
+\p{This ensures the security scan always has the threat model context it needs for accurate analysis.}
+}
+
+\subtree{
+\title{Step 2: Get Changed Files}
+\p{Based on the user's request, get the list of changed files and their diffs using git:}
+
+\ul{
+\li{For PRs: use \code{\startverb gh pr diff\stopverb}}
+\li{For commits/ranges: use \code{\startverb git diff\stopverb} or \code{\startverb git show\stopverb}}
+\li{For staged changes: use \code{\startverb git diff --cached\stopverb}}
+}
+
+\p{Read the full content of each changed file for context.}
+}
+
+\subtree{
+\title{Step 3: Load Threat Model}
+\p{Read \code{\startverb .factory/threat-model.md\stopverb} and \code{\startverb .factory/security-config.json\stopverb} to understand:}
+
+\ul{
+\li{The system's architecture and trust boundaries}
+\li{Known vulnerability patterns for this codebase}
+\li{Severity thresholds for findings}
+}
+}
+
+\subtree{
+\title{Step 4: Analyze for Vulnerabilities}
+\p{For each changed file, systematically check for STRIDE threats:}
+
+\subtree{
+\title{S - Spoofing Identity}
+\ul{
+\li{Missing or weak authentication checks}
+\li{Session handling vulnerabilities}
+\li{Token/credential exposure in code}
+\li{Insecure cookie settings}
+}
+}
+
+\subtree{
+\title{T - Tampering with Data}
+\ul{
+\li{\strong{SQL Injection}: String concatenation/interpolation in SQL queries}
+\li{\strong{Command Injection}: User input in shell commands, \code{\startverb eval()\stopverb}, \code{\startverb exec()\stopverb}}
+\li{\strong{XSS}: Unescaped user input in HTML/templates}
+\li{\strong{Mass Assignment}: Blind assignment from request to model}
+\li{\strong{Path Traversal}: User input in file paths without validation}
+}
+}
+
+\subtree{
+\title{R - Repudiation}
+\ul{
+\li{Missing audit logging for sensitive operations}
+\li{Insufficient error logging}
+\li{Log injection vulnerabilities}
+}
+}
+
+\subtree{
+\title{I - Information Disclosure}
+\ul{
+\li{\strong{IDOR}: Direct object access without ownership verification}
+\li{Verbose error messages exposing internals}
+\li{Hardcoded secrets, API keys, credentials}
+\li{Sensitive data in logs or responses}
+\li{Debug endpoints exposed}
+}
+}
+
+\subtree{
+\title{D - Denial of Service}
+\ul{
+\li{Missing rate limiting on endpoints}
+\li{Unbounded resource consumption (file uploads, queries)}
+\li{Algorithmic complexity attacks (regex, sorting)}
+\li{Missing pagination on list endpoints}
+}
+}
+
+\subtree{
+\title{E - Elevation of Privilege}
+\ul{
+\li{Missing authorization checks on endpoints}
+\li{Role/permission bypass opportunities}
+\li{Privilege escalation through parameter manipulation}
+}
+}
+}
+
+\subtree{
+\title{Step 5: Assess Each Finding}
+\p{For each potential vulnerability:}
+
+\ol{
+\li{\strong{Trace data flow}: Follow user input from source to sink}
+}
+
+\ul{
+\li{Where does the input come from? (request params, body, headers, files)}
+\li{Does it pass through validation/sanitization?}
+\li{Where does it end up? (database, shell, response, file system)}
+}
+
+\ol{
+\li{\strong{Check for existing mitigations}:}
+}
+
+\ul{
+\li{Is there validation elsewhere in the codebase?}
+\li{Are there middleware/decorators that protect this code?}
+\li{Does the framework provide automatic protection?}
+}
+
+\ol{
+\li{\strong{Determine severity}:}
+}
+
+\ul{
+\li{\strong{CRITICAL}: Remote code execution, auth bypass, data breach}
+\li{\strong{HIGH}: SQL injection, XSS, IDOR, privilege escalation}
+\li{\strong{MEDIUM}: Information disclosure, missing security headers}
+\li{\strong{LOW}: Best practice violations, minor issues}
+}
+
+\ol{
+\li{\strong{Assess confidence}:}
+\li{\strong{HIGH}: Clear vulnerable pattern, direct data flow, no mitigations}
+\li{\strong{MEDIUM}: Possible vulnerability, some uncertainty about context}
+\li{\strong{LOW}: Suspicious pattern, likely has mitigations we can't see}
+}
+}
+
+\subtree{
+\title{Step 6: Generate Report}
+\p{Create \code{\startverb security-findings.json\stopverb} with this structure:}
+
+\pre{\startverb
+{
+  "scan_id": "scan-YYYY-MM-DD-XXX",
+  "scan_date": "<ISO 8601 timestamp>",
+  "scan_type": "pr|commit|range|staged|working",
+  "commit_range": "<base>..<head>",
+  "pr_number": null,
+  "threat_model_version": "<from security-config.json>",
+  "findings": [
+    {
+      "id": "VULN-001",
+      "severity": "HIGH",
+      "stride_category": "Tampering",
+      "vulnerability_type": "SQL Injection",
+      "cwe": "CWE-89",
+      "file": "src/api/users.py",
+      "line_range": "45-49",
+      "code_context": "<vulnerable code snippet>",
+      "analysis": "<explanation of why this is vulnerable>",
+      "exploit_scenario": "<how an attacker could exploit this>",
+      "threat_model_reference": "Section 5.2 - SQL Injection",
+      "existing_mitigations": [],
+      "recommended_fix": "<how to fix the vulnerability>",
+      "confidence": "HIGH",
+      "reasoning": "<why this confidence level>"
+    }
+  ],
+  "summary": {
+    "total_findings": 0,
+    "by_severity": { "CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
+    "by_stride": {
+      "Spoofing": 0,
+      "Tampering": 0,
+      "Repudiation": 0,
+      "InfoDisclosure": 0,
+      "DoS": 0,
+      "ElevationOfPrivilege": 0
+    },
+    "files_analyzed": 0
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Step 7: Report Results}
+\ol{
+\li{Save findings to \code{\startverb security-findings.json\stopverb}}
+\li{Report summary to user (findings count by severity, triggered thresholds)}
+\li{Check severity thresholds from \code{\startverb security-config.json\stopverb} and note if any are triggered}
+}
+}
+}
+
+\subtree{
+\title{CWE Reference}
+\p{Common CWE mappings for findings:}
+
+\pre{\startverb
+| Vulnerability Type       | CWE     |
+| ------------------------ | ------- |
+| SQL Injection            | CWE-89  |
+| Command Injection        | CWE-78  |
+| XSS (Reflected)          | CWE-79  |
+| XSS (Stored)             | CWE-79  |
+| Path Traversal           | CWE-22  |
+| IDOR                     | CWE-639 |
+| Missing Authentication   | CWE-306 |
+| Missing Authorization    | CWE-862 |
+| Hardcoded Credentials    | CWE-798 |
+| Sensitive Data Exposure  | CWE-200 |
+| Mass Assignment          | CWE-915 |
+| Open Redirect            | CWE-601 |
+| SSRF                     | CWE-918 |
+| XXE                      | CWE-611 |
+| Insecure Deserialization | CWE-502 |
+\stopverb}
+}
+
+\subtree{
+\title{Example Invocations}
+\p{\strong{Scan a PR:}}
+
+\pre{\startverb
+Scan PR #123 for security vulnerabilities
+\stopverb}
+
+\p{\strong{Scan staged changes before committing:}}
+
+\pre{\startverb
+Scan my staged changes for security issues
+\stopverb}
+
+\p{\strong{Scan a feature branch:}}
+
+\pre{\startverb
+Scan changes from main to feature/user-auth for vulnerabilities
+\stopverb}
+
+\p{\strong{Scan recent commits:}}
+
+\pre{\startverb
+Scan the last 5 commits for security issues
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Analysis examples: \code{\startverb analysis-examples.md\stopverb} (in this skill directory)}
+\li{Threat model: \code{\startverb .factory/threat-model.md\stopverb}}
+\li{Security config: \code{\startverb .factory/security-config.json\stopverb}}
+\li{[OWASP Top 10](https://owasp.org/www-project-top-ten/)}
+\li{[CWE Top 25](https://cwe.mitre.org/top25/)}
+}
+}
+}

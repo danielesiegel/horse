@@ -1,0 +1,1348 @@
+\title{Hooks automation}
+
+\taxon{skill}
+
+\meta{description}{Automated coordination, formatting, and learning from Claude Code operations using intelligent hooks with MCP integration. Includes pre/post task hooks, session management, Git integration, memory coordination, and neural pattern training for enhanced development workflows.}
+
+\subtree{
+\title{Hooks Automation}
+\p{Intelligent automation system that coordinates, validates, and learns from Claude Code operations through hooks integrated with MCP tools and neural pattern training.}
+
+\subtree{
+\title{What This Skill Does}
+\p{This skill provides a comprehensive hook system that automatically manages development operations, coordinates swarm agents, maintains session state, and continuously learns from coding patterns. It enables automated agent assignment, code formatting, performance tracking, and cross-session memory persistence.}
+
+\p{\strong{Key Capabilities:}}
+
+\ul{
+\li{\strong{Pre-Operation Hooks}: Validate, prepare, and auto-assign agents before operations}
+\li{\strong{Post-Operation Hooks}: Format, analyze, and train patterns after operations}
+\li{\strong{Session Management}: Persist state, restore context, generate summaries}
+\li{\strong{Memory Coordination}: Synchronize knowledge across swarm agents}
+\li{\strong{Git Integration}: Automated commit hooks with quality verification}
+\li{\strong{Neural Training}: Continuous learning from successful patterns}
+\li{\strong{MCP Integration}: Seamless coordination with swarm tools}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\p{\strong{Required:}}
+
+\ul{
+\li{Claude Flow CLI installed (\code{\startverb npm install -g claude-flow@alpha\stopverb})}
+\li{Claude Code with hooks enabled}
+\li{\code{\startverb .claude/settings.json\stopverb} with hook configurations}
+}
+
+\p{\strong{Optional:}}
+
+\ul{
+\li{MCP servers configured (claude-flow, ruv-swarm, flow-nexus)}
+\li{Git repository for version control}
+\li{Testing framework for quality verification}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Initialize Hooks System}
+\pre{\startverb
+# Initialize with default hooks configuration
+npx claude-flow init --hooks
+\stopverb}
+
+\p{This creates:}
+
+\ul{
+\li{\code{\startverb .claude/settings.json\stopverb} with pre-configured hooks}
+\li{Hook command documentation in \code{\startverb .claude/commands/hooks/\stopverb}}
+\li{Default hook handlers for common operations}
+}
+}
+
+\subtree{
+\title{Basic Hook Usage}
+\pre{\startverb
+# Pre-task hook (auto-spawns agents)
+npx claude-flow hook pre-task --description "Implement authentication"
+
+# Post-edit hook (auto-formats and stores in memory)
+npx claude-flow hook post-edit --file "src/auth.js" --memory-key "auth/login"
+
+# Session end hook (saves state and metrics)
+npx claude-flow hook session-end --session-id "dev-session" --export-metrics
+\stopverb}
+}
+}
+
+\subtree{
+\title{Complete Guide}
+\subtree{
+\title{Available Hooks}
+\subtree{
+\title{Pre-Operation Hooks}
+\p{Hooks that execute BEFORE operations to prepare and validate:}
+
+\p{\strong{pre-edit} - Validate and assign agents before file modifications}
+
+\pre{\startverb
+npx claude-flow hook pre-edit [options]
+
+Options:
+  --file, -f <path>         File path to be edited
+  --auto-assign-agent       Automatically assign best agent (default: true)
+  --validate-syntax         Pre-validate syntax before edit
+  --check-conflicts         Check for merge conflicts
+  --backup-file             Create backup before editing
+
+Examples:
+  npx claude-flow hook pre-edit --file "src/auth/login.js"
+  npx claude-flow hook pre-edit -f "config/db.js" --validate-syntax
+  npx claude-flow hook pre-edit -f "production.env" --backup-file --check-conflicts
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Auto agent assignment based on file type}
+\li{Syntax validation to prevent broken code}
+\li{Conflict detection for concurrent edits}
+\li{Automatic file backups for safety}
+}
+
+\p{\strong{pre-bash} - Check command safety and resource requirements}
+
+\pre{\startverb
+npx claude-flow hook pre-bash --command <cmd>
+
+Options:
+  --command, -c <cmd>       Command to validate
+  --check-safety            Verify command safety (default: true)
+  --estimate-resources      Estimate resource usage
+  --require-confirmation    Request user confirmation for risky commands
+
+Examples:
+  npx claude-flow hook pre-bash -c "rm -rf /tmp/cache"
+  npx claude-flow hook pre-bash --command "docker build ." --estimate-resources
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Command safety validation}
+\li{Resource requirement estimation}
+\li{Destructive command confirmation}
+\li{Permission checks}
+}
+
+\p{\strong{pre-task} - Auto-spawn agents and prepare for complex tasks}
+
+\pre{\startverb
+npx claude-flow hook pre-task [options]
+
+Options:
+  --description, -d <text>  Task description for context
+  --auto-spawn-agents       Automatically spawn required agents (default: true)
+  --load-memory             Load relevant memory from previous sessions
+  --optimize-topology       Select optimal swarm topology
+  --estimate-complexity     Analyze task complexity
+
+Examples:
+  npx claude-flow hook pre-task --description "Implement user authentication"
+  npx claude-flow hook pre-task -d "Continue API dev" --load-memory
+  npx claude-flow hook pre-task -d "Refactor codebase" --optimize-topology
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Automatic agent spawning based on task analysis}
+\li{Memory loading for context continuity}
+\li{Topology optimization for task structure}
+\li{Complexity estimation and time prediction}
+}
+
+\p{\strong{pre-search} - Prepare and optimize search operations}
+
+\pre{\startverb
+npx claude-flow hook pre-search --query <query>
+
+Options:
+  --query, -q <text>        Search query
+  --check-cache             Check cache first (default: true)
+  --optimize-query          Optimize search pattern
+
+Examples:
+  npx claude-flow hook pre-search -q "authentication middleware"
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Cache checking for faster results}
+\li{Query optimization}
+\li{Search pattern improvement}
+}
+}
+
+\subtree{
+\title{Post-Operation Hooks}
+\p{Hooks that execute AFTER operations to process and learn:}
+
+\p{\strong{post-edit} - Auto-format, validate, and update memory}
+
+\pre{\startverb
+npx claude-flow hook post-edit [options]
+
+Options:
+  --file, -f <path>         File path that was edited
+  --auto-format             Automatically format code (default: true)
+  --memory-key, -m <key>    Store edit context in memory
+  --train-patterns          Train neural patterns from edit
+  --validate-output         Validate edited file
+
+Examples:
+  npx claude-flow hook post-edit --file "src/components/Button.jsx"
+  npx claude-flow hook post-edit -f "api/auth.js" --memory-key "auth/login"
+  npx claude-flow hook post-edit -f "utils/helpers.ts" --train-patterns
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Language-specific auto-formatting (Prettier, Black, gofmt)}
+\li{Memory storage for edit context and decisions}
+\li{Neural pattern training for continuous improvement}
+\li{Output validation with linting}
+}
+
+\p{\strong{post-bash} - Log execution and update metrics}
+
+\pre{\startverb
+npx claude-flow hook post-bash --command <cmd>
+
+Options:
+  --command, -c <cmd>       Command that was executed
+  --log-output              Log command output (default: true)
+  --update-metrics          Update performance metrics
+  --store-result            Store result in memory
+
+Examples:
+  npx claude-flow hook post-bash -c "npm test" --update-metrics
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Command execution logging}
+\li{Performance metric tracking}
+\li{Result storage for analysis}
+\li{Error pattern detection}
+}
+
+\p{\strong{post-task} - Performance analysis and decision storage}
+
+\pre{\startverb
+npx claude-flow hook post-task [options]
+
+Options:
+  --task-id, -t <id>        Task identifier for tracking
+  --analyze-performance     Generate performance metrics (default: true)
+  --store-decisions         Save task decisions to memory
+  --export-learnings        Export neural pattern learnings
+  --generate-report         Create task completion report
+
+Examples:
+  npx claude-flow hook post-task --task-id "auth-implementation"
+  npx claude-flow hook post-task -t "api-refactor" --analyze-performance
+  npx claude-flow hook post-task -t "bug-fix-123" --store-decisions
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Execution time and token usage measurement}
+\li{Decision and implementation choice recording}
+\li{Neural learning pattern export}
+\li{Completion report generation}
+}
+
+\p{\strong{post-search} - Cache results and improve patterns}
+
+\pre{\startverb
+npx claude-flow hook post-search --query <query> --results <path>
+
+Options:
+  --query, -q <text>        Original search query
+  --results, -r <path>      Results file path
+  --cache-results           Cache for future use (default: true)
+  --train-patterns          Improve search patterns
+
+Examples:
+  npx claude-flow hook post-search -q "auth" -r "results.json" --train-patterns
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Result caching for faster subsequent searches}
+\li{Search pattern improvement}
+\li{Relevance scoring}
+}
+}
+
+\subtree{
+\title{MCP Integration Hooks}
+\p{Hooks that coordinate with MCP swarm tools:}
+
+\p{\strong{mcp-initialized} - Persist swarm configuration}
+
+\pre{\startverb
+npx claude-flow hook mcp-initialized --swarm-id <id>
+
+Features:
+- Save swarm topology and configuration
+- Store agent roster in memory
+- Initialize coordination namespace
+\stopverb}
+
+\p{\strong{agent-spawned} - Update agent roster and memory}
+
+\pre{\startverb
+npx claude-flow hook agent-spawned --agent-id <id> --type <type>
+
+Features:
+- Register agent in coordination memory
+- Update agent roster
+- Initialize agent-specific memory namespace
+\stopverb}
+
+\p{\strong{task-orchestrated} - Monitor task progress}
+
+\pre{\startverb
+npx claude-flow hook task-orchestrated --task-id <id>
+
+Features:
+- Track task progress through memory
+- Monitor agent assignments
+- Update coordination state
+\stopverb}
+
+\p{\strong{neural-trained} - Save pattern improvements}
+
+\pre{\startverb
+npx claude-flow hook neural-trained --pattern <name>
+
+Features:
+- Export trained neural patterns
+- Update coordination models
+- Share learning across agents
+\stopverb}
+}
+
+\subtree{
+\title{Memory Coordination Hooks}
+\p{\strong{memory-write} - Triggered when agents write to coordination memory}
+
+\pre{\startverb
+Features:
+- Validate memory key format
+- Update cross-agent indexes
+- Trigger dependent hooks
+- Notify subscribed agents
+\stopverb}
+
+\p{\strong{memory-read} - Triggered when agents read from coordination memory}
+
+\pre{\startverb
+Features:
+- Log access patterns
+- Update popularity metrics
+- Preload related data
+- Track usage statistics
+\stopverb}
+
+\p{\strong{memory-sync} - Synchronize memory across swarm agents}
+
+\pre{\startverb
+npx claude-flow hook memory-sync --namespace <ns>
+
+Features:
+- Sync memory state across agents
+- Resolve conflicts
+- Propagate updates
+- Maintain consistency
+\stopverb}
+}
+
+\subtree{
+\title{Session Hooks}
+\p{\strong{session-start} - Initialize new session}
+
+\pre{\startverb
+npx claude-flow hook session-start --session-id <id>
+
+Options:
+  --session-id, -s <id>     Session identifier
+  --load-context            Load context from previous session
+  --init-agents             Initialize required agents
+
+Features:
+- Create session directory
+- Initialize metrics tracking
+- Load previous context
+- Set up coordination namespace
+\stopverb}
+
+\p{\strong{session-restore} - Load previous session state}
+
+\pre{\startverb
+npx claude-flow hook session-restore --session-id <id>
+
+Options:
+  --session-id, -s <id>     Session to restore
+  --restore-memory          Restore memory state (default: true)
+  --restore-agents          Restore agent configurations
+
+Examples:
+  npx claude-flow hook session-restore --session-id "swarm-20241019"
+  npx claude-flow hook session-restore -s "feature-auth" --restore-memory
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Load previous session context}
+\li{Restore memory state and decisions}
+\li{Reconfigure agents to previous state}
+\li{Resume in-progress tasks}
+}
+
+\p{\strong{session-end} - Cleanup and persist session state}
+
+\pre{\startverb
+npx claude-flow hook session-end [options]
+
+Options:
+  --session-id, -s <id>     Session identifier to end
+  --save-state              Save current session state (default: true)
+  --export-metrics          Export session metrics
+  --generate-summary        Create session summary
+  --cleanup-temp            Remove temporary files
+
+Examples:
+  npx claude-flow hook session-end --session-id "dev-session-2024"
+  npx claude-flow hook session-end -s "feature-auth" --export-metrics --generate-summary
+  npx claude-flow hook session-end -s "quick-fix" --cleanup-temp
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Save current context and progress}
+\li{Export session metrics (duration, commands, tokens, files)}
+\li{Generate work summary with decisions and next steps}
+\li{Cleanup temporary files and optimize storage}
+}
+
+\p{\strong{notify} - Custom notifications with swarm status}
+
+\pre{\startverb
+npx claude-flow hook notify --message <msg>
+
+Options:
+  --message, -m <text>      Notification message
+  --level <level>           Notification level (info|warning|error)
+  --swarm-status            Include swarm status (default: true)
+  --broadcast               Send to all agents
+
+Examples:
+  npx claude-flow hook notify -m "Task completed" --level info
+  npx claude-flow hook notify -m "Critical error" --level error --broadcast
+\stopverb}
+
+\p{\strong{Features:}}
+
+\ul{
+\li{Send notifications to coordination system}
+\li{Include swarm status and metrics}
+\li{Broadcast to all agents}
+\li{Log important events}
+}
+}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Basic Configuration}
+\p{Edit \code{\startverb .claude/settings.json\stopverb} to configure hooks:}
+
+\pre{\startverb
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Write|Edit|MultiEdit)$",
+        "hooks": [{
+          "type": "command",
+          "command": "npx claude-flow hook pre-edit --file '${tool.params.file_path}' --memory-key 'swarm/editor/current'"
+        }]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [{
+          "type": "command",
+          "command": "npx claude-flow hook pre-bash --command '${tool.params.command}'"
+        }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(Write|Edit|MultiEdit)$",
+        "hooks": [{
+          "type": "command",
+          "command": "npx claude-flow hook post-edit --file '${tool.params.file_path}' --memory-key 'swarm/editor/complete' --auto-format --train-patterns"
+        }]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [{
+          "type": "command",
+          "command": "npx claude-flow hook post-bash --command '${tool.params.command}' --update-metrics"
+        }]
+      }
+    ]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Advanced Configuration}
+\p{Complete hook configuration with all features:}
+
+\pre{\startverb
+{
+  "hooks": {
+    "enabled": true,
+    "debug": false,
+    "timeout": 5000,
+
+    "PreToolUse": [
+      {
+        "matcher": "^(Write|Edit|MultiEdit)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook pre-edit --file '${tool.params.file_path}' --auto-assign-agent --validate-syntax",
+            "timeout": 3000,
+            "continueOnError": true
+          }
+        ]
+      },
+      {
+        "matcher": "^Task$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook pre-task --description '${tool.params.task}' --auto-spawn-agents --load-memory",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "^Grep$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook pre-search --query '${tool.params.pattern}' --check-cache"
+          }
+        ]
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "matcher": "^(Write|Edit|MultiEdit)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook post-edit --file '${tool.params.file_path}' --memory-key 'edits/${tool.params.file_path}' --auto-format --train-patterns",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "^Task$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook post-task --task-id '${result.task_id}' --analyze-performance --store-decisions --export-learnings",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "^Grep$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook post-search --query '${tool.params.pattern}' --cache-results --train-patterns"
+          }
+        ]
+      }
+    ],
+
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook session-start --session-id '${session.id}' --load-context"
+          }
+        ]
+      }
+    ],
+
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook session-end --session-id '${session.id}' --export-metrics --generate-summary --cleanup-temp"
+          }
+        ]
+      }
+    ]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Protected File Patterns}
+\p{Add protection for sensitive files:}
+
+\pre{\startverb
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Write|Edit|MultiEdit)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx claude-flow hook check-protected --file '${tool.params.file_path}'"
+          }
+        ]
+      }
+    ]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Automatic Testing}
+\p{Run tests after file modifications:}
+
+\pre{\startverb
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^Write$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f '${tool.params.file_path%.js}.test.js' && npm test '${tool.params.file_path%.js}.test.js'",
+            "continueOnError": true
+          }
+        ]
+      }
+    ]
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{MCP Tool Integration}
+\p{Hooks automatically integrate with MCP tools for coordination:}
+
+\subtree{
+\title{Pre-Task Hook with Agent Spawning}
+\pre{\startverb
+// Hook command
+npx claude-flow hook pre-task --description "Build REST API"
+
+// Internally calls MCP tools:
+mcp__claude-flow__agent_spawn {
+  type: "backend-dev",
+  capabilities: ["api", "database", "testing"]
+}
+
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/task/api-build/context",
+  namespace: "coordination",
+  value: JSON.stringify({
+    description: "Build REST API",
+    agents: ["backend-dev"],
+    started: Date.now()
+  })
+}
+\stopverb}
+}
+
+\subtree{
+\title{Post-Edit Hook with Memory Storage}
+\pre{\startverb
+// Hook command
+npx claude-flow hook post-edit --file "api/auth.js"
+
+// Internally calls MCP tools:
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/edits/api/auth.js",
+  namespace: "coordination",
+  value: JSON.stringify({
+    file: "api/auth.js",
+    timestamp: Date.now(),
+    changes: { added: 45, removed: 12 },
+    formatted: true,
+    linted: true
+  })
+}
+
+mcp__claude-flow__neural_train {
+  pattern_type: "coordination",
+  training_data: { /* edit patterns */ }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Session End Hook with State Persistence}
+\pre{\startverb
+// Hook command
+npx claude-flow hook session-end --session-id "dev-2024"
+
+// Internally calls MCP tools:
+mcp__claude-flow__memory_persist {
+  sessionId: "dev-2024"
+}
+
+mcp__claude-flow__swarm_status {
+  swarmId: "current"
+}
+
+// Generates metrics and summary
+\stopverb}
+}
+}
+
+\subtree{
+\title{Memory Coordination Protocol}
+\p{All hooks follow a standardized memory coordination pattern:}
+
+\subtree{
+\title{Three-Phase Memory Protocol}
+\p{\strong{Phase 1: STATUS} - Hook starts}
+
+\pre{\startverb
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/hooks/pre-edit/status",
+  namespace: "coordination",
+  value: JSON.stringify({
+    status: "running",
+    hook: "pre-edit",
+    file: "src/auth.js",
+    timestamp: Date.now()
+  })
+}
+\stopverb}
+
+\p{\strong{Phase 2: PROGRESS} - Hook processes}
+
+\pre{\startverb
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/hooks/pre-edit/progress",
+  namespace: "coordination",
+  value: JSON.stringify({
+    progress: 50,
+    action: "validating syntax",
+    file: "src/auth.js"
+  })
+}
+\stopverb}
+
+\p{\strong{Phase 3: COMPLETE} - Hook finishes}
+
+\pre{\startverb
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/hooks/pre-edit/complete",
+  namespace: "coordination",
+  value: JSON.stringify({
+    status: "complete",
+    result: "success",
+    agent_assigned: "backend-dev",
+    syntax_valid: true,
+    backup_created: true
+  })
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Hook Response Format}
+\p{Hooks return JSON responses to control operation flow:}
+
+\subtree{
+\title{Continue Response}
+\pre{\startverb
+{
+  "continue": true,
+  "reason": "All validations passed",
+  "metadata": {
+    "agent_assigned": "backend-dev",
+    "syntax_valid": true,
+    "file": "src/auth.js"
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Block Response}
+\pre{\startverb
+{
+  "continue": false,
+  "reason": "Protected file - manual review required",
+  "metadata": {
+    "file": ".env.production",
+    "protection_level": "high",
+    "requires": "manual_approval"
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Warning Response}
+\pre{\startverb
+{
+  "continue": true,
+  "reason": "Syntax valid but complexity high",
+  "warnings": [
+    "Cyclomatic complexity: 15 (threshold: 10)",
+    "Consider refactoring for better maintainability"
+  ],
+  "metadata": {
+    "complexity": 15,
+    "threshold": 10
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Git Integration}
+\p{Hooks can integrate with Git operations for quality control:}
+
+\subtree{
+\title{Pre-Commit Hook}
+\pre{\startverb
+# Add to .git/hooks/pre-commit or use husky
+
+#!/bin/bash
+# Run quality checks before commit
+
+# Get staged files
+FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+for FILE in $FILES; do
+  # Run pre-edit hook for validation
+  npx claude-flow hook pre-edit --file "$FILE" --validate-syntax
+
+  if [ $? -ne 0 ]; then
+    echo "Validation failed for $FILE"
+    exit 1
+  fi
+
+  # Run post-edit hook for formatting
+  npx claude-flow hook post-edit --file "$FILE" --auto-format
+done
+
+# Run tests
+npm test
+
+exit $?
+\stopverb}
+}
+
+\subtree{
+\title{Post-Commit Hook}
+\pre{\startverb
+# Add to .git/hooks/post-commit
+
+#!/bin/bash
+# Track commit metrics
+
+COMMIT_HASH=$(git rev-parse HEAD)
+COMMIT_MSG=$(git log -1 --pretty=%B)
+
+npx claude-flow hook notify \
+  --message "Commit completed: $COMMIT_MSG" \
+  --level info \
+  --swarm-status
+\stopverb}
+}
+
+\subtree{
+\title{Pre-Push Hook}
+\pre{\startverb
+# Add to .git/hooks/pre-push
+
+#!/bin/bash
+# Quality gate before push
+
+# Run full test suite
+npm run test:all
+
+# Run quality checks
+npx claude-flow hook session-end \
+  --generate-report \
+  --export-metrics
+
+# Verify quality thresholds
+TRUTH_SCORE=$(npx claude-flow metrics score --format json | jq -r '.truth_score')
+
+if (( $(echo "$TRUTH_SCORE < 0.95" | bc -l) )); then
+  echo "Truth score below threshold: $TRUTH_SCORE < 0.95"
+  exit 1
+fi
+
+exit 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Agent Coordination Workflow}
+\p{How agents use hooks for coordination:}
+
+\subtree{
+\title{Agent Workflow Example}
+\pre{\startverb
+# Agent 1: Backend Developer
+# STEP 1: Pre-task preparation
+npx claude-flow hook pre-task \
+  --description "Implement user authentication API" \
+  --auto-spawn-agents \
+  --load-memory
+
+# STEP 2: Work begins - pre-edit validation
+npx claude-flow hook pre-edit \
+  --file "api/auth.js" \
+  --auto-assign-agent \
+  --validate-syntax
+
+# STEP 3: Edit file (via Claude Code Edit tool)
+# ... code changes ...
+
+# STEP 4: Post-edit processing
+npx claude-flow hook post-edit \
+  --file "api/auth.js" \
+  --memory-key "swarm/backend/auth-api" \
+  --auto-format \
+  --train-patterns
+
+# STEP 5: Notify coordination system
+npx claude-flow hook notify \
+  --message "Auth API implementation complete" \
+  --swarm-status \
+  --broadcast
+
+# STEP 6: Task completion
+npx claude-flow hook post-task \
+  --task-id "auth-api" \
+  --analyze-performance \
+  --store-decisions \
+  --export-learnings
+\stopverb}
+
+\pre{\startverb
+# Agent 2: Test Engineer (receives notification)
+# STEP 1: Check memory for API details
+npx claude-flow hook session-restore \
+  --session-id "swarm-current" \
+  --restore-memory
+
+# Memory contains: swarm/backend/auth-api with implementation details
+
+# STEP 2: Generate tests
+npx claude-flow hook pre-task \
+  --description "Write tests for auth API" \
+  --load-memory
+
+# STEP 3: Create test file
+npx claude-flow hook post-edit \
+  --file "api/auth.test.js" \
+  --memory-key "swarm/testing/auth-api-tests" \
+  --train-patterns
+
+# STEP 4: Share test results
+npx claude-flow hook notify \
+  --message "Auth API tests complete - 100% coverage" \
+  --broadcast
+\stopverb}
+}
+}
+
+\subtree{
+\title{Custom Hook Creation}
+\p{Create custom hooks for specific workflows:}
+
+\subtree{
+\title{Custom Hook Template}
+\pre{\startverb
+// .claude/hooks/custom-quality-check.js
+
+module.exports = {
+  name: 'custom-quality-check',
+  type: 'pre',
+  matcher: /\.(ts|js)$/,
+
+  async execute(context) {
+    const { file, content } = context;
+
+    // Custom validation logic
+    const complexity = await analyzeComplexity(content);
+    const securityIssues = await scanSecurity(content);
+
+    // Store in memory
+    await storeInMemory({
+      key: `quality/${file}`,
+      value: { complexity, securityIssues }
+    });
+
+    // Return decision
+    if (complexity > 15 || securityIssues.length > 0) {
+      return {
+        continue: false,
+        reason: 'Quality checks failed',
+        warnings: [
+          `Complexity: ${complexity} (max: 15)`,
+          `Security issues: ${securityIssues.length}`
+        ]
+      };
+    }
+
+    return {
+      continue: true,
+      reason: 'Quality checks passed',
+      metadata: { complexity, securityIssues: 0 }
+    };
+  }
+};
+\stopverb}
+}
+
+\subtree{
+\title{Register Custom Hook}
+\pre{\startverb
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Write|Edit)$",
+        "hooks": [
+          {
+            "type": "script",
+            "script": ".claude/hooks/custom-quality-check.js"
+          }
+        ]
+      }
+    ]
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Real-World Examples}
+\subtree{
+\title{Example 1: Full-Stack Development Workflow}
+\pre{\startverb
+# Session start - initialize coordination
+npx claude-flow hook session-start --session-id "fullstack-feature"
+
+# Pre-task planning
+npx claude-flow hook pre-task \
+  --description "Build user profile feature - frontend + backend + tests" \
+  --auto-spawn-agents \
+  --optimize-topology
+
+# Backend work
+npx claude-flow hook pre-edit --file "api/profile.js"
+# ... implement backend ...
+npx claude-flow hook post-edit \
+  --file "api/profile.js" \
+  --memory-key "profile/backend" \
+  --train-patterns
+
+# Frontend work (reads backend details from memory)
+npx claude-flow hook pre-edit --file "components/Profile.jsx"
+# ... implement frontend ...
+npx claude-flow hook post-edit \
+  --file "components/Profile.jsx" \
+  --memory-key "profile/frontend" \
+  --train-patterns
+
+# Testing (reads both backend and frontend from memory)
+npx claude-flow hook pre-task \
+  --description "Test profile feature" \
+  --load-memory
+
+# Session end - export everything
+npx claude-flow hook session-end \
+  --session-id "fullstack-feature" \
+  --export-metrics \
+  --generate-summary
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Debugging with Hooks}
+\pre{\startverb
+# Start debugging session
+npx claude-flow hook session-start --session-id "debug-memory-leak"
+
+# Pre-task: analyze issue
+npx claude-flow hook pre-task \
+  --description "Debug memory leak in event handlers" \
+  --load-memory \
+  --estimate-complexity
+
+# Search for event emitters
+npx claude-flow hook pre-search --query "EventEmitter"
+# ... search executes ...
+npx claude-flow hook post-search \
+  --query "EventEmitter" \
+  --cache-results
+
+# Fix the issue
+npx claude-flow hook pre-edit \
+  --file "services/events.js" \
+  --backup-file
+# ... fix code ...
+npx claude-flow hook post-edit \
+  --file "services/events.js" \
+  --memory-key "debug/memory-leak-fix" \
+  --validate-output
+
+# Verify fix
+npx claude-flow hook post-task \
+  --task-id "memory-leak-fix" \
+  --analyze-performance \
+  --generate-report
+
+# End session
+npx claude-flow hook session-end \
+  --session-id "debug-memory-leak" \
+  --export-metrics
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Multi-Agent Refactoring}
+\pre{\startverb
+# Initialize swarm for refactoring
+npx claude-flow hook pre-task \
+  --description "Refactor legacy codebase to modern patterns" \
+  --auto-spawn-agents \
+  --optimize-topology
+
+# Agent 1: Code Analyzer
+npx claude-flow hook pre-task --description "Analyze code complexity"
+# ... analysis ...
+npx claude-flow hook post-task \
+  --task-id "analysis" \
+  --store-decisions
+
+# Agent 2: Refactoring (reads analysis from memory)
+npx claude-flow hook session-restore \
+  --session-id "swarm-refactor" \
+  --restore-memory
+
+for file in src/**/*.js; do
+  npx claude-flow hook pre-edit --file "$file" --backup-file
+  # ... refactor ...
+  npx claude-flow hook post-edit \
+    --file "$file" \
+    --memory-key "refactor/$file" \
+    --auto-format \
+    --train-patterns
+done
+
+# Agent 3: Testing (reads refactored code from memory)
+npx claude-flow hook pre-task \
+  --description "Generate tests for refactored code" \
+  --load-memory
+
+# Broadcast completion
+npx claude-flow hook notify \
+  --message "Refactoring complete - all tests passing" \
+  --broadcast
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Tips}
+\ol{
+\li{\strong{Keep Hooks Lightweight} - Target < 100ms execution time}
+\li{\strong{Use Async for Heavy Operations} - Don't block the main flow}
+\li{\strong{Cache Aggressively} - Store frequently accessed data}
+\li{\strong{Batch Related Operations} - Combine multiple actions}
+\li{\strong{Use Memory Wisely} - Set appropriate TTLs}
+\li{\strong{Monitor Hook Performance} - Track execution times}
+\li{\strong{Parallelize When Possible} - Run independent hooks concurrently}
+}
+}
+
+\subtree{
+\title{Debugging Hooks}
+\p{Enable debug mode for troubleshooting:}
+
+\pre{\startverb
+# Enable debug output
+export CLAUDE_FLOW_DEBUG=true
+
+# Test specific hook with verbose output
+npx claude-flow hook pre-edit --file "test.js" --debug
+
+# Check hook execution logs
+cat .claude-flow/logs/hooks-$(date +%Y-%m-%d).log
+
+# Validate configuration
+npx claude-flow hook validate-config
+\stopverb}
+}
+
+\subtree{
+\title{Benefits}
+\ul{
+\li{\strong{Automatic Agent Assignment}: Right agent for every file type}
+\li{\strong{Consistent Code Formatting}: Language-specific formatters}
+\li{\strong{Continuous Learning}: Neural patterns improve over time}
+\li{\strong{Cross-Session Memory}: Context persists between sessions}
+\li{\strong{Performance Tracking}: Comprehensive metrics and analytics}
+\li{\strong{Automatic Coordination}: Agents sync via memory}
+\li{\strong{Smart Agent Spawning}: Task-based agent selection}
+\li{\strong{Quality Gates}: Pre-commit validation and verification}
+\li{\strong{Error Prevention}: Syntax validation before edits}
+\li{\strong{Knowledge Sharing}: Decisions stored and shared}
+\li{\strong{Reduced Manual Work}: Automation of repetitive tasks}
+\li{\strong{Better Collaboration}: Seamless multi-agent coordination}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Configure Hooks Early} - Set up during project initialization}
+\li{\strong{Use Memory Keys Strategically} - Organize with clear namespaces}
+\li{\strong{Enable Auto-Formatting} - Maintain code consistency}
+\li{\strong{Train Patterns Continuously} - Learn from successful operations}
+\li{\strong{Monitor Performance} - Track hook execution times}
+\li{\strong{Validate Configuration} - Test hooks before production use}
+\li{\strong{Document Custom Hooks} - Maintain hook documentation}
+\li{\strong{Set Appropriate Timeouts} - Prevent hanging operations}
+\li{\strong{Handle Errors Gracefully} - Use continueOnError when appropriate}
+\li{\strong{Review Metrics Regularly} - Optimize based on usage patterns}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Hooks Not Executing}
+\ul{
+\li{Verify \code{\startverb .claude/settings.json\stopverb} syntax}
+\li{Check hook matcher patterns}
+\li{Enable debug mode}
+\li{Review permission settings}
+\li{Ensure claude-flow CLI is in PATH}
+}
+}
+
+\subtree{
+\title{Hook Timeouts}
+\ul{
+\li{Increase timeout values in configuration}
+\li{Make hooks asynchronous for heavy operations}
+\li{Optimize hook logic}
+\li{Check network connectivity for MCP tools}
+}
+}
+
+\subtree{
+\title{Memory Issues}
+\ul{
+\li{Set appropriate TTLs for memory keys}
+\li{Clean up old memory entries}
+\li{Use memory namespaces effectively}
+\li{Monitor memory usage}
+}
+}
+
+\subtree{
+\title{Performance Problems}
+\ul{
+\li{Profile hook execution times}
+\li{Use caching for repeated operations}
+\li{Batch operations when possible}
+\li{Reduce hook complexity}
+}
+}
+}
+
+\subtree{
+\title{Related Commands}
+\ul{
+\li{\code{\startverb npx claude-flow init --hooks\stopverb} - Initialize hooks system}
+\li{\code{\startverb npx claude-flow hook --list\stopverb} - List available hooks}
+\li{\code{\startverb npx claude-flow hook --test <hook>\stopverb} - Test specific hook}
+\li{\code{\startverb npx claude-flow memory usage\stopverb} - Manage memory}
+\li{\code{\startverb npx claude-flow agent spawn\stopverb} - Spawn agents}
+\li{\code{\startverb npx claude-flow swarm init\stopverb} - Initialize swarm}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\p{This skill works seamlessly with:}
+
+\ul{
+\li{\strong{SPARC Methodology} - Hooks enhance SPARC workflows}
+\li{\strong{Pair Programming} - Automated quality in pairing sessions}
+\li{\strong{Verification Quality} - Truth-score validation in hooks}
+\li{\strong{GitHub Workflows} - Git integration for commits/PRs}
+\li{\strong{Performance Analysis} - Metrics collection in hooks}
+\li{\strong{Swarm Advanced} - Multi-agent coordination via hooks}
+}
+}
+}
+}

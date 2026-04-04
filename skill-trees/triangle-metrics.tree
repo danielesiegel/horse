@@ -1,0 +1,200 @@
+\title{Triangle Metrics}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Triangle Metrics Skill}
+
+\subtree{
+\title{Triangle Metrics Skill}
+\p{\strong{Trit}: 0 (ERGODIC - synthesizer/coordinator) \strong{Purpose}: Unify all triangle inequality skills into a coherent metric space}
+
+\subtree{
+\title{Cross-Referenced Skills}
+\pre{\startverb
+| Skill | Guarantee | Integration Point |
+|-------|-----------|-------------------|
+| **glass-hopping** | ≪ order transitivity | `TriangleInequality` Narya type |
+| **world-hopping** | Dijkstra pruning | `d13 <= d12 + d23` constraint |
+| **glass-bead-game** | Propagator constraint | `world_distance` comparisons |
+| **epistemic-arbitrage** | Knowledge transfer bound | `d(A,C) ≤ d(A,B) + d(B,C)` |
+| **l-space** | Navigation metric | `:triangle_inequality` traversal |
+| **open-games** | Play/coplay equilibrium | `equilibrium ⟺ d(a,c) ≤ d(a,b) + d(b,c)` |
+\stopverb}
+}
+
+\subtree{
+\title{Unified Interface}
+\pre{\startverb
+# Abstract metric interface all skills implement
+abstract type TriangleMetric end
+
+struct WorldDistance <: TriangleMetric
+    d12::Float64
+    d23::Float64
+    d13::Float64
+end
+
+function triangle_valid(m::WorldDistance)::Bool
+    m.d13 ≤ m.d12 + m.d23
+end
+
+# Skill-specific implementations
+struct GlassHoppingMetric <: TriangleMetric
+    h12::Bridge  # W₁ ≪ W₂
+    h23::Bridge  # W₂ ≪ W₃
+    # Transitivity guarantees h13
+end
+
+struct OpenGamesMetric <: TriangleMetric
+    play::Strategy    # Forward distance
+    coplay::Strategy  # Backward distance
+    # Equilibrium ⟺ triangle satisfied
+end
+\stopverb}
+}
+
+\subtree{
+\title{Mutual Awareness Protocol}
+\p{When any triangle skill is invoked:}
+
+\ol{
+\li{\strong{Check}: Query other loaded triangle skills}
+\li{\strong{Validate}: Ensure distances are consistent across all}
+\li{\strong{Propagate}: Share metric updates to siblings}
+\li{\strong{Witness}: Generate Narya proof if all agree}
+}
+
+\pre{\startverb
+-- Unified triangle witness
+def UnifiedTriangle 
+    (glass : GlassHopping.Bridge)
+    (world : WorldHopping.Path)
+    (game  : OpenGames.Equilibrium)
+    : TriangleValidated
+\stopverb}
+}
+
+\subtree{
+\title{DuckLake Integration}
+\pre{\startverb
+-- Query triangle-validated interactions
+SELECT a.id, a.trit, a.triangle_valid,
+       b.id as next_id, b.trit as next_trit,
+       c.id as third_id, c.trit as third_trit,
+       ABS(c.trit - a.trit) as d13,
+       ABS(b.trit - a.trit) + ABS(c.trit - b.trit) as d12_plus_d23
+FROM activity_log a
+JOIN activity_log b ON b.timestamp > a.timestamp
+JOIN activity_log c ON c.timestamp > b.timestamp
+WHERE d13 <= d12_plus_d23;  -- Triangle inequality
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{The unified metric preserves GF(3):}
+
+\pre{\startverb
+Σ(skill trits) = glass-hopping(0) + world-hopping(0) + 
+                 glass-bead-game(0) + epistemic-arbitrage(0) + 
+                 l-space(0) + open-games(0) + 
+                 triangle-metrics(0) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Validate all triangle constraints
+just triangle-validate
+
+# Generate unified Narya witness
+just triangle-witness
+
+# Query cross-skill distances
+just triangle-query
+\stopverb}
+
+\p{\strong{Integration}: Load alongside any triangle skill for automatic mutual awareness.}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 8. Degeneracy}
+\p{\strong{Concepts}: redundancy, fallback, multiple strategies, robustness}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+triangle-metrics (+) + SDF.Ch8 (−) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch5: Evaluation}
+\li{Ch10: Adventure Game Example}
+\li{Ch7: Propagators}
+\li{Ch4: Pattern Matching}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Degeneracy provides fallbacks. This skill offers redundant strategies.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

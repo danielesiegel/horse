@@ -1,0 +1,703 @@
+\title{Ctf Rev}
+
+\taxon{skill}
+
+\meta{description}{Solve CTF reverse engineering challenges using systematic analysis to find flags, keys, or passwords. Use for crackmes, binary bombs, key validators, obfuscated code, algorithm recovery, or any challenge requiring program comprehension to extract hidden information.}
+
+\subtree{
+\title{CTF Reverse Engineering}
+\subtree{
+\title{Purpose}
+\p{You are a CTF reverse engineering solver. Your goal is to \strong{understand what a program does} and \strong{extract the flag/key/password} through systematic analysis.}
+
+\p{CTF reverse engineering is fundamentally about \strong{comprehension under constraints}:}
+
+\ul{
+\li{Limited time (competition pressure)}
+\li{Unknown problem structure (what technique is being tested?)}
+\li{Minimal documentation (that's the challenge!)}
+\li{Goal-oriented (find the flag, not perfect understanding)}
+}
+
+\p{Unlike malware analysis or vulnerability research, CTF reversing tests your ability to:}
+
+\ol{
+\li{\strong{Quickly identify the core challenge} (crypto? obfuscation? algorithm recovery?)}
+\li{\strong{Trace critical data flow} (where does input go? how is it validated?)}
+\li{\strong{Recognize patterns} (standard algorithms, common tricks)}
+\li{\strong{Adapt your approach} (static vs dynamic, top-down vs bottom-up)}
+}
+}
+
+\subtree{
+\title{Conceptual Framework}
+\subtree{
+\title{The Three Questions}
+\p{Every reverse engineering challenge boils down to answering:}
+
+\p{\strong{1. What does the program EXPECT?}}
+
+\ul{
+\li{Input format (string, number, binary data?)}
+\li{Input structure (length, format, encoding?)}
+\li{Validation criteria (checks, comparisons, constraints?)}
+}
+
+\p{\strong{2. What does the program DO?}}
+
+\ul{
+\li{Transformation (encrypt, hash, encode, compute?)}
+\li{Comparison (against hardcoded value, derived value?)}
+\li{Algorithm (standard crypto, custom logic, mathematical?)}
+}
+
+\p{\strong{3. How do I REVERSE it?}}
+
+\ul{
+\li{Is the operation reversible? (encryption vs hashing)}
+\li{Can I brute force? (keyspace size, performance)}
+\li{Can I derive the answer? (solve equations, trace backwards)}
+\li{Can I bypass? (patch, debug, manipulate state)}
+}
+}
+
+\subtree{
+\title{Understanding vs Solving}
+\p{\strong{You don't need to understand everything} - focus on what gets you to the flag:}
+
+\p{\strong{Full Understanding} (often unnecessary):}
+
+\ul{
+\li{Every function's purpose}
+\li{Complete program flow}
+\li{All edge cases and error handling}
+\li{Library implementation details}
+}
+
+\p{\strong{Sufficient Understanding} (what you need):}
+
+\ul{
+\li{Entry point to flag validation}
+\li{Core transformation logic}
+\li{Input-to-output relationship}
+\li{Comparison or success criteria}
+}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+Program has 50 functions. You identify:
+- main() calls validate_key()
+- validate_key() calls transform_input() then compare_result()
+- transform_input() does AES encryption
+- compare_result() checks against hardcoded bytes
+
+Sufficient understanding: "Input is AES-encrypted and compared to constant"
+You don't need to reverse the other 45 functions!
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Methodologies}
+\subtree{
+\title{Static Analysis: Code Comprehension}
+\p{\strong{Goal:} Understand program logic by reading decompiled/disassembled code}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Small, focused programs (crackmes, keygens)}
+\li{Algorithm identification challenges}
+\li{When dynamic analysis is hindered (anti-debugging, complex state)}
+\li{When you need to understand transformation logic}
+}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{\strong{Find the critical path} - Entry point → flag validation → success}
+\li{\strong{Trace input flow} - Where does user input go? How is it used?}
+\li{\strong{Identify operations} - What transformations occur? (XOR, loops, comparisons)}
+\li{\strong{Recognize patterns} - Does this match known algorithms? (see patterns.md)}
+}
+
+\p{\strong{ReVa workflow:}}
+
+\pre{\startverb
+1. get-decompilation of entry/main function
+   - includeIncomingReferences=true to see program structure
+
+2. Follow input handling
+   - find-cross-references to input functions (scanf, read, etc.)
+   - Trace data flow from input to validation
+
+3. Analyze transformations
+   - rename-variables to clarify data flow
+   - change-variable-datatypes to understand operations
+   - set-decompilation-comment to document logic
+
+4. Identify success criteria
+   - Find comparison or validation logic
+   - Extract expected values or patterns
+\stopverb}
+}
+
+\subtree{
+\title{Dynamic Analysis: Runtime Observation}
+\p{\strong{Goal:} Observe program behavior during execution}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Complex control flow (hard to follow statically)}
+\li{Obfuscated or packed code}
+\li{When you need to see intermediate values}
+\li{Time-based or environmental checks}
+}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{\strong{Set breakpoints at key locations}}
+\li{Input processing}
+\li{Transformations}
+\li{Comparisons}
+\li{Success/failure branches}
+}
+
+\ol{
+\li{\strong{Observe state changes}}
+\li{Register/variable values}
+\li{Memory contents}
+\li{Function arguments/returns}
+}
+
+\ol{
+\li{\strong{Test hypotheses}}
+\li{"If I input X, does Y happen?"}
+\li{"What value is being compared here?"}
+}
+
+\p{\strong{Note:} ReVa focuses on static analysis. For dynamic analysis, use external debuggers (gdb, x64dbg, etc.)}
+}
+
+\subtree{
+\title{Hybrid Approach: Best of Both Worlds}
+\p{\strong{Most effective for CTF challenges}}
+
+\p{\strong{Workflow:}}
+
+\ol{
+\li{\strong{Static: Identify structure} (find validation function, success path)}
+\li{\strong{Dynamic: Observe runtime} (breakpoint at validation, see expected value)}
+\li{\strong{Static: Understand transformation} (reverse the algorithm)}
+\li{\strong{Dynamic: Verify solution} (test your derived key/flag)}
+}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+Static: "Input is transformed by function sub_401234 then compared"
+Dynamic: Run with test input, breakpoint at comparison → see expected value
+Static: Decompile sub_401234 → recognize as base64 encoding
+Solve: base64_decode(expected_value) = flag
+Dynamic: Verify flag works
+\stopverb}
+}
+}
+
+\subtree{
+\title{Problem-Solving Strategies}
+\subtree{
+\title{Strategy 1: Top-Down (Goal-Oriented)}
+\p{\strong{Start from the win condition, work backwards}}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Clear success/failure indicators (prints "Correct!" or "Wrong!")}
+\li{Simple program structure}
+\li{When you want to understand the minimum necessary}
+}
+
+\p{\strong{Workflow:}}
+
+\pre{\startverb
+1. Find success message/function
+2. find-cross-references direction="to" → What calls this?
+3. get-decompilation of validation function
+4. Identify what conditions lead to success
+5. Work backwards to understand required input
+\stopverb}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+1. String "Congratulations!" at 0x402000
+2. Referenced by function validate_flag at 0x401500
+3. Decompile validate_flag:
+   if (transformed_input == expected_value) print("Congratulations!");
+4. Now focus on: What's expected_value? How is input transformed?
+\stopverb}
+}
+
+\subtree{
+\title{Strategy 2: Bottom-Up (Data Flow)}
+\p{\strong{Start from input, trace forward to validation}}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Complex program structure (many functions)}
+\li{When win condition is unclear}
+\li{When you want to understand transformations}
+}
+
+\p{\strong{Workflow:}}
+
+\pre{\startverb
+1. get-strings regexPattern="(scanf|read|fgets|input)"
+2. find-cross-references to input function
+3. Trace data flow: input → storage → transformation → usage
+4. Follow transformations until you reach comparison/validation
+\stopverb}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+1. scanf at 0x401000 reads into buffer
+2. buffer passed to process_input(buffer)
+3. process_input calls encrypt(buffer, key)
+4. Encrypted result compared to hardcoded bytes
+5. Now analyze: What's the encryption? Can we reverse it?
+\stopverb}
+}
+
+\subtree{
+\title{Strategy 3: Pattern Recognition}
+\p{\strong{Identify standard algorithms or common techniques}}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Crypto challenges (encryption, hashing)}
+\li{Encoding challenges (base64, custom encodings)}
+\li{Algorithm implementation challenges}
+}
+
+\p{\strong{Workflow:}}
+
+\pre{\startverb
+1. Look for algorithmic patterns (see patterns.md):
+   - Loop structures (rounds, iterations)
+   - Constant arrays (S-boxes, tables)
+   - Characteristic operations (XOR, rotations, substitutions)
+
+2. Compare to known implementations:
+   - read-memory at constant arrays → compare to standard tables
+   - Count loop iterations → indicates algorithm variant
+   - search-decompilation for crypto patterns
+
+3. Once identified, apply standard solutions:
+   - AES → decrypt with known/derived key
+   - RC4 → decrypt with extracted key
+   - Custom XOR → reverse the XOR operation
+\stopverb}
+}
+
+\subtree{
+\title{Strategy 4: Constraint Solving}
+\p{\strong{Frame the problem as mathematical constraints}}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Serial/key validation (input must satisfy equations)}
+\li{Mathematical puzzles}
+\li{Multiple related checks}
+}
+
+\p{\strong{Workflow:}}
+
+\pre{\startverb
+1. Identify all constraints on input:
+   input[0] + input[1] == 0x42
+   input[0] ^ input[2] == 0x13
+   input[1] * 2 == input[3]
+
+2. Extract to external solver (z3, constraint solver)
+
+3. Solve for input values
+
+4. Verify solution in program
+\stopverb}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+Decompiled validation:
+  if (flag[0] + flag[1] != 100) return 0;
+  if (flag[0] - flag[1] != 20) return 0;
+  if (flag[2] ^ 0x42 != 0x33) return 0;
+
+Solve:
+  flag[0] + flag[1] = 100
+  flag[0] - flag[1] = 20
+  → flag[0] = 60, flag[1] = 40
+
+  flag[2] ^ 0x42 = 0x33
+  → flag[2] = 0x33 ^ 0x42 = 0x71 = 'q'
+\stopverb}
+}
+}
+
+\subtree{
+\title{Flexible Workflow}
+\p{CTF challenges vary widely - adapt your approach:}
+
+\subtree{
+\title{Initial Assessment (5-10 minutes)}
+\p{\strong{Understand the challenge:}}
+
+\ul{
+\li{What's provided? (binary, source, description?)}
+\li{What's the goal? (find flag, generate key, bypass check?)}
+\li{What's the constraint? (time limit, black box?)}
+}
+
+\p{\strong{ReVa reconnaissance:}}
+
+\pre{\startverb
+1. get-current-program or list-project-files
+2. get-strings-count and sample strings (100-200)
+   - Look for: flag format, hints, library names
+3. get-symbols with includeExternal=true
+   - Check for suspicious imports (crypto APIs, anti-debug)
+4. get-function-count to gauge complexity
+\stopverb}
+}
+
+\subtree{
+\title{Focused Investigation (15-45 minutes)}
+\p{\strong{Follow the most promising lead:}}
+
+\p{\strong{If you found flag format in strings:} → Top-down from flag string}
+
+\p{\strong{If you found crypto APIs:} → Pattern recognition (identify algorithm)}
+
+\p{\strong{If you found input validation:} → Data flow tracing (input to validation)}
+
+\p{\strong{If program is simple (< 10 functions):} → Comprehensive static analysis}
+
+\p{\strong{If program is complex or obfuscated:} → Hybrid approach (dynamic to find key points, static to understand)}
+}
+
+\subtree{
+\title{Solution Extraction (10-20 minutes)}
+\p{\strong{Once you understand the mechanism:}}
+
+\ol{
+\li{\strong{Can you reverse it?}}
+\li{Decryption, decoding, mathematical inverse}
+}
+
+\ol{
+\li{\strong{Can you derive it?}}
+\li{Solve constraints, extract from comparison}
+}
+
+\ol{
+\li{\strong{Can you brute force it?}}
+\li{Small keyspace, fast validation}
+}
+
+\ol{
+\li{\strong{Can you bypass it?}}
+\li{Patch comparison, manipulate state}
+}
+
+\p{\strong{Verify your solution:}}
+
+\ul{
+\li{Test with actual program (if possible)}
+\li{Check flag format (usually flag{...} or CTF{...})}
+}
+}
+}
+
+\subtree{
+\title{Pattern Recognition}
+\p{CTF challenges often test recognition of standard patterns. See \code{\startverb patterns.md\stopverb} for detailed guides on:}
+
+\p{\strong{Cryptographic Patterns:}}
+
+\ul{
+\li{Block ciphers (AES, DES, custom)}
+\li{Stream ciphers (RC4, custom)}
+\li{Hash functions (MD5, SHA, custom)}
+\li{XOR obfuscation}
+}
+
+\p{\strong{Algorithm Patterns:}}
+
+\ul{
+\li{Encoding schemes (base64, custom alphabets)}
+\li{Mathematical operations (modular arithmetic, matrix operations)}
+\li{State machines (input validation via states)}
+}
+
+\p{\strong{Code Patterns:}}
+
+\ul{
+\li{Input validation loops}
+\li{Character-by-character comparisons}
+\li{Transformation + comparison structures}
+\li{Anti-debugging tricks (for CTF context)}
+}
+
+\p{\strong{Data Structure Patterns:}}
+
+\ul{
+\li{Lookup tables (substitution ciphers)}
+\li{Hardcoded arrays (expected values)}
+\li{Buffer transformations}
+}
+}
+
+\subtree{
+\title{ReVa Tool Usage for CTF}
+\subtree{
+\title{Discovery Tools}
+\p{\strong{Find the interesting parts quickly:}}
+
+\pre{\startverb
+get-strings regexPattern="(flag|key|password|correct|wrong|success)"
+→ Find win/lose conditions
+
+search-decompilation pattern="(scanf|read|input|strcmp|memcmp)"
+→ Find input/comparison functions
+
+get-functions-by-similarity searchString="check"
+→ Find validation functions
+\stopverb}
+}
+
+\subtree{
+\title{Analysis Tools}
+\p{\strong{Understand the core logic:}}
+
+\pre{\startverb
+get-decompilation with includeIncomingReferences=true, includeReferenceContext=true
+→ Get full context of validation logic
+
+find-cross-references direction="both" includeContext=true
+→ Trace data flow and function relationships
+
+read-memory to extract constants, tables, expected values
+→ Get hardcoded comparison targets
+\stopverb}
+}
+
+\subtree{
+\title{Improvement Tools}
+\p{\strong{Make code readable as you work:}}
+
+\pre{\startverb
+rename-variables to track data flow
+→ input_buffer, encrypted_data, expected_hash
+
+change-variable-datatypes to clarify operations
+→ uint8_t* for byte buffers, uint32_t for crypto state
+
+set-decompilation-comment to document findings
+→ "AES round function", "Compares against flag"
+
+set-bookmark for important locations
+→ type="Analysis" for key findings
+→ type="TODO" for things to investigate
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Principles}
+\subtree{
+\title{1. Goal Focus}
+\p{\strong{Don't analyze everything - focus on getting the flag}}
+
+\ul{
+\li{Identify critical path (input → validation → success)}
+\li{Ignore unrelated functions}
+\li{Sufficient understanding > complete understanding}
+}
+}
+
+\subtree{
+\title{2. Adapt Quickly}
+\p{\strong{Switch strategies if stuck}}
+
+\ul{
+\li{Static not working? Try dynamic}
+\li{Too complex? Look for simpler approach (bypass, brute force)}
+\li{Pattern not matching? Could be custom algorithm}
+}
+}
+
+\subtree{
+\title{3. Leverage Knowledge}
+\p{\strong{CTF challenges reuse concepts}}
+
+\ul{
+\li{Standard crypto algorithms}
+\li{Common obfuscation tricks}
+\li{Typical validation patterns}
+\li{Recognize and apply known solutions}
+}
+}
+
+\subtree{
+\title{4. Document Progress}
+\p{\strong{Track what you learn}}
+
+\pre{\startverb
+set-bookmark type="Analysis" category="Finding"
+  → Document what you've confirmed
+
+set-bookmark type="TODO" category="Investigate"
+  → Track unanswered questions
+
+set-decompilation-comment
+  → Preserve understanding for later reference
+\stopverb}
+}
+
+\subtree{
+\title{5. Verify Incrementally}
+\p{\strong{Test your understanding as you go}}
+
+\ul{
+\li{"If this is AES, I should see S-box constants" → Check}
+\li{"If input is XORed with 0x42, output[0] should be..." → Verify with example}
+\li{"If this is the flag comparison, changing this byte should..." → Test hypothesis}
+}
+}
+}
+
+\subtree{
+\title{Common CTF Challenge Types}
+\subtree{
+\title{Crackme / Serial Validation}
+\p{\strong{Challenge:} Find input that passes validation \strong{Approach:} Data flow tracing (input → validation logic) \strong{Key insight:} Focus on validation function, extract constraints}
+}
+
+\subtree{
+\title{Algorithm Recovery}
+\p{\strong{Challenge:} Implement or reverse unknown algorithm \strong{Approach:} Pattern recognition, understand operations \strong{Key insight:} Look for mathematical patterns, trace transformations}
+}
+
+\subtree{
+\title{Crypto Challenge}
+\p{\strong{Challenge:} Decrypt ciphertext or find key \strong{Approach:} Identify algorithm, extract key/IV, decrypt \strong{Key insight:} Recognize standard crypto patterns (see patterns.md)}
+}
+
+\subtree{
+\title{Code Obfuscation}
+\p{\strong{Challenge:} Understand obfuscated/packed code \strong{Approach:} Dynamic analysis to observe deobfuscated state \strong{Key insight:} Let program do the work, observe result}
+}
+
+\subtree{
+\title{Binary Bomb}
+\p{\strong{Challenge:} Defuse "bomb" by providing correct inputs for each phase \strong{Approach:} Phase-by-phase analysis, mixed static/dynamic \strong{Key insight:} Each phase typically tests different concept}
+}
+
+\subtree{
+\title{Custom Encoding}
+\p{\strong{Challenge:} Decode encoded flag or encode input correctly \strong{Approach:} Identify encoding scheme, reverse or replicate \strong{Key insight:} Look for transformation loops, character mappings}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\subtree{
+\title{After Binary Triage}
+\p{\strong{Triage identified suspicious areas → Deep dive with CTF focus}}
+
+\pre{\startverb
+From triage bookmarks:
+- "Crypto function at 0x401234" → Identify algorithm, extract key
+- "Input validation at 0x402000" → Understand constraints, solve
+- "Suspicious string XOR" → Decode to find flag or hint
+\stopverb}
+}
+
+\subtree{
+\title{Using Deep Analysis}
+\p{\strong{When you need detailed function understanding}}
+
+\pre{\startverb
+CTF skill identifies: "Validation at validate_key function"
+Deep analysis answers: "What exactly does validate_key do?"
+CTF skill uses result: Apply findings to extract flag
+\stopverb}
+
+\p{\strong{Workflow:}}
+
+\ol{
+\li{CTF skill: High-level strategy, identify critical functions}
+\li{Deep analysis: Detailed investigation of specific functions}
+\li{CTF skill: Synthesize findings, extract solution}
+}
+}
+}
+
+\subtree{
+\title{Success Criteria}
+\p{\strong{You've solved the challenge when you can:}}
+
+\ol{
+\li{\strong{Demonstrate understanding:}}
+\li{Explain how input becomes output}
+\li{Identify the validation mechanism}
+\li{Recognize the core algorithm/technique}
+}
+
+\ol{
+\li{\strong{Extract the solution:}}
+\li{Provide the flag/key/password}
+\li{Explain how you derived it}
+\li{Verify it works (if testable)}
+}
+
+\ol{
+\li{\strong{Document the path:}}
+\li{Key functions and addresses}
+\li{Critical transformations or comparisons}
+\li{Solution method (reverse, derive, brute force, bypass)}
+}
+}
+
+\subtree{
+\title{Remember}
+\p{CTF reverse engineering is \strong{problem-solving under constraints}:}
+
+\ul{
+\li{You have limited time}
+\li{You need sufficient, not perfect, understanding}
+\li{The goal is the flag, not comprehensive analysis}
+\li{Adapt your strategy based on what you find}
+\li{Leverage patterns and prior knowledge}
+\li{Switch between static and dynamic as needed}
+}
+
+\p{\strong{Focus on answering:}}
+
+\ol{
+\li{What does the program expect? (input format/structure)}
+\li{What does the program do? (transformation/validation)}
+\li{How do I reverse it? (derive/decrypt/solve/bypass)}
+}
+
+\p{When you answer these three questions, you have your flag.}
+}
+}

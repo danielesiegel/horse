@@ -1,0 +1,213 @@
+\title{Chromatic Walk}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{3 parallel agents explore codebase improvements via GF(3) balanced prime geodesics}
+
+\subtree{
+\title{Chromatic Walk Skill}
+\p{\strong{Trit}: 0 (ERGODIC - navigates between generation and validation) \strong{Coordinator Color}: #D06546 (burnt sienna, transport of earth) \strong{Seed}: 1069 (0x42D)}
+
+\subtree{
+\title{Overview}
+\p{Chromatic Walk enables \strong{3 parallel agents} to explore codebase improvements using GF(3)-balanced derivation chains. Each agent holds a trit polarity, and together they form a self-boiling triad.}
+
+\p{Walks are \strong{prime geodesics}: non-backtracking paths that are unambiguously traversable in p-adic number systems.}
+
+\pre{\startverb
+Generator (⊕)  ─────┐
+                    ├──→  GF(3) = 0  ──→  Prime Geodesic
+Coordinator (○) ────┤
+                    │
+Validator (⊖)  ─────┘
+\stopverb}
+}
+
+\subtree{
+\title{The 3-Agent Structure}
+\pre{\startverb
+| Role | Trit | Color | Action | Responsibility |
+|------|------|-------|--------|----------------|
+| **Generator** | +1 | #D82626 (Red) | Create | Propose code changes, new patterns |
+| **Coordinator** | 0 | #26D826 (Green) | Transport | Formalize structure, derive next seed |
+| **Validator** | -1 | #2626D8 (Blue) | Verify | Check invariants, reduce to essence |
+\stopverb}
+}
+
+\subtree{
+\title{Prime Geodesic Foundation}
+\p{See [PRIME_GEODESICS.md](./PRIME_GEODESICS.md) for full mathematical foundation.}
+
+\subtree{
+\title{Why Non-Backtracking?}
+\pre{\startverb
+| Property | Prime Path | Composite Path |
+|----------|------------|----------------|
+| Factorization | **Unique** | Multiple |
+| p-adic valuation | **Well-defined** | Ambiguous |
+| Möbius μ(n) | ≠ 0 | = 0 (filtered) |
+| Ihara zeta | **Contributes** | Ignored |
+\stopverb}
+
+\p{\strong{Key insight}: Chromatic walks are prime geodesics in derivation space, traversable unambiguously by zeta functions.}
+}
+
+\subtree{
+\title{Zeta Function Traversability}
+\pre{\startverb
+| Zeta | Domain | Primes |
+|------|--------|--------|
+| Riemann ζ(s) | ℤ | Prime numbers |
+| Ihara ζ_G(u) | Graphs | Non-backtracking cycles |
+| Dedekind ζ_K(s) | Number fields | Prime ideals |
+| Selberg Z(s) | Manifolds | Prime geodesics |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Seed Chaining Across Agents}
+\p{Each agent derives its seed from the shared genesis, offset by the golden ratio:}
+
+\pre{\startverb
+genesis = 0x42D  # 1069
+γ = 0x9E3779B97F4A7C15  # Golden ratio constant
+
+seed_generator   = genesis                    # +1 stream
+seed_coordinator = genesis ^ γ                # 0 stream  
+seed_validator   = genesis ^ (γ << 1)         # -1 stream
+\stopverb}
+
+\subtree{
+\title{Derivation Chain (per step)}
+\pre{\startverb
+seed_{n+1} = (seed_n ⊕ (trit_n × γ)) × MIX  mod 2⁶⁴
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation Invariant}
+\p{At every step of the walk:}
+
+\pre{\startverb
+trit_generator + trit_coordinator + trit_validator ≡ 0 (mod 3)
+      (+1)      +       (0)       +      (-1)      =   0  ✓
+\stopverb}
+
+\subtree{
+\title{Self-Boiling Property}
+\p{Like the Three Chromatic Samovars:}
+
+\ul{
+\li{Generator provides +1 (creative surplus)}
+\li{Validator provides -1 (critical reduction)  }
+\li{Coordinator provides 0 (transport without change)}
+}
+}
+}
+
+\subtree{
+\title{Walk Protocol}
+\subtree{
+\title{Phase 1: Genesis}
+\pre{\startverb
+just chromatic-walk seed=1069
+\stopverb}
+}
+
+\subtree{
+\title{Phase 2: Propose (Generator leads)}
+\p{Generator proposes a codebase change with +1 trit.}
+}
+
+\subtree{
+\title{Phase 3: Formalize (Coordinator transports)}
+\p{Coordinator structures the proposal, deriving the interface.}
+}
+
+\subtree{
+\title{Phase 4: Verify (Validator constrains)}
+\p{Validator checks invariants and reduces.}
+}
+
+\subtree{
+\title{Phase 5: Commit (combined)}
+\p{If GF(3) = 0 at walk end, the improvement is committed.}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just chromatic-walk seed=1069         # Initialize walk
+just chromatic-walk-step seed=1069    # Run single step
+just chromatic-walk-verify seed=1069  # Verify GF(3) conservation
+\stopverb}
+}
+
+\subtree{
+\title{Triad Bundles}
+\pre{\startverb
+three-match (-1) ⊗ chromatic-walk (0) ⊗ gay-mcp (+1) = 0 ✓  [Core Walk]
+ramanujan-expander (-1) ⊗ ihara-zeta (0) ⊗ moebius-inversion (+1) = 0 ✓  [Prime Netting]
+\stopverb}
+}
+
+\subtree{
+\title{Goblin Integration}
+\p{Chromatic-walk is the \strong{0 Coordinator} in the goblin triad:}
+
+\pre{\startverb
+shadow-goblin (-1) ⊗ chromatic-walk (0) ⊗ agent-o-rama (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Trit | Color | Action |
+|------|------|-------|--------|
+| Shadow Goblin | -1 | #F0D127 | Validates walks |
+| **Chromatic Walk** | **0** | **#46F27F** | **Transports derivations** |
+| Agent-O-Rama | +1 | #E7B367 | Generates proposals |
+\stopverb}
+
+\subtree{
+\title{Coordinator Capabilities}
+\p{As the 0 goblin, Chromatic Walk provides:}
+
+\ul{
+\li{\strong{Transport}: Move context between generator and validator}
+\li{\strong{Derive}: Compute next seed in derivation chain}
+\li{\strong{Navigate}: Traverse between realms (Beautiful Realms)}
+\li{\strong{Balance}: Ensure triad sums remain at GF(3) = 0}
+}
+}
+
+\subtree{
+\title{Color Stream (Seed 1069, Stream 2)}
+\pre{\startverb
+Step 1: #46F27F (mint green)     ○ Transport
+Step 2: #E2282A (vivid red)      ○ Derive
+Step 3: #EE55F2 (hot pink)       ○ Navigate
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\pre{\startverb
+| Skill | Relation |
+|-------|----------|
+| **unworld** | Seed chaining foundation |
+| **ihara-zeta** | Non-backtracking enumeration |
+| **ramanujan-expander** | Spectral gap verification |
+| **moebius-inversion** | Composite filtering |
+| **gay-mcp** | Deterministic color generation |
+| **shadow-goblin** | Validates walks (-1) |
+| **agent-o-rama** | Generates proposals (+1) |
+\stopverb}
+
+\p{\strong{Skill Name}: chromatic-walk \strong{Type}: Multi-Agent Prime Geodesic Exploration \strong{Trit}: 0 (ERGODIC) \strong{GF(3)}: Conserved by construction \strong{Backtracking}: Forbidden (composites are p-adically imprecise)}
+}
+}

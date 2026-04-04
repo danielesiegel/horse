@@ -1,0 +1,299 @@
+\title{Levin Levity}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'Leonid Levin''''s algorithmic complexity meets playful mutual ingression. Use for: BB(n) prediction markets, Kolmogorov complexity rewards, WEV extraction from proof inefficiencies, Nash equilibrium between exploration (LEVITY) and convergence (LEVIN).'}
+
+\subtree{
+\title{Levin-Levity: Mutual Ingression of Minds}
+\blockquote{"The shortest program that outputs the universe is the universe computing itself." — Levin, played lightly}
+
+\subtree{
+\title{Core Duality}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│              LEVIN ⇌ LEVITY DIALECTIC                          │
+├─────────────────────────────────────────────────────────────────┤
+│  LEVIN (-1)    │  Convergence, compression, Kolmogorov        │
+│                │  "Find the shortest program"                  │
+│                │  τ_mix → 0 (rapid equilibration)              │
+├────────────────┼────────────────────────────────────────────────┤
+│  LEVITY (+1)   │  Exploration, expansion, serendipity         │
+│                │  "Discover new programs to compress"          │
+│                │  τ_mix → ∞ (eternal novelty)                  │
+├────────────────┼────────────────────────────────────────────────┤
+│  ERGODIC (0)   │  Nash equilibrium of the two                 │
+│                │  "Mutual ingression of minds"                 │
+│                │  τ_mix = τ_optimal (WEV extracted)            │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Leonid Levin's Key Ideas}
+\subtree{
+\title{1. Universal Search (Levin Search)}
+\p{The optimal algorithm for inversion problems runs all programs in parallel, weighted by 2^(-|p|):}
+
+\pre{\startverb
+L(x) = min_p { 2^|p| × T(p,x) }
+\stopverb}
+
+\p{where |p| is program length and T(p,x) is runtime. This is \strong{Levin complexity}.}
+
+\p{\strong{Levity interpretation}: Run all proofs in parallel, weighted by their Kolmogorov complexity. The first to halt wins the $BEAVER bounty.}
+}
+
+\subtree{
+\title{2. Kolmogorov Complexity}
+\p{K(x) = length of shortest program producing x}
+
+\p{\strong{Connection to BB(n)}:}
+
+\ul{
+\li{BB(n) = max halting output of n-state Turing machines}
+\li{K(BB(n)) ≤ O(n) (trivially describable by n)}
+\li{But computing BB(n) requires unbounded time}
+}
+
+\p{\strong{WEV Insight}: The gap between K(BB(n)) and the actual compute cost is the extractable inefficiency.}
+}
+
+\subtree{
+\title{3. Algorithmic Probability}
+\p{P(x) = Σ_p 2^(-|p|) for all p that output x}
+
+\p{\strong{Levity interpretation}: The probability that a random program outputs your proof. Higher algorithmic probability = lower $BEAVER reward (too easy!).}
+}
+}
+
+\subtree{
+\title{The LEVITY-LEVIN Game}
+\p{From \code{\startverb triplet_1_week2_nash_solver.jl\stopverb}:}
+
+\pre{\startverb
+# Player profiles
+LEVITY = RulePerformance(
+    "LEVITY",
+    quality = 0.72,        # Explores alternative cofactors
+    exploration = 0.65,    # High novelty
+    cofactor_discovery = 1.0  # Finds new patterns
+)
+
+LEVIN = RulePerformance(
+    "LEVIN",
+    quality = 0.88,        # Fast convergence
+    exploration = 0.40,    # Contracts search space
+    cofactor_discovery = 0.5  # Rediscovers known patterns
+)
+
+# Nash equilibrium
+# Neither player can improve by unilateral weight change
+w_levity = 0.5
+w_levin = 0.5
+# ERGODIC: balanced allocation extracts maximum combined payoff
+\stopverb}
+
+\subtree{
+\title{Best Response Dynamics}
+\pre{\startverb
+Task Type      │ Optimal w_levity │ Optimal w_levin │ Winner
+───────────────┼──────────────────┼─────────────────┼────────
+discovery      │ 0.70             │ 0.30            │ LEVITY
+convergence    │ 0.30             │ 0.70            │ LEVIN
+efficiency     │ 0.55             │ 0.45            │ ERGODIC
+balanced       │ 0.50             │ 0.50            │ NASH
+\stopverb}
+}
+}
+
+\subtree{
+\title{BB(6) World Extractable Value (WEV)}
+\subtree{
+\title{Mixing Time Analysis}
+\pre{\startverb
+| World | Strategy | τ_mix | Cost | WEV |
+|-------|----------|-------|------|-----|
+| W_Nash (uncoordinated) | Each prover works alone | years | 100 human-years | — |
+| W_Opt (market-coordinated) | $BEAVER prediction market | months | 10 human-years | 90 human-years |
+\stopverb}
+
+\p{\strong{WEV = C_Nash - C_Opt = 90 human-years of proof effort}}
+}
+
+\subtree{
+\title{Extraction Mechanism}
+\pre{\startverb
+$BEAVER Token Flow:
+    Discovery Event → Verification Phase (1 week)
+                   → Proofs submitted in Lean/Agda
+                   → Oracle verifies
+                   → $BEAVER minted ∝ log₃(BB(n))
+                   → WEV distributed to market participants
+\stopverb}
+}
+
+\subtree{
+\title{Reward Formula}
+\pre{\startverb
+BEAVER_REWARD = log₃(BB(n)) × VERIFICATION_MULTIPLIER × TERNARY_BONUS
+
+Where:
+  log₃(BB(n)) = Kolmogorov complexity in balanced ternary
+  VERIFICATION_MULTIPLIER = {1.0 (Move), 2.0 (Lean), 3.0 (Agda)}
+  TERNARY_BONUS = {-1: 0.5×, 0: 1.0×, +1: 1.5×}
+\stopverb}
+}
+
+\subtree{
+\title{Example: BB(5) = 47,176,870}
+\pre{\startverb
+log₃(47,176,870) ≈ 16.03 trits
+Agda proof: 16.03 × 3.0 × 1.5 = 72.135 $BEAVER
+Lean proof: 16.03 × 2.0 × 1.0 = 32.06 $BEAVER
+Move proof: 16.03 × 1.0 × 1.0 = 16.03 $BEAVER
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triad for BB(6) Oracle}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│  Skill                    │ Trit │ Role                         │
+├───────────────────────────┼──────┼──────────────────────────────┤
+│  busy-beaver-oracle       │  +1  │ Generate lower bound proofs  │
+│  levin-levity (this)      │   0  │ Nash equilibrium + WEV       │
+│  prediction-market-oracle │  -1  │ Price discovery on cryptids  │
+├───────────────────────────┴──────┴──────────────────────────────┤
+│  Sum: (+1) + (0) + (-1) = 0 ✓  GF(3) CONSERVED                 │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Mutual Ingression of Minds}
+\p{The levity in Levin:}
+
+\ol{
+\li{\strong{Compression is play}: Finding shorter programs is the ultimate game}
+\li{\strong{Universality is democracy}: Every program gets a fair (weighted) chance}
+\li{\strong{Incomputability is freedom}: BB(n) ensures infinite exploration space}
+\li{\strong{Markets are minds}: Prediction markets aggregate distributed cognition}
+}
+
+\subtree{
+\title{The Ingression Pattern}
+\pre{\startverb
+Mind A (LEVIN): "I seek the shortest proof"
+Mind B (LEVITY): "I seek the most surprising proof"
+Mind C (ERGODIC): "I arbitrage between your mixing times"
+
+WEV = |τ_A - τ_B| × liquidity × information_asymmetry
+\stopverb}
+}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{When to invoke this skill}
+\ul{
+\li{Designing prediction markets for undecidable problems}
+\li{Extracting WEV from uncoordinated proof efforts}
+\li{Computing Nash equilibria between exploration/convergence}
+\li{Pricing proofs by Kolmogorov complexity}
+\li{BB(n) tokenomics and $BEAVER reward calculations}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Compute Levin complexity
+amp levin-complexity --program "BB(6) proof" --output complexity.json
+
+# Simulate LEVITY-LEVIN game
+julia src/triplet_1_week2_nash_solver.jl --task balanced
+
+# Extract WEV from proof space
+amp wev-extract --world-nash "solo-provers" --world-opt "market-coordinated"
+\stopverb}
+}
+
+\subtree{
+\title{Integration with other skills}
+\pre{\startverb
+triadic_allocation:
+  - skill: busy-beaver-oracle
+    trit: +1
+    role: "Generate proofs, emit $BEAVER"
+  - skill: levin-levity
+    trit: 0
+    role: "Nash equilibrium, WEV pricing"
+  - skill: prediction-market-oracle
+    trit: -1
+    role: "Market-making, belief aggregation"
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Levin, L. (1973). "Universal sequential search problems"}
+\li{Solomonoff, R. (1964). "A formal theory of inductive inference"}
+\li{Roughgarden, T. (2010). "Algorithmic Game Theory"}
+\li{Busy Beaver Challenge: https://bbchallenge.org}
+\li{BEAVER Tokenomics: \code{\startverb /busy-beaver-oracle/BEAVER_TOKENOMICS.md\stopverb}}
+\li{Nash Solver: \code{\startverb /src/triplet_1_week2_nash_solver.jl\stopverb}}
+}
+}
+
+\subtree{
+\title{Seed 1069 Signature}
+\pre{\startverb
+TRIT_STREAM: [+1, -1, -1, +1, +1, +1, +1]
+GF(3)_SUM: 0 (CONSERVED)
+WEV_MIXING_BADGE: τ_market < τ_proof → extractable
+\stopverb}
+
+\p{*"In the mutual ingression of minds, the shortest proof finds itself."*}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 8. Degeneracy}
+\p{\strong{Concepts}: redundancy, fallback, multiple strategies, robustness}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+levin-levity (+) + SDF.Ch8 (−) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch4: Pattern Matching}
+\li{Ch5: Evaluation}
+\li{Ch6: Layering}
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Degeneracy provides fallbacks. This skill offers redundant strategies.}
+}
+}
+}

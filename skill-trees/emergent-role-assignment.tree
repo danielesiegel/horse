@@ -1,0 +1,110 @@
+\title{"emergent Role Assignment"}
+
+\taxon{skill}
+
+\meta{description}{"**Category:** Phase 3 Core - Self-Organization"}
+
+\subtree{
+\title{Emergent Role Assignment}
+\p{\strong{Category:} Phase 3 Core - Self-Organization \strong{Status:} Skeleton Implementation \strong{Dependencies:} \code{\startverb sheaf-theoretic-coordination\stopverb}, \code{\startverb chemical-organization-theory\stopverb}}
+
+\subtree{
+\title{Overview}
+\p{Implements spontaneous role assignment in multi-agent systems through self-organization, dynamic hierarchy adaptation, and reward-based emergence without central coordination.}
+}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{\strong{Spontaneous Hierarchy}: Agents self-organize into hierarchical structures}
+\li{\strong{Dynamic Role Adaptation}: Roles change based on task demands}
+\li{\strong{Reward-Based Emergence}: Roles emerge from collective optimization}
+\li{\strong{Stability Analysis}: Verify organizational stability and convergence}
+}
+}
+
+\subtree{
+\title{Core Components}
+\ol{
+\li{\strong{Role Dynamics} (\code{\startverb role_dynamics.jl\stopverb})}
+\li{Role state representation}
+\li{Transition dynamics between roles}
+\li{Stability attractors}
+}
+
+\ol{
+\li{\strong{Hierarchy Formation} (\code{\startverb hierarchy_formation.jl\stopverb})}
+\li{Emergent leadership via fitness}
+\li{Span of control optimization}
+\li{Dynamic reorganization triggers}
+}
+
+\ol{
+\li{\strong{Reward Shaping} (\code{\startverb reward_shaping.jl\stopverb})}
+\li{Collective reward functions}
+\li{Credit assignment without centralization}
+\li{Multi-agent learning objectives}
+}
+
+\ol{
+\li{\strong{Stability Verification} (\code{\startverb stability_verification.jl\stopverb})}
+\li{Lyapunov function construction}
+\li{Convergence guarantees}
+\li{Resilience to perturbations}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Input from}: \code{\startverb sheaf-theoretic-coordination\stopverb} (consensus on roles)}
+\li{\strong{Output to}: \code{\startverb chemical-organization-theory\stopverb} (roles as stable organizations)}
+\li{\strong{Coordinates with}: \code{\startverb feedforward-learning-local\stopverb} (local learning signals)}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using EmergentRoleAssignment
+
+# Define multi-agent system
+agents = [Agent(id=i, capabilities=rand(5)) for i in 1:20]
+environment = GridWorld(10, 10)
+
+# Initialize role assignment system
+role_system = RoleSystem(
+    n_roles=4,
+    transition_rates=0.1,
+    reward_fn=collective_foraging_reward
+)
+
+# Simulate emergence
+trajectory = simulate_emergence(role_system, agents, environment, steps=1000)
+
+# Analyze stability
+stability = analyze_role_stability(trajectory)
+hierarchy = extract_hierarchy(trajectory.final_state)
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Bonabeau et al. "Self-Organization in Social Insects" (1997)}
+\li{Wolpert & Tumer "Optimal Payoff Functions for Members of Collectives" (1999)}
+\li{Tumer & Wolpert "A Survey of Collectives" (2004)}
+}
+}
+
+\subtree{
+\title{Implementation Status}
+\ul{
+\li{[x] Basic role dynamics}
+\li{[x] Simple hierarchy formation}
+\li{[ ] Full reward shaping framework}
+\li{[ ] Stability verification}
+\li{[ ] Benchmark on multi-agent tasks}
+}
+}
+}

@@ -1,0 +1,559 @@
+\title{Flox Containers}
+
+\taxon{skill}
+
+\meta{description}{Containerizing Flox environments with Docker/Podman. Use for creating container images, OCI exports, multi-stage builds, and deployment workflows.}
+
+\subtree{
+\title{Flox Containerization Guide}
+\subtree{
+\title{Core Commands}
+\pre{\startverb
+flox containerize                          # Export to default tar file
+flox containerize -f ./mycontainer.tar     # Export to specific file
+flox containerize --runtime docker         # Export directly to Docker
+flox containerize --runtime podman         # Export directly to Podman
+flox containerize -f - | docker load       # Pipe to Docker
+flox containerize --tag v1.0               # Tag container image
+flox containerize -r owner/env             # Containerize remote environment
+\stopverb}
+}
+
+\subtree{
+\title{Basic Usage}
+\subtree{
+\title{Export to File}
+\pre{\startverb
+# Export to file
+flox containerize -f ./mycontainer.tar
+docker load -i ./mycontainer.tar
+
+# Or use default filename: {name}-container.tar
+flox containerize
+docker load -i myenv-container.tar
+\stopverb}
+}
+
+\subtree{
+\title{Export Directly to Runtime}
+\pre{\startverb
+# Auto-detects docker or podman
+flox containerize --runtime docker
+
+# Explicit runtime selection
+flox containerize --runtime podman
+\stopverb}
+}
+
+\subtree{
+\title{Pipe to Stdout}
+\pre{\startverb
+# Pipe directly to Docker
+flox containerize -f - | docker load
+
+# With tagging
+flox containerize --tag v1.0 -f - | docker load
+\stopverb}
+}
+}
+
+\subtree{
+\title{How Containers Behave}
+\p{\strong{Containers activate the Flox environment on startup} (like \code{\startverb flox activate\stopverb}):}
+
+\ul{
+\li{\strong{Interactive}: \code{\startverb docker run -it <image>\stopverb} → Bash shell with environment activated}
+\li{\strong{Non-interactive}: \code{\startverb docker run <image> <cmd>\stopverb} → Runs command with environment activated (like \code{\startverb flox activate -- <cmd>\stopverb})}
+\li{All packages, variables, and hooks are available inside the container}
+}
+
+\p{\strong{Note}: Flox sets an entrypoint that activates the environment, then runs \code{\startverb cmd\stopverb} inside that activation.}
+}
+
+\subtree{
+\title{Command Options}
+\pre{\startverb
+flox containerize
+  [-f <file>]           # Output file (- for stdout); defaults to {name}-container.tar
+  [--runtime <runtime>] # docker/podman (auto-detects if not specified)
+  [--tag <tag>]         # Container tag (e.g., v1.0, latest)
+  [-d <path>]           # Path to .flox/ directory
+  [-r <owner/name>]     # Remote environment from FloxHub
+\stopverb}
+}
+
+\subtree{
+\title{Manifest Configuration}
+\p{Configure container in \code{\startverb [containerize.config]\stopverb} (experimental):}
+
+\pre{\startverb
+[containerize.config]
+user = "appuser"                    # Username or uid:gid format
+exposed-ports = ["8080/tcp"]        # Ports to expose (tcp/udp/default:tcp)
+cmd = ["python", "app.py"]          # Command to run (receives activated env)
+volumes = ["/data", "/config"]      # Mount points for persistent data
+working-dir = "/app"                # Working directory
+labels = { version = "1.0" }        # Arbitrary metadata
+stop-signal = "SIGTERM"             # Signal to stop container
+\stopverb}
+
+\subtree{
+\title{Configuration Options Explained}
+\p{\strong{user}: Run container as specific user}
+
+\ul{
+\li{Username: \code{\startverb user = "appuser"\stopverb}}
+\li{UID:GID: \code{\startverb user = "1000:1000"\stopverb}}
+}
+
+\p{\strong{exposed-ports}: Network ports to expose}
+
+\ul{
+\li{TCP: \code{\startverb ["8080/tcp"]\stopverb}}
+\li{UDP: \code{\startverb ["8125/udp"]\stopverb}}
+\li{Default protocol is tcp: \code{\startverb ["8080"]\stopverb} = \code{\startverb ["8080/tcp"]\stopverb}}
+}
+
+\p{\strong{cmd}: Command to run in container}
+
+\ul{
+\li{Array form: \code{\startverb cmd = ["python", "app.py"]\stopverb}}
+\li{Empty for service-based: \code{\startverb cmd = []\stopverb}}
+}
+
+\p{\strong{volumes}: Mount points for persistent data}
+
+\ul{
+\li{List paths: \code{\startverb volumes = ["/data", "/config", "/logs"]\stopverb}}
+}
+
+\p{\strong{working-dir}: Initial working directory}
+
+\ul{
+\li{Absolute path: \code{\startverb working-dir = "/app"\stopverb}}
+}
+
+\p{\strong{labels}: Arbitrary metadata}
+
+\ul{
+\li{Key-value pairs: \code{\startverb labels = { version = "1.0", env = "production" }\stopverb}}
+}
+
+\p{\strong{stop-signal}: Signal to stop container}
+
+\ul{
+\li{Common: \code{\startverb "SIGTERM"\stopverb}, \code{\startverb "SIGINT"\stopverb}, \code{\startverb "SIGKILL"\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Complete Workflow Examples}
+\subtree{
+\title{Flask Web Application}
+\pre{\startverb
+# Create environment
+flox init
+flox install python311 flask
+
+# Configure for container
+cat >> .flox/env/manifest.toml << 'EOF'
+[containerize.config]
+exposed-ports = ["5000/tcp"]
+cmd = ["python", "-m", "flask", "run", "--host=0.0.0.0"]
+working-dir = "/app"
+user = "flask"
+EOF
+
+# Build and run
+flox containerize -f - | docker load
+docker run -p 5000:5000 -v $(pwd):/app <container-id>
+\stopverb}
+}
+
+\subtree{
+\title{Node.js Application}
+\pre{\startverb
+flox init
+flox install nodejs
+
+cat >> .flox/env/manifest.toml << 'EOF'
+[containerize.config]
+exposed-ports = ["3000/tcp"]
+cmd = ["npm", "start"]
+working-dir = "/app"
+EOF
+
+flox containerize --tag myapp:latest --runtime docker
+docker run -p 3000:3000 -v $(pwd):/app myapp:latest
+\stopverb}
+}
+
+\subtree{
+\title{Database Container}
+\pre{\startverb
+flox init
+flox install postgresql
+
+# Set up service in manifest
+flox edit
+
+# Add service and container config
+cat >> .flox/env/manifest.toml << 'EOF'
+[services.postgres]
+command = '''
+  mkdir -p /data/postgres
+  if [ ! -d "/data/postgres/pgdata" ]; then
+    initdb -D /data/postgres/pgdata
+  fi
+  exec postgres -D /data/postgres/pgdata -h 0.0.0.0
+'''
+is-daemon = true
+
+[containerize.config]
+exposed-ports = ["5432/tcp"]
+volumes = ["/data"]
+cmd = []  # Service starts automatically
+EOF
+
+flox containerize -f - | docker load
+docker run -p 5432:5432 -v pgdata:/data <container-id>
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Service Containers}
+\p{Services start automatically when cmd is empty:}
+
+\pre{\startverb
+[services.web]
+command = "python -m http.server 8000"
+
+[containerize.config]
+exposed-ports = ["8000/tcp"]
+cmd = []  # Service starts automatically
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Stage Pattern}
+\p{Build in one environment, run in another:}
+
+\pre{\startverb
+# Build environment with all dev tools
+cd build-env
+flox activate -- flox build myapp
+
+# Runtime environment with minimal deps
+cd ../runtime-env
+flox install myapp
+flox containerize --tag production -f - | docker load
+
+# Run
+docker run production
+\stopverb}
+}
+
+\subtree{
+\title{Remote Environment Containers}
+\p{Containerize shared team environments:}
+
+\pre{\startverb
+# Containerize remote environment
+flox containerize -r team/python-ml --tag latest --runtime docker
+
+# Run it
+docker run -it team-python-ml:latest
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Service Container}
+\pre{\startverb
+[services.db]
+command = '''exec postgres -D "$FLOX_ENV_CACHE/postgres"'''
+is-daemon = true
+
+[services.cache]
+command = '''exec redis-server'''
+is-daemon = true
+
+[services.api]
+command = '''exec python -m uvicorn main:app --host 0.0.0.0'''
+
+[containerize.config]
+exposed-ports = ["8000/tcp", "5432/tcp", "6379/tcp"]
+cmd = []  # All services start automatically
+\stopverb}
+}
+}
+
+\subtree{
+\title{Platform-Specific Notes}
+\subtree{
+\title{macOS}
+\ul{
+\li{Requires docker/podman runtime (uses proxy container for builds)}
+\li{May prompt for file sharing permissions}
+\li{Creates \code{\startverb flox-nix\stopverb} volume for caching}
+\li{Safe to remove when not building: \code{\startverb docker volume rm flox-nix\stopverb}}
+}
+}
+
+\subtree{
+\title{Linux}
+\ul{
+\li{Direct image creation without proxy}
+\li{No intermediate volumes needed}
+\li{Native container support}
+}
+}
+}
+
+\subtree{
+\title{Advanced Use Cases}
+\subtree{
+\title{Custom Entrypoint with Wrapper Script}
+\pre{\startverb
+[build.entrypoint]
+command = '''
+  cat > $out/bin/entrypoint.sh << 'EOF'
+#!/usr/bin/env bash
+set -e
+
+# Custom initialization
+echo "Initializing application..."
+setup_app
+
+# Run whatever command was passed
+exec "$@"
+EOF
+  chmod +x $out/bin/entrypoint.sh
+'''
+
+[containerize.config]
+cmd = ["entrypoint.sh", "python", "app.py"]
+\stopverb}
+}
+
+\subtree{
+\title{Health Check Support}
+\pre{\startverb
+[containerize.config]
+cmd = ["python", "app.py"]
+labels = {
+  "healthcheck" = "curl -f http://localhost:8000/health || exit 1"
+}
+\stopverb}
+
+\p{Then in Docker:}
+
+\pre{\startverb
+docker run --health-cmd="curl -f http://localhost:8000/health || exit 1" \
+           --health-interval=30s \
+           myimage
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Architecture Builds}
+\p{Build for different architectures:}
+
+\pre{\startverb
+# On x86_64 Linux
+flox containerize --tag myapp:amd64 --runtime docker
+
+# On ARM64 (aarch64) Linux
+flox containerize --tag myapp:arm64 --runtime docker
+
+# Create manifest
+docker manifest create myapp:latest \
+  myapp:amd64 \
+  myapp:arm64
+\stopverb}
+}
+
+\subtree{
+\title{Minimal Container Size}
+\p{Create minimal runtime environment:}
+
+\pre{\startverb
+[install]
+# Only runtime dependencies
+python.pkg-path = "python311"
+# No dev tools, no build tools
+
+[build.app]
+command = '''
+  # Build in build environment
+  python -m pip install --target=$out/lib/python -r requirements.txt
+  cp -r src $out/lib/python/
+'''
+runtime-packages = ["python"]
+
+[containerize.config]
+cmd = ["python", "-m", "myapp"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Container Registry Workflows}
+\subtree{
+\title{Push to Registry}
+\pre{\startverb
+# Build container
+flox containerize --tag myapp:v1.0 --runtime docker
+
+# Tag for registry
+docker tag myapp:v1.0 registry.company.com/myapp:v1.0
+
+# Push
+docker push registry.company.com/myapp:v1.0
+\stopverb}
+}
+
+\subtree{
+\title{GitLab CI/CD}
+\pre{\startverb
+containerize:
+  stage: build
+  script:
+    - flox containerize --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG --runtime docker
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
+\stopverb}
+}
+
+\subtree{
+\title{GitHub Actions}
+\pre{\startverb
+- name: Build container
+  run: |
+    flox containerize --tag ghcr.io/${{ github.repository }}:${{ github.sha }} --runtime docker
+
+- name: Push to GHCR
+  run: |
+    echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Kubernetes Deployment}
+\subtree{
+\title{Basic Deployment}
+\pre{\startverb
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: registry.company.com/myapp:v1.0
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: myapp-data
+\stopverb}
+}
+
+\subtree{
+\title{Service Definition}
+\pre{\startverb
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: LoadBalancer
+\stopverb}
+}
+}
+
+\subtree{
+\title{Debugging Container Issues}
+\subtree{
+\title{Inspect Container}
+\pre{\startverb
+# Run interactively
+docker run -it --entrypoint /bin/bash <image-id>
+
+# Check environment
+docker run <image-id> env
+
+# Check what's in the image
+docker run <image-id> ls -la /
+\stopverb}
+}
+
+\subtree{
+\title{View Container Logs}
+\pre{\startverb
+# Follow logs
+docker logs -f <container-id>
+
+# Last 100 lines
+docker logs --tail 100 <container-id>
+\stopverb}
+}
+
+\subtree{
+\title{Execute Commands in Running Container}
+\pre{\startverb
+# Get a shell
+docker exec -it <container-id> /bin/bash
+
+# Run specific command
+docker exec <container-id> flox list
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Use specific tags}: Avoid \code{\startverb latest\stopverb}, use semantic versioning}
+\li{\strong{Minimize layers}: Combine related operations in manifests}
+\li{\strong{Use .dockerignore equivalent}: Only include necessary files in build context}
+\li{\strong{Health checks}: Implement health check endpoints for services}
+\li{\strong{Security}: Run as non-root user when possible}
+\li{\strong{Volumes}: Use volumes for persistent data, not container filesystem}
+\li{\strong{Environment variables}: Make configuration overridable via env vars}
+\li{\strong{Logging}: Log to stdout/stderr, not files}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{flox-environments} - Creating environments to containerize}
+\li{\strong{flox-services} - Running services in containers}
+\li{\strong{flox-builds} - Building artifacts before containerizing}
+\li{\strong{flox-sharing} - Containerizing remote environments}
+}
+}
+}

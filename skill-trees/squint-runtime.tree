@@ -1,0 +1,132 @@
+\title{Squint Runtime}
+
+\taxon{skill}
+
+\meta{description}{Squint ClojureScript runtime for minimal JS output compilation}
+
+\subtree{
+\title{Squint Runtime Skill}
+\p{\strong{Status}: ✅ Production Ready \strong{Author}: Michiel Borkent (borkdude) \strong{Trit}: 0 (ERGODIC - neutral transport) \strong{Stars}: 1.2k+}
+
+\subtree{
+\title{Overview}
+\p{Squint is a \strong{light-weight ClojureScript dialect} that compiles to JavaScript with minimal runtime overhead. It's the "minimal" alternative in borkdude's browser runtime spectrum.}
+}
+
+\subtree{
+\title{When to Use Squint vs Cherry}
+\pre{\startverb
+| Aspect | Squint | Cherry 🍒 |
+|--------|--------|-----------|
+| **Runtime size** | Minimal (~10KB) | Full cljs.core (~100KB) |
+| **Semantics** | JS-like | Full CLJS |
+| **Data structures** | JS objects/arrays | Persistent immutable |
+| **Keywords** | Strings | CLJS keywords |
+| **Interop** | Seamless | Requires macros |
+| **JSX** | ❌ | ✅ |
+| **Use case** | Small scripts, interop | Full applications |
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+npm install squint-cljs@latest
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+;; example.cljs
+(ns example)
+
+;; Functions compile to regular JS functions
+(defn greet [name]
+  (str "Hello, " name "!"))
+
+;; JS interop is seamless
+(js/console.log (greet "World"))
+
+;; Object destructuring works naturally
+(defn process [{:keys [a b c]}]
+  (+ a b c))
+
+(process #js {:a 1 :b 2 :c 3})  ; => 6
+\stopverb}
+
+\subtree{
+\title{Compile and Run}
+\pre{\startverb
+# Compile to JS
+npx squint compile example.cljs
+
+# Run directly
+npx squint run example.cljs
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Differences from CLJS}
+\ol{
+\li{\strong{Data structures are JS native}:}
+}
+
+\ol{
+\li{\strong{Keywords become strings}:}
+}
+
+\ol{
+\li{\strong{No persistent data structures} (use JS mutation)}
+}
+
+\ol{
+\li{\strong{Faster interop} (no conversion needed)}
+}
+}
+
+\subtree{
+\title{Integration with Gay.jl Colors}
+\pre{\startverb
+(ns squint.gay-colors)
+
+;; SplitMix64 constants
+(def GOLDEN 0x9E3779B97F4A7C15)
+(def MASK64 0xFFFFFFFFFFFFFFFF)
+
+(defn splitmix64 [state]
+  (let [s (bit-and (+ state GOLDEN) MASK64)
+        z (-> s
+              (bit-xor (unsigned-bit-shift-right s 30))
+              (* 0xBF58476D1CE4E5B9)
+              (bit-and MASK64))
+        z (-> z
+              (bit-xor (unsigned-bit-shift-right z 27))
+              (* 0x94D049BB133111EB)
+              (bit-and MASK64))]
+    (bit-xor z (unsigned-bit-shift-right z 31))))
+
+(defn color-at [seed idx]
+  (loop [state seed i idx]
+    (if (zero? i)
+      (let [v (splitmix64 state)
+            l (+ 10 (* 85 (/ (bit-and v 0xFF) 255)))
+            c (* 100 (/ (bit-and (unsigned-bit-shift-right v 8) 0xFF) 255))
+            h (* 360 (/ (bit-and (unsigned-bit-shift-right v 16) 0xFFFF) 65535))]
+        {:L l :C c :H h})
+      (recur (splitmix64 state) (dec i)))))
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just squint-compile file.cljs  # Compile CLJS to JS
+just squint-run file.cljs      # Run CLJS file
+just squint-watch              # Watch mode compilation
+\stopverb}
+
+\p{\strong{Skill Name}: squint-runtime \strong{Type}: ClojureScript Compiler \strong{Trit}: 0 (ERGODIC) \strong{Invariant}: ✅ Deterministic compilation}
+}
+}

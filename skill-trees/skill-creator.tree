@@ -1,0 +1,125 @@
+\title{Skill Creator}
+
+\taxon{skill}
+
+\meta{description}{Guide for creating effective skills. Use when users want to create a}
+
+\subtree{
+\title{Skill Creator}
+\p{Skills are modular packages that extend Claude's capabilities by providing specialized knowledge, workflows, and tools.}
+
+\subtree{
+\title{Core Principles}
+\subtree{
+\title{Concise is Key}
+\p{The context window is a shared resource. Only add context Claude doesn't already have. Challenge each piece: "Does Claude really need this?"}
+}
+
+\subtree{
+\title{Anatomy of a Skill}
+\pre{\startverb
+skill-name/
+├── SKILL.md (required)
+│   ├── YAML frontmatter (name, description)
+│   └── Markdown instructions
+└── Bundled Resources (optional)
+    ├── scripts/      - Executable code
+    ├── references/   - Documentation
+    └── assets/       - Templates, images
+\stopverb}
+}
+
+\subtree{
+\title{SKILL.md Format}
+\pre{\startverb
+---
+name: my-skill-name
+description: A clear description of what this skill does and when to use it
+---
+
+# My Skill Name
+
+[Instructions for Claude when this skill is active]
+
+## Examples
+- Example usage 1
+- Example usage 2
+
+## Guidelines
+- Guideline 1
+- Guideline 2
+\stopverb}
+}
+}
+
+\subtree{
+\title{Skill Creation Process}
+\subtree{
+\title{Step 1: Understand with Examples}
+\p{Gather concrete examples of how the skill will be used. Ask:}
+
+\ul{
+\li{"What functionality should this skill support?"}
+\li{"What would a user say that should trigger this skill?"}
+}
+}
+
+\subtree{
+\title{Step 2: Plan Reusable Contents}
+\p{Analyze examples to identify:}
+
+\ul{
+\li{\strong{Scripts}: Code that gets rewritten repeatedly}
+\li{\strong{References}: Documentation Claude needs to reference}
+\li{\strong{Assets}: Templates, images for output}
+}
+}
+
+\subtree{
+\title{Step 3: Initialize}
+\p{Create the skill directory structure with SKILL.md and resource folders.}
+}
+
+\subtree{
+\title{Step 4: Implement}
+\ul{
+\li{Start with reusable resources (scripts, references, assets)}
+\li{Write clear SKILL.md with proper frontmatter}
+\li{Test scripts by actually running them}
+}
+}
+
+\subtree{
+\title{Step 5: Iterate}
+\p{Use the skill on real tasks, notice struggles, improve.}
+}
+}
+
+\subtree{
+\title{Progressive Disclosure}
+\p{Keep SKILL.md under 500 lines. Split content:}
+
+\pre{\startverb
+# PDF Processing
+
+## Quick start
+[code example]
+
+## Advanced features
+- **Form filling**: See [FORMS.md](FORMS.md)
+- **API reference**: See [REFERENCE.md](REFERENCE.md)
+\stopverb}
+}
+
+\subtree{
+\title{What NOT to Include}
+\ul{
+\li{README.md}
+\li{INSTALLATION_GUIDE.md}
+\li{CHANGELOG.md}
+\li{User-facing documentation}
+}
+
+\p{Skills are for AI agents, not humans.}
+}
+}

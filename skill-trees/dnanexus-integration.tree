@@ -1,0 +1,467 @@
+\title{Dnanexus Integration}
+
+\taxon{skill}
+
+\meta{description}{"DNAnexus cloud genomics platform. Build apps/applets, manage data (upload/download), dxpy Python SDK, run workflows, FASTQ/BAM/VCF, for genomics pipeline development and execution."}
+
+\subtree{
+\title{DNAnexus Integration}
+\subtree{
+\title{Overview}
+\p{DNAnexus is a cloud platform for biomedical data analysis and genomics. Build and deploy apps/applets, manage data objects, run workflows, and use the dxpy Python SDK for genomics pipeline development and execution.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Creating, building, or modifying DNAnexus apps/applets}
+\li{Uploading, downloading, searching, or organizing files and records}
+\li{Running analyses, monitoring jobs, creating workflows}
+\li{Writing scripts using dxpy to interact with the platform}
+\li{Setting up dxapp.json, managing dependencies, using Docker}
+\li{Processing FASTQ, BAM, VCF, or other bioinformatics files}
+\li{Managing projects, permissions, or platform resources}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{The skill is organized into five main areas, each with detailed reference documentation:}
+
+\subtree{
+\title{1. App Development}
+\p{\strong{Purpose}: Create executable programs (apps/applets) that run on the DNAnexus platform.}
+
+\p{\strong{Key Operations}:}
+
+\ul{
+\li{Generate app skeleton with \code{\startverb dx-app-wizard\stopverb}}
+\li{Write Python or Bash apps with proper entry points}
+\li{Handle input/output data objects}
+\li{Deploy with \code{\startverb dx build\stopverb} or \code{\startverb dx build --app\stopverb}}
+\li{Test apps on the platform}
+}
+
+\p{\strong{Common Use Cases}:}
+
+\ul{
+\li{Bioinformatics pipelines (alignment, variant calling)}
+\li{Data processing workflows}
+\li{Quality control and filtering}
+\li{Format conversion tools}
+}
+
+\p{\strong{Reference}: See \code{\startverb references/app-development.md\stopverb} for:}
+
+\ul{
+\li{Complete app structure and patterns}
+\li{Python entry point decorators}
+\li{Input/output handling with dxpy}
+\li{Development best practices}
+\li{Common issues and solutions}
+}
+}
+
+\subtree{
+\title{2. Data Operations}
+\p{\strong{Purpose}: Manage files, records, and other data objects on the platform.}
+
+\p{\strong{Key Operations}:}
+
+\ul{
+\li{Upload/download files with \code{\startverb dxpy.upload_local_file()\stopverb} and \code{\startverb dxpy.download_dxfile()\stopverb}}
+\li{Create and manage records with metadata}
+\li{Search for data objects by name, properties, or type}
+\li{Clone data between projects}
+\li{Manage project folders and permissions}
+}
+
+\p{\strong{Common Use Cases}:}
+
+\ul{
+\li{Uploading sequencing data (FASTQ files)}
+\li{Organizing analysis results}
+\li{Searching for specific samples or experiments}
+\li{Backing up data across projects}
+\li{Managing reference genomes and annotations}
+}
+
+\p{\strong{Reference}: See \code{\startverb references/data-operations.md\stopverb} for:}
+
+\ul{
+\li{Complete file and record operations}
+\li{Data object lifecycle (open/closed states)}
+\li{Search and discovery patterns}
+\li{Project management}
+\li{Batch operations}
+}
+}
+
+\subtree{
+\title{3. Job Execution}
+\p{\strong{Purpose}: Run analyses, monitor execution, and orchestrate workflows.}
+
+\p{\strong{Key Operations}:}
+
+\ul{
+\li{Launch jobs with \code{\startverb applet.run()\stopverb} or \code{\startverb app.run()\stopverb}}
+\li{Monitor job status and logs}
+\li{Create subjobs for parallel processing}
+\li{Build and run multi-step workflows}
+\li{Chain jobs with output references}
+}
+
+\p{\strong{Common Use Cases}:}
+
+\ul{
+\li{Running genomics analyses on sequencing data}
+\li{Parallel processing of multiple samples}
+\li{Multi-step analysis pipelines}
+\li{Monitoring long-running computations}
+\li{Debugging failed jobs}
+}
+
+\p{\strong{Reference}: See \code{\startverb references/job-execution.md\stopverb} for:}
+
+\ul{
+\li{Complete job lifecycle and states}
+\li{Workflow creation and orchestration}
+\li{Parallel execution patterns}
+\li{Job monitoring and debugging}
+\li{Resource management}
+}
+}
+
+\subtree{
+\title{4. Python SDK (dxpy)}
+\p{\strong{Purpose}: Programmatic access to DNAnexus platform through Python.}
+
+\p{\strong{Key Operations}:}
+
+\ul{
+\li{Work with data object handlers (DXFile, DXRecord, DXApplet, etc.)}
+\li{Use high-level functions for common tasks}
+\li{Make direct API calls for advanced operations}
+\li{Create links and references between objects}
+\li{Search and discover platform resources}
+}
+
+\p{\strong{Common Use Cases}:}
+
+\ul{
+\li{Automation scripts for data management}
+\li{Custom analysis pipelines}
+\li{Batch processing workflows}
+\li{Integration with external tools}
+\li{Data migration and organization}
+}
+
+\p{\strong{Reference}: See \code{\startverb references/python-sdk.md\stopverb} for:}
+
+\ul{
+\li{Complete dxpy class reference}
+\li{High-level utility functions}
+\li{API method documentation}
+\li{Error handling patterns}
+\li{Common code patterns}
+}
+}
+
+\subtree{
+\title{5. Configuration and Dependencies}
+\p{\strong{Purpose}: Configure app metadata and manage dependencies.}
+
+\p{\strong{Key Operations}:}
+
+\ul{
+\li{Write dxapp.json with inputs, outputs, and run specs}
+\li{Install system packages (execDepends)}
+\li{Bundle custom tools and resources}
+\li{Use assets for shared dependencies}
+\li{Integrate Docker containers}
+\li{Configure instance types and timeouts}
+}
+
+\p{\strong{Common Use Cases}:}
+
+\ul{
+\li{Defining app input/output specifications}
+\li{Installing bioinformatics tools (samtools, bwa, etc.)}
+\li{Managing Python package dependencies}
+\li{Using Docker images for complex environments}
+\li{Selecting computational resources}
+}
+
+\p{\strong{Reference}: See \code{\startverb references/configuration.md\stopverb} for:}
+
+\ul{
+\li{Complete dxapp.json specification}
+\li{Dependency management strategies}
+\li{Docker integration patterns}
+\li{Regional and resource configuration}
+\li{Example configurations}
+}
+}
+}
+
+\subtree{
+\title{Quick Start Examples}
+\subtree{
+\title{Upload and Analyze Data}
+\pre{\startverb
+import dxpy
+
+# Upload input file
+input_file = dxpy.upload_local_file("sample.fastq", project="project-xxxx")
+
+# Run analysis
+job = dxpy.DXApplet("applet-xxxx").run({
+    "reads": dxpy.dxlink(input_file.get_id())
+})
+
+# Wait for completion
+job.wait_on_done()
+
+# Download results
+output_id = job.describe()["output"]["aligned_reads"]["$dnanexus_link"]
+dxpy.download_dxfile(output_id, "aligned.bam")
+\stopverb}
+}
+
+\subtree{
+\title{Search and Download Files}
+\pre{\startverb
+import dxpy
+
+# Find BAM files from a specific experiment
+files = dxpy.find_data_objects(
+    classname="file",
+    name="*.bam",
+    properties={"experiment": "exp001"},
+    project="project-xxxx"
+)
+
+# Download each file
+for file_result in files:
+    file_obj = dxpy.DXFile(file_result["id"])
+    filename = file_obj.describe()["name"]
+    dxpy.download_dxfile(file_result["id"], filename)
+\stopverb}
+}
+
+\subtree{
+\title{Create Simple App}
+\pre{\startverb
+# src/my-app.py
+import dxpy
+import subprocess
+
+@dxpy.entry_point('main')
+def main(input_file, quality_threshold=30):
+    # Download input
+    dxpy.download_dxfile(input_file["$dnanexus_link"], "input.fastq")
+
+    # Process
+    subprocess.check_call([
+        "quality_filter",
+        "--input", "input.fastq",
+        "--output", "filtered.fastq",
+        "--threshold", str(quality_threshold)
+    ])
+
+    # Upload output
+    output_file = dxpy.upload_local_file("filtered.fastq")
+
+    return {
+        "filtered_reads": dxpy.dxlink(output_file)
+    }
+
+dxpy.run()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow Decision Tree}
+\p{When working with DNAnexus, follow this decision tree:}
+
+\ol{
+\li{\strong{Need to create a new executable?}}
+\li{Yes → Use \strong{App Development} (references/app-development.md)}
+\li{No → Continue to step 2}
+}
+
+\ol{
+\li{\strong{Need to manage files or data?}}
+\li{Yes → Use \strong{Data Operations} (references/data-operations.md)}
+\li{No → Continue to step 3}
+}
+
+\ol{
+\li{\strong{Need to run an analysis or workflow?}}
+\li{Yes → Use \strong{Job Execution} (references/job-execution.md)}
+\li{No → Continue to step 4}
+}
+
+\ol{
+\li{\strong{Writing Python scripts for automation?}}
+\li{Yes → Use \strong{Python SDK} (references/python-sdk.md)}
+\li{No → Continue to step 5}
+}
+
+\ol{
+\li{\strong{Configuring app settings or dependencies?}}
+\li{Yes → Use \strong{Configuration} (references/configuration.md)}
+}
+
+\p{Often you'll need multiple capabilities together (e.g., app development + configuration, or data operations + job execution).}
+}
+
+\subtree{
+\title{Installation and Authentication}
+\subtree{
+\title{Install dxpy}
+\pre{\startverb
+uv pip install dxpy
+\stopverb}
+}
+
+\subtree{
+\title{Login to DNAnexus}
+\pre{\startverb
+dx login
+\stopverb}
+
+\p{This authenticates your session and sets up access to projects and data.}
+}
+
+\subtree{
+\title{Verify Installation}
+\pre{\startverb
+dx --version
+dx whoami
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Pattern 1: Batch Processing}
+\p{Process multiple files with the same analysis:}
+
+\pre{\startverb
+# Find all FASTQ files
+files = dxpy.find_data_objects(
+    classname="file",
+    name="*.fastq",
+    project="project-xxxx"
+)
+
+# Launch parallel jobs
+jobs = []
+for file_result in files:
+    job = dxpy.DXApplet("applet-xxxx").run({
+        "input": dxpy.dxlink(file_result["id"])
+    })
+    jobs.append(job)
+
+# Wait for all completions
+for job in jobs:
+    job.wait_on_done()
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Multi-Step Pipeline}
+\p{Chain multiple analyses together:}
+
+\pre{\startverb
+# Step 1: Quality control
+qc_job = qc_applet.run({"reads": input_file})
+
+# Step 2: Alignment (uses QC output)
+align_job = align_applet.run({
+    "reads": qc_job.get_output_ref("filtered_reads")
+})
+
+# Step 3: Variant calling (uses alignment output)
+variant_job = variant_applet.run({
+    "bam": align_job.get_output_ref("aligned_bam")
+})
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Data Organization}
+\p{Organize analysis results systematically:}
+
+\pre{\startverb
+# Create organized folder structure
+dxpy.api.project_new_folder(
+    "project-xxxx",
+    {"folder": "/experiments/exp001/results", "parents": True}
+)
+
+# Upload with metadata
+result_file = dxpy.upload_local_file(
+    "results.txt",
+    project="project-xxxx",
+    folder="/experiments/exp001/results",
+    properties={
+        "experiment": "exp001",
+        "sample": "sample1",
+        "analysis_date": "2025-10-20"
+    },
+    tags=["validated", "published"]
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Error Handling}: Always wrap API calls in try-except blocks}
+\li{\strong{Resource Management}: Choose appropriate instance types for workloads}
+\li{\strong{Data Organization}: Use consistent folder structures and metadata}
+\li{\strong{Cost Optimization}: Archive old data, use appropriate storage classes}
+\li{\strong{Documentation}: Include clear descriptions in dxapp.json}
+\li{\strong{Testing}: Test apps with various input types before production use}
+\li{\strong{Version Control}: Use semantic versioning for apps}
+\li{\strong{Security}: Never hardcode credentials in source code}
+\li{\strong{Logging}: Include informative log messages for debugging}
+\li{\strong{Cleanup}: Remove temporary files and failed jobs}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes detailed reference documentation:}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\strong{app-development.md} - Complete guide to building and deploying apps/applets}
+\li{\strong{data-operations.md} - File management, records, search, and project operations}
+\li{\strong{job-execution.md} - Running jobs, workflows, monitoring, and parallel processing}
+\li{\strong{python-sdk.md} - Comprehensive dxpy library reference with all classes and functions}
+\li{\strong{configuration.md} - dxapp.json specification and dependency management}
+}
+
+\p{Load these references when you need detailed information about specific operations or when working on complex tasks.}
+}
+}
+
+\subtree{
+\title{Getting Help}
+\ul{
+\li{Official documentation: https://documentation.dnanexus.com/}
+\li{API reference: http://autodoc.dnanexus.com/}
+\li{GitHub repository: https://github.com/dnanexus/dx-toolkit}
+\li{Support: support@dnanexus.com}
+}
+}
+}

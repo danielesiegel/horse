@@ -1,0 +1,164 @@
+\title{Polysimy Effect Chains}
+
+\taxon{skill}
+
+\meta{description}{Verify multiple effect interpretations through propagator networks with temporal coalgebra bisimulation and common fixpoint solutions.}
+
+\subtree{
+\title{Polysimy Effect Chains Skill}
+\blockquote{*"Multiple meanings flow through constraint networks to common solutions"*}
+
+\p{\strong{Status}: NOT IN plurigrid/asi (local only) \strong{Trit}: 0 (ERGODIC - coordinator) \strong{Color}: #26D826 (Green) \strong{Principle}: Effect polysimy → Propagation → Bisimulation → Common fixpoint}
+
+\subtree{
+\title{Overview}
+\p{\strong{Polysimy} = multiple effect interpretations coexisting in a cell/channel. \strong{Effect chains} = sequences of transformations through propagator networks. \strong{Common solution} = fixpoint where all polysemic interpretations converge.}
+
+\p{This skill bridges:}
+
+\ul{
+\li{\code{\startverb propagators\stopverb} (+1) - bidirectional constraint flow}
+\li{\code{\startverb polysimy-effect-chains\stopverb} (0) - effect coordination}
+\li{\code{\startverb temporal-coalgebra\stopverb} (-1) - bisimulation verification}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{1. Polysemic Cells}
+\p{Cells that hold \strong{multiple effect interpretations} simultaneously:}
+
+\pre{\startverb
+{:id :cell-a
+ :effects [{:type :generate :transform inc}
+           {:type :coordinate :transform #(* % 2)}
+           {:type :validate :transform identity}]
+ :value 20
+ :trit 0}
+\stopverb}
+}
+
+\subtree{
+\title{2. Effect Chain Composition}
+\p{Effects compose through the cell, creating a derivation stream:}
+
+\pre{\startverb
+init(10) → generate(inc) → coordinate(*2) → validate(id) → 22
+\stopverb}
+}
+
+\subtree{
+\title{3. Common Solution via Bisimulation}
+\p{Two effect chains have a \strong{common solution} iff they are \strong{bisimilar}:}
+
+\pre{\startverb
+bisimilar?(chain-a, chain-b) ⟺
+  observe(chain-a).head == observe(chain-b).head ∧
+  effects-count(chain-a) ≡ effects-count(chain-b) (mod 3)
+\stopverb}
+}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+(require '[polysimy-effect-chains :as pec])
+
+;; Create polysemic cell
+(def cell (pec/make-cell :my-cell {:trit 0}))
+
+;; Chain effects
+(def chain-a
+  (-> cell
+      (pec/chain {:type :generate :init 10 :f inc})
+      (pec/chain {:type :coordinate :f #(* % 2)})
+      (pec/chain {:type :validate :f identity})))
+
+;; Verify common solution
+(pec/find-common-solution chain-a chain-b)
+;; => {:bisimilar true
+;;     :common-value 22
+;;     :gf3-conserved true}
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\p{Forms valid triads:}
+
+\pre{\startverb
+propagators (+1) ⊗ polysimy-effect-chains (0) ⊗ temporal-coalgebra (-1) = 0 ✓
+gay-mcp (+1) ⊗ polysimy-effect-chains (0) ⊗ sheaf-cohomology (-1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Temporary Verification Pattern}
+\p{For \strong{temporary} (intermediate) verification before full fixpoint:}
+
+\pre{\startverb
+(defn verify-temporary [cells depth]
+  (loop [d 0]
+    (when (< d depth)
+      (let [obs (map observe cells)]
+        (if (all-bisimilar? obs)
+          {:status :bisimilar-at-depth :depth d}
+          (recur (inc d)))))))
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Verify effect chain bisimulation
+just polysimy-verify chain-a chain-b
+
+# Find common solution
+just polysimy-common [cells...]
+
+# Temporary verification to depth N
+just polysimy-temp-verify 10
+\stopverb}
+}
+
+\subtree{
+\title{Relationship to Uncommitted Skills}
+\p{This skill relates to other \strong{local-only skills not in plurigrid/asi}:}
+
+\pre{\startverb
+| Skill | Relation |
+|-------|----------|
+| `discrete-backprop` | Backward effect propagation |
+| `dynamic-sufficiency-goblin` | Effect sufficiency checking |
+| `skill-bonds` | Effect chain bonding |
+| `ultrametric-distance` | Effect distance measurement |
+\stopverb}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\subtree{
+\title{Effect Polysimy}
+\p{$$\startverb \text\stopverb{Poly}(C) = \startverb \sum\stopverb_{e \startverb \in\stopverb \startverb \text\stopverb{Effects}} e \startverb \circ\stopverb C$$}
+
+\p{Multiple effects acting on the same cell carrier.}
+}
+
+\subtree{
+\title{Bisimulation Quotient}
+\p{$$X / {\startverb \sim\stopverb} \startverb \cong\stopverb \startverb \text\stopverb{codom}(\startverb \text\stopverb{anamorphism to } \startverb \nu\stopverb F)$$}
+
+\p{Cells are equivalent iff they unfold to the same infinite stream.}
+}
+
+\subtree{
+\title{Common Solution Existence}
+\p{$$\startverb \exists\stopverb \startverb \text\stopverb{common} \startverb \iff\stopverb H^0(\startverb \mathcal\stopverb{U}, \startverb \mathcal\stopverb{F}) \startverb \neq\stopverb \startverb \emptyset\stopverb$$}
+
+\p{A common solution exists iff the zeroth cohomology is non-empty.}
+
+\p{\strong{Skill Name}: polysimy-effect-chains \strong{Type}: Effect Coordination \strong{Trit}: 0 (ERGODIC) \strong{NOT IN}: plurigrid/asi (should be committed) \strong{GF(3)}: Coordinates between generators and validators}
+}
+}
+}

@@ -1,0 +1,332 @@
+\title{Infrastructure Cost Estimation}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{Help you discover how much you spend on AWS/GCP/Azure. This rulebook guides practitioners through proper cloud cost calculations, systematic resource discovery (via IaC analysis and live environment enumeration), authoritative pricing research and analysis/estimation.}
+
+\subtree{
+\title{Infrastructure Cost Estimation Methodology}
+\subtree{
+\title{CRITICAL REQUIREMENT: EXCLUDE ALL CREDITS BY DEFAULT}
+\p{\strong{MANDATORY}: Always exclude credits, promotional offers, and discounts to get TRUE infrastructure cost. Report:}
+
+\ol{
+\li{\strong{Gross Cost} (without credits) - PRIMARY NUMBER}
+\li{\strong{Net Cost} (with credits) - comparison only}
+}
+
+\p{Credits are temporary and mask real costs. Always plan for post-credit expenses.}
+}
+
+\subtree{
+\title{Core Principles}
+\ol{
+\li{\strong{Native Cost Tools First}: Use cloud provider billing tools as primary source}
+\li{\strong{Credits Excluded}: Always exclude credits unless analyzing discount impact}
+\li{\strong{Comprehensive Discovery}: Identify ALL infrastructure components}
+\li{\strong{Current Pricing}: Research real-time standard pricing only}
+\li{\strong{Python Calculations}: Use Python for ALL numeric operations}
+}
+}
+
+\subtree{
+\title{Phase 1: Native Cost Estimation}
+\subtree{
+\title{Time Period Requirements}
+\p{\strong{CRITICAL}: Always use the most recent complete months for analysis:}
+
+\ul{
+\li{\strong{Primary Analysis}: Last 3 complete months (most recent data)}
+\li{\strong{Trend Analysis}: Last 6 complete months (for patterns)}
+\li{\strong{Never use data older than 6 months} unless specifically requested}
+\li{\strong{Always specify actual date ranges} in your analysis}
+\li{\strong{Determine current date first}, then calculate recent complete months}
+}
+}
+
+\subtree{
+\title{Credit Exclusion Steps - CLI Commands}
+\p{\strong{CRITICAL}: Use these exact CLI commands to exclude credits and get true infrastructure costs:}
+
+\subtree{
+\title{AWS CLI Credit Exclusion}
+\pre{\startverb
+# Exclude all credits and promotional charges
+aws ce get-cost-and-usage \
+  --time-period Start=YYYY-MM-01,End=YYYY-MM-01 \
+  --granularity MONTHLY \
+  --metrics "BlendedCost" \
+  --filter '{
+    "Not": {
+      "Dimensions": {
+        "Key": "RECORD_TYPE",
+        "Values": ["Credit", "Refund", "SavingsPlanNegation", "DiscountedUsage"]
+      }
+    }
+  }' \
+  --group-by Type=DIMENSION,Key=SERVICE
+
+\stopverb}
+}
+
+\subtree{
+\title{Azure CLI Credit Exclusion}
+\p{Create query file \code{\startverb exclude-credits.json\stopverb}:}
+
+\pre{\startverb
+{
+  "type": "Usage",
+  "timeframe": "Custom",
+  "timePeriod": {
+    "from": "YYYY-MM-01T00:00:00.000Z",
+    "to": "YYYY-MM-01T00:00:00.000Z"
+  },
+  "dataset": {
+    "granularity": "Monthly",
+    "filter": {
+      "not": {
+        "dimensions": {
+          "name": "ChargeType",
+          "operator": "In",
+          "values": ["Credit", "Refund", "RoundingAdjustment"]
+        }
+      }
+    },
+    "aggregation": {
+      "totalCost": {
+        "name": "PreTaxCost",
+        "function": "Sum"
+      }
+    },
+    "grouping": [{"type": "Dimension", "name": "ServiceName"}]
+  }
+}
+
+\stopverb}
+
+\p{Execute with:}
+
+\pre{\startverb
+az rest --method POST \
+  --url "https://management.azure.com/subscriptions/$(az account show --query id -o tsv)/providers/Microsoft.CostManagement/query?api-version=2023-11-01" \
+  --body @exclude-credits.json
+
+\stopverb}
+}
+
+\subtree{
+\title{Google Cloud Credit Exclusion}
+\p{\strong{Note}: Google Cloud requires BigQuery queries. No direct CLI credit filtering available.}
+
+\pre{\startverb
+# First, execute BigQuery to exclude promotional credits
+bq query --use_legacy_sql=false '
+SELECT 
+  invoice.month,
+  service.description,
+  SUM(cost) as gross_cost_no_credits
+FROM `PROJECT-ID.DATASET.gcp_billing_export_v1_BILLING-ACCOUNT-ID`
+WHERE invoice.month IN ("YYYYMM", "YYYYMM", "YYYYMM")
+GROUP BY invoice.month, service.description
+ORDER BY gross_cost_no_credits DESC;'
+
+\stopverb}
+
+\p{\strong{Key Filter Parameters by Provider}:}
+
+\ul{
+\li{\strong{AWS}: Exclude RECORD\_TYPE values: "Credit", "Refund", "SavingsPlanNegation", "DiscountedUsage"}
+\li{\strong{Azure}: Exclude ChargeType values: "Credit", "Refund", "RoundingAdjustment"}
+\li{\strong{Google Cloud}: Use BigQuery on billing export tables, no promotional credits included}
+}
+}
+}
+
+\subtree{
+\title{Native Tools}
+\p{\strong{AWS}: Cost Explorer, Pricing Calculator, Budgets, Cost & Usage Reports, Billing Dashboard \strong{Azure}: Cost Management + Billing, Pricing Calculator, Advisor, Resource Graph\ \strong{Google Cloud}: Cloud Billing, Pricing Calculator, Asset Inventory, Recommender}
+}
+}
+
+\subtree{
+\title{Phase 2: Resource Discovery}
+\p{\strong{Methods}: IaC analysis, live environment queries, API enumeration \strong{Categories}: Compute, storage, networking, platform services, security, monitoring, development, data services \strong{Coverage}: All environments, regions, scaling policies, shared resources}
+}
+
+\subtree{
+\title{Phase 3: Pricing Research}
+\p{\strong{Requirements}:}
+
+\ul{
+\li{Official provider pricing pages only}
+\li{Region-specific standard rates}
+\li{No promotional or discount pricing}
+\li{Current pay-as-you-go rates}
+}
+}
+
+\subtree{
+\title{Phase 4: Python Calculations}
+\subtree{
+\title{Credit Analysis Template}
+\pre{\startverb
+def analyze_credit_impact(billing_data, analysis_period="recent_months"):
+    """
+    Analyze credit impact for recent complete months
+    Calculate recent months dynamically based on current date
+    """
+    from datetime import datetime, timedelta
+    
+    # Determine current date and calculate recent complete months
+    current_date = datetime.now()
+    current_month = current_date.month
+    current_year = current_date.year
+    
+    # Calculate the last 3 complete months
+    recent_months = []
+    for i in range(3):
+        month_offset = i + 1
+        if current_month - month_offset <= 0:
+            month = 12 + (current_month - month_offset)
+            year = current_year - 1
+        else:
+            month = current_month - month_offset
+            year = current_year
+        recent_months.append((year, month))
+    
+    recent_months.reverse()  # Put in chronological order
+    
+    # Filter billing data to recent complete months
+    recent_billing_data = [
+        charge for charge in billing_data 
+        if (charge['date'].year, charge['date'].month) in recent_months
+    ]
+    
+    analysis = {
+        'analysis_period': f"Recent 3 complete months: {recent_months[0][1]}/{recent_months[0][0]} - {recent_months[2][1]}/{recent_months[2][0]}",
+        'gross_monthly_cost': sum(
+            charge['amount'] for charge in recent_billing_data 
+            if charge['type'] in ['Usage', 'Tax', 'Fee']
+        ) / 3,  # Average over 3 months
+        'net_monthly_cost': sum(charge['amount'] for charge in recent_billing_data) / 3,
+        'total_credits_applied': 0,
+        'credit_sustainability': 'TEMPORARY - Assume all credits expire'
+    }
+    
+    analysis['total_credits_applied'] = (
+        analysis['gross_monthly_cost'] - analysis['net_monthly_cost']
+    )
+    
+    return analysis
+
+\stopverb}
+}
+
+\subtree{
+\title{Basic Cost Calculation}
+\pre{\startverb
+def calculate_monthly_costs(resources, pricing_data):
+    HOURS_PER_MONTH = 730
+    total_cost = 0
+    cost_breakdown = {}
+    
+    for service_name, service_config in resources.items():
+        service_cost = 0
+        
+        # Fixed costs (standard hourly rates)
+        if 'instances' in service_config:
+            hourly_rate = pricing_data[service_name]['standard_hourly_rate']
+            instance_count = service_config['instances']
+            service_cost += hourly_rate * instance_count * HOURS_PER_MONTH
+        
+        # Usage-based costs (standard rates)
+        if 'usage_metrics' in service_config:
+            for metric, usage in service_config['usage_metrics'].items():
+                unit_cost = pricing_data[service_name]['standard_usage'][metric]
+                service_cost += usage * unit_cost
+        
+        cost_breakdown[service_name] = round(service_cost, 2)
+        total_cost += service_cost
+    
+    return {
+        'total_monthly_cost': round(total_cost, 2),
+        'service_breakdown': cost_breakdown
+    }
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Implementation Checklist}
+\subtree{
+\title{Credit Exclusion (MANDATORY FIRST)}
+\ul{
+\li{[ ] Excluded ALL credits from native tool analysis}
+\li{[ ] Calculated gross monthly cost (true infrastructure cost)}
+\li{[ ] Assessed credit expiration timeline}
+}
+}
+
+\subtree{
+\title{Analysis Steps}
+\ul{
+\li{[ ] Used native cost tools or CLI commands with credits excluded for \strong{recent 3 complete months}}
+\li{[ ] Applied correct CLI filters for each provider (AWS: RECORD\_TYPE, Azure: ChargeType, GCP: BigQuery)}
+\li{[ ] Specified exact date range in analysis}
+\li{[ ] Discovered all resources across all environments}
+\li{[ ] Researched current standard pricing rates}
+\li{[ ] Calculated costs using Python with standard rates}
+\li{[ ] Validated native vs calculated costs using gross amounts from recent months}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\subtree{
+\title{1. Credit Impact Analysis}
+\ul{
+\li{\strong{Analysis Period}: \[Specify actual 3 months analyzed]}
+\li{\strong{Gross Monthly Cost} (without credits): $X,XXX - \strong{PRIMARY NUMBER}}
+\li{\strong{Net Monthly Cost} (with credits): $X,XXX}
+\li{\strong{Credits Applied}: $XXX/month}
+\li{\strong{Credit Expiration Risk}: Timeline assessment}
+}
+}
+
+\subtree{
+\title{2. True Infrastructure Costs}
+\ul{
+\li{\strong{Total Monthly Cost}: Min/avg/max scenarios at standard pricing}
+\li{\strong{Service Breakdown}: Cost per service without discounts}
+\li{\strong{Environment Breakdown}: Cost per environment at standard rates}
+}
+}
+
+\subtree{
+\title{3. Validation & Assumptions}
+\ul{
+\li{Native gross cost vs calculated cost comparison}
+\li{Key assumptions and methodology}
+\li{Python scripts for reproducibility}
+}
+}
+}
+
+\subtree{
+\title{Critical Reminders}
+\ul{
+\li{\strong{ALWAYS EXCLUDE CREDITS FIRST} - Use specific CLI commands for each provider}
+\li{\strong{USE RECENT 3 COMPLETE MONTHS} - Calculate current date, then use last 3 complete months}
+\li{\strong{Correct CLI Filters}: AWS (RECORD\_TYPE), Azure (ChargeType + REST API), Google Cloud (BigQuery only)}
+\li{\strong{Use native tools} - Most accurate real-time data}
+\li{\strong{Standard pricing only} - No promotional rates}
+\li{\strong{Python for all math} - Prevent calculation errors}
+\li{\strong{Include ALL resources} - Incomplete discovery causes surprises}
+\li{\strong{Document assumptions} - Enable validation and updates}
+}
+}
+}

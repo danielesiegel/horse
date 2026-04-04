@@ -1,0 +1,92 @@
+\title{Vers Agent}
+
+\taxon{skill}
+
+\meta{description}{ACP-compliant AI agent harness with CLI/HTTP interface. Use when running Claude Code or other agents via unified protocol, managing sessions, or debugging agent workflows.}
+
+\subtree{
+\title{vers-agent}
+\p{ACP (Agent Client Protocol) harness for AI coding agents with session persistence and streaming.}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+bun install && bun run build
+export ANTHROPIC_API_KEY=sk-ant-...
+./vers-agent
+\stopverb}
+}
+
+\subtree{
+\title{Essential Commands (justfile)}
+\pre{\startverb
+| Action | Command |
+|--------|---------|
+| **Start everything** | `just up` |
+| **Server only** | `just server` |
+| **CLI only** | `just cli` |
+| **Status dashboard** | `just status` |
+| **Pre-commit check** | `just check` |
+| **Nuclear reset** | `just nuke` |
+| **One-shot prompt** | `just ask "your prompt"` |
+\stopverb}
+}
+
+\subtree{
+\title{Modes}
+\pre{\startverb
+| Flag | Description |
+|------|-------------|
+| `./vers-agent` | Server + CLI (default) |
+| `--server` | HTTP server only (:9999) |
+| `--cli` | CLI connecting to localhost |
+| `--url <host>` | CLI connecting to remote |
+| `--local` | Local mode with debug logging |
+\stopverb}
+}
+
+\subtree{
+\title{CLI Keybindings}
+\ul{
+\li{\code{\startverb Enter\stopverb} - Submit | \code{\startverb Shift+Enter\stopverb} - Newline}
+\li{\code{\startverb Tab\stopverb} - Autocomplete | \code{\startverb Ctrl+C\stopverb} - Cancel/Exit}
+\li{\code{\startverb @path\stopverb} - File completion | \code{\startverb /cmd\stopverb} - Commands}
+}
+}
+
+\subtree{
+\title{Session Commands}
+\ul{
+\li{\code{\startverb /new\stopverb} - New session | \code{\startverb /continue\stopverb} - Resume last}
+\li{\code{\startverb /sessions\stopverb} - List all | \code{\startverb /model\stopverb} - Change model}
+\li{\code{\startverb /agent\stopverb} - Switch agent | \code{\startverb /plan\stopverb} - Toggle plan mode}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\pre{\startverb
+| Problem | Fix |
+|---------|-----|
+| Port in use | `just kill-port` |
+| Auth locked | `just reset-claim` |
+| Full reset | `just nuke` |
+| Complete wipe | `just pristine` |
+\stopverb}
+}
+
+\subtree{
+\title{API Endpoints}
+\ul{
+\li{\code{\startverb POST /rpc\stopverb} - JSON-RPC handler}
+\li{\code{\startverb GET /events\stopverb} - SSE stream}
+\li{\code{\startverb GET /health\stopverb} - Health check}
+\li{\code{\startverb GET /metrics\stopverb} - Prometheus metrics}
+}
+}
+
+\subtree{
+\title{Data Location}
+\p{\code{\startverb ~/.vers-agent/\stopverb} contains sessions.db, tokens.json, config.json, and logs.}
+}
+}

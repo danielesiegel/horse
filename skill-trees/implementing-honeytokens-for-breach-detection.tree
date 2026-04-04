@@ -1,0 +1,76 @@
+\title{Implementing Honeytokens For Breach Detection}
+
+\taxon{skill}
+
+\tag{implementing}
+
+\tag{honeytokens}
+
+\tag{for}
+
+\tag{breach}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploys canary tokens and honeytokens (fake AWS credentials, DNS canaries, document beacons, database records) that trigger alerts when accessed by attackers. Uses the Canarytokens API and custom webhook integrations for breach detection. Use when building deception-based early warning systems for intrusion detection.}
+
+\subtree{
+\title{Implementing Honeytokens for Breach Detection}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing honeytokens for breach detection capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with security operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\p{Deploy honeytokens across critical systems to detect unauthorized access. Each token type alerts via webhook when triggered by an attacker.}
+
+\pre{\startverb
+import requests
+
+# Create a DNS canary token via Canarytokens
+resp = requests.post("https://canarytokens.org/generate", data={
+    "type": "dns",
+    "email": "soc@company.com",
+    "memo": "Production DB server honeytoken",
+})
+token = resp.json()
+print(f"DNS token: {token['hostname']}")
+\stopverb}
+
+\p{Token types to deploy:}
+
+\ol{
+\li{AWS credential files (~/.aws/credentials) with canary keys}
+\li{DNS tokens embedded in configuration files}
+\li{Document beacons (Word/PDF) in sensitive file shares}
+\li{Database honeytoken records in user tables}
+\li{Web bugs in internal wiki/documentation pages}
+}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+# Generate a fake AWS credentials file with canary token
+aws_creds = f"[default]\naws_access_key_id = {canary_key_id}\naws_secret_access_key = {canary_secret}\n"
+with open("/opt/backup/.aws/credentials", "w") as f:
+    f.write(aws_creds)
+\stopverb}
+}
+}

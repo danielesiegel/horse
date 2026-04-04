@@ -1,0 +1,168 @@
+\title{Sicp}
+
+\taxon{skill}
+
+\meta{description}{"SICP: Structure and Interpretation of Computer Programs - computational processes, abstraction, and metalinguistic design"}
+
+\subtree{
+\title{SICP Skill}
+\blockquote{*"Programs must be written for people to read, and only incidentally for machines to execute."* — Abelson & Sussman}
+
+\p{Geometric morphism translation from sicp.info preserving the hierarchical node structure as an ACSet with GF(3) coloring for trifurcated processing.}
+
+\subtree{
+\title{Overview}
+\p{\strong{Structure and Interpretation of Computer Programs} (Second Edition) by Harold Abelson and Gerald Jay Sussman, with Julie Sussman Foreword by Alan J. Perlis © 1996 Massachusetts Institute of Technology}
+
+\p{The wizard book for computational thinking—procedures as abstractions, data as abstractions, and the interpreter as the ultimate abstraction.}
+}
+
+\subtree{
+\title{Chapters}
+\subtree{
+\title{Chapter 1: Building Abstractions with Procedures [PLUS]}
+\ul{
+\li{\strong{1-1}: The Elements of Programming (expressions, naming, evaluation)}
+\li{\strong{1-2}: Procedures and the Processes They Generate (recursion, iteration, orders of growth)}
+\li{\strong{1-3}: Formulating Abstractions with Higher-Order Procedures (λ, returned values)}
+}
+
+\p{Key concepts: Substitution model, lexical scoping, fixed points, Newton's method}
+}
+
+\subtree{
+\title{Chapter 2: Building Abstractions with Data [ERGODIC]}
+\ul{
+\li{\strong{2-1}: Introduction to Data Abstraction (rational numbers, barriers)}
+\li{\strong{2-2}: Hierarchical Data and the Closure Property (sequences, trees, picture language)}
+\li{\strong{2-3}: Symbolic Data (quotation, differentiation, sets, Huffman encoding)}
+\li{\strong{2-4}: Multiple Representations for Abstract Data (tagged data, data-directed programming)}
+\li{\strong{2-5}: Systems with Generic Operations (type coercion, symbolic algebra)}
+}
+
+\p{Key concepts: Pairs, cons/car/cdr, closure property, abstraction barriers, message passing}
+}
+
+\subtree{
+\title{Chapter 3: Modularity, Objects, and State [PLUS]}
+\ul{
+\li{\strong{3-1}: Assignment and Local State (set!, costs of assignment)}
+\li{\strong{3-2}: The Environment Model of Evaluation (frames, procedure objects)}
+\li{\strong{3-3}: Modeling with Mutable Data (queues, tables, digital circuits, constraints)}
+\li{\strong{3-4}: Concurrency: Time Is of the Essence (serializers, deadlock)}
+\li{\strong{3-5}: Streams (delayed evaluation, infinite streams, signal processing)}
+}
+
+\p{Key concepts: State, identity, time, streams vs objects duality}
+}
+
+\subtree{
+\title{Chapter 4: Metalinguistic Abstraction [PLUS]}
+\ul{
+\li{\strong{4-1}: The Metacircular Evaluator (eval/apply, syntax procedures, environments)}
+\li{\strong{4-2}: Variations on a Scheme (lazy evaluation, normal vs applicative order)}
+\li{\strong{4-3}: Variations on a Scheme: Nondeterministic Computing (amb, backtracking)}
+\li{\strong{4-4}: Logic Programming (unification, pattern matching, query systems)}
+}
+
+\p{Key concepts: eval/apply loop, special forms, thunks, amb evaluator, Prolog-style logic}
+}
+
+\subtree{
+\title{Chapter 5: Computing with Register Machines [ERGODIC]}
+\ul{
+\li{\strong{5-1}: Designing Register Machines (data paths, controllers, subroutines)}
+\li{\strong{5-2}: A Register-Machine Simulator (the machine model, assembler)}
+\li{\strong{5-3}: Storage Allocation and Garbage Collection (vectors, stop-and-copy)}
+\li{\strong{5-4}: The Explicit-Control Evaluator (machine code for Scheme)}
+\li{\strong{5-5}: Compilation (structure of compiler, lexical addressing, interfacing)}
+}
+
+\p{Key concepts: Register allocation, continuation-passing, tail recursion, compilation}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{The Info file nodes distribute perfectly across GF(3) trits:}
+
+\pre{\startverb
+Total nodes: 138
+MINUS (-1):  46  ████████████████
+ERGODIC (0): 46  ████████████████
+PLUS (+1):   46  ████████████████
+Sum mod 3:   0
+Conserved:   ✓ BALANCED
+\stopverb}
+
+\p{This perfect 46/46/46 distribution enables optimal trifurcated parallel processing.}
+}
+
+\subtree{
+\title{ACSet Schema (Geometric Morphism)}
+\p{The translation from Info to Skill uses a geometric morphism \code{\startverb f: InfoTopos → SkillTopos\stopverb}:}
+
+\pre{\startverb
+Objects (Ob):
+  Node      - Info nodes (sections, subsections)
+  Edge      - Navigation and reference links
+  Content   - Extracted text and code blocks
+
+Morphisms (Hom):
+  next: Node → Node     - Sequential navigation
+  prev: Node → Node     - Backward navigation  
+  up:   Node → Node     - Hierarchical parent
+  menu: Node → Node     - Chapter/section containment
+  xref: Node → Node     - Cross-references (*Note)
+
+Attributes:
+  trit: Node → GF(3)    - Deterministic color assignment
+  text: Node → String   - Node content
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Gay.jl}
+\p{The GF(3) coloring uses the same SplitMix64 hash as Gay.jl:}
+
+\pre{\startverb
+using Gay
+
+# Color SICP nodes deterministically
+for node in sicp_nodes
+    seed = hash(node.id)
+    color = gay_color(seed)  # Returns palette with GF(3) trit
+    node.trit = color.trit
+end
+
+# Verify conservation
+@assert sum(n.trit for n in sicp_nodes) % 3 == 0
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Read in Emacs
+info sicp
+
+# Re-translate with geometric morphism
+bb info_to_skill_morphism.bb translate sicp.info
+
+# Verify grammar and GF(3) conservation
+bb info_to_skill_morphism.bb verify sicp.info
+
+# Parse to CRDT-style sexp
+bb info_to_skill_morphism.bb parse sicp.info > sicp.sexp
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Full text online](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html)}
+\li{[MIT OCW 6.001](https://ocw.mit.edu/courses/6-001-structure-and-interpretation-of-computer-programs-spring-2005/)}
+\li{[SICP Distilled](https://www.sicpdistilled.com/) (Clojure version)}
+}
+}
+}

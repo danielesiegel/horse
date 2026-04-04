@@ -1,0 +1,397 @@
+\title{Sdr Borges Reafference}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0  # ERGODIC: bridges generation (+1) and verification (-1)}
+
+\meta{description}{"SDR (GNU Radio) as self-learning REPL with Borges infinite library exploration, reafference random walks, spectral gap 1/4, and maximally mixed state for agency-enabling signal processing."}
+
+\subtree{
+\title{SDR-Borges-Reafference: Agency-Enabling Signal Processing}
+\blockquote{"The Library of Babel contains every possible radio transmission." — Borges meets GNU Radio}
+
+\subtree{
+\title{Core Concept}
+\p{\strong{SDR as Infinite Library}: Software Defined Radio is a Borges library where:}
+
+\ul{
+\li{Every frequency is a book}
+\li{Every modulation scheme is a language}
+\li{Every signal is a text awaiting interpretation}
+\li{The spectral gap determines how fast you find the book you seek}
+}
+}
+
+\subtree{
+\title{Spectral Gap 1/4: The Sweet Spot}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│  SPECTRAL GAP AND MIXING TIME                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  Gap = 0:    τ_mix = ∞    (stuck, no exploration)               │
+│  Gap = 1/4:  τ_mix = 4    (balanced exploration/exploitation)   │
+│  Gap = 1/2:  τ_mix = 2    (fast mixing, less diversity)         │
+│  Gap = 1:    τ_mix = 1    (instant mixing, no memory)           │
+└─────────────────────────────────────────────────────────────────┘
+
+WHY 1/4?
+- Alon-Boppana bound for d=3 regular graphs: λ₂ ≤ 2√2 ≈ 2.83
+- Normalized gap = (d - λ₂)/d ≈ 0.25 for Ramanujan graphs
+- This is OPTIMAL for 3-way (GF(3)) systems!
+\stopverb}
+}
+
+\subtree{
+\title{Maximally Mixed State: Agency Through Ignorance}
+\p{The \strong{maximally mixed state} ρ = I/d is:}
+
+\ul{
+\li{Maximum entropy: S(ρ) = log(d)}
+\li{No information about which eigenstate you're in}
+\li{\strong{Agency interpretation}: Complete freedom of choice}
+}
+
+\pre{\startverb
+# Maximally mixed state in 3-dimensional GF(3) space
+ρ_max = [1/3 0 0; 0 1/3 0; 0 0 1/3]
+
+# Purity: tr(ρ²) = 1/3 (minimal for d=3)
+# Von Neumann entropy: S = log(3) ≈ 1.585 bits
+
+# AGENCY MEANING:
+# - You can become MINUS, ERGODIC, or PLUS with equal probability
+# - No prior commitment constrains your action space
+# - Maximum optionality = maximum agency
+\stopverb}
+
+\subtree{
+\title{What Maximally Mixed Gets Us}
+\pre{\startverb
+| Property | Maximally Mixed | Pure State |
+|----------|-----------------|------------|
+| Entropy | log(3) = 1.585 | 0 |
+| Purity | 1/3 | 1 |
+| Agency | Maximum | Minimum |
+| Predictability | Minimum | Maximum |
+| Adaptability | Maximum | Minimum |
+\stopverb}
+
+\p{\strong{Key Insight}: Agency requires uncertainty. A system that knows exactly what it will do has no choice.}
+}
+}
+
+\subtree{
+\title{Reafference Random Walks}
+\p{From von Holst's principle:}
+
+\pre{\startverb
+Efference copy: What I intend to transmit
+Reafference:    What I observe being transmitted
+Error:          Reafference - Efference copy
+
+If error = 0: I caused this (self-generated)
+If error ≠ 0: World caused this (exafference)
+\stopverb}
+
+\subtree{
+\title{SDR Reafference Loop}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│  SDR REAFFERENCE ARCHITECTURE                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ┌──────────┐    Tx Signal     ┌──────────┐                   │
+│   │  INTENT  │ ───────────────► │  TX SDR  │ ──► Antenna       │
+│   │ (Efference│                 └──────────┘                   │
+│   │   Copy)  │                                                  │
+│   └────┬─────┘                       │                          │
+│        │                             ▼                          │
+│        │                       Environment                      │
+│        │                             │                          │
+│        │                             ▼                          │
+│   ┌────▼─────┐    Rx Signal     ┌──────────┐                   │
+│   │COMPARATOR│ ◄─────────────── │  RX SDR  │ ◄── Antenna       │
+│   │(Reafference)                └──────────┘                   │
+│   └────┬─────┘                                                  │
+│        │                                                        │
+│        ▼                                                        │
+│   Error Signal → Learning → Updated Tx Parameters               │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Random Walk on Frequency Space}
+\pre{\startverb
+# Reafference-guided random walk on spectrum
+function reafference_walk(sdr, initial_freq, steps)
+    freq = initial_freq
+    history = [freq]
+    
+    for step in 1:steps
+        # Efference: intended frequency shift
+        Δf_intended = randn() * bandwidth
+        
+        # Actual observation (with channel effects)
+        signal = receive(sdr, freq + Δf_intended)
+        Δf_observed = estimate_frequency_shift(signal)
+        
+        # Reafference error
+        error = Δf_observed - Δf_intended
+        
+        # If error ≈ 0: we caused this (stay/exploit)
+        # If error ≫ 0: world caused this (explore!)
+        if abs(error) < threshold
+            freq += Δf_intended  # Exploit
+        else
+            freq += error  # Explore world's contribution
+        end
+        
+        push!(history, freq)
+    end
+    
+    return history
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{ACSet Skill Integration}
+\p{The \code{\startverb acset-skill\stopverb} provides categorical database operations:}
+
+\pre{\startverb
+using ACSets
+
+# SDR Observation schema
+@present SchSDRObs(FreeSchema) begin
+    (Freq, Time, Signal, Modulation)::Ob
+    freq_at::Hom(Signal, Freq)
+    time_at::Hom(Signal, Time)
+    modulation::Hom(Signal, Modulation)
+    
+    # Attributes
+    (FreqHz, TimeNs, Complex, ModType)::AttrType
+    frequency::Attr(Freq, FreqHz)
+    timestamp::Attr(Time, TimeNs)
+    iq_sample::Attr(Signal, Complex)
+    mod_type::Attr(Modulation, ModType)
+end
+
+# Navigate with Specter-style paths
+select-all(sdr_obs, [:Signal :freq_at :frequency])
+\stopverb}
+}
+
+\subtree{
+\title{3 New Skills Per Refinement}
+\p{Each refinement cycle produces exactly 3 skills (GF(3) conservation):}
+
+\pre{\startverb
+Refinement N:
+  🔴 MINUS (-1): One verification/analysis skill
+  🟢 ERGODIC (0): One coordination/integration skill
+  🔵 PLUS (+1): One generation/exploration skill
+  
+  Sum: (-1) + (0) + (+1) = 0 ✓ CONSERVED
+\stopverb}
+
+\subtree{
+\title{Example Refinement Cycle}
+\p{\strong{Cycle 1: Basic SDR}}
+
+\ul{
+\li{MINUS: \code{\startverb sdr-signal-verify\stopverb} — Validate received signal integrity}
+\li{ERGODIC: \code{\startverb sdr-frequency-coordinator\stopverb} — Manage spectrum allocation}
+\li{PLUS: \code{\startverb sdr-modulation-generator\stopverb} — Create novel modulation schemes}
+}
+
+\p{\strong{Cycle 2: Borges Integration}}
+
+\ul{
+\li{MINUS: \code{\startverb borges-catalog-index\stopverb} — Compress signal library}
+\li{ERGODIC: \code{\startverb borges-library-walker\stopverb} — Navigate infinite spectrum}
+\li{PLUS: \code{\startverb borges-signal-discovery\stopverb} — Find unexpected transmissions}
+}
+
+\p{\strong{Cycle 3: Reafference Learning}}
+
+\ul{
+\li{MINUS: \code{\startverb reafference-error-analyzer\stopverb} — Measure self vs world}
+\li{ERGODIC: \code{\startverb reafference-comparator\stopverb} — Efference/reafference matching}
+\li{PLUS: \code{\startverb reafference-model-learner\stopverb} — Update world model from errors}
+}
+}
+}
+
+\subtree{
+\title{GNU Radio Integration}
+\pre{\startverb
+#!/usr/bin/env python3
+"""
+sdr_borges_reafference.py
+GNU Radio flowgraph with reafference-guided tuning
+"""
+
+from gnuradio import gr, blocks, analog, filter
+from gnuradio.filter import firdes
+import numpy as np
+
+class ReafferenceSDR(gr.top_block):
+    def __init__(self, center_freq=100e6, sample_rate=2e6):
+        gr.top_block.__init__(self, "Reafference SDR")
+        
+        # SDR source (simulated for skill definition)
+        self.source = analog.sig_source_c(
+            sample_rate, analog.GR_COS_WAVE, 0, 1, 0
+        )
+        
+        # Spectral analysis for reafference
+        self.fft_size = 1024
+        self.spectral_gap = 0.25  # 1/4 optimal mixing
+        
+        # Efference copy buffer
+        self.efference = np.zeros(self.fft_size, dtype=complex)
+        
+        # Reafference comparator
+        self.reafference_error = 0.0
+        
+    def compute_reafference(self, received_spectrum):
+        """Compare received spectrum to efference copy"""
+        self.reafference_error = np.mean(
+            np.abs(received_spectrum - self.efference)
+        )
+        return self.reafference_error
+    
+    def random_walk_step(self, current_freq):
+        """Spectral-gap-guided random walk"""
+        # Mixing time τ = 1/gap = 4 for gap=1/4
+        mixing_time = 1.0 / self.spectral_gap
+        
+        # Step size inversely proportional to mixing time
+        step_size = self.sample_rate / mixing_time
+        
+        # Reafference-weighted step
+        if self.reafference_error < 0.1:
+            # Self-caused: small exploitation step
+            delta = np.random.normal(0, step_size * 0.1)
+        else:
+            # World-caused: large exploration step
+            delta = np.random.normal(0, step_size)
+        
+        return current_freq + delta
+\stopverb}
+}
+
+\subtree{
+\title{Borges REPL: Self-Learning Radio}
+\pre{\startverb
+;; Borges REPL for SDR exploration
+;; Each command is a step in the infinite library
+
+(define (borges-repl sdr-state)
+  (display "📻 Borges Radio> ")
+  (let ((cmd (read)))
+    (case (car cmd)
+      ;; MINUS operations (verification)
+      ((verify) (verify-signal sdr-state (cadr cmd)))
+      ((analyze) (analyze-spectrum sdr-state))
+      ((compress) (kolmogorov-compress sdr-state))
+      
+      ;; ERGODIC operations (coordination)
+      ((tune) (tune-frequency sdr-state (cadr cmd)))
+      ((mix) (apply-spectral-gap sdr-state 0.25))
+      ((walk) (reafference-walk sdr-state (cadr cmd)))
+      
+      ;; PLUS operations (generation)
+      ((generate) (generate-signal sdr-state (cdr cmd)))
+      ((explore) (borges-explore sdr-state))
+      ((discover) (discover-unknown sdr-state))
+      
+      ;; Meta-operations
+      ((refine) (spawn-3-skills sdr-state))
+      ((help) (display-borges-help))
+      ((quit) 'done)
+      
+      (else (display "Unknown command. The library is vast.\n"))))
+  
+  (unless (eq? cmd 'quit)
+    (borges-repl (update-state sdr-state cmd))))
+
+(define (spawn-3-skills state)
+  "Generate exactly 3 new skills (GF(3) conservation)"
+  (let ((seed (state-seed state)))
+    (list
+      (create-skill 'minus (splitmix-next seed 0))
+      (create-skill 'ergodic (splitmix-next seed 1))
+      (create-skill 'plus (splitmix-next seed 2)))))
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Skill Triad}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│  SDR-BORGES-REAFFERENCE TRIAD                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  🔴 MINUS (-1): spectrum-analyzer                               │
+│     └─ Kolmogorov compression of signal library                 │
+│     └─ Spectral gap measurement via eigenvalue estimation       │
+│                                                                 │
+│  🟢 ERGODIC (0): sdr-borges-reafference (THIS SKILL)            │
+│     └─ Coordinates MINUS and PLUS via reafference loop          │
+│     └─ Maintains maximally mixed state for agency               │
+│                                                                 │
+│  🔵 PLUS (+1): signal-generator                                 │
+│     └─ Creates novel transmissions from Borges exploration      │
+│     └─ Random walks with spectral gap 1/4                       │
+│                                                                 │
+│  Sum: (-1) + (0) + (+1) = 0 ✓                                   │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Start Borges SDR REPL
+bb sdr-borges-repl.bb
+
+# Invoke spectral gap analysis
+amp sdr-borges-reafference --analyze-gap
+
+# Generate 3 new skills from current state
+amp sdr-borges-reafference --refine
+
+# Reafference walk across spectrum
+amp sdr-borges-reafference --walk --steps 100 --gap 0.25
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{von Holst, E. (1950). "Das Reafferenzprinzip"}
+\li{Borges, J.L. (1941). "The Library of Babel"}
+\li{Hoory, Linial, Wigderson (2006). "Expander graphs and their applications"}
+\li{GNU Radio Project: https://www.gnuradio.org}
+\li{Ramanujan graphs: λ₂ ≤ 2√(d-1) (Alon-Boppana bound)}
+}
+}
+
+\subtree{
+\title{Seed 1069 Signature}
+\pre{\startverb
+TRIT_STREAM: [+1, -1, -1, +1, +1, +1, +1]
+SPECTRAL_GAP: 1/4 (optimal for GF(3))
+MIXING_TIME: 4 steps
+MAXIMALLY_MIXED: ρ = I/3, S = log(3)
+GF(3)_SUM: 0 ✓ CONSERVED
+\stopverb}
+
+\p{*"In the Library of Babel, every signal has already been transmitted. We need only learn to tune."*}
+}
+}

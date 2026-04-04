@@ -1,0 +1,198 @@
+\title{Naturality Factor}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'Naturality Factor Skill'}
+
+\subtree{
+\title{Naturality Factor Skill}
+\blockquote{*"The naturality condition ensures transformations commute with structure."*}
+
+\p{Measures how well transformations preserve conservation laws across musical and categorical structures.}
+
+\subtree{
+\title{Overview}
+\p{\strong{Trit}: 0 (ERGODIC - Coordinator) \strong{Location}: \code{\startverb lib/conserved_quantity.rb\stopverb}, \code{\startverb lib/rubato_bridge.rb\stopverb} \strong{Dependencies}: GF(3), Z/12Z chromatic, Rubato morphisms}
+}
+
+\subtree{
+\title{Core Concept}
+\p{In category theory, a \strong{natural transformation} η: F → G satisfies:}
+
+\pre{\startverb
+    η_A
+F(A) ───→ G(A)
+  │         │
+F(f)       G(f)
+  ↓         ↓
+F(B) ───→ G(B)
+    η_B
+\stopverb}
+
+\p{The \strong{naturality factor} ν ∈ [0,1] measures how well this square commutes:}
+
+\ul{
+\li{ν = 1.0 → perfectly natural (conservation preserved)}
+\li{ν = 0.0 → maximally unnatural (conservation violated)}
+}
+}
+
+\subtree{
+\title{Mazzola's Insight}
+\p{From \em{Topos of Music}: "Conservation" in music IS naturality of functors. Transposition preserves intervals because the naturality square closes.}
+}
+
+\subtree{
+\title{Classes}
+\subtree{
+\title{NaturalityFactor}
+\pre{\startverb
+nf = ConservedQuantity::NaturalityFactor.new(
+  conservation: ConservedQuantity::Laws::CHROMATIC,
+  source_functor: ->(x) { x },
+  target_functor: ->(x) { x }
+)
+
+result = nf.compute(
+  eta: ->(x) { x + 7 },      # Transposition
+  morphism: ->(x) { x },      # Identity morphism
+  object_a: 60,               # C4
+  object_b: 64                # E4
+)
+# => { factor: 1.0, defect: 0, natural?: true }
+\stopverb}
+}
+
+\subtree{
+\title{Chromatic Naturality}
+\pre{\startverb
+# Does transposition preserve intervals?
+result = ConservedQuantity::NaturalityFactor.chromatic_naturality(
+  interval: 7,           # Perfect fifth
+  notes: [0, 4, 7]       # C major triad
+)
+# => { factor: 1.0, natural?: true, original_intervals: [4, 3] }
+\stopverb}
+}
+
+\subtree{
+\title{Triadic Naturality (GF(3))}
+\pre{\startverb
+# Does doubling preserve trit balance?
+result = ConservedQuantity::NaturalityFactor.triadic_naturality(
+  transform: ->(x) { x * 2 },
+  objects: [0, 1, 2, 3, 4, 5],
+  charge_fn: ->(x) { x % 3 }
+)
+# => { factor: 1.0, defect: 0, natural?: true }
+\stopverb}
+}
+
+\subtree{
+\title{Yoneda Conservation}
+\p{Objects determined by ALL their relationships (Yoneda lemma):}
+
+\pre{\startverb
+yoneda = ConservedQuantity::YonedaConservation.new(
+  conservation: ConservedQuantity::Laws::TRIADIC,
+  objects: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+)
+
+yoneda.yoneda_charge(3)  # Sum of all relationships
+yoneda.yoneda_balanced?(0, 3, 6)  # Check if balanced
+\stopverb}
+}
+}
+
+\subtree{
+\title{Rubato Integration}
+\subtree{
+\title{NaturalMorphism}
+\p{Rubato morphisms with naturality tracking:}
+
+\pre{\startverb
+t7 = RubatoBridge::Morphisms.transposition(7)
+transposed_score = t7.apply(score)
+
+# Check naturality
+result = t7.compute_naturality(notes)
+puts t7.naturality_factor  # => 1.0
+\stopverb}
+}
+
+\subtree{
+\title{Standard Morphisms}
+\pre{\startverb
+| Morphism | Naturality | Preserves |
+|----------|------------|-----------|
+| `transposition(n)` | 1.0 | Intervals |
+| `inversion(axis:)` | 1.0 | Interval magnitudes |
+| `retrograde` | 1.0 | Pitch content |
+| `augmentation(f)` | varies | Depends on f |
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\p{Naturality factor connects to skill triads:}
+
+\pre{\startverb
+three-match (-1) ⊗ naturality-factor (0) ⊗ gay-mcp (+1) = 0 ✓
+sheaf-cohomology (-1) ⊗ naturality-factor (0) ⊗ rubato-composer (+1) = 0 ✓
+persistent-homology (-1) ⊗ naturality-factor (0) ⊗ topos-generate (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run conservation demo with naturality
+ruby lib/conserved_quantity.rb
+
+# Run Rubato bridge with naturality demo
+ruby lib/rubato_bridge.rb
+
+# Check naturality of a transposition
+just naturality-check T7 "0,4,7"
+\stopverb}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\subtree{
+\title{Defect Calculation}
+\p{For transformation η with conservation law C:}
+
+\pre{\startverb
+defect = C.combine(charge(left_path), -charge(right_path))
+factor = defect == identity ? 1.0 : 1.0 / (1.0 + |defect|)
+\stopverb}
+}
+
+\subtree{
+\title{Conservation Laws Supported}
+\pre{\startverb
+| Law | Modulus | Use Case |
+|-----|---------|----------|
+| GF(3) | 3 | Trit balance |
+| Chromatic | 12 | Pitch classes |
+| Diatonic | 7 | Scale degrees |
+| Parity | 2 | XOR operations |
+| Integer | ∞ | Unbounded |
+\stopverb}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{[conserved_quantity.rb](file:///Users/bob/ies/music-topos/lib/conserved_quantity.rb)}
+\li{[rubato_bridge.rb](file:///Users/bob/ies/music-topos/lib/rubato_bridge.rb)}
+\li{[ctp-yoneda skill](.agents/skills/ctp-yoneda/SKILL.md)}
+\li{[rubato-composer skill](.agents/skills/rubato-composer/SKILL.md)}
+}
+}
+}

@@ -1,0 +1,448 @@
+\title{Testing Handbook Generator}
+
+\taxon{skill}
+
+\meta{description}{Meta-skill that analyzes the Trail of Bits Testing Handbook (appsec.guide) and generates Claude Code skills for security testing tools and techniques. Use when creating new skills based on handbook content.}
+
+\subtree{
+\title{Testing Handbook Skill Generator}
+\p{Generate and maintain Claude Code skills from the Trail of Bits Testing Handbook.}
+
+\subtree{
+\title{When to Use}
+\p{\strong{Invoke this skill when:}}
+
+\ul{
+\li{Creating new security testing skills from handbook content}
+\li{User mentions "testing handbook", "appsec.guide", or asks about generating skills}
+\li{Bulk skill generation or refresh is needed}
+}
+
+\p{\strong{Do NOT use for:}}
+
+\ul{
+\li{General security testing questions (use the generated skills)}
+\li{Non-handbook skill creation}
+}
+}
+
+\subtree{
+\title{Handbook Location}
+\p{The skill needs the Testing Handbook repository. See [discovery.md](discovery.md) for full details.}
+
+\p{\strong{Quick reference:} Check \code{\startverb ./testing-handbook\stopverb}, \code{\startverb ../testing-handbook\stopverb}, \code{\startverb ~/testing-handbook\stopverb} → ask user → clone as last resort.}
+
+\p{\strong{Repository:} \code{\startverb https://github.com/trailofbits/testing-handbook\stopverb}}
+}
+
+\subtree{
+\title{Workflow Overview}
+\pre{\startverb
+Phase 0: Setup              Phase 1: Discovery
+┌─────────────────┐        ┌─────────────────┐
+│ Locate handbook │   →    │ Analyze handbook│
+│ - Find or clone │        │ - Scan sections │
+│ - Confirm path  │        │ - Classify types│
+└─────────────────┘        └─────────────────┘
+         ↓                          ↓
+Phase 3: Generation        Phase 2: Planning
+┌─────────────────┐        ┌─────────────────┐
+│ TWO-PASS GEN    │   ←    │ Generate plan   │
+│ Pass 1: Content │        │ - New skills    │
+│ Pass 2: X-refs  │        │ - Updates       │
+│ - Write to gen/ │        │ - Present user  │
+└─────────────────┘        └─────────────────┘
+         ↓
+Phase 4: Testing           Phase 5: Finalize
+┌─────────────────┐        ┌─────────────────┐
+│ Validate skills │   →    │ Post-generation │
+│ - Run validator │        │ - Update README │
+│ - Test activation│       │ - Update X-refs │
+│ - Fix issues    │        │ - Self-improve  │
+└─────────────────┘        └─────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Scope Restrictions}
+\p{\strong{ONLY modify these locations:}}
+
+\ul{
+\li{\code{\startverb plugins/testing-handbook-skills/skills/[skill-name]/*\stopverb} - Generated skills (as siblings to testing-handbook-generator)}
+\li{\code{\startverb plugins/testing-handbook-skills/skills/testing-handbook-generator/*\stopverb} - Self-improvement}
+\li{Repository root \code{\startverb README.md\stopverb} - Add generated skills to table}
+}
+
+\p{\strong{NEVER modify or analyze:}}
+
+\ul{
+\li{Other plugins (\code{\startverb plugins/property-based-testing/\stopverb}, \code{\startverb plugins/static-analysis/\stopverb}, etc.)}
+\li{Other skills outside this plugin}
+}
+
+\p{Do not scan or pull into context any skills outside of \code{\startverb testing-handbook-skills/\stopverb}. Generate skills based solely on handbook content and resources referenced from it.}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{Section → Skill Type Mapping}
+\pre{\startverb
+| Handbook Section | Skill Type | Template |
+|------------------|------------|----------|
+| `/static-analysis/[tool]/` | Tool Skill | tool-skill.md |
+| `/fuzzing/[lang]/[fuzzer]/` | Fuzzer Skill | fuzzer-skill.md |
+| `/fuzzing/techniques/` | Technique Skill | technique-skill.md |
+| `/crypto/[tool]/` | Domain Skill | domain-skill.md |
+| `/web/[tool]/` | Tool Skill | tool-skill.md |
+\stopverb}
+}
+
+\subtree{
+\title{Skill Candidate Signals}
+\pre{\startverb
+| Signal | Indicates |
+|--------|-----------|
+| `_index.md` with `bookCollapseSection: true` | Major tool/topic |
+| Numbered files (00-, 10-, 20-) | Structured content |
+| `techniques/` subsection | Methodology content |
+| `99-resources.md` or `91-resources.md` | Has external links |
+\stopverb}
+}
+
+\subtree{
+\title{Exclusion Signals}
+\pre{\startverb
+| Signal | Action |
+|--------|--------|
+| `draft: true` in frontmatter | Skip section |
+| Empty directory | Skip section |
+| Template/placeholder file | Skip section |
+| GUI-only tool (e.g., `web/burp/`) | Skip section (Claude cannot operate GUI tools) |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Decision Tree}
+\p{\strong{Starting skill generation?}}
+
+\pre{\startverb
+├─ Need to analyze handbook and build plan?
+│  └─ Read: discovery.md
+│     (Handbook analysis methodology, plan format)
+│
+├─ Spawning skill generation agents?
+│  └─ Read: agent-prompt.md
+│     (Full prompt template, variable reference, validation checklist)
+│
+├─ Generating a specific skill type?
+│  └─ Read appropriate template:
+│     ├─ Tool (Semgrep, CodeQL) → templates/tool-skill.md
+│     ├─ Fuzzer (libFuzzer, AFL++) → templates/fuzzer-skill.md
+│     ├─ Technique (harness, coverage) → templates/technique-skill.md
+│     └─ Domain (crypto, web) → templates/domain-skill.md
+│
+├─ Validating generated skills?
+│  └─ Run: scripts/validate-skills.py
+│     Then read: testing.md for activation testing
+│
+├─ Finalizing after generation?
+│  └─ See: Post-Generation Tasks below
+│     (Update main README, update Skills Cross-Reference, self-improvement)
+│
+└─ Quick generation from specific section?
+   └─ Use Quick Reference above, apply template directly
+\stopverb}
+}
+
+\subtree{
+\title{Two-Pass Generation (Phase 3)}
+\p{Generation uses a \strong{two-pass approach} to solve forward reference problems (skills referencing other skills that don't exist yet).}
+
+\subtree{
+\title{Pass 1: Content Generation (Parallel)}
+\p{Generate all skills in parallel \strong{without} the Related Skills section:}
+
+\pre{\startverb
+Pass 1 - Generating 5 skills in parallel:
+├─ Agent 1: libfuzzer (fuzzer) → skills/libfuzzer/SKILL.md
+├─ Agent 2: aflpp (fuzzer) → skills/aflpp/SKILL.md
+├─ Agent 3: semgrep (tool) → skills/semgrep/SKILL.md
+├─ Agent 4: harness-writing (technique) → skills/harness-writing/SKILL.md
+└─ Agent 5: wycheproof (domain) → skills/wycheproof/SKILL.md
+
+Each agent uses: pass=1 (content only, Related Skills left empty)
+\stopverb}
+
+\p{\strong{Pass 1 agents:}}
+
+\ul{
+\li{Generate all sections EXCEPT Related Skills}
+\li{Leave a placeholder: \code{\startverb ## Related Skills\startverb \n\stopverb\startverb \n\stopverb<!-- PASS2: populate after all skills exist -->\stopverb}}
+\li{Output report includes \code{\startverb references: DEFERRED\stopverb}}
+}
+}
+
+\subtree{
+\title{Pass 2: Cross-Reference Population (Sequential)}
+\p{After all Pass 1 agents complete, run Pass 2 to populate Related Skills:}
+
+\pre{\startverb
+Pass 2 - Populating cross-references:
+├─ Read all generated skill names from skills/*/SKILL.md
+├─ For each skill, determine related skills based on:
+│   ├─ related_sections from discovery (handbook structure)
+│   ├─ Skill type relationships (fuzzers → techniques)
+│   └─ Explicit mentions in content
+└─ Update each SKILL.md's Related Skills section
+\stopverb}
+
+\p{\strong{Pass 2 process:}}
+
+\ol{
+\li{Collect all generated skill names: \code{\startverb ls -d skills/*/SKILL.md\stopverb}}
+\li{For each skill, identify related skills using the mapping from discovery}
+\li{Edit each SKILL.md to replace the placeholder with actual links}
+\li{Validate cross-references exist (no broken links)}
+}
+}
+
+\subtree{
+\title{Agent Prompt Template}
+\p{See \strong{[agent-prompt.md](agent-prompt.md)} for the full prompt template with:}
+
+\ul{
+\li{Variable substitution reference (including \code{\startverb pass\stopverb} variable)}
+\li{Pre-write validation checklist}
+\li{Hugo shortcode conversion rules}
+\li{Line count splitting rules}
+\li{Error handling guidance}
+\li{Output report format}
+}
+}
+
+\subtree{
+\title{Collecting Results}
+\p{After Pass 1: Aggregate output reports, verify all skills generated. After Pass 2: Run validator to check cross-references.}
+}
+
+\subtree{
+\title{Handling Agent Failures}
+\p{If an agent fails or produces invalid output:}
+
+\pre{\startverb
+| Failure Type | Detection | Recovery Action |
+|--------------|-----------|-----------------|
+| Agent crashed | No output report | Re-run single agent with same inputs |
+| Validation failed | Output report shows errors | Check gaps/warnings, manually patch or re-run |
+| Wrong skill type | Content doesn't match template | Re-run with corrected `type` parameter |
+| Missing content | Output report lists gaps | Accept if minor, or provide additional `related_sections` |
+| Pass 2 broken ref | Validator shows missing skill | Check if skill was skipped, update reference |
+\stopverb}
+
+\p{\strong{Important:} Do NOT re-run the entire parallel batch for a single agent failure. Fix individual failures independently.}
+}
+
+\subtree{
+\title{Single-Skill Regeneration}
+\p{To regenerate a single skill without re-running the entire batch:}
+
+\pre{\startverb
+# Regenerate single skill (Pass 1 - content only)
+"Use testing-handbook-generator to regenerate the {skill-name} skill from section {section_path}"
+
+# Example:
+"Use testing-handbook-generator to regenerate the libfuzzer skill from section fuzzing/c-cpp/10-libfuzzer"
+\stopverb}
+
+\p{\strong{Regeneration workflow:}}
+
+\ol{
+\li{Re-read the handbook section for fresh content}
+\li{Apply the appropriate template}
+\li{Write to \code{\startverb skills/{skill-name}/SKILL.md\stopverb} (overwrites existing)}
+\li{Re-run Pass 2 for that skill only to update cross-references}
+\li{Run validator on the single skill: \code{\startverb uv run scripts/validate-skills.py --skill {skill-name}\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Output Location}
+\p{Generated skills are written to:}
+
+\pre{\startverb
+skills/[skill-name]/SKILL.md
+\stopverb}
+
+\p{Each skill gets its own directory for potential supporting files (as siblings to testing-handbook-generator).}
+}
+
+\subtree{
+\title{Quality Checklist}
+\p{Before delivering generated skills:}
+
+\ul{
+\li{[ ] All handbook sections analyzed (Phase 1)}
+\li{[ ] Plan presented to user before generation (Phase 2)}
+\li{[ ] Parallel agents launched - one per skill (Phase 3)}
+\li{[ ] Templates applied correctly per skill type}
+\li{[ ] Validator passes: \code{\startverb uv run scripts/validate-skills.py\stopverb}}
+\li{[ ] Activation testing passed - see [testing.md](testing.md)}
+\li{[ ] Main \code{\startverb README.md\stopverb} updated with generated skills table}
+\li{[ ] \code{\startverb README.md\stopverb} Skills Cross-Reference graph updated}
+\li{[ ] Self-improvement notes captured}
+\li{[ ] User notified with summary}
+}
+}
+
+\subtree{
+\title{Post-Generation Tasks}
+\subtree{
+\title{1. Update Main README}
+\p{After generating skills, update the repository's main \code{\startverb README.md\stopverb} to list them.}
+
+\p{\strong{Format:} Add generated skills to the same "Available Plugins" table, directly after \code{\startverb testing-handbook-skills\stopverb}. Use plain text \code{\startverb testing-handbook-generator\stopverb} as the author (no link).}
+
+\p{\strong{Example:}}
+
+\pre{\startverb
+| Plugin | Description | Author |
+|--------|-------------|--------|
+| ... other plugins ... |
+| [testing-handbook-skills](plugins/testing-handbook-skills/) | Meta-skill that generates skills from the Testing Handbook | Paweł Płatek |
+| [libfuzzer](plugins/testing-handbook-skills/skills/libfuzzer/) | Coverage-guided fuzzing with libFuzzer for C/C++ | testing-handbook-generator |
+| [aflpp](plugins/testing-handbook-skills/skills/aflpp/) | Multi-core fuzzing with AFL++ | testing-handbook-generator |
+| [semgrep](plugins/testing-handbook-skills/skills/semgrep/) | Fast static analysis for finding bugs | testing-handbook-generator |
+\stopverb}
+}
+
+\subtree{
+\title{2. Update Skills Cross-Reference}
+\p{After generating skills, update the \code{\startverb README.md\stopverb}'s \strong{Skills Cross-Reference} section with the mermaid graph showing skill relationships.}
+
+\p{\strong{Process:}}
+
+\ol{
+\li{Read each generated skill's \code{\startverb SKILL.md\stopverb} and extract its \code{\startverb ## Related Skills\stopverb} section}
+\li{Build the mermaid graph with nodes grouped by skill type (Fuzzers, Techniques, Tools, Domain)}
+\li{Add edges based on the Related Skills relationships:}
+\li{Solid arrows (\code{\startverb -->\stopverb}) for primary technique dependencies}
+\li{Dashed arrows (\code{\startverb -.->\stopverb}) for alternative tool suggestions}
+\li{Replace the existing mermaid code block in README.md}
+}
+
+\p{\strong{Edge classification:}}
+
+\pre{\startverb
+| Relationship | Arrow Style | Example |
+|--------------|-------------|---------|
+| Fuzzer → Technique | `-->` | `libfuzzer --> harness-writing` |
+| Tool → Tool (alternative) | `-.->` | `semgrep -.-> codeql` |
+| Fuzzer → Fuzzer (alternative) | `-.->` | `libfuzzer -.-> aflpp` |
+| Technique → Technique | `-->` | `harness-writing --> coverage-analysis` |
+\stopverb}
+
+\p{\strong{Validation:} After updating, run \code{\startverb validate-skills.py\stopverb} to verify all referenced skills exist.}
+}
+
+\subtree{
+\title{3. Self-Improvement}
+\p{After each generation run, reflect on what could improve future runs.}
+
+\p{\strong{Capture improvements to:}}
+
+\ul{
+\li{Templates (missing sections, better structure)}
+\li{Discovery logic (missed patterns, false positives)}
+\li{Content extraction (shortcodes not handled, formatting issues)}
+}
+
+\p{\strong{Update process:}}
+
+\ol{
+\li{Note issues encountered during generation}
+\li{Identify patterns that caused problems}
+\li{Update relevant files:}
+\li{\code{\startverb SKILL.md\stopverb} - Workflow, decision tree, quick reference updates}
+\li{\code{\startverb templates/*.md\stopverb} - Template improvements}
+\li{\code{\startverb discovery.md\stopverb} - Detection logic updates}
+\li{\code{\startverb testing.md\stopverb} - New validation checks}
+\li{Document the improvement in commit message}
+}
+
+\p{\strong{Example self-improvement:}}
+
+\pre{\startverb
+Issue: libFuzzer skill missing sanitizer flags table
+Fix: Updated templates/fuzzer-skill.md to include ## Compiler Flags section
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Usage}
+\subtree{
+\title{Full Discovery and Generation}
+\pre{\startverb
+User: "Generate skills from the testing handbook"
+
+1. Locate handbook (check common locations, ask user, or clone)
+2. Read discovery.md for methodology
+3. Scan handbook at {handbook_path}/content/docs/
+4. Build candidate list with types
+5. Present plan to user
+6. On approval, generate each skill using appropriate template
+7. Validate generated skills
+8. Update main README.md with generated skills table
+9. Update README.md Skills Cross-Reference graph from Related Skills sections
+10. Self-improve: note any template/discovery issues for future runs
+11. Report results
+\stopverb}
+}
+
+\subtree{
+\title{Single Section Generation}
+\pre{\startverb
+User: "Create a skill for the libFuzzer section"
+
+1. Read /testing-handbook/content/docs/fuzzing/c-cpp/10-libfuzzer/
+2. Identify type: Fuzzer Skill
+3. Read templates/fuzzer-skill.md
+4. Extract content, apply template
+5. Write to skills/libfuzzer/SKILL.md
+6. Validate and report
+\stopverb}
+}
+}
+
+\subtree{
+\title{Tips}
+\p{\strong{Do:}}
+
+\ul{
+\li{Always present plan before generating}
+\li{Use appropriate template for skill type}
+\li{Preserve code blocks exactly}
+\li{Validate after generation}
+}
+
+\p{\strong{Don't:}}
+
+\ul{
+\li{Generate without user approval}
+\li{Skip fetching non-video external resources (use WebFetch)}
+\li{Fetch video URLs (YouTube, Vimeo - titles only)}
+\li{Include handbook images directly}
+\li{Skip validation step}
+\li{Exceed 500 lines per SKILL.md}
+}
+
+\p{\strong{For first-time use:} Start with [discovery.md](discovery.md) to understand the handbook analysis process.}
+
+\p{\strong{For template reference:} See [templates/](templates/) directory for skill type templates.}
+
+\p{\strong{For validation:} See [testing.md](testing.md) for quality assurance methodology.}
+}
+}

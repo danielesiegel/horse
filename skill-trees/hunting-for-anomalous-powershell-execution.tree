@@ -1,0 +1,75 @@
+\title{Hunting For Anomalous Powershell Execution}
+
+\taxon{skill}
+
+\tag{powershell}
+
+\tag{script-block-logging}
+
+\tag{event-4104}
+
+\tag{amsi}
+
+\tag{threat-hunting}
+
+\tag{evtx}
+
+\tag{obfuscation}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Hunt for malicious PowerShell activity by analyzing Script Block Logging (Event 4104), Module Logging (Event 4103), and process creation events. The analyst parses Windows Event Log EVTX files to detect obfuscated commands, AMSI bypass attempts, encoded payloads, credential dumping keywords, and suspicious download cradles. Activates for requests involving PowerShell threat hunting, script block analysis, encoded command detection, or AMSI bypass identification.}
+
+\subtree{
+\title{Hunting for Anomalous PowerShell Execution}
+\subtree{
+\title{Overview}
+\p{PowerShell Script Block Logging (Event ID 4104) records the full deobfuscated script text executed on a Windows endpoint, making it the primary data source for hunting malicious PowerShell. Combined with Module Logging (4103) and process creation events, analysts can detect encoded commands, AMSI bypass patterns, download cradles, credential theft tools, and fileless attack techniques even when the attacker uses obfuscation layers.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for anomalous powershell execution}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows Event Log exports (.evtx) from Microsoft-Windows-PowerShell/Operational}
+\li{Python 3.8+ with python-evtx and lxml libraries}
+\li{Script Block Logging enabled via Group Policy}
+\li{Understanding of common PowerShell attack techniques}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Parse EVTX files extracting Event 4104 script block text and metadata}
+\li{Reassemble multi-part script blocks using ScriptBlock ID correlation}
+\li{Scan script text for AMSI bypass indicators and obfuscation patterns}
+\li{Detect encoded command execution and base64 payloads}
+\li{Identify download cradles, credential dumping, and lateral movement commands}
+\li{Score and prioritize findings by threat severity}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\pre{\startverb
+{
+  "total_events": 1247,
+  "suspicious_events": 23,
+  "amsi_bypass_attempts": 2,
+  "encoded_commands": 8,
+  "download_cradles": 5,
+  "credential_access": 3
+}
+\stopverb}
+}
+}

@@ -1,0 +1,83 @@
+\title{Hunting For Cobalt Strike Beacons}
+
+\taxon{skill}
+
+\tag{cobalt-strike}
+
+\tag{beacon}
+
+\tag{threat-hunting}
+
+\tag{c2}
+
+\tag{zeek}
+
+\tag{suricata}
+
+\tag{ja3}
+
+\tag{jarm}
+
+\tag{network-forensics}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect Cobalt Strike beacon network activity using default TLS certificate signatures (serial 8BB00EE), JA3/JA3S/JARM fingerprints, HTTP C2 profile pattern matching, beacon jitter analysis, and named pipe detection via Zeek, Suricata, and Python PCAP analysis.}
+
+\subtree{
+\title{Hunting for Cobalt Strike Beacons}
+\subtree{
+\title{Overview}
+\p{Cobalt Strike is the most prevalent command-and-control framework used by both red teams and threat actors. Beacon, its primary payload, communicates with team servers using configurable HTTP/HTTPS/DNS profiles that can mimic legitimate traffic. However, default configurations and behavioral patterns remain detectable through TLS certificate analysis (default serial 8BB00EE), JA3/JA3S fingerprinting, beacon interval jitter analysis, and HTTP malleable profile pattern matching. This skill covers building detection capabilities using Zeek network logs, Suricata IDS rules, and Python-based PCAP analysis to identify beacon callbacks in network traffic.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for cobalt strike beacons}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Zeek 6.0+ with JA3 and HASSH packages installed}
+\li{Suricata 7.0+ with Emerging Threats ruleset}
+\li{Python 3.9+ with scapy and dpkt libraries}
+\li{Network traffic captures (PCAP) or live Zeek logs}
+\li{RITA (Real Intelligence Threat Analytics) for beacon scoring}
+\li{Threat intelligence feeds with known Cobalt Strike IOCs}
+}
+}
+
+\subtree{
+\title{Steps}
+\subtree{
+\title{Step 1: TLS Certificate Analysis}
+\p{Detect default Cobalt Strike certificates using JA3S fingerprints, certificate serial numbers, and JARM fingerprints in Zeek ssl.log.}
+}
+
+\subtree{
+\title{Step 2: Beacon Interval Analysis}
+\p{Analyze connection timing patterns to identify regular callback intervals with configurable jitter, characteristic of beacon behavior.}
+}
+
+\subtree{
+\title{Step 3: HTTP Profile Detection}
+\p{Match HTTP request patterns (URI paths, headers, user-agents) against known malleable C2 profiles.}
+}
+
+\subtree{
+\title{Step 4: Correlate and Score}
+\p{Combine multiple indicators (TLS + timing + HTTP profile) into a composite beacon confidence score.}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report containing detected beacon candidates with confidence scores, TLS fingerprints, timing analysis, HTTP profile matches, and recommended response actions.}
+}
+}

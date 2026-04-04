@@ -1,0 +1,220 @@
+\title{Implementing Google Workspace Sso Configuration}
+
+\taxon{skill}
+
+\tag{google-workspace}
+
+\tag{sso}
+
+\tag{saml}
+
+\tag{identity-provider}
+
+\tag{authentication}
+
+\tag{federation}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Configure SAML 2.0 single sign-on for Google Workspace with a third-party identity provider, enabling centralized authentication and enforcing organization-wide access policies.}
+
+\subtree{
+\title{Implementing Google Workspace SSO Configuration}
+\subtree{
+\title{Overview}
+\p{Single Sign-On (SSO) for Google Workspace allows organizations to authenticate users through their existing identity provider (IdP) such as Okta, Azure AD (Microsoft Entra ID), or ADFS, rather than managing separate Google passwords. This is implemented using SAML 2.0 protocol where Google Workspace acts as the Service Provider (SP) and the organization's IdP handles authentication. SSO centralizes credential management, enforces MFA policies at the IdP, and enables immediate access revocation when users leave the organization.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing google workspace sso configuration capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Google Workspace Business, Enterprise, or Education edition}
+\li{Super Admin access to Google Admin Console}
+\li{Identity Provider with SAML 2.0 support (Okta, Azure AD, ADFS, Ping Identity)}
+\li{IdP signing certificate (X.509 PEM format, RSA or DSA)}
+\li{DNS verification for the Google Workspace domain}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{SAML 2.0 SSO Flow}
+\pre{\startverb
+User navigates to Google Workspace app (Gmail, Drive, etc.)
+        │
+        ├── Google checks: Is SSO configured for this domain?
+        │
+        ├── YES → Redirect user to IdP Sign-In Page URL
+        │          (SAML AuthnRequest sent via browser redirect)
+        │
+        ├── User authenticates at IdP (credentials + MFA)
+        │
+        ├── IdP generates SAML Response with signed assertion
+        │
+        ├── Browser POSTs SAML Response to Google ACS URL:
+        │   https://www.google.com/a/{domain}/acs
+        │
+        ├── Google validates SAML signature against uploaded certificate
+        │
+        └── User is granted access to Google Workspace
+\stopverb}
+}
+
+\subtree{
+\title{Key SAML Parameters}
+\pre{\startverb
+| Parameter | Value |
+|-----------|-------|
+| ACS URL | `https://www.google.com/a/{your-domain}/acs` |
+| Entity ID | `google.com/a/{your-domain}` or `google.com` |
+| NameID Format | `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress` |
+| NameID Value | User's primary Google Workspace email |
+| Binding | HTTP-POST (for ACS), HTTP-Redirect (for SSO URL) |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Prepare the Identity Provider}
+\p{\strong{For Okta:}}
+
+\ol{
+\li{Navigate to Applications > Add Application > Search "Google Workspace"}
+\li{Configure the Google Workspace app with your domain}
+\li{Assign users/groups to the application}
+\li{Download the IdP metadata or note: SSO URL, Entity ID, Certificate}
+}
+
+\p{\strong{For Azure AD (Microsoft Entra ID):}}
+
+\ol{
+\li{Navigate to Enterprise Applications > New Application > Google Cloud/Workspace}
+\li{Configure Single sign-on > SAML}
+\li{Set Basic SAML Configuration:}
+\li{Identifier (Entity ID): \code{\startverb google.com\stopverb}}
+\li{Reply URL (ACS): \code{\startverb https://www.google.com/a/{your-domain}/acs\stopverb}}
+\li{Sign on URL: \code{\startverb https://www.google.com/a/{your-domain}/ServiceLogin\stopverb}}
+\li{Download Federation Metadata XML or Certificate (Base64)}
+}
+
+\p{\strong{For ADFS:}}
+
+\ol{
+\li{Add Relying Party Trust using federation metadata}
+\li{Configure claim rules to pass NameID as email address}
+\li{Export the token-signing certificate}
+}
+}
+
+\subtree{
+\title{Step 2: Configure Google Workspace SSO}
+\ol{
+\li{Sign in to Google Admin Console (admin.google.com) as Super Admin}
+\li{Navigate to Security > Authentication > SSO with third-party IdP}
+\li{Click "Add SSO profile" or configure the default profile}
+}
+
+\p{\strong{Third-Party SSO Profile Settings:}}
+
+\pre{\startverb
+| Setting | Value |
+|---------|-------|
+| Set up SSO with third-party IdP | Enabled |
+| Sign-in page URL | IdP's SAML SSO endpoint (e.g., `https://idp.example.com/sso/saml`) |
+| Sign-out page URL | IdP's logout URL (e.g., `https://idp.example.com/slo`) |
+| Change password URL | IdP's password change URL |
+| Verification certificate | Upload IdP's X.509 signing certificate |
+| Use a domain-specific issuer | Enabled (uses `google.com/a/{domain}` as entity ID) |
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Assign SSO Profile to Users}
+\p{SSO profiles can be applied at different scopes:}
+
+\pre{\startverb
+Organization-wide (all users)
+    │
+    ├── Org Unit level (specific departments)
+    │   ├── Engineering OU → SSO via Okta
+    │   ├── Marketing OU → SSO via Azure AD
+    │   └── Contractors OU → SSO via specific IdP
+    │
+    └── Group level (specific security groups)
+        └── VPN Users → SSO with additional MFA
+\stopverb}
+
+\ol{
+\li{Navigate to Security > Authentication > SSO with third-party IdP}
+\li{Select the SSO profile to assign}
+\li{Choose organizational units or groups}
+\li{Save and wait for propagation (up to 24 hours, typically minutes)}
+}
+}
+
+\subtree{
+\title{Step 4: Configure Network Masks (Optional)}
+\p{Network masks control when SSO is enforced based on the user's IP:}
+
+\ul{
+\li{If the user's IP matches a network mask, they use Google's sign-in page}
+\li{If the user's IP does NOT match, they are redirected to the IdP}
+}
+
+\p{This is useful for allowing direct Google login from corporate network while enforcing SSO for external access.}
+}
+
+\subtree{
+\title{Step 5: Test SSO}
+\ol{
+\li{Open an incognito browser window}
+\li{Navigate to \code{\startverb https://mail.google.com/a/{your-domain}\stopverb}}
+\li{Verify redirect to IdP sign-in page}
+\li{Authenticate at the IdP}
+\li{Verify successful redirect back to Google Workspace}
+\li{Test sign-out flow redirects to IdP logout page}
+\li{Test with user not assigned in IdP (should fail)}
+}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] IdP SAML application configured with correct ACS URL and Entity ID}
+\li{[ ] IdP signing certificate uploaded to Google Admin Console}
+\li{[ ] SSO profile assigned to target organizational units/groups}
+\li{[ ] SAML assertion includes correct NameID (email format)}
+\li{[ ] MFA enforced at IdP for all Google Workspace users}
+\li{[ ] Sign-out URL configured to terminate IdP session}
+\li{[ ] Network masks configured if internal/external access differs}
+\li{[ ] Break-glass Super Admin accounts bypass SSO (use Google auth)}
+\li{[ ] SSO tested with multiple user types (admin, standard, contractor)}
+\li{[ ] SAML response signature validated successfully}
+\li{[ ] Error handling tested (expired cert, invalid user, clock skew)}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Google Workspace SSO Configuration Guide](https://support.google.com/a/answer/12032922)}
+\li{[Set Up Custom SAML App - Google](https://support.google.com/a/answer/6087519)}
+\li{[Okta Google Workspace SAML Guide](https://saml-doc.okta.com/SAML_Docs/How-to-Enable-SAML-2.0-in-Google-Apps.html)}
+\li{[SAML 2.0 Technical Overview - OASIS](https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html)}
+}
+}
+}

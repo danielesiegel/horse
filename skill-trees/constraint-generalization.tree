@@ -1,0 +1,410 @@
+\title{Constraint Generalization}
+
+\taxon{skill}
+
+\meta{trit}{+1}
+
+\meta{description}{Generalization and composition of constraints across navigators}
+
+\subtree{
+\title{Constraint Generalization}
+\subtree{
+\title{Core Concept}
+\p{Given proven constraints on individual paths, \strong{synthesize new constraints} that hold across composed paths. This skill moves from "validation" (rejecting bad paths) to "generation" (creating better paths).}
+
+\p{Example: If path A proves outputs are even, and path B proves outputs are positive, the \strong{composed path AB proves outputs are both even AND positive}.}
+}
+
+\subtree{
+\title{Why Constraint Generalization?}
+\p{Without it, constraints are lost during composition:}
+
+\pre{\startverb
+nav_even = @late_nav([ALL, pred(iseven)])      # proves: even
+nav_positive = @late_nav([ALL, pred(x > 0)])   # proves: positive
+
+# Compose them:
+nav_composed = compose_navigators(nav_even, nav_positive)
+# What can we prove about the result?
+# Without generalization: nothing! Constraints are forgotten.
+
+# With generalization:
+# => Proves: even(x) ∧ positive(x)
+# => More refined type: EvenPositiveInt
+\stopverb}
+
+\p{This \strong{refinement typing} enables:}
+
+\ul{
+\li{\strong{Automatic constraint propagation} downstream}
+\li{\strong{Fewer re-checks} (prove once, use many times)}
+\li{\strong{Smarter composition} (know which paths can combine)}
+\li{\strong{Proof generation} (formal certificates for constraints)}
+}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{Constraint Representation}
+\pre{\startverb
+struct Constraint
+    predicate::Function           # The boolean test
+    name::Symbol                  # :even, :positive, :non_null, ...
+    arity::Int                    # 1 for unary, 2 for binary, etc.
+    proof::Proof                  # Evidence constraint holds
+    refinement_type::RefinementType  # Int → EvenInt
+end
+\stopverb}
+}
+
+\subtree{
+\title{Constraint Composition}
+\p{\strong{CNF (Conjunctive Normal Form)} for constraint composition:}
+
+\pre{\startverb
+C₁ ∧ C₂ ∧ C₃ = (iseven AND positive AND nonzero)
+
+Satisfiable? Check via 3-MATCH:
+  - Find x where iseven(x) ∧ positive(x) ∧ nonzero(x)
+  - If no x exists → constraints are contradictory
+  - If x exists → constraints compose validly
+\stopverb}
+}
+
+\subtree{
+\title{Constraint Lattice}
+\pre{\startverb
+        ⊤ (True, no constraint)
+       / \
+    even  odd
+     / \   / \
+    ... ∧ ... (conjunctions)
+     \ /   \ /
+     ⊥ (False, unsatisfiable)
+\stopverb}
+
+\p{Generalization works upward in this lattice: from specific constraints to general ones.}
+}
+}
+
+\subtree{
+\title{API}
+\subtree{
+\title{Constraint Extraction}
+\p{\strong{\code{\startverb extract_constraints(navigator::Navigator) :: Vector{Constraint}\stopverb}} Pulls constraints from a compiled Navigator.}
+
+\pre{\startverb
+nav = @late_nav([ALL, pred(x -> iseven(x) && x > 0)])
+constraints = extract_constraints(nav)
+# => [
+#      Constraint(:even, iseven, proof=...),
+#      Constraint(:positive, x > 0, proof=...)
+#    ]
+\stopverb}
+
+\p{\strong{\code{\startverb named_constraint(name::Symbol, predicate::Function) :: Constraint\stopverb}} Creates a named, reusable constraint.}
+
+\pre{\startverb
+constraint_even = named_constraint(:even, iseven)
+constraint_gt5 = named_constraint(:gt5, x -> x > 5)
+constraint_string = named_constraint(:string, x -> isa(x, String))
+\stopverb}
+}
+
+\subtree{
+\title{Constraint Composition}
+\p{\strong{\code{\startverb compose_constraints(c1::Constraint, c2::Constraint) :: ComposedConstraint\stopverb}} Combines two constraints, proving they're satisfiable together.}
+
+\pre{\startverb
+c_even = named_constraint(:even, iseven)
+c_positive = named_constraint(:positive, x > 0)
+
+c_composed = compose_constraints(c_even, c_positive)
+# => ComposedConstraint(
+#     name: :even_and_positive,
+#     predicate: x -> iseven(x) && x > 0,
+#     proof: (satisfiable evidence),
+#     refinement_type: EvenPositiveInt
+#   )
+\stopverb}
+
+\p{\strong{\code{\startverb compose_constraints(constraints::Vector) :: ComposedConstraint\stopverb}} Composes multiple constraints at once.}
+
+\pre{\startverb
+constraints = [
+  named_constraint(:even, iseven),
+  named_constraint(:gt5, x -> x > 5),
+  named_constraint(:lt100, x -> x < 100)
+]
+
+composed = compose_constraints(constraints)
+# => Constraint proven satisfiable for ints in [6, 8, 10, ..., 98]
+\stopverb}
+}
+
+\subtree{
+\title{Constraint Generalization}
+\p{\strong{\code{\startverb generalize_constraint(constraint::Constraint) :: GeneralConstraint\stopverb}} Finds the most general constraint that subsumes the given one.}
+
+\pre{\startverb
+c_eq42 = named_constraint(:eq42, x -> x == 42)
+general = generalize_constraint(c_eq42)
+# => :positive (42 is positive—more general)
+# => Or :nonzero, :nonnegative, etc. (depending on strategy)
+\stopverb}
+
+\p{\strong{\code{\startverb abstract_constraint(constraint::Constraint, level::Int) :: GeneralConstraint\stopverb}} Applies abstract interpretation to weaken constraints.}
+
+\pre{\startverb
+c_detailed = named_constraint(:detailed, x -> iseven(x) && x > 5 && x < 100)
+
+abstract_constraint(c_detailed, 1)  # Weaken slightly
+# => iseven(x) && x > 5
+
+abstract_constraint(c_detailed, 2)  # Weaken more
+# => iseven(x)
+
+abstract_constraint(c_detailed, 3)  # Very weak
+# => numeric(x)  # Only knows it's a number
+\stopverb}
+}
+
+\subtree{
+\title{Refinement Types}
+\p{\strong{\code{\startverb refine_type(base_type::Type, constraint::Constraint) :: RefinementType\stopverb}} Creates a refined type with proven constraint.}
+
+\pre{\startverb
+refine_type(Int, named_constraint(:even, iseven))
+# => RefinementType(Int, :even)
+# Meaning: "An Int that is proven even"
+
+refine_type(String, named_constraint(:nonempty, x -> length(x) > 0))
+# => RefinementType(String, :nonempty)
+# Meaning: "A String that is proven non-empty"
+\stopverb}
+}
+
+\subtree{
+\title{Proof Certificates}
+\p{\strong{\code{\startverb generate_proof(constraint::Constraint) :: ProofCertificate\stopverb}} Creates a formal proof that the constraint is satisfiable.}
+
+\pre{\startverb
+c = named_constraint(:even_positive, x -> iseven(x) && x > 0)
+proof = generate_proof(c)
+# => ProofCertificate(
+#     constraint: c,
+#     witnesses: [2, 4, 6, 8, ...],  # Examples that satisfy
+#     satisfiability: SAT,             # Satisfiable
+#     hardness: #P,                    # Complexity class
+#     explanation: "Constraint is satisfiable; even positive integers exist"
+#   )
+\stopverb}
+}
+}
+
+\subtree{
+\title{Constraint Propagation}
+\p{Once constraints are proven, they propagate through compositions:}
+
+\pre{\startverb
+Path A: X → even(X)
+Path B: Y → positive(Y)
+
+Compose A then B:
+  => even(X) ∧ positive(Y)
+  => If Y = A(X), then: positive(even(X))
+  => Generalization: IntegersEvenAndPositive type
+
+Compose again with Path C:
+Path C: Z → Z < 100
+
+  => even(X) ∧ positive(Y) ∧ (Y < 100)
+  => Refines to: {2, 4, 6, ..., 98}
+\stopverb}
+}
+
+\subtree{
+\title{Integration with 3-MATCH}
+\p{Constraint composition uses 3-MATCH for satisfiability:}
+
+\pre{\startverb
+constraints = [
+  :even,        # iseven(x)
+  :positive,    # x > 0
+  :lt100        # x < 100
+]
+
+# 3-MATCH checks:
+# Satisfiable? (iseven(x) ∧ x > 0 ∧ x < 100)
+# => YES: x ∈ {2, 4, 6, ..., 98}
+
+# If constraints were contradictory:
+constraints_bad = [:even, :odd]  # Can't be both!
+# => 3-MATCH: UNSAT
+# => Reject composition
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Type Inference}
+\p{Refined types emerge from constraint composition:}
+
+\pre{\startverb
+nav = @late_nav([ALL, pred(x -> iseven(x) && x > 0)])
+
+# Type inference sees:
+# Input: Vector{Int}
+# Constraints: [even, positive]
+# Output type: Vector{EvenPositiveInt}  ← Refined!
+
+sig = navigator_signature(nav)
+# => TypeSignature(
+#     input: Vector{Int},
+#     output: Vector{EvenPositiveInt},  # Refined output type!
+#     constraints: [even, positive],
+#     proof: ...
+#   )
+\stopverb}
+}
+
+\subtree{
+\title{Constraint Algebra}
+\p{Constraints form an \strong{algebraic structure} under generalization:}
+
+\pre{\startverb
+Lattice operations:
+  even ∧ positive = even_positive    (Meet/AND)
+  even ∨ positive = numeric           (Join/OR, generalize)
+  ¬even = odd                         (Complement)
+  ⊤ = True                           (Top, no constraint)
+  ⊥ = False                          (Bottom, unsatisfiable)
+
+Example derivations:
+  even ∧ positive → nonnegative  (generalization)
+  odd ∧ gt5 → numeric            (upper bound)
+  string ∧ nonempty → string     (redundant, but valid)
+\stopverb}
+}
+
+\subtree{
+\title{Practical Examples}
+\subtree{
+\title{Example 1: Filtering Pipeline}
+\pre{\startverb
+# Stage 1: Filter for positive numbers
+nav1 = @late_nav([ALL, pred(x -> x > 0)])
+constraints1 = extract_constraints(nav1)
+# => [:positive]
+
+# Stage 2: Further filter for even
+nav2 = @late_nav([ALL, pred(iseven)])
+constraints2 = extract_constraints(nav2)
+# => [:even]
+
+# Compose stages
+final_constraints = compose_constraints(
+  constraints1[1],
+  constraints2[1]
+)
+# => Constraint(:even_positive, x -> iseven(x) && x > 0)
+
+# Proof:
+proof = generate_proof(final_constraints)
+# => Witnesses: [2, 4, 6, 8, ...]
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Product Navigation with Constraints}
+\pre{\startverb
+# Navigate to (x, y) pairs where x is positive and y is negative
+nav = @tuple_nav([:x, :y])
+
+constraints = compose_constraints([
+  named_constraint(:x_positive, px -> px > 0),
+  named_constraint(:y_negative, py -> py < 0)
+])
+
+# Refined output type: Tuple{PositiveInt, NegativeInt}
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Iterative Constraint Refinement}
+\pre{\startverb
+# Start with loose constraint
+c1 = named_constraint(:numeric, x -> isnumeric(x))
+
+# Refine iteratively
+c2 = compose_constraints(c1, named_constraint(:positive, x -> x > 0))
+# => numeric ∧ positive = positive
+
+c3 = compose_constraints(c2, named_constraint(:even, iseven))
+# => positive ∧ even = even_positive
+
+c4 = compose_constraints(c3, named_constraint(:lt100, x -> x < 100))
+# => even_positive ∧ lt100 = {2, 4, 6, ..., 98}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\p{\strong{Unsatisfiable constraints}:}
+
+\pre{\startverb
+c_even = named_constraint(:even, iseven)
+c_odd = named_constraint(:odd, isodd)
+
+compose_constraints(c_even, c_odd)
+# => UnsatisfiableConstraintError("No integer is both even and odd")
+\stopverb}
+
+\p{\strong{Type conflicts}:}
+
+\pre{\startverb
+c_string = named_constraint(:string, x -> isa(x, String))
+c_numeric = named_constraint(:numeric, x -> isnumeric(x))
+
+compose_constraints(c_string, c_numeric)
+# => TypeError("String and Numeric constraints are disjoint")
+\stopverb}
+}
+
+\subtree{
+\title{Performance}
+\pre{\startverb
+| Operation | Complexity | Notes |
+|-----------|-----------|-------|
+| extract_constraints | O(n) | n = path length |
+| compose_constraints | O(m³) | m = number of constraints (SAT checking) |
+| generalize_constraint | O(1) | Pre-computed lattice |
+| refine_type | O(1) | Type annotation |
+| generate_proof | O(2^m) | SAT solver on constraint space |
+\stopverb}
+
+\p{Note: Proof generation is expensive but cached—proofs are reused.}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{type-inference-validation} - Proves constraint satisfiability}
+\li{\strong{tuple-nav-composition} - Applies generalized constraints to products}
+\li{\strong{specter-navigator-gadget} - Navigator system that uses constraints}
+\li{\strong{three-match} - Underlying SAT solver for constraint composition}
+\li{\strong{color-envelope-preserving} - Maintains GF(3) along with constraints}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Constraint logic programming: "Introduction to CLP" - Jaffar & Maher}
+\li{Refinement types: "Refinement Types for TypeScript" - Rondon et al.}
+\li{Abstract interpretation: "The Cousot-Cousot Approach to Program Analysis" - Cousot}
+\li{Proof assistants: "Formal Proof Assistants" - Coq/Isabelle documentation}
+}
+}
+}

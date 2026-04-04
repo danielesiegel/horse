@@ -1,0 +1,69 @@
+\title{Hunting For Ntlm Relay Attacks}
+
+\taxon{skill}
+
+\tag{NTLM-relay}
+
+\tag{Windows-events}
+
+\tag{Event-4624}
+
+\tag{NTLMSSP}
+
+\tag{Responder}
+
+\tag{SMB-signing}
+
+\tag{credential-access}
+
+\tag{T1557.001}
+
+\tag{Active-Directory}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect NTLM relay attacks by analyzing Windows Event 4624 logon type 3 with NTLMSSP authentication, identifying IP-to-hostname mismatches, Responder traffic signatures, SMB signing status, and suspicious authentication patterns across the domain.}
+
+\subtree{
+\title{Hunting for NTLM Relay Attacks}
+\subtree{
+\title{Overview}
+\p{NTLM relay attacks intercept and forward NTLM authentication messages to gain unauthorized access to network resources. Attackers use tools like Responder for LLMNR/NBT-NS poisoning and ntlmrelayx for credential relay. This skill detects relay activity by querying Windows Security Event 4624 (successful logon) for type 3 network logons with NTLMSSP authentication, identifying mismatches between WorkstationName and source IpAddress, detecting rapid multi-host authentication from single accounts, and auditing SMB signing configuration across domain hosts.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for ntlm relay attacks}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with Windows Event Log access or exported logs}
+\li{Windows Security audit logging enabled (Event ID 4624, 4625, 5145)}
+\li{Network access for SMB signing status checks}
+}
+}
+
+\subtree{
+\title{Key Detection Areas}
+\ol{
+\li{\strong{IP-hostname mismatch} — WorkstationName in Event 4624 does not resolve to the source IpAddress}
+\li{\strong{NTLMSSP authentication} — logon events using NTLM instead of Kerberos from domain-joined hosts}
+\li{\strong{Machine account relay} — computer accounts (ending in $) authenticating from unexpected IPs}
+\li{\strong{Rapid authentication} — single account authenticating to multiple hosts within seconds}
+\li{\strong{Named pipe access} — Event 5145 showing access to Spoolss, lsarpc, netlogon, samr pipes}
+\li{\strong{SMB signing disabled} — hosts not enforcing SMB signing, enabling relay attacks}
+}
+}
+
+\subtree{
+\title{Output}
+\p{JSON report with suspected relay events, IP-hostname correlation anomalies, SMB signing audit results, and MITRE ATT&CK mapping to T1557.001.}
+}
+}

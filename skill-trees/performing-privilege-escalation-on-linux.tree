@@ -1,0 +1,147 @@
+\title{Performing Privilege Escalation On Linux}
+
+\taxon{skill}
+
+\tag{red-team}
+
+\tag{adversary-simulation}
+
+\tag{mitre-attack}
+
+\tag{exploitation}
+
+\tag{post-exploitation}
+
+\tag{privilege-escalation}
+
+\tag{linux}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Linux privilege escalation involves elevating from a low-privilege user account to root access on a compromised system. Red teams exploit misconfigurations, vulnerable services, kernel exploits, and w}
+
+\subtree{
+\title{Performing Privilege Escalation on Linux}
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+
+\subtree{
+\title{Overview}
+\p{Linux privilege escalation involves elevating from a low-privilege user account to root access on a compromised system. Red teams exploit misconfigurations, vulnerable services, kernel exploits, and weak permissions to achieve root. This skill covers both manual enumeration techniques and automated tools for identifying and exploiting privilege escalation vectors.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing privilege escalation on linux}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with red teaming concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{MITRE ATT&CK Mapping}
+\ul{
+\li{\strong{T1548.001} - Abuse Elevation Control Mechanism: Setuid and Setgid}
+\li{\strong{T1548.003} - Abuse Elevation Control Mechanism: Sudo and Sudo Caching}
+\li{\strong{T1068} - Exploitation for Privilege Escalation}
+\li{\strong{T1574.006} - Hijack Execution Flow: Dynamic Linker Hijacking}
+\li{\strong{T1053.003} - Scheduled Task/Job: Cron}
+\li{\strong{T1543.002} - Create or Modify System Process: Systemd Service}
+}
+}
+
+\subtree{
+\title{Key Escalation Vectors}
+\subtree{
+\title{SUID/SGID Binaries}
+\ul{
+\li{Find SUID binaries: \code{\startverb find / -perm -4000 -type f 2>/dev/null\stopverb}}
+\li{Check GTFOBins for exploitation methods}
+\li{Custom SUID binaries may have vulnerabilities}
+}
+}
+
+\subtree{
+\title{Sudo Misconfigurations}
+\ul{
+\li{\code{\startverb sudo -l\stopverb} to list allowed commands}
+\li{Wildcards in sudo rules allow injection}
+\li{NOPASSWD entries for dangerous commands}
+\li{sudo versions vulnerable to CVE-2021-3156 (Baron Samedit)}
+}
+}
+
+\subtree{
+\title{Kernel Exploits}
+\ul{
+\li{Dirty Cow (CVE-2016-5195) for older kernels}
+\li{Dirty Pipe (CVE-2022-0847) for kernel 5.8+}
+\li{PwnKit (CVE-2021-4034) for pkexec}
+\li{GameOver(lay) (CVE-2023-2640, CVE-2023-32629) for Ubuntu}
+}
+}
+
+\subtree{
+\title{Cron Job Abuse}
+\ul{
+\li{World-writable cron scripts}
+\li{PATH hijacking in cron jobs}
+\li{Wildcard injection in cron commands}
+}
+}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{\code{\startverb getcap -r / 2>/dev/null\stopverb} to find binaries with capabilities}
+\li{cap_setuid allows UID manipulation}
+\li{cap_dac_override bypasses file permissions}
+}
+}
+
+\subtree{
+\title{Writable Service Files}
+\ul{
+\li{Systemd unit files with weak permissions}
+\li{Init scripts writable by non-root users}
+\li{Socket files in accessible locations}
+}
+}
+}
+
+\subtree{
+\title{Tools and Resources}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| LinPEAS | Automated privilege escalation enumeration |
+| LinEnum | Linux enumeration script |
+| linux-exploit-suggester | Kernel exploit matching |
+| pspy | Process monitoring without root |
+| GTFOBins | SUID/sudo binary exploitation reference |
+| PEASS-ng | Privilege escalation awesome scripts suite |
+\stopverb}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Enumeration performed using automated tools}
+\li{[ ] Privilege escalation vector identified}
+\li{[ ] Root access achieved through identified vector}
+\li{[ ] Evidence documented (screenshots, command output)}
+\li{[ ] Alternative escalation paths identified}
+}
+}
+}

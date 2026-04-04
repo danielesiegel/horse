@@ -1,0 +1,426 @@
+\title{Neurokit2}
+
+\taxon{skill}
+
+\meta{description}{Comprehensive biosignal processing toolkit for analyzing physiological data including ECG, EEG, EDA, RSP, PPG, EMG, and EOG signals. Use this skill when processing cardiovascular signals, brain activity, electrodermal responses, respiratory patterns, muscle activity, or eye movements. Applicable for heart rate variability analysis, event-related potentials, complexity measures, autonomic nervous system assessment, psychophysiology research, and multi-modal physiological signal integration.}
+
+\subtree{
+\title{NeuroKit2}
+\subtree{
+\title{Overview}
+\p{NeuroKit2 is a comprehensive Python toolkit for processing and analyzing physiological signals (biosignals). Use this skill to process cardiovascular, neural, autonomic, respiratory, and muscular signals for psychophysiology research, clinical applications, and human-computer interaction studies.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Apply this skill when working with:}
+
+\ul{
+\li{\strong{Cardiac signals}: ECG, PPG, heart rate variability (HRV), pulse analysis}
+\li{\strong{Brain signals}: EEG frequency bands, microstates, complexity, source localization}
+\li{\strong{Autonomic signals}: Electrodermal activity (EDA/GSR), skin conductance responses (SCR)}
+\li{\strong{Respiratory signals}: Breathing rate, respiratory variability (RRV), volume per time}
+\li{\strong{Muscular signals}: EMG amplitude, muscle activation detection}
+\li{\strong{Eye tracking}: EOG, blink detection and analysis}
+\li{\strong{Multi-modal integration}: Processing multiple physiological signals simultaneously}
+\li{\strong{Complexity analysis}: Entropy measures, fractal dimensions, nonlinear dynamics}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Cardiac Signal Processing (ECG/PPG)}
+\p{Process electrocardiogram and photoplethysmography signals for cardiovascular analysis. See \code{\startverb references/ecg_cardiac.md\stopverb} for detailed workflows.}
+
+\p{\strong{Primary workflows:}}
+
+\ul{
+\li{ECG processing pipeline: cleaning → R-peak detection → delineation → quality assessment}
+\li{HRV analysis across time, frequency, and nonlinear domains}
+\li{PPG pulse analysis and quality assessment}
+\li{ECG-derived respiration extraction}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+import neurokit2 as nk
+
+# Complete ECG processing pipeline
+signals, info = nk.ecg_process(ecg_signal, sampling_rate=1000)
+
+# Analyze ECG data (event-related or interval-related)
+analysis = nk.ecg_analyze(signals, sampling_rate=1000)
+
+# Comprehensive HRV analysis
+hrv = nk.hrv(peaks, sampling_rate=1000)  # Time, frequency, nonlinear domains
+\stopverb}
+}
+
+\subtree{
+\title{2. Heart Rate Variability Analysis}
+\p{Compute comprehensive HRV metrics from cardiac signals. See \code{\startverb references/hrv.md\stopverb} for all indices and domain-specific analysis.}
+
+\p{\strong{Supported domains:}}
+
+\ul{
+\li{\strong{Time domain}: SDNN, RMSSD, pNN50, SDSD, and derived metrics}
+\li{\strong{Frequency domain}: ULF, VLF, LF, HF, VHF power and ratios}
+\li{\strong{Nonlinear domain}: Poincaré plot (SD1/SD2), entropy measures, fractal dimensions}
+\li{\strong{Specialized}: Respiratory sinus arrhythmia (RSA), recurrence quantification analysis (RQA)}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# All HRV indices at once
+hrv_indices = nk.hrv(peaks, sampling_rate=1000)
+
+# Domain-specific analysis
+hrv_time = nk.hrv_time(peaks)
+hrv_freq = nk.hrv_frequency(peaks, sampling_rate=1000)
+hrv_nonlinear = nk.hrv_nonlinear(peaks, sampling_rate=1000)
+hrv_rsa = nk.hrv_rsa(peaks, rsp_signal, sampling_rate=1000)
+\stopverb}
+}
+
+\subtree{
+\title{3. Brain Signal Analysis (EEG)}
+\p{Analyze electroencephalography signals for frequency power, complexity, and microstate patterns. See \code{\startverb references/eeg.md\stopverb} for detailed workflows and MNE integration.}
+
+\p{\strong{Primary capabilities:}}
+
+\ul{
+\li{Frequency band power analysis (Delta, Theta, Alpha, Beta, Gamma)}
+\li{Channel quality assessment and re-referencing}
+\li{Source localization (sLORETA, MNE)}
+\li{Microstate segmentation and transition dynamics}
+\li{Global field power and dissimilarity measures}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Power analysis across frequency bands
+power = nk.eeg_power(eeg_data, sampling_rate=250, channels=['Fz', 'Cz', 'Pz'])
+
+# Microstate analysis
+microstates = nk.microstates_segment(eeg_data, n_microstates=4, method='kmod')
+static = nk.microstates_static(microstates)
+dynamic = nk.microstates_dynamic(microstates)
+\stopverb}
+}
+
+\subtree{
+\title{4. Electrodermal Activity (EDA)}
+\p{Process skin conductance signals for autonomic nervous system assessment. See \code{\startverb references/eda.md\stopverb} for detailed workflows.}
+
+\p{\strong{Primary workflows:}}
+
+\ul{
+\li{Signal decomposition into tonic and phasic components}
+\li{Skin conductance response (SCR) detection and analysis}
+\li{Sympathetic nervous system index calculation}
+\li{Autocorrelation and changepoint detection}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Complete EDA processing
+signals, info = nk.eda_process(eda_signal, sampling_rate=100)
+
+# Analyze EDA data
+analysis = nk.eda_analyze(signals, sampling_rate=100)
+
+# Sympathetic nervous system activity
+sympathetic = nk.eda_sympathetic(signals, sampling_rate=100)
+\stopverb}
+}
+
+\subtree{
+\title{5. Respiratory Signal Processing (RSP)}
+\p{Analyze breathing patterns and respiratory variability. See \code{\startverb references/rsp.md\stopverb} for detailed workflows.}
+
+\p{\strong{Primary capabilities:}}
+
+\ul{
+\li{Respiratory rate calculation and variability analysis}
+\li{Breathing amplitude and symmetry assessment}
+\li{Respiratory volume per time (fMRI applications)}
+\li{Respiratory amplitude variability (RAV)}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Complete RSP processing
+signals, info = nk.rsp_process(rsp_signal, sampling_rate=100)
+
+# Respiratory rate variability
+rrv = nk.rsp_rrv(signals, sampling_rate=100)
+
+# Respiratory volume per time
+rvt = nk.rsp_rvt(signals, sampling_rate=100)
+\stopverb}
+}
+
+\subtree{
+\title{6. Electromyography (EMG)}
+\p{Process muscle activity signals for activation detection and amplitude analysis. See \code{\startverb references/emg.md\stopverb} for workflows.}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Complete EMG processing
+signals, info = nk.emg_process(emg_signal, sampling_rate=1000)
+
+# Muscle activation detection
+activation = nk.emg_activation(signals, sampling_rate=1000, method='threshold')
+\stopverb}
+}
+
+\subtree{
+\title{7. Electrooculography (EOG)}
+\p{Analyze eye movement and blink patterns. See \code{\startverb references/eog.md\stopverb} for workflows.}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Complete EOG processing
+signals, info = nk.eog_process(eog_signal, sampling_rate=500)
+
+# Extract blink features
+features = nk.eog_features(signals, sampling_rate=500)
+\stopverb}
+}
+
+\subtree{
+\title{8. General Signal Processing}
+\p{Apply filtering, decomposition, and transformation operations to any signal. See \code{\startverb references/signal_processing.md\stopverb} for comprehensive utilities.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{Filtering (lowpass, highpass, bandpass, bandstop)}
+\li{Decomposition (EMD, SSA, wavelet)}
+\li{Peak detection and correction}
+\li{Power spectral density estimation}
+\li{Signal interpolation and resampling}
+\li{Autocorrelation and synchrony analysis}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Filtering
+filtered = nk.signal_filter(signal, sampling_rate=1000, lowcut=0.5, highcut=40)
+
+# Peak detection
+peaks = nk.signal_findpeaks(signal)
+
+# Power spectral density
+psd = nk.signal_psd(signal, sampling_rate=1000)
+\stopverb}
+}
+
+\subtree{
+\title{9. Complexity and Entropy Analysis}
+\p{Compute nonlinear dynamics, fractal dimensions, and information-theoretic measures. See \code{\startverb references/complexity.md\stopverb} for all available metrics.}
+
+\p{\strong{Available measures:}}
+
+\ul{
+\li{\strong{Entropy}: Shannon, approximate, sample, permutation, spectral, fuzzy, multiscale}
+\li{\strong{Fractal dimensions}: Katz, Higuchi, Petrosian, Sevcik, correlation dimension}
+\li{\strong{Nonlinear dynamics}: Lyapunov exponents, Lempel-Ziv complexity, recurrence quantification}
+\li{\strong{DFA}: Detrended fluctuation analysis, multifractal DFA}
+\li{\strong{Information theory}: Fisher information, mutual information}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Multiple complexity metrics at once
+complexity_indices = nk.complexity(signal, sampling_rate=1000)
+
+# Specific measures
+apen = nk.entropy_approximate(signal)
+dfa = nk.fractal_dfa(signal)
+lyap = nk.complexity_lyapunov(signal, sampling_rate=1000)
+\stopverb}
+}
+
+\subtree{
+\title{10. Event-Related Analysis}
+\p{Create epochs around stimulus events and analyze physiological responses. See \code{\startverb references/epochs_events.md\stopverb} for workflows.}
+
+\p{\strong{Primary capabilities:}}
+
+\ul{
+\li{Epoch creation from event markers}
+\li{Event-related averaging and visualization}
+\li{Baseline correction options}
+\li{Grand average computation with confidence intervals}
+}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Find events in signal
+events = nk.events_find(trigger_signal, threshold=0.5)
+
+# Create epochs around events
+epochs = nk.epochs_create(signals, events, sampling_rate=1000,
+                          epochs_start=-0.5, epochs_end=2.0)
+
+# Average across epochs
+grand_average = nk.epochs_average(epochs)
+\stopverb}
+}
+
+\subtree{
+\title{11. Multi-Signal Integration}
+\p{Process multiple physiological signals simultaneously with unified output. See \code{\startverb references/bio_module.md\stopverb} for integration workflows.}
+
+\p{\strong{Key functions:}}
+
+\pre{\startverb
+# Process multiple signals at once
+bio_signals, bio_info = nk.bio_process(
+    ecg=ecg_signal,
+    rsp=rsp_signal,
+    eda=eda_signal,
+    emg=emg_signal,
+    sampling_rate=1000
+)
+
+# Analyze all processed signals
+bio_analysis = nk.bio_analyze(bio_signals, sampling_rate=1000)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Analysis Modes}
+\p{NeuroKit2 automatically selects between two analysis modes based on data duration:}
+
+\p{\strong{Event-related analysis} (< 10 seconds):}
+
+\ul{
+\li{Analyzes stimulus-locked responses}
+\li{Epoch-based segmentation}
+\li{Suitable for experimental paradigms with discrete trials}
+}
+
+\p{\strong{Interval-related analysis} (≥ 10 seconds):}
+
+\ul{
+\li{Characterizes physiological patterns over extended periods}
+\li{Resting state or continuous activities}
+\li{Suitable for baseline measurements and long-term monitoring}
+}
+
+\p{Most \code{\startverb *_analyze()\stopverb} functions automatically choose the appropriate mode.}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install neurokit2
+\stopverb}
+
+\p{For development version:}
+
+\pre{\startverb
+uv pip install https://github.com/neuropsychology/NeuroKit/zipball/dev
+\stopverb}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Quick Start: ECG Analysis}
+\pre{\startverb
+import neurokit2 as nk
+
+# Load example data
+ecg = nk.ecg_simulate(duration=60, sampling_rate=1000)
+
+# Process ECG
+signals, info = nk.ecg_process(ecg, sampling_rate=1000)
+
+# Analyze HRV
+hrv = nk.hrv(info['ECG_R_Peaks'], sampling_rate=1000)
+
+# Visualize
+nk.ecg_plot(signals, info)
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Modal Analysis}
+\pre{\startverb
+# Process multiple signals
+bio_signals, bio_info = nk.bio_process(
+    ecg=ecg_signal,
+    rsp=rsp_signal,
+    eda=eda_signal,
+    sampling_rate=1000
+)
+
+# Analyze all signals
+results = nk.bio_analyze(bio_signals, sampling_rate=1000)
+\stopverb}
+}
+
+\subtree{
+\title{Event-Related Potential}
+\pre{\startverb
+# Find events
+events = nk.events_find(trigger_channel, threshold=0.5)
+
+# Create epochs
+epochs = nk.epochs_create(processed_signals, events,
+                          sampling_rate=1000,
+                          epochs_start=-0.5, epochs_end=2.0)
+
+# Event-related analysis for each signal type
+ecg_epochs = nk.ecg_eventrelated(epochs)
+eda_epochs = nk.eda_eventrelated(epochs)
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\p{This skill includes comprehensive reference documentation organized by signal type and analysis method:}
+
+\ul{
+\li{\strong{ecg_cardiac.md}: ECG/PPG processing, R-peak detection, delineation, quality assessment}
+\li{\strong{hrv.md}: Heart rate variability indices across all domains}
+\li{\strong{eeg.md}: EEG analysis, frequency bands, microstates, source localization}
+\li{\strong{eda.md}: Electrodermal activity processing and SCR analysis}
+\li{\strong{rsp.md}: Respiratory signal processing and variability}
+\li{\strong{ppg.md}: Photoplethysmography signal analysis}
+\li{\strong{emg.md}: Electromyography processing and activation detection}
+\li{\strong{eog.md}: Electrooculography and blink analysis}
+\li{\strong{signal_processing.md}: General signal utilities and transformations}
+\li{\strong{complexity.md}: Entropy, fractal, and nonlinear measures}
+\li{\strong{epochs_events.md}: Event-related analysis and epoch creation}
+\li{\strong{bio_module.md}: Multi-signal integration workflows}
+}
+
+\p{Load specific reference files as needed using the Read tool to access detailed function documentation and parameters.}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{Official Documentation: https://neuropsychology.github.io/NeuroKit/}
+\li{GitHub Repository: https://github.com/neuropsychology/NeuroKit}
+\li{Publication: Makowski et al. (2021). NeuroKit2: A Python toolbox for neurophysiological signal processing. Behavior Research Methods. https://doi.org/10.3758/s13428-020-01516-y}
+}
+}
+}

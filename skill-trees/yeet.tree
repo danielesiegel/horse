@@ -1,0 +1,38 @@
+\title{"yeet"}
+
+\taxon{skill}
+
+\meta{description}{"Use only when the user explicitly asks to stage, commit, push, and open a GitHub pull request in one flow using the GitHub CLI (`gh`)."}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Require GitHub CLI \code{\startverb gh\stopverb}. Check \code{\startverb gh --version\stopverb}. If missing, ask the user to install \code{\startverb gh\stopverb} and stop.}
+\li{Require authenticated \code{\startverb gh\stopverb} session. Run \code{\startverb gh auth status\stopverb}. If not authenticated, ask the user to run \code{\startverb gh auth login\stopverb} (and re-run \code{\startverb gh auth status\stopverb}) before continuing.}
+}
+}
+
+\subtree{
+\title{Naming conventions}
+\ul{
+\li{Branch: \code{\startverb codex/{description}\stopverb} when starting from main/master/default.}
+\li{Commit: \code{\startverb {description}\stopverb} (terse).}
+\li{PR title: \code{\startverb [codex] {description}\stopverb} summarizing the full diff.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ul{
+\li{If on main/master/default, create a branch: \code{\startverb git checkout -b "codex/{description}"\stopverb}}
+\li{Otherwise stay on the current branch.}
+\li{Confirm status, then stage everything: \code{\startverb git status -sb\stopverb} then \code{\startverb git add -A\stopverb}.}
+\li{Commit tersely with the description: \code{\startverb git commit -m "{description}"\stopverb}}
+\li{Run checks if not already. If checks fail due to missing deps/tools, install dependencies and rerun once.}
+\li{Push with tracking: \code{\startverb git push -u origin $(git branch --show-current)\stopverb}}
+\li{If git push fails due to workflow auth errors, pull from master and retry the push.}
+\li{Open a PR and edit title/body to reflect the description and the deltas: \code{\startverb GH_PROMPT_DISABLED=1 GIT_TERMINAL_PROMPT=0 gh pr create --draft --fill --head $(git branch --show-current)\stopverb}}
+\li{Write the PR description to a temp file with real newlines (e.g. pr-body.md ... EOF) and run pr-body.md to avoid \\startverb \n\stopverb-escaped markdown.}
+\li{PR description (markdown) must be detailed prose covering the issue, the cause and effect on users, the root cause, the fix, and any tests or checks used to validate.}
+}
+}

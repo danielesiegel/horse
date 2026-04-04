@@ -1,0 +1,71 @@
+\title{Analyzing Cobaltstrike Malleable C2 Profiles}
+
+\taxon{skill}
+
+\tag{cobalt-strike}
+
+\tag{malleable-c2}
+
+\tag{c2-detection}
+
+\tag{beacon-analysis}
+
+\tag{network-signatures}
+
+\tag{threat-hunting}
+
+\tag{red-team-tools}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Parse and analyze Cobalt Strike Malleable C2 profiles using dissect.cobaltstrike and pyMalleableC2 to extract C2 indicators, detect evasion techniques, and generate network detection signatures.}
+
+\subtree{
+\title{Analyzing CobaltStrike Malleable C2 Profiles}
+\subtree{
+\title{Overview}
+\p{Cobalt Strike Malleable C2 profiles are domain-specific language scripts that customize how Beacon communicates with the team server, defining HTTP request/response transformations, sleep intervals, jitter values, user agents, URI paths, and process injection behavior. Threat actors use malleable profiles to disguise C2 traffic as legitimate services (Amazon, Google, Slack). Analyzing these profiles reveals network indicators for detection: URI patterns, HTTP headers, POST/GET transforms, DNS settings, and process injection techniques. The \code{\startverb dissect.cobaltstrike\stopverb} library can parse both profile files and extract configurations from beacon payloads, while \code{\startverb pyMalleableC2\stopverb} provides AST-based parsing using Lark grammar for programmatic profile manipulation and validation.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing cobaltstrike malleable c2 profiles}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb dissect.cobaltstrike\stopverb} and/or \code{\startverb pyMalleableC2\stopverb}}
+\li{Sample Malleable C2 profiles (available from public repositories)}
+\li{Understanding of HTTP protocol and Cobalt Strike beacon communication model}
+\li{Network monitoring tools (Suricata/Snort) for signature deployment}
+\li{PCAP analysis tools for traffic validation}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Install libraries: \code{\startverb pip install dissect.cobaltstrike\stopverb} or \code{\startverb pip install pyMalleableC2\stopverb}}
+\li{Parse profile with \code{\startverb C2Profile.from_path("profile.profile")\stopverb}}
+\li{Extract HTTP GET/POST block configurations (URIs, headers, parameters)}
+\li{Identify user agent strings and spoof targets}
+\li{Extract sleep time, jitter percentage, and DNS beacon settings}
+\li{Analyze process injection settings (spawn-to, allocation technique)}
+\li{Generate Suricata/Snort signatures from extracted network indicators}
+\li{Compare profile against known threat actor profile collections}
+\li{Extract staging URIs and payload delivery mechanisms}
+\li{Produce detection report with IOCs and recommended network signatures}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{A JSON report containing extracted C2 URIs, HTTP headers, user agents, sleep/jitter settings, process injection config, spawned process paths, DNS settings, and generated Suricata-compatible detection rules.}
+}
+}

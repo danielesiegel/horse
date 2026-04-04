@@ -1,0 +1,172 @@
+\title{Amp Skill}
+
+\taxon{skill}
+
+\meta{description}{Interruption pattern detection and retrieval from Amp thread history. Use for analyzing tool rejection patterns and improving agent behavior.}
+
+\subtree{
+\title{Amp-Skill: Interruption Pattern Detection and Retrieval}
+\p{\strong{GF(3) Trit}: 0 (ERGODIC - coordination layer) \strong{Foundation}: DuckDB ACSet from Amp file-changes}
+
+\subtree{
+\title{Overview}
+\p{Amp-Skill distills usage patterns from Amp thread history, specifically focusing on \strong{interruption patterns} where tool suggestions were rejected in favor of:}
+
+\ol{
+\li{\strong{Two-lock processes} - user requested confirmation before proceeding}
+\li{\strong{Complete discontinuation} - user abandoned the thread entirely}
+\li{\strong{Reverted operations} - user explicitly undid an AI action}
+}
+}
+
+\subtree{
+\title{Retrieval Benchmark Metrics}
+\pre{\startverb
+| Metric | Value |
+|--------|-------|
+| Total Threads | 616 |
+| Total Tool Calls | 2,535 |
+| Threads with Interruptions | 282 (45.8%) |
+| Reverted Tool Calls | 84 (3.3%) |
+| Two-Lock Cascades | 47 |
+| Complete Discontinuations | 22 |
+\stopverb}
+}
+
+\subtree{
+\title{Interruption Pattern Distribution}
+\pre{\startverb
+| Pattern Type | Count | Percentage |
+|--------------|-------|------------|
+| abandoned | 269 | 62.4% |
+| reverted | 84 | 19.5% |
+| two_lock | 47 | 10.9% |
+| discontinuation | 22 | 5.1% |
+| high_rejection | 9 | 2.1% |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Distribution}
+\pre{\startverb
+| Role | Threads | Tool Calls | Reverted |
+|------|---------|------------|----------|
+| MINUS | 218 | 769 | 27 |
+| ERGODIC | 209 | 976 | 26 |
+| PLUS | 189 | 790 | 31 |
+\stopverb}
+}
+
+\subtree{
+\title{File Types Most Frequently Reverted}
+\ol{
+\li{\code{\startverb .org\stopverb} - 28 reverts (Emacs org-mode files)}
+\li{\code{\startverb .py\stopverb} - 20 reverts (Python scripts)}
+\li{\code{\startverb .sh\stopverb} - 18 reverts (Shell scripts)}
+\li{\code{\startverb .md\stopverb} - 15 reverts (Markdown documentation)}
+}
+}
+
+\subtree{
+\title{SQL Access}
+\pre{\startverb
+-- Query interruption patterns
+SELECT * FROM amp_interruptions ORDER BY ts DESC;
+
+-- Find high-rejection threads
+SELECT thread_id, tool_call_count, reverted_count,
+       ROUND(100.0 * reverted_count / tool_call_count, 1) as revert_pct
+FROM amp_threads
+WHERE reverted_count > 0
+ORDER BY revert_pct DESC;
+
+-- Detect two-lock cascades
+SELECT thread_id, COUNT(*) as consecutive_reverts
+FROM amp_interruptions
+WHERE pattern_type = 'two_lock'
+GROUP BY thread_id
+ORDER BY consecutive_reverts DESC;
+\stopverb}
+}
+
+\subtree{
+\title{Key Insights}
+\subtree{
+\title{1. Abandoned Threads (62.4\%)}
+\ul{
+\li{Single tool call threads indicate quick task completion OR user abandonment}
+\li{Requires context analysis to distinguish}
+}
+}
+
+\subtree{
+\title{2. Two-Lock Cascades (10.9\%)}
+\ul{
+\li{47 instances of consecutive reverts within 60 seconds}
+\li{Indicates AI attempting same action repeatedly despite rejection}
+\li{\strong{Action}: Implement backoff after 2 consecutive reverts}
+}
+}
+
+\subtree{
+\title{3. High-Rejection Threads (2.1\%)}
+\ul{
+\li{9 threads with >50\% revert rate}
+\li{Top offender: 100\% revert rate on \code{\startverb capability-signer-prototype.sh\stopverb}}
+\li{\strong{Pattern}: Security-sensitive code rejected multiple times}
+}
+}
+
+\subtree{
+\title{4. File Type Sensitivity}
+\ul{
+\li{\code{\startverb .org\stopverb} files most frequently rejected (28)}
+\li{Personal/organizational files have higher rejection rate}
+\li{\strong{Action}: Add confirmation prompt for org-mode edits}
+}
+}
+}
+
+\subtree{
+\title{Retrieval Benchmark Success Criteria}
+\ul{
+\li{[x] All 616 threads loaded from filesystem}
+\li{[x] All 2,535 tool calls indexed with metadata}
+\li{[x] 5 interruption pattern types detected}
+\li{[x] Two-lock pattern detection via SQL windowing}
+\li{[x] Discontinuation pattern (thread ends on revert)}
+\li{[ ] GF(3) conservation (currently imbalanced by 29)}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Load/refresh Amp threads
+bb scripts/amp_thread_loader.bb
+
+# Query via DuckDB
+duckdb trit_stream.duckdb "SELECT * FROM amp_interruptions"
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Triadic Protocol}
+\p{When Amp-Skill detects a high-rejection pattern:}
+
+\ol{
+\li{\strong{MINUS (-1)}: Validate the rejection pattern}
+\li{\strong{ERGODIC (0)}: Coordinate alternative approaches}
+\li{\strong{PLUS (+1)}: Generate new solution avoiding rejected pattern}
+}
+}
+
+\subtree{
+\title{Data Sources}
+\ul{
+\li{\strong{Local}: \code{\startverb ~/.amp/file-changes/T-*\stopverb} (2,535 files)}
+\li{\strong{API}: None currently (file-changes only contain diffs)}
+\li{\strong{Potential}: Amp GraphQL API for full conversation history}
+}
+}
+}

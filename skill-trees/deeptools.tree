@@ -1,0 +1,678 @@
+\title{Deeptools}
+
+\taxon{skill}
+
+\meta{description}{"NGS analysis toolkit. BAM to bigWig conversion, QC (correlation, PCA, fingerprints), heatmaps/profiles (TSS, peaks), for ChIP-seq, RNA-seq, ATAC-seq visualization."}
+
+\subtree{
+\title{deepTools: NGS Data Analysis Toolkit}
+\subtree{
+\title{Overview}
+\p{deepTools is a comprehensive suite of Python command-line tools designed for processing and analyzing high-throughput sequencing data. Use deepTools to perform quality control, normalize data, compare samples, and generate publication-quality visualizations for ChIP-seq, RNA-seq, ATAC-seq, MNase-seq, and other NGS experiments.}
+
+\p{\strong{Core capabilities:}}
+
+\ul{
+\li{Convert BAM alignments to normalized coverage tracks (bigWig/bedGraph)}
+\li{Quality control assessment (fingerprint, correlation, coverage)}
+\li{Sample comparison and correlation analysis}
+\li{Heatmap and profile plot generation around genomic features}
+\li{Enrichment analysis and peak region visualization}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{\strong{File conversion}: "Convert BAM to bigWig", "generate coverage tracks", "normalize ChIP-seq data"}
+\li{\strong{Quality control}: "check ChIP quality", "compare replicates", "assess sequencing depth", "QC analysis"}
+\li{\strong{Visualization}: "create heatmap around TSS", "plot ChIP signal", "visualize enrichment", "generate profile plot"}
+\li{\strong{Sample comparison}: "compare treatment vs control", "correlate samples", "PCA analysis"}
+\li{\strong{Analysis workflows}: "analyze ChIP-seq data", "RNA-seq coverage", "ATAC-seq analysis", "complete workflow"}
+\li{\strong{Working with specific file types}: BAM files, bigWig files, BED region files in genomics context}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\p{For users new to deepTools, start with file validation and common workflows:}
+
+\subtree{
+\title{1. Validate Input Files}
+\p{Before running any analysis, validate BAM, bigWig, and BED files using the validation script:}
+
+\pre{\startverb
+python scripts/validate_files.py --bam sample1.bam sample2.bam --bed regions.bed
+\stopverb}
+
+\p{This checks file existence, BAM indices, and format correctness.}
+}
+
+\subtree{
+\title{2. Generate Workflow Template}
+\p{For standard analyses, use the workflow generator to create customized scripts:}
+
+\pre{\startverb
+# List available workflows
+python scripts/workflow_generator.py --list
+
+# Generate ChIP-seq QC workflow
+python scripts/workflow_generator.py chipseq_qc -o qc_workflow.sh \
+    --input-bam Input.bam --chip-bams "ChIP1.bam ChIP2.bam" \
+    --genome-size 2913022398
+
+# Make executable and run
+chmod +x qc_workflow.sh
+./qc_workflow.sh
+\stopverb}
+}
+
+\subtree{
+\title{3. Most Common Operations}
+\p{See \code{\startverb assets/quick_reference.md\stopverb} for frequently used commands and parameters.}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install deeptools
+\stopverb}
+}
+
+\subtree{
+\title{Core Workflows}
+\p{deepTools workflows typically follow this pattern: \strong{QC → Normalization → Comparison/Visualization}}
+
+\subtree{
+\title{ChIP-seq Quality Control Workflow}
+\p{When users request ChIP-seq QC or quality assessment:}
+
+\ol{
+\li{\strong{Generate workflow script} using \code{\startverb scripts/workflow_generator.py chipseq_qc\stopverb}}
+\li{\strong{Key QC steps}:}
+\li{Sample correlation (multiBamSummary + plotCorrelation)}
+\li{PCA analysis (plotPCA)}
+\li{Coverage assessment (plotCoverage)}
+\li{Fragment size validation (bamPEFragmentSize)}
+\li{ChIP enrichment strength (plotFingerprint)}
+}
+
+\p{\strong{Interpreting results:}}
+
+\ul{
+\li{\strong{Correlation}: Replicates should cluster together with high correlation (>0.9)}
+\li{\strong{Fingerprint}: Strong ChIP shows steep rise; flat diagonal indicates poor enrichment}
+\li{\strong{Coverage}: Assess if sequencing depth is adequate for analysis}
+}
+
+\p{Full workflow details in \code{\startverb references/workflows.md\stopverb} → "ChIP-seq Quality Control Workflow"}
+}
+
+\subtree{
+\title{ChIP-seq Complete Analysis Workflow}
+\p{For full ChIP-seq analysis from BAM to visualizations:}
+
+\ol{
+\li{\strong{Generate coverage tracks} with normalization (bamCoverage)}
+\li{\strong{Create comparison tracks} (bamCompare for log2 ratio)}
+\li{\strong{Compute signal matrices} around features (computeMatrix)}
+\li{\strong{Generate visualizations} (plotHeatmap, plotProfile)}
+\li{\strong{Enrichment analysis} at peaks (plotEnrichment)}
+}
+
+\p{Use \code{\startverb scripts/workflow_generator.py chipseq_analysis\stopverb} to generate template.}
+
+\p{Complete command sequences in \code{\startverb references/workflows.md\stopverb} → "ChIP-seq Analysis Workflow"}
+}
+
+\subtree{
+\title{RNA-seq Coverage Workflow}
+\p{For strand-specific RNA-seq coverage tracks:}
+
+\p{Use bamCoverage with \code{\startverb --filterRNAstrand\stopverb} to separate forward and reverse strands.}
+
+\p{\strong{Important:} NEVER use \code{\startverb --extendReads\stopverb} for RNA-seq (would extend over splice junctions).}
+
+\p{Use normalization: CPM for fixed bins, RPKM for gene-level analysis.}
+
+\p{Template available: \code{\startverb scripts/workflow_generator.py rnaseq_coverage\stopverb}}
+
+\p{Details in \code{\startverb references/workflows.md\stopverb} → "RNA-seq Coverage Workflow"}
+}
+
+\subtree{
+\title{ATAC-seq Analysis Workflow}
+\p{ATAC-seq requires Tn5 offset correction:}
+
+\ol{
+\li{\strong{Shift reads} using alignmentSieve with \code{\startverb --ATACshift\stopverb}}
+\li{\strong{Generate coverage} with bamCoverage}
+\li{\strong{Analyze fragment sizes} (expect nucleosome ladder pattern)}
+\li{\strong{Visualize at peaks} if available}
+}
+
+\p{Template: \code{\startverb scripts/workflow_generator.py atacseq\stopverb}}
+
+\p{Full workflow in \code{\startverb references/workflows.md\stopverb} → "ATAC-seq Workflow"}
+}
+}
+
+\subtree{
+\title{Tool Categories and Common Tasks}
+\subtree{
+\title{BAM/bigWig Processing}
+\p{\strong{Convert BAM to normalized coverage:}}
+
+\pre{\startverb
+bamCoverage --bam input.bam --outFileName output.bw \
+    --normalizeUsing RPGC --effectiveGenomeSize 2913022398 \
+    --binSize 10 --numberOfProcessors 8
+\stopverb}
+
+\p{\strong{Compare two samples (log2 ratio):}}
+
+\pre{\startverb
+bamCompare -b1 treatment.bam -b2 control.bam -o ratio.bw \
+    --operation log2 --scaleFactorsMethod readCount
+\stopverb}
+
+\p{\strong{Key tools:} bamCoverage, bamCompare, multiBamSummary, multiBigwigSummary, correctGCBias, alignmentSieve}
+
+\p{Complete reference: \code{\startverb references/tools_reference.md\stopverb} → "BAM and bigWig File Processing Tools"}
+}
+
+\subtree{
+\title{Quality Control}
+\p{\strong{Check ChIP enrichment:}}
+
+\pre{\startverb
+plotFingerprint -b input.bam chip.bam -o fingerprint.png \
+    --extendReads 200 --ignoreDuplicates
+\stopverb}
+
+\p{\strong{Sample correlation:}}
+
+\pre{\startverb
+multiBamSummary bins --bamfiles *.bam -o counts.npz
+plotCorrelation -in counts.npz --corMethod pearson \
+    --whatToShow heatmap -o correlation.png
+\stopverb}
+
+\p{\strong{Key tools:} plotFingerprint, plotCoverage, plotCorrelation, plotPCA, bamPEFragmentSize}
+
+\p{Complete reference: \code{\startverb references/tools_reference.md\stopverb} → "Quality Control Tools"}
+}
+
+\subtree{
+\title{Visualization}
+\p{\strong{Create heatmap around TSS:}}
+
+\pre{\startverb
+# Compute matrix
+computeMatrix reference-point -S signal.bw -R genes.bed \
+    -b 3000 -a 3000 --referencePoint TSS -o matrix.gz
+
+# Generate heatmap
+plotHeatmap -m matrix.gz -o heatmap.png \
+    --colorMap RdBu --kmeans 3
+\stopverb}
+
+\p{\strong{Create profile plot:}}
+
+\pre{\startverb
+plotProfile -m matrix.gz -o profile.png \
+    --plotType lines --colors blue red
+\stopverb}
+
+\p{\strong{Key tools:} computeMatrix, plotHeatmap, plotProfile, plotEnrichment}
+
+\p{Complete reference: \code{\startverb references/tools_reference.md\stopverb} → "Visualization Tools"}
+}
+}
+
+\subtree{
+\title{Normalization Methods}
+\p{Choosing the correct normalization is critical for valid comparisons. Consult \code{\startverb references/normalization_methods.md\stopverb} for comprehensive guidance.}
+
+\p{\strong{Quick selection guide:}}
+
+\ul{
+\li{\strong{ChIP-seq coverage}: Use RPGC or CPM}
+\li{\strong{ChIP-seq comparison}: Use bamCompare with log2 and readCount}
+\li{\strong{RNA-seq bins}: Use CPM}
+\li{\strong{RNA-seq genes}: Use RPKM (accounts for gene length)}
+\li{\strong{ATAC-seq}: Use RPGC or CPM}
+}
+
+\p{\strong{Normalization methods:}}
+
+\ul{
+\li{\strong{RPGC}: 1× genome coverage (requires --effectiveGenomeSize)}
+\li{\strong{CPM}: Counts per million mapped reads}
+\li{\strong{RPKM}: Reads per kb per million (accounts for region length)}
+\li{\strong{BPM}: Bins per million}
+\li{\strong{None}: Raw counts (not recommended for comparisons)}
+}
+
+\p{Full explanation: \code{\startverb references/normalization_methods.md\stopverb}}
+}
+
+\subtree{
+\title{Effective Genome Sizes}
+\p{RPGC normalization requires effective genome size. Common values:}
+
+\pre{\startverb
+| Organism | Assembly | Size | Usage |
+|----------|----------|------|-------|
+| Human | GRCh38/hg38 | 2,913,022,398 | `--effectiveGenomeSize 2913022398` |
+| Mouse | GRCm38/mm10 | 2,652,783,500 | `--effectiveGenomeSize 2652783500` |
+| Zebrafish | GRCz11 | 1,368,780,147 | `--effectiveGenomeSize 1368780147` |
+| *Drosophila* | dm6 | 142,573,017 | `--effectiveGenomeSize 142573017` |
+| *C. elegans* | ce10/ce11 | 100,286,401 | `--effectiveGenomeSize 100286401` |
+\stopverb}
+
+\p{Complete table with read-length-specific values: \code{\startverb references/effective_genome_sizes.md\stopverb}}
+}
+
+\subtree{
+\title{Common Parameters Across Tools}
+\p{Many deepTools commands share these options:}
+
+\p{\strong{Performance:}}
+
+\ul{
+\li{\code{\startverb --numberOfProcessors, -p\stopverb}: Enable parallel processing (always use available cores)}
+\li{\code{\startverb --region\stopverb}: Process specific regions for testing (e.g., \code{\startverb chr1:1-1000000\stopverb})}
+}
+
+\p{\strong{Read Filtering:}}
+
+\ul{
+\li{\code{\startverb --ignoreDuplicates\stopverb}: Remove PCR duplicates (recommended for most analyses)}
+\li{\code{\startverb --minMappingQuality\stopverb}: Filter by alignment quality (e.g., \code{\startverb --minMappingQuality 10\stopverb})}
+\li{\code{\startverb --minFragmentLength\stopverb} / \code{\startverb --maxFragmentLength\stopverb}: Fragment length bounds}
+\li{\code{\startverb --samFlagInclude\stopverb} / \code{\startverb --samFlagExclude\stopverb}: SAM flag filtering}
+}
+
+\p{\strong{Read Processing:}}
+
+\ul{
+\li{\code{\startverb --extendReads\stopverb}: Extend to fragment length (ChIP-seq: YES, RNA-seq: NO)}
+\li{\code{\startverb --centerReads\stopverb}: Center at fragment midpoint for sharper signals}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{File Validation}
+\p{\strong{Always validate files first} using \code{\startverb scripts/validate_files.py\stopverb} to check:}
+
+\ul{
+\li{File existence and readability}
+\li{BAM indices present (.bai files)}
+\li{BED format correctness}
+\li{File sizes reasonable}
+}
+}
+
+\subtree{
+\title{Analysis Strategy}
+\ol{
+\li{\strong{Start with QC}: Run correlation, coverage, and fingerprint analysis before proceeding}
+\li{\strong{Test on small regions}: Use \code{\startverb --region chr1:1-10000000\stopverb} for parameter testing}
+\li{\strong{Document commands}: Save full command lines for reproducibility}
+\li{\strong{Use consistent normalization}: Apply same method across samples in comparisons}
+\li{\strong{Verify genome assembly}: Ensure BAM and BED files use matching genome builds}
+}
+}
+
+\subtree{
+\title{ChIP-seq Specific}
+\ul{
+\li{\strong{Always extend reads} for ChIP-seq: \code{\startverb --extendReads 200\stopverb}}
+\li{\strong{Remove duplicates}: Use \code{\startverb --ignoreDuplicates\stopverb} in most cases}
+\li{\strong{Check enrichment first}: Run plotFingerprint before detailed analysis}
+\li{\strong{GC correction}: Only apply if significant bias detected; never use \code{\startverb --ignoreDuplicates\stopverb} after GC correction}
+}
+}
+
+\subtree{
+\title{RNA-seq Specific}
+\ul{
+\li{\strong{Never extend reads} for RNA-seq (would span splice junctions)}
+\li{\strong{Strand-specific}: Use \code{\startverb --filterRNAstrand forward/reverse\stopverb} for stranded libraries}
+\li{\strong{Normalization}: CPM for bins, RPKM for genes}
+}
+}
+
+\subtree{
+\title{ATAC-seq Specific}
+\ul{
+\li{\strong{Apply Tn5 correction}: Use alignmentSieve with \code{\startverb --ATACshift\stopverb}}
+\li{\strong{Fragment filtering}: Set appropriate min/max fragment lengths}
+\li{\strong{Check nucleosome pattern}: Fragment size plot should show ladder pattern}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\ol{
+\li{\strong{Use multiple processors}: \code{\startverb --numberOfProcessors 8\stopverb} (or available cores)}
+\li{\strong{Increase bin size} for faster processing and smaller files}
+\li{\strong{Process chromosomes separately} for memory-limited systems}
+\li{\strong{Pre-filter BAM files} using alignmentSieve to create reusable filtered files}
+\li{\strong{Use bigWig over bedGraph}: Compressed and faster to process}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{BAM index missing:}}
+
+\pre{\startverb
+samtools index input.bam
+\stopverb}
+
+\p{\strong{Out of memory:} Process chromosomes individually using \code{\startverb --region\stopverb}:}
+
+\pre{\startverb
+bamCoverage --bam input.bam -o chr1.bw --region chr1
+\stopverb}
+
+\p{\strong{Slow processing:} Increase \code{\startverb --numberOfProcessors\stopverb} and/or increase \code{\startverb --binSize\stopverb}}
+
+\p{\strong{bigWig files too large:} Increase bin size: \code{\startverb --binSize 50\stopverb} or larger}
+}
+
+\subtree{
+\title{Validation Errors}
+\p{Run validation script to identify issues:}
+
+\pre{\startverb
+python scripts/validate_files.py --bam *.bam --bed regions.bed
+\stopverb}
+
+\p{Common errors and solutions explained in script output.}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{This skill includes comprehensive reference documentation:}
+
+\subtree{
+\title{references/tools_reference.md}
+\p{Complete documentation of all deepTools commands organized by category:}
+
+\ul{
+\li{BAM and bigWig processing tools (9 tools)}
+\li{Quality control tools (6 tools)}
+\li{Visualization tools (3 tools)}
+\li{Miscellaneous tools (2 tools)}
+}
+
+\p{Each tool includes:}
+
+\ul{
+\li{Purpose and overview}
+\li{Key parameters with explanations}
+\li{Usage examples}
+\li{Important notes and best practices}
+}
+
+\p{\strong{Use this reference when:} Users ask about specific tools, parameters, or detailed usage.}
+}
+
+\subtree{
+\title{references/workflows.md}
+\p{Complete workflow examples for common analyses:}
+
+\ul{
+\li{ChIP-seq quality control workflow}
+\li{ChIP-seq complete analysis workflow}
+\li{RNA-seq coverage workflow}
+\li{ATAC-seq analysis workflow}
+\li{Multi-sample comparison workflow}
+\li{Peak region analysis workflow}
+\li{Troubleshooting and performance tips}
+}
+
+\p{\strong{Use this reference when:} Users need complete analysis pipelines or workflow examples.}
+}
+
+\subtree{
+\title{references/normalization_methods.md}
+\p{Comprehensive guide to normalization methods:}
+
+\ul{
+\li{Detailed explanation of each method (RPGC, CPM, RPKM, BPM, etc.)}
+\li{When to use each method}
+\li{Formulas and interpretation}
+\li{Selection guide by experiment type}
+\li{Common pitfalls and solutions}
+\li{Quick reference table}
+}
+
+\p{\strong{Use this reference when:} Users ask about normalization, comparing samples, or which method to use.}
+}
+
+\subtree{
+\title{references/effective_genome_sizes.md}
+\p{Effective genome size values and usage:}
+
+\ul{
+\li{Common organism values (human, mouse, fly, worm, zebrafish)}
+\li{Read-length-specific values}
+\li{Calculation methods}
+\li{When and how to use in commands}
+\li{Custom genome calculation instructions}
+}
+
+\p{\strong{Use this reference when:} Users need genome size for RPGC normalization or GC bias correction.}
+}
+}
+
+\subtree{
+\title{Helper Scripts}
+\subtree{
+\title{scripts/validate_files.py}
+\p{Validates BAM, bigWig, and BED files for deepTools analysis. Checks file existence, indices, and format.}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+python scripts/validate_files.py --bam sample1.bam sample2.bam \
+    --bed peaks.bed --bigwig signal.bw
+\stopverb}
+
+\p{\strong{When to use:} Before starting any analysis, or when troubleshooting errors.}
+}
+
+\subtree{
+\title{scripts/workflow_generator.py}
+\p{Generates customizable bash script templates for common deepTools workflows.}
+
+\p{\strong{Available workflows:}}
+
+\ul{
+\li{\code{\startverb chipseq_qc\stopverb}: ChIP-seq quality control}
+\li{\code{\startverb chipseq_analysis\stopverb}: Complete ChIP-seq analysis}
+\li{\code{\startverb rnaseq_coverage\stopverb}: Strand-specific RNA-seq coverage}
+\li{\code{\startverb atacseq\stopverb}: ATAC-seq with Tn5 correction}
+}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+# List workflows
+python scripts/workflow_generator.py --list
+
+# Generate workflow
+python scripts/workflow_generator.py chipseq_qc -o qc.sh \
+    --input-bam Input.bam --chip-bams "ChIP1.bam ChIP2.bam" \
+    --genome-size 2913022398 --threads 8
+
+# Run generated workflow
+chmod +x qc.sh
+./qc.sh
+\stopverb}
+
+\p{\strong{When to use:} Users request standard workflows or need template scripts to customize.}
+}
+}
+
+\subtree{
+\title{Assets}
+\subtree{
+\title{assets/quick_reference.md}
+\p{Quick reference card with most common commands, effective genome sizes, and typical workflow pattern.}
+
+\p{\strong{When to use:} Users need quick command examples without detailed documentation.}
+}
+}
+
+\subtree{
+\title{Handling User Requests}
+\subtree{
+\title{For New Users}
+\ol{
+\li{Start with installation verification}
+\li{Validate input files using \code{\startverb scripts/validate_files.py\stopverb}}
+\li{Recommend appropriate workflow based on experiment type}
+\li{Generate workflow template using \code{\startverb scripts/workflow_generator.py\stopverb}}
+\li{Guide through customization and execution}
+}
+}
+
+\subtree{
+\title{For Experienced Users}
+\ol{
+\li{Provide specific tool commands for requested operations}
+\li{Reference appropriate sections in \code{\startverb references/tools_reference.md\stopverb}}
+\li{Suggest optimizations and best practices}
+\li{Offer troubleshooting for issues}
+}
+}
+
+\subtree{
+\title{For Specific Tasks}
+\p{\strong{"Convert BAM to bigWig":}}
+
+\ul{
+\li{Use bamCoverage with appropriate normalization}
+\li{Recommend RPGC or CPM based on use case}
+\li{Provide effective genome size for organism}
+\li{Suggest relevant parameters (extendReads, ignoreDuplicates, binSize)}
+}
+
+\p{\strong{"Check ChIP quality":}}
+
+\ul{
+\li{Run full QC workflow or use plotFingerprint specifically}
+\li{Explain interpretation of results}
+\li{Suggest follow-up actions based on results}
+}
+
+\p{\strong{"Create heatmap":}}
+
+\ul{
+\li{Guide through two-step process: computeMatrix → plotHeatmap}
+\li{Help choose appropriate matrix mode (reference-point vs scale-regions)}
+\li{Suggest visualization parameters and clustering options}
+}
+
+\p{\strong{"Compare samples":}}
+
+\ul{
+\li{Recommend bamCompare for two-sample comparison}
+\li{Suggest multiBamSummary + plotCorrelation for multiple samples}
+\li{Guide normalization method selection}
+}
+}
+
+\subtree{
+\title{Referencing Documentation}
+\p{When users need detailed information:}
+
+\ul{
+\li{\strong{Tool details}: Direct to specific sections in \code{\startverb references/tools_reference.md\stopverb}}
+\li{\strong{Workflows}: Use \code{\startverb references/workflows.md\stopverb} for complete analysis pipelines}
+\li{\strong{Normalization}: Consult \code{\startverb references/normalization_methods.md\stopverb} for method selection}
+\li{\strong{Genome sizes}: Reference \code{\startverb references/effective_genome_sizes.md\stopverb}}
+}
+
+\p{Search references using grep patterns:}
+
+\pre{\startverb
+# Find tool documentation
+grep -A 20 "^### toolname" references/tools_reference.md
+
+# Find workflow
+grep -A 50 "^## Workflow Name" references/workflows.md
+
+# Find normalization method
+grep -A 15 "^### Method Name" references/normalization_methods.md
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Interactions}
+\p{\strong{User: "I need to analyze my ChIP-seq data"}}
+
+\p{Response approach:}
+
+\ol{
+\li{Ask about files available (BAM files, peaks, genes)}
+\li{Validate files using validation script}
+\li{Generate chipseq_analysis workflow template}
+\li{Customize for their specific files and organism}
+\li{Explain each step as script runs}
+}
+
+\p{\strong{User: "Which normalization should I use?"}}
+
+\p{Response approach:}
+
+\ol{
+\li{Ask about experiment type (ChIP-seq, RNA-seq, etc.)}
+\li{Ask about comparison goal (within-sample or between-sample)}
+\li{Consult \code{\startverb references/normalization_methods.md\stopverb} selection guide}
+\li{Recommend appropriate method with justification}
+\li{Provide command example with parameters}
+}
+
+\p{\strong{User: "Create a heatmap around TSS"}}
+
+\p{Response approach:}
+
+\ol{
+\li{Verify bigWig and gene BED files available}
+\li{Use computeMatrix with reference-point mode at TSS}
+\li{Generate plotHeatmap with appropriate visualization parameters}
+\li{Suggest clustering if dataset is large}
+\li{Offer profile plot as complement}
+}
+}
+
+\subtree{
+\title{Key Reminders}
+\ul{
+\li{\strong{File validation first}: Always validate input files before analysis}
+\li{\strong{Normalization matters}: Choose appropriate method for comparison type}
+\li{\strong{Extend reads carefully}: YES for ChIP-seq, NO for RNA-seq}
+\li{\strong{Use all cores}: Set \code{\startverb --numberOfProcessors\stopverb} to available cores}
+\li{\strong{Test on regions}: Use \code{\startverb --region\stopverb} for parameter testing}
+\li{\strong{Check QC first}: Run quality control before detailed analysis}
+\li{\strong{Document everything}: Save commands for reproducibility}
+\li{\strong{Reference documentation}: Use comprehensive references for detailed guidance}
+}
+}
+}

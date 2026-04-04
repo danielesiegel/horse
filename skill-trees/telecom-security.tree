@@ -1,0 +1,247 @@
+\title{Telecom Security}
+
+\taxon{skill}
+
+\meta{description}{Assess telecommunications infrastructure security including VoIP/SIP, SS7/Diameter, cellular networks, SMS-based authentication, and telephony-integrated applications. Identifies vulnerabilities in phone-based verification, call routing, and telecom protocol implementations. Use when auditing SMS 2FA, VoIP systems, IVR applications, or any telephony-dependent security controls.}
+
+\subtree{
+\title{Telecom Security Audit Skill}
+\subtree{
+\title{When to Use}
+\p{Activate this skill when the engagement involves:}
+
+\ul{
+\li{\strong{SMS-based 2FA/MFA} — assessing OTP delivery, SIM swap risk, interception vectors}
+\li{\strong{SIP/VoIP infrastructure} — auditing PBX, softphones, SIP trunks, WebRTC gateways}
+\li{\strong{IVR systems} — interactive voice response security, DTMF handling, menu traversal}
+\li{\strong{Call center authentication} — knowledge-based auth, callback verification, social engineering resistance}
+\li{\strong{Telephony APIs} — Twilio, Vonage, Bandwidth, Plivo, Telnyx integration security}
+\li{\strong{Cellular security} — baseband, IMSI catchers, roaming, carrier interconnects}
+\li{\strong{Carrier-grade infrastructure} — SS7/SIGTRAN, Diameter, GTP, SIM provisioning}
+}
+}
+
+\subtree{
+\title{Historical Context}
+\p{The name \strong{2600} comes from a 2600 Hz tone — the exact frequency that, when played into an AT&T long-distance trunk line, seized control of the switch. This was in-band signaling: control data traveled on the same channel as voice, so anyone who could produce the tone could command the network.}
+
+\ul{
+\li{\strong{Blue box}: generated MF (multi-frequency) tones to route calls after seizing a trunk with 2600 Hz}
+\li{\strong{Red box}: simulated coin deposit tones on payphones}
+\li{\strong{Black box}: manipulated line voltage to prevent billing on incoming calls}
+}
+
+\p{The fundamental lesson: \strong{when control signaling shares a channel with user data, users become operators.} AT&T eventually moved to out-of-band signaling (SS7), but SS7 introduced its own trust model vulnerability — carriers implicitly trust each other, and that trust is now exploitable by anyone with an SS7 interconnect.}
+}
+
+\subtree{
+\title{Attack Surface Taxonomy}
+\subtree{
+\title{SS7/MAP (Legacy Signaling)}
+\ul{
+\li{\strong{Location tracking}: \code{\startverb SendRoutingInfo\stopverb} / \code{\startverb ProvideSubscriberInfo\stopverb} queries reveal cell tower location}
+\li{\strong{SMS interception}: \code{\startverb UpdateLocation\stopverb} re-registers victim to attacker-controlled MSC}
+\li{\strong{Call interception}: \code{\startverb InsertSubscriberData\stopverb} redirects call forwarding}
+\li{\strong{Authentication bypass}: obtain IMSI, trigger re-authentication to capture triplets}
+}
+}
+
+\subtree{
+\title{Diameter (4G/5G Signaling)}
+\ul{
+\li{Roaming scenarios inherit SS7's implicit trust between carriers}
+\li{S6a/S6d interfaces expose subscriber data during inter-PLMN handoffs}
+\li{Diameter Edge Agents (DEA) provide filtering, but coverage is inconsistent}
+}
+}
+
+\subtree{
+\title{SIP/VoIP}
+\ul{
+\li{\strong{Registration hijacking}: unauthenticated REGISTER, digest auth brute force}
+\li{\strong{Eavesdropping}: RTP without SRTP, SIP without TLS}
+\li{\strong{Toll fraud}: compromised endpoints used for premium-rate number dialing}
+\li{\strong{Caller ID spoofing}: \code{\startverb From\stopverb} header trivially set to any value}
+\li{\strong{SRTP key negotiation}: SRTP-SDES sends keys in plaintext SDP (use DTLS-SRTP instead)}
+}
+}
+
+\subtree{
+\title{SMS/OTP}
+\ul{
+\li{\strong{SS7 interception}: redirect SMS at the network level (proven in real attacks)}
+\li{\strong{SIM swap}: social engineering carrier support to port number to attacker SIM}
+\li{\strong{Smishing}: SMS phishing with shortened/obfuscated URLs}
+\li{\strong{OTP interception}: malware with SMS read permission on Android}
+}
+}
+
+\subtree{
+\title{IVR/DTMF}
+\ul{
+\li{\strong{Brute force}: PIN/account number guessing via rapid DTMF input}
+\li{\strong{Menu traversal}: undocumented options, debug menus, operator escape sequences}
+\li{\strong{Information disclosure}: reading back account details, SSN, balances without strong auth}
+\li{\strong{Recording exposure}: call recordings stored without encryption or access control}
+}
+}
+
+\subtree{
+\title{Caller ID / ANI}
+\ul{
+\li{\strong{Caller ID (CNAM)}: trivially spoofable — no cryptographic verification in legacy PSTN}
+\li{\strong{STIR/SHAKEN}: adds certificate-based attestation but adoption is still incomplete}
+\li{\strong{ANI vs Caller ID}: ANI is harder to spoof but not immune in VoIP-to-PSTN transitions}
+}
+}
+
+\subtree{
+\title{SIM Security}
+\ul{
+\li{\strong{SIM swap}: social engineering carrier reps, insider threats, automated porting attacks}
+\li{\strong{SIM cloning}: legacy Comp128v1 vulnerability (historical, mostly patched)}
+\li{\strong{eSIM provisioning}: QR code interception, SM-DP+ server compromise}
+\li{\strong{SIM toolkit (STK)}: Simjacker-style attacks via crafted OTA SMS}
+}
+}
+
+\subtree{
+\title{Telephony APIs}
+\ul{
+\li{\strong{Webhook spoofing}: attacker sends fake status callbacks to application endpoints}
+\li{\strong{Credential leakage}: API keys/auth tokens in client-side code, logs, or VCS history}
+\li{\strong{Rate limiting gaps}: no throttle on verification SMS sends (cost amplification, spam)}
+\li{\strong{Number enumeration}: carrier lookup APIs reveal active numbers and carrier info}
+}
+}
+}
+
+\subtree{
+\title{Audit Methodology}
+\ol{
+\li{\strong{Enumerate telephony-dependent auth paths}}
+\li{Map every flow that uses phone numbers: login, password reset, transaction verification}
+\li{Identify which are SMS-only vs. offering TOTP/WebAuthn alternatives}
+}
+
+\ol{
+\li{\strong{Assess SMS 2FA for known bypass vectors}}
+\li{Can an attacker SIM-swap the target? (carrier policy, account PIN, port-out protection)}
+\li{Is the application vulnerable if SMS is intercepted? (session fixation, race conditions)}
+\li{Are OTPs time-limited and single-use? Are they sufficiently long (6+ digits)?}
+}
+
+\ol{
+\li{\strong{Test caller ID verification}}
+\li{Can a spoofed caller ID bypass IVR authentication?}
+\li{Does the system use callback verification for sensitive operations?}
+\li{Is STIR/SHAKEN attestation level checked for incoming SIP calls?}
+}
+
+\ol{
+\li{\strong{Audit VoIP configuration}}
+\li{SIP: TLS enabled? Certificate validation? Digest auth or mutual TLS?}
+\li{Media: SRTP enforced? DTLS-SRTP or SDES? Key management reviewed?}
+\li{Registration: rate limiting on REGISTER? Fail2ban or equivalent?}
+}
+
+\ol{
+\li{\strong{Review IVR security}}
+\li{Lockout after N failed PIN attempts?}
+\li{Sensitive data readback requires step-up authentication?}
+\li{Debug/admin menus accessible from external callers?}
+}
+
+\ol{
+\li{\strong{Test telephony API integration}}
+\li{Webhook endpoints validate request signatures (e.g., Twilio \code{\startverb X-Twilio-Signature\stopverb})?}
+\li{Replay protection via timestamp validation?}
+\li{API credentials rotated, scoped to minimum permissions?}
+}
+
+\ol{
+\li{\strong{Assess carrier/provider resilience}}
+\li{Single carrier dependency? Failover path?}
+\li{Geographic number portability risks?}
+\li{Provider SLA and incident response capability?}
+}
+}
+
+\subtree{
+\title{Code Review Patterns}
+\p{Look for these anti-patterns during source review:}
+
+\pre{\startverb
+# FINDING: SMS as sole second factor — no TOTP/WebAuthn alternative
+if user.mfa_method == "sms":
+    send_otp(user.phone_number)  # No fallback offered
+
+# FINDING: Phone number as primary account identifier
+user = User.objects.get(phone=request.data["phone"])  # SIM swap = account takeover
+
+# FINDING: Caller ID trusted for authentication
+if call.caller_id == expected_number:
+    grant_access()  # Trivially spoofable
+
+# FINDING: SIP credentials in plaintext config
+SIP_PASSWORD = "oops-plaintext"  # Should use secrets manager
+
+# FINDING: No SRTP — voice traffic sent unencrypted
+media_encryption = "none"  # Should be "srtp" with DTLS key exchange
+
+# FINDING: Telephony webhook without signature verification
+@app.route("/twilio/status", methods=["POST"])
+def status_callback():
+    process(request.form)  # No X-Twilio-Signature check
+
+# FINDING: No rate limiting on phone verification endpoint
+@app.route("/verify/send", methods=["POST"])
+def send_verification():
+    send_sms(request.json["phone"])  # Unlimited sends = cost amplification
+
+# FINDING: Phone number enumeration via error differences
+if not user_exists(phone):
+    return {"error": "User not found"}  # vs. "Invalid credentials"
+\stopverb}
+}
+
+\subtree{
+\title{Remediation Quick Reference}
+\pre{\startverb
+| Issue | Remediation |
+|-------|-------------|
+| SMS as sole 2FA | Offer TOTP (RFC 6238) or WebAuthn as alternatives |
+| SIM swap risk | Enable carrier port-out PIN, number lock, SIM swap detection alerts |
+| Caller ID trusted | Never authenticate on caller ID alone; use callback verification |
+| SIP without TLS | Enforce TLS 1.2+ for signaling, validate certificates |
+| RTP without SRTP | Enforce SRTP with DTLS-SRTP key exchange (not SDES) |
+| IVR PIN brute force | Lockout after 3-5 failures, exponential backoff, CAPTCHA for web-initiated calls |
+| Webhook spoofing | Validate HMAC signatures, check timestamps, reject replays >5 min |
+| Number enumeration | Uniform error responses, rate limit lookup endpoints |
+| API key exposure | Use environment variables or secrets manager, rotate regularly, scope permissions |
+| No OTP expiry | OTPs expire in 5-10 minutes, single-use, minimum 6 digits |
+\stopverb}
+}
+
+\subtree{
+\title{Tools Reference}
+\ul{
+\li{\strong{SIPVicious} (\code{\startverb sipvicious\stopverb}): SIP scanning, enumeration, password cracking}
+\li{\strong{Ohrwurm}: RTP fuzzer for VoIP}
+\li{\strong{Mr.SIP}: SIP-based audit and attack tool}
+\li{\strong{SigPloit}: SS7/Diameter/GTP pentesting framework}
+\li{\strong{Owasp VoIPAudit}: VoIP security testing methodology}
+\li{\strong{Owasp Owasp Telephony cheatsheet}: telephony security reference}
+\li{\strong{Owasp Testing Guide}: relevant sections on OTP, 2FA bypass}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb social-engineering-audit\stopverb} — SIM swap and call center pretexting vectors}
+\li{\code{\startverb entry-point-analyzer\stopverb} — mapping telephony-dependent authentication surfaces}
+\li{\code{\startverb static-security-analyzer\stopverb} — scanning for hardcoded SIP credentials and API keys}
+}
+}
+}

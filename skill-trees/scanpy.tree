@@ -1,0 +1,456 @@
+\title{Scanpy}
+
+\taxon{skill}
+
+\meta{description}{"Single-cell RNA-seq analysis. Load .h5ad/10X data, QC, normalization, PCA/UMAP/t-SNE, Leiden clustering, marker genes, cell type annotation, trajectory, for scRNA-seq analysis."}
+
+\subtree{
+\title{Scanpy: Single-Cell Analysis}
+\subtree{
+\title{Overview}
+\p{Scanpy is a scalable Python toolkit for analyzing single-cell RNA-seq data, built on AnnData. Apply this skill for complete single-cell workflows including quality control, normalization, dimensionality reduction, clustering, marker gene identification, visualization, and trajectory analysis.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Analyzing single-cell RNA-seq data (.h5ad, 10X, CSV formats)}
+\li{Performing quality control on scRNA-seq datasets}
+\li{Creating UMAP, t-SNE, or PCA visualizations}
+\li{Identifying cell clusters and finding marker genes}
+\li{Annotating cell types based on gene expression}
+\li{Conducting trajectory inference or pseudotime analysis}
+\li{Generating publication-quality single-cell plots}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Basic Import and Setup}
+\pre{\startverb
+import scanpy as sc
+import pandas as pd
+import numpy as np
+
+# Configure settings
+sc.settings.verbosity = 3
+sc.settings.set_figure_params(dpi=80, facecolor='white')
+sc.settings.figdir = './figures/'
+\stopverb}
+}
+
+\subtree{
+\title{Loading Data}
+\pre{\startverb
+# From 10X Genomics
+adata = sc.read_10x_mtx('path/to/data/')
+adata = sc.read_10x_h5('path/to/data.h5')
+
+# From h5ad (AnnData format)
+adata = sc.read_h5ad('path/to/data.h5ad')
+
+# From CSV
+adata = sc.read_csv('path/to/data.csv')
+\stopverb}
+}
+
+\subtree{
+\title{Understanding AnnData Structure}
+\p{The AnnData object is the core data structure in scanpy:}
+
+\pre{\startverb
+adata.X          # Expression matrix (cells × genes)
+adata.obs        # Cell metadata (DataFrame)
+adata.var        # Gene metadata (DataFrame)
+adata.uns        # Unstructured annotations (dict)
+adata.obsm       # Multi-dimensional cell data (PCA, UMAP)
+adata.raw        # Raw data backup
+
+# Access cell and gene names
+adata.obs_names  # Cell barcodes
+adata.var_names  # Gene names
+\stopverb}
+}
+}
+
+\subtree{
+\title{Standard Analysis Workflow}
+\subtree{
+\title{1. Quality Control}
+\p{Identify and filter low-quality cells and genes:}
+
+\pre{\startverb
+# Identify mitochondrial genes
+adata.var['mt'] = adata.var_names.str.startswith('MT-')
+
+# Calculate QC metrics
+sc.pp.calculate_qc_metrics(adata, qc_vars=['mt'], inplace=True)
+
+# Visualize QC metrics
+sc.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt'],
+             jitter=0.4, multi_panel=True)
+
+# Filter cells and genes
+sc.pp.filter_cells(adata, min_genes=200)
+sc.pp.filter_genes(adata, min_cells=3)
+adata = adata[adata.obs.pct_counts_mt < 5, :]  # Remove high MT% cells
+\stopverb}
+
+\p{\strong{Use the QC script for automated analysis:}}
+
+\pre{\startverb
+python scripts/qc_analysis.py input_file.h5ad --output filtered.h5ad
+\stopverb}
+}
+
+\subtree{
+\title{2. Normalization and Preprocessing}
+\pre{\startverb
+# Normalize to 10,000 counts per cell
+sc.pp.normalize_total(adata, target_sum=1e4)
+
+# Log-transform
+sc.pp.log1p(adata)
+
+# Save raw counts for later
+adata.raw = adata
+
+# Identify highly variable genes
+sc.pp.highly_variable_genes(adata, n_top_genes=2000)
+sc.pl.highly_variable_genes(adata)
+
+# Subset to highly variable genes
+adata = adata[:, adata.var.highly_variable]
+
+# Regress out unwanted variation
+sc.pp.regress_out(adata, ['total_counts', 'pct_counts_mt'])
+
+# Scale data
+sc.pp.scale(adata, max_value=10)
+\stopverb}
+}
+
+\subtree{
+\title{3. Dimensionality Reduction}
+\pre{\startverb
+# PCA
+sc.tl.pca(adata, svd_solver='arpack')
+sc.pl.pca_variance_ratio(adata, log=True)  # Check elbow plot
+
+# Compute neighborhood graph
+sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+
+# UMAP for visualization
+sc.tl.umap(adata)
+sc.pl.umap(adata, color='leiden')
+
+# Alternative: t-SNE
+sc.tl.tsne(adata)
+\stopverb}
+}
+
+\subtree{
+\title{4. Clustering}
+\pre{\startverb
+# Leiden clustering (recommended)
+sc.tl.leiden(adata, resolution=0.5)
+sc.pl.umap(adata, color='leiden', legend_loc='on data')
+
+# Try multiple resolutions to find optimal granularity
+for res in [0.3, 0.5, 0.8, 1.0]:
+    sc.tl.leiden(adata, resolution=res, key_added=f'leiden_{res}')
+\stopverb}
+}
+
+\subtree{
+\title{5. Marker Gene Identification}
+\pre{\startverb
+# Find marker genes for each cluster
+sc.tl.rank_genes_groups(adata, 'leiden', method='wilcoxon')
+
+# Visualize results
+sc.pl.rank_genes_groups(adata, n_genes=25, sharey=False)
+sc.pl.rank_genes_groups_heatmap(adata, n_genes=10)
+sc.pl.rank_genes_groups_dotplot(adata, n_genes=5)
+
+# Get results as DataFrame
+markers = sc.get.rank_genes_groups_df(adata, group='0')
+\stopverb}
+}
+
+\subtree{
+\title{6. Cell Type Annotation}
+\pre{\startverb
+# Define marker genes for known cell types
+marker_genes = ['CD3D', 'CD14', 'MS4A1', 'NKG7', 'FCGR3A']
+
+# Visualize markers
+sc.pl.umap(adata, color=marker_genes, use_raw=True)
+sc.pl.dotplot(adata, var_names=marker_genes, groupby='leiden')
+
+# Manual annotation
+cluster_to_celltype = {
+    '0': 'CD4 T cells',
+    '1': 'CD14+ Monocytes',
+    '2': 'B cells',
+    '3': 'CD8 T cells',
+}
+adata.obs['cell_type'] = adata.obs['leiden'].map(cluster_to_celltype)
+
+# Visualize annotated types
+sc.pl.umap(adata, color='cell_type', legend_loc='on data')
+\stopverb}
+}
+
+\subtree{
+\title{7. Save Results}
+\pre{\startverb
+# Save processed data
+adata.write('results/processed_data.h5ad')
+
+# Export metadata
+adata.obs.to_csv('results/cell_metadata.csv')
+adata.var.to_csv('results/gene_metadata.csv')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Tasks}
+\subtree{
+\title{Creating Publication-Quality Plots}
+\pre{\startverb
+# Set high-quality defaults
+sc.settings.set_figure_params(dpi=300, frameon=False, figsize=(5, 5))
+sc.settings.file_format_figs = 'pdf'
+
+# UMAP with custom styling
+sc.pl.umap(adata, color='cell_type',
+           palette='Set2',
+           legend_loc='on data',
+           legend_fontsize=12,
+           legend_fontoutline=2,
+           frameon=False,
+           save='_publication.pdf')
+
+# Heatmap of marker genes
+sc.pl.heatmap(adata, var_names=genes, groupby='cell_type',
+              swap_axes=True, show_gene_labels=True,
+              save='_markers.pdf')
+
+# Dot plot
+sc.pl.dotplot(adata, var_names=genes, groupby='cell_type',
+              save='_dotplot.pdf')
+\stopverb}
+
+\p{Refer to \code{\startverb references/plotting_guide.md\stopverb} for comprehensive visualization examples.}
+}
+
+\subtree{
+\title{Trajectory Inference}
+\pre{\startverb
+# PAGA (Partition-based graph abstraction)
+sc.tl.paga(adata, groups='leiden')
+sc.pl.paga(adata, color='leiden')
+
+# Diffusion pseudotime
+adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden'] == '0')[0]
+sc.tl.dpt(adata)
+sc.pl.umap(adata, color='dpt_pseudotime')
+\stopverb}
+}
+
+\subtree{
+\title{Differential Expression Between Conditions}
+\pre{\startverb
+# Compare treated vs control within cell types
+adata_subset = adata[adata.obs['cell_type'] == 'T cells']
+sc.tl.rank_genes_groups(adata_subset, groupby='condition',
+                         groups=['treated'], reference='control')
+sc.pl.rank_genes_groups(adata_subset, groups=['treated'])
+\stopverb}
+}
+
+\subtree{
+\title{Gene Set Scoring}
+\pre{\startverb
+# Score cells for gene set expression
+gene_set = ['CD3D', 'CD3E', 'CD3G']
+sc.tl.score_genes(adata, gene_set, score_name='T_cell_score')
+sc.pl.umap(adata, color='T_cell_score')
+\stopverb}
+}
+
+\subtree{
+\title{Batch Correction}
+\pre{\startverb
+# ComBat batch correction
+sc.pp.combat(adata, key='batch')
+
+# Alternative: use Harmony or scVI (separate packages)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Parameters to Adjust}
+\subtree{
+\title{Quality Control}
+\ul{
+\li{\code{\startverb min_genes\stopverb}: Minimum genes per cell (typically 200-500)}
+\li{\code{\startverb min_cells\stopverb}: Minimum cells per gene (typically 3-10)}
+\li{\code{\startverb pct_counts_mt\stopverb}: Mitochondrial threshold (typically 5-20\%)}
+}
+}
+
+\subtree{
+\title{Normalization}
+\ul{
+\li{\code{\startverb target_sum\stopverb}: Target counts per cell (default 1e4)}
+}
+}
+
+\subtree{
+\title{Feature Selection}
+\ul{
+\li{\code{\startverb n_top_genes\stopverb}: Number of HVGs (typically 2000-3000)}
+\li{\code{\startverb min_mean\stopverb}, \code{\startverb max_mean\stopverb}, \code{\startverb min_disp\stopverb}: HVG selection parameters}
+}
+}
+
+\subtree{
+\title{Dimensionality Reduction}
+\ul{
+\li{\code{\startverb n_pcs\stopverb}: Number of principal components (check variance ratio plot)}
+\li{\code{\startverb n_neighbors\stopverb}: Number of neighbors (typically 10-30)}
+}
+}
+
+\subtree{
+\title{Clustering}
+\ul{
+\li{\code{\startverb resolution\stopverb}: Clustering granularity (0.4-1.2, higher = more clusters)}
+}
+}
+}
+
+\subtree{
+\title{Common Pitfalls and Best Practices}
+\ol{
+\li{\strong{Always save raw counts}: \code{\startverb adata.raw = adata\stopverb} before filtering genes}
+\li{\strong{Check QC plots carefully}: Adjust thresholds based on dataset quality}
+\li{\strong{Use Leiden over Louvain}: More efficient and better results}
+\li{\strong{Try multiple clustering resolutions}: Find optimal granularity}
+\li{\strong{Validate cell type annotations}: Use multiple marker genes}
+\li{\strong{Use \code{\startverb use_raw=True\stopverb} for gene expression plots}: Shows original counts}
+\li{\strong{Check PCA variance ratio}: Determine optimal number of PCs}
+\li{\strong{Save intermediate results}: Long workflows can fail partway through}
+}
+}
+
+\subtree{
+\title{Bundled Resources}
+\subtree{
+\title{scripts/qc_analysis.py}
+\p{Automated quality control script that calculates metrics, generates plots, and filters data:}
+
+\pre{\startverb
+python scripts/qc_analysis.py input.h5ad --output filtered.h5ad \
+    --mt-threshold 5 --min-genes 200 --min-cells 3
+\stopverb}
+}
+
+\subtree{
+\title{references/standard_workflow.md}
+\p{Complete step-by-step workflow with detailed explanations and code examples for:}
+
+\ul{
+\li{Data loading and setup}
+\li{Quality control with visualization}
+\li{Normalization and scaling}
+\li{Feature selection}
+\li{Dimensionality reduction (PCA, UMAP, t-SNE)}
+\li{Clustering (Leiden, Louvain)}
+\li{Marker gene identification}
+\li{Cell type annotation}
+\li{Trajectory inference}
+\li{Differential expression}
+}
+
+\p{Read this reference when performing a complete analysis from scratch.}
+}
+
+\subtree{
+\title{references/api_reference.md}
+\p{Quick reference guide for scanpy functions organized by module:}
+
+\ul{
+\li{Reading/writing data (\code{\startverb sc.read_*\stopverb}, \code{\startverb adata.write_*\stopverb})}
+\li{Preprocessing (\code{\startverb sc.pp.*\stopverb})}
+\li{Tools (\code{\startverb sc.tl.*\stopverb})}
+\li{Plotting (\code{\startverb sc.pl.*\stopverb})}
+\li{AnnData structure and manipulation}
+\li{Settings and utilities}
+}
+
+\p{Use this for quick lookup of function signatures and common parameters.}
+}
+
+\subtree{
+\title{references/plotting_guide.md}
+\p{Comprehensive visualization guide including:}
+
+\ul{
+\li{Quality control plots}
+\li{Dimensionality reduction visualizations}
+\li{Clustering visualizations}
+\li{Marker gene plots (heatmaps, dot plots, violin plots)}
+\li{Trajectory and pseudotime plots}
+\li{Publication-quality customization}
+\li{Multi-panel figures}
+\li{Color palettes and styling}
+}
+
+\p{Consult this when creating publication-ready figures.}
+}
+
+\subtree{
+\title{assets/analysis_template.py}
+\p{Complete analysis template providing a full workflow from data loading through cell type annotation. Copy and customize this template for new analyses:}
+
+\pre{\startverb
+cp assets/analysis_template.py my_analysis.py
+# Edit parameters and run
+python my_analysis.py
+\stopverb}
+
+\p{The template includes all standard steps with configurable parameters and helpful comments.}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official scanpy documentation}: https://scanpy.readthedocs.io/}
+\li{\strong{Scanpy tutorials}: https://scanpy-tutorials.readthedocs.io/}
+\li{\strong{scverse ecosystem}: https://scverse.org/ (related tools: squidpy, scvi-tools, cellrank)}
+\li{\strong{Best practices}: Luecken & Theis (2019) "Current best practices in single-cell RNA-seq"}
+}
+}
+
+\subtree{
+\title{Tips for Effective Analysis}
+\ol{
+\li{\strong{Start with the template}: Use \code{\startverb assets/analysis_template.py\stopverb} as a starting point}
+\li{\strong{Run QC script first}: Use \code{\startverb scripts/qc_analysis.py\stopverb} for initial filtering}
+\li{\strong{Consult references as needed}: Load workflow and API references into context}
+\li{\strong{Iterate on clustering}: Try multiple resolutions and visualization methods}
+\li{\strong{Validate biologically}: Check marker genes match expected cell types}
+\li{\strong{Document parameters}: Record QC thresholds and analysis settings}
+\li{\strong{Save checkpoints}: Write intermediate results at key steps}
+}
+}
+}

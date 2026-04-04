@@ -1,0 +1,204 @@
+\title{Counter Surveillance}
+
+\taxon{skill}
+
+\meta{description}{Assess and harden operational security (OPSEC) posture for applications, communications, and infrastructure. Identifies surveillance exposure, metadata leakage, and tracking vectors. Use when auditing privacy-sensitive applications, reviewing OPSEC for threat models involving state-level adversaries, or hardening communications infrastructure.}
+
+\subtree{
+\title{Counter-Surveillance Security Skill}
+\p{Trail of Bits-style defensive security assessment focused on surveillance resistance, metadata minimization, and operational security hardening.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Auditing privacy-sensitive applications}
+\li{Reviewing journalist/activist threat models}
+\li{Hardening communications platforms}
+\li{Assessing metadata leakage in protocols and applications}
+\li{Evaluating anonymous communication systems}
+\li{Reviewing data retention and logging policies}
+\li{Assessing exposure to lawful intercept and legal compulsion}
+}
+}
+
+\subtree{
+\title{Threat Model Tiers}
+\p{Structure analysis by adversary capability. Each tier subsumes the capabilities of all lower tiers.}
+
+\pre{\startverb
+| Tier | Adversary | Capabilities |
+|------|-----------|-------------|
+| **1** | Passive network observer | ISP, coffee shop WiFi, upstream AS. Sees DNS, IP flows, unencrypted traffic. |
+| **2** | Active network attacker | MITM, DNS manipulation, BGP hijack, certificate compromise via rogue CA. |
+| **3** | Platform-level adversary | Cloud provider, app store, OS vendor. Access to plaintext data at rest, push notification content, software update channel. |
+| **4** | State-level | Lawful intercept (CALEA), FISA orders, national security letters with gag orders, IMSI catchers (Stingray), device exploit vendors (NSO Group). |
+| **5** | Global passive adversary | Traffic analysis across jurisdictions, correlation attacks on anonymity networks, upstream cable taps (UPSTREAM/PRISM-class). |
+\stopverb}
+
+\p{Always define the threat tier before beginning an audit. Controls adequate for Tier 1 are meaningless against Tier 4.}
+}
+
+\subtree{
+\title{Surveillance Surface Taxonomy}
+\subtree{
+\title{Network Metadata}
+\ul{
+\li{DNS queries (reveal browsing intent even with HTTPS)}
+\li{TLS SNI field (reveals destination hostname in plaintext pre-ECH)}
+\li{Connection timing and duration patterns}
+\li{Packet sizes and inter-arrival times (traffic fingerprinting)}
+\li{IP address correlation across sessions}
+}
+}
+
+\subtree{
+\title{Application Metadata}
+\ul{
+\li{Push notification payloads (visible to Apple/Google)}
+\li{App store analytics and telemetry}
+\li{Crash reports containing device state}
+\li{Update check frequency and timing}
+\li{OAuth token exchanges revealing service usage}
+}
+}
+
+\subtree{
+\title{Device Fingerprinting}
+\ul{
+\li{Browser fingerprint (canvas, WebGL, fonts, screen resolution)}
+\li{Hardware identifiers (IMEI, MAC address, serial numbers)}
+\li{Sensor data (accelerometer, gyroscope uniqueness)}
+\li{Installed font and plugin enumeration}
+\li{TLS client fingerprint (JA3/JA4)}
+}
+}
+
+\subtree{
+\title{Location Tracking}
+\ul{
+\li{GPS and GNSS precise positioning}
+\li{Cell tower triangulation (passive, no user consent needed)}
+\li{WiFi positioning (BSSID databases)}
+\li{Bluetooth beacons and BLE scanning}
+\li{IP geolocation databases}
+}
+}
+
+\subtree{
+\title{Communications Metadata}
+\ul{
+\li{Who-talks-to-whom social graph (contact chaining)}
+\li{Timing and frequency of communication}
+\li{Message size and duration patterns}
+\li{Group membership inference}
+\li{Presence and online status indicators}
+}
+}
+
+\subtree{
+\title{Financial Tracking}
+\ul{
+\li{Payment processor transaction logs}
+\li{Blockchain analysis and address clustering}
+\li{Loyalty program purchase correlation}
+\li{ATM and POS location tracking}
+\li{Subscription service usage patterns}
+}
+}
+}
+
+\subtree{
+\title{Audit Methodology}
+\ol{
+\li{\strong{Map data flows} — Diagram all metadata emission points from client to server to third party. Include DNS resolvers, CDNs, analytics, crash reporting, and push notification services.}
+}
+
+\ol{
+\li{\strong{Assess encryption coverage} — Evaluate protection for data in transit (TLS 1.3, certificate pinning), at rest (full-disk encryption, per-record encryption), and in use (enclaves, MPC, FHE where applicable).}
+}
+
+\ol{
+\li{\strong{Evaluate authentication without identification} — Can users authenticate to the service without revealing real-world identity? Review account creation flow, recovery mechanisms, and payment requirements.}
+}
+
+\ol{
+\li{\strong{Review logging and data retention} — What identifiers are logged server-side? For how long? Under what legal jurisdiction? Can logs be compelled via subpoena, NSL, or FISA order?}
+}
+
+\ol{
+\li{\strong{Test traffic analysis resistance} — Are encrypted messages padded to uniform size? Is timing randomized? Is cover traffic generated? Can an observer distinguish message types by size or pattern?}
+}
+
+\ol{
+\li{\strong{Assess supply chain integrity} — Are builds reproducible? Are dependencies pinned and audited? Is the signing key air-gapped? Can users verify binary-to-source correspondence?}
+}
+
+\ol{
+\li{\strong{Review jurisdiction and legal compulsion exposure} — Map server locations, corporate domicile, and applicable legal frameworks. Identify single points of legal compulsion (one subpoena reveals all user data).}
+}
+}
+
+\subtree{
+\title{Code Review Patterns}
+\p{Look for these anti-patterns in privacy-sensitive codebases:}
+
+\pre{\startverb
+# FINDING: Unnecessary logging of user identifiers
+logger.info(f"Request from user {user_id} at {ip_address}")
+# FIX: Log only what is operationally necessary; use rotating pseudonyms
+
+# FINDING: Unpadded encrypted messages reveal content type
+encrypted = encrypt(message)
+# FIX: Pad all messages to fixed size buckets before encryption
+encrypted = encrypt(pad_to_bucket(message))
+
+# FINDING: Timestamps with unnecessary precision
+created_at = datetime.utcnow()  # microsecond precision
+# FIX: Round to reduce temporal fingerprinting
+created_at = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+
+# FINDING: Device identifiers transmitted to server
+analytics.send(device_id=get_hardware_id())
+# FIX: Use unlinkable session tokens; never transmit hardware IDs
+
+# FINDING: DNS queries leaking browsing intent
+requests.get("https://sensitive-site.org/resource")
+# FIX: Enforce DNS-over-HTTPS/TLS; consider Tor for DNS resolution
+
+# FINDING: Push notification content visible to platform provider
+send_push(user, title="New message from Alice")
+# FIX: Send empty/tombstone push; fetch content via E2E encrypted channel
+
+# FINDING: Certificate pinning absent or bypassable
+session = requests.Session()  # no pin validation
+# FIX: Pin leaf or intermediate cert; detect and alert on pin failure
+\stopverb}
+}
+
+\subtree{
+\title{Hardening Checklist}
+\ul{
+\li{[ ] \strong{Network anonymity} — Tor/onion routing for metadata-resistant connectivity}
+\li{[ ] \strong{E2E encrypted messaging} — Signal protocol or equivalent with forward secrecy}
+\li{[ ] \strong{Metadata-resistant protocols} — Sealed Sender, Private Information Retrieval, oblivious HTTP}
+\li{[ ] \strong{Encrypted DNS} — DNS-over-HTTPS or DNS-over-TLS with trusted resolver; ECH for SNI}
+\li{[ ] \strong{Reproducible builds} — Deterministic compilation; users can verify binary matches source}
+\li{[ ] \strong{Air-gapped signing} — Software release signing keys on offline hardware}
+\li{[ ] \strong{Memory-safe crypto} — Rust, Go, or formally verified C for cryptographic implementations}
+\li{[ ] \strong{Minimal logging} — Log only what is operationally essential; auto-expire within days}
+\li{[ ] \strong{Jurisdiction diversity} — Distribute infrastructure across non-cooperating legal jurisdictions}
+\li{[ ] \strong{Warrant canary} — Publish regular signed statements of non-compromise; absence signals compulsion}
+\li{[ ] \strong{Anonymous account creation} — No phone number, no email, no payment required}
+\li{[ ] \strong{Forward secrecy} — Compromise of long-term keys does not reveal past communications}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb static-security-analyzer\stopverb} — Automated code scanning for security vulnerabilities}
+\li{\code{\startverb webapp-testing\stopverb} — Web application penetration testing methodology}
+\li{\code{\startverb secure-workflow-guide\stopverb} — Secure development lifecycle and CI/CD hardening}
+}
+}
+}

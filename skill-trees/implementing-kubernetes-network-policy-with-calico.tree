@@ -1,0 +1,349 @@
+\title{Implementing Kubernetes Network Policy With Calico}
+
+\taxon{skill}
+
+\tag{calico}
+
+\tag{kubernetes}
+
+\tag{network-policy}
+
+\tag{network-segmentation}
+
+\tag{zero-trust}
+
+\tag{cni}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement Kubernetes network segmentation using Calico NetworkPolicy and GlobalNetworkPolicy for zero-trust pod-to-pod communication.}
+
+\subtree{
+\title{Implementing Kubernetes Network Policy with Calico}
+\subtree{
+\title{Overview}
+\p{Calico is an open-source CNI plugin that provides fine-grained network policy enforcement for Kubernetes clusters. It implements the full Kubernetes NetworkPolicy API and extends it with Calico-specific GlobalNetworkPolicy, supporting policy ordering, deny rules, and service-account-based selectors.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing kubernetes network policy with calico capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Kubernetes cluster (v1.24+)}
+\li{Calico CNI installed (v3.26+)}
+\li{\code{\startverb kubectl\stopverb} and \code{\startverb calicoctl\stopverb} CLI tools}
+\li{Cluster admin RBAC permissions}
+}
+}
+
+\subtree{
+\title{Installing Calico}
+\subtree{
+\title{Operator-based Installation (Recommended)}
+\pre{\startverb
+# Install the Tigera operator
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/tigera-operator.yaml
+
+# Install Calico custom resources
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/custom-resources.yaml
+
+# Verify installation
+kubectl get pods -n calico-system
+watch kubectl get pods -n calico-system
+
+# Install calicoctl
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/calicoctl.yaml
+\stopverb}
+}
+
+\subtree{
+\title{Verify Calico is Running}
+\pre{\startverb
+# Check Calico pods
+kubectl get pods -n calico-system
+
+# Check Calico node status
+kubectl exec -n calico-system calicoctl -- calicoctl node status
+
+# Check IP pools
+kubectl exec -n calico-system calicoctl -- calicoctl get ippool -o wide
+\stopverb}
+}
+}
+
+\subtree{
+\title{Kubernetes NetworkPolicy}
+\subtree{
+\title{Default Deny All Traffic}
+\pre{\startverb
+# deny-all-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+# deny-all-egress.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+\stopverb}
+}
+
+\subtree{
+\title{Allow Specific Pod-to-Pod Communication}
+\pre{\startverb
+# allow-frontend-to-backend.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
+\stopverb}
+}
+
+\subtree{
+\title{Allow DNS Egress}
+\pre{\startverb
+# allow-dns-egress.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+\stopverb}
+}
+
+\subtree{
+\title{Namespace Isolation}
+\pre{\startverb
+# allow-same-namespace.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Calico-Specific Policies}
+\subtree{
+\title{GlobalNetworkPolicy (Cluster-Wide)}
+\pre{\startverb
+# global-deny-external.yaml
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: deny-external-ingress
+spec:
+  order: 100
+  selector: "projectcalico.org/namespace != 'ingress-nginx'"
+  types:
+    - Ingress
+  ingress:
+    - action: Deny
+      source:
+        nets:
+          - 0.0.0.0/0
+      destination: {}
+\stopverb}
+}
+
+\subtree{
+\title{Calico NetworkPolicy with Deny Rules}
+\pre{\startverb
+# calico-deny-policy.yaml
+apiVersion: projectcalico.org/v3
+kind: NetworkPolicy
+metadata:
+  name: deny-database-from-frontend
+  namespace: production
+spec:
+  order: 10
+  selector: app == 'database'
+  types:
+    - Ingress
+  ingress:
+    - action: Deny
+      source:
+        selector: app == 'frontend'
+    - action: Allow
+      source:
+        selector: app == 'backend'
+      destination:
+        ports:
+          - 5432
+\stopverb}
+}
+
+\subtree{
+\title{Service Account Based Policy}
+\pre{\startverb
+# sa-based-policy.yaml
+apiVersion: projectcalico.org/v3
+kind: NetworkPolicy
+metadata:
+  name: allow-by-service-account
+  namespace: production
+spec:
+  selector: app == 'api'
+  ingress:
+    - action: Allow
+      source:
+        serviceAccounts:
+          names:
+            - frontend-sa
+            - monitoring-sa
+  egress:
+    - action: Allow
+      destination:
+        serviceAccounts:
+          names:
+            - database-sa
+\stopverb}
+}
+
+\subtree{
+\title{Host Endpoint Protection}
+\pre{\startverb
+# host-endpoint-policy.yaml
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: restrict-host-ssh
+spec:
+  order: 10
+  selector: "has(kubernetes.io/hostname)"
+  applyOnForward: false
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        nets:
+          - 10.0.0.0/8
+      destination:
+        ports:
+          - 22
+    - action: Deny
+      protocol: TCP
+      destination:
+        ports:
+          - 22
+\stopverb}
+}
+}
+
+\subtree{
+\title{Calico Policy Tiers}
+\pre{\startverb
+# security-tier.yaml
+apiVersion: projectcalico.org/v3
+kind: Tier
+metadata:
+  name: security
+spec:
+  order: 100
+
+---
+# platform-tier.yaml
+apiVersion: projectcalico.org/v3
+kind: Tier
+metadata:
+  name: platform
+spec:
+  order: 200
+\stopverb}
+}
+
+\subtree{
+\title{Monitoring and Troubleshooting}
+\pre{\startverb
+# List all network policies
+kubectl get networkpolicy --all-namespaces
+
+# List Calico-specific policies
+kubectl exec -n calico-system calicoctl -- calicoctl get networkpolicy --all-namespaces -o wide
+kubectl exec -n calico-system calicoctl -- calicoctl get globalnetworkpolicy -o wide
+
+# Check policy evaluation for a specific endpoint
+kubectl exec -n calico-system calicoctl -- calicoctl get workloadendpoint -n production -o yaml
+
+# View Calico logs
+kubectl logs -n calico-system -l k8s-app=calico-node --tail=100
+
+# Test connectivity
+kubectl exec -n production frontend-pod -- wget -qO- --timeout=2 http://backend-svc:8080/health
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Start with default deny} - Apply deny-all policies to every namespace, then allow specific traffic}
+\li{\strong{Use labels consistently} - Define a labeling standard for app, tier, environment}
+\li{\strong{Order policies} - Use Calico policy ordering (\code{\startverb order\stopverb} field) to control evaluation precedence}
+\li{\strong{Allow DNS first} - Always create DNS egress rules before applying egress deny policies}
+\li{\strong{Use GlobalNetworkPolicy} for cluster-wide security baselines}
+\li{\strong{Test policies in staging} - Validate network connectivity after applying policies}
+\li{\strong{Monitor denied traffic} - Enable Calico flow logs for visibility into blocked connections}
+\li{\strong{Use tiers} - Organize policies into security, platform, and application tiers}
+}
+}
+}

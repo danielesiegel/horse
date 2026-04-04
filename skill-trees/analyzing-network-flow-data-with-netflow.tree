@@ -1,0 +1,70 @@
+\title{Analyzing Network Flow Data With Netflow}
+
+\taxon{skill}
+
+\tag{analyzing}
+
+\tag{network}
+
+\tag{flow}
+
+\tag{data}
+
+\meta{version}{"1.0"}
+
+\meta{description}{>-}
+
+\subtree{
+\title{Analyzing Network Flow Data with Netflow}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing network flow data with netflow}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with network security concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\ol{
+\li{Install dependencies: \code{\startverb pip install netflow\stopverb}}
+\li{Collect NetFlow/IPFIX data from routers or use the built-in collector: \code{\startverb python -m netflow.collector -p 9995\stopverb}}
+\li{Parse captured flow data using \code{\startverb netflow.parse_packet()\stopverb}.}
+\li{Analyze flows for:}
+\li{Port scanning: single source to many destinations on same port}
+\li{Data exfiltration: high byte-count outbound flows to unusual destinations}
+\li{C2 beaconing: periodic connections with consistent intervals}
+\li{Volumetric anomalies: traffic spikes beyond baseline thresholds}
+\li{Generate a prioritized findings report.}
+}
+
+\pre{\startverb
+python scripts/agent.py --flow-file captured_flows.json --output netflow_report.json
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Parse NetFlow v9 Packet}
+\pre{\startverb
+import netflow
+data, _ = netflow.parse_packet(raw_bytes, templates={})
+for flow in data.flows:
+    print(flow.IPV4_SRC_ADDR, flow.IPV4_DST_ADDR, flow.IN_BYTES)
+\stopverb}
+}
+}
+}

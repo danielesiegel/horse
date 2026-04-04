@@ -1,0 +1,763 @@
+\title{"verification & quality assurance"}
+
+\taxon{skill}
+
+\tag{"verification"}
+
+\tag{"truth-scoring"}
+
+\tag{"quality"}
+
+\tag{"rollback"}
+
+\tag{"metrics"}
+
+\tag{"ci-cd"}
+
+\meta{version}{"2.0.0"}
+
+\meta{description}{"Comprehensive truth scoring, code quality verification, and automatic rollback system with 0.95 accuracy threshold for ensuring high-quality agent outputs and codebase reliability."}
+
+\subtree{
+\title{Verification & Quality Assurance Skill}
+\subtree{
+\title{What This Skill Does}
+\p{This skill provides a comprehensive verification and quality assurance system that ensures code quality and correctness through:}
+
+\ul{
+\li{\strong{Truth Scoring}: Real-time reliability metrics (0.0-1.0 scale) for code, agents, and tasks}
+\li{\strong{Verification Checks}: Automated code correctness, security, and best practices validation}
+\li{\strong{Automatic Rollback}: Instant reversion of changes that fail verification (default threshold: 0.95)}
+\li{\strong{Quality Metrics}: Statistical analysis with trends, confidence intervals, and improvement tracking}
+\li{\strong{CI/CD Integration}: Export capabilities for continuous integration pipelines}
+\li{\strong{Real-time Monitoring}: Live dashboards and watch modes for ongoing verification}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Claude Flow installed (\code{\startverb npx claude-flow@alpha\stopverb})}
+\li{Git repository (for rollback features)}
+\li{Node.js 18+ (for dashboard features)}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# View current truth scores
+npx claude-flow@alpha truth
+
+# Run verification check
+npx claude-flow@alpha verify check
+
+# Verify specific file with custom threshold
+npx claude-flow@alpha verify check --file src/app.js --threshold 0.98
+
+# Rollback last failed verification
+npx claude-flow@alpha verify rollback --last-good
+\stopverb}
+}
+
+\subtree{
+\title{Complete Guide}
+\subtree{
+\title{Truth Scoring System}
+\subtree{
+\title{View Truth Metrics}
+\p{Display comprehensive quality and reliability metrics for your codebase and agent tasks.}
+
+\p{\strong{Basic Usage:}}
+
+\pre{\startverb
+# View current truth scores (default: table format)
+npx claude-flow@alpha truth
+
+# View scores for specific time period
+npx claude-flow@alpha truth --period 7d
+
+# View scores for specific agent
+npx claude-flow@alpha truth --agent coder --period 24h
+
+# Find files/tasks below threshold
+npx claude-flow@alpha truth --threshold 0.8
+\stopverb}
+
+\p{\strong{Output Formats:}}
+
+\pre{\startverb
+# Table format (default)
+npx claude-flow@alpha truth --format table
+
+# JSON for programmatic access
+npx claude-flow@alpha truth --format json
+
+# CSV for spreadsheet analysis
+npx claude-flow@alpha truth --format csv
+
+# HTML report with visualizations
+npx claude-flow@alpha truth --format html --export report.html
+\stopverb}
+
+\p{\strong{Real-time Monitoring:}}
+
+\pre{\startverb
+# Watch mode with live updates
+npx claude-flow@alpha truth --watch
+
+# Export metrics automatically
+npx claude-flow@alpha truth --export .claude-flow/metrics/truth-$(date +%Y%m%d).json
+\stopverb}
+}
+
+\subtree{
+\title{Truth Score Dashboard}
+\p{Example dashboard output:}
+
+\pre{\startverb
+📊 Truth Metrics Dashboard
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Overall Truth Score: 0.947 ✅
+Trend: ↗️ +2.3% (7d)
+
+Top Performers:
+  verification-agent   0.982 ⭐
+  code-analyzer       0.971 ⭐
+  test-generator      0.958 ✅
+
+Needs Attention:
+  refactor-agent      0.821 ⚠️
+  docs-generator      0.794 ⚠️
+
+Recent Tasks:
+  task-456  0.991 ✅  "Implement auth"
+  task-455  0.967 ✅  "Add tests"
+  task-454  0.743 ❌  "Refactor API"
+\stopverb}
+}
+
+\subtree{
+\title{Metrics Explained}
+\p{\strong{Truth Scores (0.0-1.0):}}
+
+\ul{
+\li{\code{\startverb 1.0-0.95\stopverb}: Excellent ⭐ (production-ready)}
+\li{\code{\startverb 0.94-0.85\stopverb}: Good ✅ (acceptable quality)}
+\li{\code{\startverb 0.84-0.75\stopverb}: Warning ⚠️ (needs attention)}
+\li{\code{\startverb <0.75\stopverb}: Critical ❌ (requires immediate action)}
+}
+
+\p{\strong{Trend Indicators:}}
+
+\ul{
+\li{↗️ Improving (positive trend)}
+\li{→ Stable (consistent performance)}
+\li{↘️ Declining (quality regression detected)}
+}
+
+\p{\strong{Statistics:}}
+
+\ul{
+\li{\strong{Mean Score}: Average truth score across all measurements}
+\li{\strong{Median Score}: Middle value (less affected by outliers)}
+\li{\strong{Standard Deviation}: Consistency of scores (lower = more consistent)}
+\li{\strong{Confidence Interval}: Statistical reliability of measurements}
+}
+}
+}
+
+\subtree{
+\title{Verification Checks}
+\subtree{
+\title{Run Verification}
+\p{Execute comprehensive verification checks on code, tasks, or agent outputs.}
+
+\p{\strong{File Verification:}}
+
+\pre{\startverb
+# Verify single file
+npx claude-flow@alpha verify check --file src/app.js
+
+# Verify directory recursively
+npx claude-flow@alpha verify check --directory src/
+
+# Verify with auto-fix enabled
+npx claude-flow@alpha verify check --file src/utils.js --auto-fix
+
+# Verify current working directory
+npx claude-flow@alpha verify check
+\stopverb}
+
+\p{\strong{Task Verification:}}
+
+\pre{\startverb
+# Verify specific task output
+npx claude-flow@alpha verify check --task task-123
+
+# Verify with custom threshold
+npx claude-flow@alpha verify check --task task-456 --threshold 0.99
+
+# Verbose output for debugging
+npx claude-flow@alpha verify check --task task-789 --verbose
+\stopverb}
+
+\p{\strong{Batch Verification:}}
+
+\pre{\startverb
+# Verify multiple files in parallel
+npx claude-flow@alpha verify batch --files "*.js" --parallel
+
+# Verify with pattern matching
+npx claude-flow@alpha verify batch --pattern "src/**/*.ts"
+
+# Integration test suite
+npx claude-flow@alpha verify integration --test-suite full
+\stopverb}
+}
+
+\subtree{
+\title{Verification Criteria}
+\p{The verification system evaluates:}
+
+\ol{
+\li{\strong{Code Correctness}}
+\li{Syntax validation}
+\li{Type checking (TypeScript)}
+\li{Logic flow analysis}
+\li{Error handling completeness}
+}
+
+\ol{
+\li{\strong{Best Practices}}
+\li{Code style adherence}
+\li{SOLID principles}
+\li{Design patterns usage}
+\li{Modularity and reusability}
+}
+
+\ol{
+\li{\strong{Security}}
+\li{Vulnerability scanning}
+\li{Secret detection}
+\li{Input validation}
+\li{Authentication/authorization checks}
+}
+
+\ol{
+\li{\strong{Performance}}
+\li{Algorithmic complexity}
+\li{Memory usage patterns}
+\li{Database query optimization}
+\li{Bundle size impact}
+}
+
+\ol{
+\li{\strong{Documentation}}
+\li{JSDoc/TypeDoc completeness}
+\li{README accuracy}
+\li{API documentation}
+\li{Code comments quality}
+}
+}
+
+\subtree{
+\title{JSON Output for CI/CD}
+\pre{\startverb
+# Get structured JSON output
+npx claude-flow@alpha verify check --json > verification.json
+
+# Example JSON structure:
+{
+  "overallScore": 0.947,
+  "passed": true,
+  "threshold": 0.95,
+  "checks": [
+    {
+      "name": "code-correctness",
+      "score": 0.98,
+      "passed": true
+    },
+    {
+      "name": "security",
+      "score": 0.91,
+      "passed": false,
+      "issues": [...]
+    }
+  ]
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Automatic Rollback}
+\subtree{
+\title{Rollback Failed Changes}
+\p{Automatically revert changes that fail verification checks.}
+
+\p{\strong{Basic Rollback:}}
+
+\pre{\startverb
+# Rollback to last known good state
+npx claude-flow@alpha verify rollback --last-good
+
+# Rollback to specific commit
+npx claude-flow@alpha verify rollback --to-commit abc123
+
+# Interactive rollback with preview
+npx claude-flow@alpha verify rollback --interactive
+\stopverb}
+
+\p{\strong{Smart Rollback:}}
+
+\pre{\startverb
+# Rollback only failed files (preserve good changes)
+npx claude-flow@alpha verify rollback --selective
+
+# Rollback with automatic backup
+npx claude-flow@alpha verify rollback --backup-first
+
+# Dry-run mode (preview without executing)
+npx claude-flow@alpha verify rollback --dry-run
+\stopverb}
+
+\p{\strong{Rollback Performance:}}
+
+\ul{
+\li{Git-based rollback: <1 second}
+\li{Selective file rollback: <500ms}
+\li{Backup creation: Automatic before rollback}
+}
+}
+}
+
+\subtree{
+\title{Verification Reports}
+\subtree{
+\title{Generate Reports}
+\p{Create detailed verification reports with metrics and visualizations.}
+
+\p{\strong{Report Formats:}}
+
+\pre{\startverb
+# JSON report
+npx claude-flow@alpha verify report --format json
+
+# HTML report with charts
+npx claude-flow@alpha verify report --export metrics.html --format html
+
+# CSV for data analysis
+npx claude-flow@alpha verify report --format csv --export metrics.csv
+
+# Markdown summary
+npx claude-flow@alpha verify report --format markdown
+\stopverb}
+
+\p{\strong{Time-based Reports:}}
+
+\pre{\startverb
+# Last 24 hours
+npx claude-flow@alpha verify report --period 24h
+
+# Last 7 days
+npx claude-flow@alpha verify report --period 7d
+
+# Last 30 days with trends
+npx claude-flow@alpha verify report --period 30d --include-trends
+
+# Custom date range
+npx claude-flow@alpha verify report --from 2025-01-01 --to 2025-01-31
+\stopverb}
+
+\p{\strong{Report Content:}}
+
+\ul{
+\li{Overall truth scores}
+\li{Per-agent performance metrics}
+\li{Task completion quality}
+\li{Verification pass/fail rates}
+\li{Rollback frequency}
+\li{Quality improvement trends}
+\li{Statistical confidence intervals}
+}
+}
+}
+
+\subtree{
+\title{Interactive Dashboard}
+\subtree{
+\title{Launch Dashboard}
+\p{Run interactive web-based verification dashboard with real-time updates.}
+
+\pre{\startverb
+# Launch dashboard on default port (3000)
+npx claude-flow@alpha verify dashboard
+
+# Custom port
+npx claude-flow@alpha verify dashboard --port 8080
+
+# Export dashboard data
+npx claude-flow@alpha verify dashboard --export
+
+# Dashboard with auto-refresh
+npx claude-flow@alpha verify dashboard --refresh 5s
+\stopverb}
+
+\p{\strong{Dashboard Features:}}
+
+\ul{
+\li{Real-time truth score updates (WebSocket)}
+\li{Interactive charts and graphs}
+\li{Agent performance comparison}
+\li{Task history timeline}
+\li{Rollback history viewer}
+\li{Export to PDF/HTML}
+\li{Filter by time period/agent/score}
+}
+}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Default Configuration}
+\p{Set verification preferences in \code{\startverb .claude-flow/config.json\stopverb}:}
+
+\pre{\startverb
+{
+  "verification": {
+    "threshold": 0.95,
+    "autoRollback": true,
+    "gitIntegration": true,
+    "hooks": {
+      "preCommit": true,
+      "preTask": true,
+      "postEdit": true
+    },
+    "checks": {
+      "codeCorrectness": true,
+      "security": true,
+      "performance": true,
+      "documentation": true,
+      "bestPractices": true
+    }
+  },
+  "truth": {
+    "defaultFormat": "table",
+    "defaultPeriod": "24h",
+    "warningThreshold": 0.85,
+    "criticalThreshold": 0.75,
+    "autoExport": {
+      "enabled": true,
+      "path": ".claude-flow/metrics/truth-daily.json"
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Threshold Configuration}
+\p{\strong{Adjust verification strictness:}}
+
+\pre{\startverb
+# Strict mode (99% accuracy required)
+npx claude-flow@alpha verify check --threshold 0.99
+
+# Lenient mode (90% acceptable)
+npx claude-flow@alpha verify check --threshold 0.90
+
+# Set default threshold
+npx claude-flow@alpha config set verification.threshold 0.98
+\stopverb}
+
+\p{\strong{Per-environment thresholds:}}
+
+\pre{\startverb
+{
+  "verification": {
+    "thresholds": {
+      "production": 0.99,
+      "staging": 0.95,
+      "development": 0.90
+    }
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration Examples}
+\subtree{
+\title{CI/CD Integration}
+\p{\strong{GitHub Actions:}}
+
+\pre{\startverb
+name: Quality Verification
+
+on: [push, pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Verification
+        run: |
+          npx claude-flow@alpha verify check --json > verification.json
+
+      - name: Check Truth Score
+        run: |
+          score=$(jq '.overallScore' verification.json)
+          if (( $(echo "$score < 0.95" | bc -l) )); then
+            echo "Truth score too low: $score"
+            exit 1
+          fi
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: verification-report
+          path: verification.json
+\stopverb}
+
+\p{\strong{GitLab CI:}}
+
+\pre{\startverb
+verify:
+  stage: test
+  script:
+    - npx claude-flow@alpha verify check --threshold 0.95 --json > verification.json
+    - |
+      score=$(jq '.overallScore' verification.json)
+      if [ $(echo "$score < 0.95" | bc) -eq 1 ]; then
+        echo "Verification failed with score: $score"
+        exit 1
+      fi
+  artifacts:
+    paths:
+      - verification.json
+    reports:
+      junit: verification.json
+\stopverb}
+}
+
+\subtree{
+\title{Swarm Integration}
+\p{Run verification automatically during swarm operations:}
+
+\pre{\startverb
+# Swarm with verification enabled
+npx claude-flow@alpha swarm --verify --threshold 0.98
+
+# Hive Mind with auto-rollback
+npx claude-flow@alpha hive-mind --verify --rollback-on-fail
+
+# Training pipeline with verification
+npx claude-flow@alpha train --verify --threshold 0.99
+\stopverb}
+}
+
+\subtree{
+\title{Pair Programming Integration}
+\p{Enable real-time verification during collaborative development:}
+
+\pre{\startverb
+# Pair with verification
+npx claude-flow@alpha pair --verify --real-time
+
+# Pair with custom threshold
+npx claude-flow@alpha pair --verify --threshold 0.97 --auto-fix
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Workflows}
+\subtree{
+\title{Continuous Verification}
+\p{Monitor codebase continuously during development:}
+
+\pre{\startverb
+# Watch directory for changes
+npx claude-flow@alpha verify watch --directory src/
+
+# Watch with auto-fix
+npx claude-flow@alpha verify watch --directory src/ --auto-fix
+
+# Watch with notifications
+npx claude-flow@alpha verify watch --notify --threshold 0.95
+\stopverb}
+}
+
+\subtree{
+\title{Monitoring Integration}
+\p{Send metrics to external monitoring systems:}
+
+\pre{\startverb
+# Export to Prometheus
+npx claude-flow@alpha truth --format json | \
+  curl -X POST https://pushgateway.example.com/metrics/job/claude-flow \
+  -d @-
+
+# Send to DataDog
+npx claude-flow@alpha verify report --format json | \
+  curl -X POST "https://api.datadoghq.com/api/v1/series?api_key=${DD_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d @-
+
+# Custom webhook
+npx claude-flow@alpha truth --format json | \
+  curl -X POST https://metrics.example.com/api/truth \
+  -H "Content-Type: application/json" \
+  -d @-
+\stopverb}
+}
+
+\subtree{
+\title{Pre-commit Hooks}
+\p{Automatically verify before commits:}
+
+\pre{\startverb
+# Install pre-commit hook
+npx claude-flow@alpha verify install-hook --pre-commit
+
+# .git/hooks/pre-commit example:
+#!/bin/bash
+npx claude-flow@alpha verify check --threshold 0.95 --json > /tmp/verify.json
+
+score=$(jq '.overallScore' /tmp/verify.json)
+if (( $(echo "$score < 0.95" | bc -l) )); then
+  echo "❌ Verification failed with score: $score"
+  echo "Run 'npx claude-flow@alpha verify check --verbose' for details"
+  exit 1
+fi
+
+echo "✅ Verification passed with score: $score"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Metrics}
+\p{\strong{Verification Speed:}}
+
+\ul{
+\li{Single file check: <100ms}
+\li{Directory scan: <500ms (per 100 files)}
+\li{Full codebase analysis: <5s (typical project)}
+\li{Truth score calculation: <50ms}
+}
+
+\p{\strong{Rollback Speed:}}
+
+\ul{
+\li{Git-based rollback: <1s}
+\li{Selective file rollback: <500ms}
+\li{Backup creation: <2s}
+}
+
+\p{\strong{Dashboard Performance:}}
+
+\ul{
+\li{Initial load: <1s}
+\li{Real-time updates: <100ms latency (WebSocket)}
+\li{Chart rendering: 60 FPS}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{Low Truth Scores:}}
+
+\pre{\startverb
+# Get detailed breakdown
+npx claude-flow@alpha truth --verbose --threshold 0.0
+
+# Check specific criteria
+npx claude-flow@alpha verify check --verbose
+
+# View agent-specific issues
+npx claude-flow@alpha truth --agent <agent-name> --format json
+\stopverb}
+
+\p{\strong{Rollback Failures:}}
+
+\pre{\startverb
+# Check git status
+git status
+
+# View rollback history
+npx claude-flow@alpha verify rollback --history
+
+# Manual rollback
+git reset --hard HEAD~1
+\stopverb}
+
+\p{\strong{Verification Timeouts:}}
+
+\pre{\startverb
+# Increase timeout
+npx claude-flow@alpha verify check --timeout 60s
+
+# Verify in batches
+npx claude-flow@alpha verify batch --batch-size 10
+\stopverb}
+}
+}
+
+\subtree{
+\title{Exit Codes}
+\p{Verification commands return standard exit codes:}
+
+\ul{
+\li{\code{\startverb 0\stopverb}: Verification passed (score ≥ threshold)}
+\li{\code{\startverb 1\stopverb}: Verification failed (score < threshold)}
+\li{\code{\startverb 2\stopverb}: Error during verification (invalid input, system error)}
+}
+}
+
+\subtree{
+\title{Related Commands}
+\ul{
+\li{\code{\startverb npx claude-flow@alpha pair\stopverb} - Collaborative development with verification}
+\li{\code{\startverb npx claude-flow@alpha train\stopverb} - Training with verification feedback}
+\li{\code{\startverb npx claude-flow@alpha swarm\stopverb} - Multi-agent coordination with quality checks}
+\li{\code{\startverb npx claude-flow@alpha report\stopverb} - Generate comprehensive project reports}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Set Appropriate Thresholds}: Use 0.99 for critical code, 0.95 for standard, 0.90 for experimental}
+\li{\strong{Enable Auto-rollback}: Prevent bad code from persisting}
+\li{\strong{Monitor Trends}: Track improvement over time, not just current scores}
+\li{\strong{Integrate with CI/CD}: Make verification part of your pipeline}
+\li{\strong{Use Watch Mode}: Get immediate feedback during development}
+\li{\strong{Export Metrics}: Track quality metrics in your monitoring system}
+\li{\strong{Review Rollbacks}: Understand why changes were rejected}
+\li{\strong{Train Agents}: Use verification feedback to improve agent performance}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{Truth Scoring Algorithm: See \code{\startverb /docs/truth-scoring.md\stopverb}}
+\li{Verification Criteria: See \code{\startverb /docs/verification-criteria.md\stopverb}}
+\li{Integration Examples: See \code{\startverb /examples/verification/\stopverb}}
+\li{API Reference: See \code{\startverb /docs/api/verification.md\stopverb}}
+}
+}
+}
+}

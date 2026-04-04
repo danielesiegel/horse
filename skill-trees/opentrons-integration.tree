@@ -1,0 +1,597 @@
+\title{Opentrons Integration}
+
+\taxon{skill}
+
+\meta{description}{"Lab automation platform for Flex/OT-2 robots. Write Protocol API v2 protocols, liquid handling, hardware modules (heater-shaker, thermocycler), labware management, for automated pipetting workflows."}
+
+\subtree{
+\title{Opentrons Integration}
+\subtree{
+\title{Overview}
+\p{Opentrons is a Python-based lab automation platform for Flex and OT-2 robots. Write Protocol API v2 protocols for liquid handling, control hardware modules (heater-shaker, thermocycler), manage labware, for automated pipetting workflows.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Writing Opentrons Protocol API v2 protocols in Python}
+\li{Automating liquid handling workflows on Flex or OT-2 robots}
+\li{Controlling hardware modules (temperature, magnetic, heater-shaker, thermocycler)}
+\li{Setting up labware configurations and deck layouts}
+\li{Implementing complex pipetting operations (serial dilutions, plate replication, PCR setup)}
+\li{Managing tip usage and optimizing protocol efficiency}
+\li{Working with multi-channel pipettes for 96-well plate operations}
+\li{Simulating and testing protocols before robot execution}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Protocol Structure and Metadata}
+\p{Every Opentrons protocol follows a standard structure:}
+
+\pre{\startverb
+from opentrons import protocol_api
+
+# Metadata
+metadata = {
+    'protocolName': 'My Protocol',
+    'author': 'Name <email@example.com>',
+    'description': 'Protocol description',
+    'apiLevel': '2.19'  # Use latest available API version
+}
+
+# Requirements (optional)
+requirements = {
+    'robotType': 'Flex',  # or 'OT-2'
+    'apiLevel': '2.19'
+}
+
+# Run function
+def run(protocol: protocol_api.ProtocolContext):
+    # Protocol commands go here
+    pass
+\stopverb}
+
+\p{\strong{Key elements:}}
+
+\ul{
+\li{Import \code{\startverb protocol_api\stopverb} from \code{\startverb opentrons\stopverb}}
+\li{Define \code{\startverb metadata\stopverb} dict with protocolName, author, description, apiLevel}
+\li{Optional \code{\startverb requirements\stopverb} dict for robot type and API version}
+\li{Implement \code{\startverb run()\stopverb} function receiving \code{\startverb ProtocolContext\stopverb} as parameter}
+\li{All protocol logic goes inside the \code{\startverb run()\stopverb} function}
+}
+}
+
+\subtree{
+\title{2. Loading Hardware}
+\p{\strong{Loading Instruments (Pipettes):}}
+
+\pre{\startverb
+def run(protocol: protocol_api.ProtocolContext):
+    # Load pipette on specific mount
+    left_pipette = protocol.load_instrument(
+        'p1000_single_flex',  # Instrument name
+        'left',               # Mount: 'left' or 'right'
+        tip_racks=[tip_rack]  # List of tip rack labware objects
+    )
+\stopverb}
+
+\p{Common pipette names:}
+
+\ul{
+\li{Flex: \code{\startverb p50_single_flex\stopverb}, \code{\startverb p1000_single_flex\stopverb}, \code{\startverb p50_multi_flex\stopverb}, \code{\startverb p1000_multi_flex\stopverb}}
+\li{OT-2: \code{\startverb p20_single_gen2\stopverb}, \code{\startverb p300_single_gen2\stopverb}, \code{\startverb p1000_single_gen2\stopverb}, \code{\startverb p20_multi_gen2\stopverb}, \code{\startverb p300_multi_gen2\stopverb}}
+}
+
+\p{\strong{Loading Labware:}}
+
+\pre{\startverb
+# Load labware directly on deck
+plate = protocol.load_labware(
+    'corning_96_wellplate_360ul_flat',  # Labware API name
+    'D1',                                # Deck slot (Flex: A1-D3, OT-2: 1-11)
+    label='Sample Plate'                 # Optional display label
+)
+
+# Load tip rack
+tip_rack = protocol.load_labware('opentrons_flex_96_tiprack_1000ul', 'C1')
+
+# Load labware on adapter
+adapter = protocol.load_adapter('opentrons_flex_96_tiprack_adapter', 'B1')
+tips = adapter.load_labware('opentrons_flex_96_tiprack_200ul')
+\stopverb}
+
+\p{\strong{Loading Modules:}}
+
+\pre{\startverb
+# Temperature module
+temp_module = protocol.load_module('temperature module gen2', 'D3')
+temp_plate = temp_module.load_labware('corning_96_wellplate_360ul_flat')
+
+# Magnetic module
+mag_module = protocol.load_module('magnetic module gen2', 'C2')
+mag_plate = mag_module.load_labware('nest_96_wellplate_100ul_pcr_full_skirt')
+
+# Heater-Shaker module
+hs_module = protocol.load_module('heaterShakerModuleV1', 'D1')
+hs_plate = hs_module.load_labware('corning_96_wellplate_360ul_flat')
+
+# Thermocycler module (takes up specific slots automatically)
+tc_module = protocol.load_module('thermocyclerModuleV2')
+tc_plate = tc_module.load_labware('nest_96_wellplate_100ul_pcr_full_skirt')
+\stopverb}
+}
+
+\subtree{
+\title{3. Liquid Handling Operations}
+\p{\strong{Basic Operations:}}
+
+\pre{\startverb
+# Pick up tip
+pipette.pick_up_tip()
+
+# Aspirate (draw liquid in)
+pipette.aspirate(
+    volume=100,           # Volume in µL
+    location=source['A1'] # Well or location object
+)
+
+# Dispense (expel liquid)
+pipette.dispense(
+    volume=100,
+    location=dest['B1']
+)
+
+# Drop tip
+pipette.drop_tip()
+
+# Return tip to rack
+pipette.return_tip()
+\stopverb}
+
+\p{\strong{Complex Operations:}}
+
+\pre{\startverb
+# Transfer (combines pick_up, aspirate, dispense, drop_tip)
+pipette.transfer(
+    volume=100,
+    source=source_plate['A1'],
+    dest=dest_plate['B1'],
+    new_tip='always'  # 'always', 'once', or 'never'
+)
+
+# Distribute (one source to multiple destinations)
+pipette.distribute(
+    volume=50,
+    source=reservoir['A1'],
+    dest=[plate['A1'], plate['A2'], plate['A3']],
+    new_tip='once'
+)
+
+# Consolidate (multiple sources to one destination)
+pipette.consolidate(
+    volume=50,
+    source=[plate['A1'], plate['A2'], plate['A3']],
+    dest=reservoir['A1'],
+    new_tip='once'
+)
+\stopverb}
+
+\p{\strong{Advanced Techniques:}}
+
+\pre{\startverb
+# Mix (aspirate and dispense in same location)
+pipette.mix(
+    repetitions=3,
+    volume=50,
+    location=plate['A1']
+)
+
+# Air gap (prevent dripping)
+pipette.aspirate(100, source['A1'])
+pipette.air_gap(20)  # 20µL air gap
+pipette.dispense(120, dest['A1'])
+
+# Blow out (expel remaining liquid)
+pipette.blow_out(location=dest['A1'].top())
+
+# Touch tip (remove droplets on tip exterior)
+pipette.touch_tip(location=plate['A1'])
+\stopverb}
+
+\p{\strong{Flow Rate Control:}}
+
+\pre{\startverb
+# Set flow rates (µL/s)
+pipette.flow_rate.aspirate = 150
+pipette.flow_rate.dispense = 300
+pipette.flow_rate.blow_out = 400
+\stopverb}
+}
+
+\subtree{
+\title{4. Accessing Wells and Locations}
+\p{\strong{Well Access Methods:}}
+
+\pre{\startverb
+# By name
+well_a1 = plate['A1']
+
+# By index
+first_well = plate.wells()[0]
+
+# All wells
+all_wells = plate.wells()  # Returns list
+
+# By rows
+rows = plate.rows()  # Returns list of lists
+row_a = plate.rows()[0]  # All wells in row A
+
+# By columns
+columns = plate.columns()  # Returns list of lists
+column_1 = plate.columns()[0]  # All wells in column 1
+
+# Wells by name (dictionary)
+wells_dict = plate.wells_by_name()  # {'A1': Well, 'A2': Well, ...}
+\stopverb}
+
+\p{\strong{Location Methods:}}
+
+\pre{\startverb
+# Top of well (default: 1mm below top)
+pipette.aspirate(100, well.top())
+pipette.aspirate(100, well.top(z=5))  # 5mm above top
+
+# Bottom of well (default: 1mm above bottom)
+pipette.aspirate(100, well.bottom())
+pipette.aspirate(100, well.bottom(z=2))  # 2mm above bottom
+
+# Center of well
+pipette.aspirate(100, well.center())
+\stopverb}
+}
+
+\subtree{
+\title{5. Hardware Module Control}
+\p{\strong{Temperature Module:}}
+
+\pre{\startverb
+# Set temperature
+temp_module.set_temperature(celsius=4)
+
+# Wait for temperature
+temp_module.await_temperature(celsius=4)
+
+# Deactivate
+temp_module.deactivate()
+
+# Check status
+current_temp = temp_module.temperature  # Current temperature
+target_temp = temp_module.target  # Target temperature
+\stopverb}
+
+\p{\strong{Magnetic Module:}}
+
+\pre{\startverb
+# Engage (raise magnets)
+mag_module.engage(height_from_base=10)  # mm from labware base
+
+# Disengage (lower magnets)
+mag_module.disengage()
+
+# Check status
+is_engaged = mag_module.status  # 'engaged' or 'disengaged'
+\stopverb}
+
+\p{\strong{Heater-Shaker Module:}}
+
+\pre{\startverb
+# Set temperature
+hs_module.set_target_temperature(celsius=37)
+
+# Wait for temperature
+hs_module.wait_for_temperature()
+
+# Set shake speed
+hs_module.set_and_wait_for_shake_speed(rpm=500)
+
+# Close labware latch
+hs_module.close_labware_latch()
+
+# Open labware latch
+hs_module.open_labware_latch()
+
+# Deactivate heater
+hs_module.deactivate_heater()
+
+# Deactivate shaker
+hs_module.deactivate_shaker()
+\stopverb}
+
+\p{\strong{Thermocycler Module:}}
+
+\pre{\startverb
+# Open lid
+tc_module.open_lid()
+
+# Close lid
+tc_module.close_lid()
+
+# Set lid temperature
+tc_module.set_lid_temperature(celsius=105)
+
+# Set block temperature
+tc_module.set_block_temperature(
+    temperature=95,
+    hold_time_seconds=30,
+    hold_time_minutes=0.5,
+    block_max_volume=50  # µL per well
+)
+
+# Execute profile (PCR cycling)
+profile = [
+    {'temperature': 95, 'hold_time_seconds': 30},
+    {'temperature': 57, 'hold_time_seconds': 30},
+    {'temperature': 72, 'hold_time_seconds': 60}
+]
+tc_module.execute_profile(
+    steps=profile,
+    repetitions=30,
+    block_max_volume=50
+)
+
+# Deactivate
+tc_module.deactivate_lid()
+tc_module.deactivate_block()
+\stopverb}
+
+\p{\strong{Absorbance Plate Reader:}}
+
+\pre{\startverb
+# Initialize and read
+result = plate_reader.read(wavelengths=[450, 650])
+
+# Access readings
+absorbance_data = result  # Dict with wavelength keys
+\stopverb}
+}
+
+\subtree{
+\title{6. Liquid Tracking and Labeling}
+\p{\strong{Define Liquids:}}
+
+\pre{\startverb
+# Define liquid types
+water = protocol.define_liquid(
+    name='Water',
+    description='Ultrapure water',
+    display_color='#0000FF'  # Hex color code
+)
+
+sample = protocol.define_liquid(
+    name='Sample',
+    description='Cell lysate sample',
+    display_color='#FF0000'
+)
+\stopverb}
+
+\p{\strong{Load Liquids into Wells:}}
+
+\pre{\startverb
+# Load liquid into specific wells
+reservoir['A1'].load_liquid(liquid=water, volume=50000)  # µL
+plate['A1'].load_liquid(liquid=sample, volume=100)
+
+# Mark wells as empty
+plate['B1'].load_empty()
+\stopverb}
+}
+
+\subtree{
+\title{7. Protocol Control and Utilities}
+\p{\strong{Execution Control:}}
+
+\pre{\startverb
+# Pause protocol
+protocol.pause(msg='Replace tip box and resume')
+
+# Delay
+protocol.delay(seconds=60)
+protocol.delay(minutes=5)
+
+# Comment (appears in logs)
+protocol.comment('Starting serial dilution')
+
+# Home robot
+protocol.home()
+\stopverb}
+
+\p{\strong{Conditional Logic:}}
+
+\pre{\startverb
+# Check if simulating
+if protocol.is_simulating():
+    protocol.comment('Running in simulation mode')
+else:
+    protocol.comment('Running on actual robot')
+\stopverb}
+
+\p{\strong{Rail Lights (Flex only):}}
+
+\pre{\startverb
+# Turn lights on
+protocol.set_rail_lights(on=True)
+
+# Turn lights off
+protocol.set_rail_lights(on=False)
+\stopverb}
+}
+
+\subtree{
+\title{8. Multi-Channel and 8-Channel Pipetting}
+\p{When using multi-channel pipettes:}
+
+\pre{\startverb
+# Load 8-channel pipette
+multi_pipette = protocol.load_instrument(
+    'p300_multi_gen2',
+    'left',
+    tip_racks=[tips]
+)
+
+# Access entire column with single well reference
+multi_pipette.transfer(
+    volume=100,
+    source=source_plate['A1'],  # Accesses entire column 1
+    dest=dest_plate['A1']       # Dispenses to entire column 1
+)
+
+# Use rows() for row-wise operations
+for row in plate.rows():
+    multi_pipette.transfer(100, reservoir['A1'], row[0])
+\stopverb}
+}
+
+\subtree{
+\title{9. Common Protocol Patterns}
+\p{\strong{Serial Dilution:}}
+
+\pre{\startverb
+def run(protocol: protocol_api.ProtocolContext):
+    # Load labware
+    tips = protocol.load_labware('opentrons_flex_96_tiprack_200ul', 'D1')
+    reservoir = protocol.load_labware('nest_12_reservoir_15ml', 'D2')
+    plate = protocol.load_labware('corning_96_wellplate_360ul_flat', 'D3')
+
+    # Load pipette
+    p300 = protocol.load_instrument('p300_single_flex', 'left', tip_racks=[tips])
+
+    # Add diluent to all wells except first
+    p300.transfer(100, reservoir['A1'], plate.rows()[0][1:])
+
+    # Serial dilution across row
+    p300.transfer(
+        100,
+        plate.rows()[0][:11],  # Source: wells 0-10
+        plate.rows()[0][1:],   # Dest: wells 1-11
+        mix_after=(3, 50),     # Mix 3x with 50µL after dispense
+        new_tip='always'
+    )
+\stopverb}
+
+\p{\strong{Plate Replication:}}
+
+\pre{\startverb
+def run(protocol: protocol_api.ProtocolContext):
+    # Load labware
+    tips = protocol.load_labware('opentrons_flex_96_tiprack_1000ul', 'C1')
+    source = protocol.load_labware('corning_96_wellplate_360ul_flat', 'D1')
+    dest = protocol.load_labware('corning_96_wellplate_360ul_flat', 'D2')
+
+    # Load pipette
+    p1000 = protocol.load_instrument('p1000_single_flex', 'left', tip_racks=[tips])
+
+    # Transfer from all wells in source to dest
+    p1000.transfer(
+        100,
+        source.wells(),
+        dest.wells(),
+        new_tip='always'
+    )
+\stopverb}
+
+\p{\strong{PCR Setup:}}
+
+\pre{\startverb
+def run(protocol: protocol_api.ProtocolContext):
+    # Load thermocycler
+    tc_mod = protocol.load_module('thermocyclerModuleV2')
+    tc_plate = tc_mod.load_labware('nest_96_wellplate_100ul_pcr_full_skirt')
+
+    # Load tips and reagents
+    tips = protocol.load_labware('opentrons_flex_96_tiprack_200ul', 'C1')
+    reagents = protocol.load_labware('opentrons_24_tuberack_nest_1.5ml_snapcap', 'D1')
+
+    # Load pipette
+    p300 = protocol.load_instrument('p300_single_flex', 'left', tip_racks=[tips])
+
+    # Open thermocycler lid
+    tc_mod.open_lid()
+
+    # Distribute master mix
+    p300.distribute(
+        20,
+        reagents['A1'],
+        tc_plate.wells(),
+        new_tip='once'
+    )
+
+    # Add samples (example for first 8 wells)
+    for i, well in enumerate(tc_plate.wells()[:8]):
+        p300.transfer(5, reagents.wells()[i+1], well, new_tip='always')
+
+    # Run PCR
+    tc_mod.close_lid()
+    tc_mod.set_lid_temperature(105)
+
+    # PCR profile
+    tc_mod.set_block_temperature(95, hold_time_seconds=180)
+
+    profile = [
+        {'temperature': 95, 'hold_time_seconds': 15},
+        {'temperature': 60, 'hold_time_seconds': 30},
+        {'temperature': 72, 'hold_time_seconds': 30}
+    ]
+    tc_mod.execute_profile(steps=profile, repetitions=35, block_max_volume=25)
+
+    tc_mod.set_block_temperature(72, hold_time_minutes=5)
+    tc_mod.set_block_temperature(4)
+
+    tc_mod.deactivate_lid()
+    tc_mod.open_lid()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Always specify API level}: Use the latest stable API version in metadata}
+\li{\strong{Use meaningful labels}: Label labware for easier identification in logs}
+\li{\strong{Check tip availability}: Ensure sufficient tips for protocol completion}
+\li{\strong{Add comments}: Use \code{\startverb protocol.comment()\stopverb} for debugging and logging}
+\li{\strong{Simulate first}: Always test protocols in simulation before running on robot}
+\li{\strong{Handle errors gracefully}: Add pauses for manual intervention when needed}
+\li{\strong{Consider timing}: Use delays when protocols require incubation periods}
+\li{\strong{Track liquids}: Use liquid tracking for better setup validation}
+\li{\strong{Optimize tip usage}: Use \code{\startverb new_tip='once'\stopverb} when appropriate to save tips}
+\li{\strong{Control flow rates}: Adjust flow rates for viscous or volatile liquids}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Common Issues:}}
+
+\ul{
+\li{\strong{Out of tips}: Verify tip rack capacity matches protocol requirements}
+\li{\strong{Labware collisions}: Check deck layout for spatial conflicts}
+\li{\strong{Volume errors}: Ensure volumes don't exceed well or pipette capacities}
+\li{\strong{Module not responding}: Verify module is properly connected and firmware is updated}
+\li{\strong{Inaccurate volumes}: Calibrate pipettes and check for air bubbles}
+\li{\strong{Protocol fails in simulation}: Check API version compatibility and labware definitions}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{For detailed API documentation, see \code{\startverb references/api_reference.md\stopverb} in this skill directory.}
+
+\p{For example protocol templates, see \code{\startverb scripts/\stopverb} directory.}
+}
+}

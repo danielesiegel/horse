@@ -1,0 +1,238 @@
+\title{Implementing Container Image Minimal Base With Distroless}
+
+\taxon{skill}
+
+\tag{distroless}
+
+\tag{container-images}
+
+\tag{minimal-base}
+
+\tag{attack-surface}
+
+\tag{docker}
+
+\tag{security-hardening}
+
+\tag{supply-chain}
+
+\tag{kubernetes}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Reduce container attack surface by building application images on Google distroless base images that contain only the application runtime with no shell, package manager, or unnecessary OS utilities.}
+
+\subtree{
+\title{Implementing Container Image Minimal Base with Distroless}
+\subtree{
+\title{Overview}
+\p{Google distroless images contain only your application and its runtime dependencies, without package managers, shells, or other programs found in standard Linux distributions. By eliminating unnecessary OS components, distroless images achieve up to 95\% reduction in attack surface compared to traditional base images like ubuntu or debian. Major projects including Kubernetes itself, Knative, and Tekton use distroless images in production. As of 2025, Docker also offers Hardened Images (DHI) as an open-source alternative for minimal container bases.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing container image minimal base with distroless capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Docker 20.10+ or compatible container build tool (Buildah, Kaniko)}
+\li{Multi-stage Dockerfile knowledge}
+\li{Application compiled as a static binary or with runtime bundled}
+\li{Container registry for image storage}
+}
+}
+
+\subtree{
+\title{Available Distroless Images}
+\pre{\startverb
+| Image | Use Case | Size |
+|-------|----------|------|
+| `gcr.io/distroless/static-debian12` | Statically compiled binaries (Go, Rust) | ~2MB |
+| `gcr.io/distroless/base-debian12` | Dynamically linked binaries needing glibc | ~20MB |
+| `gcr.io/distroless/cc-debian12` | C/C++ applications needing libstdc++ | ~25MB |
+| `gcr.io/distroless/java21-debian12` | Java 21 applications | ~220MB |
+| `gcr.io/distroless/python3-debian12` | Python 3 applications | ~50MB |
+| `gcr.io/distroless/nodejs22-debian12` | Node.js 22 applications | ~130MB |
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Stage Build Patterns}
+\subtree{
+\title{Go Application}
+\pre{\startverb
+# Build stage
+FROM golang:1.22-bookworm AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
+
+# Runtime stage - static distroless
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /server /server
+USER nonroot:nonroot
+ENTRYPOINT ["/server"]
+\stopverb}
+}
+
+\subtree{
+\title{Java Application}
+\pre{\startverb
+# Build stage
+FROM maven:3.9-eclipse-temurin-21 AS builder
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn package -DskipTests
+
+# Runtime stage - Java distroless
+FROM gcr.io/distroless/java21-debian12:nonroot
+COPY --from=builder /app/target/app.jar /app.jar
+USER nonroot:nonroot
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+\stopverb}
+}
+
+\subtree{
+\title{Python Application}
+\pre{\startverb
+# Build stage
+FROM python:3.12-bookworm AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --target=/deps -r requirements.txt
+COPY . .
+
+# Runtime stage - Python distroless
+FROM gcr.io/distroless/python3-debian12:nonroot
+WORKDIR /app
+COPY --from=builder /deps /deps
+COPY --from=builder /app /app
+ENV PYTHONPATH=/deps
+USER nonroot:nonroot
+ENTRYPOINT ["python3", "/app/main.py"]
+\stopverb}
+}
+
+\subtree{
+\title{Node.js Application}
+\pre{\startverb
+# Build stage
+FROM node:22-bookworm AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production
+COPY . .
+
+# Runtime stage - Node distroless
+FROM gcr.io/distroless/nodejs22-debian12:nonroot
+WORKDIR /app
+COPY --from=builder /app .
+USER nonroot:nonroot
+CMD ["server.js"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Benefits}
+\subtree{
+\title{Attack Surface Comparison}
+\pre{\startverb
+| Component | Ubuntu | Alpine | Distroless |
+|-----------|--------|--------|-----------|
+| Shell (bash/sh) | Yes | Yes | No |
+| Package manager | apt | apk | No |
+| coreutils | Full | BusyBox | No |
+| curl/wget | Yes | Yes | No |
+| User management | Yes | Yes | No |
+| Known CVEs (typical) | 50-200+ | 5-20 | 0-5 |
+| Image size (base) | ~77MB | ~7MB | ~2-20MB |
+\stopverb}
+}
+
+\subtree{
+\title{Security Implications}
+\ul{
+\li{\strong{No shell}: Attackers cannot exec into containers to run commands}
+\li{\strong{No package manager}: Cannot install additional tools or malware}
+\li{\strong{No coreutils}: No \code{\startverb cat\stopverb}, \code{\startverb ls\stopverb}, \code{\startverb find\stopverb}, \code{\startverb curl\stopverb} for reconnaissance}
+\li{\strong{Minimal CVEs}: Fewer packages means fewer vulnerabilities to patch}
+\li{\strong{Non-root by default}: \code{\startverb :nonroot\stopverb} tag runs as UID 65534}
+}
+}
+}
+
+\subtree{
+\title{Debugging Distroless Containers}
+\p{Since distroless has no shell, use these techniques for debugging:}
+
+\subtree{
+\title{Debug Image Variant}
+\pre{\startverb
+# Use debug variant in non-production environments only
+FROM gcr.io/distroless/base-debian12:debug
+# Includes busybox shell at /busybox/sh
+\stopverb}
+
+\pre{\startverb
+# Exec into debug variant
+kubectl exec -it pod-name -- /busybox/sh
+\stopverb}
+}
+
+\subtree{
+\title{Ephemeral Debug Containers (Kubernetes 1.25+)}
+\pre{\startverb
+# Attach a debug container with full tooling
+kubectl debug -it pod-name --image=busybox:1.36 --target=app-container
+\stopverb}
+}
+
+\subtree{
+\title{Crane/Dive for Image Inspection}
+\pre{\startverb
+# Inspect image layers without running
+crane export gcr.io/distroless/static-debian12 - | tar -tf - | head -50
+
+# Analyze image layers
+dive gcr.io/distroless/static-debian12
+\stopverb}
+}
+}
+
+\subtree{
+\title{Image Scanning Results}
+\p{Typical vulnerability comparison using Trivy:}
+
+\pre{\startverb
+# Scan Ubuntu-based image
+trivy image myapp:ubuntu
+# Result: 47 vulnerabilities (3 CRITICAL, 12 HIGH)
+
+# Scan Distroless-based image
+trivy image myapp:distroless
+# Result: 2 vulnerabilities (0 CRITICAL, 0 HIGH)
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[GoogleContainerTools/distroless GitHub](https://github.com/GoogleContainerTools/distroless)}
+\li{[Distroless Images - Docker Documentation](https://docs.docker.com/dhi/core-concepts/distroless/)}
+\li{[Alpine, Distroless, or Scratch? - Google Cloud](https://medium.com/google-cloud/alpine-distroless-or-scratch-caac35250e0b)}
+\li{[Docker Hardened Images](https://www.infoq.com/news/2025/12/docker-hardened-images/)}
+}
+}
+}

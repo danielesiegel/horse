@@ -1,0 +1,242 @@
+\title{Uniprot Database}
+
+\taxon{skill}
+
+\meta{description}{"Direct REST API access to UniProt. Protein searches, FASTA retrieval, ID mapping, Swiss-Prot/TrEMBL. For Python workflows with multiple databases, prefer bioservices (unified interface to 40+ services). Use this for direct HTTP/REST work or UniProt-specific control."}
+
+\subtree{
+\title{UniProt Database}
+\subtree{
+\title{Overview}
+\p{UniProt is the world's leading comprehensive protein sequence and functional information resource. Search proteins by name, gene, or accession, retrieve sequences in FASTA format, perform ID mapping across databases, access Swiss-Prot/TrEMBL annotations via REST API for protein analysis.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Searching for protein entries by name, gene symbol, accession, or organism}
+\li{Retrieving protein sequences in FASTA or other formats}
+\li{Mapping identifiers between UniProt and external databases (Ensembl, RefSeq, PDB, etc.)}
+\li{Accessing protein annotations including GO terms, domains, and functional descriptions}
+\li{Batch retrieving multiple protein entries efficiently}
+\li{Querying reviewed (Swiss-Prot) vs. unreviewed (TrEMBL) protein data}
+\li{Streaming large protein datasets}
+\li{Building custom queries with field-specific search syntax}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Searching for Proteins}
+\p{Search UniProt using natural language queries or structured search syntax.}
+
+\p{\strong{Common search patterns:}}
+
+\pre{\startverb
+# Search by protein name
+query = "insulin AND organism_name:\"Homo sapiens\""
+
+# Search by gene name
+query = "gene:BRCA1 AND reviewed:true"
+
+# Search by accession
+query = "accession:P12345"
+
+# Search by sequence length
+query = "length:[100 TO 500]"
+
+# Search by taxonomy
+query = "taxonomy_id:9606"  # Human proteins
+
+# Search by GO term
+query = "go:0005515"  # Protein binding
+\stopverb}
+
+\p{Use the API search endpoint: \code{\startverb https://rest.uniprot.org/uniprotkb/search?query={query}&format={format}\stopverb}}
+
+\p{\strong{Supported formats:} JSON, TSV, Excel, XML, FASTA, RDF, TXT}
+}
+
+\subtree{
+\title{2. Retrieving Individual Protein Entries}
+\p{Retrieve specific protein entries by accession number.}
+
+\p{\strong{Accession number formats:}}
+
+\ul{
+\li{Classic: P12345, Q1AAA9, O15530 (6 characters: letter + 5 alphanumeric)}
+\li{Extended: A0A022YWF9 (10 characters for newer entries)}
+}
+
+\p{\strong{Retrieve endpoint:} \code{\startverb https://rest.uniprot.org/uniprotkb/{accession}.{format}\stopverb}}
+
+\p{Example: \code{\startverb https://rest.uniprot.org/uniprotkb/P12345.fasta\stopverb}}
+}
+
+\subtree{
+\title{3. Batch Retrieval and ID Mapping}
+\p{Map protein identifiers between different database systems and retrieve multiple entries efficiently.}
+
+\p{\strong{ID Mapping workflow:}}
+
+\ol{
+\li{Submit mapping job to: \code{\startverb https://rest.uniprot.org/idmapping/run\stopverb}}
+\li{Check job status: \code{\startverb https://rest.uniprot.org/idmapping/status/{jobId}\stopverb}}
+\li{Retrieve results: \code{\startverb https://rest.uniprot.org/idmapping/results/{jobId}\stopverb}}
+}
+
+\p{\strong{Supported databases for mapping:}}
+
+\ul{
+\li{UniProtKB AC/ID}
+\li{Gene names}
+\li{Ensembl, RefSeq, EMBL}
+\li{PDB, AlphaFoldDB}
+\li{KEGG, GO terms}
+\li{And many more (see \code{\startverb /references/id_mapping_databases.md\stopverb})}
+}
+
+\p{\strong{Limitations:}}
+
+\ul{
+\li{Maximum 100,000 IDs per job}
+\li{Results stored for 7 days}
+}
+}
+
+\subtree{
+\title{4. Streaming Large Result Sets}
+\p{For large queries that exceed pagination limits, use the stream endpoint:}
+
+\p{\code{\startverb https://rest.uniprot.org/uniprotkb/stream?query={query}&format={format}\stopverb}}
+
+\p{The stream endpoint returns all results without pagination, suitable for downloading complete datasets.}
+}
+
+\subtree{
+\title{5. Customizing Retrieved Fields}
+\p{Specify exactly which fields to retrieve for efficient data transfer.}
+
+\p{\strong{Common fields:}}
+
+\ul{
+\li{\code{\startverb accession\stopverb} - UniProt accession number}
+\li{\code{\startverb id\stopverb} - Entry name}
+\li{\code{\startverb gene_names\stopverb} - Gene name(s)}
+\li{\code{\startverb organism_name\stopverb} - Organism}
+\li{\code{\startverb protein_name\stopverb} - Protein names}
+\li{\code{\startverb sequence\stopverb} - Amino acid sequence}
+\li{\code{\startverb length\stopverb} - Sequence length}
+\li{\code{\startverb go_*\stopverb} - Gene Ontology annotations}
+\li{\code{\startverb cc_*\stopverb} - Comment fields (function, interaction, etc.)}
+\li{\code{\startverb ft_*\stopverb} - Feature annotations (domains, sites, etc.)}
+}
+
+\p{\strong{Example:} \code{\startverb https://rest.uniprot.org/uniprotkb/search?query=insulin&fields=accession,gene_names,organism_name,length,sequence&format=tsv\stopverb}}
+
+\p{See \code{\startverb /references/api_fields.md\stopverb} for complete field list.}
+}
+}
+
+\subtree{
+\title{Python Implementation}
+\p{For programmatic access, use the provided helper script \code{\startverb scripts/uniprot_client.py\stopverb} which implements:}
+
+\ul{
+\li{\code{\startverb search_proteins(query, format)\stopverb} - Search UniProt with any query}
+\li{\code{\startverb get_protein(accession, format)\stopverb} - Retrieve single protein entry}
+\li{\code{\startverb map_ids(ids, from_db, to_db)\stopverb} - Map between identifier types}
+\li{\code{\startverb batch_retrieve(accessions, format)\stopverb} - Retrieve multiple entries}
+\li{\code{\startverb stream_results(query, format)\stopverb} - Stream large result sets}
+}
+
+\p{\strong{Alternative Python packages:}}
+
+\ul{
+\li{\strong{Unipressed}: Modern, typed Python client for UniProt REST API}
+\li{\strong{bioservices}: Comprehensive bioinformatics web services client}
+}
+}
+
+\subtree{
+\title{Query Syntax Examples}
+\p{\strong{Boolean operators:}}
+
+\pre{\startverb
+kinase AND organism_name:human
+(diabetes OR insulin) AND reviewed:true
+cancer NOT lung
+\stopverb}
+
+\p{\strong{Field-specific searches:}}
+
+\pre{\startverb
+gene:BRCA1
+accession:P12345
+organism_id:9606
+taxonomy_name:"Homo sapiens"
+annotation:(type:signal)
+\stopverb}
+
+\p{\strong{Range queries:}}
+
+\pre{\startverb
+length:[100 TO 500]
+mass:[50000 TO 100000]
+\stopverb}
+
+\p{\strong{Wildcards:}}
+
+\pre{\startverb
+gene:BRCA*
+protein_name:kinase*
+\stopverb}
+
+\p{See \code{\startverb /references/query_syntax.md\stopverb} for comprehensive syntax documentation.}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Use reviewed entries when possible}: Filter with \code{\startverb reviewed:true\stopverb} for Swiss-Prot (manually curated) entries}
+\li{\strong{Specify format explicitly}: Choose the most appropriate format (FASTA for sequences, TSV for tabular data, JSON for programmatic parsing)}
+\li{\strong{Use field selection}: Only request fields you need to reduce bandwidth and processing time}
+\li{\strong{Handle pagination}: For large result sets, implement proper pagination or use the stream endpoint}
+\li{\strong{Cache results}: Store frequently accessed data locally to minimize API calls}
+\li{\strong{Rate limiting}: Be respectful of API resources; implement delays for large batch operations}
+\li{\strong{Check data quality}: TrEMBL entries are computational predictions; Swiss-Prot entries are manually reviewed}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{scripts/}
+\p{\code{\startverb uniprot_client.py\stopverb} - Python client with helper functions for common UniProt operations including search, retrieval, ID mapping, and streaming.}
+}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb api_fields.md\stopverb} - Complete list of available fields for customizing queries}
+\li{\code{\startverb id_mapping_databases.md\stopverb} - Supported databases for ID mapping operations}
+\li{\code{\startverb query_syntax.md\stopverb} - Comprehensive query syntax with advanced examples}
+\li{\code{\startverb api_examples.md\stopverb} - Code examples in multiple languages (Python, curl, R)}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{API Documentation}: https://www.uniprot.org/help/api}
+\li{\strong{Interactive API Explorer}: https://www.uniprot.org/api-documentation}
+\li{\strong{REST Tutorial}: https://www.uniprot.org/help/uniprot_rest_tutorial}
+\li{\strong{Query Syntax Help}: https://www.uniprot.org/help/query-fields}
+\li{\strong{SPARQL Endpoint}: https://sparql.uniprot.org/ (for advanced graph queries)}
+}
+}
+}

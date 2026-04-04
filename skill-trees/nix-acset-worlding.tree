@@ -1,0 +1,172 @@
+\title{Nix Acset Worlding}
+
+\taxon{skill}
+
+\meta{description}{Model Nix store as Attributed C-Set for dependency verification, GC analysis,}
+
+\subtree{
+\title{Nix ACSet Worlding Skill}
+\blockquote{\strong{Trit}: -1 (MINUS) - Constraint verification of Nix store semantics}
+
+\p{Model Nix store as Attributed C-Set for dependency verification and world management.}
+
+\subtree{
+\title{Schema}
+\pre{\startverb
+@present SchNixStore(FreeSchema) begin
+    (Path, Hash, Name, Type, World)::Ob
+    
+    path_hash::Hom(Path, Hash)
+    path_name::Hom(Path, Name)  
+    path_type::Hom(Path, Type)
+    depends_on::Hom(Path, Path)
+    belongs_to::Hom(Path, World)
+    
+    hash_value::Attr(Hash, String)      # 32-char base32
+    name_value::Attr(Name, String)
+    type_value::Attr(Type, Symbol)      # :drv, :out, :source, :patch
+    world_name::Attr(World, String)
+    size_bytes::Attr(Path, Int)
+    is_dead::Attr(Path, Bool)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Core Operations}
+\subtree{
+\title{1. GC Root Analysis}
+\pre{\startverb
+function live_roots(store::NixStoreACSet)
+    filter(p -> !store[:is_dead][p], parts(store, :Path))
+end
+
+function dead_paths(store::NixStoreACSet)
+    filter(p -> store[:is_dead][p], parts(store, :Path))
+end
+\stopverb}
+}
+
+\subtree{
+\title{2. World Management}
+\p{Flox environments as categorical worlds:}
+
+\pre{\startverb
+World := {name, dev_env, run_env, manifest}
+\stopverb}
+
+\p{Live worlds (2024-12-24):}
+
+\ul{
+\li{\code{\startverb music-topos\stopverb} - Audio/visual synthesis}
+\li{\code{\startverb stellogen\stopverb} - Stellar generators}
+\li{\code{\startverb bevy_fullscreen_app\stopverb} - Rust game engine}
+\li{\code{\startverb cubical-agda\stopverb} - HoTT proof assistant}
+}
+}
+
+\subtree{
+\title{3. Dependency Sheaf}
+\p{Dependencies form a sheaf over the store graph:}
+
+\pre{\startverb
+function dependency_sheaf(store::NixStoreACSet)
+    # Check transitive closure consistency
+    for p in parts(store, :Path)
+        deps = store[:depends_on][p]
+        for d in deps
+            @assert haspart(store, :Path, d)
+        end
+    end
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Gay.jl}
+\subtree{
+\title{Hash → Color Mapping}
+\pre{\startverb
+function hash_to_color(hash::String)
+    seed = parse(UInt64, hash[1:16], base=32)
+    gay_color(seed ⊻ GAY_SEED)
+end
+\stopverb}
+}
+
+\subtree{
+\title{GC Statistics (2024-12-24 Snapshot)}
+\pre{\startverb
+| Metric | Value |
+|--------|-------|
+| Dead paths | 299 |
+| Reclaimable | 3.9 GB |
+| Live roots | 17 |
+| Worlds pruned | 5 |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Triadic Composition}
+\pre{\startverb
+nix-acset-worlding (-1) ⊗ flox-envs (0) ⊗ world-hopping (+1) = 0 ✓
+nix-acset-worlding (-1) ⊗ structured-decomp (0) ⊗ gay-mcp (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Snapshot current store
+nix-store --gc --print-roots > roots.txt
+nix-store --gc --print-dead > dead.txt
+
+# Build ACSet from snapshot
+julia -e 'using NixACSet; build_from_snapshot("dead.txt")'
+
+# Verify dependency sheaf
+julia -e 'using NixACSet; verify_sheaf(load_store())'
+\stopverb}
+}
+
+\subtree{
+\title{Categorical Semantics}
+\subtree{
+\title{Nix Store as Topos}
+\ul{
+\li{\strong{Objects}: Store paths}
+\li{\strong{Morphisms}: Dependencies (derivation → output)}
+\li{\strong{Subobject classifier}: Ω = {live, dead, gc-protected}}
+}
+}
+
+\subtree{
+\title{Pullback for Conflict Detection}
+\pre{\startverb
+     P ──────→ A
+     │         │
+     ↓         ↓
+     B ──────→ C
+\stopverb}
+
+\p{When two derivations depend on conflicting versions:}
+
+\ul{
+\li{P = empty → conflict detected}
+\li{P ≠ empty → shared dependency}
+}
+}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{\strong{Dolstra} - Nix: A Safe and Policy-Free System for Software Deployment}
+\li{\strong{Eelco} - The Purely Functional Software Deployment Model}
+\li{\strong{ACSets.jl} - Attributed C-Sets for algebraic databases}
+\li{\strong{Gay.jl} - Deterministic coloring for store visualization}
+}
+}
+}

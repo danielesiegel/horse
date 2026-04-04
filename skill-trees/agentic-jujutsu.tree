@@ -1,0 +1,717 @@
+\title{Agentic Jujutsu}
+
+\taxon{skill}
+
+\meta{version}{2.3.2}
+
+\meta{description}{Quantum-resistant, self-learning version control for AI agents with ReasoningBank intelligence and multi-agent coordination}
+
+\subtree{
+\title{Agentic Jujutsu - AI Agent Version Control}
+\blockquote{Quantum-ready, self-learning version control designed for multiple AI agents working simultaneously without conflicts.}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use \strong{agentic-jujutsu} when you need:}
+
+\ul{
+\li{✅ Multiple AI agents modifying code simultaneously}
+\li{✅ Lock-free version control (23x faster than Git)}
+\li{✅ Self-learning AI that improves from experience}
+\li{✅ Quantum-resistant security for future-proof protection}
+\li{✅ Automatic conflict resolution (87\% success rate)}
+\li{✅ Pattern recognition and intelligent suggestions}
+\li{✅ Multi-agent coordination without blocking}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Installation}
+\pre{\startverb
+npx agentic-jujutsu
+\stopverb}
+}
+
+\subtree{
+\title{Basic Usage}
+\pre{\startverb
+const { JjWrapper } = require('agentic-jujutsu');
+
+const jj = new JjWrapper();
+
+// Basic operations
+await jj.status();
+await jj.newCommit('Add feature');
+await jj.log(10);
+
+// Self-learning trajectory
+const id = jj.startTrajectory('Implement authentication');
+await jj.branchCreate('feature/auth');
+await jj.newCommit('Add auth');
+jj.addToTrajectory();
+jj.finalizeTrajectory(0.9, 'Clean implementation');
+
+// Get AI suggestions
+const suggestion = JSON.parse(jj.getSuggestion('Add logout feature'));
+console.log(`Confidence: ${suggestion.confidence}`);
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Self-Learning with ReasoningBank}
+\p{Track operations, learn patterns, and get intelligent suggestions:}
+
+\pre{\startverb
+// Start learning trajectory
+const trajectoryId = jj.startTrajectory('Deploy to production');
+
+// Perform operations (automatically tracked)
+await jj.execute(['git', 'push', 'origin', 'main']);
+await jj.branchCreate('release/v1.0');
+await jj.newCommit('Release v1.0');
+
+// Record operations to trajectory
+jj.addToTrajectory();
+
+// Finalize with success score (0.0-1.0) and critique
+jj.finalizeTrajectory(0.95, 'Deployment successful, no issues');
+
+// Later: Get AI-powered suggestions for similar tasks
+const suggestion = JSON.parse(jj.getSuggestion('Deploy to staging'));
+console.log('AI Recommendation:', suggestion.reasoning);
+console.log('Confidence:', (suggestion.confidence * 100).toFixed(1) + '%');
+console.log('Expected Success:', (suggestion.expectedSuccessRate * 100).toFixed(1) + '%');
+\stopverb}
+
+\p{\strong{Validation (v2.3.1)}:}
+
+\ul{
+\li{✅ Tasks must be non-empty (max 10KB)}
+\li{✅ Success scores must be 0.0-1.0}
+\li{✅ Must have operations before finalizing}
+\li{✅ Contexts cannot be empty}
+}
+}
+
+\subtree{
+\title{2. Pattern Discovery}
+\p{Automatically identify successful operation sequences:}
+
+\pre{\startverb
+// Get discovered patterns
+const patterns = JSON.parse(jj.getPatterns());
+
+patterns.forEach(pattern => {
+    console.log(`Pattern: ${pattern.name}`);
+    console.log(`  Success rate: ${(pattern.successRate * 100).toFixed(1)}%`);
+    console.log(`  Used ${pattern.observationCount} times`);
+    console.log(`  Operations: ${pattern.operationSequence.join(' → ')}`);
+    console.log(`  Confidence: ${(pattern.confidence * 100).toFixed(1)}%`);
+});
+\stopverb}
+}
+
+\subtree{
+\title{3. Learning Statistics}
+\p{Track improvement over time:}
+
+\pre{\startverb
+const stats = JSON.parse(jj.getLearningStats());
+
+console.log('Learning Progress:');
+console.log(`  Total trajectories: ${stats.totalTrajectories}`);
+console.log(`  Patterns discovered: ${stats.totalPatterns}`);
+console.log(`  Average success: ${(stats.avgSuccessRate * 100).toFixed(1)}%`);
+console.log(`  Improvement rate: ${(stats.improvementRate * 100).toFixed(1)}%`);
+console.log(`  Prediction accuracy: ${(stats.predictionAccuracy * 100).toFixed(1)}%`);
+\stopverb}
+}
+
+\subtree{
+\title{4. Multi-Agent Coordination}
+\p{Multiple agents work concurrently without conflicts:}
+
+\pre{\startverb
+// Agent 1: Developer
+const dev = new JjWrapper();
+dev.startTrajectory('Implement feature');
+await dev.newCommit('Add feature X');
+dev.addToTrajectory();
+dev.finalizeTrajectory(0.85);
+
+// Agent 2: Reviewer (learns from Agent 1)
+const reviewer = new JjWrapper();
+const suggestion = JSON.parse(reviewer.getSuggestion('Review feature X'));
+
+if (suggestion.confidence > 0.7) {
+    console.log('High confidence approach:', suggestion.reasoning);
+}
+
+// Agent 3: Tester (benefits from both)
+const tester = new JjWrapper();
+const similar = JSON.parse(tester.queryTrajectories('test feature', 5));
+console.log(`Found ${similar.length} similar test approaches`);
+\stopverb}
+}
+
+\subtree{
+\title{5. Quantum-Resistant Security (v2.3.0+)}
+\p{Fast integrity verification with quantum-resistant cryptography:}
+
+\pre{\startverb
+const { generateQuantumFingerprint, verifyQuantumFingerprint } = require('agentic-jujutsu');
+
+// Generate SHA3-512 fingerprint (NIST FIPS 202)
+const data = Buffer.from('commit-data');
+const fingerprint = generateQuantumFingerprint(data);
+console.log('Fingerprint:', fingerprint.toString('hex'));
+
+// Verify integrity (<1ms)
+const isValid = verifyQuantumFingerprint(data, fingerprint);
+console.log('Valid:', isValid);
+
+// HQC-128 encryption for trajectories
+const crypto = require('crypto');
+const key = crypto.randomBytes(32).toString('base64');
+jj.enableEncryption(key);
+\stopverb}
+}
+
+\subtree{
+\title{6. Operation Tracking with AgentDB}
+\p{Automatic tracking of all operations:}
+
+\pre{\startverb
+// Operations are tracked automatically
+await jj.status();
+await jj.newCommit('Fix bug');
+await jj.rebase('main');
+
+// Get operation statistics
+const stats = JSON.parse(jj.getStats());
+console.log(`Total operations: ${stats.total_operations}`);
+console.log(`Success rate: ${(stats.success_rate * 100).toFixed(1)}%`);
+console.log(`Avg duration: ${stats.avg_duration_ms.toFixed(2)}ms`);
+
+// Query recent operations
+const ops = jj.getOperations(10);
+ops.forEach(op => {
+    console.log(`${op.operationType}: ${op.command}`);
+    console.log(`  Duration: ${op.durationMs}ms, Success: ${op.success}`);
+});
+
+// Get user operations (excludes snapshots)
+const userOps = jj.getUserOperations(20);
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Use Cases}
+\subtree{
+\title{Use Case 1: Adaptive Workflow Optimization}
+\p{Learn and improve deployment workflows:}
+
+\pre{\startverb
+async function adaptiveDeployment(jj, environment) {
+    // Get AI suggestion based on past deployments
+    const suggestion = JSON.parse(jj.getSuggestion(`Deploy to ${environment}`));
+    
+    console.log(`Deploying with ${(suggestion.confidence * 100).toFixed(0)}% confidence`);
+    console.log(`Expected duration: ${suggestion.estimatedDurationMs}ms`);
+    
+    // Start tracking
+    jj.startTrajectory(`Deploy to ${environment}`);
+    
+    // Execute recommended operations
+    for (const op of suggestion.recommendedOperations) {
+        console.log(`Executing: ${op}`);
+        await executeOperation(op);
+    }
+    
+    jj.addToTrajectory();
+    
+    // Record outcome
+    const success = await verifyDeployment();
+    jj.finalizeTrajectory(
+        success ? 0.95 : 0.5,
+        success ? 'Deployment successful' : 'Issues detected'
+    );
+}
+\stopverb}
+}
+
+\subtree{
+\title{Use Case 2: Multi-Agent Code Review}
+\p{Coordinate review across multiple agents:}
+
+\pre{\startverb
+async function coordinatedReview(agents) {
+    const reviews = await Promise.all(agents.map(async (agent) => {
+        const jj = new JjWrapper();
+        
+        // Start review trajectory
+        jj.startTrajectory(`Review by ${agent.name}`);
+        
+        // Get AI suggestion for review approach
+        const suggestion = JSON.parse(jj.getSuggestion('Code review'));
+        
+        // Perform review
+        const diff = await jj.diff('@', '@-');
+        const issues = await agent.analyze(diff);
+        
+        jj.addToTrajectory();
+        jj.finalizeTrajectory(
+            issues.length === 0 ? 0.9 : 0.6,
+            `Found ${issues.length} issues`
+        );
+        
+        return { agent: agent.name, issues, suggestion };
+    }));
+    
+    // Aggregate learning from all agents
+    return reviews;
+}
+\stopverb}
+}
+
+\subtree{
+\title{Use Case 3: Error Pattern Detection}
+\p{Learn from failures to prevent future issues:}
+
+\pre{\startverb
+async function smartMerge(jj, branch) {
+    // Query similar merge attempts
+    const similar = JSON.parse(jj.queryTrajectories(`merge ${branch}`, 10));
+    
+    // Analyze past failures
+    const failures = similar.filter(t => t.successScore < 0.5);
+    
+    if (failures.length > 0) {
+        console.log('⚠️ Similar merges failed in the past:');
+        failures.forEach(f => {
+            if (f.critique) {
+                console.log(`  - ${f.critique}`);
+            }
+        });
+    }
+    
+    // Get AI recommendation
+    const suggestion = JSON.parse(jj.getSuggestion(`merge ${branch}`));
+    
+    if (suggestion.confidence < 0.7) {
+        console.log('⚠️ Low confidence. Recommended steps:');
+        suggestion.recommendedOperations.forEach(op => console.log(`  - ${op}`));
+    }
+    
+    // Execute merge with tracking
+    jj.startTrajectory(`Merge ${branch}`);
+    try {
+        await jj.execute(['merge', branch]);
+        jj.addToTrajectory();
+        jj.finalizeTrajectory(0.9, 'Merge successful');
+    } catch (err) {
+        jj.addToTrajectory();
+        jj.finalizeTrajectory(0.3, `Merge failed: ${err.message}`);
+        throw err;
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Use Case 4: Continuous Learning Loop}
+\p{Implement a self-improving agent:}
+
+\pre{\startverb
+class SelfImprovingAgent {
+    constructor() {
+        this.jj = new JjWrapper();
+    }
+    
+    async performTask(taskDescription) {
+        // Get AI suggestion
+        const suggestion = JSON.parse(this.jj.getSuggestion(taskDescription));
+        
+        console.log(`Task: ${taskDescription}`);
+        console.log(`AI Confidence: ${(suggestion.confidence * 100).toFixed(1)}%`);
+        console.log(`Expected Success: ${(suggestion.expectedSuccessRate * 100).toFixed(1)}%`);
+        
+        // Start trajectory
+        this.jj.startTrajectory(taskDescription);
+        
+        // Execute with recommended approach
+        const startTime = Date.now();
+        let success = false;
+        
+        try {
+            for (const op of suggestion.recommendedOperations) {
+                await this.execute(op);
+            }
+            success = true;
+        } catch (err) {
+            console.error('Task failed:', err.message);
+        }
+        
+        const duration = Date.now() - startTime;
+        
+        // Record learning
+        this.jj.addToTrajectory();
+        this.jj.finalizeTrajectory(
+            success ? 0.9 : 0.4,
+            success 
+                ? `Completed in ${duration}ms using ${suggestion.recommendedOperations.length} operations`
+                : `Failed after ${duration}ms`
+        );
+        
+        // Check improvement
+        const stats = JSON.parse(this.jj.getLearningStats());
+        console.log(`Improvement rate: ${(stats.improvementRate * 100).toFixed(1)}%`);
+        
+        return success;
+    }
+    
+    async execute(operation) {
+        // Execute operation logic
+    }
+}
+
+// Usage
+const agent = new SelfImprovingAgent();
+
+// Agent improves over time
+for (let i = 1; i <= 10; i++) {
+    console.log(`\n--- Attempt ${i} ---`);
+    await agent.performTask('Deploy application');
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{API Reference}
+\subtree{
+\title{Core Methods}
+\pre{\startverb
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `new JjWrapper()` | Create wrapper instance | JjWrapper |
+| `status()` | Get repository status | Promise<JjResult> |
+| `newCommit(msg)` | Create new commit | Promise<JjResult> |
+| `log(limit)` | Show commit history | Promise<JjCommit[]> |
+| `diff(from, to)` | Show differences | Promise<JjDiff> |
+| `branchCreate(name, rev?)` | Create branch | Promise<JjResult> |
+| `rebase(source, dest)` | Rebase commits | Promise<JjResult> |
+\stopverb}
+}
+
+\subtree{
+\title{ReasoningBank Methods}
+\pre{\startverb
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `startTrajectory(task)` | Begin learning trajectory | string (trajectory ID) |
+| `addToTrajectory()` | Add recent operations | void |
+| `finalizeTrajectory(score, critique?)` | Complete trajectory (score: 0.0-1.0) | void |
+| `getSuggestion(task)` | Get AI recommendation | JSON: DecisionSuggestion |
+| `getLearningStats()` | Get learning metrics | JSON: LearningStats |
+| `getPatterns()` | Get discovered patterns | JSON: Pattern[] |
+| `queryTrajectories(task, limit)` | Find similar trajectories | JSON: Trajectory[] |
+| `resetLearning()` | Clear learned data | void |
+\stopverb}
+}
+
+\subtree{
+\title{AgentDB Methods}
+\pre{\startverb
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `getStats()` | Get operation statistics | JSON: Stats |
+| `getOperations(limit)` | Get recent operations | JjOperation[] |
+| `getUserOperations(limit)` | Get user operations only | JjOperation[] |
+| `clearLog()` | Clear operation log | void |
+\stopverb}
+}
+
+\subtree{
+\title{Quantum Security Methods (v2.3.0+)}
+\pre{\startverb
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `generateQuantumFingerprint(data)` | Generate SHA3-512 fingerprint | Buffer (64 bytes) |
+| `verifyQuantumFingerprint(data, fp)` | Verify fingerprint | boolean |
+| `enableEncryption(key, pubKey?)` | Enable HQC-128 encryption | void |
+| `disableEncryption()` | Disable encryption | void |
+| `isEncryptionEnabled()` | Check encryption status | boolean |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Characteristics}
+\pre{\startverb
+| Metric | Git | Agentic Jujutsu |
+|--------|-----|-----------------|
+| Concurrent commits | 15 ops/s | 350 ops/s (23x) |
+| Context switching | 500-1000ms | 50-100ms (10x) |
+| Conflict resolution | 30-40% auto | 87% auto (2.5x) |
+| Lock waiting | 50 min/day | 0 min (∞) |
+| Quantum fingerprints | N/A | <1ms |
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{1. Trajectory Management}
+\pre{\startverb
+// ✅ Good: Meaningful task descriptions
+jj.startTrajectory('Implement user authentication with JWT');
+
+// ❌ Bad: Vague descriptions
+jj.startTrajectory('fix stuff');
+
+// ✅ Good: Honest success scores
+jj.finalizeTrajectory(0.7, 'Works but needs refactoring');
+
+// ❌ Bad: Always 1.0
+jj.finalizeTrajectory(1.0, 'Perfect!'); // Prevents learning
+\stopverb}
+}
+
+\subtree{
+\title{2. Pattern Recognition}
+\pre{\startverb
+// ✅ Good: Let patterns emerge naturally
+for (let i = 0; i < 10; i++) {
+    jj.startTrajectory('Deploy feature');
+    await deploy();
+    jj.addToTrajectory();
+    jj.finalizeTrajectory(wasSuccessful ? 0.9 : 0.5);
+}
+
+// ❌ Bad: Not recording outcomes
+await deploy(); // No learning
+\stopverb}
+}
+
+\subtree{
+\title{3. Multi-Agent Coordination}
+\pre{\startverb
+// ✅ Good: Concurrent operations
+const agents = ['agent1', 'agent2', 'agent3'];
+await Promise.all(agents.map(async (agent) => {
+    const jj = new JjWrapper();
+    // Each agent works independently
+    await jj.newCommit(`Changes by ${agent}`);
+}));
+
+// ❌ Bad: Sequential with locks
+for (const agent of agents) {
+    await agent.waitForLock(); // Not needed!
+    await agent.commit();
+}
+\stopverb}
+}
+
+\subtree{
+\title{4. Error Handling}
+\pre{\startverb
+// ✅ Good: Record failures with details
+try {
+    await jj.execute(['complex-operation']);
+    jj.finalizeTrajectory(0.9);
+} catch (err) {
+    jj.finalizeTrajectory(0.3, `Failed: ${err.message}. Root cause: ...`);
+}
+
+// ❌ Bad: Silent failures
+try {
+    await jj.execute(['operation']);
+} catch (err) {
+    // No learning from failure
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Rules (v2.3.1+)}
+\subtree{
+\title{Task Description}
+\ul{
+\li{✅ Cannot be empty or whitespace-only}
+\li{✅ Maximum length: 10,000 bytes}
+\li{✅ Automatically trimmed}
+}
+}
+
+\subtree{
+\title{Success Score}
+\ul{
+\li{✅ Must be finite (not NaN or Infinity)}
+\li{✅ Must be between 0.0 and 1.0 (inclusive)}
+}
+}
+
+\subtree{
+\title{Operations}
+\ul{
+\li{✅ Must have at least one operation before finalizing}
+}
+}
+
+\subtree{
+\title{Context}
+\ul{
+\li{✅ Cannot be empty}
+\li{✅ Keys cannot be empty or whitespace-only}
+\li{✅ Keys max 1,000 bytes, values max 10,000 bytes}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Issue: Low Confidence Suggestions}
+\pre{\startverb
+const suggestion = JSON.parse(jj.getSuggestion('new task'));
+
+if (suggestion.confidence < 0.5) {
+    // Not enough data - check learning stats
+    const stats = JSON.parse(jj.getLearningStats());
+    console.log(`Need more data. Current trajectories: ${stats.totalTrajectories}`);
+    
+    // Recommend: Record 5-10 trajectories first
+}
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Validation Errors}
+\pre{\startverb
+try {
+    jj.startTrajectory(''); // Empty task
+} catch (err) {
+    if (err.message.includes('Validation error')) {
+        console.log('Invalid input:', err.message);
+        // Use non-empty, meaningful task description
+    }
+}
+
+try {
+    jj.finalizeTrajectory(1.5); // Score > 1.0
+} catch (err) {
+    // Use score between 0.0 and 1.0
+    jj.finalizeTrajectory(Math.max(0, Math.min(1, score)));
+}
+\stopverb}
+}
+
+\subtree{
+\title{Issue: No Patterns Discovered}
+\pre{\startverb
+const patterns = JSON.parse(jj.getPatterns());
+
+if (patterns.length === 0) {
+    // Need more trajectories with >70% success
+    // Record at least 3-5 successful trajectories
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Example 1: Simple Learning Workflow}
+\pre{\startverb
+const { JjWrapper } = require('agentic-jujutsu');
+
+async function learnFromWork() {
+    const jj = new JjWrapper();
+    
+    // Start tracking
+    jj.startTrajectory('Add user profile feature');
+    
+    // Do work
+    await jj.branchCreate('feature/user-profile');
+    await jj.newCommit('Add user profile model');
+    await jj.newCommit('Add profile API endpoints');
+    await jj.newCommit('Add profile UI');
+    
+    // Record operations
+    jj.addToTrajectory();
+    
+    // Finalize with result
+    jj.finalizeTrajectory(0.85, 'Feature complete, minor styling issues remain');
+    
+    // Next time, get suggestions
+    const suggestion = JSON.parse(jj.getSuggestion('Add settings page'));
+    console.log('AI suggests:', suggestion.reasoning);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Multi-Agent Swarm}
+\pre{\startverb
+async function agentSwarm(taskList) {
+    const agents = taskList.map((task, i) => ({
+        name: `agent-${i}`,
+        jj: new JjWrapper(),
+        task
+    }));
+    
+    // All agents work concurrently (no conflicts!)
+    const results = await Promise.all(agents.map(async (agent) => {
+        agent.jj.startTrajectory(agent.task);
+        
+        // Get AI suggestion
+        const suggestion = JSON.parse(agent.jj.getSuggestion(agent.task));
+        
+        // Execute task
+        const success = await executeTask(agent, suggestion);
+        
+        agent.jj.addToTrajectory();
+        agent.jj.finalizeTrajectory(success ? 0.9 : 0.5);
+        
+        return { agent: agent.name, success };
+    }));
+    
+    console.log('Results:', results);
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Documentation}
+\ul{
+\li{\strong{NPM Package}: https://npmjs.com/package/agentic-jujutsu}
+\li{\strong{GitHub}: https://github.com/ruvnet/agentic-flow/tree/main/packages/agentic-jujutsu}
+\li{\strong{Full README}: See package README.md}
+\li{\strong{Validation Guide}: docs/VALIDATION_FIXES_v2.3.1.md}
+\li{\strong{AgentDB Guide}: docs/AGENTDB_GUIDE.md}
+}
+}
+
+\subtree{
+\title{Version History}
+\ul{
+\li{\strong{v2.3.2} - Documentation updates}
+\li{\strong{v2.3.1} - Validation fixes for ReasoningBank}
+\li{\strong{v2.3.0} - Quantum-resistant security with @qudag/napi-core}
+\li{\strong{v2.1.0} - Self-learning AI with ReasoningBank}
+\li{\strong{v2.0.0} - Zero-dependency installation with embedded jj binary}
+}
+
+\p{\strong{Status}: ✅ Production Ready \strong{License}: MIT \strong{Maintained}: Active}
+}
+}

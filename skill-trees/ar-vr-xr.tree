@@ -1,0 +1,212 @@
+\title{Ar Vr Xr}
+
+\taxon{skill}
+
+\meta{description}{Reality tech (AR/VR/XR). Build and ship spatial experiences (WebXR/OpenXR/Unity/Unreal) with strong defaults for interaction, performance, comfort, privacy, and deployment.}
+
+\subtree{
+\title{AR / VR / XR (Reality Tech)}
+\p{Use this skill when the user is building or debugging:}
+
+\ul{
+\li{AR (camera passthrough overlays)}
+\li{VR (fully immersive)}
+\li{XR/MR (mixed reality, spatial computing)}
+\li{WebXR/OpenXR, Quest/Vision Pro/PCVR}
+\li{Unity/Unreal/Web (Three.js, Babylon.js, A-Frame)}
+}
+
+\subtree{
+\title{First Questions (Only Ask What Blocks Progress)}
+\p{Ask up to 3:}
+
+\ol{
+\li{Target platform: Web (WebXR) or native (OpenXR via Unity/Unreal)?}
+\li{Target device(s): Quest, Vision Pro, PCVR (SteamVR), mobile AR (ARKit/ARCore), other?}
+\li{Interaction + locomotion: hands, controllers, gaze, roomscale, smooth locomotion, teleport?}
+}
+
+\p{If the user does not know yet, default to:}
+
+\ul{
+\li{WebXR + Three.js for a fast prototype}
+\li{Teleport locomotion + snap-turn for comfort}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Define the experience mode and constraints.}
+\li{AR vs VR vs MR}
+\li{Required capabilities: 3DoF/6DoF, plane detection, meshing, hand tracking, anchors}
+}
+
+\ol{
+\li{Establish world scale and coordinate conventions early.}
+\li{1 unit = 1 meter (recommended)}
+\li{Choose a single "up" axis and stick to it end-to-end}
+}
+
+\ol{
+\li{Build a vertical slice (minimum shippable loop).}
+\li{Tracking + session start}
+\li{One interaction (grab/select)}
+\li{One UI surface (menu, tooltip, reticle)}
+}
+
+\ol{
+\li{Budget performance from day 1.}
+\li{Stable frame time beats peak quality}
+\li{Reduce draw calls, overdraw, shader cost, and texture bandwidth}
+}
+
+\ol{
+\li{Enforce comfort defaults.}
+\li{Avoid sustained acceleration}
+\li{Prefer teleport and snap-turn}
+\li{Keep UI readable and at comfortable depth}
+}
+
+\ol{
+\li{Treat privacy and sensors as first-class.}
+\li{Camera/mic permissions, spatial maps, room meshes, biometrics}
+\li{Minimize collection, document clearly, store locally when possible}
+}
+}
+
+\subtree{
+\title{WebXR Quickstart (Three.js)}
+\pre{\startverb
+import * as THREE from 'three';
+import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.xr.enabled = true;
+document.body.appendChild(renderer.domElement);
+document.body.appendChild(VRButton.createButton(renderer));
+
+const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+scene.add(light);
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(10, 10),
+  new THREE.MeshStandardMaterial({ color: 0x222222 })
+);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+renderer.setAnimationLoop(() => {
+  renderer.render(scene, camera);
+});
+\stopverb}
+
+\p{Notes:}
+
+\ul{
+\li{WebXR requires HTTPS (or localhost).}
+\li{To target AR: request an \code{\startverb immersive-ar\stopverb} session and handle hit-test/anchors (framework-specific).}
+}
+}
+
+\subtree{
+\title{OpenXR Notes (Unity/Unreal)}
+\ul{
+\li{Unity: prefer XR Plugin Management + OpenXR plugin; use XR Interaction Toolkit for baseline interaction.}
+\li{Unreal: use the OpenXR plugin; validate input mappings per device.}
+}
+
+\p{When debugging native XR:}
+
+\ul{
+\li{Confirm runtime: OpenXR runtime (SteamVR, Oculus, WMR) and version}
+\li{Validate action bindings and controller profiles}
+\li{Verify frame timing on-device, not just in editor}
+}
+}
+
+\subtree{
+\title{Comfort Checklist}
+\ul{
+\li{Keep horizon stable; avoid camera bob unless user opts in}
+\li{Use snap-turn (30-45 deg) by default}
+\li{Teleport is the safest default locomotion}
+\li{Avoid "forced" motion tied to animations}
+\li{UI: large text, high contrast, avoid depth conflict (z-fighting)}
+}
+}
+
+\subtree{
+\title{Performance Checklist}
+\ul{
+\li{Measure on target device (Quest/Vision Pro/PCVR), not only desktop}
+\li{Reduce: draw calls, transparent layers, dynamic shadows, post-processing}
+\li{Prefer baked lighting where possible}
+\li{Stream assets with progressive quality (LOD), avoid blocking loads}
+}
+}
+
+\subtree{
+\title{Device Profile: Varjo XR-4}
+\p{If the target device is Varjo XR-4 Series, use \code{\startverb varjo-xr-4\stopverb} for runtime/tracking/refresh-rate specifics.}
+}
+
+\subtree{
+\title{Interleave With New Skills (plurigrid/asi PRs #61-64)}
+\p{Use these as building blocks:}
+
+\ul{
+\li{\code{\startverb visual-design\stopverb}: spatial UI readability, typography, contrast, layout}
+\li{\code{\startverb svelte-components\stopverb} / \code{\startverb sveltekit-structure\stopverb} / \code{\startverb sveltekit-data-flow\stopverb}: WebXR shells, menus, settings, content pipelines}
+\li{\code{\startverb browser-navigation\stopverb}: XR web debugging and reproducible repro steps}
+\li{\code{\startverb bandwidth-benchmark\stopverb}: asset streaming, scene/texture delivery constraints}
+\li{\code{\startverb threat-model-generation\stopverb} + \code{\startverb security-review\stopverb}: sensors, permissions, privacy, on-device data}
+\li{\code{\startverb jepsen-testing\stopverb}: correctness thinking for multi-user/shared-state XR backends}
+}
+}
+
+\subtree{
+\title{Jepsen For Shared-State XR}
+\p{Use \code{\startverb jepsen-testing\stopverb} when your experience includes a backend claim about correctness under faults (multiplayer rooms, shared anchors, inventories, authoritative physics, replicated scene graphs).}
+
+\p{XR-specific intake:}
+
+\ul{
+\li{Define the surface: websocket RPC, REST/gRPC, realtime relay, or a persistence API.}
+\li{Define acknowledged for XR ops (e.g., "spawn confirmed", "anchor committed", "inventory write ok").}
+\li{Pick a checkable property per primitive:}
+\li{Room membership/presence: no phantom joins, monotonic session state.}
+\li{Object transforms: no lost acknowledged updates; no impossible readbacks.}
+\li{Anchors/placements: placement does not disappear after an ok, unless explicitly deleted.}
+}
+
+\p{Faults worth testing:}
+
+\ul{
+\li{Partitions between clients and relay/region.}
+\li{Process kill/restart of relay, authoritative host, or storage layer.}
+\li{Clock skew if you use timestamps for conflict resolution.}
+}
+
+\p{Minimization tip:}
+
+\ul{
+\li{Reduce to 1-2 rooms, 2-3 objects, and a single nemesis schedule until the violation is explainable.}
+}
+}
+
+\subtree{
+\title{Example Prompts This Skill Should Handle}
+\ul{
+\li{"Build a WebXR VR scene with teleport and grab interactions"}
+\li{"Port this Unity project to OpenXR and fix controller bindings"}
+\li{"Optimize this Quest app to hit stable 72/90 fps"}
+\li{"Design a spatial settings UI that stays readable in passthrough"}
+\li{"Threat-model an AR app that uses camera + spatial mapping"}
+\li{\code{\startverb steamvr-tracking\stopverb} for Lighthouse/base station setup- \code{\startverb xr-color-management\stopverb} for sRGB/P3/Rec.2020 pipeline issues}
+}
+}
+}

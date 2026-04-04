@@ -1,0 +1,504 @@
+\title{Owasp Security Check}
+
+\taxon{skill}
+
+\meta{description}{Security audit guidelines for web applications and REST APIs based on OWASP Top 10 and web security best practices. Use when checking code for vulnerabilities, reviewing auth/authz, auditing APIs, or before production deployment.}
+
+\subtree{
+\title{OWASP Security Check}
+\p{Comprehensive security audit patterns for web applications and REST APIs. Contains 20 rules across 5 categories covering OWASP Top 10 and common web vulnerabilities.}
+
+\subtree{
+\title{When to Apply}
+\p{Use this skill when:}
+
+\ul{
+\li{Auditing a codebase for security vulnerabilities}
+\li{Reviewing user-provided file or folder for security issues}
+\li{Checking authentication/authorization implementations}
+\li{Evaluating REST API security}
+\li{Assessing data protection measures}
+\li{Reviewing configuration and deployment settings}
+\li{Before production deployment}
+\li{After adding new features that handle sensitive data}
+}
+}
+
+\subtree{
+\title{How to Use This Skill}
+\ol{
+\li{\strong{Identify application type} - Web app, REST API, SPA, SSR, or mixed}
+\li{\strong{Scan by priority} - Start with CRITICAL rules, then HIGH, then MEDIUM}
+\li{\strong{Review relevant rule files} - Load specific rules from @rules/ directory}
+\li{\strong{Report findings} - Note severity, file location, and impact}
+\li{\strong{Provide remediation} - Give concrete code examples for fixes}
+}
+}
+
+\subtree{
+\title{Audit Workflow}
+\subtree{
+\title{Step 1: Systematic Review by Priority}
+\p{Work through categories by priority:}
+
+\ol{
+\li{\strong{CRITICAL}: Authentication & Authorization, Data Protection, Input/Output Security}
+\li{\strong{HIGH}: Configuration & Headers}
+\li{\strong{MEDIUM}: API & Monitoring}
+}
+}
+
+\subtree{
+\title{Step 2: Generate Report}
+\p{Format findings as:}
+
+\ul{
+\li{\strong{Severity}: CRITICAL | HIGH | MEDIUM | LOW}
+\li{\strong{Category}: Rule name}
+\li{\strong{File}: Path and line number}
+\li{\strong{Issue}: What's wrong}
+\li{\strong{Impact}: Security consequence}
+\li{\strong{Fix}: Code example of remediation}
+}
+}
+}
+
+\subtree{
+\title{Rules Summary}
+\subtree{
+\title{Authentication & Authorization (CRITICAL)}
+\subtree{
+\title{broken-access-control - @rules/broken-access-control.md}
+\p{Check for missing authorization, IDOR, privilege escalation.}
+
+\pre{\startverb
+// Bad: No authorization check
+async function getUser(req: Request): Promise<Response> {
+  let url = new URL(req.url);
+  let userId = url.searchParams.get("id");
+  let user = await db.user.findUnique({ where: { id: userId } });
+  return new Response(JSON.stringify(user));
+}
+
+// Good: Verify ownership
+async function getUser(req: Request): Promise<Response> {
+  let session = await getSession(req);
+  let url = new URL(req.url);
+  let userId = url.searchParams.get("id");
+
+  if (session.userId !== userId && !session.isAdmin) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  let user = await db.user.findUnique({ where: { id: userId } });
+  return new Response(JSON.stringify(user));
+}
+\stopverb}
+}
+
+\subtree{
+\title{authentication-failures - @rules/authentication-failures.md}
+\p{Check for weak authentication, missing MFA, session issues.}
+
+\pre{\startverb
+// Bad: Weak password check
+if (password.length >= 6) {
+  /* allow */
+}
+
+// Good: Strong password requirements
+function validatePassword(password: string) {
+  if (password.length < 12) return false;
+  if (!/[A-Z]/.test(password)) return false;
+  if (!/[a-z]/.test(password)) return false;
+  if (!/[0-9]/.test(password)) return false;
+  if (!/[^A-Za-z0-9]/.test(password)) return false;
+  return true;
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Data Protection (CRITICAL)}
+\subtree{
+\title{cryptographic-failures - @rules/cryptographic-failures.md}
+\p{Check for weak encryption, plaintext storage, bad hashing.}
+
+\pre{\startverb
+// Bad: MD5 for passwords
+let hash = crypto.createHash("md5").update(password).digest("hex");
+
+// Good: bcrypt with salt
+let hash = await bcrypt(password, 12);
+\stopverb}
+}
+
+\subtree{
+\title{sensitive-data-exposure - @rules/sensitive-data-exposure.md}
+\p{Check for PII in logs/responses, error messages leaking info.}
+
+\pre{\startverb
+// Bad: Exposing sensitive data
+return new Response(JSON.stringify(user)); // Contains password hash, email, etc.
+
+// Good: Return only needed fields
+return new Response(
+  JSON.stringify({
+    id: user.id,
+    username: user.username,
+    displayName: user.displayName,
+  }),
+);
+\stopverb}
+}
+
+\subtree{
+\title{data-integrity-failures - @rules/data-integrity-failures.md}
+\p{Check for unsigned data, insecure deserialization.}
+
+\pre{\startverb
+// Bad: Trusting unsigned JWT
+let decoded = JSON.parse(atob(token.split(".")[1]));
+if (decoded.isAdmin) {
+  /* grant access */
+}
+
+// Good: Verify signature
+let payload = await verifyJWT(token, secret);
+\stopverb}
+}
+
+\subtree{
+\title{secrets-management - @rules/secrets-management.md}
+\p{Check for hardcoded secrets, exposed env vars.}
+
+\pre{\startverb
+// Bad: Hardcoded secret
+const API_KEY = "sk_live_a1b2c3d4e5f6";
+
+// Good: Environment variables
+let API_KEY = process.env.API_KEY;
+if (!API_KEY) throw new Error("API_KEY not configured");
+\stopverb}
+}
+}
+
+\subtree{
+\title{Input/Output Security (CRITICAL)}
+\subtree{
+\title{injection-attacks - @rules/injection-attacks.md}
+\p{Check for SQL, XSS, NoSQL, Command, Path Traversal injection.}
+
+\pre{\startverb
+// Bad: SQL injection
+let query = `SELECT * FROM users WHERE email = '${email}'`;
+
+// Good: Parameterized query
+let user = await db.user.findUnique({ where: { email } });
+\stopverb}
+}
+
+\subtree{
+\title{ssrf-attacks - @rules/ssrf-attacks.md}
+\p{Check for unvalidated URLs, internal network access.}
+
+\pre{\startverb
+// Bad: Fetching user-provided URL
+let url = await req.json().then((d) => d.url);
+let response = await fetch(url);
+
+// Good: Validate against allowlist
+const ALLOWED_DOMAINS = ["api.example.com", "cdn.example.com"];
+let url = new URL(await req.json().then((d) => d.url));
+if (!ALLOWED_DOMAINS.includes(url.hostname)) {
+  return new Response("Invalid URL", { status: 400 });
+}
+\stopverb}
+}
+
+\subtree{
+\title{file-upload-security - @rules/file-upload-security.md}
+\p{Check for unrestricted uploads, MIME validation.}
+
+\pre{\startverb
+// Bad: No file type validation
+let file = await req.formData().then((fd) => fd.get("file"));
+await writeFile(`./uploads/${file.name}`, file);
+
+// Good: Validate type and extension
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
+let file = await req.formData().then((fd) => fd.get("file") as File);
+
+if (!ALLOWED_TYPES.includes(file.type)) {
+  return new Response("Invalid file type", { status: 400 });
+}
+\stopverb}
+}
+
+\subtree{
+\title{redirect-validation - @rules/redirect-validation.md}
+\p{Check for open redirects, unvalidated redirect URLs.}
+
+\pre{\startverb
+// Bad: Unvalidated redirect
+let returnUrl = new URL(req.url).searchParams.get("return");
+return Response.redirect(returnUrl);
+
+// Good: Validate redirect URL
+let returnUrl = new URL(req.url).searchParams.get("return");
+let allowed = ["/dashboard", "/profile", "/settings"];
+if (!allowed.includes(returnUrl)) {
+  return Response.redirect("/");
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration & Headers (HIGH)}
+\subtree{
+\title{insecure-design - @rules/insecure-design.md}
+\p{Check for security anti-patterns in architecture.}
+
+\pre{\startverb
+// Bad: Security by obscurity
+let isAdmin = req.headers.get("x-admin-secret") === "admin123";
+
+// Good: Proper role-based access control
+let session = await getSession(req);
+let isAdmin = await db.user
+  .findUnique({
+    where: { id: session.userId },
+  })
+  .then((u) => u.role === "ADMIN");
+\stopverb}
+}
+
+\subtree{
+\title{security-misconfiguration - @rules/security-misconfiguration.md}
+\p{Check for default configs, debug mode, error handling.}
+
+\pre{\startverb
+// Bad: Exposing stack traces
+catch (error) {
+  return new Response(error.stack, { status: 500 });
+}
+
+// Good: Generic error message
+catch (error) {
+  console.error(error); // Log server-side only
+  return new Response("Internal server error", { status: 500 });
+}
+\stopverb}
+}
+
+\subtree{
+\title{security-headers - @rules/security-headers.md}
+\p{Check for CSP, HSTS, X-Frame-Options, etc.}
+
+\pre{\startverb
+// Bad: No security headers
+return new Response(html);
+
+// Good: Security headers set
+return new Response(html, {
+  headers: {
+    "Content-Security-Policy": "default-src 'self'",
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  },
+});
+\stopverb}
+}
+
+\subtree{
+\title{cors-configuration - @rules/cors-configuration.md}
+\p{Check for overly permissive CORS.}
+
+\pre{\startverb
+// Bad: Wildcard with credentials
+headers.set("Access-Control-Allow-Origin", "*");
+headers.set("Access-Control-Allow-Credentials", "true");
+
+// Good: Specific origin
+let allowedOrigins = ["https://app.example.com"];
+let origin = req.headers.get("origin");
+if (origin && allowedOrigins.includes(origin)) {
+  headers.set("Access-Control-Allow-Origin", origin);
+}
+\stopverb}
+}
+
+\subtree{
+\title{csrf-protection - @rules/csrf-protection.md}
+\p{Check for CSRF tokens, SameSite cookies.}
+
+\pre{\startverb
+// Bad: No CSRF protection
+let cookies = parseCookies(req.headers.get("cookie"));
+let session = await getSession(cookies.sessionId);
+
+// Good: SameSite cookie + token validation
+return new Response("OK", {
+  headers: {
+    "Set-Cookie": "session=abc; SameSite=Strict; Secure; HttpOnly",
+  },
+});
+\stopverb}
+}
+
+\subtree{
+\title{session-security - @rules/session-security.md}
+\p{Check for cookie flags, JWT issues, token storage.}
+
+\pre{\startverb
+// Bad: Insecure cookie
+return new Response("OK", {
+  headers: { "Set-Cookie": "session=abc123" },
+});
+
+// Good: Secure cookie with all flags
+return new Response("OK", {
+  headers: {
+    "Set-Cookie":
+      "session=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600",
+  },
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{API & Monitoring (MEDIUM-HIGH)}
+\subtree{
+\title{api-security - @rules/api-security.md}
+\p{Check for REST API vulnerabilities, mass assignment.}
+
+\pre{\startverb
+// Bad: Mass assignment vulnerability
+let userData = await req.json();
+await db.user.update({ where: { id }, data: userData });
+
+// Good: Explicitly allow fields
+let { displayName, bio } = await req.json();
+await db.user.update({
+  where: { id },
+  data: { displayName, bio }, // Only allowed fields
+});
+\stopverb}
+}
+
+\subtree{
+\title{rate-limiting - @rules/rate-limiting.md}
+\p{Check for missing rate limits, brute force prevention.}
+
+\pre{\startverb
+// Bad: No rate limiting
+async function login(req: Request): Promise<Response> {
+  let { email, password } = await req.json();
+  // Allows unlimited login attempts
+}
+
+// Good: Rate limiting
+let ip = req.headers.get("x-forwarded-for");
+let { success } = await ratelimit.limit(ip);
+if (!success) {
+  return new Response("Too many requests", { status: 429 });
+}
+\stopverb}
+}
+
+\subtree{
+\title{logging-monitoring - @rules/logging-monitoring.md}
+\p{Check for insufficient logging, sensitive data in logs.}
+
+\pre{\startverb
+// Bad: Logging sensitive data
+console.log("User login:", { email, password, ssn });
+
+// Good: Log events without sensitive data
+console.log("User login attempt", {
+  email,
+  ip: req.headers.get("x-forwarded-for"),
+  timestamp: new Date().toISOString(),
+});
+\stopverb}
+}
+
+\subtree{
+\title{vulnerable-dependencies - @rules/vulnerable-dependencies.md}
+\p{Check for outdated packages, known CVEs.}
+
+\pre{\startverb
+# Bad: No dependency checking
+npm install
+
+# Good: Regular audits
+npm audit
+npm audit fix
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Common Vulnerability Patterns}
+\p{Quick reference of patterns to look for:}
+
+\ul{
+\li{\strong{User input without validation}: \code{\startverb req.json()\stopverb} → immediate use}
+\li{\strong{Missing auth checks}: Routes without authorization middleware}
+\li{\strong{Hardcoded secrets}: Strings containing "password", "secret", "key"}
+\li{\strong{SQL injection}: String concatenation in queries}
+\li{\strong{XSS}: \code{\startverb dangerouslySetInnerHTML\stopverb}, \code{\startverb .innerHTML\stopverb}}
+\li{\strong{Weak crypto}: \code{\startverb md5\stopverb}, \code{\startverb sha1\stopverb} for passwords}
+\li{\strong{Missing headers}: No CSP, HSTS, or security headers}
+\li{\strong{CORS wildcards}: \code{\startverb Access-Control-Allow-Origin: *\stopverb} with credentials}
+\li{\strong{Insecure cookies}: Missing Secure, HttpOnly, SameSite flags}
+\li{\strong{Path traversal}: User input in file paths without validation}
+}
+}
+
+\subtree{
+\title{Severity Quick Reference}
+\p{\strong{Fix Immediately (CRITICAL):}}
+
+\ul{
+\li{SQL/XSS/Command Injection}
+\li{Missing authentication on sensitive endpoints}
+\li{Hardcoded secrets in code}
+\li{Plaintext password storage}
+\li{IDOR vulnerabilities}
+}
+
+\p{\strong{Fix Soon (HIGH):}}
+
+\ul{
+\li{Missing CSRF protection}
+\li{Weak password requirements}
+\li{Missing security headers}
+\li{Overly permissive CORS}
+\li{Insecure session management}
+}
+
+\p{\strong{Fix When Possible (MEDIUM):}}
+
+\ul{
+\li{Missing rate limiting}
+\li{Incomplete logging}
+\li{Outdated dependencies (no known exploits)}
+\li{Missing input validation on non-critical fields}
+}
+
+\p{\strong{Improve (LOW):}}
+
+\ul{
+\li{Missing optional security headers}
+\li{Verbose error messages (non-production)}
+\li{Suboptimal crypto parameters}
+}
+}
+}

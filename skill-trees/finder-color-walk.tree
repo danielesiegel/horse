@@ -1,0 +1,170 @@
+\title{Finder Color Walk}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Deterministic triadic fanout over file-sets with macOS Finder label coloring, GF(3) conservation, and Strong Parallelism Invariance (SPI).}
+
+\subtree{
+\title{finder-color-walk}
+\p{Deterministic \em{triadic fanout} over a file-set, with macOS Finder label coloring, supporting \strong{GF(3) conservation} and \strong{Strong Parallelism Invariance (SPI)}.}
+
+\subtree{
+\title{Contract}
+\subtree{
+\title{Inputs}
+\ul{
+\li{Root path(s) to enumerate files (user-supplied).}
+\li{Optional filters (extensions, max depth, ignore globs).}
+\li{Policy:}
+\li{\code{\startverb raw\stopverb} (default): \code{\startverb color_at(file)\stopverb} only; SPI holds; \strong{GF(3) not guaranteed}.}
+\li{\code{\startverb gf3_balanced\stopverb}: colors are assigned in position-aligned triplets across the 3 routed fibers; \strong{GF(3) holds}.}
+}
+}
+
+\subtree{
+\title{Outputs}
+\ul{
+\li{A (file → color) assignment and a (file → fiber) routing.}
+\li{Optional application of macOS Finder label colors.}
+}
+}
+}
+
+\subtree{
+\title{Guarantees}
+\subtree{
+\title{SPI (Strong Parallelism Invariance)}
+\p{For a fixed file-set, policy, and seed:}
+
+\ul{
+\li{routing is deterministic and order-independent}
+\li{color assignment is deterministic and order-independent}
+}
+
+\p{Formally: any permutation of the same input file-set yields the same final mapping.}
+}
+
+\subtree{
+\title{GF(3) conservation (policy = \code{\startverb gf3_balanced\stopverb})}
+\p{Let the three fibers be sorted lists \code{\startverb F0,F1,F2\stopverb} of equal length \code{\startverb N\stopverb}. For each index \code{\startverb i\stopverb} define trits \code{\startverb t0(i), t1(i), t2(i) ∈ {0,1,2}\stopverb} as assigned to \code{\startverb F0[i],F1[i],F2[i]\stopverb}. Then for all \code{\startverb i\stopverb}:}
+
+\ul{
+\li{\code{\startverb t0(i) + t1(i) + t2(i) ≡ 0 (mod 3)\stopverb}}
+}
+
+\p{Implementation: choose \code{\startverb t0,t1\stopverb} deterministically; set \code{\startverb t2 := (-t0-t1) mod 3\stopverb}.}
+}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{\code{\startverb schema.jl\stopverb} — Catlab ACSet schema: \code{\startverb FileColorWalk\stopverb}.}
+\li{\code{\startverb triadic_router.bb\stopverb} — GF(3)-balanced routing into 3 fibers.}
+\li{\code{\startverb finder_color_walk.bb\stopverb} — single-stream walk (policy \code{\startverb raw\stopverb}).}
+\li{\code{\startverb parallel_walk.bb\stopverb} — 3-stream walk + \code{\startverb gf3_balanced\stopverb} coloring.}
+\li{\code{\startverb spi_test.py\stopverb} — verifies SPI + GF(3) (where requested).}
+\li{\code{\startverb INTERLEAVED.md\stopverb} — 4-corpus synthesis notes.}
+}
+}
+
+\subtree{
+\title{Quick start}
+\subtree{
+\title{Route files into 3 fibers}
+\pre{\startverb
+bb triadic_router.bb --root . --out fibers.json
+\stopverb}
+}
+
+\subtree{
+\title{Apply GF(3)-balanced colors (dry-run by default)}
+\pre{\startverb
+bb parallel_walk.bb --fibers fibers.json --policy gf3_balanced --dry-run
+\stopverb}
+}
+
+\subtree{
+\title{Verify invariants}
+\pre{\startverb
+python spi_test.py --fibers fibers.json --policy gf3_balanced
+\stopverb}
+}
+}
+
+\subtree{
+\title{macOS Finder label mapping}
+\p{Trits → label colors (customize inside scripts):}
+
+\ul{
+\li{0: None}
+\li{1: Green}
+\li{2: Blue}
+}
+}
+
+\subtree{
+\title{Related Skills (Backlinks)}
+\pre{\startverb
+| Skill | Trit | Integration |
+|-------|------|-------------|
+| [google-workspace](file:///Users/alice/.claude/skills/google-workspace/SKILL.md) | 0 | Drive file coloring via `drive_color_walk.py` |
+| [gay-mcp](file:///Users/alice/.agents/skills/gay-mcp/SKILL.md) | +1 | SplitMix64 algorithm, trit-to-hue mapping |
+| [triad-interleave](file:///Users/alice/.agents/skills/triad-interleave/SKILL.md) | +1 | Schedule file walks in balanced triplets |
+| [bisimulation-game](file:///Users/alice/.agents/skills/bisimulation-game/SKILL.md) | -1 | Verify file state equivalence |
+| [spi-parallel-verify](file:///Users/alice/.agents/skills/spi-parallel-verify/SKILL.md) | -1 | Strong Parallelism Invariance verification |
+\stopverb}
+}
+
+\subtree{
+\title{Comparison with Related Skills}
+\subtree{
+\title{vs gay-mcp}
+\ul{
+\li{\strong{gay-mcp}: Pure color generation, OkLCH space, hex output}
+\li{\strong{finder-color-walk}: File-focused, routing + coloring, Finder integration}
+\li{\strong{Shared}: SplitMix64 RNG, GF(3) trits, SPI guarantee}
+}
+}
+
+\subtree{
+\title{vs triad-interleave}
+\ul{
+\li{\strong{triad-interleave}: Stream scheduling, temporal ordering}
+\li{\strong{finder-color-walk}: Spatial routing into fibers}
+\li{\strong{Shared}: 3-way balanced triplets, GF(3) conservation}
+}
+}
+
+\subtree{
+\title{vs bisimulation-game}
+\ul{
+\li{\strong{bisimulation-game}: State equivalence verification}
+\li{\strong{finder-color-walk}: Deterministic state generation}
+\li{\strong{Integration}: Use bisim to verify color assignments match across systems}
+}
+}
+}
+
+\subtree{
+\title{Integration Bridge}
+\pre{\startverb
+# drive_color_walk.py bridges:
+#   google-workspace MCP (file listing) 
+#   → finder-color-walk (GF(3) routing)
+#   → gay-mcp (color generation)
+#   → Finder/Drive labels
+
+from google_workspace import list_drive_items
+from finder_color_walk import route_to_fibers, gf3_color
+from gay import SplitMixTernary
+
+files = list_drive_items(folder_id="root")
+fibers = route_to_fibers(files, seed=0x42D)
+colored = gf3_color(fibers, seed=0x42D)
+# Apply to both Drive (via MCP) and Finder (via xattr)
+\stopverb}
+}
+}

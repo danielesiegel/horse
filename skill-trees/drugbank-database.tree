@@ -1,0 +1,238 @@
+\title{Drugbank Database}
+
+\taxon{skill}
+
+\meta{description}{Access and analyze comprehensive drug information from the DrugBank database including drug properties, interactions, targets, pathways, chemical structures, and pharmacology data. This skill should be used when working with pharmaceutical data, drug discovery research, pharmacology studies, drug-drug interaction analysis, target identification, chemical similarity searches, ADMET predictions, or any task requiring detailed drug and drug target information from DrugBank.}
+
+\subtree{
+\title{DrugBank Database}
+\subtree{
+\title{Overview}
+\p{DrugBank is a comprehensive bioinformatics and cheminformatics database containing detailed information on drugs and drug targets. This skill enables programmatic access to DrugBank data including ~9,591 drug entries (2,037 FDA-approved small molecules, 241 biotech drugs, 96 nutraceuticals, and 6,000+ experimental compounds) with 200+ data fields per entry.}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Data Access and Authentication}
+\p{Download and access DrugBank data using Python with proper authentication. The skill provides guidance on:}
+
+\ul{
+\li{Installing and configuring the \code{\startverb drugbank-downloader\stopverb} package}
+\li{Managing credentials securely via environment variables or config files}
+\li{Downloading specific or latest database versions}
+\li{Opening and parsing XML data efficiently}
+\li{Working with cached data to optimize performance}
+}
+
+\p{\strong{When to use}: Setting up DrugBank access, downloading database updates, initial project configuration.}
+
+\p{\strong{Reference}: See \code{\startverb references/data-access.md\stopverb} for detailed authentication, download procedures, API access, caching strategies, and troubleshooting.}
+}
+
+\subtree{
+\title{2. Drug Information Queries}
+\p{Extract comprehensive drug information from the database including identifiers, chemical properties, pharmacology, clinical data, and cross-references to external databases.}
+
+\p{\strong{Query capabilities}:}
+
+\ul{
+\li{Search by DrugBank ID, name, CAS number, or keywords}
+\li{Extract basic drug information (name, type, description, indication)}
+\li{Retrieve chemical properties (SMILES, InChI, molecular formula)}
+\li{Get pharmacology data (mechanism of action, pharmacodynamics, ADME)}
+\li{Access external identifiers (PubChem, ChEMBL, UniProt, KEGG)}
+\li{Build searchable drug datasets and export to DataFrames}
+\li{Filter drugs by type (small molecule, biotech, nutraceutical)}
+}
+
+\p{\strong{When to use}: Retrieving specific drug information, building drug databases, pharmacology research, literature review, drug profiling.}
+
+\p{\strong{Reference}: See \code{\startverb references/drug-queries.md\stopverb} for XML navigation, query functions, data extraction methods, and performance optimization.}
+}
+
+\subtree{
+\title{3. Drug-Drug Interactions Analysis}
+\p{Analyze drug-drug interactions (DDIs) including mechanism, clinical significance, and interaction networks for pharmacovigilance and clinical decision support.}
+
+\p{\strong{Analysis capabilities}:}
+
+\ul{
+\li{Extract all interactions for specific drugs}
+\li{Build bidirectional interaction networks}
+\li{Classify interactions by severity and mechanism}
+\li{Check interactions between drug pairs}
+\li{Identify drugs with most interactions}
+\li{Analyze polypharmacy regimens for safety}
+\li{Create interaction matrices and network graphs}
+\li{Perform community detection in interaction networks}
+\li{Calculate interaction risk scores}
+}
+
+\p{\strong{When to use}: Polypharmacy safety analysis, clinical decision support, drug interaction prediction, pharmacovigilance research, identifying contraindications.}
+
+\p{\strong{Reference}: See \code{\startverb references/interactions.md\stopverb} for interaction extraction, classification methods, network analysis, and clinical applications.}
+}
+
+\subtree{
+\title{4. Drug Targets and Pathways}
+\p{Access detailed information about drug-protein interactions including targets, enzymes, transporters, carriers, and biological pathways.}
+
+\p{\strong{Target analysis capabilities}:}
+
+\ul{
+\li{Extract drug targets with actions (inhibitor, agonist, antagonist)}
+\li{Identify metabolic enzymes (CYP450, Phase II enzymes)}
+\li{Analyze transporters (uptake, efflux) for ADME studies}
+\li{Map drugs to biological pathways (SMPDB)}
+\li{Find drugs targeting specific proteins}
+\li{Identify drugs with shared targets for repurposing}
+\li{Analyze polypharmacology and off-target effects}
+\li{Extract Gene Ontology (GO) terms for targets}
+\li{Cross-reference with UniProt for protein data}
+}
+
+\p{\strong{When to use}: Mechanism of action studies, drug repurposing research, target identification, pathway analysis, predicting off-target effects, understanding drug metabolism.}
+
+\p{\strong{Reference}: See \code{\startverb references/targets-pathways.md\stopverb} for target extraction, pathway analysis, repurposing strategies, CYP450 profiling, and transporter analysis.}
+}
+
+\subtree{
+\title{5. Chemical Properties and Similarity}
+\p{Perform structure-based analysis including molecular similarity searches, property calculations, substructure searches, and ADMET predictions.}
+
+\p{\strong{Chemical analysis capabilities}:}
+
+\ul{
+\li{Extract chemical structures (SMILES, InChI, molecular formula)}
+\li{Calculate physicochemical properties (MW, logP, PSA, H-bonds)}
+\li{Apply Lipinski's Rule of Five and Veber's rules}
+\li{Calculate Tanimoto similarity between molecules}
+\li{Generate molecular fingerprints (Morgan, MACCS, topological)}
+\li{Perform substructure searches with SMARTS patterns}
+\li{Find structurally similar drugs for repurposing}
+\li{Create similarity matrices for drug clustering}
+\li{Predict oral absorption and BBB permeability}
+\li{Analyze chemical space with PCA and clustering}
+\li{Export chemical property databases}
+}
+
+\p{\strong{When to use}: Structure-activity relationship (SAR) studies, drug similarity searches, QSAR modeling, drug-likeness assessment, ADMET prediction, chemical space exploration.}
+
+\p{\strong{Reference}: See \code{\startverb references/chemical-analysis.md\stopverb} for structure extraction, similarity calculations, fingerprint generation, ADMET predictions, and chemical space analysis.}
+}
+}
+
+\subtree{
+\title{Typical Workflows}
+\subtree{
+\title{Drug Discovery Workflow}
+\ol{
+\li{Use \code{\startverb data-access.md\stopverb} to download and access latest DrugBank data}
+\li{Use \code{\startverb drug-queries.md\stopverb} to build searchable drug database}
+\li{Use \code{\startverb chemical-analysis.md\stopverb} to find similar compounds}
+\li{Use \code{\startverb targets-pathways.md\stopverb} to identify shared targets}
+\li{Use \code{\startverb interactions.md\stopverb} to check safety of candidate combinations}
+}
+}
+
+\subtree{
+\title{Polypharmacy Safety Analysis}
+\ol{
+\li{Use \code{\startverb drug-queries.md\stopverb} to look up patient medications}
+\li{Use \code{\startverb interactions.md\stopverb} to check all pairwise interactions}
+\li{Use \code{\startverb interactions.md\stopverb} to classify interaction severity}
+\li{Use \code{\startverb interactions.md\stopverb} to calculate overall risk score}
+\li{Use \code{\startverb targets-pathways.md\stopverb} to understand interaction mechanisms}
+}
+}
+
+\subtree{
+\title{Drug Repurposing Research}
+\ol{
+\li{Use \code{\startverb targets-pathways.md\stopverb} to find drugs with shared targets}
+\li{Use \code{\startverb chemical-analysis.md\stopverb} to find structurally similar drugs}
+\li{Use \code{\startverb drug-queries.md\stopverb} to extract indication and pharmacology data}
+\li{Use \code{\startverb interactions.md\stopverb} to assess potential combination therapies}
+}
+}
+
+\subtree{
+\title{Pharmacology Study}
+\ol{
+\li{Use \code{\startverb drug-queries.md\stopverb} to extract drug of interest}
+\li{Use \code{\startverb targets-pathways.md\stopverb} to identify all protein interactions}
+\li{Use \code{\startverb targets-pathways.md\stopverb} to map to biological pathways}
+\li{Use \code{\startverb chemical-analysis.md\stopverb} to predict ADMET properties}
+\li{Use \code{\startverb interactions.md\stopverb} to identify potential contraindications}
+}
+}
+}
+
+\subtree{
+\title{Installation Requirements}
+\subtree{
+\title{Python Packages}
+\pre{\startverb
+uv pip install drugbank-downloader  # Core access
+uv pip install bioversions          # Latest version detection
+uv pip install lxml                 # XML parsing optimization
+uv pip install pandas               # Data manipulation
+uv pip install rdkit                # Chemical informatics (for similarity)
+uv pip install networkx             # Network analysis (for interactions)
+uv pip install scikit-learn         # ML/clustering (for chemical space)
+\stopverb}
+}
+
+\subtree{
+\title{Account Setup}
+\ol{
+\li{Create free account at go.drugbank.com}
+\li{Accept license agreement (free for academic use)}
+\li{Obtain username and password credentials}
+\li{Configure credentials as documented in \code{\startverb references/data-access.md\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Data Version and Reproducibility}
+\p{Always specify the DrugBank version for reproducible research:}
+
+\pre{\startverb
+from drugbank_downloader import download_drugbank
+path = download_drugbank(version='5.1.10')  # Specify exact version
+\stopverb}
+
+\p{Document the version used in publications and analysis scripts.}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Credentials}: Use environment variables or config files, never hardcode}
+\li{\strong{Versioning}: Specify exact database version for reproducibility}
+\li{\strong{Caching}: Cache parsed data to avoid re-downloading and re-parsing}
+\li{\strong{Namespaces}: Handle XML namespaces properly when parsing}
+\li{\strong{Validation}: Validate chemical structures with RDKit before use}
+\li{\strong{Cross-referencing}: Use external identifiers (UniProt, PubChem) for integration}
+\li{\strong{Clinical Context}: Always consider clinical context when interpreting interaction data}
+\li{\strong{License Compliance}: Ensure proper licensing for your use case}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{All detailed implementation guidance is organized in modular reference files:}
+
+\ul{
+\li{\strong{references/data-access.md}: Authentication, download, parsing, API access, caching}
+\li{\strong{references/drug-queries.md}: XML navigation, query methods, data extraction, indexing}
+\li{\strong{references/interactions.md}: DDI extraction, classification, network analysis, safety scoring}
+\li{\strong{references/targets-pathways.md}: Target/enzyme/transporter extraction, pathway mapping, repurposing}
+\li{\strong{references/chemical-analysis.md}: Structure extraction, similarity, fingerprints, ADMET prediction}
+}
+
+\p{Load these references as needed based on your specific analysis requirements.}
+}
+}

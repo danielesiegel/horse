@@ -1,0 +1,280 @@
+\title{Implementing Zero Standing Privilege With Cyberark}
+
+\taxon{skill}
+
+\tag{cyberark}
+
+\tag{zero-standing-privilege}
+
+\tag{jit-access}
+
+\tag{pam}
+
+\tag{cloud-security}
+
+\tag{least-privilege}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploy CyberArk Secure Cloud Access to eliminate standing privileges in hybrid and multi-cloud environments using just-in-time access with time, entitlement, and approval controls.}
+
+\subtree{
+\title{Implementing Zero Standing Privilege with CyberArk}
+\subtree{
+\title{Overview}
+\p{Zero Standing Privileges (ZSP) is a security model where no user or identity retains persistent privileged access. Instead, elevated access is provisioned dynamically on a just-in-time (JIT) basis and automatically revoked after use. CyberArk implements ZSP through its Secure Cloud Access (SCA) module, which creates ephemeral, scoped roles in cloud environments (AWS, Azure, GCP) that exist only for the duration of a session. The TEA framework -- Time, Entitlements, and Approvals -- governs every privileged access session.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing zero standing privilege with cyberark capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{CyberArk Identity Security Platform (Privilege Cloud or self-hosted)}
+\li{CyberArk Secure Cloud Access (SCA) license}
+\li{Cloud provider accounts (AWS, Azure, GCP) with admin access for integration}
+\li{ITSM integration (ServiceNow, Jira) for approval workflows}
+\li{CyberArk Vault configured with safe management}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{TEA Framework (Time, Entitlements, Approvals)}
+\pre{\startverb
+| Component | Description | Configuration |
+|-----------|-------------|---------------|
+| **Time** | Duration of the privileged session | Min 15 minutes, max 8 hours, default 1 hour |
+| **Entitlements** | Permissions granted during the session | Dynamically scoped IAM roles/policies |
+| **Approvals** | Authorization workflow before access | Auto-approve, manager approval, or multi-level |
+\stopverb}
+}
+
+\subtree{
+\title{ZSP Architecture}
+\pre{\startverb
+User requests access via CyberArk
+        │
+        ├── CyberArk evaluates request against policies:
+        │   ├── Is user eligible for this access?
+        │   ├── Does the request comply with TEA policies?
+        │   └── Is approval required?
+        │
+        ├── [If approval needed] → Route to approver (ITSM/ChatOps)
+        │
+        ├── Upon approval:
+        │   ├── CyberArk creates ephemeral IAM role in target cloud
+        │   ├── Scopes permissions to minimum required entitlements
+        │   ├── Sets session TTL (time-bound)
+        │   └── Provisions temporary credentials
+        │
+        ├── User accesses cloud resources via session
+        │   ├── All actions logged and recorded
+        │   └── Session monitored for policy violations
+        │
+        └── Session expires:
+            ├── Ephemeral role deleted
+            ├── Temporary credentials revoked
+            └── Zero standing privileges remain
+\stopverb}
+}
+
+\subtree{
+\title{CyberArk Components}
+\pre{\startverb
+| Component | Role |
+|-----------|------|
+| Identity Security Platform | Central management and policy engine |
+| Privilege Cloud Vault | Stores privileged credentials and keys |
+| Secure Cloud Access | Creates/destroys ephemeral cloud roles |
+| Endpoint Privilege Manager | Controls local admin and app elevation |
+| Privileged Session Manager | Records and monitors privileged sessions |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Integrate Cloud Providers}
+\p{\strong{AWS Integration:}}
+
+\ol{
+\li{Create a CyberArk integration role in AWS IAM}
+\li{Configure cross-account trust policy allowing CyberArk to assume roles}
+\li{Create IAM policies that define maximum allowed entitlements}
+\li{Register AWS accounts in CyberArk SCA}
+}
+
+\pre{\startverb
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Principal": {
+            "AWS": "arn:aws:iam::CYBERARK_ACCOUNT:role/CyberArkSCARole"
+        },
+        "Action": "sts:AssumeRole",
+        "Condition": {
+            "StringEquals": {
+                "sts:ExternalId": "cyberark-external-id"
+            }
+        }
+    }]
+}
+\stopverb}
+
+\p{\strong{Azure Integration:}}
+
+\ol{
+\li{Register CyberArk as an enterprise application in Microsoft Entra ID}
+\li{Grant CyberArk application permissions: Directory.ReadWrite.All, RoleManagement.ReadWrite.Directory}
+\li{Create custom Azure roles with scoped permissions}
+\li{Register Azure subscriptions in CyberArk SCA}
+}
+
+\p{\strong{GCP Integration:}}
+
+\ol{
+\li{Create a service account for CyberArk in GCP}
+\li{Grant IAM Admin and Service Account Admin roles}
+\li{Configure workload identity federation for cross-cloud access}
+\li{Register GCP projects in CyberArk SCA}
+}
+}
+
+\subtree{
+\title{Step 2: Define Access Policies}
+\p{Create policies that map job functions to cloud entitlements:}
+
+\pre{\startverb
+# CyberArk SCA Policy Example
+policy_name: "developer-aws-read-access"
+description: "Read-only access to AWS production for developers"
+target_cloud: "aws"
+target_accounts: ["123456789012", "987654321098"]
+
+time_policy:
+  max_duration: "4h"
+  default_duration: "1h"
+  business_hours_only: true
+  timezone: "America/New_York"
+
+entitlement_policy:
+  aws_managed_policies:
+    - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+  deny_actions:
+    - "iam:*"
+    - "organizations:*"
+    - "sts:*"
+  resource_restrictions:
+    - "arn:aws:s3:::production-*"
+
+approval_policy:
+  approval_required: true
+  approvers:
+    - type: "manager"
+    - type: "group"
+      group: "cloud-security-team"
+  auto_approve_conditions:
+    - previous_approved_same_policy: true
+      within_days: 7
+  escalation_timeout: "2h"
+  escalation_approver: "cloud-security-lead"
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Configure Session Monitoring}
+\p{Set up privileged session recording and real-time monitoring:}
+
+\ol{
+\li{Enable session recording for all ZSP sessions}
+\li{Configure keystroke logging for SSH/RDP sessions}
+\li{Set up real-time alerts for suspicious activities:}
+\li{Attempts to escalate privileges during session}
+\li{Access to resources outside policy scope}
+\li{Session duration exceeding 2x the normal pattern}
+\li{Forward session metadata to SIEM}
+}
+}
+
+\subtree{
+\title{Step 4: Implement Approval Workflows}
+\p{Integrate with ITSM tools for access request and approval:}
+
+\ul{
+\li{\strong{ServiceNow}: CyberArk SCA connector creates ServiceNow tickets for approval}
+\li{\strong{Slack/Teams}: ChatOps bot for quick approvals within messaging platforms}
+\li{\strong{Jira}: Integration for development-related access requests}
+\li{\strong{Auto-Approval}: Configure rules for low-risk, previously approved requests}
+}
+}
+
+\subtree{
+\title{Step 5: Migrate from Standing Privileges}
+\pre{\startverb
+Phase 1: DISCOVERY (Weeks 1-2)
+    ├── Inventory all standing privileged roles across cloud accounts
+    ├── Map users to their standing role assignments
+    ├── Analyze CloudTrail/activity logs for actual permission usage
+    └── Identify roles that can be converted to JIT
+
+Phase 2: POLICY CREATION (Weeks 3-4)
+    ├── Create ZSP policies based on actual usage analysis
+    ├── Define TEA parameters for each policy
+    ├── Configure approval workflows
+    └── Test policies with pilot users
+
+Phase 3: MIGRATION (Weeks 5-8)
+    ├── Assign ZSP policies to pilot group
+    ├── Remove standing privileges from pilot users
+    ├── Monitor for access issues and adjust policies
+    ├── Expand to additional teams incrementally
+    └── Remove all standing privileges organization-wide
+
+Phase 4: GOVERNANCE (Ongoing)
+    ├── Monthly review of ZSP policy effectiveness
+    ├── Quarterly entitlement optimization
+    ├── Monitor for policy drift or standing privilege re-creation
+    └── Report ZSP metrics to security leadership
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] Cloud providers integrated with CyberArk SCA}
+\li{[ ] TEA policies defined for all privileged access scenarios}
+\li{[ ] Approval workflows configured and tested}
+\li{[ ] Session recording and monitoring enabled}
+\li{[ ] All standing privileged roles identified for migration}
+\li{[ ] Pilot group successfully using ZSP without standing privileges}
+\li{[ ] Break-glass procedure defined for emergency access}
+\li{[ ] SIEM integration receiving session and access logs}
+\li{[ ] Auto-approval rules configured for low-risk, repeat access}
+\li{[ ] Organization-wide migration plan approved and scheduled}
+\li{[ ] KPI tracking: reduction in standing privilege assignments}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[CyberArk Zero Standing Privileges](https://www.cyberark.com/what-is/zero-standing-privileges/)}
+\li{[CyberArk ZSP Implementation with AWS](https://aws.amazon.com/blogs/apn/how-to-implement-zero-standing-privileges-with-cyberark-for-securing-access-to-the-aws-console/)}
+\li{[CyberArk Blueprint - Zero Standing Privilege](https://docs.cyberark.com/cyberark-blueprint/latest/en/content/zero-standing-privilege.htm)}
+\li{[CyberArk Secure Cloud Access Documentation](https://docs.cyberark.com/ispss-access/latest/en/content/getstarted/acc-frst-page.htm)}
+}
+}
+}

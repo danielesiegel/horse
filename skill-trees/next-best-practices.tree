@@ -1,0 +1,229 @@
+\title{Next Best Practices}
+
+\taxon{skill}
+
+\meta{description}{Next.js best practices - file conventions, RSC boundaries, data patterns, async APIs, metadata, error handling, route handlers, image/font optimization, bundling}
+
+\subtree{
+\title{Next.js Best Practices}
+\p{Apply these rules when writing or reviewing Next.js code.}
+
+\subtree{
+\title{File Conventions}
+\p{See [file-conventions.md](./file-conventions.md) for:}
+
+\ul{
+\li{Project structure and special files}
+\li{Route segments (dynamic, catch-all, groups)}
+\li{Parallel and intercepting routes}
+\li{Middleware rename in v16 (middleware → proxy)}
+}
+}
+
+\subtree{
+\title{RSC Boundaries}
+\p{Detect invalid React Server Component patterns.}
+
+\p{See [rsc-boundaries.md](./rsc-boundaries.md) for:}
+
+\ul{
+\li{Async client component detection (invalid)}
+\li{Non-serializable props detection}
+\li{Server Action exceptions}
+}
+}
+
+\subtree{
+\title{Async Patterns}
+\p{Next.js 15+ async API changes.}
+
+\p{See [async-patterns.md](./async-patterns.md) for:}
+
+\ul{
+\li{Async \code{\startverb params\stopverb} and \code{\startverb searchParams\stopverb}}
+\li{Async \code{\startverb cookies()\stopverb} and \code{\startverb headers()\stopverb}}
+\li{Migration codemod}
+}
+}
+
+\subtree{
+\title{Runtime Selection}
+\p{See [runtime-selection.md](./runtime-selection.md) for:}
+
+\ul{
+\li{Default to Node.js runtime}
+\li{When Edge runtime is appropriate}
+}
+}
+
+\subtree{
+\title{Directives}
+\p{See [directives.md](./directives.md) for:}
+
+\ul{
+\li{\code{\startverb 'use client'\stopverb}, \code{\startverb 'use server'\stopverb} (React)}
+\li{\code{\startverb 'use cache'\stopverb} (Next.js)}
+}
+}
+
+\subtree{
+\title{Functions}
+\p{See [functions.md](./functions.md) for:}
+
+\ul{
+\li{Navigation hooks: \code{\startverb useRouter\stopverb}, \code{\startverb usePathname\stopverb}, \code{\startverb useSearchParams\stopverb}, \code{\startverb useParams\stopverb}}
+\li{Server functions: \code{\startverb cookies\stopverb}, \code{\startverb headers\stopverb}, \code{\startverb draftMode\stopverb}, \code{\startverb after\stopverb}}
+\li{Generate functions: \code{\startverb generateStaticParams\stopverb}, \code{\startverb generateMetadata\stopverb}}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\p{See [error-handling.md](./error-handling.md) for:}
+
+\ul{
+\li{\code{\startverb error.tsx\stopverb}, \code{\startverb global-error.tsx\stopverb}, \code{\startverb not-found.tsx\stopverb}}
+\li{\code{\startverb redirect\stopverb}, \code{\startverb permanentRedirect\stopverb}, \code{\startverb notFound\stopverb}}
+\li{\code{\startverb forbidden\stopverb}, \code{\startverb unauthorized\stopverb} (auth errors)}
+\li{\code{\startverb unstable_rethrow\stopverb} for catch blocks}
+}
+}
+
+\subtree{
+\title{Data Patterns}
+\p{See [data-patterns.md](./data-patterns.md) for:}
+
+\ul{
+\li{Server Components vs Server Actions vs Route Handlers}
+\li{Avoiding data waterfalls (\code{\startverb Promise.all\stopverb}, Suspense, preload)}
+\li{Client component data fetching}
+}
+}
+
+\subtree{
+\title{Route Handlers}
+\p{See [route-handlers.md](./route-handlers.md) for:}
+
+\ul{
+\li{\code{\startverb route.ts\stopverb} basics}
+\li{GET handler conflicts with \code{\startverb page.tsx\stopverb}}
+\li{Environment behavior (no React DOM)}
+\li{When to use vs Server Actions}
+}
+}
+
+\subtree{
+\title{Metadata & OG Images}
+\p{See [metadata.md](./metadata.md) for:}
+
+\ul{
+\li{Static and dynamic metadata}
+\li{\code{\startverb generateMetadata\stopverb} function}
+\li{OG image generation with \code{\startverb next/og\stopverb}}
+\li{File-based metadata conventions}
+}
+}
+
+\subtree{
+\title{Image Optimization}
+\p{See [image.md](./image.md) for:}
+
+\ul{
+\li{Always use \code{\startverb next/image\stopverb} over \code{\startverb <img>\stopverb}}
+\li{Remote images configuration}
+\li{Responsive \code{\startverb sizes\stopverb} attribute}
+\li{Blur placeholders}
+\li{Priority loading for LCP}
+}
+}
+
+\subtree{
+\title{Font Optimization}
+\p{See [font.md](./font.md) for:}
+
+\ul{
+\li{\code{\startverb next/font\stopverb} setup}
+\li{Google Fonts, local fonts}
+\li{Tailwind CSS integration}
+\li{Preloading subsets}
+}
+}
+
+\subtree{
+\title{Bundling}
+\p{See [bundling.md](./bundling.md) for:}
+
+\ul{
+\li{Server-incompatible packages}
+\li{CSS imports (not link tags)}
+\li{Polyfills (already included)}
+\li{ESM/CommonJS issues}
+\li{Bundle analysis}
+}
+}
+
+\subtree{
+\title{Scripts}
+\p{See [scripts.md](./scripts.md) for:}
+
+\ul{
+\li{\code{\startverb next/script\stopverb} vs native script tags}
+\li{Inline scripts need \code{\startverb id\stopverb}}
+\li{Loading strategies}
+\li{Google Analytics with \code{\startverb @next/third-parties\stopverb}}
+}
+}
+
+\subtree{
+\title{Hydration Errors}
+\p{See [hydration-error.md](./hydration-error.md) for:}
+
+\ul{
+\li{Common causes (browser APIs, dates, invalid HTML)}
+\li{Debugging with error overlay}
+\li{Fixes for each cause}
+}
+}
+
+\subtree{
+\title{Suspense Boundaries}
+\p{See [suspense-boundaries.md](./suspense-boundaries.md) for:}
+
+\ul{
+\li{CSR bailout with \code{\startverb useSearchParams\stopverb} and \code{\startverb usePathname\stopverb}}
+\li{Which hooks require Suspense boundaries}
+}
+}
+
+\subtree{
+\title{Parallel & Intercepting Routes}
+\p{See [parallel-routes.md](./parallel-routes.md) for:}
+
+\ul{
+\li{Modal patterns with \code{\startverb @slot\stopverb} and \code{\startverb (.)\stopverb} interceptors}
+\li{\code{\startverb default.tsx\stopverb} for fallbacks}
+\li{Closing modals correctly with \code{\startverb router.back()\stopverb}}
+}
+}
+
+\subtree{
+\title{Self-Hosting}
+\p{See [self-hosting.md](./self-hosting.md) for:}
+
+\ul{
+\li{\code{\startverb output: 'standalone'\stopverb} for Docker}
+\li{Cache handlers for multi-instance ISR}
+\li{What works vs needs extra setup}
+}
+}
+
+\subtree{
+\title{Debug Tricks}
+\p{See [debug-tricks.md](./debug-tricks.md) for:}
+
+\ul{
+\li{MCP endpoint for AI-assisted debugging}
+\li{Rebuild specific routes with \code{\startverb --debug-build-paths\stopverb}}
+}
+}
+}

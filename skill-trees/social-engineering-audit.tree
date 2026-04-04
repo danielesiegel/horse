@@ -1,0 +1,193 @@
+\title{Social Engineering Audit}
+
+\taxon{skill}
+
+\meta{description}{Assess social engineering attack surface in applications and organizations. Identifies pretexting vectors, OSINT exposure, phishing susceptibility in authentication flows, and human-factor vulnerabilities in security architecture. Use when auditing auth flows, help desk procedures, password reset mechanisms, or organizational security posture.}
+
+\subtree{
+\title{Social Engineering Audit}
+\subtree{
+\title{When to Use}
+\p{Invoke this skill when assessing:}
+
+\ul{
+\li{Authentication and authorization flows (login, MFA, password reset, account recovery)}
+\li{Help desk and customer support procedures}
+\li{Identity verification and onboarding processes}
+\li{Organizational security posture against targeted attacks}
+\li{Account takeover risk via non-technical channels}
+\li{Physical access control and personnel security}
+}
+
+\p{This is not a penetration test. This is a structured assessment of the human-factor attack surface -- the seams where process, trust, and technology meet.}
+}
+
+\subtree{
+\title{Attack Surface Taxonomy}
+\subtree{
+\title{1. Pretexting Vectors}
+\ul{
+\li{\strong{Support channels}: phone, email, chat, social media DMs. Each is an identity}
+\li{\strong{Internal help desk}: IT support desks are high-value targets. Assess what}
+\li{\strong{Vendor/contractor impersonation}: third-party relationships create implicit}
+\li{\strong{Authority exploitation}: executive impersonation, "urgent" escalation paths,}
+}
+}
+
+\subtree{
+\title{2. Authentication Bypass via Social Channels}
+\ul{
+\li{\strong{Password reset}: Does the reset flow rely on email alone? Is there a}
+\li{\strong{Account recovery}: What happens when a user "loses everything"? The recovery}
+\li{\strong{SIM swap / number porting}: If SMS is used for 2FA or recovery, the phone}
+\li{\strong{Session hijacking via support}: Can support generate magic links, session}
+}
+}
+
+\subtree{
+\title{3. OSINT Exposure}
+\ul{
+\li{\strong{Breached credentials}: Check paste sites, breach databases. Credential}
+\li{\strong{Social media}: Employee roles, org charts, technology stack, office photos}
+\li{\strong{Public records}: Domain registrations, DNS records, job postings (reveal}
+\li{\strong{Code repositories}: Leaked secrets, internal URLs, employee emails in}
+\li{\strong{Metadata}: Document metadata (author names, software versions, internal}
+}
+}
+
+\subtree{
+\title{4. Phishing Surface}
+\ul{
+\li{\strong{Email authentication}: Check SPF, DKIM, DMARC records. A missing or}
+\li{\strong{Lookalike domains}: Check for registered typosquats and homoglyph domains.}
+\li{\strong{Link handling}: How does the application handle links in emails, chat,}
+\li{\strong{OAuth consent phishing}: Can an attacker register an OAuth app with a}
+}
+}
+
+\subtree{
+\title{5. Physical Social Engineering}
+\ul{
+\li{\strong{Tailgating}: Badge-controlled entrances without mantraps or visual}
+\li{\strong{Badge cloning}: Proximity card technology (125kHz HID is trivially cloned).}
+\li{\strong{Impersonation}: Delivery, maintenance, IT support pretexts for physical}
+\li{\strong{Dumpster diving}: Document disposal procedures, shredding policy.}
+}
+}
+}
+
+\subtree{
+\title{Audit Methodology}
+\p{Execute in order. Each step informs the next.}
+
+\p{\strong{Step 1: Map human-mediated authentication paths.} Enumerate every path where a human (support agent, IT admin, manager) can override, bypass, or supplement automated authentication. Document what each path can do and what verification it requires.}
+
+\p{\strong{Step 2: Identify identity verification procedures.} For each human-mediated path: what questions are asked? What constitutes "sufficient" proof of identity? Is it documented or ad hoc? Can the answers be obtained via OSINT?}
+
+\p{\strong{Step 3: Assess OSINT exposure.} Gather publicly available information that could be used to answer verification questions or craft targeted pretexts. Focus on: employee names and roles, email formats, technology stack, org structure, breached credentials.}
+
+\p{\strong{Step 4: Evaluate phishing controls.} Check email authentication records (SPF/DKIM/DMARC). Enumerate registered lookalike domains. Review whether the organization has phishing-resistant MFA (WebAuthn/FIDO2) or phishable MFA (TOTP/SMS).}
+
+\p{\strong{Step 5: Review account recovery flows.} Walk through every account recovery path as an attacker who controls only public information. Identify which paths leak user existence, accept guessable answers, or defer to a human who can be pretexted.}
+
+\p{\strong{Step 6: Test help desk resistance.} Design pretext scenarios based on Steps 2-3. Assess (or recommend testing) whether support staff follow verification procedures under pressure, urgency, or authority cues.}
+}
+
+\subtree{
+\title{Code Review Patterns}
+\p{When reviewing application source, flag these patterns:}
+
+\subtree{
+\title{User Enumeration}
+\pre{\startverb
+# BAD: Different responses for valid vs invalid users
+if not user_exists(email):
+    return "No account found"     # Leaks existence
+return "Reset link sent"
+\stopverb}
+
+\p{Fix: Return the same response regardless. Send email only if account exists.}
+}
+
+\subtree{
+\title{Security Questions for Recovery}
+\p{Any use of security questions (mother's maiden name, first pet, etc.) is a finding. These are OSINT-retrievable and not secrets.}
+}
+
+\subtree{
+\title{Support Tooling Without Verification Audit Trail}
+\pre{\startverb
+# BAD: Support action with no identity verification logged
+@admin_required
+def reset_user_password(user_id):
+    user.set_random_password()    # No record of what verification was performed
+\stopverb}
+
+\p{Fix: Require and log the verification method used before any support action.}
+}
+
+\subtree{
+\title{OAuth/SSO Misconfigurations}
+\ul{
+\li{Open redirect in OAuth callback URLs (enables token theft)}
+\li{Wildcard or overly broad redirect URI matching}
+\li{Missing \code{\startverb state\stopverb} parameter validation (CSRF in OAuth flow)}
+\li{Auto-approval of OAuth consent for internal apps (can be abused if app}
+}
+}
+
+\subtree{
+\title{Rate Limiting Gaps}
+\pre{\startverb
+# BAD: No rate limit on verification code endpoint
+@app.route("/verify-code", methods=["POST"])
+def verify_code():
+    if request.form["code"] == stored_code:
+        grant_access()
+\stopverb}
+
+\p{Fix: Rate limit by IP and account. Lock after N failures. Use longer codes.}
+}
+
+\subtree{
+\title{MFA Bypass in Recovery}
+\p{Look for code paths where MFA is enforced at login but skipped during account recovery, password reset, or support-initiated access.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\p{Structure findings as:}
+
+\pre{\startverb
+### [SE-001] Finding Title
+
+Severity: Critical / High / Medium / Low / Informational
+Category: Pretexting | Auth Bypass | OSINT Exposure | Phishing | Physical
+Attack Scenario: Concrete, step-by-step description of how an attacker
+  exploits this. Name the pretext. Name the channel. Name what they obtain.
+Evidence: What was observed (code path, policy gap, DNS record, etc.)
+Remediation: Specific, actionable fix. Not "improve training."
+References: Relevant standards (NIST 800-63B, OWASP, etc.)
+\stopverb}
+
+\p{Severity calibration:}
+
+\ul{
+\li{\strong{Critical}: Direct account takeover via social channel, no technical skill required.}
+\li{\strong{High}: Account takeover possible with moderate OSINT gathering.}
+\li{\strong{Medium}: Information disclosure that enables targeted attacks.}
+\li{\strong{Low}: Weak controls that increase attack surface but require chaining.}
+\li{\strong{Informational}: Observations that inform security posture but lack direct exploit path.}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb entry-point-analyzer\stopverb} -- map technical entry points before assessing human ones}
+\li{\code{\startverb webapp-testing\stopverb} -- complement social engineering audit with technical testing}
+\li{\code{\startverb audit-context-building\stopverb} -- establish organizational context and threat model}
+}
+}
+}

@@ -1,0 +1,69 @@
+\title{Implementing Network Traffic Analysis With Arkime}
+
+\taxon{skill}
+
+\tag{implementing}
+
+\tag{network}
+
+\tag{traffic}
+
+\tag{analysis}
+
+\meta{version}{"1.0"}
+
+\meta{description}{>-}
+
+\subtree{
+\title{Implementing Network Traffic Analysis with Arkime}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing network traffic analysis with arkime capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with network security concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\ol{
+\li{Install dependencies: \code{\startverb pip install requests\stopverb}}
+\li{Configure Arkime viewer URL and credentials.}
+\li{Run the agent to query Arkime sessions and analyze traffic:}
+\li{Search sessions by IP, port, protocol, or expression}
+\li{Download PCAP data for forensic analysis}
+\li{Detect C2 beaconing via connection interval analysis}
+\li{Identify DNS tunneling through query length statistics}
+\li{Flag connections to known-bad TLS certificate issuers}
+}
+
+\pre{\startverb
+python scripts/agent.py --arkime-url https://arkime.local:8005 --user admin --password secret --output arkime_report.json
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Beaconing Detection}
+\pre{\startverb
+Source: 10.1.2.50 -> 185.220.101.34:443
+Sessions: 288 over 24 hours
+Avg interval: 300s, Jitter: 4.2%
+Verdict: HIGH confidence C2 beaconing (jitter < 5%)
+\stopverb}
+}
+}
+}

@@ -1,0 +1,153 @@
+\title{Detecting Spearphishing With Email Gateway}
+
+\taxon{skill}
+
+\tag{phishing}
+
+\tag{email-security}
+
+\tag{social-engineering}
+
+\tag{dmarc}
+
+\tag{awareness}
+
+\tag{spearphishing}
+
+\tag{email-gateway}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Spearphishing targets specific individuals using personalized, researched content that bypasses generic spam filters. Email security gateways (SEGs) like Microsoft Defender for Office 365, Proofpoint,}
+
+\subtree{
+\title{Detecting Spearphishing with Email Gateway}
+\subtree{
+\title{Overview}
+\p{Spearphishing targets specific individuals using personalized, researched content that bypasses generic spam filters. Email security gateways (SEGs) like Microsoft Defender for Office 365, Proofpoint, Mimecast, and Barracuda provide advanced detection capabilities including behavioral analysis, URL detonation, attachment sandboxing, and impersonation detection. This skill covers configuring these gateways to detect and block targeted phishing attacks.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting spearphishing with email gateway}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Access to email security gateway admin console}
+\li{Understanding of email flow architecture (MX records, transport rules)}
+\li{Familiarity with SPF/DKIM/DMARC authentication}
+\li{Knowledge of common spearphishing techniques and pretexts}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Spearphishing Characteristics}
+\ul{
+\li{\strong{Targeted recipients}: Specific individuals, often executives or finance staff}
+\li{\strong{Researched pretexts}: References to real projects, colleagues, or events}
+\li{\strong{Impersonation}: Spoofs trusted senders (CEO, vendor, partner)}
+\li{\strong{Low volume}: Few emails to avoid pattern-based detection}
+\li{\strong{Urgent tone}: Creates pressure to act quickly}
+}
+}
+
+\subtree{
+\title{Gateway Detection Layers}
+\ol{
+\li{\strong{Reputation filtering}: IP/domain/URL reputation scoring}
+\li{\strong{Authentication checks}: SPF, DKIM, DMARC validation}
+\li{\strong{Content analysis}: NLP-based analysis of email body}
+\li{\strong{Impersonation detection}: Display name and domain similarity matching}
+\li{\strong{URL analysis}: Real-time URL detonation and redirect following}
+\li{\strong{Attachment sandboxing}: Behavioral analysis of attachments in isolated environments}
+\li{\strong{Behavioral analytics}: Anomaly detection in communication patterns}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Configure Impersonation Protection}
+\pre{\startverb
+Microsoft Defender for Office 365:
+  Security > Anti-phishing policies > Impersonation settings
+  - Enable user impersonation protection for VIPs
+  - Enable domain impersonation protection
+  - Add protected users (CEO, CFO, HR Director)
+  - Set action: Quarantine message
+
+Proofpoint:
+  Email Protection > Impostor Classifier
+  - Enable display name spoofing detection
+  - Configure lookalike domain detection
+  - Set Impostor threshold sensitivity
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Configure URL Protection}
+\ul{
+\li{Enable Safe Links / URL rewriting}
+\li{Enable time-of-click URL detonation}
+\li{Block newly registered domains (< 30 days)}
+\li{Enable URL redirect chain following}
+}
+}
+
+\subtree{
+\title{Step 3: Configure Attachment Sandboxing}
+\ul{
+\li{Enable Safe Attachments / attachment sandboxing}
+\li{Configure dynamic delivery (deliver body, hold attachments)}
+\li{Set sandbox detonation timeout to 60+ seconds}
+\li{Block macro-enabled Office documents from external senders}
+}
+}
+
+\subtree{
+\title{Step 4: Create Custom Detection Rules}
+\p{Use the \code{\startverb scripts/process.py\stopverb} to analyze email gateway logs, identify spearphishing patterns, and generate custom detection rules.}
+}
+
+\subtree{
+\title{Step 5: Configure Alert and Response Actions}
+\ul{
+\li{Real-time alerts for impersonation attempts}
+\li{Automatic quarantine for high-confidence detections}
+\li{User notification with safety tips}
+\li{Integration with SIEM for correlation}
+}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{Microsoft Defender for Office 365}: https://security.microsoft.com}
+\li{\strong{Proofpoint Email Protection}: https://www.proofpoint.com/us/products/email-security}
+\li{\strong{Mimecast Email Security}: https://www.mimecast.com/products/email-security/}
+\li{\strong{Barracuda Email Protection}: https://www.barracuda.com/products/email-protection}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{Impersonation protection correctly identifies spoofed VIP display names}
+\li{URL detonation catches malicious links in test phishing emails}
+\li{Attachment sandboxing detects weaponized documents}
+\li{Custom rules trigger on known spearphishing patterns}
+\li{SIEM integration receives gateway alerts}
+}
+}
+}

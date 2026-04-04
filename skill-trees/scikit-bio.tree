@@ -1,0 +1,541 @@
+\title{Scikit Bio}
+
+\taxon{skill}
+
+\meta{description}{"Biological data toolkit. Sequence analysis, alignments, phylogenetic trees, diversity metrics (alpha/beta, UniFrac), ordination (PCoA), PERMANOVA, FASTA/Newick I/O, for microbiome analysis."}
+
+\subtree{
+\title{scikit-bio}
+\subtree{
+\title{Overview}
+\p{scikit-bio is a comprehensive Python library for working with biological data. Apply this skill for bioinformatics analyses spanning sequence manipulation, alignment, phylogenetics, microbial ecology, and multivariate statistics.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when the user:}
+
+\ul{
+\li{Works with biological sequences (DNA, RNA, protein)}
+\li{Needs to read/write biological file formats (FASTA, FASTQ, GenBank, Newick, BIOM, etc.)}
+\li{Performs sequence alignments or searches for motifs}
+\li{Constructs or analyzes phylogenetic trees}
+\li{Calculates diversity metrics (alpha/beta diversity, UniFrac distances)}
+\li{Performs ordination analysis (PCoA, CCA, RDA)}
+\li{Runs statistical tests on biological/ecological data (PERMANOVA, ANOSIM, Mantel)}
+\li{Analyzes microbiome or community ecology data}
+\li{Works with protein embeddings from language models}
+\li{Needs to manipulate biological data tables}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Sequence Manipulation}
+\p{Work with biological sequences using specialized classes for DNA, RNA, and protein data.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{Read/write sequences from FASTA, FASTQ, GenBank, EMBL formats}
+\li{Sequence slicing, concatenation, and searching}
+\li{Reverse complement, transcription (DNA→RNA), and translation (RNA→protein)}
+\li{Find motifs and patterns using regex}
+\li{Calculate distances (Hamming, k-mer based)}
+\li{Handle sequence quality scores and metadata}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+import skbio
+
+# Read sequences from file
+seq = skbio.DNA.read('input.fasta')
+
+# Sequence operations
+rc = seq.reverse_complement()
+rna = seq.transcribe()
+protein = rna.translate()
+
+# Find motifs
+motif_positions = seq.find_with_regex('ATG[ACGT]{3}')
+
+# Check for properties
+has_degens = seq.has_degenerates()
+seq_no_gaps = seq.degap()
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{Use \code{\startverb DNA\stopverb}, \code{\startverb RNA\stopverb}, \code{\startverb Protein\stopverb} classes for grammared sequences with validation}
+\li{Use \code{\startverb Sequence\stopverb} class for generic sequences without alphabet restrictions}
+\li{Quality scores automatically loaded from FASTQ files into positional metadata}
+\li{Metadata types: sequence-level (ID, description), positional (per-base), interval (regions/features)}
+}
+}
+
+\subtree{
+\title{2. Sequence Alignment}
+\p{Perform pairwise and multiple sequence alignments using dynamic programming algorithms.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Global alignment (Needleman-Wunsch with semi-global variant)}
+\li{Local alignment (Smith-Waterman)}
+\li{Configurable scoring schemes (match/mismatch, gap penalties, substitution matrices)}
+\li{CIGAR string conversion}
+\li{Multiple sequence alignment storage and manipulation with \code{\startverb TabularMSA\stopverb}}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio.alignment import local_pairwise_align_ssw, TabularMSA
+
+# Pairwise alignment
+alignment = local_pairwise_align_ssw(seq1, seq2)
+
+# Access aligned sequences
+msa = alignment.aligned_sequences
+
+# Read multiple alignment from file
+msa = TabularMSA.read('alignment.fasta', constructor=skbio.DNA)
+
+# Calculate consensus
+consensus = msa.consensus()
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{Use \code{\startverb local_pairwise_align_ssw\stopverb} for local alignments (faster, SSW-based)}
+\li{Use \code{\startverb StripedSmithWaterman\stopverb} for protein alignments}
+\li{Affine gap penalties recommended for biological sequences}
+\li{Can convert between scikit-bio, BioPython, and Biotite alignment formats}
+}
+}
+
+\subtree{
+\title{3. Phylogenetic Trees}
+\p{Construct, manipulate, and analyze phylogenetic trees representing evolutionary relationships.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Tree construction from distance matrices (UPGMA, WPGMA, Neighbor Joining, GME, BME)}
+\li{Tree manipulation (pruning, rerooting, traversal)}
+\li{Distance calculations (patristic, cophenetic, Robinson-Foulds)}
+\li{ASCII visualization}
+\li{Newick format I/O}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio import TreeNode
+from skbio.tree import nj
+
+# Read tree from file
+tree = TreeNode.read('tree.nwk')
+
+# Construct tree from distance matrix
+tree = nj(distance_matrix)
+
+# Tree operations
+subtree = tree.shear(['taxon1', 'taxon2', 'taxon3'])
+tips = [node for node in tree.tips()]
+lca = tree.lowest_common_ancestor(['taxon1', 'taxon2'])
+
+# Calculate distances
+patristic_dist = tree.find('taxon1').distance(tree.find('taxon2'))
+cophenetic_matrix = tree.cophenetic_matrix()
+
+# Compare trees
+rf_distance = tree.robinson_foulds(other_tree)
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{Use \code{\startverb nj()\stopverb} for neighbor joining (classic phylogenetic method)}
+\li{Use \code{\startverb upgma()\stopverb} for UPGMA (assumes molecular clock)}
+\li{GME and BME are highly scalable for large trees}
+\li{Trees can be rooted or unrooted; some metrics require specific rooting}
+}
+}
+
+\subtree{
+\title{4. Diversity Analysis}
+\p{Calculate alpha and beta diversity metrics for microbial ecology and community analysis.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Alpha diversity: richness, Shannon entropy, Simpson index, Faith's PD, Pielou's evenness}
+\li{Beta diversity: Bray-Curtis, Jaccard, weighted/unweighted UniFrac, Euclidean distances}
+\li{Phylogenetic diversity metrics (require tree input)}
+\li{Rarefaction and subsampling}
+\li{Integration with ordination and statistical tests}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio.diversity import alpha_diversity, beta_diversity
+import skbio
+
+# Alpha diversity
+alpha = alpha_diversity('shannon', counts_matrix, ids=sample_ids)
+faith_pd = alpha_diversity('faith_pd', counts_matrix, ids=sample_ids,
+                          tree=tree, otu_ids=feature_ids)
+
+# Beta diversity
+bc_dm = beta_diversity('braycurtis', counts_matrix, ids=sample_ids)
+unifrac_dm = beta_diversity('unweighted_unifrac', counts_matrix,
+                           ids=sample_ids, tree=tree, otu_ids=feature_ids)
+
+# Get available metrics
+from skbio.diversity import get_alpha_diversity_metrics
+print(get_alpha_diversity_metrics())
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{Counts must be integers representing abundances, not relative frequencies}
+\li{Phylogenetic metrics (Faith's PD, UniFrac) require tree and OTU ID mapping}
+\li{Use \code{\startverb partial_beta_diversity()\stopverb} for computing specific sample pairs only}
+\li{Alpha diversity returns Series, beta diversity returns DistanceMatrix}
+}
+}
+
+\subtree{
+\title{5. Ordination Methods}
+\p{Reduce high-dimensional biological data to visualizable lower-dimensional spaces.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{PCoA (Principal Coordinate Analysis) from distance matrices}
+\li{CA (Correspondence Analysis) for contingency tables}
+\li{CCA (Canonical Correspondence Analysis) with environmental constraints}
+\li{RDA (Redundancy Analysis) for linear relationships}
+\li{Biplot projection for feature interpretation}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio.stats.ordination import pcoa, cca
+
+# PCoA from distance matrix
+pcoa_results = pcoa(distance_matrix)
+pc1 = pcoa_results.samples['PC1']
+pc2 = pcoa_results.samples['PC2']
+
+# CCA with environmental variables
+cca_results = cca(species_matrix, environmental_matrix)
+
+# Save/load ordination results
+pcoa_results.write('ordination.txt')
+results = skbio.OrdinationResults.read('ordination.txt')
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{PCoA works with any distance/dissimilarity matrix}
+\li{CCA reveals environmental drivers of community composition}
+\li{Ordination results include eigenvalues, proportion explained, and sample/feature coordinates}
+\li{Results integrate with plotting libraries (matplotlib, seaborn, plotly)}
+}
+}
+
+\subtree{
+\title{6. Statistical Testing}
+\p{Perform hypothesis tests specific to ecological and biological data.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{PERMANOVA: test group differences using distance matrices}
+\li{ANOSIM: alternative test for group differences}
+\li{PERMDISP: test homogeneity of group dispersions}
+\li{Mantel test: correlation between distance matrices}
+\li{Bioenv: find environmental variables correlated with distances}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio.stats.distance import permanova, anosim, mantel
+
+# Test if groups differ significantly
+permanova_results = permanova(distance_matrix, grouping, permutations=999)
+print(f"p-value: {permanova_results['p-value']}")
+
+# ANOSIM test
+anosim_results = anosim(distance_matrix, grouping, permutations=999)
+
+# Mantel test between two distance matrices
+mantel_results = mantel(dm1, dm2, method='pearson', permutations=999)
+print(f"Correlation: {mantel_results[0]}, p-value: {mantel_results[1]}")
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{Permutation tests provide non-parametric significance testing}
+\li{Use 999+ permutations for robust p-values}
+\li{PERMANOVA sensitive to dispersion differences; pair with PERMDISP}
+\li{Mantel tests assess matrix correlation (e.g., geographic vs genetic distance)}
+}
+}
+
+\subtree{
+\title{7. File I/O and Format Conversion}
+\p{Read and write 19+ biological file formats with automatic format detection.}
+
+\p{\strong{Supported formats:}}
+
+\ul{
+\li{Sequences: FASTA, FASTQ, GenBank, EMBL, QSeq}
+\li{Alignments: Clustal, PHYLIP, Stockholm}
+\li{Trees: Newick}
+\li{Tables: BIOM (HDF5 and JSON)}
+\li{Distances: delimited square matrices}
+\li{Analysis: BLAST+6/7, GFF3, Ordination results}
+\li{Metadata: TSV/CSV with validation}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+import skbio
+
+# Read with automatic format detection
+seq = skbio.DNA.read('file.fasta', format='fasta')
+tree = skbio.TreeNode.read('tree.nwk')
+
+# Write to file
+seq.write('output.fasta', format='fasta')
+
+# Generator for large files (memory efficient)
+for seq in skbio.io.read('large.fasta', format='fasta', constructor=skbio.DNA):
+    process(seq)
+
+# Convert formats
+seqs = list(skbio.io.read('input.fastq', format='fastq', constructor=skbio.DNA))
+skbio.io.write(seqs, format='fasta', into='output.fasta')
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{Use generators for large files to avoid memory issues}
+\li{Format can be auto-detected when \code{\startverb into\stopverb} parameter specified}
+\li{Some objects can be written to multiple formats}
+\li{Support for stdin/stdout piping with \code{\startverb verify=False\stopverb}}
+}
+}
+
+\subtree{
+\title{8. Distance Matrices}
+\p{Create and manipulate distance/dissimilarity matrices with statistical methods.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Store symmetric (DistanceMatrix) or asymmetric (DissimilarityMatrix) data}
+\li{ID-based indexing and slicing}
+\li{Integration with diversity, ordination, and statistical tests}
+\li{Read/write delimited text format}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio import DistanceMatrix
+import numpy as np
+
+# Create from array
+data = np.array([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
+dm = DistanceMatrix(data, ids=['A', 'B', 'C'])
+
+# Access distances
+dist_ab = dm['A', 'B']
+row_a = dm['A']
+
+# Read from file
+dm = DistanceMatrix.read('distances.txt')
+
+# Use in downstream analyses
+pcoa_results = pcoa(dm)
+permanova_results = permanova(dm, grouping)
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{DistanceMatrix enforces symmetry and zero diagonal}
+\li{DissimilarityMatrix allows asymmetric values}
+\li{IDs enable integration with metadata and biological knowledge}
+\li{Compatible with pandas, numpy, and scikit-learn}
+}
+}
+
+\subtree{
+\title{9. Biological Tables}
+\p{Work with feature tables (OTU/ASV tables) common in microbiome research.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{BIOM format I/O (HDF5 and JSON)}
+\li{Integration with pandas, polars, AnnData, numpy}
+\li{Data augmentation techniques (phylomix, mixup, compositional methods)}
+\li{Sample/feature filtering and normalization}
+\li{Metadata integration}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio import Table
+
+# Read BIOM table
+table = Table.read('table.biom')
+
+# Access data
+sample_ids = table.ids(axis='sample')
+feature_ids = table.ids(axis='observation')
+counts = table.matrix_data
+
+# Filter
+filtered = table.filter(sample_ids_to_keep, axis='sample')
+
+# Convert to/from pandas
+df = table.to_dataframe()
+table = Table.from_dataframe(df)
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{BIOM tables are standard in QIIME 2 workflows}
+\li{Rows typically represent samples, columns represent features (OTUs/ASVs)}
+\li{Supports sparse and dense representations}
+\li{Output format configurable (pandas/polars/numpy)}
+}
+}
+
+\subtree{
+\title{10. Protein Embeddings}
+\p{Work with protein language model embeddings for downstream analysis.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Store embeddings from protein language models (ESM, ProtTrans, etc.)}
+\li{Convert embeddings to distance matrices}
+\li{Generate ordination objects for visualization}
+\li{Export to numpy/pandas for ML workflows}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from skbio.embedding import ProteinEmbedding, ProteinVector
+
+# Create embedding from array
+embedding = ProteinEmbedding(embedding_array, sequence_ids)
+
+# Convert to distance matrix for analysis
+dm = embedding.to_distances(metric='euclidean')
+
+# PCoA visualization of embedding space
+pcoa_results = embedding.to_ordination(metric='euclidean', method='pcoa')
+
+# Export for machine learning
+array = embedding.to_array()
+df = embedding.to_dataframe()
+\stopverb}
+
+\p{\strong{Important notes:}}
+
+\ul{
+\li{Embeddings bridge protein language models with traditional bioinformatics}
+\li{Compatible with scikit-bio's distance/ordination/statistics ecosystem}
+\li{SequenceEmbedding and ProteinEmbedding provide specialized functionality}
+\li{Useful for sequence clustering, classification, and visualization}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install scikit-bio
+\stopverb}
+}
+
+\subtree{
+\title{Performance Considerations}
+\ul{
+\li{Use generators for large sequence files to minimize memory usage}
+\li{For massive phylogenetic trees, prefer GME or BME over NJ}
+\li{Beta diversity calculations can be parallelized with \code{\startverb partial_beta_diversity()\stopverb}}
+\li{BIOM format (HDF5) more efficient than JSON for large tables}
+}
+}
+
+\subtree{
+\title{Integration with Ecosystem}
+\ul{
+\li{Sequences interoperate with Biopython via standard formats}
+\li{Tables integrate with pandas, polars, and AnnData}
+\li{Distance matrices compatible with scikit-learn}
+\li{Ordination results visualizable with matplotlib/seaborn/plotly}
+\li{Works seamlessly with QIIME 2 artifacts (BIOM, trees, distance matrices)}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\ol{
+\li{\strong{Microbiome diversity analysis}: Read BIOM table → Calculate alpha/beta diversity → Ordination (PCoA) → Statistical testing (PERMANOVA)}
+\li{\strong{Phylogenetic analysis}: Read sequences → Align → Build distance matrix → Construct tree → Calculate phylogenetic distances}
+\li{\strong{Sequence processing}: Read FASTQ → Quality filter → Trim/clean → Find motifs → Translate → Write FASTA}
+\li{\strong{Comparative genomics}: Read sequences → Pairwise alignment → Calculate distances → Build tree → Analyze clades}
+}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{For detailed API information, parameter specifications, and advanced usage examples, refer to \code{\startverb references/api_reference.md\stopverb} which contains comprehensive documentation on:}
+
+\ul{
+\li{Complete method signatures and parameters for all capabilities}
+\li{Extended code examples for complex workflows}
+\li{Troubleshooting common issues}
+\li{Performance optimization tips}
+\li{Integration patterns with other libraries}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{Official documentation: https://scikit.bio/docs/latest/}
+\li{GitHub repository: https://github.com/scikit-bio/scikit-bio}
+\li{Forum support: https://forum.qiime2.org (scikit-bio is part of QIIME 2 ecosystem)}
+}
+}
+}

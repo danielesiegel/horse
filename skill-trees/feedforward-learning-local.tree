@@ -1,0 +1,111 @@
+\title{"feedforward Learning Local"}
+
+\taxon{skill}
+
+\meta{description}{"**Category:** Phase 3 Core - Alternative Learning Paradigms"}
+
+\subtree{
+\title{Feedforward Learning Local}
+\p{\strong{Category:} Phase 3 Core - Alternative Learning Paradigms \strong{Status:} Skeleton Implementation \strong{Dependencies:} None (standalone learning framework)}
+
+\subtree{
+\title{Overview}
+\p{Implements forward-forward (FF) learning algorithm and variants that eliminate backpropagation through local, layer-wise contrastive objectives. Each layer learns to distinguish positive from negative data independently.}
+}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{\strong{Forward-Forward Algorithm}: Hinton's layer-local learning}
+\li{\strong{Contrastive Objectives}: Positive/negative data discrimination}
+\li{\strong{No Backprop}: Purely feedforward gradient computation}
+\li{\strong{Statistical Communication}: Inter-layer coordination via activity statistics}
+}
+}
+
+\subtree{
+\title{Core Components}
+\ol{
+\li{\strong{FF Layer} (\code{\startverb ff_layer.jl\stopverb})}
+\li{Local goodness function per layer}
+\li{Positive/negative data generation}
+\li{Layer-wise gradient updates}
+}
+
+\ol{
+\li{\strong{Contrastive Learning} (\code{\startverb contrastive_learning.jl\stopverb})}
+\li{Contrastive divergence variants}
+\li{Energy-based formulations}
+\li{Hybrid supervised/unsupervised objectives}
+}
+
+\ol{
+\li{\strong{Statistical Coordination} (\code{\startverb statistical_coordination.jl\stopverb})}
+\li{Activity normalization between layers}
+\li{Whitening and decorrelation}
+\li{Predictive coding integration}
+}
+
+\ol{
+\li{\strong{FF Network} (\code{\startverb ff_network.jl\stopverb})}
+\li{Multi-layer FF architecture}
+\li{Inference and training loops}
+\li{Comparison with backprop baselines}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Input from}: Raw data (no dependencies on other skills)}
+\li{\strong{Output to}: \code{\startverb emergent-role-assignment\stopverb} (decentralized learning signals)}
+\li{\strong{Coordinates with}: \code{\startverb categorical-composition\stopverb} (compositional learning)}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using FeedforwardLearningLocal
+
+# Create FF network
+network = FFNetwork([
+    FFLayer(input_dim=784, hidden_dim=500, threshold=2.0),
+    FFLayer(input_dim=500, hidden_dim=500, threshold=2.0),
+    FFLayer(input_dim=500, hidden_dim=10, threshold=1.0)
+])
+
+# Train on MNIST
+for (x_pos, y) in train_data
+    # Generate negative data by corrupting label
+    x_neg = overlay_wrong_label(x_pos, y)
+
+    # Local learning at each layer
+    train_step!(network, x_pos, x_neg)
+end
+
+# Inference
+predictions = predict(network, test_data)
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Hinton "The Forward-Forward Algorithm" (2022)}
+\li{LeCun et al. "A Tutorial on Energy-Based Learning" (2006)}
+\li{Nokland & Eidnes "Training Neural Networks with Local Error Signals" (ICML 2019)}
+}
+}
+
+\subtree{
+\title{Implementation Status}
+\ul{
+\li{[x] Basic FF layer implementation}
+\li{[x] Positive/negative data generation}
+\li{[ ] Multiple variants (supervised, unsupervised)}
+\li{[ ] Benchmark against backprop}
+\li{[ ] Integration with predictive coding}
+}
+}
+}

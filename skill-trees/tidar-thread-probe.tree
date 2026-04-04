@@ -1,0 +1,198 @@
+\title{Tidar Thread Probe}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{TIDAR Thread Probe Skill}
+
+\subtree{
+\title{TIDAR Thread Probe Skill}
+\p{Tree-structured Iterative Decomposition And Recombination for cross-system thread pattern discovery across AMP, Claude, Codex, and Warp.}
+
+\subtree{
+\title{Capability}
+\p{Analyzes threads across multiple AI agent interaction surfaces using ordered locale site semantics:}
+
+\ol{
+\li{\strong{Shared Patterns}: Fields/behaviors present in ALL systems}
+\li{\strong{Pairwise Patterns}: Fields shared by exactly 2 systems}
+\li{\strong{Unique Patterns}: System-specific fields and behaviors}
+\li{\strong{Perplexing Patterns}: Anomalies, contradictions, mysteries}
+}
+}
+
+\subtree{
+\title{Ordered Locale vs Ordered Locale Sites}
+\ul{
+\li{\strong{Ordered Locale}: Complete Heyting algebra (frame) L with compatible preorder ≤ satisfying open cone condition. Each thread lives in an ordered locale (its workspace/project).}
+}
+
+\ul{
+\li{\strong{Ordered Locale Site}: Grothendieck site on ordered locale with coverage relation J. Cross-system observation uses ordered locale sites where sheaves model behavioral coalgebra.}
+}
+}
+
+\subtree{
+\title{Thread Counts (as of 2025-12-26)}
+\pre{\startverb
+| Source | Threads | Sessions | Messages |
+|--------|---------|----------|----------|
+| AMP | 616 | - | 2,535 tool calls |
+| Claude | - | 236 | 36,057 messages |
+| Codex | - | 36+ | ~400 records |
+| **Total** | **888** canonical threads |
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Universal Schema}
+\pre{\startverb
+ATOMIC FIELDS (required):
+  thread_id   : string  - unique session/thread identifier
+  timestamp   : int64   - Unix ms (or ISO-8601 converted)
+  workspace   : string  - absolute path to project/cwd
+  role        : enum    - user|assistant|system|tool
+  content     : string  - message text content
+
+OPTIONAL ATOMIC:
+  model       : string  - model identifier
+  originator  : string  - source tool (amp, claude, codex)
+
+DERIVED FIELDS:
+  message_count    : COUNT(messages in thread)
+  tool_call_count  : COUNT(tool invocations)
+  acceptance_rate  : 1 - (reverted / total)
+  trit             : GF(3) from hash(thread_id) mod 3 - 1
+  role_semantic    : trit → {validator, coordinator, generator}
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation Status}
+\p{Current cross-system trit distribution:}
+
+\ul{
+\li{MINUS (-1): 284 threads}
+\li{ERGODIC (0): 288 threads}
+\li{PLUS (+1): 316 threads}
+\li{\strong{Σ trits = 32 (mod 3 = 2) → NOT CONSERVED}}
+}
+
+\p{Need 1 more MINUS thread or 2 more ERGODIC threads to balance.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Run TIDAR analysis
+python3 src/universal_thread_schema.py
+
+# Query specific source
+duckdb trit_stream.duckdb -c "SELECT * FROM amp_threads LIMIT 10"
+jq -s '.' ~/.claude/history.jsonl | head
+\stopverb}
+}
+
+\subtree{
+\title{Perplexing Patterns}
+\ol{
+\li{AMP \code{\startverb .org\stopverb} files have \strong{45\% revert rate} vs 0\% for .clj/.jl/.bb}
+\li{AMP threads with 40+ hour durations but only 5-9 tool calls}
+\li{Codex uses \code{\startverb danger-full-access\stopverb} sandbox policy in production}
+\li{Claude longest session: 841 messages in 182 seconds (4.6 msg/sec)}
+\li{AMP bimodal acceptance: threads cluster at 0\% or 100\%}
+\li{Codex embeds ~50KB instructions per session (redundant)}
+\li{Claude \code{\startverb pastedContents\stopverb} used in only 0.5\% of entries}
+}
+}
+
+\subtree{
+\title{Source-Specific Mappings}
+\subtree{
+\title{AMP → Canonical}
+\ul{
+\li{thread_id → thread_id}
+\li{first_ts/last_ts → timestamp range}
+\li{uri → workspace (extracted)}
+\li{tool_id → tool invocation}
+\li{reverted → acceptance tracking}
+}
+}
+
+\subtree{
+\title{Claude → Canonical}
+\ul{
+\li{sessionId → thread_id}
+\li{timestamp → timestamp (already Unix ms)}
+\li{project → workspace}
+\li{display → content}
+}
+}
+
+\subtree{
+\title{Codex → Canonical}
+\ul{
+\li{payload.id → thread_id}
+\li{timestamp → timestamp (ISO-8601 → Unix ms)}
+\li{cwd → workspace}
+\li{message/content → content}
+}
+}
+}
+
+\subtree{
+\title{Integration with Gay-MCP Colors}
+\p{Each thread's trit determines its Gay-MCP hue:}
+
+\ul{
+\li{MINUS (-1): Cold hues (180-300°) - Blue/Violet spectrum}
+\li{ERGODIC (0): Neutral hues (60-180°) - Green/Cyan spectrum}
+\li{PLUS (+1): Warm hues (0-60°, 300-360°) - Red/Yellow spectrum}
+}
+
+\p{Visualization: \code{\startverb scripts/gay_stream.py --threads\stopverb}}
+}
+
+\subtree{
+\title{Dependencies}
+\ul{
+\li{\code{\startverb duckdb\stopverb} for AMP queries}
+\li{\code{\startverb jq\stopverb} for Claude JSONL parsing}
+\li{Python 3.10+ with dataclasses}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+tidar-thread-probe (+) + SDF.Ch10 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch3: Variations on an Arithmetic Theme}
+\li{Ch4: Pattern Matching}
+\li{Ch8: Degeneracy}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+}

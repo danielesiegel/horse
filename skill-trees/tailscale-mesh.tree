@@ -1,0 +1,90 @@
+\title{Tailscale Mesh}
+
+\taxon{skill}
+
+\meta{description}{"Tailscale mesh VPN for secure peer-to-peer networking. WireGuard-based overlay network with MagicDNS and ACLs."}
+
+\subtree{
+\title{Tailscale Mesh Skill}
+\p{\strong{Trit}: 0 (ERGODIC - mediates network topology) \strong{Foundation}: Tailscale + WireGuard + DERP}
+
+\subtree{
+\title{Core Concept}
+\p{Tailscale creates a mesh VPN:}
+
+\ul{
+\li{WireGuard encryption}
+\li{NAT traversal via DERP relays}
+\li{MagicDNS for hostname resolution}
+\li{ACLs for access control}
+}
+}
+
+\subtree{
+\title{Common Commands}
+\pre{\startverb
+# Status
+tailscale status
+tailscale netcheck
+
+# Connect/disconnect
+tailscale up
+tailscale down
+
+# Send files
+tailscale file cp file.txt hostname:
+
+# SSH
+tailscale ssh hostname
+
+# Funnel (public exposure)
+tailscale funnel 8080
+\stopverb}
+}
+
+\subtree{
+\title{ACL Configuration}
+\pre{\startverb
+{
+  "acls": [
+    {"action": "accept", "src": ["group:dev"], "dst": ["*:*"]},
+    {"action": "accept", "src": ["tag:server"], "dst": ["tag:db:5432"]}
+  ],
+  "tagOwners": {
+    "tag:server": ["group:ops"],
+    "tag:db": ["group:dba"]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+def trit_from_connection(conn):
+    """Map connection type to GF(3) trit."""
+    if conn.type == "direct":
+        return 1   # PLUS: optimal path
+    elif conn.type == "derp":
+        return 0   # ERGODIC: relayed
+    else:
+        return -1  # MINUS: failed/blocked
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Triads}
+\pre{\startverb
+bisimulation-game (-1) ⊗ tailscale-mesh (0) ⊗ localsend-mcp (+1) = 0 ✓
+spi-parallel-verify (-1) ⊗ tailscale-mesh (0) ⊗ tailscale-file-transfer (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb tailscale-file-transfer\stopverb} - File transfer with open games semantics}
+\li{\code{\startverb localsend-mcp\stopverb} - P2P transfer via LocalSend}
+}
+}
+}

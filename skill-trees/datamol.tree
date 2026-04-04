@@ -1,0 +1,783 @@
+\title{Datamol}
+
+\taxon{skill}
+
+\meta{description}{"Pythonic wrapper around RDKit with simplified interface and sensible defaults. Preferred for standard drug discovery: SMILES parsing, standardization, descriptors, fingerprints, clustering, 3D conformers, parallel processing. Returns native rdkit.Chem.Mol objects. For advanced control or custom parameters, use rdkit directly."}
+
+\subtree{
+\title{Datamol Cheminformatics Skill}
+\subtree{
+\title{Overview}
+\p{Datamol is a Python library that provides a lightweight, Pythonic abstraction layer over RDKit for molecular cheminformatics. Simplify complex molecular operations with sensible defaults, efficient parallelization, and modern I/O capabilities. All molecular objects are native \code{\startverb rdkit.Chem.Mol\stopverb} instances, ensuring full compatibility with the RDKit ecosystem.}
+
+\p{\strong{Key capabilities}:}
+
+\ul{
+\li{Molecular format conversion (SMILES, SELFIES, InChI)}
+\li{Structure standardization and sanitization}
+\li{Molecular descriptors and fingerprints}
+\li{3D conformer generation and analysis}
+\li{Clustering and diversity selection}
+\li{Scaffold and fragment analysis}
+\li{Chemical reaction application}
+\li{Visualization and alignment}
+\li{Batch processing with parallelization}
+\li{Cloud storage support via fsspec}
+}
+}
+
+\subtree{
+\title{Installation and Setup}
+\p{Guide users to install datamol:}
+
+\pre{\startverb
+uv pip install datamol
+\stopverb}
+
+\p{\strong{Import convention}:}
+
+\pre{\startverb
+import datamol as dm
+\stopverb}
+}
+
+\subtree{
+\title{Core Workflows}
+\subtree{
+\title{1. Basic Molecule Handling}
+\p{\strong{Creating molecules from SMILES}:}
+
+\pre{\startverb
+import datamol as dm
+
+# Single molecule
+mol = dm.to_mol("CCO")  # Ethanol
+
+# From list of SMILES
+smiles_list = ["CCO", "c1ccccc1", "CC(=O)O"]
+mols = [dm.to_mol(smi) for smi in smiles_list]
+
+# Error handling
+mol = dm.to_mol("invalid_smiles")  # Returns None
+if mol is None:
+    print("Failed to parse SMILES")
+\stopverb}
+
+\p{\strong{Converting molecules to SMILES}:}
+
+\pre{\startverb
+# Canonical SMILES
+smiles = dm.to_smiles(mol)
+
+# Isomeric SMILES (includes stereochemistry)
+smiles = dm.to_smiles(mol, isomeric=True)
+
+# Other formats
+inchi = dm.to_inchi(mol)
+inchikey = dm.to_inchikey(mol)
+selfies = dm.to_selfies(mol)
+\stopverb}
+
+\p{\strong{Standardization and sanitization} (always recommend for user-provided molecules):}
+
+\pre{\startverb
+# Sanitize molecule
+mol = dm.sanitize_mol(mol)
+
+# Full standardization (recommended for datasets)
+mol = dm.standardize_mol(
+    mol,
+    disconnect_metals=True,
+    normalize=True,
+    reionize=True
+)
+
+# For SMILES strings directly
+clean_smiles = dm.standardize_smiles(smiles)
+\stopverb}
+}
+
+\subtree{
+\title{2. Reading and Writing Molecular Files}
+\p{Refer to \code{\startverb references/io_module.md\stopverb} for comprehensive I/O documentation.}
+
+\p{\strong{Reading files}:}
+
+\pre{\startverb
+# SDF files (most common in chemistry)
+df = dm.read_sdf("compounds.sdf", mol_column='mol')
+
+# SMILES files
+df = dm.read_smi("molecules.smi", smiles_column='smiles', mol_column='mol')
+
+# CSV with SMILES column
+df = dm.read_csv("data.csv", smiles_column="SMILES", mol_column="mol")
+
+# Excel files
+df = dm.read_excel("compounds.xlsx", sheet_name=0, mol_column="mol")
+
+# Universal reader (auto-detects format)
+df = dm.open_df("file.sdf")  # Works with .sdf, .csv, .xlsx, .parquet, .json
+\stopverb}
+
+\p{\strong{Writing files}:}
+
+\pre{\startverb
+# Save as SDF
+dm.to_sdf(mols, "output.sdf")
+# Or from DataFrame
+dm.to_sdf(df, "output.sdf", mol_column="mol")
+
+# Save as SMILES file
+dm.to_smi(mols, "output.smi")
+
+# Excel with rendered molecule images
+dm.to_xlsx(df, "output.xlsx", mol_columns=["mol"])
+\stopverb}
+
+\p{\strong{Remote file support} (S3, GCS, HTTP):}
+
+\pre{\startverb
+# Read from cloud storage
+df = dm.read_sdf("s3://bucket/compounds.sdf")
+df = dm.read_csv("https://example.com/data.csv")
+
+# Write to cloud storage
+dm.to_sdf(mols, "s3://bucket/output.sdf")
+\stopverb}
+}
+
+\subtree{
+\title{3. Molecular Descriptors and Properties}
+\p{Refer to \code{\startverb references/descriptors_viz.md\stopverb} for detailed descriptor documentation.}
+
+\p{\strong{Computing descriptors for a single molecule}:}
+
+\pre{\startverb
+# Get standard descriptor set
+descriptors = dm.descriptors.compute_many_descriptors(mol)
+# Returns: {'mw': 46.07, 'logp': -0.03, 'hbd': 1, 'hba': 1,
+#           'tpsa': 20.23, 'n_aromatic_atoms': 0, ...}
+\stopverb}
+
+\p{\strong{Batch descriptor computation} (recommended for datasets):}
+
+\pre{\startverb
+# Compute for all molecules in parallel
+desc_df = dm.descriptors.batch_compute_many_descriptors(
+    mols,
+    n_jobs=-1,      # Use all CPU cores
+    progress=True   # Show progress bar
+)
+\stopverb}
+
+\p{\strong{Specific descriptors}:}
+
+\pre{\startverb
+# Aromaticity
+n_aromatic = dm.descriptors.n_aromatic_atoms(mol)
+aromatic_ratio = dm.descriptors.n_aromatic_atoms_proportion(mol)
+
+# Stereochemistry
+n_stereo = dm.descriptors.n_stereo_centers(mol)
+n_unspec = dm.descriptors.n_stereo_centers_unspecified(mol)
+
+# Flexibility
+n_rigid = dm.descriptors.n_rigid_bonds(mol)
+\stopverb}
+
+\p{\strong{Drug-likeness filtering (Lipinski's Rule of Five)}:}
+
+\pre{\startverb
+# Filter compounds
+def is_druglike(mol):
+    desc = dm.descriptors.compute_many_descriptors(mol)
+    return (
+        desc['mw'] <= 500 and
+        desc['logp'] <= 5 and
+        desc['hbd'] <= 5 and
+        desc['hba'] <= 10
+    )
+
+druglike_mols = [mol for mol in mols if is_druglike(mol)]
+\stopverb}
+}
+
+\subtree{
+\title{4. Molecular Fingerprints and Similarity}
+\p{\strong{Generating fingerprints}:}
+
+\pre{\startverb
+# ECFP (Extended Connectivity Fingerprint, default)
+fp = dm.to_fp(mol, fp_type='ecfp', radius=2, n_bits=2048)
+
+# Other fingerprint types
+fp_maccs = dm.to_fp(mol, fp_type='maccs')
+fp_topological = dm.to_fp(mol, fp_type='topological')
+fp_atompair = dm.to_fp(mol, fp_type='atompair')
+\stopverb}
+
+\p{\strong{Similarity calculations}:}
+
+\pre{\startverb
+# Pairwise distances within a set
+distance_matrix = dm.pdist(mols, n_jobs=-1)
+
+# Distances between two sets
+distances = dm.cdist(query_mols, library_mols, n_jobs=-1)
+
+# Find most similar molecules
+from scipy.spatial.distance import squareform
+dist_matrix = squareform(dm.pdist(mols))
+# Lower distance = higher similarity (Tanimoto distance = 1 - Tanimoto similarity)
+\stopverb}
+}
+
+\subtree{
+\title{5. Clustering and Diversity Selection}
+\p{Refer to \code{\startverb references/core_api.md\stopverb} for clustering details.}
+
+\p{\strong{Butina clustering}:}
+
+\pre{\startverb
+# Cluster molecules by structural similarity
+clusters = dm.cluster_mols(
+    mols,
+    cutoff=0.2,    # Tanimoto distance threshold (0=identical, 1=completely different)
+    n_jobs=-1      # Parallel processing
+)
+
+# Each cluster is a list of molecule indices
+for i, cluster in enumerate(clusters):
+    print(f"Cluster {i}: {len(cluster)} molecules")
+    cluster_mols = [mols[idx] for idx in cluster]
+\stopverb}
+
+\p{\strong{Important}: Butina clustering builds a full distance matrix - suitable for ~1000 molecules, not for 10,000+.}
+
+\p{\strong{Diversity selection}:}
+
+\pre{\startverb
+# Pick diverse subset
+diverse_mols = dm.pick_diverse(
+    mols,
+    npick=100  # Select 100 diverse molecules
+)
+
+# Pick cluster centroids
+centroids = dm.pick_centroids(
+    mols,
+    npick=50   # Select 50 representative molecules
+)
+\stopverb}
+}
+
+\subtree{
+\title{6. Scaffold Analysis}
+\p{Refer to \code{\startverb references/fragments_scaffolds.md\stopverb} for complete scaffold documentation.}
+
+\p{\strong{Extracting Murcko scaffolds}:}
+
+\pre{\startverb
+# Get Bemis-Murcko scaffold (core structure)
+scaffold = dm.to_scaffold_murcko(mol)
+scaffold_smiles = dm.to_smiles(scaffold)
+\stopverb}
+
+\p{\strong{Scaffold-based analysis}:}
+
+\pre{\startverb
+# Group compounds by scaffold
+from collections import Counter
+
+scaffolds = [dm.to_scaffold_murcko(mol) for mol in mols]
+scaffold_smiles = [dm.to_smiles(s) for s in scaffolds]
+
+# Count scaffold frequency
+scaffold_counts = Counter(scaffold_smiles)
+most_common = scaffold_counts.most_common(10)
+
+# Create scaffold-to-molecules mapping
+scaffold_groups = {}
+for mol, scaf_smi in zip(mols, scaffold_smiles):
+    if scaf_smi not in scaffold_groups:
+        scaffold_groups[scaf_smi] = []
+    scaffold_groups[scaf_smi].append(mol)
+\stopverb}
+
+\p{\strong{Scaffold-based train/test splitting} (for ML):}
+
+\pre{\startverb
+# Ensure train and test sets have different scaffolds
+scaffold_to_mols = {}
+for mol, scaf in zip(mols, scaffold_smiles):
+    if scaf not in scaffold_to_mols:
+        scaffold_to_mols[scaf] = []
+    scaffold_to_mols[scaf].append(mol)
+
+# Split scaffolds into train/test
+import random
+scaffolds = list(scaffold_to_mols.keys())
+random.shuffle(scaffolds)
+split_idx = int(0.8 * len(scaffolds))
+train_scaffolds = scaffolds[:split_idx]
+test_scaffolds = scaffolds[split_idx:]
+
+# Get molecules for each split
+train_mols = [mol for scaf in train_scaffolds for mol in scaffold_to_mols[scaf]]
+test_mols = [mol for scaf in test_scaffolds for mol in scaffold_to_mols[scaf]]
+\stopverb}
+}
+
+\subtree{
+\title{7. Molecular Fragmentation}
+\p{Refer to \code{\startverb references/fragments_scaffolds.md\stopverb} for fragmentation details.}
+
+\p{\strong{BRICS fragmentation} (16 bond types):}
+
+\pre{\startverb
+# Fragment molecule
+fragments = dm.fragment.brics(mol)
+# Returns: set of fragment SMILES with attachment points like '[1*]CCN'
+\stopverb}
+
+\p{\strong{RECAP fragmentation} (11 bond types):}
+
+\pre{\startverb
+fragments = dm.fragment.recap(mol)
+\stopverb}
+
+\p{\strong{Fragment analysis}:}
+
+\pre{\startverb
+# Find common fragments across compound library
+from collections import Counter
+
+all_fragments = []
+for mol in mols:
+    frags = dm.fragment.brics(mol)
+    all_fragments.extend(frags)
+
+fragment_counts = Counter(all_fragments)
+common_frags = fragment_counts.most_common(20)
+
+# Fragment-based scoring
+def fragment_score(mol, reference_fragments):
+    mol_frags = dm.fragment.brics(mol)
+    overlap = mol_frags.intersection(reference_fragments)
+    return len(overlap) / len(mol_frags) if mol_frags else 0
+\stopverb}
+}
+
+\subtree{
+\title{8. 3D Conformer Generation}
+\p{Refer to \code{\startverb references/conformers_module.md\stopverb} for detailed conformer documentation.}
+
+\p{\strong{Generating conformers}:}
+
+\pre{\startverb
+# Generate 3D conformers
+mol_3d = dm.conformers.generate(
+    mol,
+    n_confs=50,           # Number to generate (auto if None)
+    rms_cutoff=0.5,       # Filter similar conformers (Ångströms)
+    minimize_energy=True,  # Minimize with UFF force field
+    method='ETKDGv3'      # Embedding method (recommended)
+)
+
+# Access conformers
+n_conformers = mol_3d.GetNumConformers()
+conf = mol_3d.GetConformer(0)  # Get first conformer
+positions = conf.GetPositions()  # Nx3 array of atom coordinates
+\stopverb}
+
+\p{\strong{Conformer clustering}:}
+
+\pre{\startverb
+# Cluster conformers by RMSD
+clusters = dm.conformers.cluster(
+    mol_3d,
+    rms_cutoff=1.0,
+    centroids=False
+)
+
+# Get representative conformers
+centroids = dm.conformers.return_centroids(mol_3d, clusters)
+\stopverb}
+
+\p{\strong{SASA calculation}:}
+
+\pre{\startverb
+# Calculate solvent accessible surface area
+sasa_values = dm.conformers.sasa(mol_3d, n_jobs=-1)
+
+# Access SASA from conformer properties
+conf = mol_3d.GetConformer(0)
+sasa = conf.GetDoubleProp('rdkit_free_sasa')
+\stopverb}
+}
+
+\subtree{
+\title{9. Visualization}
+\p{Refer to \code{\startverb references/descriptors_viz.md\stopverb} for visualization documentation.}
+
+\p{\strong{Basic molecule grid}:}
+
+\pre{\startverb
+# Visualize molecules
+dm.viz.to_image(
+    mols[:20],
+    legends=[dm.to_smiles(m) for m in mols[:20]],
+    n_cols=5,
+    mol_size=(300, 300)
+)
+
+# Save to file
+dm.viz.to_image(mols, outfile="molecules.png")
+
+# SVG for publications
+dm.viz.to_image(mols, outfile="molecules.svg", use_svg=True)
+\stopverb}
+
+\p{\strong{Aligned visualization} (for SAR analysis):}
+
+\pre{\startverb
+# Align molecules by common substructure
+dm.viz.to_image(
+    similar_mols,
+    align=True,  # Enable MCS alignment
+    legends=activity_labels,
+    n_cols=4
+)
+\stopverb}
+
+\p{\strong{Highlighting substructures}:}
+
+\pre{\startverb
+# Highlight specific atoms and bonds
+dm.viz.to_image(
+    mol,
+    highlight_atom=[0, 1, 2, 3],  # Atom indices
+    highlight_bond=[0, 1, 2]      # Bond indices
+)
+\stopverb}
+
+\p{\strong{Conformer visualization}:}
+
+\pre{\startverb
+# Display multiple conformers
+dm.viz.conformers(
+    mol_3d,
+    n_confs=10,
+    align_conf=True,
+    n_cols=3
+)
+\stopverb}
+}
+
+\subtree{
+\title{10. Chemical Reactions}
+\p{Refer to \code{\startverb references/reactions_data.md\stopverb} for reactions documentation.}
+
+\p{\strong{Applying reactions}:}
+
+\pre{\startverb
+from rdkit.Chem import rdChemReactions
+
+# Define reaction from SMARTS
+rxn_smarts = '[C:1](=[O:2])[OH:3]>>[C:1](=[O:2])[Cl:3]'
+rxn = rdChemReactions.ReactionFromSmarts(rxn_smarts)
+
+# Apply to molecule
+reactant = dm.to_mol("CC(=O)O")  # Acetic acid
+product = dm.reactions.apply_reaction(
+    rxn,
+    (reactant,),
+    sanitize=True
+)
+
+# Convert to SMILES
+product_smiles = dm.to_smiles(product)
+\stopverb}
+
+\p{\strong{Batch reaction application}:}
+
+\pre{\startverb
+# Apply reaction to library
+products = []
+for mol in reactant_mols:
+    try:
+        prod = dm.reactions.apply_reaction(rxn, (mol,))
+        if prod is not None:
+            products.append(prod)
+    except Exception as e:
+        print(f"Reaction failed: {e}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Parallelization}
+\p{Datamol includes built-in parallelization for many operations. Use \code{\startverb n_jobs\stopverb} parameter:}
+
+\ul{
+\li{\code{\startverb n_jobs=1\stopverb}: Sequential (no parallelization)}
+\li{\code{\startverb n_jobs=-1\stopverb}: Use all available CPU cores}
+\li{\code{\startverb n_jobs=4\stopverb}: Use 4 cores}
+}
+
+\p{\strong{Functions supporting parallelization}:}
+
+\ul{
+\li{\code{\startverb dm.read_sdf(..., n_jobs=-1)\stopverb}}
+\li{\code{\startverb dm.descriptors.batch_compute_many_descriptors(..., n_jobs=-1)\stopverb}}
+\li{\code{\startverb dm.cluster_mols(..., n_jobs=-1)\stopverb}}
+\li{\code{\startverb dm.pdist(..., n_jobs=-1)\stopverb}}
+\li{\code{\startverb dm.conformers.sasa(..., n_jobs=-1)\stopverb}}
+}
+
+\p{\strong{Progress bars}: Many batch operations support \code{\startverb progress=True\stopverb} parameter.}
+}
+
+\subtree{
+\title{Common Workflows and Patterns}
+\subtree{
+\title{Complete Pipeline: Data Loading → Filtering → Analysis}
+\pre{\startverb
+import datamol as dm
+import pandas as pd
+
+# 1. Load molecules
+df = dm.read_sdf("compounds.sdf")
+
+# 2. Standardize
+df['mol'] = df['mol'].apply(lambda m: dm.standardize_mol(m) if m else None)
+df = df[df['mol'].notna()]  # Remove failed molecules
+
+# 3. Compute descriptors
+desc_df = dm.descriptors.batch_compute_many_descriptors(
+    df['mol'].tolist(),
+    n_jobs=-1,
+    progress=True
+)
+
+# 4. Filter by drug-likeness
+druglike = (
+    (desc_df['mw'] <= 500) &
+    (desc_df['logp'] <= 5) &
+    (desc_df['hbd'] <= 5) &
+    (desc_df['hba'] <= 10)
+)
+filtered_df = df[druglike]
+
+# 5. Cluster and select diverse subset
+diverse_mols = dm.pick_diverse(
+    filtered_df['mol'].tolist(),
+    npick=100
+)
+
+# 6. Visualize results
+dm.viz.to_image(
+    diverse_mols,
+    legends=[dm.to_smiles(m) for m in diverse_mols],
+    outfile="diverse_compounds.png",
+    n_cols=10
+)
+\stopverb}
+}
+
+\subtree{
+\title{Structure-Activity Relationship (SAR) Analysis}
+\pre{\startverb
+# Group by scaffold
+scaffolds = [dm.to_scaffold_murcko(mol) for mol in mols]
+scaffold_smiles = [dm.to_smiles(s) for s in scaffolds]
+
+# Create DataFrame with activities
+sar_df = pd.DataFrame({
+    'mol': mols,
+    'scaffold': scaffold_smiles,
+    'activity': activities  # User-provided activity data
+})
+
+# Analyze each scaffold series
+for scaffold, group in sar_df.groupby('scaffold'):
+    if len(group) >= 3:  # Need multiple examples
+        print(f"\nScaffold: {scaffold}")
+        print(f"Count: {len(group)}")
+        print(f"Activity range: {group['activity'].min():.2f} - {group['activity'].max():.2f}")
+
+        # Visualize with activities as legends
+        dm.viz.to_image(
+            group['mol'].tolist(),
+            legends=[f"Activity: {act:.2f}" for act in group['activity']],
+            align=True  # Align by common substructure
+        )
+\stopverb}
+}
+
+\subtree{
+\title{Virtual Screening Pipeline}
+\pre{\startverb
+# 1. Generate fingerprints for query and library
+query_fps = [dm.to_fp(mol) for mol in query_actives]
+library_fps = [dm.to_fp(mol) for mol in library_mols]
+
+# 2. Calculate similarities
+from scipy.spatial.distance import cdist
+import numpy as np
+
+distances = dm.cdist(query_actives, library_mols, n_jobs=-1)
+
+# 3. Find closest matches (min distance to any query)
+min_distances = distances.min(axis=0)
+similarities = 1 - min_distances  # Convert distance to similarity
+
+# 4. Rank and select top hits
+top_indices = np.argsort(similarities)[::-1][:100]  # Top 100
+top_hits = [library_mols[i] for i in top_indices]
+top_scores = [similarities[i] for i in top_indices]
+
+# 5. Visualize hits
+dm.viz.to_image(
+    top_hits[:20],
+    legends=[f"Sim: {score:.3f}" for score in top_scores[:20]],
+    outfile="screening_hits.png"
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{For detailed API documentation, consult these reference files:}
+
+\ul{
+\li{\strong{\code{\startverb references/core_api.md\stopverb}}: Core namespace functions (conversions, standardization, fingerprints, clustering)}
+\li{\strong{\code{\startverb references/io_module.md\stopverb}}: File I/O operations (read/write SDF, CSV, Excel, remote files)}
+\li{\strong{\code{\startverb references/conformers_module.md\stopverb}}: 3D conformer generation, clustering, SASA calculations}
+\li{\strong{\code{\startverb references/descriptors_viz.md\stopverb}}: Molecular descriptors and visualization functions}
+\li{\strong{\code{\startverb references/fragments_scaffolds.md\stopverb}}: Scaffold extraction, BRICS/RECAP fragmentation}
+\li{\strong{\code{\startverb references/reactions_data.md\stopverb}}: Chemical reactions and toy datasets}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Always standardize molecules} from external sources:}
+}
+
+\ol{
+\li{\strong{Check for None values} after molecule parsing:}
+}
+
+\ol{
+\li{\strong{Use parallel processing} for large datasets:}
+}
+
+\ol{
+\li{\strong{Leverage fsspec} for cloud storage:}
+}
+
+\ol{
+\li{\strong{Use appropriate fingerprints} for similarity:}
+\li{ECFP (Morgan): General purpose, structural similarity}
+\li{MACCS: Fast, smaller feature space}
+\li{Atom pairs: Considers atom pairs and distances}
+}
+
+\ol{
+\li{\strong{Consider scale limitations}:}
+\li{Butina clustering: ~1,000 molecules (full distance matrix)}
+\li{For larger datasets: Use diversity selection or hierarchical methods}
+}
+
+\ol{
+\li{\strong{Scaffold splitting for ML}: Ensure proper train/test separation by scaffold}
+}
+
+\ol{
+\li{\strong{Align molecules} when visualizing SAR series}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\pre{\startverb
+# Safe molecule creation
+def safe_to_mol(smiles):
+    try:
+        mol = dm.to_mol(smiles)
+        if mol is not None:
+            mol = dm.standardize_mol(mol)
+        return mol
+    except Exception as e:
+        print(f"Failed to process {smiles}: {e}")
+        return None
+
+# Safe batch processing
+valid_mols = []
+for smiles in smiles_list:
+    mol = safe_to_mol(smiles)
+    if mol is not None:
+        valid_mols.append(mol)
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Machine Learning}
+\pre{\startverb
+# Feature generation
+X = np.array([dm.to_fp(mol) for mol in mols])
+
+# Or descriptors
+desc_df = dm.descriptors.batch_compute_many_descriptors(mols, n_jobs=-1)
+X = desc_df.values
+
+# Train model
+from sklearn.ensemble import RandomForestRegressor
+model = RandomForestRegressor()
+model.fit(X, y_target)
+
+# Predict
+predictions = model.predict(X_test)
+\stopverb}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Issue}: Molecule parsing fails}
+
+\ul{
+\li{\strong{Solution}: Use \code{\startverb dm.standardize_smiles()\stopverb} first or try \code{\startverb dm.fix_mol()\stopverb}}
+}
+
+\p{\strong{Issue}: Memory errors with clustering}
+
+\ul{
+\li{\strong{Solution}: Use \code{\startverb dm.pick_diverse()\stopverb} instead of full clustering for large sets}
+}
+
+\p{\strong{Issue}: Slow conformer generation}
+
+\ul{
+\li{\strong{Solution}: Reduce \code{\startverb n_confs\stopverb} or increase \code{\startverb rms_cutoff\stopverb} to generate fewer conformers}
+}
+
+\p{\strong{Issue}: Remote file access fails}
+
+\ul{
+\li{\strong{Solution}: Ensure fsspec and appropriate cloud provider libraries are installed (s3fs, gcsfs, etc.)}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Datamol Documentation}: https://docs.datamol.io/}
+\li{\strong{RDKit Documentation}: https://www.rdkit.org/docs/}
+\li{\strong{GitHub Repository}: https://github.com/datamol-io/datamol}
+}
+}
+}

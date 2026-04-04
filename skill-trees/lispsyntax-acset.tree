@@ -1,0 +1,257 @@
+\title{Lispsyntax Acset}
+
+\taxon{skill}
+
+\meta{description}{LispSyntax.jl ↔ ACSets.jl bidirectional bridge with OCaml ppx_sexp_conv-style}
+
+\subtree{
+\title{lispsyntax-acset}
+\blockquote{Bidirectional S-expression ↔ ACSet conversion with Specter-style inline caching}
+
+\p{\strong{Version}: 1.2.0 \strong{Trit}: 0 (Ergodic - coordinates data serialization) \strong{Dynamic Sufficiency}: ✅ VERIFIED (2025-12-22)}
+
+\subtree{
+\title{Overview}
+\p{This skill bridges \strong{LispSyntax.jl} with \strong{ACSets.jl} using patterns from:}
+
+\ol{
+\li{OCaml's \code{\startverb ppx_sexp_conv\stopverb} library (bidirectional deriving)}
+\li{Clojure \strong{Specter}'s inline caching and CPS (Nathan Marz)}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. S-expression Parsing & Serialization}
+\pre{\startverb
+# String → Sexp (like OCaml's Sexp.of_string)
+sexp = parse_sexp("(define (square x) (* x x))")
+
+# Sexp → String (like OCaml's Sexp.to_string)
+str = to_string(sexp)
+\stopverb}
+}
+
+\subtree{
+\title{2. ACSet Conversion (ppx_sexp_conv pattern)}
+\pre{\startverb
+# ACSet → Sexp
+sexp = sexp_of_acset(my_graph)
+
+# Sexp → ACSet
+graph = acset_of_sexp(GraphType, sexp)
+\stopverb}
+}
+
+\subtree{
+\title{3. Specter-Style Bidirectional Navigation}
+\p{\strong{Key insight from Specter}: Same path expression works for both \code{\startverb select\stopverb} AND \code{\startverb transform\stopverb}:}
+
+\pre{\startverb
+# Same path for selection and transformation
+path = [ALL, pred(iseven)]
+
+# Select: collect matching values
+select(path, [1,2,3,4,5])  # → [2, 4]
+
+# Transform: modify matching values in-place
+transform(path, x -> x*10, [1,2,3,4,5])  # → [1, 20, 3, 40, 5]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Specter Navigator Protocol}
+\p{From Marz's talk "Rama on Clojure's Terms":}
+
+\pre{\startverb
+| Specter (Clojure) | Julia (SpecterACSet) | Purpose |
+|-------------------|---------------------|---------|
+| `RichNavigator` | `Navigator` abstract type | select*/transform* duality |
+| `comp-navs` | `comp_navs(navs...)` | Fast composition (alloc + field sets) |
+| `late-bound-nav` | `@late_nav` macro | Dynamic param caching |
+| `coerce-nav` | `coerce_nav(x)` | Symbol→keypath, fn→pred |
+\stopverb}
+
+\subtree{
+\title{Primitive Navigators}
+\pre{\startverb
+ALL       # Navigate to every element
+FIRST     # Navigate to first element
+LAST      # Navigate to last element
+keypath(k) # Navigate to key in map/dict
+pred(f)   # Filter by predicate
+\stopverb}
+}
+
+\subtree{
+\title{S-expression Navigators (Unique to Julia)}
+\pre{\startverb
+SEXP_HEAD      # Navigate to first child (head of list)
+SEXP_TAIL      # Navigate to rest of children
+SEXP_CHILDREN  # Navigate to children as vector
+SEXP_WALK      # Recursive descent (prewalk)
+sexp_nth(n)    # Navigate to nth child
+ATOM_VALUE     # Navigate to atom's string value
+\stopverb}
+}
+
+\subtree{
+\title{ACSet Navigators (Unique to Julia)}
+\pre{\startverb
+acset_field(:E, :src)        # Navigate morphism values
+acset_where(:E, :src, ==(1)) # Filter parts by predicate
+acset_parts(:V)              # Navigate all parts of object
+\stopverb}
+}
+}
+
+\subtree{
+\title{Bidirectional Examples}
+\subtree{
+\title{S-expression Transform}
+\pre{\startverb
+sexp = parse_sexp("(define (square x) (* x x))")
+
+# Uppercase all atoms
+transformed = nav_transform(SEXP_WALK, sexp, 
+    s -> s isa Atom ? Atom(uppercase(s.value)) : s)
+# → (DEFINE (SQUARE X) (* X X))
+
+# Rename function: change 'square' to 'cube'
+renamed = transform([sexp_nth(2), sexp_nth(1), ATOM_VALUE], _ -> "cube", sexp)
+# → (define (cube x) (* x x))
+\stopverb}
+}
+
+\subtree{
+\title{ACSet Navigation}
+\pre{\startverb
+g = @acset Graph begin V=4; E=3; src=[1,2,3]; tgt=[2,3,4] end
+
+# Select all source vertices
+select([acset_field(:E, :src)], g)  # → [1, 2, 3]
+
+# Transform: shift all targets (mod 4)
+g2 = transform([acset_field(:E, :tgt)], t -> mod1(t+1, 4), g)
+\stopverb}
+}
+
+\subtree{
+\title{Cross-Domain Bridge}
+\pre{\startverb
+# ACSet → Sexp → Navigate → Transform → Sexp → ACSet
+graph = @acset Graph begin V=4; E=3; src=[1,2,3]; tgt=[2,3,4] end
+sexp = sexp_of_acset(graph)
+
+# Navigate sexp to find all morphism names
+morphism_names = select([SEXP_CHILDREN, sexp_nth(1), ATOM_VALUE], sexp)
+
+# Roundtrip back to ACSet
+graph2 = acset_of_sexp(Graph, sexp)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance: Inline Caching (comp-navs = alloc + field sets)}
+\p{From Marz's Specter talk: \strong{"comp-navs is fast because it's just object allocation + field sets"}}
+
+\subtree{
+\title{What This Means}
+\pre{\startverb
+# Traditional approach: work at composition time
+compose(a, b, c) → [compile] → [optimize] → CompiledPath  # SLOW
+
+# Specter approach: zero work at composition
+comp_navs(a, b, c) → ComposedNav{navs: [a, b, c]}  # Just allocate!
+\stopverb}
+
+\p{The \code{\startverb comp_navs\stopverb} function does \strong{exactly two things}:}
+
+\ol{
+\li{Allocate a \code{\startverb ComposedNav\stopverb} struct}
+\li{Set its \code{\startverb navs\stopverb} field to the array of navigators}
+}
+
+\p{\strong{No compilation. No interpretation. No tree walking. Just allocation.}}
+}
+
+\subtree{
+\title{Why This Works: CPS (Continuation-Passing Style)}
+\p{All actual work happens at traversal time via chained continuations:}
+
+\pre{\startverb
+# When you call select(), it builds a chain:
+nav_select(first_nav, data, 
+    result1 -> nav_select(second_nav, result1,
+        result2 -> nav_select(third_nav, result2,
+            final_result -> collect(final_result))))
+\stopverb}
+}
+
+\subtree{
+\title{Inline Caching at Callsite}
+\pre{\startverb
+# At each callsite, path compiled ONCE:
+@compiled_select([ALL, pred(iseven)], data)
+
+# Internally:
+let cached = @__MODULE__.CACHE[callsite_id]
+    if cached === nothing
+        cached = comp_navs(ALL, pred(iseven))  # Once!
+    end
+    nav_select(cached, data, identity)
+end
+\stopverb}
+
+\p{\strong{Result}: Near-hand-written performance with full abstraction.}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+| Triad | Role |
+|-------|------|
+| slime-lisp (-1) ⊗ lispsyntax-acset (0) ⊗ cider-clojure (+1) | Sexp Serialization |
+| three-match (-1) ⊗ lispsyntax-acset (0) ⊗ gay-mcp (+1) | Colored Sexp |
+| polyglot-spi (-1) ⊗ lispsyntax-acset (0) ⊗ geiser-chicken (+1) | Scheme Bridge |
+| modelica (-1) ⊗ lispsyntax-acset (0) ⊗ emacs-mli (+1) | Emacs Interleave (see `modelica-lispsyntax-interleave`) |
+\stopverb}
+}
+
+\subtree{
+\title{Catlab API Notes}
+\p{The \code{\startverb homs(schema)\stopverb} API returns tuples \code{\startverb (name, dom, codom)\stopverb}:}
+
+\pre{\startverb
+# Correct usage (post-Catlab update)
+for hom_tuple in homs(schema)
+    hom_name = hom_tuple[1]  # First element is name
+    dom_ob = hom_tuple[2]    # Second is domain
+    codom_ob = hom_tuple[3]  # Third is codomain
+end
+\stopverb}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{\strong{Bridge}: \code{\startverb lib/lispsyntax_acset_bridge.jl\stopverb}}
+\li{\strong{Specter navigators}: \code{\startverb lib/specter_acset.jl\stopverb}}
+\li{\strong{Comparison}: \code{\startverb lib/specter_comparison.bb\stopverb}}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Specter](https://github.com/redplanetlabs/specter) - Nathan Marz}
+\li{[ppx_sexp_conv](https://github.com/janestreet/ppx_sexp_conv) - Jane Street}
+\li{[LispSyntax.jl](https://github.com/swadey/LispSyntax.jl)}
+\li{[ACSets.jl](https://github.com/AlgebraicJulia/ACSets.jl)}
+}
+}
+}

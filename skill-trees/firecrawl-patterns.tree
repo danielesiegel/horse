@@ -1,0 +1,123 @@
+\title{Firecrawl Patterns}
+
+\taxon{skill}
+
+\tag{scraping}
+
+\tag{firecrawl}
+
+\tag{web}
+
+\tag{research}
+
+\tag{mcp}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{1}
+
+\meta{description}{"Firecrawl MCP for web scraping and search. Data-mined from 663 calls: scrape (383), search (254), map (9), crawl (5)."}
+
+\subtree{
+\title{Firecrawl MCP Skill}
+\subtree{
+\title{Data-Mined Usage (663 calls)}
+\subtree{
+\title{Tool Frequency}
+\pre{\startverb
+| Tool | Calls | Use Case |
+|------|-------|----------|
+| `firecrawl_scrape` | 383 (58%) | Extract content from specific URLs |
+| `firecrawl_search` | 254 (38%) | Web search with content extraction |
+| `firecrawl_map` | 9 | Site map discovery |
+| `firecrawl_crawl` | 5 | Multi-page crawling |
+| `firecrawl_check_crawl_status` | 6 | Async crawl polling |
+| `firecrawl_extract` | 2 | Structured extraction |
+| `firecrawl_agent` | 4 | Agent-based scraping |
+\stopverb}
+}
+
+\subtree{
+\title{Top Scraped Domains (by frequency)}
+\pre{\startverb
+| Domain | Pattern |
+|--------|---------|
+| `arxiv.org` | Papers (PDF + abs pages) |
+| `github.com` | Repos, READMEs, specific files |
+| `skills.sh` | Skill registry |
+| `clockssugars.blog` | Applied category theory |
+| `soft-machine.io` | Project docs |
+| `sign.kernel.community` | Kernel signing |
+| `book.jank-lang.org` | Jank documentation |
+| `ziglang.org` | Zig std library docs |
+| `tweag.io` | Blog posts (CodeQL, etc) |
+| `sciencedirect.com` | Academic papers |
+\stopverb}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{1. Research Pipeline (co-occurs with exa + deepwiki)}
+\pre{\startverb
+exa web_search → find URLs
+  → firecrawl scrape → extract full content
+    → deepwiki ask_question → cross-reference with repo docs
+\stopverb}
+}
+
+\subtree{
+\title{2. Paper Reading}
+\pre{\startverb
+firecrawl_scrape(url: "https://arxiv.org/pdf/XXXX.XXXXX")
+\stopverb}
+}
+
+\subtree{
+\title{3. Documentation Extraction}
+\pre{\startverb
+firecrawl_scrape(url: "https://docs.example.com/api")
+\stopverb}
+}
+
+\subtree{
+\title{4. Site Discovery}
+\pre{\startverb
+firecrawl_map(url: "https://example.com")
+  → firecrawl_scrape (targeted pages)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Co-occurrence Patterns}
+\ul{
+\li{\strong{firecrawl + exa} (3 sessions): Search then scrape}
+\li{\strong{firecrawl + exa + deepwiki} (3 sessions): Full research pipeline}
+\li{\strong{firecrawl + exa + tree-sitter} (2 sessions): Scrape + code analysis}
+\li{\strong{firecrawl standalone} (4 sessions): Direct URL scraping}
+}
+}
+
+\subtree{
+\title{When to Use Firecrawl vs Other Tools}
+\pre{\startverb
+| Need | Use |
+|------|-----|
+| Specific URL content | `firecrawl_scrape` |
+| Web search + content | `firecrawl_search` or `exa web_search` |
+| GitHub repo docs | `deepwiki ask_question` (faster, free) |
+| Simple page fetch | `WebFetch` (built-in, no MCP needed) |
+| Full site crawl | `firecrawl_crawl` (async, check status) |
+\stopverb}
+}
+
+\subtree{
+\title{Server Config}
+\pre{\startverb
+[mcp_servers.firecrawl]
+url = "https://mcp.firecrawl.dev/fc-XXXXX/v2/mcp"
+\stopverb}
+}
+}
+}

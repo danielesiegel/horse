@@ -1,0 +1,72 @@
+\title{Performing Active Directory Forest Trust Attack}
+
+\taxon{skill}
+
+\tag{active-directory}
+
+\tag{forest-trust}
+
+\tag{impacket}
+
+\tag{SID-filtering}
+
+\tag{kerberos}
+
+\tag{red-team}
+
+\tag{trust-enumeration}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Enumerate and audit Active Directory forest trust relationships using impacket for SID filtering analysis, trust key extraction, cross-forest SID history abuse detection, and inter-realm Kerberos ticket assessment.}
+
+\subtree{
+\title{Performing Active Directory Forest Trust Attack}
+\subtree{
+\title{Overview}
+\p{Active Directory forest trusts enable authentication across organizational boundaries but introduce attack surface if misconfigured. This skill uses impacket to enumerate trust relationships, analyze SID filtering configuration, detect SID history abuse vectors, perform cross-forest SID lookups via LSA/LSAT RPC calls, and assess inter-realm Kerberos ticket configurations for trust ticket forgery risks.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing active directory forest trust attack}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb impacket\stopverb}, \code{\startverb ldap3\stopverb}}
+\li{Domain credentials with read access to AD trust objects}
+\li{Network access to Domain Controllers (ports 389, 445, 88)}
+\li{Authorized penetration testing engagement or lab environment}
+}
+
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Enumerate forest trust relationships via LDAP trusted domain objects}
+\li{Query trust attributes and SID filtering status for each trust}
+\li{Perform SID lookups across trust boundaries using LsarLookupNames3}
+\li{Enumerate foreign security principals in trusted domains}
+\li{Check for SID history on cross-forest accounts}
+\li{Assess trust direction and transitivity for lateral movement paths}
+\li{Generate trust security audit report with risk findings}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing all trust relationships, SID filtering status, foreign principals, trust direction/transitivity, and risk assessment}
+\li{Cross-forest attack path analysis with remediation recommendations}
+}
+}
+}

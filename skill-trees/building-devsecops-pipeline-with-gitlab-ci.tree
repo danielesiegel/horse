@@ -1,0 +1,294 @@
+\title{Building Devsecops Pipeline With Gitlab Ci}
+
+\taxon{skill}
+
+\tag{gitlab-ci}
+
+\tag{devsecops}
+
+\tag{sast}
+
+\tag{dast}
+
+\tag{container-scanning}
+
+\tag{dependency-scanning}
+
+\tag{secret-detection}
+
+\tag{cicd-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Design and implement a comprehensive DevSecOps pipeline in GitLab CI/CD integrating SAST, DAST, container scanning, dependency scanning, and secret detection.}
+
+\subtree{
+\title{Building DevSecOps Pipeline with GitLab CI}
+\subtree{
+\title{Overview}
+\p{GitLab provides an integrated DevSecOps platform that embeds security testing directly into the CI/CD pipeline. By leveraging GitLab's built-in security scanners---SAST, DAST, container scanning, dependency scanning, secret detection, and license compliance---teams can shift security left, catching vulnerabilities during development rather than post-deployment. GitLab Duo AI assists with false positive detection for SAST vulnerabilities, helping security teams focus on genuine issues.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring building devsecops pipeline with gitlab ci capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{GitLab Ultimate license (required for full security scanner suite)}
+\li{GitLab Runner configured (shared or self-hosted)}
+\li{\code{\startverb .gitlab-ci.yml\stopverb} pipeline configuration familiarity}
+\li{Docker-in-Docker (DinD) or Kaniko for container builds}
+\li{Application deployed to a staging environment for DAST scanning}
+}
+}
+
+\subtree{
+\title{Core Security Scanning Stages}
+\subtree{
+\title{Static Application Security Testing (SAST)}
+\p{SAST analyzes source code for vulnerabilities before compilation. GitLab supports 14+ languages using analyzers such as Semgrep, SpotBugs, Gosec, Bandit, and NodeJsScan. The simplest inclusion uses GitLab's managed templates.}
+}
+
+\subtree{
+\title{Dynamic Application Security Testing (DAST)}
+\p{DAST tests running applications by simulating attack payloads against HTTP endpoints. It detects XSS, SQLi, CSRF, and other runtime vulnerabilities that static analysis cannot find. DAST requires a deployed, accessible target URL.}
+}
+
+\subtree{
+\title{Container Scanning}
+\p{Uses Trivy to scan Docker images for known CVEs in OS packages and application dependencies. Runs after the Docker build stage to gate images before they reach a registry.}
+}
+
+\subtree{
+\title{Dependency Scanning}
+\p{Inspects dependency manifests (package.json, requirements.txt, pom.xml, Gemfile.lock) for known vulnerable versions. Operates at the source code level, complementing container scanning.}
+}
+
+\subtree{
+\title{Secret Detection}
+\p{Scans commits for accidentally committed credentials, API keys, tokens, and private keys using pattern matching and entropy analysis. Runs on every commit to prevent secrets from reaching the repository.}
+}
+}
+
+\subtree{
+\title{Implementation}
+\subtree{
+\title{Complete Pipeline Configuration}
+\pre{\startverb
+# .gitlab-ci.yml
+
+stages:
+  - build
+  - test
+  - security
+  - deploy-staging
+  - dast
+  - deploy-production
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  SECURE_LOG_LEVEL: "info"
+
+# Include GitLab managed security templates
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+  - template: DAST.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+
+build:
+  stage: build
+  image: docker:24.0
+  services:
+    - docker:24.0-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+unit-tests:
+  stage: test
+  image: $DOCKER_IMAGE
+  script:
+    - npm ci
+    - npm run test:coverage
+  coverage: '/Lines\s*:\s*(\d+\.?\d*)%/'
+  artifacts:
+    reports:
+      junit: junit-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+
+# Override SAST to run in security stage
+sast:
+  stage: security
+  variables:
+    SAST_EXCLUDED_PATHS: "spec,test,tests,tmp,node_modules"
+    SEARCH_MAX_DEPTH: 10
+
+# Override container scanning
+container_scanning:
+  stage: security
+  variables:
+    CS_IMAGE: $DOCKER_IMAGE
+    CS_SEVERITY_THRESHOLD: "HIGH"
+
+# Override dependency scanning
+dependency_scanning:
+  stage: security
+
+# Override secret detection
+secret_detection:
+  stage: security
+
+# License compliance scanning
+license_scanning:
+  stage: security
+
+deploy-staging:
+  stage: deploy-staging
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl set image deployment/app app=$DOCKER_IMAGE -n staging
+    - kubectl rollout status deployment/app -n staging --timeout=300s
+  environment:
+    name: staging
+    url: https://staging.example.com
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# DAST runs against deployed staging
+dast:
+  stage: dast
+  variables:
+    DAST_WEBSITE: https://staging.example.com
+    DAST_FULL_SCAN_ENABLED: "true"
+    DAST_BROWSER_SCAN: "true"
+  needs:
+    - deploy-staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy-production:
+  stage: deploy-production
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl set image deployment/app app=$DOCKER_IMAGE -n production
+    - kubectl rollout status deployment/app -n production --timeout=300s
+  environment:
+    name: production
+    url: https://app.example.com
+  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+\stopverb}
+}
+
+\subtree{
+\title{Security Approval Policies}
+\p{Configure scan execution policies to enforce mandatory security scans:}
+
+\ol{
+\li{Navigate to Security & Compliance > Policies}
+\li{Create a "Scan Execution Policy" requiring SAST and secret detection on all branches}
+\li{Create a "Merge Request Approval Policy" requiring security team approval when critical vulnerabilities are detected}
+}
+}
+
+\subtree{
+\title{Custom SAST Ruleset Configuration}
+\p{Create \code{\startverb .gitlab/sast-ruleset.toml\stopverb} to customize analyzer behavior:}
+
+\pre{\startverb
+[semgrep]
+  [[semgrep.ruleset]]
+    dirs = ["src"]
+
+  [[semgrep.passthrough]]
+    type = "url"
+    target = "/sgrep-rules/custom-rules.yml"
+    value = "https://semgrep.dev/p/owasp-top-ten"
+
+  [[semgrep.passthrough]]
+    type = "url"
+    target = "/sgrep-rules/java-rules.yml"
+    value = "https://semgrep.dev/p/java"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Dashboard and Vulnerability Management}
+\subtree{
+\title{Vulnerability Report}
+\p{GitLab consolidates all scanner findings into a single Vulnerability Report accessible at Security & Compliance > Vulnerability Report. Each vulnerability includes:}
+
+\ul{
+\li{Severity rating (Critical, High, Medium, Low, Info)}
+\li{Scanner source (SAST, DAST, Container, Dependency, Secret)}
+\li{Location in source code or image layer}
+\li{Remediation guidance and suggested fixes}
+\li{Status tracking (Detected, Confirmed, Dismissed, Resolved)}
+}
+}
+
+\subtree{
+\title{Merge Request Security Widget}
+\p{Every merge request displays a security scanning widget showing:}
+
+\ul{
+\li{New vulnerabilities introduced by the MR}
+\li{Fixed vulnerabilities resolved by the MR}
+\li{Comparison against the target branch baseline}
+}
+}
+}
+
+\subtree{
+\title{Pipeline Optimization}
+\ul{
+\li{\strong{Parallel execution}: Security scanners run concurrently in the security stage}
+\li{\strong{Caching}: Use CI cache for dependency downloads to speed up scanning}
+\li{\strong{Incremental scanning}: SAST can scan only changed files using \code{\startverb SAST_INCREMENTAL: "true"\stopverb}}
+\li{\strong{Fail conditions}: Set \code{\startverb allow_failure: false\stopverb} on critical scanners to enforce quality gates}
+}
+}
+
+\subtree{
+\title{Monitoring and Metrics}
+\pre{\startverb
+| Metric | Description | Target |
+|--------|-------------|--------|
+| Pipeline security coverage | Percentage of projects with all scanners enabled | > 95% |
+| Critical vulnerability MTTR | Time from detection to resolution for critical findings | < 48 hours |
+| False positive rate | Percentage of dismissed-as-false-positive findings | < 15% |
+| Secret detection block rate | Percentage of secret commits blocked by push rules | > 99% |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[GitLab Security Scanning Documentation](https://docs.gitlab.com/ee/user/application_security/)}
+\li{[GitLab SAST Analyzers](https://docs.gitlab.com/ee/user/application_security/sast/)}
+\li{[GitLab DAST Configuration](https://docs.gitlab.com/ee/user/application_security/dast/)}
+\li{[GitLab Security Policies](https://docs.gitlab.com/ee/user/application_security/policies/)}
+\li{[GitLab Vulnerability Management](https://docs.gitlab.com/ee/user/application_security/vulnerability_report/)}
+}
+}
+}

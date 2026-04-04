@@ -1,0 +1,322 @@
+\title{12 Factor App Modernization}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{Systematic process for analyzing and modernizing legacy applications to comply with the 12-Factor App methodology. Covers code analysis, configuration externalization, dependency management, and container/Kubernetes best practices.}
+
+\subtree{
+\title{12-Factor App Modernization}
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Analyze Application}
+\pre{\startverb
+# Clone repository
+git clone <repo-url>
+cd <repo-name>
+
+# Create inventory of services
+# Document tech stack, deployment configs, backing services
+\stopverb}
+}
+
+\subtree{
+\title{Generate Compliance Report}
+\p{Create a structured JSON report documenting compliance status for all 12 factors.}
+}
+}
+
+\subtree{
+\title{The 12 Factors}
+\pre{\startverb
+| Factor | Principle | Key Questions |
+|--------|-----------|---------------|
+| I. Codebase | One codebase, many deploys | Is there a single repo? Are there environment-specific branches? |
+| II. Dependencies | Explicitly declare and isolate | Are all dependencies declared with pinned versions? |
+| III. Config | Store config in environment | Are connection strings, credentials, and settings externalized? |
+| IV. Backing Services | Treat as attached resources | Can backing services be swapped without code changes? |
+| V. Build, Release, Run | Strict separation | Are build artifacts immutable? Is config injected at runtime? |
+| VI. Processes | Stateless processes | Is session state stored externally? |
+| VII. Port Binding | Export via port binding | Are services self-contained with embedded servers? |
+| VIII. Concurrency | Scale via process model | Can the app scale horizontally? |
+| IX. Disposability | Fast startup, graceful shutdown | Does the app handle SIGTERM? Is there an init system (tini)? |
+| X. Dev/Prod Parity | Keep environments similar | Are dev and prod using same backing services? |
+| XI. Logs | Treat as event streams | Does the app write to stdout/stderr? |
+| XII. Admin Processes | Run as one-off processes | Are migrations and admin tasks separate from the main app? |
+\stopverb}
+}
+
+\subtree{
+\title{Application Analysis}
+\subtree{
+\title{Step 1: Clone and Inventory}
+\p{Map out the application architecture:}
+
+\ul{
+\li{Identify all services/microservices}
+\li{Document the tech stack for each service (language, framework, runtime)}
+\li{List all deployment configurations (Dockerfiles, docker-compose, Kubernetes manifests)}
+\li{Identify backing services (databases, caches, message queues)}
+}
+}
+
+\subtree{
+\title{Step 2: Analyze Against Each Factor}
+\p{Systematically evaluate each service against all 12 factors. Create a structured report documenting compliance status.}
+}
+}
+
+\subtree{
+\title{Compliance Report Structure}
+\pre{\startverb
+{
+  "title": "12-Factor App Compliance Report",
+  "repository": "<repo-url>",
+  "analysis_date": "<date>",
+  "summary": {
+    "total_factors": 12,
+    "services_analyzed": ["<service-list>"],
+    "overall_compliance": "<status>"
+  },
+  "factors": {
+    "<factor_id>": {
+      "name": "<factor-name>",
+      "status": "<COMPLIANT|PARTIAL|NON-COMPLIANT>",
+      "findings": ["<observations>"],
+      "issues": [{"service": "", "file": "", "problem": "", "severity": "", "impact": ""}],
+      "fixes": [{"service": "", "file": "", "action": ""}]
+    }
+  },
+  "priority_fixes": [{"priority": 1, "category": "", "description": "", "affected_files": []}]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Configuration Externalization (Factor III - Highest Priority)}
+\p{This is typically the most critical violation. Hardcoded credentials and connection strings are security risks.}
+
+\subtree{
+\title{Python (Flask/Django)}
+\pre{\startverb
+# Before (hardcoded)
+redis = Redis(host="redis", port=6379)
+
+# After (externalized)
+redis_host = os.getenv('REDIS_HOST', 'redis')
+redis_port = int(os.getenv('REDIS_PORT', '6379'))
+redis = Redis(host=redis_host, port=redis_port)
+\stopverb}
+}
+
+\subtree{
+\title{Node.js}
+\pre{\startverb
+// Before (hardcoded)
+const pool = new Pool({
+  connectionString: 'postgres://user:pass@db/mydb'
+});
+
+// After (externalized)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgres://user:pass@db/mydb'
+});
+\stopverb}
+}
+
+\subtree{
+\title{C#/.NET}
+\pre{\startverb
+// Before (hardcoded)
+var conn = new NpgsqlConnection("Server=db;Username=postgres;Password=secret;");
+
+// After (externalized)
+var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "db";
+var user = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
+var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "postgres";
+var connString = $"Server={host};Username={user};Password={password};";
+\stopverb}
+}
+}
+
+\subtree{
+\title{Dependency Management (Factor II)}
+\p{Unpinned dependencies cause reproducibility issues and potential security vulnerabilities.}
+
+\subtree{
+\title{Python (requirements.txt)}
+\pre{\startverb
+# Before
+Flask
+Redis
+gunicorn
+
+# After
+Flask==3.0.0
+Redis==5.0.1
+gunicorn==21.2.0
+\stopverb}
+}
+
+\subtree{
+\title{Node.js (package.json)}
+\pre{\startverb
+// Before - caret allows minor/patch updates
+"dependencies": {
+  "express": "^4.18.2"
+}
+
+// After - exact versions
+"dependencies": {
+  "express": "4.18.2"
+}
+\stopverb}
+
+\p{\strong{Important:} After changing package.json versions, regenerate package-lock.json:}
+
+\pre{\startverb
+rm package-lock.json && npm install --package-lock-only
+\stopverb}
+}
+}
+
+\subtree{
+\title{Signal Handling (Factor IX)}
+\p{Containers need proper init systems to handle signals correctly for graceful shutdown.}
+
+\subtree{
+\title{Add tini to Dockerfiles}
+\pre{\startverb
+# Install tini
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends tini && \
+    rm -rf /var/lib/apt/lists/*
+
+# Use tini as entrypoint
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["your-app-command"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Docker Compose Configuration}
+\p{Replace hardcoded values with environment variable substitution:}
+
+\pre{\startverb
+services:
+  app:
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db/mydb"
+      REDIS_HOST: redis
+  
+  db:
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+\stopverb}
+}
+
+\subtree{
+\title{Kubernetes Secrets}
+\p{Never store credentials in plain text in Kubernetes manifests.}
+
+\subtree{
+\title{Create Secret Manifest}
+\pre{\startverb
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+type: Opaque
+stringData:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: <generate-strong-password>
+\stopverb}
+}
+
+\subtree{
+\title{Reference in Deployments}
+\pre{\startverb
+env:
+- name: DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: db-credentials
+      key: POSTGRES_PASSWORD
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation}
+\subtree{
+\title{Docker Compose Validation}
+\pre{\startverb
+docker compose config --quiet && echo "✓ Valid"
+\stopverb}
+}
+
+\subtree{
+\title{Kubernetes Manifest Validation}
+\pre{\startverb
+kubectl apply --dry-run=client -f k8s-specifications/
+\stopverb}
+}
+
+\subtree{
+\title{Build and Test}
+\pre{\startverb
+docker compose build
+docker compose up -d
+docker compose ps  # Verify all services healthy
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Anti-Patterns}
+\ol{
+\li{\strong{Hardcoded connection strings} - Most common and most critical}
+\li{\strong{Unpinned dependencies} - Causes "works on my machine" issues}
+\li{\strong{Missing init systems} - Causes zombie processes and slow shutdowns}
+\li{\strong{Credentials in source control} - Security vulnerability}
+\li{\strong{Environment-specific code branches} - Violates codebase principle}
+}
+}
+
+\subtree{
+\title{Environment Variable Naming Conventions}
+\p{Use consistent, descriptive names:}
+
+\ul{
+\li{\code{\startverb DB_HOST\stopverb}, \code{\startverb DB_PORT\stopverb}, \code{\startverb DB_USER\stopverb}, \code{\startverb DB_PASSWORD\stopverb}, \code{\startverb DB_NAME\stopverb}}
+\li{\code{\startverb REDIS_HOST\stopverb}, \code{\startverb REDIS_PORT\stopverb}}
+\li{\code{\startverb DATABASE_URL\stopverb} (for connection string format)}
+\li{\code{\startverb <SERVICE>_URL\stopverb} for full connection strings}
+}
+}
+
+\subtree{
+\title{Backward Compatibility}
+\p{Always provide sensible defaults when externalizing config:}
+
+\pre{\startverb
+# Maintains backward compatibility with existing deployments
+host = os.getenv('REDIS_HOST', 'redis')  # Falls back to 'redis'
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[The Twelve-Factor App](https://12factor.net/) - Original methodology}
+\li{[Beyond the Twelve-Factor App](https://www.oreilly.com/library/view/beyond-the-twelve-factor/9781492042631/) - O'Reilly extended guide}
+\li{[Kubernetes Secrets Best Practices](https://kubernetes.io/docs/concepts/configuration/secret/)}
+\li{[Docker Init Systems](https://github.com/krallin/tini) - tini documentation}
+\li{[OWASP Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)}
+}
+}
+}

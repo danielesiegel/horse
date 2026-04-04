@@ -1,0 +1,90 @@
+\title{Whitehole Audio}
+
+\taxon{skill}
+
+\meta{description}{Modern macOS + tripos audio loopback driver for inter-application audio}
+
+\subtree{
+\title{WhiteHole - Zero-Latency Audio Loopback}
+\p{Modern macOS + tripos audio loopback driver for inter-application audio routing with minimal latency.}
+
+\subtree{
+\title{Repository}
+\ul{
+\li{\strong{Source}: https://github.com/bmorphism/WhiteHole}
+\li{\strong{Language}: C (CoreAudio driver)}
+\li{\strong{Platform}: macOS (AudioServerPlugin)}
+}
+}
+
+\subtree{
+\title{Core Concept}
+\p{WhiteHole creates virtual audio devices that pass audio between applications with "hex color #000000 latency" - effectively zero perceptible delay.}
+
+\pre{\startverb
+┌─────────────┐     WhiteHole     ┌─────────────┐
+│   DAW       │ ───────────────▶  │   Streamer  │
+│ (Ableton)   │   virtual device  │   (OBS)     │
+└─────────────┘                   └─────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Clone and build
+git clone https://github.com/bmorphism/WhiteHole
+cd WhiteHole
+xcodebuild -project WhiteHole.xcodeproj
+
+# Install driver
+sudo cp -R build/Release/WhiteHole.driver /Library/Audio/Plug-Ins/HAL/
+sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Gay.jl Colors}
+\p{WhiteHole devices can be color-coded using Gay.jl deterministic colors:}
+
+\pre{\startverb
+using Gay
+
+# Assign deterministic color to audio channel
+channel_seed = hash("WhiteHole:Channel1")
+channel_color = gay_color(channel_seed)  # e.g., LCH(72, 45, 280)
+\stopverb}
+}
+
+\subtree{
+\title{Use Cases}
+\ol{
+\li{\strong{Multi-app audio routing} - Route DAW output to streaming software}
+\li{\strong{Audio analysis} - Tap system audio for visualization}
+\li{\strong{Virtual soundcards} - Create multiple virtual devices}
+\li{\strong{music-topos integration} - Route SuperCollider to analysis tools}
+}
+}
+
+\subtree{
+\title{Tripos Integration}
+\p{The "tripos" in the description refers to the three-way (GF(3)) audio routing:}
+
+\pre{\startverb
+| Channel | GF(3) Trit | Purpose |
+|---------|------------|---------|
+| Left | MINUS | Primary signal |
+| Right | PLUS | Secondary signal |
+| Center | ERGODIC | Mixed/balanced |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb gay-mcp\stopverb} - Color assignment for devices}
+\li{\code{\startverb rubato-composer\stopverb} - Mazzola's music theory integration}
+\li{\code{\startverb algorithmic-art\stopverb} - Audio-reactive visuals}
+}
+}
+}

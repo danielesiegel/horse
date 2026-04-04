@@ -1,0 +1,240 @@
+\title{Generate Image}
+
+\taxon{skill}
+
+\meta{description}{Generate or edit images using AI models (FLUX, Gemini). Use for general-purpose image generation including photos, illustrations, artwork, visual assets, concept art, and any image that isn't a technical diagram or schematic. For flowcharts, circuits, pathways, and technical diagrams, use the scientific-schematics skill instead.}
+
+\subtree{
+\title{Generate Image}
+\p{Generate and edit high-quality images using OpenRouter's image generation models including FLUX.2 Pro and Gemini 3 Pro.}
+
+\subtree{
+\title{When to Use This Skill}
+\p{\strong{Use generate-image for:}}
+
+\ul{
+\li{Photos and photorealistic images}
+\li{Artistic illustrations and artwork}
+\li{Concept art and visual concepts}
+\li{Visual assets for presentations or documents}
+\li{Image editing and modifications}
+\li{Any general-purpose image generation needs}
+}
+
+\p{\strong{Use scientific-schematics instead for:}}
+
+\ul{
+\li{Flowcharts and process diagrams}
+\li{Circuit diagrams and electrical schematics}
+\li{Biological pathways and signaling cascades}
+\li{System architecture diagrams}
+\li{CONSORT diagrams and methodology flowcharts}
+\li{Any technical/schematic diagrams}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Use the \code{\startverb scripts/generate_image.py\stopverb} script to generate or edit images:}
+
+\pre{\startverb
+# Generate a new image
+python scripts/generate_image.py "A beautiful sunset over mountains"
+
+# Edit an existing image
+python scripts/generate_image.py "Make the sky purple" --input photo.jpg
+\stopverb}
+
+\p{This generates/edits an image and saves it as \code{\startverb generated_image.png\stopverb} in the current directory.}
+}
+
+\subtree{
+\title{API Key Setup}
+\p{\strong{CRITICAL}: The script requires an OpenRouter API key. Before running, check if the user has configured their API key:}
+
+\ol{
+\li{Look for a \code{\startverb .env\stopverb} file in the project directory or parent directories}
+\li{Check for \code{\startverb OPENROUTER_API_KEY=<key>\stopverb} in the \code{\startverb .env\stopverb} file}
+\li{If not found, inform the user they need to:}
+\li{Create a \code{\startverb .env\stopverb} file with \code{\startverb OPENROUTER_API_KEY=your-api-key-here\stopverb}}
+\li{Or set the environment variable: \code{\startverb export OPENROUTER_API_KEY=your-api-key-here\stopverb}}
+\li{Get an API key from: https://openrouter.ai/keys}
+}
+
+\p{The script will automatically detect the \code{\startverb .env\stopverb} file and provide clear error messages if the API key is missing.}
+}
+
+\subtree{
+\title{Model Selection}
+\p{\strong{Default model}: \code{\startverb google/gemini-3-pro-image-preview\stopverb} (high quality, recommended)}
+
+\p{\strong{Available models for generation and editing}:}
+
+\ul{
+\li{\code{\startverb google/gemini-3-pro-image-preview\stopverb} - High quality, supports generation + editing}
+\li{\code{\startverb black-forest-labs/flux.2-pro\stopverb} - Fast, high quality, supports generation + editing}
+}
+
+\p{\strong{Generation only}:}
+
+\ul{
+\li{\code{\startverb black-forest-labs/flux.2-flex\stopverb} - Fast and cheap, but not as high quality as pro}
+}
+
+\p{Select based on:}
+
+\ul{
+\li{\strong{Quality}: Use gemini-3-pro or flux.2-pro}
+\li{\strong{Editing}: Use gemini-3-pro or flux.2-pro (both support image editing)}
+\li{\strong{Cost}: Use flux.2-flex for generation only}
+}
+}
+
+\subtree{
+\title{Common Usage Patterns}
+\subtree{
+\title{Basic generation}
+\pre{\startverb
+python scripts/generate_image.py "Your prompt here"
+\stopverb}
+}
+
+\subtree{
+\title{Specify model}
+\pre{\startverb
+python scripts/generate_image.py "A cat in space" --model "black-forest-labs/flux.2-pro"
+\stopverb}
+}
+
+\subtree{
+\title{Custom output path}
+\pre{\startverb
+python scripts/generate_image.py "Abstract art" --output artwork.png
+\stopverb}
+}
+
+\subtree{
+\title{Edit an existing image}
+\pre{\startverb
+python scripts/generate_image.py "Make the background blue" --input photo.jpg
+\stopverb}
+}
+
+\subtree{
+\title{Edit with a specific model}
+\pre{\startverb
+python scripts/generate_image.py "Add sunglasses to the person" --input portrait.png --model "black-forest-labs/flux.2-pro"
+\stopverb}
+}
+
+\subtree{
+\title{Edit with custom output}
+\pre{\startverb
+python scripts/generate_image.py "Remove the text from the image" --input screenshot.png --output cleaned.png
+\stopverb}
+}
+
+\subtree{
+\title{Multiple images}
+\p{Run the script multiple times with different prompts or output paths:}
+
+\pre{\startverb
+python scripts/generate_image.py "Image 1 description" --output image1.png
+python scripts/generate_image.py "Image 2 description" --output image2.png
+\stopverb}
+}
+}
+
+\subtree{
+\title{Script Parameters}
+\ul{
+\li{\code{\startverb prompt\stopverb} (required): Text description of the image to generate, or editing instructions}
+\li{\code{\startverb --input\stopverb} or \code{\startverb -i\stopverb}: Input image path for editing (enables edit mode)}
+\li{\code{\startverb --model\stopverb} or \code{\startverb -m\stopverb}: OpenRouter model ID (default: google/gemini-3-pro-image-preview)}
+\li{\code{\startverb --output\stopverb} or \code{\startverb -o\stopverb}: Output file path (default: generated_image.png)}
+\li{\code{\startverb --api-key\stopverb}: OpenRouter API key (overrides .env file)}
+}
+}
+
+\subtree{
+\title{Example Use Cases}
+\subtree{
+\title{For Scientific Documents}
+\pre{\startverb
+# Generate a conceptual illustration for a paper
+python scripts/generate_image.py "Microscopic view of cancer cells being attacked by immunotherapy agents, scientific illustration style" --output figures/immunotherapy_concept.png
+
+# Create a visual for a presentation
+python scripts/generate_image.py "DNA double helix structure with highlighted mutation site, modern scientific visualization" --output slides/dna_mutation.png
+\stopverb}
+}
+
+\subtree{
+\title{For Presentations and Posters}
+\pre{\startverb
+# Title slide background
+python scripts/generate_image.py "Abstract blue and white background with subtle molecular patterns, professional presentation style" --output slides/background.png
+
+# Poster hero image
+python scripts/generate_image.py "Laboratory setting with modern equipment, photorealistic, well-lit" --output poster/hero.png
+\stopverb}
+}
+
+\subtree{
+\title{For General Visual Content}
+\pre{\startverb
+# Website or documentation images
+python scripts/generate_image.py "Professional team collaboration around a digital whiteboard, modern office" --output docs/team_collaboration.png
+
+# Marketing materials
+python scripts/generate_image.py "Futuristic AI brain concept with glowing neural networks" --output marketing/ai_concept.png
+\stopverb}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\p{The script provides clear error messages for:}
+
+\ul{
+\li{Missing API key (with setup instructions)}
+\li{API errors (with status codes)}
+\li{Unexpected response formats}
+\li{Missing dependencies (requests library)}
+}
+
+\p{If the script fails, read the error message and address the issue before retrying.}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{Images are returned as base64-encoded data URLs and automatically saved as PNG files}
+\li{The script supports both \code{\startverb images\stopverb} and \code{\startverb content\stopverb} response formats from different OpenRouter models}
+\li{Generation time varies by model (typically 5-30 seconds)}
+\li{For image editing, the input image is encoded as base64 and sent to the model}
+\li{Supported input image formats: PNG, JPEG, GIF, WebP}
+\li{Check OpenRouter pricing for cost information: https://openrouter.ai/models}
+}
+}
+
+\subtree{
+\title{Image Editing Tips}
+\ul{
+\li{Be specific about what changes you want (e.g., "change the sky to sunset colors" vs "edit the sky")}
+\li{Reference specific elements in the image when possible}
+\li{For best results, use clear and detailed editing instructions}
+\li{Both Gemini 3 Pro and FLUX.2 Pro support image editing through OpenRouter}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\ul{
+\li{\strong{scientific-schematics}: Use for technical diagrams, flowcharts, circuits, pathways}
+\li{\strong{generate-image}: Use for photos, illustrations, artwork, visual concepts}
+\li{\strong{scientific-slides}: Combine with generate-image for visually rich presentations}
+\li{\strong{latex-posters}: Use generate-image for poster visuals and hero images}
+}
+}
+}

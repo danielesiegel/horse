@@ -1,0 +1,56 @@
+\title{Babashka Clj}
+
+\taxon{skill}
+
+\meta{description}{"Babashka scripting for fast Clojure execution. JVM-less scripting with GraalVM native compilation and sci interpreter."}
+
+\subtree{
+\title{Babashka Clojure Skill}
+\p{\strong{Trit}: 0 (ERGODIC - scripting mediates between REPL and production) \strong{Foundation}: Babashka + sci interpreter + pods}
+
+\subtree{
+\title{Core Concept}
+\p{Babashka provides instant Clojure scripting without JVM startup:}
+
+\ul{
+\li{Native binary via GraalVM}
+\li{Compatible with most clojure.core}
+\li{Pods for extending functionality}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run script
+bb script.clj
+
+# REPL
+bb nrepl-server
+
+# Tasks
+bb tasks
+bb run <task>
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+(require '[babashka.process :refer [shell]])
+
+;; Color from seed
+(defn gay-color [seed idx]
+  (let [h (mod (* seed idx 0x9E3779B97F4A7C15) 360)]
+    {:hue h :trit (cond (< h 120) 1 (< h 240) 0 :else -1)}))
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Triads}
+\pre{\startverb
+borkdude (-1) ⊗ babashka-clj (0) ⊗ gay-mcp (+1) = 0 ✓
+cider-clojure (-1) ⊗ babashka-clj (0) ⊗ squint-runtime (+1) = 0 ✓
+\stopverb}
+}
+}

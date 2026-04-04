@@ -1,0 +1,617 @@
+\title{Pyhealth}
+
+\taxon{skill}
+
+\meta{description}{Comprehensive healthcare AI toolkit for developing, testing, and deploying machine learning models with clinical data. This skill should be used when working with electronic health records (EHR), clinical prediction tasks (mortality, readmission, drug recommendation), medical coding systems (ICD, NDC, ATC), physiological signals (EEG, ECG), healthcare datasets (MIMIC-III/IV, eICU, OMOP), or implementing deep learning models for healthcare applications (RETAIN, SafeDrug, Transformer, GNN).}
+
+\subtree{
+\title{PyHealth: Healthcare AI Toolkit}
+\subtree{
+\title{Overview}
+\p{PyHealth is a comprehensive Python library for healthcare AI that provides specialized tools, models, and datasets for clinical machine learning. Use this skill when developing healthcare prediction models, processing clinical data, working with medical coding systems, or deploying AI solutions in healthcare settings.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Invoke this skill when:}
+
+\ul{
+\li{\strong{Working with healthcare datasets}: MIMIC-III, MIMIC-IV, eICU, OMOP, sleep EEG data, medical images}
+\li{\strong{Clinical prediction tasks}: Mortality prediction, hospital readmission, length of stay, drug recommendation}
+\li{\strong{Medical coding}: Translating between ICD-9/10, NDC, RxNorm, ATC coding systems}
+\li{\strong{Processing clinical data}: Sequential events, physiological signals, clinical text, medical images}
+\li{\strong{Implementing healthcare models}: RETAIN, SafeDrug, GAMENet, StageNet, Transformer for EHR}
+\li{\strong{Evaluating clinical models}: Fairness metrics, calibration, interpretability, uncertainty quantification}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{PyHealth operates through a modular 5-stage pipeline optimized for healthcare AI:}
+
+\ol{
+\li{\strong{Data Loading}: Access 10+ healthcare datasets with standardized interfaces}
+\li{\strong{Task Definition}: Apply 20+ predefined clinical prediction tasks or create custom tasks}
+\li{\strong{Model Selection}: Choose from 33+ models (baselines, deep learning, healthcare-specific)}
+\li{\strong{Training}: Train with automatic checkpointing, monitoring, and evaluation}
+\li{\strong{Deployment}: Calibrate, interpret, and validate for clinical use}
+}
+
+\p{\strong{Performance}: 3x faster than pandas for healthcare data processing}
+}
+
+\subtree{
+\title{Quick Start Workflow}
+\pre{\startverb
+from pyhealth.datasets import MIMIC4Dataset
+from pyhealth.tasks import mortality_prediction_mimic4_fn
+from pyhealth.datasets import split_by_patient, get_dataloader
+from pyhealth.models import Transformer
+from pyhealth.trainer import Trainer
+
+# 1. Load dataset and set task
+dataset = MIMIC4Dataset(root="/path/to/data")
+sample_dataset = dataset.set_task(mortality_prediction_mimic4_fn)
+
+# 2. Split data
+train, val, test = split_by_patient(sample_dataset, [0.7, 0.1, 0.2])
+
+# 3. Create data loaders
+train_loader = get_dataloader(train, batch_size=64, shuffle=True)
+val_loader = get_dataloader(val, batch_size=64, shuffle=False)
+test_loader = get_dataloader(test, batch_size=64, shuffle=False)
+
+# 4. Initialize and train model
+model = Transformer(
+    dataset=sample_dataset,
+    feature_keys=["diagnoses", "medications"],
+    mode="binary",
+    embedding_dim=128
+)
+
+trainer = Trainer(model=model, device="cuda")
+trainer.train(
+    train_dataloader=train_loader,
+    val_dataloader=val_loader,
+    epochs=50,
+    monitor="pr_auc_score"
+)
+
+# 5. Evaluate
+results = trainer.evaluate(test_loader)
+\stopverb}
+}
+
+\subtree{
+\title{Detailed Documentation}
+\p{This skill includes comprehensive reference documentation organized by functionality. Read specific reference files as needed:}
+
+\subtree{
+\title{1. Datasets and Data Structures}
+\p{\strong{File}: \code{\startverb references/datasets.md\stopverb}}
+
+\p{\strong{Read when:}}
+
+\ul{
+\li{Loading healthcare datasets (MIMIC, eICU, OMOP, sleep EEG, etc.)}
+\li{Understanding Event, Patient, Visit data structures}
+\li{Processing different data types (EHR, signals, images, text)}
+\li{Splitting data for training/validation/testing}
+\li{Working with SampleDataset for task-specific formatting}
+}
+
+\p{\strong{Key Topics:}}
+
+\ul{
+\li{Core data structures (Event, Patient, Visit)}
+\li{10+ available datasets (EHR, physiological signals, imaging, text)}
+\li{Data loading and iteration}
+\li{Train/val/test splitting strategies}
+\li{Performance optimization for large datasets}
+}
+}
+
+\subtree{
+\title{2. Medical Coding Translation}
+\p{\strong{File}: \code{\startverb references/medical_coding.md\stopverb}}
+
+\p{\strong{Read when:}}
+
+\ul{
+\li{Translating between medical coding systems}
+\li{Working with diagnosis codes (ICD-9-CM, ICD-10-CM, CCS)}
+\li{Processing medication codes (NDC, RxNorm, ATC)}
+\li{Standardizing procedure codes (ICD-9-PROC, ICD-10-PROC)}
+\li{Grouping codes into clinical categories}
+\li{Handling hierarchical drug classifications}
+}
+
+\p{\strong{Key Topics:}}
+
+\ul{
+\li{InnerMap for within-system lookups}
+\li{CrossMap for cross-system translation}
+\li{Supported coding systems (ICD, NDC, ATC, CCS, RxNorm)}
+\li{Code standardization and hierarchy traversal}
+\li{Medication classification by therapeutic class}
+\li{Integration with datasets}
+}
+}
+
+\subtree{
+\title{3. Clinical Prediction Tasks}
+\p{\strong{File}: \code{\startverb references/tasks.md\stopverb}}
+
+\p{\strong{Read when:}}
+
+\ul{
+\li{Defining clinical prediction objectives}
+\li{Using predefined tasks (mortality, readmission, drug recommendation)}
+\li{Working with EHR, signal, imaging, or text-based tasks}
+\li{Creating custom prediction tasks}
+\li{Setting up input/output schemas for models}
+\li{Applying task-specific filtering logic}
+}
+
+\p{\strong{Key Topics:}}
+
+\ul{
+\li{20+ predefined clinical tasks}
+\li{EHR tasks (mortality, readmission, length of stay, drug recommendation)}
+\li{Signal tasks (sleep staging, EEG analysis, seizure detection)}
+\li{Imaging tasks (COVID-19 chest X-ray classification)}
+\li{Text tasks (medical coding, specialty classification)}
+\li{Custom task creation patterns}
+}
+}
+
+\subtree{
+\title{4. Models and Architectures}
+\p{\strong{File}: \code{\startverb references/models.md\stopverb}}
+
+\p{\strong{Read when:}}
+
+\ul{
+\li{Selecting models for clinical prediction}
+\li{Understanding model architectures and capabilities}
+\li{Choosing between general-purpose and healthcare-specific models}
+\li{Implementing interpretable models (RETAIN, AdaCare)}
+\li{Working with medication recommendation (SafeDrug, GAMENet)}
+\li{Using graph neural networks for healthcare}
+\li{Configuring model hyperparameters}
+}
+
+\p{\strong{Key Topics:}}
+
+\ul{
+\li{33+ available models}
+\li{General-purpose: Logistic Regression, MLP, CNN, RNN, Transformer, GNN}
+\li{Healthcare-specific: RETAIN, SafeDrug, GAMENet, StageNet, AdaCare}
+\li{Model selection by task type and data type}
+\li{Interpretability considerations}
+\li{Computational requirements}
+\li{Hyperparameter tuning guidelines}
+}
+}
+
+\subtree{
+\title{5. Data Preprocessing}
+\p{\strong{File}: \code{\startverb references/preprocessing.md\stopverb}}
+
+\p{\strong{Read when:}}
+
+\ul{
+\li{Preprocessing clinical data for models}
+\li{Handling sequential events and time-series data}
+\li{Processing physiological signals (EEG, ECG)}
+\li{Normalizing lab values and vital signs}
+\li{Preparing labels for different task types}
+\li{Building feature vocabularies}
+\li{Managing missing data and outliers}
+}
+
+\p{\strong{Key Topics:}}
+
+\ul{
+\li{15+ processor types}
+\li{Sequence processing (padding, truncation)}
+\li{Signal processing (filtering, segmentation)}
+\li{Feature extraction and encoding}
+\li{Label processors (binary, multi-class, multi-label, regression)}
+\li{Text and image preprocessing}
+\li{Common preprocessing workflows}
+}
+}
+
+\subtree{
+\title{6. Training and Evaluation}
+\p{\strong{File}: \code{\startverb references/training_evaluation.md\stopverb}}
+
+\p{\strong{Read when:}}
+
+\ul{
+\li{Training models with the Trainer class}
+\li{Evaluating model performance}
+\li{Computing clinical metrics}
+\li{Assessing model fairness across demographics}
+\li{Calibrating predictions for reliability}
+\li{Quantifying prediction uncertainty}
+\li{Interpreting model predictions}
+\li{Preparing models for clinical deployment}
+}
+
+\p{\strong{Key Topics:}}
+
+\ul{
+\li{Trainer class (train, evaluate, inference)}
+\li{Metrics for binary, multi-class, multi-label, regression tasks}
+\li{Fairness metrics for bias assessment}
+\li{Calibration methods (Platt scaling, temperature scaling)}
+\li{Uncertainty quantification (conformal prediction, MC dropout)}
+\li{Interpretability tools (attention visualization, SHAP, ChEFER)}
+\li{Complete training pipeline example}
+}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install pyhealth
+\stopverb}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{Python ≥ 3.7}
+\li{PyTorch ≥ 1.8}
+\li{NumPy, pandas, scikit-learn}
+}
+}
+
+\subtree{
+\title{Common Use Cases}
+\subtree{
+\title{Use Case 1: ICU Mortality Prediction}
+\p{\strong{Objective}: Predict patient mortality in intensive care unit}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{Load MIMIC-IV dataset → Read \code{\startverb references/datasets.md\stopverb}}
+\li{Apply mortality prediction task → Read \code{\startverb references/tasks.md\stopverb}}
+\li{Select interpretable model (RETAIN) → Read \code{\startverb references/models.md\stopverb}}
+\li{Train and evaluate → Read \code{\startverb references/training_evaluation.md\stopverb}}
+\li{Interpret predictions for clinical use → Read \code{\startverb references/training_evaluation.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Use Case 2: Safe Medication Recommendation}
+\p{\strong{Objective}: Recommend medications while avoiding drug-drug interactions}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{Load EHR dataset (MIMIC-IV or OMOP) → Read \code{\startverb references/datasets.md\stopverb}}
+\li{Apply drug recommendation task → Read \code{\startverb references/tasks.md\stopverb}}
+\li{Use SafeDrug model with DDI constraints → Read \code{\startverb references/models.md\stopverb}}
+\li{Preprocess medication codes → Read \code{\startverb references/medical_coding.md\stopverb}}
+\li{Evaluate with multi-label metrics → Read \code{\startverb references/training_evaluation.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Use Case 3: Hospital Readmission Prediction}
+\p{\strong{Objective}: Identify patients at risk of 30-day readmission}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{Load multi-site EHR data (eICU or OMOP) → Read \code{\startverb references/datasets.md\stopverb}}
+\li{Apply readmission prediction task → Read \code{\startverb references/tasks.md\stopverb}}
+\li{Handle class imbalance in preprocessing → Read \code{\startverb references/preprocessing.md\stopverb}}
+\li{Train Transformer model → Read \code{\startverb references/models.md\stopverb}}
+\li{Calibrate predictions and assess fairness → Read \code{\startverb references/training_evaluation.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Use Case 4: Sleep Disorder Diagnosis}
+\p{\strong{Objective}: Classify sleep stages from EEG signals}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{Load sleep EEG dataset (SleepEDF, SHHS) → Read \code{\startverb references/datasets.md\stopverb}}
+\li{Apply sleep staging task → Read \code{\startverb references/tasks.md\stopverb}}
+\li{Preprocess EEG signals (filtering, segmentation) → Read \code{\startverb references/preprocessing.md\stopverb}}
+\li{Train CNN or RNN model → Read \code{\startverb references/models.md\stopverb}}
+\li{Evaluate per-stage performance → Read \code{\startverb references/training_evaluation.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Use Case 5: Medical Code Translation}
+\p{\strong{Objective}: Standardize diagnoses across different coding systems}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{Read \code{\startverb references/medical_coding.md\stopverb} for comprehensive guidance}
+\li{Use CrossMap to translate between ICD-9, ICD-10, CCS}
+\li{Group codes into clinically meaningful categories}
+\li{Integrate with dataset processing}
+}
+}
+
+\subtree{
+\title{Use Case 6: Clinical Text to ICD Coding}
+\p{\strong{Objective}: Automatically assign ICD codes from clinical notes}
+
+\p{\strong{Approach:}}
+
+\ol{
+\li{Load MIMIC-III with clinical text → Read \code{\startverb references/datasets.md\stopverb}}
+\li{Apply ICD coding task → Read \code{\startverb references/tasks.md\stopverb}}
+\li{Preprocess clinical text → Read \code{\startverb references/preprocessing.md\stopverb}}
+\li{Use TransformersModel (ClinicalBERT) → Read \code{\startverb references/models.md\stopverb}}
+\li{Evaluate with multi-label metrics → Read \code{\startverb references/training_evaluation.md\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Data Handling}
+\ol{
+\li{\strong{Always split by patient}: Prevent data leakage by ensuring no patient appears in multiple splits}
+}
+
+\ol{
+\li{\strong{Check dataset statistics}: Understand your data before modeling}
+}
+
+\ol{
+\li{\strong{Use appropriate preprocessing}: Match processors to data types (see \code{\startverb references/preprocessing.md\stopverb})}
+}
+}
+
+\subtree{
+\title{Model Development}
+\ol{
+\li{\strong{Start with baselines}: Establish baseline performance with simple models}
+\li{Logistic Regression for binary/multi-class tasks}
+\li{MLP for initial deep learning baseline}
+}
+
+\ol{
+\li{\strong{Choose task-appropriate models}:}
+\li{Interpretability needed → RETAIN, AdaCare}
+\li{Drug recommendation → SafeDrug, GAMENet}
+\li{Long sequences → Transformer}
+\li{Graph relationships → GNN}
+}
+
+\ol{
+\li{\strong{Monitor validation metrics}: Use appropriate metrics for task and handle class imbalance}
+\li{Binary classification: AUROC, AUPRC (especially for rare events)}
+\li{Multi-class: macro-F1 (for imbalanced), weighted-F1}
+\li{Multi-label: Jaccard, example-F1}
+\li{Regression: MAE, RMSE}
+}
+}
+
+\subtree{
+\title{Clinical Deployment}
+\ol{
+\li{\strong{Calibrate predictions}: Ensure probabilities are reliable (see \code{\startverb references/training_evaluation.md\stopverb})}
+}
+
+\ol{
+\li{\strong{Assess fairness}: Evaluate across demographic groups to detect bias}
+}
+
+\ol{
+\li{\strong{Quantify uncertainty}: Provide confidence estimates for predictions}
+}
+
+\ol{
+\li{\strong{Interpret predictions}: Use attention weights, SHAP, or ChEFER for clinical trust}
+}
+
+\ol{
+\li{\strong{Validate thoroughly}: Use held-out test sets from different time periods or sites}
+}
+}
+}
+
+\subtree{
+\title{Limitations and Considerations}
+\subtree{
+\title{Data Requirements}
+\ul{
+\li{\strong{Large datasets}: Deep learning models require sufficient data (thousands of patients)}
+\li{\strong{Data quality}: Missing data and coding errors impact performance}
+\li{\strong{Temporal consistency}: Ensure train/test split respects temporal ordering when needed}
+}
+}
+
+\subtree{
+\title{Clinical Validation}
+\ul{
+\li{\strong{External validation}: Test on data from different hospitals/systems}
+\li{\strong{Prospective evaluation}: Validate in real clinical settings before deployment}
+\li{\strong{Clinical review}: Have clinicians review predictions and interpretations}
+\li{\strong{Ethical considerations}: Address privacy (HIPAA/GDPR), fairness, and safety}
+}
+}
+
+\subtree{
+\title{Computational Resources}
+\ul{
+\li{\strong{GPU recommended}: For training deep learning models efficiently}
+\li{\strong{Memory requirements}: Large datasets may require 16GB+ RAM}
+\li{\strong{Storage}: Healthcare datasets can be 10s-100s of GB}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{ImportError for dataset}:}
+
+\ul{
+\li{Ensure dataset files are downloaded and path is correct}
+\li{Check PyHealth version compatibility}
+}
+
+\p{\strong{Out of memory}:}
+
+\ul{
+\li{Reduce batch size}
+\li{Reduce sequence length (\code{\startverb max_seq_length\stopverb})}
+\li{Use gradient accumulation}
+\li{Process data in chunks}
+}
+
+\p{\strong{Poor performance}:}
+
+\ul{
+\li{Check class imbalance and use appropriate metrics (AUPRC vs AUROC)}
+\li{Verify preprocessing (normalization, missing data handling)}
+\li{Increase model capacity or training epochs}
+\li{Check for data leakage in train/test split}
+}
+
+\p{\strong{Slow training}:}
+
+\ul{
+\li{Use GPU (\code{\startverb device="cuda"\stopverb})}
+\li{Increase batch size (if memory allows)}
+\li{Reduce sequence length}
+\li{Use more efficient model (CNN vs Transformer)}
+}
+}
+
+\subtree{
+\title{Getting Help}
+\ul{
+\li{\strong{Documentation}: https://pyhealth.readthedocs.io/}
+\li{\strong{GitHub Issues}: https://github.com/sunlabuiuc/PyHealth/issues}
+\li{\strong{Tutorials}: 7 core tutorials + 5 practical pipelines available online}
+}
+}
+}
+
+\subtree{
+\title{Example: Complete Workflow}
+\pre{\startverb
+# Complete mortality prediction pipeline
+from pyhealth.datasets import MIMIC4Dataset
+from pyhealth.tasks import mortality_prediction_mimic4_fn
+from pyhealth.datasets import split_by_patient, get_dataloader
+from pyhealth.models import RETAIN
+from pyhealth.trainer import Trainer
+
+# 1. Load dataset
+print("Loading MIMIC-IV dataset...")
+dataset = MIMIC4Dataset(root="/data/mimic4")
+print(dataset.stats())
+
+# 2. Define task
+print("Setting mortality prediction task...")
+sample_dataset = dataset.set_task(mortality_prediction_mimic4_fn)
+print(f"Generated {len(sample_dataset)} samples")
+
+# 3. Split data (by patient to prevent leakage)
+print("Splitting data...")
+train_ds, val_ds, test_ds = split_by_patient(
+    sample_dataset, ratios=[0.7, 0.1, 0.2], seed=42
+)
+
+# 4. Create data loaders
+train_loader = get_dataloader(train_ds, batch_size=64, shuffle=True)
+val_loader = get_dataloader(val_ds, batch_size=64)
+test_loader = get_dataloader(test_ds, batch_size=64)
+
+# 5. Initialize interpretable model
+print("Initializing RETAIN model...")
+model = RETAIN(
+    dataset=sample_dataset,
+    feature_keys=["diagnoses", "procedures", "medications"],
+    mode="binary",
+    embedding_dim=128,
+    hidden_dim=128
+)
+
+# 6. Train model
+print("Training model...")
+trainer = Trainer(model=model, device="cuda")
+trainer.train(
+    train_dataloader=train_loader,
+    val_dataloader=val_loader,
+    epochs=50,
+    optimizer="Adam",
+    learning_rate=1e-3,
+    weight_decay=1e-5,
+    monitor="pr_auc_score",  # Use AUPRC for imbalanced data
+    monitor_criterion="max",
+    save_path="./checkpoints/mortality_retain"
+)
+
+# 7. Evaluate on test set
+print("Evaluating on test set...")
+test_results = trainer.evaluate(
+    test_loader,
+    metrics=["accuracy", "precision", "recall", "f1_score",
+             "roc_auc_score", "pr_auc_score"]
+)
+
+print("\nTest Results:")
+for metric, value in test_results.items():
+    print(f"  {metric}: {value:.4f}")
+
+# 8. Get predictions with attention for interpretation
+predictions = trainer.inference(
+    test_loader,
+    additional_outputs=["visit_attention", "feature_attention"],
+    return_patient_ids=True
+)
+
+# 9. Analyze a high-risk patient
+high_risk_idx = predictions["y_pred"].argmax()
+patient_id = predictions["patient_ids"][high_risk_idx]
+visit_attn = predictions["visit_attention"][high_risk_idx]
+feature_attn = predictions["feature_attention"][high_risk_idx]
+
+print(f"\nHigh-risk patient: {patient_id}")
+print(f"Risk score: {predictions['y_pred'][high_risk_idx]:.3f}")
+print(f"Most influential visit: {visit_attn.argmax()}")
+print(f"Most important features: {feature_attn[visit_attn.argmax()].argsort()[-5:]}")
+
+# 10. Save model for deployment
+trainer.save("./models/mortality_retain_final.pt")
+print("\nModel saved successfully!")
+\stopverb}
+}
+
+\subtree{
+\title{Resources}
+\p{For detailed information on each component, refer to the comprehensive reference files in the \code{\startverb references/\stopverb} directory:}
+
+\ul{
+\li{\strong{datasets.md}: Data structures, loading, and splitting (4,500 words)}
+\li{\strong{medical_coding.md}: Code translation and standardization (3,800 words)}
+\li{\strong{tasks.md}: Clinical prediction tasks and custom task creation (4,200 words)}
+\li{\strong{models.md}: Model architectures and selection guidelines (5,100 words)}
+\li{\strong{preprocessing.md}: Data processors and preprocessing workflows (4,600 words)}
+\li{\strong{training_evaluation.md}: Training, metrics, calibration, interpretability (5,900 words)}
+}
+
+\p{\strong{Total comprehensive documentation}: ~28,000 words across modular reference files.}
+}
+}

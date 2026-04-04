@@ -1,0 +1,146 @@
+\title{Synthetic Adjunctions}
+
+\taxon{skill}
+
+\meta{description}{Synthetic adjunctions in directed type theory for ∞-categorical universal}
+
+\subtree{
+\title{Synthetic Adjunctions Skill: Universal Construction Generation}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: +1 (PLUS - generator) \strong{Color}: #D82626 (Red) \strong{Principle}: Adjunctions generate universal structures \strong{Frame}: Directed type theory with adjoint functors}
+
+\subtree{
+\title{Overview}
+\p{\strong{Synthetic Adjunctions} generates adjunction data in directed type theory. Adjunctions are the fundamental generators of universal constructions—limits, colimits, Kan extensions, and monads all arise from adjunctions.}
+
+\ol{
+\li{\strong{Unit/counit}: Natural transformations η, ε}
+\li{\strong{Triangle identities}: Coherence conditions}
+\li{\strong{Mate correspondence}: Bijection between hom-sets}
+\li{\strong{Universal properties}: Initial/terminal characterizations}
+}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+L ⊣ R adjunction:
+  η : Id → R ∘ L       (unit)
+  ε : L ∘ R → Id       (counit)
+  
+Triangle identities:
+  (εL) ∘ (Lη) = id_L
+  (Rε) ∘ (ηR) = id_R
+\stopverb}
+
+\pre{\startverb
+-- Generate adjunction from universal property
+generate_adjunction :: FreeConstruction → Adjunction
+generate_adjunction (Free F) = Adjunction {
+    left = F,
+    right = Forgetful,
+    unit = η_universal,
+    counit = ε_evaluation
+}
+\stopverb}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{1. Adjunction Generation}
+\pre{\startverb
+-- Construct adjunction from representability
+representable-adjunction : 
+  (F : A → B) → (G : B → A) →
+  ((a : A) (b : B) → Hom_B(F a, b) ≃ Hom_A(a, G b)) →
+  Adjunction F G
+representable-adjunction F G iso = record
+  { unit = λ a → iso.inv (id (F a))
+  ; counit = λ b → iso.to (id (G b))
+  ; triangle-L = from-iso-naturality
+  ; triangle-R = from-iso-naturality
+  }
+\stopverb}
+}
+
+\subtree{
+\title{2. Free-Forgetful Generation}
+\pre{\startverb
+-- Generate free algebra adjunction
+free-forgetful : (T : Monad) → Adjunction (Free T) (Forgetful T)
+free-forgetful T = record
+  { unit = T.η
+  ; counit = T.μ ∘ T.map(eval)
+  ; triangle-L = T.left-unit
+  ; triangle-R = T.right-unit
+  }
+
+-- Free monoid on sets
+Free-Mon : Adjunction Free Underlying
+Free-Mon = free-forgetful List-Monad
+\stopverb}
+}
+
+\subtree{
+\title{3. Kan Extension via Adjunction}
+\pre{\startverb
+-- Left Kan extension as left adjoint to restriction
+Lan : (K : A → B) → Adjunction (Lan_K) (Res_K)
+Lan K = record
+  { left = λ F → colim_{K/b} F ∘ proj
+  ; right = λ G → G ∘ K
+  ; unit = universal-arrow
+  ; counit = eval-at-colimit
+  }
+\stopverb}
+}
+
+\subtree{
+\title{4. Generate Limits from Adjunctions}
+\pre{\startverb
+-- Diagonal adjunction gives limits
+limit-adjunction : Adjunction Δ lim
+limit-adjunction = record
+  { left = Δ         -- diagonal functor
+  ; right = lim      -- limit functor
+  ; unit = proj      -- projections
+  ; counit = univ    -- universal property
+  }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Generate adjunction from free construction
+just adjunction-generate --free-on Monoid
+
+# Synthesize unit/counit
+just adjunction-unit-counit L R
+
+# Verify triangle identities
+just adjunction-verify adj.rzk
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\pre{\startverb
+covariant-fibrations (-1) ⊗ directed-interval (0) ⊗ synthetic-adjunctions (+1) = 0 ✓  [Transport]
+yoneda-directed (-1) ⊗ elements-infinity-cats (0) ⊗ synthetic-adjunctions (+1) = 0 ✓  [Yoneda-Adjunction]
+segal-types (-1) ⊗ directed-interval (0) ⊗ synthetic-adjunctions (+1) = 0 ✓  [Segal Adjunctions]
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{elements-infinity-cats} (0): Coordinate ∞-categorical adjunctions}
+\li{\strong{covariant-fibrations} (-1): Validate fibration conditions}
+\li{\strong{free-monad-gen} (+1): Generate free monads from adjunctions}
+}
+
+\p{\strong{Skill Name}: synthetic-adjunctions \strong{Type}: Universal Construction Generator \strong{Trit}: +1 (PLUS) \strong{Color}: #D82626 (Red)}
+}
+}

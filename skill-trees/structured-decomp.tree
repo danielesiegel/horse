@@ -1,0 +1,177 @@
+\title{Structured Decomp}
+
+\taxon{skill}
+
+\meta{description}{"StructuredDecompositions.jl sheaves on tree decompositions for FPT algorithms with bidirectional navigation"}
+
+\subtree{
+\title{Structured Decompositions Skill}
+\blockquote{Sheaves on tree decompositions with bidirectional navigation}
+
+\p{\strong{Version}: 1.1.0 \strong{Trit}: 0 (Ergodic - coordinates decomposition)}
+
+\subtree{
+\title{Core Concept}
+\p{\strong{StrDecomp} = Functor \code{\startverb d: ∫G → C\stopverb} where:}
+
+\ul{
+\li{\strong{∫G} = category of elements of shape graph}
+\li{\strong{C} = target category (Graph, FinSet, etc.)}
+}
+
+\pre{\startverb
+using StructuredDecompositions
+
+# Create decomposition from graph
+d = StrDecomp(graph)
+
+# Access components
+bags(d)           # Local substructures
+adhesions(d)      # Overlaps (shared boundaries)
+adhesionSpans(d)  # Span morphisms
+\stopverb}
+}
+
+\subtree{
+\title{The 𝐃 Functor}
+\p{Lifts decision problems to decomposition space:}
+
+\pre{\startverb
+# Define problem as functor
+k_coloring(G) = homomorphisms(G, K_k)
+
+# Lift and solve
+solution = 𝐃(k_coloring, decomp, CoDecomposition)
+(answer, witness) = decide_sheaf_tree_shape(k_coloring, decomp)
+\stopverb}
+}
+
+\subtree{
+\title{Specter-Style Navigation for Decompositions}
+\p{Bidirectional paths for navigating decomposition structures:}
+
+\pre{\startverb
+using SpecterACSet
+
+# Navigate bags
+select([decomp_bags, ALL, acset_parts(:V)], decomp)
+
+# Navigate adhesions with bidirectional transform
+transform([decomp_adhesions, ALL], 
+          adh -> reindex_adhesion(adh, mapping), 
+          decomp)
+\stopverb}
+
+\subtree{
+\title{Decomposition Navigators}
+\pre{\startverb
+| Navigator | Select | Transform |
+|-----------|--------|-----------|
+| `decomp_bags` | All bag ACSets | Update bags |
+| `decomp_adhesions` | All adhesion ACSets | Update adhesions |
+| `decomp_spans` | Span morphisms | Reindex spans |
+| `adhesion_between(i,j)` | Specific adhesion | Update specific |
+\stopverb}
+}
+}
+
+\subtree{
+\title{FPT Complexity}
+\p{Runtime: \strong{O(f(width) × n)} where width = max adhesion size}
+
+\p{The sheaf condition ensures local solutions glue to global:}
+
+\pre{\startverb
+# Sheaf condition: sections over overlaps must agree
+function verify_sheaf_condition(decomp, local_solutions)
+    for (i, j) in adhesion_pairs(decomp)
+        adh = adhesion(decomp, i, j)
+        s_i = restrict(local_solutions[i], adh)
+        s_j = restrict(local_solutions[j], adh)
+        s_i == s_j || return false
+    end
+    return true
+end
+\stopverb}
+}
+
+\subtree{
+\title{Integration with lispsyntax-acset}
+\p{Serialize decompositions to S-expressions for inspection:}
+
+\pre{\startverb
+# Decomposition → Sexp
+sexp = sexp_of_strdecomp(decomp)
+
+# Navigate sexp representation
+bag_names = select([SEXP_CHILDREN, pred(is_bag), SEXP_HEAD, ATOM_VALUE], sexp)
+
+# Roundtrip
+decomp2 = strdecomp_of_sexp(GraphType, sexp)
+\stopverb}
+}
+
+\subtree{
+\title{Adhesion as Colored Boundary}
+\p{With Gay.jl deterministic coloring:}
+
+\pre{\startverb
+using Gay
+
+struct ColoredAdhesion
+    left_bag::ACSet
+    right_bag::ACSet
+    adhesion::ACSet
+    color::String  # Deterministic from seed + index
+end
+
+function color_decomposition(decomp, seed)
+    [ColoredAdhesion(
+        bags(decomp)[i],
+        bags(decomp)[j],
+        adhesion(decomp, i, j),
+        Gay.color_at(seed, idx)
+    ) for (idx, (i, j)) in enumerate(adhesion_pairs(decomp))]
+end
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+dmd-spectral (-1) ⊗ structured-decomp (0) ⊗ koopman-generator (+1) = 0 ✓
+sheaf-cohomology (-1) ⊗ structured-decomp (0) ⊗ colimit-reconstruct (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Time-Varying Data (Brunton + Spivak Integration)}
+\p{For DMD/Koopman analysis on decomposed data:}
+
+\pre{\startverb
+@present SchTimeVaryingDecomp(FreeSchema) begin
+    Interval::Ob
+    Snapshot::Ob
+    State::Ob
+    
+    timestamp::Hom(Snapshot, Interval)
+    observable::Hom(Snapshot, State)
+    
+    Time::AttrType
+    Value::AttrType
+end
+
+# Colimit reconstructs dynamics
+# DMD = colimit of snapshot diagram over intervals
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Bumpus et al. "Structured Decompositions" arXiv:2207.06091}
+\li{algebraicjulia.github.io/StructuredDecompositions.jl}
+\li{Nathan Marz: Specter inline caching patterns}
+}
+}
+}

@@ -1,0 +1,127 @@
+\title{Dwarf Expert}
+
+\taxon{skill}
+
+\meta{description}{Provides expertise for analyzing DWARF debug files and understanding the DWARF debug format/standard (v3-v5). Triggers when understanding DWARF information, interacting with DWARF files, answering DWARF-related questions, or working with code that parses DWARF data.}
+
+\subtree{
+\title{Overview}
+\p{This skill provides technical knowledge and expertise about the DWARF standard and how to interact with DWARF files. Tasks include answering questions about the DWARF standard, providing examples of various DWARF features, parsing and/or creating DWARF files, and writing/modifying/analyzing code that interacts with DWARF data.}
+
+\subtree{
+\title{When to Use This Skill}
+\ul{
+\li{Understanding or parsing DWARF debug information from compiled binaries}
+\li{Answering questions about the DWARF standard (v3, v4, v5)}
+\li{Writing or reviewing code that interacts with DWARF data}
+\li{Using \code{\startverb dwarfdump\stopverb} or \code{\startverb readelf\stopverb} to extract debug information}
+\li{Verifying DWARF data integrity with \code{\startverb llvm-dwarfdump --verify\stopverb}}
+\li{Working with DWARF parsing libraries (libdwarf, pyelftools, gimli, etc.)}
+}
+}
+
+\subtree{
+\title{When NOT to Use This Skill}
+\ul{
+\li{\strong{DWARF v1/v2 Analysis}: Expertise limited to versions 3, 4, and 5.}
+\li{\strong{General ELF Parsing}: Use standard ELF tools if DWARF data isn't needed.}
+\li{\strong{Executable Debugging}: Use dedicated debugging tools (gdb, lldb, etc) for debugging executable code/runtime behavior.}
+\li{\strong{Binary Reverse Engineering}: Use dedicated RE tools (Ghidra, IDA) unless specifically analyzing DWARF sections.}
+\li{\strong{Compiler Debugging}: DWARF generation issues are compiler-specific, not covered here.}
+}
+}
+}
+
+\subtree{
+\title{Authoritative Sources}
+\p{When specific DWARF standard information is needed, use these authoritative sources:}
+
+\ol{
+\li{\strong{Official DWARF Standards (dwarfstd.org)}: Use web search to find specific sections of the official DWARF specification at dwarfstd.org. Search queries like "DWARF5 DW_TAG_subprogram attributes site:dwarfstd.org" are effective.}
+}
+
+\ol{
+\li{\strong{LLVM DWARF Implementation}: The LLVM project's DWARF handling code at \code{\startverb llvm/lib/DebugInfo/DWARF/\stopverb} serves as a reliable reference implementation. Key files include:}
+\li{\code{\startverb DWARFDie.cpp\stopverb} - DIE handling and attribute access}
+\li{\code{\startverb DWARFUnit.cpp\stopverb} - Compilation unit parsing}
+\li{\code{\startverb DWARFDebugLine.cpp\stopverb} - Line number information}
+\li{\code{\startverb DWARFVerifier.cpp\stopverb} - Validation logic}
+}
+
+\ol{
+\li{\strong{libdwarf}: The reference C implementation at github.com/davea42/libdwarf-code provides detailed handling of DWARF data structures.}
+}
+}
+
+\subtree{
+\title{Verification Workflows}
+\p{Use \code{\startverb llvm-dwarfdump\stopverb} verification options to validate DWARF data integrity:}
+
+\subtree{
+\title{Structural Validation}
+\pre{\startverb
+# Verify DWARF structure (compile units, DIE relationships, address ranges)
+llvm-dwarfdump --verify <binary>
+
+# Detailed error output with summary
+llvm-dwarfdump --verify --error-display=full <binary>
+
+# Machine-readable JSON error summary
+llvm-dwarfdump --verify --verify-json=errors.json <binary>
+\stopverb}
+}
+
+\subtree{
+\title{Quality Metrics}
+\pre{\startverb
+# Output debug info quality metrics as JSON
+llvm-dwarfdump --statistics <binary>
+\stopverb}
+
+\p{The \code{\startverb --statistics\stopverb} output helps compare debug info quality across compiler versions and optimization levels.}
+}
+
+\subtree{
+\title{Common Verification Patterns}
+\ul{
+\li{\strong{After compilation}: Verify binaries have valid DWARF before distribution}
+\li{\strong{Comparing builds}: Use \code{\startverb --statistics\stopverb} to detect debug info quality regressions}
+\li{\strong{Debugging debuggers}: Identify malformed DWARF causing debugger issues}
+\li{\strong{DWARF tool development}: Validate parser output against known-good binaries}
+}
+}
+}
+
+\subtree{
+\title{Parsing DWARF Debug Information}
+\subtree{
+\title{readelf}
+\p{ELF files can be parsed via the \code{\startverb readelf\stopverb} command ({baseDir}/reference/readelf.md). Use this for general ELF information, but prefer \code{\startverb dwarfdump\stopverb} for DWARF-specific parsing.}
+}
+
+\subtree{
+\title{dwarfdump}
+\p{DWARF files can be parsed via the \code{\startverb dwarfdump\stopverb} command, which is more effective at parsing and displaying complex DWARF information than \code{\startverb readelf\stopverb} and should be used for most DWARF parsing tasks ({baseDir}/reference/dwarfdump.md).}
+}
+}
+
+\subtree{
+\title{Working With Code}
+\p{This skill supports writing, modifying, and reviewing code that interacts with DWARF data. This may involve code that parses DWARF debug data from scratch or code that leverages libraries to parse and interact with DWARF data ({baseDir}/reference/coding.md).}
+}
+
+\subtree{
+\title{Choosing Your Approach}
+\pre{\startverb
+┌─ Need to verify DWARF data integrity?
+│   └─ Use `llvm-dwarfdump --verify` (see Verification Workflows above)
+├─ Need to answer questions about the DWARF standard?
+│   └─ Search dwarfstd.org or reference LLVM/libdwarf source
+├─ Need simple section dump or general ELF info?
+│   └─ Use `readelf` ({baseDir}/reference/readelf.md)
+├─ Need to parse, search, and/or dump DWARF DIE nodes?
+│   └─ Use `dwarfdump` ({baseDir}/reference/dwarfdump.md)
+└─ Need to write, modify, or review code that interacts with DWARF data?
+    └─ Refer to the coding reference ({baseDir}/reference/coding.md)
+\stopverb}
+}

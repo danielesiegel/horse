@@ -1,0 +1,375 @@
+\title{Analytics Tracking}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{When the user wants to set up, improve, or audit analytics tracking and measurement. Also use when the user mentions "set up tracking," "GA4," "Google Analytics," "conversion tracking," "event tracking," "UTM parameters," "tag manager," "GTM," "analytics implementation," or "tracking plan." For A/B test measurement, see ab-test-setup.}
+
+\subtree{
+\title{Analytics Tracking}
+\p{You are an expert in analytics implementation and measurement. Your goal is to help set up tracking that provides actionable insights for marketing and product decisions.}
+
+\subtree{
+\title{Initial Assessment}
+\p{\strong{Check for product marketing context first:} If \code{\startverb .claude/product-marketing-context.md\stopverb} exists, read it before asking questions. Use that context and only ask for information not already covered or specific to this task.}
+
+\p{Before implementing tracking, understand:}
+
+\ol{
+\li{\strong{Business Context} - What decisions will this data inform? What are key conversions?}
+\li{\strong{Current State} - What tracking exists? What tools are in use?}
+\li{\strong{Technical Context} - What's the tech stack? Any privacy/compliance requirements?}
+}
+}
+
+\subtree{
+\title{Core Principles}
+\subtree{
+\title{1. Track for Decisions, Not Data}
+\ul{
+\li{Every event should inform a decision}
+\li{Avoid vanity metrics}
+\li{Quality > quantity of events}
+}
+}
+
+\subtree{
+\title{2. Start with the Questions}
+\ul{
+\li{What do you need to know?}
+\li{What actions will you take based on this data?}
+\li{Work backwards to what you need to track}
+}
+}
+
+\subtree{
+\title{3. Name Things Consistently}
+\ul{
+\li{Naming conventions matter}
+\li{Establish patterns before implementing}
+\li{Document everything}
+}
+}
+
+\subtree{
+\title{4. Maintain Data Quality}
+\ul{
+\li{Validate implementation}
+\li{Monitor for issues}
+\li{Clean data > more data}
+}
+}
+}
+
+\subtree{
+\title{Tracking Plan Framework}
+\subtree{
+\title{Structure}
+\pre{\startverb
+Event Name | Category | Properties | Trigger | Notes
+---------- | -------- | ---------- | ------- | -----
+\stopverb}
+}
+
+\subtree{
+\title{Event Types}
+\pre{\startverb
+| Type | Examples |
+|------|----------|
+| Pageviews | Automatic, enhanced with metadata |
+| User Actions | Button clicks, form submissions, feature usage |
+| System Events | Signup completed, purchase, subscription changed |
+| Custom Conversions | Goal completions, funnel stages |
+\stopverb}
+
+\p{\strong{For comprehensive event lists}: See [references/event-library.md](references/event-library.md)}
+}
+}
+
+\subtree{
+\title{Event Naming Conventions}
+\subtree{
+\title{Recommended Format: Object-Action}
+\pre{\startverb
+signup_completed
+button_clicked
+form_submitted
+article_read
+checkout_payment_completed
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ul{
+\li{Lowercase with underscores}
+\li{Be specific: \code{\startverb cta_hero_clicked\stopverb} vs. \code{\startverb button_clicked\stopverb}}
+\li{Include context in properties, not event name}
+\li{Avoid spaces and special characters}
+\li{Document decisions}
+}
+}
+}
+
+\subtree{
+\title{Essential Events}
+\subtree{
+\title{Marketing Site}
+\pre{\startverb
+| Event | Properties |
+|-------|------------|
+| cta_clicked | button_text, location |
+| form_submitted | form_type |
+| signup_completed | method, source |
+| demo_requested | - |
+\stopverb}
+}
+
+\subtree{
+\title{Product/App}
+\pre{\startverb
+| Event | Properties |
+|-------|------------|
+| onboarding_step_completed | step_number, step_name |
+| feature_used | feature_name |
+| purchase_completed | plan, value |
+| subscription_cancelled | reason |
+\stopverb}
+
+\p{\strong{For full event library by business type}: See [references/event-library.md](references/event-library.md)}
+}
+}
+
+\subtree{
+\title{Event Properties}
+\subtree{
+\title{Standard Properties}
+\pre{\startverb
+| Category | Properties |
+|----------|------------|
+| Page | page_title, page_location, page_referrer |
+| User | user_id, user_type, account_id, plan_type |
+| Campaign | source, medium, campaign, content, term |
+| Product | product_id, product_name, category, price |
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ul{
+\li{Use consistent property names}
+\li{Include relevant context}
+\li{Don't duplicate automatic properties}
+\li{Avoid PII in properties}
+}
+}
+}
+
+\subtree{
+\title{GA4 Implementation}
+\subtree{
+\title{Quick Setup}
+\ol{
+\li{Create GA4 property and data stream}
+\li{Install gtag.js or GTM}
+\li{Enable enhanced measurement}
+\li{Configure custom events}
+\li{Mark conversions in Admin}
+}
+}
+
+\subtree{
+\title{Custom Event Example}
+\pre{\startverb
+gtag('event', 'signup_completed', {
+  'method': 'email',
+  'plan': 'free'
+});
+\stopverb}
+
+\p{\strong{For detailed GA4 implementation}: See [references/ga4-implementation.md](references/ga4-implementation.md)}
+}
+}
+
+\subtree{
+\title{Google Tag Manager}
+\subtree{
+\title{Container Structure}
+\pre{\startverb
+| Component | Purpose |
+|-----------|---------|
+| Tags | Code that executes (GA4, pixels) |
+| Triggers | When tags fire (page view, click) |
+| Variables | Dynamic values (click text, data layer) |
+\stopverb}
+}
+
+\subtree{
+\title{Data Layer Pattern}
+\pre{\startverb
+dataLayer.push({
+  'event': 'form_submitted',
+  'form_name': 'contact',
+  'form_location': 'footer'
+});
+\stopverb}
+
+\p{\strong{For detailed GTM implementation}: See [references/gtm-implementation.md](references/gtm-implementation.md)}
+}
+}
+
+\subtree{
+\title{UTM Parameter Strategy}
+\subtree{
+\title{Standard Parameters}
+\pre{\startverb
+| Parameter | Purpose | Example |
+|-----------|---------|---------|
+| utm_source | Traffic source | google, newsletter |
+| utm_medium | Marketing medium | cpc, email, social |
+| utm_campaign | Campaign name | spring_sale |
+| utm_content | Differentiate versions | hero_cta |
+| utm_term | Paid search keywords | running+shoes |
+\stopverb}
+}
+
+\subtree{
+\title{Naming Conventions}
+\ul{
+\li{Lowercase everything}
+\li{Use underscores or hyphens consistently}
+\li{Be specific but concise: \code{\startverb blog_footer_cta\stopverb}, not \code{\startverb cta1\stopverb}}
+\li{Document all UTMs in a spreadsheet}
+}
+}
+}
+
+\subtree{
+\title{Debugging and Validation}
+\subtree{
+\title{Testing Tools}
+\pre{\startverb
+| Tool | Use For |
+|------|---------|
+| GA4 DebugView | Real-time event monitoring |
+| GTM Preview Mode | Test triggers before publish |
+| Browser Extensions | Tag Assistant, dataLayer Inspector |
+\stopverb}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] Events firing on correct triggers}
+\li{[ ] Property values populating correctly}
+\li{[ ] No duplicate events}
+\li{[ ] Works across browsers and mobile}
+\li{[ ] Conversions recorded correctly}
+\li{[ ] No PII leaking}
+}
+}
+
+\subtree{
+\title{Common Issues}
+\pre{\startverb
+| Issue | Check |
+|-------|-------|
+| Events not firing | Trigger config, GTM loaded |
+| Wrong values | Variable path, data layer structure |
+| Duplicate events | Multiple containers, trigger firing twice |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Privacy and Compliance}
+\subtree{
+\title{Considerations}
+\ul{
+\li{Cookie consent required in EU/UK/CA}
+\li{No PII in analytics properties}
+\li{Data retention settings}
+\li{User deletion capabilities}
+}
+}
+
+\subtree{
+\title{Implementation}
+\ul{
+\li{Use consent mode (wait for consent)}
+\li{IP anonymization}
+\li{Only collect what you need}
+\li{Integrate with consent management platform}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\subtree{
+\title{Tracking Plan Document}
+\pre{\startverb
+# [Site/Product] Tracking Plan
+
+## Overview
+- Tools: GA4, GTM
+- Last updated: [Date]
+
+## Events
+
+| Event Name | Description | Properties | Trigger |
+|------------|-------------|------------|---------|
+| signup_completed | User completes signup | method, plan | Success page |
+
+## Custom Dimensions
+
+| Name | Scope | Parameter |
+|------|-------|-----------|
+| user_type | User | user_type |
+
+## Conversions
+
+| Conversion | Event | Counting |
+|------------|-------|----------|
+| Signup | signup_completed | Once per session |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Task-Specific Questions}
+\ol{
+\li{What tools are you using (GA4, Mixpanel, etc.)?}
+\li{What key actions do you want to track?}
+\li{What decisions will this data inform?}
+\li{Who implements - dev team or marketing?}
+\li{Are there privacy/consent requirements?}
+\li{What's already tracked?}
+}
+}
+
+\subtree{
+\title{Tool Integrations}
+\p{For implementation, see the [tools registry](../../tools/REGISTRY.md). Key analytics tools:}
+
+\pre{\startverb
+| Tool | Best For | MCP | Guide |
+|------|----------|:---:|-------|
+| **GA4** | Web analytics, Google ecosystem | ✓ | [ga4.md](../../tools/integrations/ga4.md) |
+| **Mixpanel** | Product analytics, event tracking | - | [mixpanel.md](../../tools/integrations/mixpanel.md) |
+| **Amplitude** | Product analytics, cohort analysis | - | [amplitude.md](../../tools/integrations/amplitude.md) |
+| **PostHog** | Open-source analytics, session replay | - | [posthog.md](../../tools/integrations/posthog.md) |
+| **Segment** | Customer data platform, routing | - | [segment.md](../../tools/integrations/segment.md) |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{ab-test-setup}: For experiment tracking}
+\li{\strong{seo-audit}: For organic traffic analysis}
+\li{\strong{page-cro}: For conversion optimization (uses this data)}
+}
+}
+}

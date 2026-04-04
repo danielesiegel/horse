@@ -1,0 +1,471 @@
+\title{Implementing Data Loss Prevention With Microsoft Purview}
+
+\taxon{skill}
+
+\tag{DLP}
+
+\tag{Microsoft-Purview}
+
+\tag{sensitivity-labels}
+
+\tag{endpoint-DLP}
+
+\tag{data-classification}
+
+\tag{compliance}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Implements data loss prevention policies using Microsoft Purview to protect sensitive information across Exchange Online, SharePoint, OneDrive, Teams, endpoint devices, and Power BI. The analyst configures sensitivity labels with encryption and content marking, creates DLP policies using built-in and custom sensitive information types with regex patterns, deploys endpoint DLP rules to control file operations on Windows and macOS devices, and monitors policy effectiveness through Activity Explorer and DLP alert management. Uses PowerShell cmdlets and the Microsoft Graph API for programmatic policy management. Activates for requests involving DLP policy creation, sensitivity label configuration, data classification, endpoint data protection, or Microsoft Purview compliance administration.}
+
+\subtree{
+\title{Implementing Data Loss Prevention with Microsoft Purview}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Deploying DLP policies to prevent sensitive data (PII, PHI, PCI, intellectual property) from leaving the organization through email, cloud storage, chat, or endpoint file operations}
+\li{Configuring sensitivity labels with encryption, content marking, and auto-labeling to classify documents and emails by confidentiality level}
+\li{Creating custom sensitive information types with regex patterns to detect organization-specific data formats (employee IDs, project codes, internal account numbers)}
+\li{Deploying endpoint DLP to control copy-to-USB, print, upload-to-cloud, and copy-to-clipboard actions for labeled or sensitive content on managed devices}
+\li{Investigating DLP incidents through Activity Explorer to analyze policy match events, user activity patterns, and false positive rates for policy tuning}
+}
+
+\p{\strong{Do not use} without appropriate Microsoft 365 E5, E5 Compliance, or E5 Information Protection licensing. Do not deploy DLP policies directly to production enforcement mode without a simulation period. Do not configure endpoint DLP without coordinating with the endpoint management team responsible for device onboarding.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Microsoft 365 E5 or E5 Compliance / E5 Information Protection add-on license assigned to target users}
+\li{Global Administrator, Compliance Administrator, or Compliance Data Administrator role in the Microsoft Purview portal}
+\li{Exchange Online PowerShell module (ExchangeOnlineManagement v3.x) and Security & Compliance PowerShell for policy automation}
+\li{Devices onboarded to Microsoft Purview endpoint DLP through Microsoft Intune or Configuration Manager (Windows 10/11 21H2+, macOS 12+)}
+\li{Data classification scan completed or content explorer populated to understand existing sensitive data distribution}
+\li{Stakeholder agreement on sensitivity label taxonomy (classification levels, encryption requirements, scope)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Design the Sensitivity Label Taxonomy}
+\p{Define the classification hierarchy that maps to organizational data handling requirements:}
+
+\ul{
+\li{\strong{Establish label tiers}: Create a label hierarchy reflecting data sensitivity levels. A standard enterprise taxonomy includes:}
+\li{\strong{Define protection settings per label}: For each label, configure encryption scope (all employees, specific groups, or custom permissions), content marking (headers, footers, watermarks), and auto-labeling conditions:}
+}
+
+\subtree{
+\title{Create parent label}
+\p{New-Label -DisplayName "Confidential" \code{\startverb  -Name "Confidential" \stopverb} -Tooltip "Business data that could cause damage if disclosed to unauthorized parties" ` -Comment "Apply to internal business documents, financial reports, and customer data"}
+}
+
+\subtree{
+\title{Create sub-label with encryption}
+\p{New-Label -DisplayName "Confidential - Finance" \code{\startverb  -Name "Confidential-Finance" \stopverb} -ParentId (Get-Label -Identity "Confidential").Guid \code{\startverb  -Tooltip "Financial data restricted to Finance department" \stopverb} -EncryptionEnabled $true \code{\startverb  -EncryptionProtectionType "Template" \stopverb} -EncryptionRightsDefinitions "finance-group@contoso.com:VIEW,VIEWRIGHTSDATA,DOCEDIT,EDIT,PRINT,EXTRACT,OBJMODEL" ` -ContentType "File, Email"}
+
+\pre{\startverb
+- **Configure content marking**: Apply visual indicators that persist with the document:
+\stopverb}
+
+\p{Set-Label -Identity "Confidential-Finance" \code{\startverb  -HeaderEnabled $true \stopverb} -HeaderText "CONFIDENTIAL - FINANCE" \code{\startverb  -HeaderFontSize 10 \stopverb} -HeaderFontColor "#FF0000" \code{\startverb  -HeaderAlignment "Center" \stopverb} -FooterEnabled $true \code{\startverb  -FooterText "This document contains confidential financial information" \stopverb} -WatermarkEnabled $true \code{\startverb  -WatermarkText "CONFIDENTIAL" \stopverb} -WatermarkFontSize 36}
+
+\pre{\startverb
+- **Publish labels via label policy**: Labels must be published to users through a label policy that defines which users see the labels and whether a default label or mandatory labeling is enforced:
+\stopverb}
+
+\p{New-LabelPolicy -Name "Corporate Label Policy" \code{\startverb  -Labels "Public","General","Confidential","Confidential-Finance", "Confidential-HR","HighlyConfidential","HighlyConfidential-ProjectX" \stopverb} -ExchangeLocation "All" \code{\startverb  -ModernGroupLocation "All" \stopverb} -Comment "Standard corporate sensitivity labels"}
+}
+
+\subtree{
+\title{Require justification for label downgrade}
+\p{Set-LabelPolicy -Identity "Corporate Label Policy" ` -AdvancedSettings @{RequireDowngradeJustification="True"; DefaultLabelId="General"}}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 2: Create DLP Policies with Sensitive Information Types}
+\p{Configure DLP policies that detect and protect sensitive content across Microsoft 365 workloads:}
+
+\ul{
+\li{\strong{Create a DLP policy using built-in sensitive information types}: Microsoft Purview includes 300+ built-in SITs for credit card numbers, Social Security numbers, passport numbers, and health records. Create a policy targeting financial data:}
+}
+
+\subtree{
+\title{Create rule for high-volume credit card detection}
+\p{New-DlpComplianceRule -Name "Block Bulk Credit Card Sharing" \code{\startverb  -Policy "Financial Data Protection" \stopverb} -ContentContainsSensitiveInformation @{ Name = "Credit Card Number"; MinCount = 5; MinConfidence = 85 } \code{\startverb  -BlockAccess $true \stopverb} -BlockAccessScope "All" \code{\startverb  -NotifyUser "SiteAdmin","LastModifier" \stopverb} -NotifyUserType "NotSet" \code{\startverb  -GenerateIncidentReport "SiteAdmin" \stopverb} -IncidentReportContent "All" ` -ReportSeverityLevel "High"}
+}
+
+\subtree{
+\title{Create rule for low-volume with user override}
+\p{New-DlpComplianceRule -Name "Warn on Credit Card Sharing" \code{\startverb  -Policy "Financial Data Protection" \stopverb} -ContentContainsSensitiveInformation @{ Name = "Credit Card Number"; MinCount = 1; MaxCount = 4; MinConfidence = 75 } \code{\startverb  -NotifyUser "LastModifier" \stopverb} -NotifyUserType "NotSet" \code{\startverb  -GenerateAlert "Low" \stopverb} -NotifyOverride "WithJustification"}
+
+\pre{\startverb
+- **Create custom sensitive information types with regex**: Define organization-specific patterns for data that built-in SITs do not cover:
+\stopverb}
+}
+
+\subtree{
+\title{Create custom SIT for employee ID format (EMP-XXXXXX)}
+\p{$rulePackXml = @" <RulePackage xmlns="http://schemas.microsoft.com/office/2011/mce"> <RulePack id="$(New-Guid)"> <Version major="1" minor="0" build="0" revision="0"/> <Publisher id="$(New-Guid)"/> </RulePack> <Rules> <Entity id="$(New-Guid)" patternsProximity="300" recommendedConfidence="85"> <Pattern confidenceLevel="85"> <IdMatch idRef="EmployeeId_Regex"/> </Pattern> <Pattern confidenceLevel="95"> <IdMatch idRef="EmployeeId_Regex"/> <Match idRef="EmployeeId_Keyword"/> </Pattern> </Entity> <Regex id="EmployeeId_Regex">EMP-[0-9]{6}</Regex> <Keyword id="EmployeeId_Keyword"> <Group matchStyle="word"> <Term>employee</Term> <Term>employee id</Term> <Term>emp id</Term> <Term>staff number</Term> </Group> </Keyword> <LocalizedStrings> <Resource idRef="EmployeeId_Regex"> <Name default="true" langcode="en-us">Contoso Employee ID</Name> <Description default="true" langcode="en-us"> Detects Contoso employee IDs in format EMP-XXXXXX </Description> </Resource> </LocalizedStrings> </Rules> </RulePackage> "@}
+}
+
+\subtree{
+\title{Save and import the rule package}
+\p{$rulePackXml | Out-File -FilePath "EmployeeID_SIT.xml" -Encoding utf8 New-DlpSensitiveInformationTypeRulePackage -FileData ( [System.IO.File]::ReadAllBytes("EmployeeID_SIT.xml") )}
+
+\pre{\startverb
+- **Use sensitivity labels as DLP conditions**: Create policies that apply different restrictions based on the label applied to the content:
+\stopverb}
+
+\p{New-DlpCompliancePolicy -Name "Highly Confidential Sharing Control" \code{\startverb  -ExchangeLocation "All" \stopverb} -SharePointLocation "All" \code{\startverb  -OneDriveLocation "All" \stopverb} -Mode "Enable"}
+
+\p{New-DlpComplianceRule -Name "Block External Sharing of HC Content" \code{\startverb  -Policy "Highly Confidential Sharing Control" \stopverb} -ContentContainsSensitiveInformation $null \code{\startverb  -ContentPropertyContainsWords "MSIP_Label_$( (Get-Label -Identity 'HighlyConfidential').Guid )_Enabled=True" \stopverb} -BlockAccess $true \code{\startverb  -BlockAccessScope "NotInOrganization" \stopverb} -NotifyUser "LastModifier" \code{\startverb  -GenerateIncidentReport "SiteAdmin" \stopverb} -ReportSeverityLevel "High"}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 3: Deploy Endpoint DLP Rules}
+\p{Extend DLP protection to managed Windows and macOS endpoints to control file operations:}
+
+\ul{
+\li{\strong{Verify device onboarding}: Confirm devices are onboarded to Microsoft Purview endpoint DLP through Microsoft Intune or the local onboarding script:}
+}
+
+\subtree{
+\title{Local verification on Windows endpoint}
+
+}
+
+\subtree{
+\title{Check registry key:}
+
+}
+
+\subtree{
+\title{HKLM\startverb \SOFTWARE\stopverb\startverb \Microsoft\stopverb\startverb \Windows\stopverb Advanced Threat Protection\startverb \Status\stopverb}
+
+}
+
+\subtree{
+\title{OnboardingState should be 1}
+\pre{\startverb
+- **Configure endpoint DLP settings**: Define global settings that control which applications and file types endpoint DLP monitors:
+\stopverb}
+}
+
+\subtree{
+\title{Configure unallowed apps (browsers, cloud sync clients)}
+\p{Set-PolicyConfig -EndpointDlpGlobalSettings ` -UnallowedApps @( @{Name="Chrome"; Executable="chrome.exe"}, @{Name="Firefox"; Executable="firefox.exe"}, @{Name="PersonalDropbox"; Executable="Dropbox.exe"} )}
+}
+
+\subtree{
+\title{Configure unallowed Bluetooth apps}
+\p{Set-PolicyConfig -EndpointDlpGlobalSettings ` -UnallowedBluetoothApps @( @{Name="BluetoothFileTransfer"; Executable="fsquirt.exe"} )}
+}
+
+\subtree{
+\title{Configure network share groups}
+\p{Set-PolicyConfig -EndpointDlpGlobalSettings ` -NetworkShareGroups @( @{ Name = "Authorized Shares"; NetworkPaths = @("\\startverb \server\stopverb01\startverb \approved\stopverb$", "\\startverb \server\stopverb02\startverb \secure\stopverb$") } )}
+}
+
+\subtree{
+\title{Configure sensitive service domains (allowed cloud destinations)}
+\p{Set-PolicyConfig -EndpointDlpGlobalSettings ` -SensitiveServiceDomains @( @{ Name = "Approved Cloud Storage"; Domains = @("sharepoint.com", "onedrive.com") MatchType = "Allow" }, @{ Name = "Blocked Cloud Storage"; Domains = @("dropbox.com", "box.com", "drive.google.com") MatchType = "Block" } )}
+
+\pre{\startverb
+- **Create endpoint-specific DLP rules**: Define rules that control copy-to-USB, print, upload, and clipboard operations for sensitive content:
+\stopverb}
+}
+
+\subtree{
+\title{Add endpoint location to existing policy}
+\p{Set-DlpCompliancePolicy -Identity "Financial Data Protection" ` -EndpointDlpLocation "All"}
+}
+
+\subtree{
+\title{Create endpoint-specific rule}
+\p{New-DlpComplianceRule -Name "Block USB Copy of Financial Data" \code{\startverb  -Policy "Financial Data Protection" \stopverb} -ContentContainsSensitiveInformation @{ Name = "Credit Card Number"; MinCount = 1; MinConfidence = 85 } \code{\startverb  -EndpointDlpRestrictions @( @{Setting="CopyToRemovableMedia"; Value="Block"}, @{Setting="CopyToNetworkShare"; Value="Audit"}, @{Setting="CopyToClipboard"; Value="Block"}, @{Setting="Print"; Value="Warn"}, @{Setting="UploadToCloudService"; Value="Block"}, @{Setting="UnallowedBluetoothApp"; Value="Block"} ) \stopverb} -NotifyUser "LastModifier" ` -GenerateIncidentReport "SiteAdmin"}
+
+\pre{\startverb
+- **Configure printer groups and USB device exceptions**: Allow specific printers and approved USB devices while blocking unauthorized removable media:
+\stopverb}
+}
+
+\subtree{
+\title{Define authorized USB devices by vendor/product ID}
+\p{Set-PolicyConfig -EndpointDlpGlobalSettings ` -RemovableMediaGroups @( @{ Name = "Approved Encrypted USBs"; Devices = @( @{VendorId="0781"; ProductId="5583"; SerialNumber="*"}  # SanDisk Extreme ) } )}
+}
+
+\subtree{
+\title{Define authorized printers}
+\p{Set-PolicyConfig -EndpointDlpGlobalSettings ` -PrinterGroups @( @{ Name = "Corporate Printers"; Printers = @( @{PrinterName="\em{Corporate}"; PrinterType="Corporate"}, @{PrinterName="PDF Printer"; PrinterType="Print to PDF"} ) } )}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 4: Configure Auto-Labeling Policies}
+\p{Deploy service-side auto-labeling to automatically classify content at rest and in transit:}
+
+\ul{
+\li{\strong{Create auto-labeling policy for email}: Automatically label inbound and outbound emails containing sensitive information:}
+}
+
+\p{New-AutoSensitivityLabelRule -Name "Financial SIT Match" \code{\startverb  -Policy "Auto-Label Financial Emails" \stopverb} -SensitiveInformationType @{ Name = "Credit Card Number"; MinCount = 1; MinConfidence = 85 },@{ Name = "U.S. Bank Account Number"; MinCount = 1; MinConfidence = 85 } \code{\startverb  -WorkloadDomain "Exchange" \stopverb} -ApplySensitivityLabel "Confidential-Finance"}
+
+\pre{\startverb
+- **Create auto-labeling policy for SharePoint and OneDrive**: Label existing files at rest that match sensitive information patterns:
+\stopverb}
+
+\p{New-AutoSensitivityLabelPolicy -Name "Auto-Label SP Financial Docs" \code{\startverb  -SharePointLocation "https://contoso.sharepoint.com/sites/finance" \stopverb} -OneDriveLocation "All" ` -Mode "TestWithNotifications"}
+
+\p{New-AutoSensitivityLabelRule -Name "Financial Docs SIT Match" \code{\startverb  -Policy "Auto-Label SP Financial Docs" \stopverb} -SensitiveInformationType @{ Name = "Credit Card Number"; MinCount = 1; MinConfidence = 85 } \code{\startverb  -WorkloadDomain "SharePoint" \stopverb} -ApplySensitivityLabel "Confidential-Finance"}
+
+\pre{\startverb
+- **Simulate before enforcing**: Always run auto-labeling in simulation mode first. Review the simulation results in the Microsoft Purview portal under Information Protection > Auto-labeling. The simulation shows estimated matches per location and sample content matches for validation. Only switch to enforcement mode after confirming accuracy:
+\stopverb}
+
+\subtree{
+\title{Check simulation results}
+\p{Get-AutoSensitivityLabelPolicy -Identity "Auto-Label Financial Emails" | Select-Object Name, Mode, WhenCreated, DistributionStatus}
+}
+
+\subtree{
+\title{Switch to enforcement after validation}
+\p{Set-AutoSensitivityLabelPolicy -Identity "Auto-Label Financial Emails" ` -Mode "Enable"}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 5: Monitor with Activity Explorer and Manage DLP Alerts}
+\p{Use Activity Explorer and the DLP alerts dashboard to monitor policy effectiveness and investigate incidents:}
+
+\ul{
+\li{\strong{Access Activity Explorer}: Navigate to Microsoft Purview portal > Data Classification > Activity Explorer. Filter by activity type "DLPRuleMatch" to see all DLP policy matches. Key columns include:}
+\li{Activity timestamp and user principal name}
+\li{Sensitive information type matched and confidence level}
+\li{Policy and rule name that triggered}
+\li{Action taken (Audit, Block, Warn with Override)}
+\li{Location (Exchange, SharePoint, OneDrive, Endpoint)}
+\li{File name and site URL}
+\li{\strong{Analyze false positive rates}: Export Activity Explorer data filtered by "Override" actions with justification text to identify rules that users frequently override. A high override rate (>20\%) indicates the rule may be too aggressive or matching non-sensitive content:}
+}
+
+\p{Export to CSV for analysis of override justifications and affected file types to refine SIT confidence thresholds.}
+
+\pre{\startverb
+- **Configure DLP alerts**: Set up alert policies in Microsoft Purview > Data Loss Prevention > Alerts to receive notifications for high-severity matches:
+\stopverb}
+
+\subtree{
+\title{DLP alerts are configured within the DLP rule itself}
+
+}
+
+\subtree{
+\title{Adjust alert volume thresholds on high-traffic rules}
+\p{Set-DlpComplianceRule -Identity "Block Bulk Credit Card Sharing" \code{\startverb  -GenerateAlert "High" \stopverb} -AlertProperties @{ AggregationType = "SimpleAggregation"; Threshold = 1; TimeWindow = "00:05:00" }}
+
+\pre{\startverb
+- **Query DLP events via Microsoft Graph API**: Programmatically retrieve DLP alerts and policy match details for integration with SIEM or custom dashboards:
+\stopverb}
+
+\p{import requests}
+}
+
+\subtree{
+\title{Authenticate with Microsoft Graph (client credentials flow)}
+\p{token_url = "https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token" token_response = requests.post(token_url, data={ "client_id": client_id, "client_secret": client_secret, "scope": "https://graph.microsoft.com/.default", "grant_type": "client_credentials" }) access_token = token_response.json()["access_token"]}
+
+\p{headers = {"Authorization": f"Bearer {access_token}"}}
+}
+
+\subtree{
+\title{Retrieve DLP alerts}
+\p{alerts_url = "https://graph.microsoft.com/v1.0/security/alerts_v2" params = { "$filter": "serviceSource eq 'microsoftDataLossPrevention'", "$top": 50, "$orderby": "createdDateTime desc" } response = requests.get(alerts_url, headers=headers, params=params) alerts = response.json().get("value", [])}
+
+\p{for alert in alerts: print(f"Alert: {alert['title']}") print(f"  Severity: {alert['severity']}") print(f"  Status: {alert['status']}") print(f"  Created: {alert['createdDateTime']}") print(f"  User: {alert.get('userStates', [{}])[0].get('userPrincipalName', 'N/A')}")}
+
+\pre{\startverb
+- **Retrieve DLP policy match details for compliance reporting**: Use the unified audit log to extract granular DLP match data including the matched content, SIT type, and confidence level:
+\stopverb}
+}
+
+\subtree{
+\title{Search unified audit log for DLP policy matches}
+\p{Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-7) \code{\startverb  -EndDate (Get-Date) \stopverb} -RecordType "DLP" ` -ResultSize 1000 | Select-Object CreationDate, UserIds, Operations, @{N='PolicyName';E={($_.AuditData | ConvertFrom-Json).PolicyDetails.PolicyName}}, @{N='RuleName';E={($_.AuditData | ConvertFrom-Json).PolicyDetails.Rules.RuleName}}, @{N='SITMatched';E={($_.AuditData | ConvertFrom-Json).SensitiveInfoDetections.SensitiveType}} | Export-Csv -Path "DLP_Audit_Report.csv" -NoTypeInformation}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Sensitivity Label** | A classification tag applied to documents and emails that can enforce encryption, content marking (headers/footers/watermarks), and access restrictions. Labels persist with the content and travel with files when shared externally. |
+| **Sensitive Information Type (SIT)** | A pattern-based classifier that detects specific data patterns (credit card numbers, SSNs, custom regex) in content. Each SIT has a confidence level (low/medium/high) determined by primary pattern match plus corroborating evidence (keywords, proximity). |
+| **DLP Policy** | A set of rules that detect sensitive information in Microsoft 365 locations (Exchange, SharePoint, OneDrive, Teams, Endpoints) and apply protective actions (audit, warn with override, block) based on the sensitivity of matched content and the sharing context. |
+| **Endpoint DLP** | Extension of DLP protection to managed Windows and macOS devices that monitors and controls file operations including copy-to-USB, print, upload-to-cloud, copy-to-clipboard, and access by unallowed applications for files containing sensitive information. |
+| **Activity Explorer** | A monitoring dashboard in Microsoft Purview that displays a historical view (up to 30 days) of labeled content activities, DLP policy matches, and user interactions with classified data across all monitored locations. |
+| **Auto-Labeling** | Service-side automatic classification that applies sensitivity labels to documents and emails matching specified SIT patterns without requiring user interaction. Runs in simulation mode first to preview matches before enforcement. |
+| **Content Marking** | Visual indicators (headers, footers, watermarks) applied by sensitivity labels to documents and emails. Markings persist in the file and are visible when printed or shared, serving as a visual classification reminder. |
+| **DLP Alert** | A notification generated when a DLP rule match meets the configured severity threshold. Alerts appear in the Microsoft Purview DLP alerts dashboard and can be routed to Microsoft Sentinel or other SIEM platforms. |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Microsoft Purview Compliance Portal}: Web-based administration interface for creating and managing sensitivity labels, DLP policies, auto-labeling rules, and reviewing Activity Explorer data and DLP alerts.}
+\li{\strong{Security & Compliance PowerShell}: PowerShell module (Connect-IPPSSession) providing cmdlets for programmatic management of labels (New-Label, Set-Label), label policies (New-LabelPolicy), DLP policies (New-DlpCompliancePolicy, New-DlpComplianceRule), and sensitive information types.}
+\li{\strong{Microsoft Graph Security API}: REST API providing programmatic access to DLP alerts (security/alerts_v2), data classification insights, and protection scope evaluation for integrating Purview DLP with custom applications and SIEM platforms.}
+\li{\strong{Microsoft Intune}: Endpoint management platform used to onboard Windows and macOS devices to endpoint DLP, deploy configuration profiles, and manage device compliance states.}
+\li{\strong{Microsoft Sentinel}: Cloud-native SIEM that ingests DLP alerts and audit logs from Microsoft Purview via the Microsoft 365 Defender data connector for correlation with other security events and automated incident response.}
+\li{\strong{Unified Audit Log}: Microsoft 365 audit service recording all DLP policy match events (RecordType "DLP") with detailed match metadata for compliance reporting and forensic investigation.}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Protecting Financial Data Across a Multinational Organization}
+\p{\strong{Context}: A financial services company with 15,000 users across 12 countries needs to prevent credit card numbers, bank account details, and financial statements from being shared externally through email, Teams, SharePoint, and endpoint file operations. The company must comply with PCI-DSS and GDPR.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Design a four-tier sensitivity label taxonomy: Public, Internal, Confidential (with sub-labels for Finance, Legal, HR), and Highly Confidential. Publish labels to all users with "Internal" as the default label and mandatory labeling enabled for email.}
+\li{Create a DLP policy "PCI-DSS Financial Data Protection" scoped to all Exchange, SharePoint, OneDrive, Teams, and Endpoint locations. Configure two rules: a warning rule for 1-4 credit card numbers (notify user, allow override with justification) and a blocking rule for 5+ credit card numbers (block external sharing, generate incident report to compliance team).}
+\li{Deploy endpoint DLP with rules blocking copy-to-USB and upload-to-unapproved-cloud for any file containing credit card numbers or labeled "Confidential - Finance". Allow printing with audit logging. Configure approved USB device exceptions for encrypted corporate drives by vendor/product ID.}
+\li{Create auto-labeling policies that scan existing SharePoint finance sites and OneDrive locations, automatically applying "Confidential - Finance" to documents matching credit card number or bank account number SITs with confidence level 85+.}
+\li{Run all policies in simulation mode for 14 days. Review Activity Explorer for false positive rates, override patterns, and unprotected sensitive content locations. Tune SIT confidence thresholds from 75 to 85 on the credit card SIT after identifying false positives from partial number sequences in meeting notes.}
+\li{Switch to enforcement mode after stakeholder sign-off. Configure DLP alerts with Microsoft Sentinel integration for real-time incident correlation. Schedule monthly Activity Explorer reviews to track policy effectiveness metrics.}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Deploying DLP policies in enforcement mode without simulation, causing mass blocking of legitimate business communications and user productivity disruption}
+\li{Using low confidence thresholds (65) for SITs, generating excessive false positives that erode user trust and lead to policy override fatigue}
+\li{Not configuring endpoint DLP exceptions for approved encrypted USB devices, blocking legitimate data transfers to authorized external parties}
+\li{Forgetting to publish sensitivity labels via a label policy after creation, resulting in labels being invisible to end users in Office applications}
+\li{Not coordinating auto-labeling deployment with document library owners, leading to unexpected label changes on existing content that alter access permissions}
+}
+}
+
+\subtree{
+\title{Scenario: Implementing Custom DLP for Intellectual Property Protection}
+\p{\strong{Context}: A pharmaceutical company needs to prevent research data identified by internal project codes (format: RX-YYYY-NNNN) and compound identifiers from being shared outside the research department. The data appears in lab reports, research presentations, and email communications.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Create a custom sensitive information type using regex \code{\startverb RX-20[2-3][0-9]-[0-9]{4}\stopverb} with corroborating keywords ("compound", "trial", "formulation", "assay", "efficacy") within 300-character proximity. Set primary pattern at 85\% confidence and keyword-corroborated pattern at 95\%.}
+\li{Create a second custom SIT for compound identifiers using regex \code{\startverb CPD-[A-Z]{3}-[0-9]{5}\stopverb} with keywords ("molecule", "synthesis", "pharmacokinetics") for higher confidence matching.}
+\li{Deploy a DLP policy scoped to the Research department's Exchange distribution list, SharePoint research site collection, and research team OneDrive accounts. Block external sharing, block forwarding to non-research internal users, and generate alerts for the research compliance officer.}
+\li{Configure endpoint DLP to prevent copy-to-USB and screen capture of documents containing the custom SITs on research department laptops. Allow printing only to approved secure printers in the research facility.}
+\li{Create a sensitivity label "Highly Confidential - Research" with encryption restricting access to the Research security group. Configure auto-labeling to apply this label to documents matching either custom SIT.}
+\li{Monitor Activity Explorer weekly for 30 days post-deployment. The compliance team identifies that the RX-YYYY-NNNN regex matches historical project codes in archived documents. Refine the regex to \code{\startverb RX-202[4-6]-[0-9]{4}\stopverb} to target only active project codes and reduce false positives by 60\%.}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Using positional regex anchors (^ and $) in custom SITs, which do not work as expected in Microsoft Purview regex evaluation and cause pattern match failures}
+\li{Setting MinCount too low (1) for the project code SIT without keyword corroboration, matching isolated instances in general business correspondence that happen to follow the same format}
+\li{Not testing the custom SIT against a representative sample corpus before deploying the DLP policy, missing edge cases in the regex pattern}
+\li{Scoping the policy too broadly (entire organization) instead of targeting the research department, causing alerts on legitimate references to project codes in executive summaries}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## DLP Policy Deployment Report
+
+**Policy Name**: PCI-DSS Financial Data Protection
+**Deployment Date**: 2026-03-19
+**Current Mode**: Simulation (TestWithNotifications)
+**Locations**: Exchange Online, SharePoint Online, OneDrive, Teams, Endpoints
+
+---
+
+### Simulation Results (14-Day Period)
+
+**Total Policy Matches**: 4,287
+**Unique Users Affected**: 892
+**Unique Files/Messages**: 3,641
+
+| Rule | Matches | Action | Override Rate |
+|------|---------|--------|---------------|
+| Block Bulk Credit Card Sharing (5+) | 47 | Block | N/A |
+| Warn on Credit Card Sharing (1-4) | 4,240 | Warn | 12.3% |
+
+### Sensitive Information Type Breakdown
+
+| SIT | Matches | Avg Confidence | False Positive Est. |
+|-----|---------|----------------|---------------------|
+| Credit Card Number | 3,891 | 87% | 8.2% |
+| U.S. Bank Account Number | 312 | 82% | 15.1% |
+| ABA Routing Number | 84 | 79% | 22.6% |
+
+### Recommendations
+
+1. **Enable enforcement** for "Block Bulk Credit Card Sharing" rule -
+   47 matches are all true positives involving bulk credit card data in
+   spreadsheet attachments.
+
+2. **Increase confidence threshold** for ABA Routing Number from 75 to 85 -
+   22.6% false positive rate driven by 9-digit numbers in invoice references
+   matching the routing number pattern.
+
+3. **Add file type exception** for password-protected ZIP attachments that
+   trigger false positives when the credit card SIT matches encrypted content
+   metadata.
+
+4. **Deploy endpoint DLP** in audit mode for 7 additional days before
+   enabling block actions on USB copy and cloud upload.
+
+---
+
+### DLP Alert Summary (Last 7 Days)
+
+| Severity | Count | Top Policy | Top User |
+|----------|-------|------------|----------|
+| High | 12 | Financial Data Protection | j.smith@contoso.com |
+| Medium | 89 | IP Protection - Research | r.chen@contoso.com |
+| Low | 234 | General PII Protection | (distributed) |
+
+### Activity Explorer Insights
+
+- Peak DLP match activity: Monday 09:00-11:00 UTC (weekly report distribution)
+- Top matched location: Finance SharePoint site (62% of all matches)
+- Most overridden rule: "Warn on Credit Card Sharing" (523 overrides, 12.3%)
+- Override justification analysis: 78% "Business requirement", 15% "False positive",
+  7% "Other"
+\stopverb}
+}
+}

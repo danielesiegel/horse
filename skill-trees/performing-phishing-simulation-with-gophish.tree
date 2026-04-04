@@ -1,0 +1,160 @@
+\title{Performing Phishing Simulation With Gophish}
+
+\taxon{skill}
+
+\tag{phishing}
+
+\tag{email-security}
+
+\tag{social-engineering}
+
+\tag{dmarc}
+
+\tag{awareness}
+
+\tag{gophish}
+
+\tag{simulation}
+
+\meta{version}{"1.0"}
+
+\meta{description}{GoPhish is an open-source phishing simulation framework used by security teams to conduct authorized phishing awareness campaigns. It provides campaign management, email template creation, landing pag}
+
+\subtree{
+\title{Performing Phishing Simulation with GoPhish}
+\subtree{
+\title{Overview}
+\p{GoPhish is an open-source phishing simulation framework used by security teams to conduct authorized phishing awareness campaigns. It provides campaign management, email template creation, landing page cloning, and comprehensive reporting. This skill covers deploying GoPhish, creating realistic phishing scenarios, and analyzing campaign results to measure and improve organizational resilience.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing phishing simulation with gophish}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{GoPhish binary or Docker image (https://github.com/gophish/gophish)}
+\li{SMTP server or relay for sending test emails}
+\li{Written authorization from management for phishing simulation}
+\li{Target email list (HR-approved)}
+\li{SSL/TLS certificate for landing pages}
+\li{Python 3.8+ for automation scripts}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{GoPhish Architecture}
+\ul{
+\li{\strong{Admin Panel}: Web UI for campaign management (default port 3333)}
+\li{\strong{Phishing Server}: Serves landing pages and tracks clicks (default port 80/443)}
+\li{\strong{SMTP Configuration}: Outbound email sending profile}
+\li{\strong{Campaign Engine}: Orchestrates email delivery, tracking, and reporting}
+}
+}
+
+\subtree{
+\title{Campaign Components}
+\ol{
+\li{\strong{Sending Profile}: SMTP server configuration for outbound email}
+\li{\strong{Email Template}: The phishing email content with tracking}
+\li{\strong{Landing Page}: The fake page users are directed to}
+\li{\strong{User Group}: Target recipients for the campaign}
+\li{\strong{Campaign}: Combines all components with scheduling}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Deploy GoPhish}
+\pre{\startverb
+# Docker deployment
+docker pull gophish/gophish
+docker run -d --name gophish -p 3333:3333 -p 8080:80 gophish/gophish
+
+# Or binary deployment
+wget https://github.com/gophish/gophish/releases/latest/download/gophish-v0.12.1-linux-64bit.zip
+unzip gophish-v0.12.1-linux-64bit.zip
+chmod +x gophish
+./gophish
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Configure Sending Profile}
+\ul{
+\li{Name: "Internal Mail Server"}
+\li{SMTP From: awareness-test@yourdomain.com}
+\li{Host: smtp.yourdomain.com:587}
+\li{Username/Password: Service account credentials}
+\li{Enable TLS}
+}
+}
+
+\subtree{
+\title{Step 3: Create Email Template}
+\ul{
+\li{Use realistic scenarios: password reset, IT notification, HR update}
+\li{Include GoPhish tracking pixel: \code{\startverb {{.Tracker}}\stopverb}}
+\li{Include phishing link: \code{\startverb {{.URL}}\stopverb}}
+\li{Personalize with \code{\startverb {{.FirstName}}\stopverb}, \code{\startverb {{.LastName}}\stopverb}, \code{\startverb {{.Position}}\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 4: Create Landing Page}
+\ul{
+\li{Clone legitimate login page using GoPhish's import feature}
+\li{Enable credential capture (for authorized testing only)}
+\li{Configure redirect to training page after submission}
+\li{Add SSL certificate for HTTPS}
+}
+}
+
+\subtree{
+\title{Step 5: Import Users and Launch Campaign}
+\ul{
+\li{Import CSV with: First Name, Last Name, Email, Position}
+\li{Set campaign schedule (stagger sends to avoid detection)}
+\li{Launch and monitor in real-time}
+}
+}
+
+\subtree{
+\title{Step 6: Analyze Results with process.py}
+\p{Use the automation script to pull campaign data via GoPhish API and generate detailed analytics reports.}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{GoPhish}: https://getgophish.com/}
+\li{\strong{GoPhish API Docs}: https://docs.getgophish.com/api-documentation/}
+\li{\strong{GoPhish GitHub}: https://github.com/gophish/gophish}
+\li{\strong{Evilginx2} (for advanced AiTM testing): https://github.com/kgretzky/evilginx2}
+\li{\strong{King Phisher}: https://github.com/rsmusllp/king-phisher}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{Successfully deploy GoPhish and access admin panel}
+\li{Create and send a test phishing email to a test mailbox}
+\li{Capture simulated credentials on landing page}
+\li{Generate campaign report with open/click/submit rates}
+\li{Redirect users to awareness training after interaction}
+}
+}
+}

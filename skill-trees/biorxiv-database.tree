@@ -1,0 +1,552 @@
+\title{Biorxiv Database}
+
+\taxon{skill}
+
+\meta{description}{Efficient database search tool for bioRxiv preprint server. Use this skill when searching for life sciences preprints by keywords, authors, date ranges, or categories, retrieving paper metadata, downloading PDFs, or conducting literature reviews.}
+
+\subtree{
+\title{bioRxiv Database}
+\subtree{
+\title{Overview}
+\p{This skill provides efficient Python-based tools for searching and retrieving preprints from the bioRxiv database. It enables comprehensive searches by keywords, authors, date ranges, and categories, returning structured JSON metadata that includes titles, abstracts, DOIs, and citation information. The skill also supports PDF downloads for full-text analysis.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when:}
+
+\ul{
+\li{Searching for recent preprints in specific research areas}
+\li{Tracking publications by particular authors}
+\li{Conducting systematic literature reviews}
+\li{Analyzing research trends over time periods}
+\li{Retrieving metadata for citation management}
+\li{Downloading preprint PDFs for analysis}
+\li{Filtering papers by bioRxiv subject categories}
+}
+}
+
+\subtree{
+\title{Core Search Capabilities}
+\subtree{
+\title{1. Keyword Search}
+\p{Search for preprints containing specific keywords in titles, abstracts, or author lists.}
+
+\p{\strong{Basic Usage:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --keywords "CRISPR" "gene editing" \
+  --start-date 2024-01-01 \
+  --end-date 2024-12-31 \
+  --output results.json
+\stopverb}
+
+\p{\strong{With Category Filter:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --keywords "neural networks" "deep learning" \
+  --days-back 180 \
+  --category neuroscience \
+  --output recent_neuroscience.json
+\stopverb}
+
+\p{\strong{Search Fields:} By default, keywords are searched in both title and abstract. Customize with \code{\startverb --search-fields\stopverb}:}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --keywords "AlphaFold" \
+  --search-fields title \
+  --days-back 365
+\stopverb}
+}
+
+\subtree{
+\title{2. Author Search}
+\p{Find all papers by a specific author within a date range.}
+
+\p{\strong{Basic Usage:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --author "Smith" \
+  --start-date 2023-01-01 \
+  --end-date 2024-12-31 \
+  --output smith_papers.json
+\stopverb}
+
+\p{\strong{Recent Publications:}}
+
+\pre{\startverb
+# Last year by default if no dates specified
+python scripts/biorxiv_search.py \
+  --author "Johnson" \
+  --output johnson_recent.json
+\stopverb}
+}
+
+\subtree{
+\title{3. Date Range Search}
+\p{Retrieve all preprints posted within a specific date range.}
+
+\p{\strong{Basic Usage:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --start-date 2024-01-01 \
+  --end-date 2024-01-31 \
+  --output january_2024.json
+\stopverb}
+
+\p{\strong{With Category Filter:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --start-date 2024-06-01 \
+  --end-date 2024-06-30 \
+  --category genomics \
+  --output genomics_june.json
+\stopverb}
+
+\p{\strong{Days Back Shortcut:}}
+
+\pre{\startverb
+# Last 30 days
+python scripts/biorxiv_search.py \
+  --days-back 30 \
+  --output last_month.json
+\stopverb}
+}
+
+\subtree{
+\title{4. Paper Details by DOI}
+\p{Retrieve detailed metadata for a specific preprint.}
+
+\p{\strong{Basic Usage:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --doi "10.1101/2024.01.15.123456" \
+  --output paper_details.json
+\stopverb}
+
+\p{\strong{Full DOI URLs Accepted:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --doi "https://doi.org/10.1101/2024.01.15.123456"
+\stopverb}
+}
+
+\subtree{
+\title{5. PDF Downloads}
+\p{Download the full-text PDF of any preprint.}
+
+\p{\strong{Basic Usage:}}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --doi "10.1101/2024.01.15.123456" \
+  --download-pdf paper.pdf
+\stopverb}
+
+\p{\strong{Batch Processing:} For multiple PDFs, extract DOIs from a search result JSON and download each paper:}
+
+\pre{\startverb
+import json
+from biorxiv_search import BioRxivSearcher
+
+# Load search results
+with open('results.json') as f:
+    data = json.load(f)
+
+searcher = BioRxivSearcher(verbose=True)
+
+# Download each paper
+for i, paper in enumerate(data['results'][:10]):  # First 10 papers
+    doi = paper['doi']
+    searcher.download_pdf(doi, f"papers/paper_{i+1}.pdf")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Valid Categories}
+\p{Filter searches by bioRxiv subject categories:}
+
+\ul{
+\li{\code{\startverb animal-behavior-and-cognition\stopverb}}
+\li{\code{\startverb biochemistry\stopverb}}
+\li{\code{\startverb bioengineering\stopverb}}
+\li{\code{\startverb bioinformatics\stopverb}}
+\li{\code{\startverb biophysics\stopverb}}
+\li{\code{\startverb cancer-biology\stopverb}}
+\li{\code{\startverb cell-biology\stopverb}}
+\li{\code{\startverb clinical-trials\stopverb}}
+\li{\code{\startverb developmental-biology\stopverb}}
+\li{\code{\startverb ecology\stopverb}}
+\li{\code{\startverb epidemiology\stopverb}}
+\li{\code{\startverb evolutionary-biology\stopverb}}
+\li{\code{\startverb genetics\stopverb}}
+\li{\code{\startverb genomics\stopverb}}
+\li{\code{\startverb immunology\stopverb}}
+\li{\code{\startverb microbiology\stopverb}}
+\li{\code{\startverb molecular-biology\stopverb}}
+\li{\code{\startverb neuroscience\stopverb}}
+\li{\code{\startverb paleontology\stopverb}}
+\li{\code{\startverb pathology\stopverb}}
+\li{\code{\startverb pharmacology-and-toxicology\stopverb}}
+\li{\code{\startverb physiology\stopverb}}
+\li{\code{\startverb plant-biology\stopverb}}
+\li{\code{\startverb scientific-communication-and-education\stopverb}}
+\li{\code{\startverb synthetic-biology\stopverb}}
+\li{\code{\startverb systems-biology\stopverb}}
+\li{\code{\startverb zoology\stopverb}}
+}
+}
+
+\subtree{
+\title{Output Format}
+\p{All searches return structured JSON with the following format:}
+
+\pre{\startverb
+{
+  "query": {
+    "keywords": ["CRISPR"],
+    "start_date": "2024-01-01",
+    "end_date": "2024-12-31",
+    "category": "genomics"
+  },
+  "result_count": 42,
+  "results": [
+    {
+      "doi": "10.1101/2024.01.15.123456",
+      "title": "Paper Title Here",
+      "authors": "Smith J, Doe J, Johnson A",
+      "author_corresponding": "Smith J",
+      "author_corresponding_institution": "University Example",
+      "date": "2024-01-15",
+      "version": "1",
+      "type": "new results",
+      "license": "cc_by",
+      "category": "genomics",
+      "abstract": "Full abstract text...",
+      "pdf_url": "https://www.biorxiv.org/content/10.1101/2024.01.15.123456v1.full.pdf",
+      "html_url": "https://www.biorxiv.org/content/10.1101/2024.01.15.123456v1",
+      "jatsxml": "https://www.biorxiv.org/content/...",
+      "published": ""
+    }
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Common Usage Patterns}
+\subtree{
+\title{Literature Review Workflow}
+\ol{
+\li{\strong{Broad keyword search:}}
+}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --keywords "organoids" "tissue engineering" \
+  --start-date 2023-01-01 \
+  --end-date 2024-12-31 \
+  --category bioengineering \
+  --output organoid_papers.json
+\stopverb}
+
+\ol{
+\li{\strong{Extract and review results:}}
+}
+
+\pre{\startverb
+import json
+
+with open('organoid_papers.json') as f:
+    data = json.load(f)
+
+print(f"Found {data['result_count']} papers")
+
+for paper in data['results'][:5]:
+    print(f"\nTitle: {paper['title']}")
+    print(f"Authors: {paper['authors']}")
+    print(f"Date: {paper['date']}")
+    print(f"DOI: {paper['doi']}")
+\stopverb}
+
+\ol{
+\li{\strong{Download selected papers:}}
+}
+
+\pre{\startverb
+from biorxiv_search import BioRxivSearcher
+
+searcher = BioRxivSearcher()
+selected_dois = ["10.1101/2024.01.15.123456", "10.1101/2024.02.20.789012"]
+
+for doi in selected_dois:
+    filename = doi.replace("/", "_").replace(".", "_") + ".pdf"
+    searcher.download_pdf(doi, f"papers/{filename}")
+\stopverb}
+}
+
+\subtree{
+\title{Trend Analysis}
+\p{Track research trends by analyzing publication frequencies over time:}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --keywords "machine learning" \
+  --start-date 2020-01-01 \
+  --end-date 2024-12-31 \
+  --category bioinformatics \
+  --output ml_trends.json
+\stopverb}
+
+\p{Then analyze the temporal distribution in the results.}
+}
+
+\subtree{
+\title{Author Tracking}
+\p{Monitor specific researchers' preprints:}
+
+\pre{\startverb
+# Track multiple authors
+authors = ["Smith", "Johnson", "Williams"]
+
+for author in authors:
+    python scripts/biorxiv_search.py \
+      --author "{author}" \
+      --days-back 365 \
+      --output "{author}_papers.json"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Python API Usage}
+\p{For more complex workflows, import and use the \code{\startverb BioRxivSearcher\stopverb} class directly:}
+
+\pre{\startverb
+from scripts.biorxiv_search import BioRxivSearcher
+
+# Initialize
+searcher = BioRxivSearcher(verbose=True)
+
+# Multiple search operations
+keywords_papers = searcher.search_by_keywords(
+    keywords=["CRISPR", "gene editing"],
+    start_date="2024-01-01",
+    end_date="2024-12-31",
+    category="genomics"
+)
+
+author_papers = searcher.search_by_author(
+    author_name="Smith",
+    start_date="2023-01-01",
+    end_date="2024-12-31"
+)
+
+# Get specific paper details
+paper = searcher.get_paper_details("10.1101/2024.01.15.123456")
+
+# Download PDF
+success = searcher.download_pdf(
+    doi="10.1101/2024.01.15.123456",
+    output_path="paper.pdf"
+)
+
+# Format results consistently
+formatted = searcher.format_result(paper, include_abstract=True)
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Use appropriate date ranges}: Smaller date ranges return faster. For keyword searches over long periods, consider splitting into multiple queries.}
+}
+
+\ol{
+\li{\strong{Filter by category}: When possible, use \code{\startverb --category\stopverb} to reduce data transfer and improve search precision.}
+}
+
+\ol{
+\li{\strong{Respect rate limits}: The script includes automatic delays (0.5s between requests). For large-scale data collection, add additional delays.}
+}
+
+\ol{
+\li{\strong{Cache results}: Save search results to JSON files to avoid repeated API calls.}
+}
+
+\ol{
+\li{\strong{Version tracking}: Preprints can have multiple versions. The \code{\startverb version\stopverb} field indicates which version is returned. PDF URLs include the version number.}
+}
+
+\ol{
+\li{\strong{Handle errors gracefully}: Check the \code{\startverb result_count\stopverb} in output JSON. Empty results may indicate date range issues or API connectivity problems.}
+}
+
+\ol{
+\li{\strong{Verbose mode for debugging}: Use \code{\startverb --verbose\stopverb} flag to see detailed logging of API requests and responses.}
+}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{Custom Date Range Logic}
+\pre{\startverb
+from datetime import datetime, timedelta
+
+# Last quarter
+end_date = datetime.now()
+start_date = end_date - timedelta(days=90)
+
+python scripts/biorxiv_search.py \
+  --start-date {start_date.strftime('%Y-%m-%d')} \
+  --end-date {end_date.strftime('%Y-%m-%d')}
+\stopverb}
+}
+
+\subtree{
+\title{Result Limiting}
+\p{Limit the number of results returned:}
+
+\pre{\startverb
+python scripts/biorxiv_search.py \
+  --keywords "COVID-19" \
+  --days-back 30 \
+  --limit 50 \
+  --output covid_top50.json
+\stopverb}
+}
+
+\subtree{
+\title{Exclude Abstracts for Speed}
+\p{When only metadata is needed:}
+
+\pre{\startverb
+# Note: Abstract inclusion is controlled in Python API
+from scripts.biorxiv_search import BioRxivSearcher
+
+searcher = BioRxivSearcher()
+papers = searcher.search_by_keywords(keywords=["AI"], days_back=30)
+formatted = [searcher.format_result(p, include_abstract=False) for p in papers]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Programmatic Integration}
+\p{Integrate search results into downstream analysis pipelines:}
+
+\pre{\startverb
+import json
+import pandas as pd
+
+# Load results
+with open('results.json') as f:
+    data = json.load(f)
+
+# Convert to DataFrame for analysis
+df = pd.DataFrame(data['results'])
+
+# Analyze
+print(f"Total papers: {len(df)}")
+print(f"Date range: {df['date'].min()} to {df['date'].max()}")
+print(f"\nTop authors by paper count:")
+print(df['authors'].str.split(',').explode().str.strip().value_counts().head(10))
+
+# Filter and export
+recent = df[df['date'] >= '2024-06-01']
+recent.to_csv('recent_papers.csv', index=False)
+\stopverb}
+}
+
+\subtree{
+\title{Testing the Skill}
+\p{To verify that the bioRxiv database skill is working correctly, run the comprehensive test suite.}
+
+\p{\strong{Prerequisites:}}
+
+\pre{\startverb
+uv pip install requests
+\stopverb}
+
+\p{\strong{Run tests:}}
+
+\pre{\startverb
+python tests/test_biorxiv_search.py
+\stopverb}
+
+\p{The test suite validates:}
+
+\ul{
+\li{\strong{Initialization}: BioRxivSearcher class instantiation}
+\li{\strong{Date Range Search}: Retrieving papers within specific date ranges}
+\li{\strong{Category Filtering}: Filtering papers by bioRxiv categories}
+\li{\strong{Keyword Search}: Finding papers containing specific keywords}
+\li{\strong{DOI Lookup}: Retrieving specific papers by DOI}
+\li{\strong{Result Formatting}: Proper formatting of paper metadata}
+\li{\strong{Interval Search}: Fetching recent papers by time intervals}
+}
+
+\p{\strong{Expected Output:}}
+
+\pre{\startverb
+🧬 bioRxiv Database Search Skill Test Suite
+======================================================================
+
+🧪 Test 1: Initialization
+✅ BioRxivSearcher initialized successfully
+
+🧪 Test 2: Date Range Search
+✅ Found 150 papers between 2024-01-01 and 2024-01-07
+   First paper: Novel CRISPR-based approach for genome editing...
+
+[... additional tests ...]
+
+======================================================================
+📊 Test Summary
+======================================================================
+✅ PASS: Initialization
+✅ PASS: Date Range Search
+✅ PASS: Category Filtering
+✅ PASS: Keyword Search
+✅ PASS: DOI Lookup
+✅ PASS: Result Formatting
+✅ PASS: Interval Search
+======================================================================
+Results: 7/7 tests passed (100%)
+======================================================================
+
+🎉 All tests passed! The bioRxiv database skill is working correctly.
+\stopverb}
+
+\p{\strong{Note:} Some tests may show warnings if no papers are found in specific date ranges or categories. This is normal and does not indicate a failure.}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{For detailed API specifications, endpoint documentation, and response schemas, refer to:}
+
+\ul{
+\li{\code{\startverb references/api_reference.md\stopverb} - Complete bioRxiv API documentation}
+}
+
+\p{The reference file includes:}
+
+\ul{
+\li{Full API endpoint specifications}
+\li{Response format details}
+\li{Error handling patterns}
+\li{Rate limiting guidelines}
+\li{Advanced search patterns}
+}
+}
+}

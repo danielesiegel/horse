@@ -1,0 +1,798 @@
+\title{Seaborn}
+
+\taxon{skill}
+
+\meta{description}{"Statistical visualization. Scatter, box, violin, heatmaps, pair plots, regression, correlation matrices, KDE, faceted plots, for exploratory analysis and publication figures."}
+
+\subtree{
+\title{Seaborn Statistical Visualization}
+\subtree{
+\title{Overview}
+\p{Seaborn is a Python visualization library for creating publication-quality statistical graphics. Use this skill for dataset-oriented plotting, multivariate analysis, automatic statistical estimation, and complex multi-panel figures with minimal code.}
+}
+
+\subtree{
+\title{Design Philosophy}
+\p{Seaborn follows these core principles:}
+
+\ol{
+\li{\strong{Dataset-oriented}: Work directly with DataFrames and named variables rather than abstract coordinates}
+\li{\strong{Semantic mapping}: Automatically translate data values into visual properties (colors, sizes, styles)}
+\li{\strong{Statistical awareness}: Built-in aggregation, error estimation, and confidence intervals}
+\li{\strong{Aesthetic defaults}: Publication-ready themes and color palettes out of the box}
+\li{\strong{Matplotlib integration}: Full compatibility with matplotlib customization when needed}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load example dataset
+df = sns.load_dataset('tips')
+
+# Create a simple visualization
+sns.scatterplot(data=df, x='total_bill', y='tip', hue='day')
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Core Plotting Interfaces}
+\subtree{
+\title{Function Interface (Traditional)}
+\p{The function interface provides specialized plotting functions organized by visualization type. Each category has \strong{axes-level} functions (plot to single axes) and \strong{figure-level} functions (manage entire figure with faceting).}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Quick exploratory analysis}
+\li{Single-purpose visualizations}
+\li{When you need a specific plot type}
+}
+}
+
+\subtree{
+\title{Objects Interface (Modern)}
+\p{The \code{\startverb seaborn.objects\stopverb} interface provides a declarative, composable API similar to ggplot2. Build visualizations by chaining methods to specify data mappings, marks, transformations, and scales.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Complex layered visualizations}
+\li{When you need fine-grained control over transformations}
+\li{Building custom plot types}
+\li{Programmatic plot generation}
+}
+
+\pre{\startverb
+from seaborn import objects as so
+
+# Declarative syntax
+(
+    so.Plot(data=df, x='total_bill', y='tip')
+    .add(so.Dot(), color='day')
+    .add(so.Line(), so.PolyFit())
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Plotting Functions by Category}
+\subtree{
+\title{Relational Plots (Relationships Between Variables)}
+\p{\strong{Use for:} Exploring how two or more variables relate to each other}
+
+\ul{
+\li{\code{\startverb scatterplot()\stopverb} - Display individual observations as points}
+\li{\code{\startverb lineplot()\stopverb} - Show trends and changes (automatically aggregates and computes CI)}
+\li{\code{\startverb relplot()\stopverb} - Figure-level interface with automatic faceting}
+}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{\code{\startverb x\stopverb}, \code{\startverb y\stopverb} - Primary variables}
+\li{\code{\startverb hue\stopverb} - Color encoding for additional categorical/continuous variable}
+\li{\code{\startverb size\stopverb} - Point/line size encoding}
+\li{\code{\startverb style\stopverb} - Marker/line style encoding}
+\li{\code{\startverb col\stopverb}, \code{\startverb row\stopverb} - Facet into multiple subplots (figure-level only)}
+}
+
+\pre{\startverb
+# Scatter with multiple semantic mappings
+sns.scatterplot(data=df, x='total_bill', y='tip',
+                hue='time', size='size', style='sex')
+
+# Line plot with confidence intervals
+sns.lineplot(data=timeseries, x='date', y='value', hue='category')
+
+# Faceted relational plot
+sns.relplot(data=df, x='total_bill', y='tip',
+            col='time', row='sex', hue='smoker', kind='scatter')
+\stopverb}
+}
+
+\subtree{
+\title{Distribution Plots (Single and Bivariate Distributions)}
+\p{\strong{Use for:} Understanding data spread, shape, and probability density}
+
+\ul{
+\li{\code{\startverb histplot()\stopverb} - Bar-based frequency distributions with flexible binning}
+\li{\code{\startverb kdeplot()\stopverb} - Smooth density estimates using Gaussian kernels}
+\li{\code{\startverb ecdfplot()\stopverb} - Empirical cumulative distribution (no parameters to tune)}
+\li{\code{\startverb rugplot()\stopverb} - Individual observation tick marks}
+\li{\code{\startverb displot()\stopverb} - Figure-level interface for univariate and bivariate distributions}
+\li{\code{\startverb jointplot()\stopverb} - Bivariate plot with marginal distributions}
+\li{\code{\startverb pairplot()\stopverb} - Matrix of pairwise relationships across dataset}
+}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{\code{\startverb x\stopverb}, \code{\startverb y\stopverb} - Variables (y optional for univariate)}
+\li{\code{\startverb hue\stopverb} - Separate distributions by category}
+\li{\code{\startverb stat\stopverb} - Normalization: "count", "frequency", "probability", "density"}
+\li{\code{\startverb bins\stopverb} / \code{\startverb binwidth\stopverb} - Histogram binning control}
+\li{\code{\startverb bw_adjust\stopverb} - KDE bandwidth multiplier (higher = smoother)}
+\li{\code{\startverb fill\stopverb} - Fill area under curve}
+\li{\code{\startverb multiple\stopverb} - How to handle hue: "layer", "stack", "dodge", "fill"}
+}
+
+\pre{\startverb
+# Histogram with density normalization
+sns.histplot(data=df, x='total_bill', hue='time',
+             stat='density', multiple='stack')
+
+# Bivariate KDE with contours
+sns.kdeplot(data=df, x='total_bill', y='tip',
+            fill=True, levels=5, thresh=0.1)
+
+# Joint plot with marginals
+sns.jointplot(data=df, x='total_bill', y='tip',
+              kind='scatter', hue='time')
+
+# Pairwise relationships
+sns.pairplot(data=df, hue='species', corner=True)
+\stopverb}
+}
+
+\subtree{
+\title{Categorical Plots (Comparisons Across Categories)}
+\p{\strong{Use for:} Comparing distributions or statistics across discrete categories}
+
+\p{\strong{Categorical scatterplots:}}
+
+\ul{
+\li{\code{\startverb stripplot()\stopverb} - Points with jitter to show all observations}
+\li{\code{\startverb swarmplot()\stopverb} - Non-overlapping points (beeswarm algorithm)}
+}
+
+\p{\strong{Distribution comparisons:}}
+
+\ul{
+\li{\code{\startverb boxplot()\stopverb} - Quartiles and outliers}
+\li{\code{\startverb violinplot()\stopverb} - KDE + quartile information}
+\li{\code{\startverb boxenplot()\stopverb} - Enhanced boxplot for larger datasets}
+}
+
+\p{\strong{Statistical estimates:}}
+
+\ul{
+\li{\code{\startverb barplot()\stopverb} - Mean/aggregate with confidence intervals}
+\li{\code{\startverb pointplot()\stopverb} - Point estimates with connecting lines}
+\li{\code{\startverb countplot()\stopverb} - Count of observations per category}
+}
+
+\p{\strong{Figure-level:}}
+
+\ul{
+\li{\code{\startverb catplot()\stopverb} - Faceted categorical plots (set \code{\startverb kind\stopverb} parameter)}
+}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{\code{\startverb x\stopverb}, \code{\startverb y\stopverb} - Variables (one typically categorical)}
+\li{\code{\startverb hue\stopverb} - Additional categorical grouping}
+\li{\code{\startverb order\stopverb}, \code{\startverb hue_order\stopverb} - Control category ordering}
+\li{\code{\startverb dodge\stopverb} - Separate hue levels side-by-side}
+\li{\code{\startverb orient\stopverb} - "v" (vertical) or "h" (horizontal)}
+\li{\code{\startverb kind\stopverb} - Plot type for catplot: "strip", "swarm", "box", "violin", "bar", "point"}
+}
+
+\pre{\startverb
+# Swarm plot showing all points
+sns.swarmplot(data=df, x='day', y='total_bill', hue='sex')
+
+# Violin plot with split for comparison
+sns.violinplot(data=df, x='day', y='total_bill',
+               hue='sex', split=True)
+
+# Bar plot with error bars
+sns.barplot(data=df, x='day', y='total_bill',
+            hue='sex', estimator='mean', errorbar='ci')
+
+# Faceted categorical plot
+sns.catplot(data=df, x='day', y='total_bill',
+            col='time', kind='box')
+\stopverb}
+}
+
+\subtree{
+\title{Regression Plots (Linear Relationships)}
+\p{\strong{Use for:} Visualizing linear regressions and residuals}
+
+\ul{
+\li{\code{\startverb regplot()\stopverb} - Axes-level regression plot with scatter + fit line}
+\li{\code{\startverb lmplot()\stopverb} - Figure-level with faceting support}
+\li{\code{\startverb residplot()\stopverb} - Residual plot for assessing model fit}
+}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{\code{\startverb x\stopverb}, \code{\startverb y\stopverb} - Variables to regress}
+\li{\code{\startverb order\stopverb} - Polynomial regression order}
+\li{\code{\startverb logistic\stopverb} - Fit logistic regression}
+\li{\code{\startverb robust\stopverb} - Use robust regression (less sensitive to outliers)}
+\li{\code{\startverb ci\stopverb} - Confidence interval width (default 95)}
+\li{\code{\startverb scatter_kws\stopverb}, \code{\startverb line_kws\stopverb} - Customize scatter and line properties}
+}
+
+\pre{\startverb
+# Simple linear regression
+sns.regplot(data=df, x='total_bill', y='tip')
+
+# Polynomial regression with faceting
+sns.lmplot(data=df, x='total_bill', y='tip',
+           col='time', order=2, ci=95)
+
+# Check residuals
+sns.residplot(data=df, x='total_bill', y='tip')
+\stopverb}
+}
+
+\subtree{
+\title{Matrix Plots (Rectangular Data)}
+\p{\strong{Use for:} Visualizing matrices, correlations, and grid-structured data}
+
+\ul{
+\li{\code{\startverb heatmap()\stopverb} - Color-encoded matrix with annotations}
+\li{\code{\startverb clustermap()\stopverb} - Hierarchically-clustered heatmap}
+}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{\code{\startverb data\stopverb} - 2D rectangular dataset (DataFrame or array)}
+\li{\code{\startverb annot\stopverb} - Display values in cells}
+\li{\code{\startverb fmt\stopverb} - Format string for annotations (e.g., ".2f")}
+\li{\code{\startverb cmap\stopverb} - Colormap name}
+\li{\code{\startverb center\stopverb} - Value at colormap center (for diverging colormaps)}
+\li{\code{\startverb vmin\stopverb}, \code{\startverb vmax\stopverb} - Color scale limits}
+\li{\code{\startverb square\stopverb} - Force square cells}
+\li{\code{\startverb linewidths\stopverb} - Gap between cells}
+}
+
+\pre{\startverb
+# Correlation heatmap
+corr = df.corr()
+sns.heatmap(corr, annot=True, fmt='.2f',
+            cmap='coolwarm', center=0, square=True)
+
+# Clustered heatmap
+sns.clustermap(data, cmap='viridis',
+               standard_scale=1, figsize=(10, 10))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Multi-Plot Grids}
+\p{Seaborn provides grid objects for creating complex multi-panel figures:}
+
+\subtree{
+\title{FacetGrid}
+\p{Create subplots based on categorical variables. Most useful when called through figure-level functions (\code{\startverb relplot\stopverb}, \code{\startverb displot\stopverb}, \code{\startverb catplot\stopverb}), but can be used directly for custom plots.}
+
+\pre{\startverb
+g = sns.FacetGrid(df, col='time', row='sex', hue='smoker')
+g.map(sns.scatterplot, 'total_bill', 'tip')
+g.add_legend()
+\stopverb}
+}
+
+\subtree{
+\title{PairGrid}
+\p{Show pairwise relationships between all variables in a dataset.}
+
+\pre{\startverb
+g = sns.PairGrid(df, hue='species')
+g.map_upper(sns.scatterplot)
+g.map_lower(sns.kdeplot)
+g.map_diag(sns.histplot)
+g.add_legend()
+\stopverb}
+}
+
+\subtree{
+\title{JointGrid}
+\p{Combine bivariate plot with marginal distributions.}
+
+\pre{\startverb
+g = sns.JointGrid(data=df, x='total_bill', y='tip')
+g.plot_joint(sns.scatterplot)
+g.plot_marginals(sns.histplot)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Figure-Level vs Axes-Level Functions}
+\p{Understanding this distinction is crucial for effective seaborn usage:}
+
+\subtree{
+\title{Axes-Level Functions}
+\ul{
+\li{Plot to a single matplotlib \code{\startverb Axes\stopverb} object}
+\li{Integrate easily into complex matplotlib figures}
+\li{Accept \code{\startverb ax=\stopverb} parameter for precise placement}
+\li{Return \code{\startverb Axes\stopverb} object}
+\li{Examples: \code{\startverb scatterplot\stopverb}, \code{\startverb histplot\stopverb}, \code{\startverb boxplot\stopverb}, \code{\startverb regplot\stopverb}, \code{\startverb heatmap\stopverb}}
+}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Building custom multi-plot layouts}
+\li{Combining different plot types}
+\li{Need matplotlib-level control}
+\li{Integrating with existing matplotlib code}
+}
+
+\pre{\startverb
+fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+sns.scatterplot(data=df, x='x', y='y', ax=axes[0, 0])
+sns.histplot(data=df, x='x', ax=axes[0, 1])
+sns.boxplot(data=df, x='cat', y='y', ax=axes[1, 0])
+sns.kdeplot(data=df, x='x', y='y', ax=axes[1, 1])
+\stopverb}
+}
+
+\subtree{
+\title{Figure-Level Functions}
+\ul{
+\li{Manage entire figure including all subplots}
+\li{Built-in faceting via \code{\startverb col\stopverb} and \code{\startverb row\stopverb} parameters}
+\li{Return \code{\startverb FacetGrid\stopverb}, \code{\startverb JointGrid\stopverb}, or \code{\startverb PairGrid\stopverb} objects}
+\li{Use \code{\startverb height\stopverb} and \code{\startverb aspect\stopverb} for sizing (per subplot)}
+\li{Cannot be placed in existing figure}
+\li{Examples: \code{\startverb relplot\stopverb}, \code{\startverb displot\stopverb}, \code{\startverb catplot\stopverb}, \code{\startverb lmplot\stopverb}, \code{\startverb jointplot\stopverb}, \code{\startverb pairplot\stopverb}}
+}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Faceted visualizations (small multiples)}
+\li{Quick exploratory analysis}
+\li{Consistent multi-panel layouts}
+\li{Don't need to combine with other plot types}
+}
+
+\pre{\startverb
+# Automatic faceting
+sns.relplot(data=df, x='x', y='y', col='category', row='group',
+            hue='type', height=3, aspect=1.2)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Data Structure Requirements}
+\subtree{
+\title{Long-Form Data (Preferred)}
+\p{Each variable is a column, each observation is a row. This "tidy" format provides maximum flexibility:}
+
+\pre{\startverb
+# Long-form structure
+   subject  condition  measurement
+0        1    control         10.5
+1        1  treatment         12.3
+2        2    control          9.8
+3        2  treatment         13.1
+\stopverb}
+
+\p{\strong{Advantages:}}
+
+\ul{
+\li{Works with all seaborn functions}
+\li{Easy to remap variables to visual properties}
+\li{Supports arbitrary complexity}
+\li{Natural for DataFrame operations}
+}
+}
+
+\subtree{
+\title{Wide-Form Data}
+\p{Variables are spread across columns. Useful for simple rectangular data:}
+
+\pre{\startverb
+# Wide-form structure
+   control  treatment
+0     10.5       12.3
+1      9.8       13.1
+\stopverb}
+
+\p{\strong{Use cases:}}
+
+\ul{
+\li{Simple time series}
+\li{Correlation matrices}
+\li{Heatmaps}
+\li{Quick plots of array data}
+}
+
+\p{\strong{Converting wide to long:}}
+
+\pre{\startverb
+df_long = df.melt(var_name='condition', value_name='measurement')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Color Palettes}
+\p{Seaborn provides carefully designed color palettes for different data types:}
+
+\subtree{
+\title{Qualitative Palettes (Categorical Data)}
+\p{Distinguish categories through hue variation:}
+
+\ul{
+\li{\code{\startverb "deep"\stopverb} - Default, vivid colors}
+\li{\code{\startverb "muted"\stopverb} - Softer, less saturated}
+\li{\code{\startverb "pastel"\stopverb} - Light, desaturated}
+\li{\code{\startverb "bright"\stopverb} - Highly saturated}
+\li{\code{\startverb "dark"\stopverb} - Dark values}
+\li{\code{\startverb "colorblind"\stopverb} - Safe for color vision deficiency}
+}
+
+\pre{\startverb
+sns.set_palette("colorblind")
+sns.color_palette("Set2")
+\stopverb}
+}
+
+\subtree{
+\title{Sequential Palettes (Ordered Data)}
+\p{Show progression from low to high values:}
+
+\ul{
+\li{\code{\startverb "rocket"\stopverb}, \code{\startverb "mako"\stopverb} - Wide luminance range (good for heatmaps)}
+\li{\code{\startverb "flare"\stopverb}, \code{\startverb "crest"\stopverb} - Restricted luminance (good for points/lines)}
+\li{\code{\startverb "viridis"\stopverb}, \code{\startverb "magma"\stopverb}, \code{\startverb "plasma"\stopverb} - Matplotlib perceptually uniform}
+}
+
+\pre{\startverb
+sns.heatmap(data, cmap='rocket')
+sns.kdeplot(data=df, x='x', y='y', cmap='mako', fill=True)
+\stopverb}
+}
+
+\subtree{
+\title{Diverging Palettes (Centered Data)}
+\p{Emphasize deviations from a midpoint:}
+
+\ul{
+\li{\code{\startverb "vlag"\stopverb} - Blue to red}
+\li{\code{\startverb "icefire"\stopverb} - Blue to orange}
+\li{\code{\startverb "coolwarm"\stopverb} - Cool to warm}
+\li{\code{\startverb "Spectral"\stopverb} - Rainbow diverging}
+}
+
+\pre{\startverb
+sns.heatmap(correlation_matrix, cmap='vlag', center=0)
+\stopverb}
+}
+
+\subtree{
+\title{Custom Palettes}
+\pre{\startverb
+# Create custom palette
+custom = sns.color_palette("husl", 8)
+
+# Light to dark gradient
+palette = sns.light_palette("seagreen", as_cmap=True)
+
+# Diverging palette from hues
+palette = sns.diverging_palette(250, 10, as_cmap=True)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Theming and Aesthetics}
+\subtree{
+\title{Set Theme}
+\p{\code{\startverb set_theme()\stopverb} controls overall appearance:}
+
+\pre{\startverb
+# Set complete theme
+sns.set_theme(style='whitegrid', palette='pastel', font='sans-serif')
+
+# Reset to defaults
+sns.set_theme()
+\stopverb}
+}
+
+\subtree{
+\title{Styles}
+\p{Control background and grid appearance:}
+
+\ul{
+\li{\code{\startverb "darkgrid"\stopverb} - Gray background with white grid (default)}
+\li{\code{\startverb "whitegrid"\stopverb} - White background with gray grid}
+\li{\code{\startverb "dark"\stopverb} - Gray background, no grid}
+\li{\code{\startverb "white"\stopverb} - White background, no grid}
+\li{\code{\startverb "ticks"\stopverb} - White background with axis ticks}
+}
+
+\pre{\startverb
+sns.set_style("whitegrid")
+
+# Remove spines
+sns.despine(left=False, bottom=False, offset=10, trim=True)
+
+# Temporary style
+with sns.axes_style("white"):
+    sns.scatterplot(data=df, x='x', y='y')
+\stopverb}
+}
+
+\subtree{
+\title{Contexts}
+\p{Scale elements for different use cases:}
+
+\ul{
+\li{\code{\startverb "paper"\stopverb} - Smallest (default)}
+\li{\code{\startverb "notebook"\stopverb} - Slightly larger}
+\li{\code{\startverb "talk"\stopverb} - Presentation slides}
+\li{\code{\startverb "poster"\stopverb} - Large format}
+}
+
+\pre{\startverb
+sns.set_context("talk", font_scale=1.2)
+
+# Temporary context
+with sns.plotting_context("poster"):
+    sns.barplot(data=df, x='category', y='value')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{1. Data Preparation}
+\p{Always use well-structured DataFrames with meaningful column names:}
+
+\pre{\startverb
+# Good: Named columns in DataFrame
+df = pd.DataFrame({'bill': bills, 'tip': tips, 'day': days})
+sns.scatterplot(data=df, x='bill', y='tip', hue='day')
+
+# Avoid: Unnamed arrays
+sns.scatterplot(x=x_array, y=y_array)  # Loses axis labels
+\stopverb}
+}
+
+\subtree{
+\title{2. Choose the Right Plot Type}
+\p{\strong{Continuous x, continuous y:} \code{\startverb scatterplot\stopverb}, \code{\startverb lineplot\stopverb}, \code{\startverb kdeplot\stopverb}, \code{\startverb regplot\stopverb} \strong{Continuous x, categorical y:} \code{\startverb violinplot\stopverb}, \code{\startverb boxplot\stopverb}, \code{\startverb stripplot\stopverb}, \code{\startverb swarmplot\stopverb} \strong{One continuous variable:} \code{\startverb histplot\stopverb}, \code{\startverb kdeplot\stopverb}, \code{\startverb ecdfplot\stopverb} \strong{Correlations/matrices:} \code{\startverb heatmap\stopverb}, \code{\startverb clustermap\stopverb} \strong{Pairwise relationships:} \code{\startverb pairplot\stopverb}, \code{\startverb jointplot\stopverb}}
+}
+
+\subtree{
+\title{3. Use Figure-Level Functions for Faceting}
+\pre{\startverb
+# Instead of manual subplot creation
+sns.relplot(data=df, x='x', y='y', col='category', col_wrap=3)
+
+# Not: Creating subplots manually for simple faceting
+\stopverb}
+}
+
+\subtree{
+\title{4. Leverage Semantic Mappings}
+\p{Use \code{\startverb hue\stopverb}, \code{\startverb size\stopverb}, and \code{\startverb style\stopverb} to encode additional dimensions:}
+
+\pre{\startverb
+sns.scatterplot(data=df, x='x', y='y',
+                hue='category',      # Color by category
+                size='importance',    # Size by continuous variable
+                style='type')         # Marker style by type
+\stopverb}
+}
+
+\subtree{
+\title{5. Control Statistical Estimation}
+\p{Many functions compute statistics automatically. Understand and customize:}
+
+\pre{\startverb
+# Lineplot computes mean and 95% CI by default
+sns.lineplot(data=df, x='time', y='value',
+             errorbar='sd')  # Use standard deviation instead
+
+# Barplot computes mean by default
+sns.barplot(data=df, x='category', y='value',
+            estimator='median',  # Use median instead
+            errorbar=('ci', 95))  # Bootstrapped CI
+\stopverb}
+}
+
+\subtree{
+\title{6. Combine with Matplotlib}
+\p{Seaborn integrates seamlessly with matplotlib for fine-tuning:}
+
+\pre{\startverb
+ax = sns.scatterplot(data=df, x='x', y='y')
+ax.set(xlabel='Custom X Label', ylabel='Custom Y Label',
+       title='Custom Title')
+ax.axhline(y=0, color='r', linestyle='--')
+plt.tight_layout()
+\stopverb}
+}
+
+\subtree{
+\title{7. Save High-Quality Figures}
+\pre{\startverb
+fig = sns.relplot(data=df, x='x', y='y', col='group')
+fig.savefig('figure.png', dpi=300, bbox_inches='tight')
+fig.savefig('figure.pdf')  # Vector format for publications
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Exploratory Data Analysis}
+\pre{\startverb
+# Quick overview of all relationships
+sns.pairplot(data=df, hue='target', corner=True)
+
+# Distribution exploration
+sns.displot(data=df, x='variable', hue='group',
+            kind='kde', fill=True, col='category')
+
+# Correlation analysis
+corr = df.corr()
+sns.heatmap(corr, annot=True, cmap='coolwarm', center=0)
+\stopverb}
+}
+
+\subtree{
+\title{Publication-Quality Figures}
+\pre{\startverb
+sns.set_theme(style='ticks', context='paper', font_scale=1.1)
+
+g = sns.catplot(data=df, x='treatment', y='response',
+                col='cell_line', kind='box', height=3, aspect=1.2)
+g.set_axis_labels('Treatment Condition', 'Response (μM)')
+g.set_titles('{col_name}')
+sns.despine(trim=True)
+
+g.savefig('figure.pdf', dpi=300, bbox_inches='tight')
+\stopverb}
+}
+
+\subtree{
+\title{Complex Multi-Panel Figures}
+\pre{\startverb
+# Using matplotlib subplots with seaborn
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+sns.scatterplot(data=df, x='x1', y='y', hue='group', ax=axes[0, 0])
+sns.histplot(data=df, x='x1', hue='group', ax=axes[0, 1])
+sns.violinplot(data=df, x='group', y='y', ax=axes[1, 0])
+sns.heatmap(df.pivot_table(values='y', index='x1', columns='x2'),
+            ax=axes[1, 1], cmap='viridis')
+
+plt.tight_layout()
+\stopverb}
+}
+
+\subtree{
+\title{Time Series with Confidence Bands}
+\pre{\startverb
+# Lineplot automatically aggregates and shows CI
+sns.lineplot(data=timeseries, x='date', y='measurement',
+             hue='sensor', style='location', errorbar='sd')
+
+# For more control
+g = sns.relplot(data=timeseries, x='date', y='measurement',
+                col='location', hue='sensor', kind='line',
+                height=4, aspect=1.5, errorbar=('ci', 95))
+g.set_axis_labels('Date', 'Measurement (units)')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Issue: Legend Outside Plot Area}
+\p{Figure-level functions place legends outside by default. To move inside:}
+
+\pre{\startverb
+g = sns.relplot(data=df, x='x', y='y', hue='category')
+g._legend.set_bbox_to_anchor((0.9, 0.5))  # Adjust position
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Overlapping Labels}
+\pre{\startverb
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Figure Too Small}
+\p{For figure-level functions:}
+
+\pre{\startverb
+sns.relplot(data=df, x='x', y='y', height=6, aspect=1.5)
+\stopverb}
+
+\p{For axes-level functions:}
+
+\pre{\startverb
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.scatterplot(data=df, x='x', y='y', ax=ax)
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Colors Not Distinct Enough}
+\pre{\startverb
+# Use a different palette
+sns.set_palette("bright")
+
+# Or specify number of colors
+palette = sns.color_palette("husl", n_colors=len(df['category'].unique()))
+sns.scatterplot(data=df, x='x', y='y', hue='category', palette=palette)
+\stopverb}
+}
+
+\subtree{
+\title{Issue: KDE Too Smooth or Jagged}
+\pre{\startverb
+# Adjust bandwidth
+sns.kdeplot(data=df, x='x', bw_adjust=0.5)  # Less smooth
+sns.kdeplot(data=df, x='x', bw_adjust=2)    # More smooth
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes reference materials for deeper exploration:}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb function_reference.md\stopverb} - Comprehensive listing of all seaborn functions with parameters and examples}
+\li{\code{\startverb objects_interface.md\stopverb} - Detailed guide to the modern seaborn.objects API}
+\li{\code{\startverb examples.md\stopverb} - Common use cases and code patterns for different analysis scenarios}
+}
+
+\p{Load reference files as needed for detailed function signatures, advanced parameters, or specific examples.}
+}
+}
+}

@@ -1,0 +1,66 @@
+\title{Xr Color Management}
+
+\taxon{skill}
+
+\meta{description}{Color spaces and gamuts in XR. sRGB vs DCI-P3 vs Rec.2020, OpenXR swapchain formats, and practical guidance for wide-gamut headsets.}
+
+\subtree{
+\title{XR Color Management}
+\p{Use when the user asks about:}
+
+\ul{
+\li{"best color space" / DCI-P3 / Rec.2020 / sRGB}
+\li{why colors look washed out or oversaturated in-headset}
+\li{how to ship consistent color across headsets}
+}
+
+\subtree{
+\title{Ground Truth}
+\ul{
+\li{Color gamut coverage (e.g., "96\% DCI-P3") is display capability, not color accuracy.}
+\li{XR runtimes often compose in linear space; apps must be explicit about sRGB vs linear formats.}
+}
+}
+
+\subtree{
+\title{Practical Defaults}
+\ul{
+\li{Keep your pipeline sRGB-correct unless you \em{know} your runtime + device support wide-gamut end-to-end.}
+\li{Prefer a linear rendering workflow with sRGB textures flagged correctly.}
+\li{Validate with in-headset test patterns (ramps, skin tones, near-black, saturation sweeps).}
+}
+}
+
+\subtree{
+\title{OpenXR Notes}
+\ul{
+\li{Use API-specific sRGB swapchain formats when your render targets are sRGB encoded.}
+\li{If you submit linear data in 8-bit formats, banding and incorrect tones are common.}
+}
+}
+
+\subtree{
+\title{Vendor Extensions (When Available)}
+\ul{
+\li{Some runtimes expose explicit color space selection (e.g., Meta's \code{\startverb XR_FB_color_space\stopverb} can request P3 / Rec.2020 / Rec.709).}
+}
+}
+
+\subtree{
+\title{Troubleshooting Checklist}
+\ul{
+\li{Confirm you’re not double-applying gamma (too dark/too contrasty) or skipping sRGB decode (too bright/washed).}
+\li{Check post-processing: tone mapping, color grading LUTs, exposure auto.}
+\li{If the runtime/toolkit offers post-processing (OpenXR Toolkit etc.), use it only to validate hypotheses, not as a permanent substitute for correct pipeline.}
+}
+}
+
+\subtree{
+\title{Interleave With}
+\ul{
+\li{\code{\startverb varjo-xr-4\stopverb} for XR-4-specific refresh-rate and Varjo Base settings}
+\li{\code{\startverb steamvr-tracking\stopverb} when the XR setup uses Lighthouse base stations}
+\li{\code{\startverb visual-design\stopverb} (from plurigrid/asi PR #61) for readable spatial UI color/contrast}
+}
+}
+}

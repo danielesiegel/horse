@@ -1,0 +1,538 @@
+\title{Pytdc}
+
+\taxon{skill}
+
+\meta{description}{"Therapeutics Data Commons. AI-ready drug discovery datasets (ADME, toxicity, DTI), benchmarks, scaffold splits, molecular oracles, for therapeutic ML and pharmacological prediction."}
+
+\subtree{
+\title{PyTDC (Therapeutics Data Commons)}
+\subtree{
+\title{Overview}
+\p{PyTDC is an open-science platform providing AI-ready datasets and benchmarks for drug discovery and development. Access curated datasets spanning the entire therapeutics pipeline with standardized evaluation metrics and meaningful data splits, organized into three categories: single-instance prediction (molecular/protein properties), multi-instance prediction (drug-target interactions, DDI), and generation (molecule generation, retrosynthesis).}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Working with drug discovery or therapeutic ML datasets}
+\li{Benchmarking machine learning models on standardized pharmaceutical tasks}
+\li{Predicting molecular properties (ADME, toxicity, bioactivity)}
+\li{Predicting drug-target or drug-drug interactions}
+\li{Generating novel molecules with desired properties}
+\li{Accessing curated datasets with proper train/test splits (scaffold, cold-split)}
+\li{Using molecular oracles for property optimization}
+}
+}
+
+\subtree{
+\title{Installation & Setup}
+\p{Install PyTDC using pip:}
+
+\pre{\startverb
+uv pip install PyTDC
+\stopverb}
+
+\p{To upgrade to the latest version:}
+
+\pre{\startverb
+uv pip install PyTDC --upgrade
+\stopverb}
+
+\p{Core dependencies (automatically installed):}
+
+\ul{
+\li{numpy, pandas, tqdm, seaborn, scikit_learn, fuzzywuzzy}
+}
+
+\p{Additional packages are installed automatically as needed for specific features.}
+}
+
+\subtree{
+\title{Quick Start}
+\p{The basic pattern for accessing any TDC dataset follows this structure:}
+
+\pre{\startverb
+from tdc.<problem> import <Task>
+data = <Task>(name='<Dataset>')
+split = data.get_split(method='scaffold', seed=1, frac=[0.7, 0.1, 0.2])
+df = data.get_data(format='df')
+\stopverb}
+
+\p{Where:}
+
+\ul{
+\li{\code{\startverb <problem>\stopverb}: One of \code{\startverb single_pred\stopverb}, \code{\startverb multi_pred\stopverb}, or \code{\startverb generation\stopverb}}
+\li{\code{\startverb <Task>\stopverb}: Specific task category (e.g., ADME, DTI, MolGen)}
+\li{\code{\startverb <Dataset>\stopverb}: Dataset name within that task}
+}
+
+\p{\strong{Example - Loading ADME data:}}
+
+\pre{\startverb
+from tdc.single_pred import ADME
+data = ADME(name='Caco2_Wang')
+split = data.get_split(method='scaffold')
+# Returns dict with 'train', 'valid', 'test' DataFrames
+\stopverb}
+}
+
+\subtree{
+\title{Single-Instance Prediction Tasks}
+\p{Single-instance prediction involves forecasting properties of individual biomedical entities (molecules, proteins, etc.).}
+
+\subtree{
+\title{Available Task Categories}
+\subtree{
+\title{1. ADME (Absorption, Distribution, Metabolism, Excretion)}
+\p{Predict pharmacokinetic properties of drug molecules.}
+
+\pre{\startverb
+from tdc.single_pred import ADME
+data = ADME(name='Caco2_Wang')  # Intestinal permeability
+# Other datasets: HIA_Hou, Bioavailability_Ma, Lipophilicity_AstraZeneca, etc.
+\stopverb}
+
+\p{\strong{Common ADME datasets:}}
+
+\ul{
+\li{Caco2 - Intestinal permeability}
+\li{HIA - Human intestinal absorption}
+\li{Bioavailability - Oral bioavailability}
+\li{Lipophilicity - Octanol-water partition coefficient}
+\li{Solubility - Aqueous solubility}
+\li{BBB - Blood-brain barrier penetration}
+\li{CYP - Cytochrome P450 metabolism}
+}
+}
+
+\subtree{
+\title{2. Toxicity (Tox)}
+\p{Predict toxicity and adverse effects of compounds.}
+
+\pre{\startverb
+from tdc.single_pred import Tox
+data = Tox(name='hERG')  # Cardiotoxicity
+# Other datasets: AMES, DILI, Carcinogens_Lagunin, etc.
+\stopverb}
+
+\p{\strong{Common toxicity datasets:}}
+
+\ul{
+\li{hERG - Cardiac toxicity}
+\li{AMES - Mutagenicity}
+\li{DILI - Drug-induced liver injury}
+\li{Carcinogens - Carcinogenicity}
+\li{ClinTox - Clinical trial toxicity}
+}
+}
+
+\subtree{
+\title{3. HTS (High-Throughput Screening)}
+\p{Bioactivity predictions from screening data.}
+
+\pre{\startverb
+from tdc.single_pred import HTS
+data = HTS(name='SARSCoV2_Vitro_Touret')
+\stopverb}
+}
+
+\subtree{
+\title{4. QM (Quantum Mechanics)}
+\p{Quantum mechanical properties of molecules.}
+
+\pre{\startverb
+from tdc.single_pred import QM
+data = QM(name='QM7')
+\stopverb}
+}
+
+\subtree{
+\title{5. Other Single Prediction Tasks}
+\ul{
+\li{\strong{Yields}: Chemical reaction yield prediction}
+\li{\strong{Epitope}: Epitope prediction for biologics}
+\li{\strong{Develop}: Development-stage predictions}
+\li{\strong{CRISPROutcome}: Gene editing outcome prediction}
+}
+}
+}
+
+\subtree{
+\title{Data Format}
+\p{Single prediction datasets typically return DataFrames with columns:}
+
+\ul{
+\li{\code{\startverb Drug_ID\stopverb} or \code{\startverb Compound_ID\stopverb}: Unique identifier}
+\li{\code{\startverb Drug\stopverb} or \code{\startverb X\stopverb}: SMILES string or molecular representation}
+\li{\code{\startverb Y\stopverb}: Target label (continuous or binary)}
+}
+}
+}
+
+\subtree{
+\title{Multi-Instance Prediction Tasks}
+\p{Multi-instance prediction involves forecasting properties of interactions between multiple biomedical entities.}
+
+\subtree{
+\title{Available Task Categories}
+\subtree{
+\title{1. DTI (Drug-Target Interaction)}
+\p{Predict binding affinity between drugs and protein targets.}
+
+\pre{\startverb
+from tdc.multi_pred import DTI
+data = DTI(name='BindingDB_Kd')
+split = data.get_split()
+\stopverb}
+
+\p{\strong{Available datasets:}}
+
+\ul{
+\li{BindingDB_Kd - Dissociation constant (52,284 pairs)}
+\li{BindingDB_IC50 - Half-maximal inhibitory concentration (991,486 pairs)}
+\li{BindingDB_Ki - Inhibition constant (375,032 pairs)}
+\li{DAVIS, KIBA - Kinase binding datasets}
+}
+
+\p{\strong{Data format:} Drug_ID, Target_ID, Drug (SMILES), Target (sequence), Y (binding affinity)}
+}
+
+\subtree{
+\title{2. DDI (Drug-Drug Interaction)}
+\p{Predict interactions between drug pairs.}
+
+\pre{\startverb
+from tdc.multi_pred import DDI
+data = DDI(name='DrugBank')
+split = data.get_split()
+\stopverb}
+
+\p{Multi-class classification task predicting interaction types. Dataset contains 191,808 DDI pairs with 1,706 drugs.}
+}
+
+\subtree{
+\title{3. PPI (Protein-Protein Interaction)}
+\p{Predict protein-protein interactions.}
+
+\pre{\startverb
+from tdc.multi_pred import PPI
+data = PPI(name='HuRI')
+\stopverb}
+}
+
+\subtree{
+\title{4. Other Multi-Prediction Tasks}
+\ul{
+\li{\strong{GDA}: Gene-disease associations}
+\li{\strong{DrugRes}: Drug resistance prediction}
+\li{\strong{DrugSyn}: Drug synergy prediction}
+\li{\strong{PeptideMHC}: Peptide-MHC binding}
+\li{\strong{AntibodyAff}: Antibody affinity prediction}
+\li{\strong{MTI}: miRNA-target interactions}
+\li{\strong{Catalyst}: Catalyst prediction}
+\li{\strong{TrialOutcome}: Clinical trial outcome prediction}
+}
+}
+}
+}
+
+\subtree{
+\title{Generation Tasks}
+\p{Generation tasks involve creating novel biomedical entities with desired properties.}
+
+\subtree{
+\title{1. Molecular Generation (MolGen)}
+\p{Generate diverse, novel molecules with desirable chemical properties.}
+
+\pre{\startverb
+from tdc.generation import MolGen
+data = MolGen(name='ChEMBL_V29')
+split = data.get_split()
+\stopverb}
+
+\p{Use with oracles to optimize for specific properties:}
+
+\pre{\startverb
+from tdc import Oracle
+oracle = Oracle(name='GSK3B')
+score = oracle('CC(C)Cc1ccc(cc1)C(C)C(O)=O')  # Evaluate SMILES
+\stopverb}
+
+\p{See \code{\startverb references/oracles.md\stopverb} for all available oracle functions.}
+}
+
+\subtree{
+\title{2. Retrosynthesis (RetroSyn)}
+\p{Predict reactants needed to synthesize a target molecule.}
+
+\pre{\startverb
+from tdc.generation import RetroSyn
+data = RetroSyn(name='USPTO')
+split = data.get_split()
+\stopverb}
+
+\p{Dataset contains 1,939,253 reactions from USPTO database.}
+}
+
+\subtree{
+\title{3. Paired Molecule Generation}
+\p{Generate molecule pairs (e.g., prodrug-drug pairs).}
+
+\pre{\startverb
+from tdc.generation import PairMolGen
+data = PairMolGen(name='Prodrug')
+\stopverb}
+
+\p{For detailed oracle documentation and molecular generation workflows, refer to \code{\startverb references/oracles.md\stopverb} and \code{\startverb scripts/molecular_generation.py\stopverb}.}
+}
+}
+
+\subtree{
+\title{Benchmark Groups}
+\p{Benchmark groups provide curated collections of related datasets for systematic model evaluation.}
+
+\subtree{
+\title{ADMET Benchmark Group}
+\pre{\startverb
+from tdc.benchmark_group import admet_group
+group = admet_group(path='data/')
+
+# Get benchmark datasets
+benchmark = group.get('Caco2_Wang')
+predictions = {}
+
+for seed in [1, 2, 3, 4, 5]:
+    train, valid = benchmark['train'], benchmark['valid']
+    # Train model here
+    predictions[seed] = model.predict(benchmark['test'])
+
+# Evaluate with required 5 seeds
+results = group.evaluate(predictions)
+\stopverb}
+
+\p{\strong{ADMET Group includes 22 datasets} covering absorption, distribution, metabolism, excretion, and toxicity.}
+}
+
+\subtree{
+\title{Other Benchmark Groups}
+\p{Available benchmark groups include collections for:}
+
+\ul{
+\li{ADMET properties}
+\li{Drug-target interactions}
+\li{Drug combination prediction}
+\li{And more specialized therapeutic tasks}
+}
+
+\p{For benchmark evaluation workflows, see \code{\startverb scripts/benchmark_evaluation.py\stopverb}.}
+}
+}
+
+\subtree{
+\title{Data Functions}
+\p{TDC provides comprehensive data processing utilities organized into four categories.}
+
+\subtree{
+\title{1. Dataset Splits}
+\p{Retrieve train/validation/test partitions with various strategies:}
+
+\pre{\startverb
+# Scaffold split (default for most tasks)
+split = data.get_split(method='scaffold', seed=1, frac=[0.7, 0.1, 0.2])
+
+# Random split
+split = data.get_split(method='random', seed=42, frac=[0.8, 0.1, 0.1])
+
+# Cold split (for DTI/DDI tasks)
+split = data.get_split(method='cold_drug', seed=1)  # Unseen drugs in test
+split = data.get_split(method='cold_target', seed=1)  # Unseen targets in test
+\stopverb}
+
+\p{\strong{Available split strategies:}}
+
+\ul{
+\li{\code{\startverb random\stopverb}: Random shuffling}
+\li{\code{\startverb scaffold\stopverb}: Scaffold-based (for chemical diversity)}
+\li{\code{\startverb cold_drug\stopverb}, \code{\startverb cold_target\stopverb}, \code{\startverb cold_drug_target\stopverb}: For DTI tasks}
+\li{\code{\startverb temporal\stopverb}: Time-based splits for temporal datasets}
+}
+}
+
+\subtree{
+\title{2. Model Evaluation}
+\p{Use standardized metrics for evaluation:}
+
+\pre{\startverb
+from tdc import Evaluator
+
+# For binary classification
+evaluator = Evaluator(name='ROC-AUC')
+score = evaluator(y_true, y_pred)
+
+# For regression
+evaluator = Evaluator(name='RMSE')
+score = evaluator(y_true, y_pred)
+\stopverb}
+
+\p{\strong{Available metrics:} ROC-AUC, PR-AUC, F1, Accuracy, RMSE, MAE, R2, Spearman, Pearson, and more.}
+}
+
+\subtree{
+\title{3. Data Processing}
+\p{TDC provides 11 key processing utilities:}
+
+\pre{\startverb
+from tdc.chem_utils import MolConvert
+
+# Molecule format conversion
+converter = MolConvert(src='SMILES', dst='PyG')
+pyg_graph = converter('CC(C)Cc1ccc(cc1)C(C)C(O)=O')
+\stopverb}
+
+\p{\strong{Processing utilities include:}}
+
+\ul{
+\li{Molecule format conversion (SMILES, SELFIES, PyG, DGL, ECFP, etc.)}
+\li{Molecule filters (PAINS, drug-likeness)}
+\li{Label binarization and unit conversion}
+\li{Data balancing (over/under-sampling)}
+\li{Negative sampling for pair data}
+\li{Graph transformation}
+\li{Entity retrieval (CID to SMILES, UniProt to sequence)}
+}
+
+\p{For comprehensive utilities documentation, see \code{\startverb references/utilities.md\stopverb}.}
+}
+
+\subtree{
+\title{4. Molecule Generation Oracles}
+\p{TDC provides 17+ oracle functions for molecular optimization:}
+
+\pre{\startverb
+from tdc import Oracle
+
+# Single oracle
+oracle = Oracle(name='DRD2')
+score = oracle('CC(C)Cc1ccc(cc1)C(C)C(O)=O')
+
+# Multiple oracles
+oracle = Oracle(name='JNK3')
+scores = oracle(['SMILES1', 'SMILES2', 'SMILES3'])
+\stopverb}
+
+\p{For complete oracle documentation, see \code{\startverb references/oracles.md\stopverb}.}
+}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{Retrieve Available Datasets}
+\pre{\startverb
+from tdc.utils import retrieve_dataset_names
+
+# Get all ADME datasets
+adme_datasets = retrieve_dataset_names('ADME')
+
+# Get all DTI datasets
+dti_datasets = retrieve_dataset_names('DTI')
+\stopverb}
+}
+
+\subtree{
+\title{Label Transformations}
+\pre{\startverb
+# Get label mapping
+label_map = data.get_label_map(name='DrugBank')
+
+# Convert labels
+from tdc.chem_utils import label_transform
+transformed = label_transform(y, from_unit='nM', to_unit='p')
+\stopverb}
+}
+
+\subtree{
+\title{Database Queries}
+\pre{\startverb
+from tdc.utils import cid2smiles, uniprot2seq
+
+# Convert PubChem CID to SMILES
+smiles = cid2smiles(2244)
+
+# Convert UniProt ID to amino acid sequence
+sequence = uniprot2seq('P12345')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Train a Single Prediction Model}
+\p{See \code{\startverb scripts/load_and_split_data.py\stopverb} for a complete example:}
+
+\pre{\startverb
+from tdc.single_pred import ADME
+from tdc import Evaluator
+
+# Load data
+data = ADME(name='Caco2_Wang')
+split = data.get_split(method='scaffold', seed=42)
+
+train, valid, test = split['train'], split['valid'], split['test']
+
+# Train model (user implements)
+# model.fit(train['Drug'], train['Y'])
+
+# Evaluate
+evaluator = Evaluator(name='MAE')
+# score = evaluator(test['Y'], predictions)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Benchmark Evaluation}
+\p{See \code{\startverb scripts/benchmark_evaluation.py\stopverb} for a complete example with multiple seeds and proper evaluation protocol.}
+}
+
+\subtree{
+\title{Workflow 3: Molecular Generation with Oracles}
+\p{See \code{\startverb scripts/molecular_generation.py\stopverb} for an example of goal-directed generation using oracle functions.}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes bundled resources for common TDC workflows:}
+
+\subtree{
+\title{scripts/}
+\ul{
+\li{\code{\startverb load_and_split_data.py\stopverb}: Template for loading and splitting TDC datasets with various strategies}
+\li{\code{\startverb benchmark_evaluation.py\stopverb}: Template for running benchmark group evaluations with proper 5-seed protocol}
+\li{\code{\startverb molecular_generation.py\stopverb}: Template for molecular generation using oracle functions}
+}
+}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb datasets.md\stopverb}: Comprehensive catalog of all available datasets organized by task type}
+\li{\code{\startverb oracles.md\stopverb}: Complete documentation of all 17+ molecule generation oracles}
+\li{\code{\startverb utilities.md\stopverb}: Detailed guide to data processing, splitting, and evaluation utilities}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Website}: https://tdcommons.ai}
+\li{\strong{Documentation}: https://tdc.readthedocs.io}
+\li{\strong{GitHub}: https://github.com/mims-harvard/TDC}
+\li{\strong{Paper}: NeurIPS 2021 - "Therapeutics Data Commons: Machine Learning Datasets and Tasks for Drug Discovery and Development"}
+}
+}
+}

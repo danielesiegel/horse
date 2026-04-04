@@ -1,0 +1,581 @@
+\title{Flox Publish}
+
+\taxon{skill}
+
+\meta{description}{Use for publishing user packages to flox for use in Flox environments.  Use for package distribution and sharing of builds defined in a flox environment.}
+
+\subtree{
+\title{Flox Package Publishing Guide}
+\subtree{
+\title{Core Commands}
+\pre{\startverb
+flox publish                    # Publish all packages
+flox publish my_package         # Publish single package
+flox publish -o myorg package   # Publish to organization
+flox publish -o myuser package  # Publish to personal namespace
+flox auth login                 # Authenticate before publishing
+\stopverb}
+}
+
+\subtree{
+\title{Publishing Workflow: Development to Runtime}
+\p{Publishing packages enables a clear separation between \strong{development} and \strong{runtime/consumption}:}
+
+\subtree{
+\title{The Complete Workflow}
+\p{\strong{Phase 1: Development Environment}}
+
+\pre{\startverb
+# .flox/env/manifest.toml (in git with source code)
+[install]
+gcc.pkg-path = "gcc13"
+make.pkg-path = "make"
+python.pkg-path = "python311Full"
+
+[build.myapp]
+command = '''
+  python setup.py build
+  mkdir -p $out/bin
+  cp build/myapp $out/bin/
+'''
+version = "1.0.0"
+\stopverb}
+
+\p{Developers work in this environment, commit \code{\startverb .flox/\stopverb} to git alongside source code.}
+
+\p{\strong{Phase 2: Build and Publish}}
+
+\pre{\startverb
+# Build the package
+flox build myapp
+
+# Publish to catalog
+flox publish -o myorg myapp
+\stopverb}
+
+\p{The published package contains BINARIES/ARTIFACTS (what's in \code{\startverb $out/\stopverb}), NOT source code.}
+
+\p{\strong{Phase 3: Runtime Environment}}
+
+\pre{\startverb
+# Separate environment (can be pushed to FloxHub)
+[install]
+myapp.pkg-path = "myorg/myapp"  # The published package
+\stopverb}
+
+\p{Consumers create runtime environments and install the published package. No build tools needed, no source code exposed.}
+
+\p{\strong{Key insight}: You don't install the published package back into the development environment - that would be circular. Published packages are installed into OTHER environments (different projects, production, etc.).}
+}
+}
+
+\subtree{
+\title{Publishing to Flox Catalog}
+\subtree{
+\title{Prerequisites}
+\p{Before publishing:}
+
+\ul{
+\li{Package defined in \code{\startverb [build]\stopverb} section or \code{\startverb .flox/pkgs/\stopverb}}
+\li{Environment in Git repo with configured remote}
+\li{Clean working tree (no uncommitted changes)}
+\li{Current commit pushed to remote}
+\li{All build files tracked by Git}
+\li{At least one package installed in \code{\startverb [install]\stopverb}}
+}
+}
+
+\subtree{
+\title{Authentication}
+\p{Run authentication before first publish:}
+
+\pre{\startverb
+flox auth login
+\stopverb}
+}
+
+\subtree{
+\title{Publishing Commands}
+\pre{\startverb
+# Publish single package
+flox publish my_package
+
+# Publish all packages
+flox publish
+
+# Publish to organization
+flox publish -o myorg my_package
+
+# Publish to personal namespace (for testing)
+flox publish -o mypersonalhandle my_package
+\stopverb}
+}
+
+\subtree{
+\title{Catalog Types}
+\p{\strong{Personal catalogs}: Only visible to you (good for testing)}
+
+\ul{
+\li{Published to your personal namespace}
+\li{Example: User "alice" publishes "hello" → available as \code{\startverb alice/hello\stopverb}}
+\li{Useful for testing before publishing to organization}
+}
+
+\p{\strong{Organization catalogs}: Shared with team members (paid feature)}
+
+\ul{
+\li{Published to organization namespace}
+\li{Example: Org "acme" publishes "tool" → available as \code{\startverb acme/tool\stopverb}}
+\li{All organization members can install}
+}
+}
+
+\subtree{
+\title{Build Validation}
+\p{Flox clones your repo to a temp location and performs a clean build to ensure reproducibility. Only packages that build successfully in this clean environment can be published.}
+
+\p{This validation ensures:}
+
+\ul{
+\li{All dependencies are declared}
+\li{Build is reproducible}
+\li{No reliance on local machine state}
+\li{Git repository is clean and up-to-date}
+}
+}
+
+\subtree{
+\title{After Publishing}
+\ul{
+\li{Package available in \code{\startverb flox search\stopverb}, \code{\startverb flox show\stopverb}, \code{\startverb flox install\stopverb}}
+\li{Metadata sent to Flox servers}
+\li{Package binaries uploaded to Catalog Store}
+\li{Install with: \code{\startverb flox install <catalog>/<package>\stopverb}}
+}
+
+\p{Users can then:}
+
+\pre{\startverb
+# Search for your package
+flox search my_package
+
+# See package details
+flox show myorg/my_package
+
+# Install the package
+flox install myorg/my_package
+\stopverb}
+}
+
+\subtree{
+\title{What Gets Published}
+\p{\strong{Published packages contain:}}
+
+\ul{
+\li{Binaries and compiled artifacts (everything in \code{\startverb $out/\stopverb})}
+\li{Runtime dependencies specified in \code{\startverb runtime-packages\stopverb}}
+\li{Package metadata (version, description)}
+}
+
+\p{\strong{Published packages do NOT contain:}}
+
+\ul{
+\li{Source code (unless explicitly copied to \code{\startverb $out/\stopverb})}
+\li{Build tools or build-time dependencies}
+\li{Development environment configuration}
+\li{The \code{\startverb .flox/\stopverb} directory itself}
+}
+
+\p{This separation allows you to share built artifacts without exposing source code.}
+}
+}
+
+\subtree{
+\title{Real-world Publishing Workflows}
+\subtree{
+\title{Application Development Workflow}
+\p{\strong{Developer workflow:}}
+
+\ol{
+\li{Create development environment with build tools:}
+}
+
+\ol{
+\li{Add source code and build definition to \code{\startverb .flox/env/manifest.toml\stopverb}:}
+}
+
+\ol{
+\li{Commit to git (environment definition + source code):}
+}
+
+\ol{
+\li{Build and publish package (binaries/artifacts):}
+}
+
+\p{\strong{Other developers:}}
+
+\ul{
+\li{Clone repo: \code{\startverb git clone <repo> && cd myapp && flox activate\stopverb}}
+\li{Get the same development environment with build tools}
+}
+
+\p{\strong{Consumers:}}
+
+\ul{
+\li{Create new runtime environment: \code{\startverb flox init && flox install myorg/myapp\stopverb}}
+\li{OR install into existing environment: \code{\startverb flox install myorg/myapp\stopverb}}
+\li{Get the BUILT package (binaries), not source code}
+\li{Can push runtime environment to FloxHub without exposing source}
+}
+}
+
+\subtree{
+\title{Fork-based Development Pattern}
+\ol{
+\li{Fork upstream repo (e.g., \code{\startverb user/project\stopverb} from \code{\startverb upstream/project\stopverb})}
+\li{Add \code{\startverb .flox/\stopverb} to fork with build definitions}
+\li{Commit and push: \code{\startverb git push origin main\stopverb}}
+\li{Publish package: \code{\startverb flox publish -o username package-name\stopverb}}
+\li{Others can install: \code{\startverb flox install username/package-name\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Versioning Strategies}
+\subtree{
+\title{Semantic Versioning}
+\pre{\startverb
+[build.mytool]
+version = "1.2.3"  # Major.Minor.Patch
+description = "My awesome tool"
+\stopverb}
+}
+
+\subtree{
+\title{Git-based Versioning}
+\pre{\startverb
+[build.mytool]
+version.command = "git describe --tags"
+description = "My awesome tool"
+\stopverb}
+}
+
+\subtree{
+\title{File-based Versioning}
+\pre{\startverb
+[build.mytool]
+version.file = "VERSION.txt"
+description = "My awesome tool"
+\stopverb}
+}
+
+\subtree{
+\title{Dynamic Versioning from Source}
+\pre{\startverb
+[build.rustapp]
+version.command = "cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version'"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Publishing Multiple Variants}
+\p{You can publish multiple variants of the same project:}
+
+\pre{\startverb
+[build.myapp]
+command = '''
+  cargo build --release
+  mkdir -p $out/bin
+  cp target/release/myapp $out/bin/
+'''
+version = "1.0.0"
+description = "Production build"
+sandbox = "pure"
+
+[build.myapp-debug]
+command = '''
+  cargo build
+  mkdir -p $out/bin
+  cp target/debug/myapp $out/bin/myapp-debug
+'''
+version = "1.0.0"
+description = "Debug build with symbols"
+sandbox = "off"
+\stopverb}
+
+\p{Both can be published and users can choose which to install.}
+}
+
+\subtree{
+\title{Testing Before Publishing}
+\subtree{
+\title{Local Testing}
+\ol{
+\li{Build the package:}
+}
+
+\pre{\startverb
+flox build myapp
+\stopverb}
+
+\ol{
+\li{Test the built artifact:}
+}
+
+\pre{\startverb
+./result-myapp/bin/myapp --version
+\stopverb}
+
+\ol{
+\li{Install locally to test:}
+}
+
+\pre{\startverb
+flox install ./result-myapp
+\stopverb}
+}
+
+\subtree{
+\title{Personal Catalog Testing}
+\p{Publish to your personal namespace first:}
+
+\pre{\startverb
+flox publish -o myusername myapp
+\stopverb}
+
+\p{Then test installation:}
+
+\pre{\startverb
+flox install myusername/myapp
+\stopverb}
+
+\p{Once validated, republish to organization:}
+
+\pre{\startverb
+flox publish -o myorg myapp
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Gotchas}
+\subtree{
+\title{Branch names}
+\p{Many repos use \code{\startverb master\stopverb} not \code{\startverb main\stopverb} - check with \code{\startverb git branch\stopverb}}
+}
+
+\subtree{
+\title{Auth required}
+\p{Run \code{\startverb flox auth login\stopverb} before first publish}
+}
+
+\subtree{
+\title{Clean git state}
+\p{Commit and push ALL changes before \code{\startverb flox publish\stopverb}:}
+
+\pre{\startverb
+git status  # Check for uncommitted changes
+git add .flox/
+git commit -m "Add flox build configuration"
+git push origin master
+\stopverb}
+}
+
+\subtree{
+\title{runtime-packages}
+\p{List only what package needs at runtime, not build deps:}
+
+\pre{\startverb
+[install]
+gcc.pkg-path = "gcc"
+make.pkg-path = "make"
+
+[build.myapp]
+command = '''make && cp myapp $out/bin/'''
+runtime-packages = []  # No runtime deps needed
+\stopverb}
+}
+
+\subtree{
+\title{Git-tracked files only}
+\p{All files referenced in build must be tracked:}
+
+\pre{\startverb
+git add .flox/pkgs/*
+git add src/
+git commit -m "Add build files"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Publishing Nix Expression Builds}
+\p{For Nix expression builds in \code{\startverb .flox/pkgs/\stopverb}:}
+
+\ol{
+\li{Create the Nix expression:}
+}
+
+\pre{\startverb
+mkdir -p .flox/pkgs
+cat > .flox/pkgs/hello.nix << 'EOF'
+{ hello }:
+hello.overrideAttrs (oldAttrs: {
+  patches = (oldAttrs.patches or []) ++ [ ./my.patch ];
+})
+EOF
+\stopverb}
+
+\ol{
+\li{Track with Git:}
+}
+
+\pre{\startverb
+git add .flox/pkgs/*
+git commit -m "Add hello package"
+git push
+\stopverb}
+
+\ol{
+\li{Publish:}
+}
+
+\pre{\startverb
+flox publish hello
+\stopverb}
+}
+
+\subtree{
+\title{Publishing Configuration and Assets}
+\p{You can publish non-code artifacts:}
+
+\subtree{
+\title{Configuration templates}
+\pre{\startverb
+[build.nginx-config]
+command = '''
+  mkdir -p $out/etc
+  cp nginx.conf $out/etc/
+  cp -r conf.d $out/etc/
+'''
+version = "1.0.0"
+description = "Organization Nginx configuration"
+\stopverb}
+}
+
+\subtree{
+\title{Protocol buffers}
+\pre{\startverb
+[build.api-proto]
+command = '''
+  mkdir -p $out/share/proto
+  cp proto/**/*.proto $out/share/proto/
+'''
+version = "2.1.0"
+description = "API protocol definitions"
+\stopverb}
+
+\p{Teams install and reference via \code{\startverb $FLOX_ENV/etc/\stopverb} or \code{\startverb $FLOX_ENV/share/\stopverb}.}
+}
+}
+
+\subtree{
+\title{Continuous Integration Publishing}
+\subtree{
+\title{GitHub Actions Example}
+\pre{\startverb
+name: Publish to Flox
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Flox
+        run: |
+          curl -fsSL https://downloads.flox.dev/by-env/stable/install | bash
+
+      - name: Authenticate
+        env:
+          FLOX_AUTH_TOKEN: ${{ secrets.FLOX_AUTH_TOKEN }}
+        run: flox auth login --token "$FLOX_AUTH_TOKEN"
+
+      - name: Publish package
+        run: flox publish -o myorg mypackage
+\stopverb}
+}
+
+\subtree{
+\title{GitLab CI Example}
+\pre{\startverb
+publish:
+  stage: deploy
+  only:
+    - tags
+  script:
+    - curl -fsSL https://downloads.flox.dev/by-env/stable/install | bash
+    - flox auth login --token "$FLOX_AUTH_TOKEN"
+    - flox publish -o myorg mypackage
+\stopverb}
+}
+}
+
+\subtree{
+\title{Package Metadata Best Practices}
+\subtree{
+\title{Good Descriptions}
+\pre{\startverb
+[build.cli]
+description = "High-performance log shipper with filtering"  # Good: specific, descriptive
+
+# Avoid:
+# description = "My tool"  # Too vague
+# description = "CLI"      # Not descriptive enough
+\stopverb}
+}
+
+\subtree{
+\title{Proper Versioning}
+\ul{
+\li{Use semantic versioning: MAJOR.MINOR.PATCH}
+\li{Increment MAJOR for breaking changes}
+\li{Increment MINOR for new features}
+\li{Increment PATCH for bug fixes}
+}
+}
+
+\subtree{
+\title{Runtime Dependencies}
+\p{Only include what's actually needed at runtime:}
+
+\pre{\startverb
+[install]
+# Build-time only
+gcc.pkg-path = "gcc"
+make.pkg-path = "make"
+# Runtime dependency
+libssl.pkg-path = "openssl"
+
+[build.myapp]
+runtime-packages = ["libssl"]  # Only runtime deps
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{flox-builds} - Building packages before publishing, dual-environment workflow}
+\li{\strong{flox-environments} - Setting up development and runtime environments}
+\li{\strong{flox-sharing} - Sharing environment definitions (via git or FloxHub) vs publishing packages (binaries/artifacts)}
+}
+}
+}

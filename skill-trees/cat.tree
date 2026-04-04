@@ -1,0 +1,167 @@
+\title{Cat}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{"cat Skill: Derivational Pipe Chaining"}
+
+\subtree{
+\title{cat Skill: Derivational Pipe Chaining}
+\p{\strong{Trit}: 0 (ERGODIC - coordinator) \strong{Color}: #26D826 (Green) \strong{Principle}: Chain operations via derivational succession, not temporal}
+
+\subtree{
+\title{Overview}
+\p{The \code{\startverb cat\stopverb} skill implements the \code{\startverb |>\stopverb} pipe operator using \strong{derivational chaining} instead of temporal succession. Each pipe stage advances a seed: \code{\startverb seed_{n+1} = f(seed_n, trit_n)\stopverb}.}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+pipe_chain: A |> f |> g |> h
+  seed₀ → f(seed₀, trit_f) → seed₁
+  seed₁ → g(seed₁, trit_g) → seed₂  
+  seed₂ → h(seed₂, trit_h) → seed₃
+
+GF(3) conservation: Σ(trit_f + trit_g + trit_h) ≡ 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{Babashka Implementation}
+\pre{\startverb
+(ns cat.pipe
+  (:require [clojure.string :as str]))
+
+(def GAMMA 0x9E3779B97F4A7C15)
+(def MIX 0xBF58476D1CE4E5B9)
+(def MASK64 0xFFFFFFFFFFFFFFFF)
+
+(defn chain-seed [seed trit]
+  (bit-and (unchecked-multiply 
+             (bit-xor seed (* trit GAMMA)) 
+             MIX) 
+           MASK64))
+
+(defmacro |> 
+  "Derivational pipe with GF(3) tracking"
+  [seed & forms]
+  (reduce (fn [acc [f trit]]
+            `(let [result# (~f ~acc)
+                   new-seed# (chain-seed (:seed ~acc) ~trit)]
+               (assoc result# :seed new-seed# :trit ~trit)))
+          `{:value ~seed :seed 0x42D :trit 0}
+          (partition 2 forms)))
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Pipe with GF(3) conservation
+bb -e "(require '[cat.pipe :refer [|>]])
+       (|> 'input' 
+           [read-fn -1]      ; MINUS: validate
+           [transform-fn 0]  ; ERGODIC: coordinate
+           [write-fn +1])    ; PLUS: generate
+       ; => GF(3) sum = 0 ✓"
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run pipe chain
+just cat-pipe 'input' -1 0 +1
+
+# Verify GF(3) conservation
+just cat-verify-gf3 chain.edn
+\stopverb}
+}
+
+\subtree{
+\title{Integration}
+\p{Forms triads with temporal-coalgebra (-1) and synthetic-adjunctions (+1):}
+
+\pre{\startverb
+temporal-coalgebra (-1) ⊗ cat (0) ⊗ synthetic-adjunctions (+1) = 0 ✓
+\stopverb}
+
+\p{\strong{Skill Name}: cat \strong{Type}: Pipe Coordinator \strong{Trit}: 0 (ERGODIC) \strong{Replaces}: dypler-mcp (not found in npm)}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb category-theory\stopverb}: 139 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 3. Variations on an Arithmetic Theme}
+\p{\strong{Concepts}: generic arithmetic, coercion, symbolic, numeric}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+cat (−) + SDF.Ch3 (○) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch2: Domain-Specific Languages}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Generic arithmetic crosses type boundaries. This skill handles heterogeneous data.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

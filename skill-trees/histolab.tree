@@ -1,0 +1,829 @@
+\title{Histolab}
+
+\taxon{skill}
+
+\meta{description}{Digital pathology image processing toolkit for whole slide images (WSI). Use this skill when working with histopathology slides, processing H&E or IHC stained tissue images, extracting tiles from gigapixel pathology images, detecting tissue regions, segmenting tissue masks, or preparing datasets for computational pathology deep learning pipelines. Applies to WSI formats (SVS, TIFF, NDPI), tile-based analysis, and histological image preprocessing workflows.}
+
+\subtree{
+\title{Histolab}
+\subtree{
+\title{Overview}
+\p{Histolab is a Python library for processing whole slide images (WSI) in digital pathology. It automates tissue detection, extracts informative tiles from gigapixel images, and prepares datasets for deep learning pipelines. The library handles multiple WSI formats, implements sophisticated tissue segmentation, and provides flexible tile extraction strategies.}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install histolab
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Basic workflow for extracting tiles from a whole slide image:}
+
+\pre{\startverb
+from histolab.slide import Slide
+from histolab.tiler import RandomTiler
+
+# Load slide
+slide = Slide("slide.svs", processed_path="output/")
+
+# Configure tiler
+tiler = RandomTiler(
+    tile_size=(512, 512),
+    n_tiles=100,
+    level=0,
+    seed=42
+)
+
+# Preview tile locations
+tiler.locate_tiles(slide, n_tiles=20)
+
+# Extract tiles
+tiler.extract(slide)
+\stopverb}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Slide Management}
+\p{Load, inspect, and work with whole slide images in various formats.}
+
+\p{\strong{Common operations:}}
+
+\ul{
+\li{Loading WSI files (SVS, TIFF, NDPI, etc.)}
+\li{Accessing slide metadata (dimensions, magnification, properties)}
+\li{Generating thumbnails for visualization}
+\li{Working with pyramidal image structures}
+\li{Extracting regions at specific coordinates}
+}
+
+\p{\strong{Key classes:} \code{\startverb Slide\stopverb}}
+
+\p{\strong{Reference:} \code{\startverb references/slide_management.md\stopverb} contains comprehensive documentation on:}
+
+\ul{
+\li{Slide initialization and configuration}
+\li{Built-in sample datasets (prostate, ovarian, breast, heart, kidney tissues)}
+\li{Accessing slide properties and metadata}
+\li{Thumbnail generation and visualization}
+\li{Working with pyramid levels}
+\li{Multi-slide processing workflows}
+}
+
+\p{\strong{Example workflow:}}
+
+\pre{\startverb
+from histolab.slide import Slide
+from histolab.data import prostate_tissue
+
+# Load sample data
+prostate_svs, prostate_path = prostate_tissue()
+
+# Initialize slide
+slide = Slide(prostate_path, processed_path="output/")
+
+# Inspect properties
+print(f"Dimensions: {slide.dimensions}")
+print(f"Levels: {slide.levels}")
+print(f"Magnification: {slide.properties.get('openslide.objective-power')}")
+
+# Save thumbnail
+slide.save_thumbnail()
+\stopverb}
+}
+
+\subtree{
+\title{2. Tissue Detection and Masks}
+\p{Automatically identify tissue regions and filter background/artifacts.}
+
+\p{\strong{Common operations:}}
+
+\ul{
+\li{Creating binary tissue masks}
+\li{Detecting largest tissue region}
+\li{Excluding background and artifacts}
+\li{Custom tissue segmentation}
+\li{Removing pen annotations}
+}
+
+\p{\strong{Key classes:} \code{\startverb TissueMask\stopverb}, \code{\startverb BiggestTissueBoxMask\stopverb}, \code{\startverb BinaryMask\stopverb}}
+
+\p{\strong{Reference:} \code{\startverb references/tissue_masks.md\stopverb} contains comprehensive documentation on:}
+
+\ul{
+\li{TissueMask: Segments all tissue regions using automated filters}
+\li{BiggestTissueBoxMask: Returns bounding box of largest tissue region (default)}
+\li{BinaryMask: Base class for custom mask implementations}
+\li{Visualizing masks with \code{\startverb locate_mask()\stopverb}}
+\li{Creating custom rectangular and annotation-exclusion masks}
+\li{Mask integration with tile extraction}
+\li{Best practices and troubleshooting}
+}
+
+\p{\strong{Example workflow:}}
+
+\pre{\startverb
+from histolab.masks import TissueMask, BiggestTissueBoxMask
+
+# Create tissue mask for all tissue regions
+tissue_mask = TissueMask()
+
+# Visualize mask on slide
+slide.locate_mask(tissue_mask)
+
+# Get mask array
+mask_array = tissue_mask(slide)
+
+# Use largest tissue region (default for most extractors)
+biggest_mask = BiggestTissueBoxMask()
+\stopverb}
+
+\p{\strong{When to use each mask:}}
+
+\ul{
+\li{\code{\startverb TissueMask\stopverb}: Multiple tissue sections, comprehensive analysis}
+\li{\code{\startverb BiggestTissueBoxMask\stopverb}: Single main tissue section, exclude artifacts (default)}
+\li{Custom \code{\startverb BinaryMask\stopverb}: Specific ROI, exclude annotations, custom segmentation}
+}
+}
+
+\subtree{
+\title{3. Tile Extraction}
+\p{Extract smaller regions from large WSI using different strategies.}
+
+\p{\strong{Three extraction strategies:}}
+
+\p{\strong{RandomTiler:} Extract fixed number of randomly positioned tiles}
+
+\ul{
+\li{Best for: Sampling diverse regions, exploratory analysis, training data}
+\li{Key parameters: \code{\startverb n_tiles\stopverb}, \code{\startverb seed\stopverb} for reproducibility}
+}
+
+\p{\strong{GridTiler:} Systematically extract tiles across tissue in grid pattern}
+
+\ul{
+\li{Best for: Complete coverage, spatial analysis, reconstruction}
+\li{Key parameters: \code{\startverb pixel_overlap\stopverb} for sliding windows}
+}
+
+\p{\strong{ScoreTiler:} Extract top-ranked tiles based on scoring functions}
+
+\ul{
+\li{Best for: Most informative regions, quality-driven selection}
+\li{Key parameters: \code{\startverb scorer\stopverb} (NucleiScorer, CellularityScorer, custom)}
+}
+
+\p{\strong{Common parameters:}}
+
+\ul{
+\li{\code{\startverb tile_size\stopverb}: Tile dimensions (e.g., (512, 512))}
+\li{\code{\startverb level\stopverb}: Pyramid level for extraction (0 = highest resolution)}
+\li{\code{\startverb check_tissue\stopverb}: Filter tiles by tissue content}
+\li{\code{\startverb tissue_percent\stopverb}: Minimum tissue coverage (default 80\%)}
+\li{\code{\startverb extraction_mask\stopverb}: Mask defining extraction region}
+}
+
+\p{\strong{Reference:} \code{\startverb references/tile_extraction.md\stopverb} contains comprehensive documentation on:}
+
+\ul{
+\li{Detailed explanation of each tiler strategy}
+\li{Available scorers (NucleiScorer, CellularityScorer, custom)}
+\li{Tile preview with \code{\startverb locate_tiles()\stopverb}}
+\li{Extraction workflows and reporting}
+\li{Advanced patterns (multi-level, hierarchical extraction)}
+\li{Performance optimization and troubleshooting}
+}
+
+\p{\strong{Example workflows:}}
+
+\pre{\startverb
+from histolab.tiler import RandomTiler, GridTiler, ScoreTiler
+from histolab.scorer import NucleiScorer
+
+# Random sampling (fast, diverse)
+random_tiler = RandomTiler(
+    tile_size=(512, 512),
+    n_tiles=100,
+    level=0,
+    seed=42,
+    check_tissue=True,
+    tissue_percent=80.0
+)
+random_tiler.extract(slide)
+
+# Grid coverage (comprehensive)
+grid_tiler = GridTiler(
+    tile_size=(512, 512),
+    level=0,
+    pixel_overlap=0,
+    check_tissue=True
+)
+grid_tiler.extract(slide)
+
+# Score-based selection (most informative)
+score_tiler = ScoreTiler(
+    tile_size=(512, 512),
+    n_tiles=50,
+    scorer=NucleiScorer(),
+    level=0
+)
+score_tiler.extract(slide, report_path="tiles_report.csv")
+\stopverb}
+
+\p{\strong{Always preview before extracting:}}
+
+\pre{\startverb
+# Preview tile locations on thumbnail
+tiler.locate_tiles(slide, n_tiles=20)
+\stopverb}
+}
+
+\subtree{
+\title{4. Filters and Preprocessing}
+\p{Apply image processing filters for tissue detection, quality control, and preprocessing.}
+
+\p{\strong{Filter categories:}}
+
+\p{\strong{Image Filters:} Color space conversions, thresholding, contrast enhancement}
+
+\ul{
+\li{\code{\startverb RgbToGrayscale\stopverb}, \code{\startverb RgbToHsv\stopverb}, \code{\startverb RgbToHed\stopverb}}
+\li{\code{\startverb OtsuThreshold\stopverb}, \code{\startverb AdaptiveThreshold\stopverb}}
+\li{\code{\startverb StretchContrast\stopverb}, \code{\startverb HistogramEqualization\stopverb}}
+}
+
+\p{\strong{Morphological Filters:} Structural operations on binary images}
+
+\ul{
+\li{\code{\startverb BinaryDilation\stopverb}, \code{\startverb BinaryErosion\stopverb}}
+\li{\code{\startverb BinaryOpening\stopverb}, \code{\startverb BinaryClosing\stopverb}}
+\li{\code{\startverb RemoveSmallObjects\stopverb}, \code{\startverb RemoveSmallHoles\stopverb}}
+}
+
+\p{\strong{Composition:} Chain multiple filters together}
+
+\ul{
+\li{\code{\startverb Compose\stopverb}: Create filter pipelines}
+}
+
+\p{\strong{Reference:} \code{\startverb references/filters_preprocessing.md\stopverb} contains comprehensive documentation on:}
+
+\ul{
+\li{Detailed explanation of each filter type}
+\li{Filter composition and chaining}
+\li{Common preprocessing pipelines (tissue detection, pen removal, nuclei enhancement)}
+\li{Applying filters to tiles}
+\li{Custom mask filters}
+\li{Quality control filters (blur detection, tissue coverage)}
+\li{Best practices and troubleshooting}
+}
+
+\p{\strong{Example workflows:}}
+
+\pre{\startverb
+from histolab.filters.compositions import Compose
+from histolab.filters.image_filters import RgbToGrayscale, OtsuThreshold
+from histolab.filters.morphological_filters import (
+    BinaryDilation, RemoveSmallHoles, RemoveSmallObjects
+)
+
+# Standard tissue detection pipeline
+tissue_detection = Compose([
+    RgbToGrayscale(),
+    OtsuThreshold(),
+    BinaryDilation(disk_size=5),
+    RemoveSmallHoles(area_threshold=1000),
+    RemoveSmallObjects(area_threshold=500)
+])
+
+# Use with custom mask
+from histolab.masks import TissueMask
+custom_mask = TissueMask(filters=tissue_detection)
+
+# Apply filters to tile
+from histolab.tile import Tile
+filtered_tile = tile.apply_filters(tissue_detection)
+\stopverb}
+}
+
+\subtree{
+\title{5. Visualization}
+\p{Visualize slides, masks, tile locations, and extraction quality.}
+
+\p{\strong{Common visualization tasks:}}
+
+\ul{
+\li{Displaying slide thumbnails}
+\li{Visualizing tissue masks}
+\li{Previewing tile locations}
+\li{Assessing tile quality}
+\li{Creating reports and figures}
+}
+
+\p{\strong{Reference:} \code{\startverb references/visualization.md\stopverb} contains comprehensive documentation on:}
+
+\ul{
+\li{Slide thumbnail display and saving}
+\li{Mask visualization with \code{\startverb locate_mask()\stopverb}}
+\li{Tile location preview with \code{\startverb locate_tiles()\stopverb}}
+\li{Displaying extracted tiles and mosaics}
+\li{Quality assessment (score distributions, top vs bottom tiles)}
+\li{Multi-slide visualization}
+\li{Filter effect visualization}
+\li{Exporting high-resolution figures and PDF reports}
+\li{Interactive visualization in Jupyter notebooks}
+}
+
+\p{\strong{Example workflows:}}
+
+\pre{\startverb
+import matplotlib.pyplot as plt
+from histolab.masks import TissueMask
+
+# Display slide thumbnail
+plt.figure(figsize=(10, 10))
+plt.imshow(slide.thumbnail)
+plt.title(f"Slide: {slide.name}")
+plt.axis('off')
+plt.show()
+
+# Visualize tissue mask
+tissue_mask = TissueMask()
+slide.locate_mask(tissue_mask)
+
+# Preview tile locations
+tiler = RandomTiler(tile_size=(512, 512), n_tiles=50)
+tiler.locate_tiles(slide, n_tiles=20)
+
+# Display extracted tiles in grid
+from pathlib import Path
+from PIL import Image
+
+tile_paths = list(Path("output/tiles/").glob("*.png"))[:16]
+fig, axes = plt.subplots(4, 4, figsize=(12, 12))
+axes = axes.ravel()
+
+for idx, tile_path in enumerate(tile_paths):
+    tile_img = Image.open(tile_path)
+    axes[idx].imshow(tile_img)
+    axes[idx].set_title(tile_path.stem, fontsize=8)
+    axes[idx].axis('off')
+
+plt.tight_layout()
+plt.show()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Typical Workflows}
+\subtree{
+\title{Workflow 1: Exploratory Tile Extraction}
+\p{Quick sampling of diverse tissue regions for initial analysis.}
+
+\pre{\startverb
+from histolab.slide import Slide
+from histolab.tiler import RandomTiler
+import logging
+
+# Enable logging for progress tracking
+logging.basicConfig(level=logging.INFO)
+
+# Load slide
+slide = Slide("slide.svs", processed_path="output/random_tiles/")
+
+# Inspect slide
+print(f"Dimensions: {slide.dimensions}")
+print(f"Levels: {slide.levels}")
+slide.save_thumbnail()
+
+# Configure random tiler
+random_tiler = RandomTiler(
+    tile_size=(512, 512),
+    n_tiles=100,
+    level=0,
+    seed=42,
+    check_tissue=True,
+    tissue_percent=80.0
+)
+
+# Preview locations
+random_tiler.locate_tiles(slide, n_tiles=20)
+
+# Extract tiles
+random_tiler.extract(slide)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Comprehensive Grid Extraction}
+\p{Complete tissue coverage for whole-slide analysis.}
+
+\pre{\startverb
+from histolab.slide import Slide
+from histolab.tiler import GridTiler
+from histolab.masks import TissueMask
+
+# Load slide
+slide = Slide("slide.svs", processed_path="output/grid_tiles/")
+
+# Use TissueMask for all tissue sections
+tissue_mask = TissueMask()
+slide.locate_mask(tissue_mask)
+
+# Configure grid tiler
+grid_tiler = GridTiler(
+    tile_size=(512, 512),
+    level=1,  # Use level 1 for faster extraction
+    pixel_overlap=0,
+    check_tissue=True,
+    tissue_percent=70.0
+)
+
+# Preview grid
+grid_tiler.locate_tiles(slide)
+
+# Extract all tiles
+grid_tiler.extract(slide, extraction_mask=tissue_mask)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 3: Quality-Driven Tile Selection}
+\p{Extract most informative tiles based on nuclei density.}
+
+\pre{\startverb
+from histolab.slide import Slide
+from histolab.tiler import ScoreTiler
+from histolab.scorer import NucleiScorer
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load slide
+slide = Slide("slide.svs", processed_path="output/scored_tiles/")
+
+# Configure score tiler
+score_tiler = ScoreTiler(
+    tile_size=(512, 512),
+    n_tiles=50,
+    level=0,
+    scorer=NucleiScorer(),
+    check_tissue=True
+)
+
+# Preview top tiles
+score_tiler.locate_tiles(slide, n_tiles=15)
+
+# Extract with report
+score_tiler.extract(slide, report_path="tiles_report.csv")
+
+# Analyze scores
+report_df = pd.read_csv("tiles_report.csv")
+plt.hist(report_df['score'], bins=20, edgecolor='black')
+plt.xlabel('Tile Score')
+plt.ylabel('Frequency')
+plt.title('Distribution of Tile Scores')
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 4: Multi-Slide Processing Pipeline}
+\p{Process entire slide collection with consistent parameters.}
+
+\pre{\startverb
+from pathlib import Path
+from histolab.slide import Slide
+from histolab.tiler import RandomTiler
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+# Configure tiler once
+tiler = RandomTiler(
+    tile_size=(512, 512),
+    n_tiles=50,
+    level=0,
+    seed=42,
+    check_tissue=True
+)
+
+# Process all slides
+slide_dir = Path("slides/")
+output_base = Path("output/")
+
+for slide_path in slide_dir.glob("*.svs"):
+    print(f"\nProcessing: {slide_path.name}")
+
+    # Create slide-specific output directory
+    output_dir = output_base / slide_path.stem
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load and process slide
+    slide = Slide(slide_path, processed_path=output_dir)
+
+    # Save thumbnail for review
+    slide.save_thumbnail()
+
+    # Extract tiles
+    tiler.extract(slide)
+
+    print(f"Completed: {slide_path.name}")
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 5: Custom Tissue Detection and Filtering}
+\p{Handle slides with artifacts, annotations, or unusual staining.}
+
+\pre{\startverb
+from histolab.slide import Slide
+from histolab.masks import TissueMask
+from histolab.tiler import RandomTiler
+from histolab.filters.compositions import Compose
+from histolab.filters.image_filters import RgbToGrayscale, OtsuThreshold
+from histolab.filters.morphological_filters import (
+    BinaryDilation, RemoveSmallObjects, RemoveSmallHoles
+)
+
+# Define custom filter pipeline for aggressive artifact removal
+aggressive_filters = Compose([
+    RgbToGrayscale(),
+    OtsuThreshold(),
+    BinaryDilation(disk_size=10),
+    RemoveSmallHoles(area_threshold=5000),
+    RemoveSmallObjects(area_threshold=3000)  # Remove larger artifacts
+])
+
+# Create custom mask
+custom_mask = TissueMask(filters=aggressive_filters)
+
+# Load slide and visualize mask
+slide = Slide("slide.svs", processed_path="output/")
+slide.locate_mask(custom_mask)
+
+# Extract with custom mask
+tiler = RandomTiler(tile_size=(512, 512), n_tiles=100)
+tiler.extract(slide, extraction_mask=custom_mask)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Slide Loading and Inspection}
+\ol{
+\li{Always inspect slide properties before processing}
+\li{Save thumbnails for quick visual review}
+\li{Check pyramid levels and dimensions}
+\li{Verify tissue is present using thumbnails}
+}
+}
+
+\subtree{
+\title{Tissue Detection}
+\ol{
+\li{Preview masks with \code{\startverb locate_mask()\stopverb} before extraction}
+\li{Use \code{\startverb TissueMask\stopverb} for multiple sections, \code{\startverb BiggestTissueBoxMask\stopverb} for single sections}
+\li{Customize filters for specific stains (H&E vs IHC)}
+\li{Handle pen annotations with custom masks}
+\li{Test masks on diverse slides}
+}
+}
+
+\subtree{
+\title{Tile Extraction}
+\ol{
+\li{\strong{Always preview with \code{\startverb locate_tiles()\stopverb} before extracting}}
+\li{Choose appropriate tiler:}
+\li{RandomTiler: Sampling and exploration}
+\li{GridTiler: Complete coverage}
+\li{ScoreTiler: Quality-driven selection}
+\li{Set appropriate \code{\startverb tissue_percent\stopverb} threshold (70-90\% typical)}
+\li{Use seeds for reproducibility in RandomTiler}
+\li{Extract at appropriate pyramid level for analysis resolution}
+\li{Enable logging for large datasets}
+}
+}
+
+\subtree{
+\title{Performance}
+\ol{
+\li{Extract at lower levels (1, 2) for faster processing}
+\li{Use \code{\startverb BiggestTissueBoxMask\stopverb} over \code{\startverb TissueMask\stopverb} when appropriate}
+\li{Adjust \code{\startverb tissue_percent\stopverb} to reduce invalid tile attempts}
+\li{Limit \code{\startverb n_tiles\stopverb} for initial exploration}
+\li{Use \code{\startverb pixel_overlap=0\stopverb} for non-overlapping grids}
+}
+}
+
+\subtree{
+\title{Quality Control}
+\ol{
+\li{Validate tile quality (check for blur, artifacts, focus)}
+\li{Review score distributions for ScoreTiler}
+\li{Inspect top and bottom scoring tiles}
+\li{Monitor tissue coverage statistics}
+\li{Filter extracted tiles by additional quality metrics if needed}
+}
+}
+}
+
+\subtree{
+\title{Common Use Cases}
+\subtree{
+\title{Training Deep Learning Models}
+\ul{
+\li{Extract balanced datasets using RandomTiler across multiple slides}
+\li{Use ScoreTiler with NucleiScorer to focus on cell-rich regions}
+\li{Extract at consistent resolution (level 0 or level 1)}
+\li{Generate CSV reports for tracking tile metadata}
+}
+}
+
+\subtree{
+\title{Whole Slide Analysis}
+\ul{
+\li{Use GridTiler for complete tissue coverage}
+\li{Extract at multiple pyramid levels for hierarchical analysis}
+\li{Maintain spatial relationships with grid positions}
+\li{Use \code{\startverb pixel_overlap\stopverb} for sliding window approaches}
+}
+}
+
+\subtree{
+\title{Tissue Characterization}
+\ul{
+\li{Sample diverse regions with RandomTiler}
+\li{Quantify tissue coverage with masks}
+\li{Extract stain-specific information with HED decomposition}
+\li{Compare tissue patterns across slides}
+}
+}
+
+\subtree{
+\title{Quality Assessment}
+\ul{
+\li{Identify optimal focus regions with ScoreTiler}
+\li{Detect artifacts using custom masks and filters}
+\li{Assess staining quality across slide collection}
+\li{Flag problematic slides for manual review}
+}
+}
+
+\subtree{
+\title{Dataset Curation}
+\ul{
+\li{Use ScoreTiler to prioritize informative tiles}
+\li{Filter tiles by tissue percentage}
+\li{Generate reports with tile scores and metadata}
+\li{Create stratified datasets across slides and tissue types}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{No tiles extracted}
+\ul{
+\li{Lower \code{\startverb tissue_percent\stopverb} threshold}
+\li{Verify slide contains tissue (check thumbnail)}
+\li{Ensure extraction_mask captures tissue regions}
+\li{Check tile_size is appropriate for slide resolution}
+}
+}
+
+\subtree{
+\title{Many background tiles}
+\ul{
+\li{Enable \code{\startverb check_tissue=True\stopverb}}
+\li{Increase \code{\startverb tissue_percent\stopverb} threshold}
+\li{Use appropriate mask (TissueMask vs BiggestTissueBoxMask)}
+\li{Customize mask filters to better detect tissue}
+}
+}
+
+\subtree{
+\title{Extraction very slow}
+\ul{
+\li{Extract at lower pyramid level (level=1 or 2)}
+\li{Reduce \code{\startverb n_tiles\stopverb} for RandomTiler/ScoreTiler}
+\li{Use RandomTiler instead of GridTiler for sampling}
+\li{Use BiggestTissueBoxMask instead of TissueMask}
+}
+}
+
+\subtree{
+\title{Tiles have artifacts}
+\ul{
+\li{Implement custom annotation-exclusion masks}
+\li{Adjust filter parameters for artifact removal}
+\li{Increase small object removal threshold}
+\li{Apply post-extraction quality filtering}
+}
+}
+
+\subtree{
+\title{Inconsistent results across slides}
+\ul{
+\li{Use same seed for RandomTiler}
+\li{Normalize staining with preprocessing filters}
+\li{Adjust \code{\startverb tissue_percent\stopverb} per staining quality}
+\li{Implement slide-specific mask customization}
+}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes detailed reference documentation in the \code{\startverb references/\stopverb} directory:}
+
+\subtree{
+\title{references/slide_management.md}
+\p{Comprehensive guide to loading, inspecting, and working with whole slide images:}
+
+\ul{
+\li{Slide initialization and configuration}
+\li{Built-in sample datasets}
+\li{Slide properties and metadata}
+\li{Thumbnail generation and visualization}
+\li{Working with pyramid levels}
+\li{Multi-slide processing workflows}
+\li{Best practices and common patterns}
+}
+}
+
+\subtree{
+\title{references/tissue_masks.md}
+\p{Complete documentation on tissue detection and masking:}
+
+\ul{
+\li{TissueMask, BiggestTissueBoxMask, BinaryMask classes}
+\li{How tissue detection filters work}
+\li{Customizing masks with filter chains}
+\li{Visualizing masks}
+\li{Creating custom rectangular and annotation-exclusion masks}
+\li{Integration with tile extraction}
+\li{Best practices and troubleshooting}
+}
+}
+
+\subtree{
+\title{references/tile_extraction.md}
+\p{Detailed explanation of tile extraction strategies:}
+
+\ul{
+\li{RandomTiler, GridTiler, ScoreTiler comparison}
+\li{Available scorers (NucleiScorer, CellularityScorer, custom)}
+\li{Common and strategy-specific parameters}
+\li{Tile preview with locate_tiles()}
+\li{Extraction workflows and CSV reporting}
+\li{Advanced patterns (multi-level, hierarchical)}
+\li{Performance optimization}
+\li{Troubleshooting common issues}
+}
+}
+
+\subtree{
+\title{references/filters_preprocessing.md}
+\p{Complete filter reference and preprocessing guide:}
+
+\ul{
+\li{Image filters (color conversion, thresholding, contrast)}
+\li{Morphological filters (dilation, erosion, opening, closing)}
+\li{Filter composition and chaining}
+\li{Common preprocessing pipelines}
+\li{Applying filters to tiles}
+\li{Custom mask filters}
+\li{Quality control filters}
+\li{Best practices and troubleshooting}
+}
+}
+
+\subtree{
+\title{references/visualization.md}
+\p{Comprehensive visualization guide:}
+
+\ul{
+\li{Slide thumbnail display and saving}
+\li{Mask visualization techniques}
+\li{Tile location preview}
+\li{Displaying extracted tiles and creating mosaics}
+\li{Quality assessment visualizations}
+\li{Multi-slide comparison}
+\li{Filter effect visualization}
+\li{Exporting high-resolution figures and PDFs}
+\li{Interactive visualization in Jupyter notebooks}
+}
+
+\p{\strong{Usage pattern:} Reference files contain in-depth information to support workflows described in this main skill document. Load specific reference files as needed for detailed implementation guidance, troubleshooting, or advanced features.}
+}
+}
+}

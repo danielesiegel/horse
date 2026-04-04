@@ -1,0 +1,446 @@
+\title{Ctf Crypto}
+
+\taxon{skill}
+
+\meta{description}{Solve CTF cryptography challenges by identifying, analyzing, and exploiting weak crypto implementations in binaries to extract keys or decrypt data. Use for custom ciphers, weak crypto, key extraction, or algorithm identification.}
+
+\subtree{
+\title{CTF Cryptography}
+\subtree{
+\title{Purpose}
+\p{You are a cryptographic implementation investigator for CTF challenges. Your goal is to \strong{identify, analyze, and exploit cryptographic implementations} in compiled binaries to recover flags, keys, or decrypt data.}
+
+\p{Unlike real-world cryptanalysis (attacking mathematical foundations), CTF crypto-in-binaries focuses on:}
+
+\ul{
+\li{\strong{Implementation weaknesses}: Poor key management, weak RNGs, flawed custom ciphers}
+\li{\strong{Reverse engineering crypto logic}: Understanding what the binary is doing cryptographically}
+\li{\strong{Key extraction}: Finding hardcoded keys, deriving keys from weak sources}
+\li{\strong{Custom cipher analysis}: Breaking non-standard encryption schemes}
+\li{\strong{Crypto primitive identification}: Recognizing standard algorithms (AES, RSA, RC4, etc.)}
+}
+
+\p{This skill is for \strong{crypto embedded in binaries}, not pure mathematical challenges.}
+}
+
+\subtree{
+\title{Conceptual Framework}
+\p{Solving CTF crypto challenges in binaries follows a systematic investigation framework:}
+
+\subtree{
+\title{Phase 1: Crypto Detection}
+\p{\strong{Goal}: Determine if and where cryptography is used}
+
+\p{\strong{Investigation approach:}}
+
+\ul{
+\li{Search for crypto-related strings and constants}
+\li{Identify mathematical operation patterns (XOR, rotation, substitution)}
+\li{Recognize standard algorithm signatures (S-boxes, key schedules, magic constants)}
+\li{Find crypto API imports (CryptEncrypt, OpenSSL functions, etc.)}
+}
+
+\p{\strong{Key question}: "Is there crypto, and if so, what kind?"}
+}
+
+\subtree{
+\title{Phase 2: Algorithm Identification}
+\p{\strong{Goal}: Determine what cryptographic algorithm is being used}
+
+\p{\strong{Investigation approach:}}
+
+\ul{
+\li{Compare constants to known crypto constants (initialization vectors, S-boxes)}
+\li{Analyze operation patterns (rounds, block sizes, data flow)}
+\li{Match code structure to known algorithm patterns}
+\li{Check for library usage vs. custom implementation}
+}
+
+\p{\strong{Key question}: "What algorithm is this, or is it custom?"}
+}
+
+\subtree{
+\title{Phase 3: Implementation Analysis}
+\p{\strong{Goal}: Understand how the crypto is implemented and find weaknesses}
+
+\p{\strong{Investigation approach:}}
+
+\ul{
+\li{Trace key material sources (hardcoded, derived, user input)}
+\li{Analyze key generation/derivation logic}
+\li{Identify mode of operation (ECB, CBC, CTR, etc.)}
+\li{Look for implementation mistakes (IV reuse, weak RNG, etc.)}
+\li{Check for custom modifications to standard algorithms}
+}
+
+\p{\strong{Key question}: "How is it implemented, and where are the weaknesses?"}
+}
+
+\subtree{
+\title{Phase 4: Key Extraction or Breaking}
+\p{\strong{Goal}: Recover the key or break the implementation to decrypt data}
+
+\p{\strong{Investigation approach:}}
+
+\ul{
+\li{Extract hardcoded keys from binary data}
+\li{Exploit weak key derivation (predictable RNG, poor entropy)}
+\li{Break custom ciphers (frequency analysis, known-plaintext, etc.)}
+\li{Leverage implementation flaws (timing, side channels, logic errors)}
+\li{Reverse engineer decryption routines to understand transformation}
+}
+
+\p{\strong{Key question}: "How do I recover the plaintext or key?"}
+}
+}
+
+\subtree{
+\title{Core Methodologies}
+\subtree{
+\title{Methodology 1: String and Constant Analysis}
+\p{\strong{When to use}: Initial discovery phase}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Search for crypto keywords in strings}
+\li{Search for URLs, API endpoints that might receive encrypted data}
+\li{Locate large constant arrays (potential S-boxes, lookup tables)}
+\li{Compare constants to known crypto constants databases}
+\li{Follow cross-references from strings/constants to crypto functions}
+}
+
+\p{\strong{Tools}:}
+
+\ul{
+\li{\code{\startverb get-strings\stopverb} with \code{\startverb regexPattern\stopverb} for crypto keywords}
+\li{\code{\startverb get-strings\stopverb} with \code{\startverb searchString\stopverb} for algorithm names}
+\li{\code{\startverb read-memory\stopverb} to inspect constant arrays}
+\li{\code{\startverb find-cross-references\stopverb} to trace usage}
+}
+}
+
+\subtree{
+\title{Methodology 2: Pattern Recognition}
+\p{\strong{When to use}: Identifying algorithm type}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Look for characteristic loop structures (round counts)}
+\li{Identify substitution operations (table lookups)}
+\li{Recognize permutation patterns (bit shuffling)}
+\li{Spot modular arithmetic (public-key crypto)}
+\li{Match to known algorithm patterns (see patterns.md)}
+}
+
+\p{\strong{Tools}:}
+
+\ul{
+\li{\code{\startverb get-decompilation\stopverb} with context to see algorithm structure}
+\li{\code{\startverb search-decompilation\stopverb} for operation patterns}
+\li{Pattern reference (patterns.md) for recognition}
+}
+}
+
+\subtree{
+\title{Methodology 3: Data Flow Analysis}
+\p{\strong{When to use}: Understanding key management and data flow}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Trace where plaintext/ciphertext enters the system}
+\li{Follow key material from source to usage}
+\li{Identify transformation steps (encrypt, decrypt, derive)}
+\li{Map data dependencies between functions}
+\li{Find where decrypted output is used or stored}
+}
+
+\p{\strong{Tools}:}
+
+\ul{
+\li{\code{\startverb find-cross-references\stopverb} with context for data flow}
+\li{\code{\startverb rename-variables\stopverb} to clarify data roles (plaintext, key, iv)}
+\li{\code{\startverb change-variable-datatypes\stopverb} to reflect crypto types (uint8_t*, etc.)}
+}
+}
+
+\subtree{
+\title{Methodology 4: Weakness Discovery}
+\p{\strong{When to use}: Finding exploitable flaws in implementation}
+
+\p{\strong{Common implementation weaknesses in CTF challenges}:}
+
+\ul{
+\li{Hardcoded keys in binary (directly extractable)}
+\li{Weak key derivation (time-based seeds, simple XOR)}
+\li{Poor random number generation (predictable, seeded with constant)}
+\li{ECB mode (enables block analysis and manipulation)}
+\li{IV reuse or predictable IVs}
+\li{Custom ciphers with mathematical weaknesses}
+\li{Incomplete key schedules or reduced rounds}
+\li{Debug/test modes that bypass crypto}
+}
+
+\p{\strong{Investigation strategy}:}
+
+\ol{
+\li{Check if key is hardcoded (read memory at key pointer)}
+\li{Analyze RNG initialization (is seed predictable?)}
+\li{Check for mode of operation weaknesses (ECB patterns)}
+\li{Look for test/debug backdoors}
+\li{Identify custom modifications to standard algorithms}
+}
+}
+
+\subtree{
+\title{Methodology 5: Reverse Engineering Decryption}
+\p{\strong{When to use}: When you need to understand or replicate crypto logic}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Find decryption routine (may be encryption run backwards)}
+\li{Rename variables systematically (key, plaintext, ciphertext, state)}
+\li{Apply correct data types (byte arrays, word arrays)}
+\li{Document each transformation step with comments}
+\li{Replicate logic in Python script to test understanding}
+\li{Use binary's own decryption routine if possible}
+}
+
+\p{\strong{Tools}:}
+
+\ul{
+\li{\code{\startverb rename-variables\stopverb} for clarity}
+\li{\code{\startverb change-variable-datatypes\stopverb} for correctness}
+\li{\code{\startverb set-decompilation-comment\stopverb} to document understanding}
+\li{\code{\startverb set-bookmark\stopverb} to mark important crypto functions}
+}
+}
+}
+
+\subtree{
+\title{Flexible Workflow}
+\p{CTF crypto challenges vary widely, so adapt this workflow to your specific challenge:}
+
+\subtree{
+\title{Quick Triage (5 minutes)}
+\ol{
+\li{\strong{Detect}: Search for crypto strings, imports, constants}
+\li{\strong{Identify}: Quick pattern match to known algorithms}
+\li{\strong{Assess}: Is it standard crypto or custom? Strong or weak?}
+}
+}
+
+\subtree{
+\title{Deep Investigation (15-30 minutes)}
+\ol{
+\li{\strong{Understand}: Decompile crypto functions, trace data flow}
+\li{\strong{Improve}: Rename variables, fix types, document behavior}
+\li{\strong{Analyze}: Find key sources, check for weaknesses}
+\li{\strong{Exploit}: Extract keys, break weak implementations, or replicate logic}
+}
+}
+
+\subtree{
+\title{Exploitation (varies)}
+\ol{
+\li{\strong{Extract}: Pull hardcoded keys from binary data}
+\li{\strong{Break}: Exploit weak RNG, custom cipher flaws, or poor key derivation}
+\li{\strong{Decrypt}: Use recovered keys or replicated logic to get flag}
+}
+}
+
+\subtree{
+\title{Verification}
+\ol{
+\li{\strong{Test}: Verify decryption produces readable flag}
+\li{\strong{Document}: Save findings in bookmarks and comments}
+}
+}
+}
+
+\subtree{
+\title{Pattern Recognition}
+\p{For detailed cryptographic algorithm patterns and recognition techniques, see \strong{patterns.md}.}
+
+\p{Key pattern categories:}
+
+\ul{
+\li{\strong{Block ciphers}: AES, DES, Blowfish (S-boxes, rounds, key schedules)}
+\li{\strong{Stream ciphers}: RC4, ChaCha (state evolution, keystream generation)}
+\li{\strong{Public key}: RSA, ECC (modular arithmetic, large integers)}
+\li{\strong{Hash functions}: MD5, SHA family (compression, magic constants)}
+\li{\strong{Simple schemes}: XOR, substitution, custom ciphers}
+}
+}
+
+\subtree{
+\title{CTF-Specific Considerations}
+\subtree{
+\title{CTF Challenge Design Patterns}
+\p{\strong{Common CTF crypto scenarios}:}
+
+\ol{
+\li{\strong{Weak custom cipher}: Break via cryptanalysis (frequency, known-plaintext)}
+\li{\strong{Hardcoded key}: Extract from .data section}
+\li{\strong{Weak RNG}: Predict key from time-based or constant seed}
+\li{\strong{Standard crypto, weak key}: Brute-force small keyspace}
+\li{\strong{Implementation bug}: Exploit logic error to bypass crypto}
+\li{\strong{Obfuscated standard}: Recognize despite code obfuscation}
+}
+
+\p{\strong{What CTF crypto is NOT}:}
+
+\ul{
+\li{Pure mathematical cryptanalysis (breaking AES-256 mathematically)}
+\li{Side-channel attacks on hardware (timing, power analysis)}
+\li{Network protocol attacks (though may combine with binary crypto)}
+\li{Breaking modern TLS/SSL implementations}
+}
+}
+
+\subtree{
+\title{Time Management}
+\p{\strong{Prioritize based on difficulty}:}
+
+\ol{
+\li{Hardcoded keys (minutes): Search .data, extract bytes}
+\li{Weak RNG (10-15 min): Analyze seed, predict sequence}
+\li{Simple custom cipher (20-30 min): Frequency analysis, known-plaintext}
+\li{Implementation bugs (15-30 min): Find logic errors, test edge cases}
+\li{Complex custom cipher (30-60 min): Full reverse engineering and breaking}
+}
+
+\p{\strong{Know when to move on}: If you've spent 30 minutes without progress, step back and reassess or try a different challenge.}
+}
+}
+
+\subtree{
+\title{Tool Usage Patterns}
+\subtree{
+\title{Discovery Phase}
+\pre{\startverb
+get-strings regexPattern="(AES|RSA|encrypt|decrypt|crypto|cipher|key)"
+get-symbols includeExternal=true  → Check for crypto API imports
+search-decompilation pattern="(xor|sbox|round|block)"
+\stopverb}
+}
+
+\subtree{
+\title{Analysis Phase}
+\pre{\startverb
+get-decompilation includeIncomingReferences=true includeReferenceContext=true
+find-cross-references direction="both" includeContext=true
+read-memory at suspected key/S-box locations
+\stopverb}
+}
+
+\subtree{
+\title{Improvement Phase}
+\pre{\startverb
+rename-variables: {"var_1": "key", "var_2": "plaintext", "var_3": "sbox"}
+change-variable-datatypes: {"key": "uint8_t*", "block": "uint8_t[16]"}
+apply-data-type: uint8_t[256] to S-box constants
+set-decompilation-comment: Document crypto operations
+\stopverb}
+}
+
+\subtree{
+\title{Documentation Phase}
+\pre{\startverb
+set-bookmark type="Analysis" category="Crypto" → Mark crypto functions
+set-bookmark type="Note" category="Key" → Mark key locations
+set-comment → Document assumptions and findings
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\subtree{
+\title{After Binary Triage}
+\p{If binary-triage identified crypto indicators, start investigation at bookmarked locations:}
+
+\pre{\startverb
+search-bookmarks type="Warning" category="Crypto"
+search-bookmarks type="TODO" category="Crypto"
+\stopverb}
+}
+
+\subtree{
+\title{With Deep Analysis}
+\p{Use deep-analysis investigation loop for systematic crypto function analysis:}
+
+\ul{
+\li{READ → Get decompilation}
+\li{UNDERSTAND → Match to crypto patterns}
+\li{IMPROVE → Rename/retype for clarity}
+\li{VERIFY → Re-read to confirm}
+\li{FOLLOW → Trace key sources}
+\li{TRACK → Document findings}
+}
+}
+
+\subtree{
+\title{Standalone Usage}
+\p{User explicitly asks about crypto:}
+
+\ul{
+\li{"What encryption is used?"}
+\li{"Find the hardcoded key"}
+\li{"How does the custom cipher work?"}
+\li{"Extract the encryption key"}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\p{Return structured findings:}
+
+\pre{\startverb
+Crypto Analysis Summary:
+- Algorithm: [Identified algorithm or "custom cipher"]
+- Confidence: [high/medium/low]
+- Key Size: [bits/bytes]
+- Mode: [ECB, CBC, CTR, etc. if applicable]
+
+Evidence:
+- [Specific addresses, constants, code patterns]
+
+Key Material:
+- Location: [address of key]
+- Source: [hardcoded/derived/user-input]
+- Value: [key bytes if extracted]
+
+Weaknesses Found:
+- [List of exploitable weaknesses]
+
+Exploitation Strategy:
+- [How to break/bypass crypto to get flag]
+
+Database Improvements:
+- [Variables renamed, types fixed, comments added]
+
+Unanswered Questions:
+- [Further investigation needed]
+\stopverb}
+}
+
+\subtree{
+\title{Remember}
+\ul{
+\li{\strong{Generic approach}: Apply conceptual framework to any crypto implementation}
+\li{\strong{Pattern matching}: Use patterns.md for algorithm recognition}
+\li{\strong{Implementation focus}: Look for weaknesses in implementation, not mathematical breaks}
+\li{\strong{Key extraction}: Most CTF challenges have extractable or derivable keys}
+\li{\strong{Document as you go}: Crypto analysis benefits from clear variable naming}
+\li{\strong{Time-box your work}: Don't spend hours on cryptanalysis if key extraction is simpler}
+\li{\strong{Test assumptions}: Verify your understanding by replicating crypto logic}
+}
+
+\p{Your goal is to \strong{extract the flag}, not to become a cryptographer. Use implementation weaknesses, not mathematical attacks.}
+}
+}

@@ -1,0 +1,237 @@
+\title{"reasoningbank intelligence"}
+
+\taxon{skill}
+
+\meta{description}{"Implement adaptive learning with ReasoningBank for pattern recognition, strategy optimization, and continuous improvement. Use when building self-learning agents, optimizing workflows, or implementing meta-cognitive systems."}
+
+\subtree{
+\title{ReasoningBank Intelligence}
+\subtree{
+\title{What This Skill Does}
+\p{Implements ReasoningBank's adaptive learning system for AI agents to learn from experience, recognize patterns, and optimize strategies over time. Enables meta-cognitive capabilities and continuous improvement.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{agentic-flow v1.5.11+}
+\li{AgentDB v1.0.4+ (for persistence)}
+\li{Node.js 18+}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+import { ReasoningBank } from 'agentic-flow/reasoningbank';
+
+// Initialize ReasoningBank
+const rb = new ReasoningBank({
+  persist: true,
+  learningRate: 0.1,
+  adapter: 'agentdb' // Use AgentDB for storage
+});
+
+// Record task outcome
+await rb.recordExperience({
+  task: 'code_review',
+  approach: 'static_analysis_first',
+  outcome: {
+    success: true,
+    metrics: {
+      bugs_found: 5,
+      time_taken: 120,
+      false_positives: 1
+    }
+  },
+  context: {
+    language: 'typescript',
+    complexity: 'medium'
+  }
+});
+
+// Get optimal strategy
+const strategy = await rb.recommendStrategy('code_review', {
+  language: 'typescript',
+  complexity: 'high'
+});
+\stopverb}
+}
+
+\subtree{
+\title{Core Features}
+\subtree{
+\title{1. Pattern Recognition}
+\pre{\startverb
+// Learn patterns from data
+await rb.learnPattern({
+  pattern: 'api_errors_increase_after_deploy',
+  triggers: ['deployment', 'traffic_spike'],
+  actions: ['rollback', 'scale_up'],
+  confidence: 0.85
+});
+
+// Match patterns
+const matches = await rb.matchPatterns(currentSituation);
+\stopverb}
+}
+
+\subtree{
+\title{2. Strategy Optimization}
+\pre{\startverb
+// Compare strategies
+const comparison = await rb.compareStrategies('bug_fixing', [
+  'tdd_approach',
+  'debug_first',
+  'reproduce_then_fix'
+]);
+
+// Get best strategy
+const best = comparison.strategies[0];
+console.log(`Best: ${best.name} (score: ${best.score})`);
+\stopverb}
+}
+
+\subtree{
+\title{3. Continuous Learning}
+\pre{\startverb
+// Enable auto-learning from all tasks
+await rb.enableAutoLearning({
+  threshold: 0.7,        // Only learn from high-confidence outcomes
+  updateFrequency: 100   // Update models every 100 experiences
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{Meta-Learning}
+\pre{\startverb
+// Learn about learning
+await rb.metaLearn({
+  observation: 'parallel_execution_faster_for_independent_tasks',
+  confidence: 0.95,
+  applicability: {
+    task_types: ['batch_processing', 'data_transformation'],
+    conditions: ['tasks_independent', 'io_bound']
+  }
+});
+\stopverb}
+}
+
+\subtree{
+\title{Transfer Learning}
+\pre{\startverb
+// Apply knowledge from one domain to another
+await rb.transferKnowledge({
+  from: 'code_review_javascript',
+  to: 'code_review_typescript',
+  similarity: 0.8
+});
+\stopverb}
+}
+
+\subtree{
+\title{Adaptive Agents}
+\pre{\startverb
+// Create self-improving agent
+class AdaptiveAgent {
+  async execute(task: Task) {
+    // Get optimal strategy
+    const strategy = await rb.recommendStrategy(task.type, task.context);
+
+    // Execute with strategy
+    const result = await this.executeWithStrategy(task, strategy);
+
+    // Learn from outcome
+    await rb.recordExperience({
+      task: task.type,
+      approach: strategy.name,
+      outcome: result,
+      context: task.context
+    });
+
+    return result;
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with AgentDB}
+\pre{\startverb
+// Persist ReasoningBank data
+await rb.configure({
+  storage: {
+    type: 'agentdb',
+    options: {
+      database: './reasoning-bank.db',
+      enableVectorSearch: true
+    }
+  }
+});
+
+// Query learned patterns
+const patterns = await rb.query({
+  category: 'optimization',
+  minConfidence: 0.8,
+  timeRange: { last: '30d' }
+});
+\stopverb}
+}
+
+\subtree{
+\title{Performance Metrics}
+\pre{\startverb
+// Track learning effectiveness
+const metrics = await rb.getMetrics();
+console.log(`
+  Total Experiences: ${metrics.totalExperiences}
+  Patterns Learned: ${metrics.patternsLearned}
+  Strategy Success Rate: ${metrics.strategySuccessRate}
+  Improvement Over Time: ${metrics.improvement}
+`);
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Record consistently}: Log all task outcomes, not just successes}
+\li{\strong{Provide context}: Rich context improves pattern matching}
+\li{\strong{Set thresholds}: Filter low-confidence learnings}
+\li{\strong{Review periodically}: Audit learned patterns for quality}
+\li{\strong{Use vector search}: Enable semantic pattern matching}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Issue: Poor recommendations}
+\p{\strong{Solution}: Ensure sufficient training data (100+ experiences per task type)}
+}
+
+\subtree{
+\title{Issue: Slow pattern matching}
+\p{\strong{Solution}: Enable vector indexing in AgentDB}
+}
+
+\subtree{
+\title{Issue: Memory growing large}
+\p{\strong{Solution}: Set TTL for old experiences or enable pruning}
+}
+}
+
+\subtree{
+\title{Learn More}
+\ul{
+\li{ReasoningBank Guide: agentic-flow/src/reasoningbank/README.md}
+\li{AgentDB Integration: packages/agentdb/docs/reasoningbank.md}
+\li{Pattern Learning: docs/reasoning/patterns.md}
+}
+}
+}

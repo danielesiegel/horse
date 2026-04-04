@@ -1,0 +1,160 @@
+\title{Aptos Society}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'Aptos Society Scale'}
+
+\subtree{
+\title{Aptos Society Scale}
+\p{\strong{Trit}: 0 (ERGODIC - coordinator) \strong{Domain}: Compositional Game Theory × Blockchain Governance × Social Interaction Labs}
+
+\subtree{
+\title{Academic Foundations}
+\subtree{
+\title{Seth Frey (UC Davis, Ostrom Workshop)}
+\ul{
+\li{\strong{Composing Games into Complex Institutions} (PLoS ONE 2023)}
+\li{Institutional preferences laboratory experiments}
+\li{Game-theoretic institutional design with Jules Hedges}
+}
+}
+
+\subtree{
+\title{Michael Zargham (BlockScience)}
+\ul{
+\li{\strong{Computer-Aided Governance} - cadCAD simulation framework}
+\li{Token Engineering Academy foundations}
+\li{Cryptoeconomic mechanism design}
+}
+}
+
+\subtree{
+\title{Jules Hedges (Strathclyde)}
+\ul{
+\li{\strong{Open Games} - categorical game theory}
+\li{String diagram representations for institutions}
+\li{Compositional approach to strategic interaction}
+}
+}
+}
+
+\subtree{
+\title{GF(3) Triadic Skill Forcing}
+\p{Every interaction MUST load exactly 3 skills with balanced trits:}
+
+\pre{\startverb
+MINUS (-1): Validator/Constrainer (cold hues 180-300°)
+ERGODIC (0): Coordinator/Synthesizer (neutral hues 60-180°)  
+PLUS (+1): Generator/Executor (warm hues 0-60°, 300-360°)
+
+Conservation: Σ trits ≡ 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{Aptos World Wallets (26 Letters)}
+\pre{\startverb
+| Segment | Letters | Trit | Role |
+|---------|---------|------|------|
+| MINUS | A-I (9) | -1 | Validators |
+| ERGODIC | J-R (9) | 0 | Coordinators |
+| PLUS | S-Z (8) | +1 | Executors |
+\stopverb}
+}
+
+\subtree{
+\title{MCP Tools}
+\pre{\startverb
+mcp__world_{letter}_aptos__aptos_balance
+mcp__world_{letter}_aptos__aptos_transfer
+mcp__world_{letter}_aptos__aptos_swap
+mcp__world_{letter}_aptos__aptos_view
+\stopverb}
+}
+
+\subtree{
+\title{Derangement Protocol}
+\p{For seed handoff between world segments:}
+
+\ol{
+\li{XOR all addresses in segment → segment_seed}
+\li{Maximum Hamming distance reordering}
+\li{Sparsification for collision resistance}
+}
+}
+
+\subtree{
+\title{Babashka/NBB Integration}
+\pre{\startverb
+;; aptos_society.bb
+(require '[babashka.process :refer [shell]])
+
+(defn world-balance [letter]
+  (let [tool (str "mcp__world_" letter "_aptos__aptos_balance")]
+    {:world letter :tool tool}))
+
+(defn triadic-worlds []
+  {:minus (map world-balance "ABCDEFGHI")
+   :ergodic (map world-balance "JKLMNOPQR")
+   :plus (map world-balance "STUVWXYZ")})
+\stopverb}
+}
+
+\subtree{
+\title{Swift Sendable Semantics}
+\pre{\startverb
+// AptosWorld conforms to Sendable for actor isolation
+actor AptosWorld: Sendable {
+    let letter: Character
+    let trit: Int  // -1, 0, +1
+    
+    func balance() async -> Decimal
+    func transfer(to: Address, amount: Decimal) async throws
+}
+
+// Triadic dispatch
+func dispatchTriad(_ minus: AptosWorld, _ ergodic: AptosWorld, _ plus: AptosWorld) async {
+    assert(minus.trit + ergodic.trit + plus.trit == 0)  // GF(3) conservation
+    await withTaskGroup(of: Void.self) { group in
+        group.addTask { await minus.validate() }
+        group.addTask { await ergodic.coordinate() }
+        group.addTask { await plus.execute() }
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Ruler Enforcement}
+\p{Add to \code{\startverb ~/.ruler/AGENTS.md\stopverb}:}
+
+\pre{\startverb
+## Triadic Skill Forcing (Aptos Society Scale)
+
+**Rule**: Every interaction loads 3 skills with Σ trits = 0 (mod 3)
+
+1. MINUS skill: validation, constraint checking
+2. ERGODIC skill: coordination, synthesis  
+3. PLUS skill: generation, execution
+
+Verify: `(-1) + 0 + (+1) = 0 ✓`
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Frey et al. "Composing games into complex institutions" PLOS ONE 2023}
+\li{Zargham & Emmett "Computer-Aided Governance" BlockScience 2019}
+\li{Hedges "Towards compositional game theory" PhD Thesis 2016}
+\li{Ostrom "Understanding institutional diversity" Princeton 2005}
+}
+}
+
+\subtree{
+\title{NO PRIVATE INFORMATION}
+\p{This skill contains NO private keys, wallet addresses, or secrets. All wallet interactions go through MCP tools with approval flows.}
+}
+}

@@ -1,0 +1,90 @@
+\title{Notion Knowledge Capture}
+
+\taxon{skill}
+
+\meta{description}{Capture conversations and decisions into structured Notion pages; use when turning chats/notes into wiki entries, how-tos, decisions, or FAQs with proper linking.}
+
+\subtree{
+\title{Knowledge Capture}
+\p{Convert conversations and notes into structured, linkable Notion pages for easy reuse.}
+
+\subtree{
+\title{Quick start}
+\ol{
+\li{Clarify what to capture (decision, how-to, FAQ, learning, documentation) and target audience.}
+\li{Identify the right database/template in \code{\startverb reference/\stopverb} (team wiki, how-to, FAQ, decision log, learning, documentation).}
+\li{Pull any prior context from Notion with \code{\startverb Notion:notion-search\stopverb} → \code{\startverb Notion:notion-fetch\stopverb} (existing pages to update/link).}
+\li{Draft the page with \code{\startverb Notion:notion-create-pages\stopverb} using the database’s schema; include summary, context, source links, and tags/owners.}
+\li{Link from hub pages and related records; update status/owners with \code{\startverb Notion:notion-update-page\stopverb} as the source evolves.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{0) If any MCP call fails because Notion MCP is not connected, pause and set it up:}
+\ol{
+\li{Add the Notion MCP:}
+\li{\code{\startverb codex mcp add notion --url https://mcp.notion.com/mcp\stopverb}}
+\li{Enable remote MCP client:}
+\li{Set \code{\startverb [features].rmcp_client = true\stopverb} in \code{\startverb config.toml\stopverb} \strong{or} run \code{\startverb codex --enable rmcp_client\stopverb}}
+\li{Log in with OAuth:}
+\li{\code{\startverb codex mcp login notion\stopverb}}
+}
+
+\p{After successful login, the user will have to restart codex. You should finish your answer and tell them so when they try again they can continue with Step 1.}
+}
+
+\subtree{
+\title{1) Define the capture}
+\ul{
+\li{Ask purpose, audience, freshness, and whether this is new or an update.}
+\li{Determine content type: decision, how-to, FAQ, concept/wiki entry, learning/note, documentation page.}
+}
+}
+
+\subtree{
+\title{2) Locate destination}
+\ul{
+\li{Pick the correct database using \code{\startverb reference/*-database.md\stopverb} guides; confirm required properties (title, tags, owner, status, date, relations).}
+\li{If multiple candidate databases, ask the user which to use; otherwise, create in the primary wiki/documentation DB.}
+}
+}
+
+\subtree{
+\title{3) Extract and structure}
+\ul{
+\li{Extract facts, decisions, actions, and rationale from the conversation.}
+\li{For decisions, record alternatives, rationale, and outcomes.}
+\li{For how-tos/docs, capture steps, pre-reqs, links to assets/code, and edge cases.}
+\li{For FAQs, phrase as Q&A with concise answers and links to deeper docs.}
+}
+}
+
+\subtree{
+\title{4) Create/update in Notion}
+\ul{
+\li{Use \code{\startverb Notion:notion-create-pages\stopverb} with the correct \code{\startverb data_source_id\stopverb}; set properties (title, tags, owner, status, dates, relations).}
+\li{Use templates in \code{\startverb reference/\stopverb} to structure content (section headers, checklists).}
+\li{If updating an existing page, fetch then edit via \code{\startverb Notion:notion-update-page\stopverb}.}
+}
+}
+
+\subtree{
+\title{5) Link and surface}
+\ul{
+\li{Add relations/backlinks to hub pages, related specs/docs, and teams.}
+\li{Add a short summary/changelog for future readers.}
+\li{If follow-up tasks exist, create tasks in the relevant database and link them.}
+}
+}
+}
+
+\subtree{
+\title{References and examples}
+\ul{
+\li{\code{\startverb reference/\stopverb} — database schemas and templates (e.g., \code{\startverb team-wiki-database.md\stopverb}, \code{\startverb how-to-guide-database.md\stopverb}, \code{\startverb faq-database.md\stopverb}, \code{\startverb decision-log-database.md\stopverb}, \code{\startverb documentation-database.md\stopverb}, \code{\startverb learning-database.md\stopverb}, \code{\startverb database-best-practices.md\stopverb}).}
+\li{\code{\startverb examples/\stopverb} — capture patterns in practice (e.g., \code{\startverb decision-capture.md\stopverb}, \code{\startverb how-to-guide.md\stopverb}, \code{\startverb conversation-to-faq.md\stopverb}).}
+}
+}
+}

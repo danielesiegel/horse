@@ -1,0 +1,77 @@
+\title{Implementing Cloud Workload Protection}
+
+\taxon{skill}
+
+\tag{implementing}
+
+\tag{cloud}
+
+\tag{workload}
+
+\tag{protection}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implements cloud workload protection using boto3 and google-cloud APIs for runtime security monitoring, process anomaly detection, and file integrity checking on EC2/GCE instances. Scans for cryptomining, reverse shells, and unauthorized binaries. Use when building runtime security controls for cloud compute workloads.}
+
+\subtree{
+\title{Implementing Cloud Workload Protection}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing cloud workload protection capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cloud security concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\p{Monitor cloud workloads for runtime threats by checking process lists, network connections, file integrity, and resource utilization anomalies.}
+
+\pre{\startverb
+import boto3
+
+ssm = boto3.client("ssm")
+# Run command on EC2 instances to check for suspicious processes
+response = ssm.send_command(
+    InstanceIds=["i-1234567890abcdef0"],
+    DocumentName="AWS-RunShellScript",
+    Parameters={"commands": ["ps aux | grep -E 'xmrig|minerd|cryptonight'"]},
+)
+\stopverb}
+
+\p{Key protection areas:}
+
+\ol{
+\li{Process monitoring for cryptominers and reverse shells}
+\li{File integrity monitoring on critical system files}
+\li{Network connection auditing for C2 callbacks}
+\li{Resource utilization anomaly detection (CPU spikes)}
+\li{Unauthorized binary detection via hash comparison}
+}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+# Check for unauthorized outbound connections
+ssm.send_command(
+    InstanceIds=instances,
+    DocumentName="AWS-RunShellScript",
+    Parameters={"commands": ["ss -tlnp | grep ESTABLISHED"]},
+)
+\stopverb}
+}
+}

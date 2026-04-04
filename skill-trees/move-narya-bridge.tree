@@ -1,0 +1,401 @@
+\title{Move Narya Bridge}
+
+\taxon{skill}
+
+\meta{description}{Observational bridge between Move smart contracts and Narya proof verification.}
+
+\subtree{
+\title{Move-Narya Bridge Skill}
+\blockquote{*"Observational equality turns axioms into theorems. Bridge types connect worlds."*}
+
+\subtree{
+\title{Overview}
+\p{The \strong{Move-Narya Bridge} translates Move smart contract invariants into Narya's Higher Observational Type Theory (HOTT) for formal verification. Unlike traditional approaches that require axioms for function extensionality, Narya makes this \strong{definitional}.}
+
+\p{\strong{Key Insight}: Move's resource type system maps naturally to Narya's linear-like resource tracking, while GF(3) conservation laws become observational equalities.}
+}
+
+\subtree{
+\title{GF(3) Assignment}
+\pre{\startverb
+| Role | Trit | Function |
+|------|------|----------|
+| **COORDINATOR** | 0 | Bridges Move semantics to Narya verification |
+\stopverb}
+}
+
+\subtree{
+\title{Denotation}
+\blockquote{\strong{This skill translates Move module specifications into Narya proof obligations, leveraging observational equality for automatic function extensionality.}}
+
+\pre{\startverb
+Bridge : MoveSpec → NaryaTheorem
+Verify : NaryaTheorem → Result
+Invariant: ∀ spec ∈ MoveSpec: well_typed(spec) ⟹ provable(Bridge(spec))
+\stopverb}
+}
+
+\subtree{
+\title{The Three-Level Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│ Level 3: Narya HOTT                                             │
+│   - Observational equality (Id types per structure)             │
+│   - Bridge types for parametricity                              │
+│   - Definitional η-laws                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ Level 2: Move-Narya Bridge (THIS SKILL)                         │
+│   - Translate Move structs → Narya records                      │
+│   - Translate Move functions → Narya morphisms                  │
+│   - Translate invariants → proof obligations                    │
+├─────────────────────────────────────────────────────────────────┤
+│ Level 1: Move Smart Contracts                                   │
+│   - Resource types (linear)                                     │
+│   - Module specifications                                       │
+│   - GF(3) trit annotations                                      │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Translation Rules}
+\subtree{
+\title{Move Struct → Narya Record}
+\pre{\startverb
+// Move
+struct Trit has store, copy, drop {
+    value: i8,
+}
+\stopverb}
+
+\pre{\startverb
+-- Narya
+def Trit : Type := sig (
+  value : I8
+)
+
+-- Observational equality for Trit (automatic!)
+-- Id(Trit)(t1, t2) ≡ Id(I8)(t1.value, t2.value)
+\stopverb}
+}
+
+\subtree{
+\title{Move Function → Narya Morphism}
+\pre{\startverb
+// Move
+public fun add(a: Trit, b: Trit): Trit {
+    Trit { value: normalize(a.value + b.value) }
+}
+\stopverb}
+
+\pre{\startverb
+-- Narya
+def add : Trit → Trit → Trit :=
+  λ a b. (value := normalize (a.value + b.value))
+
+-- Function extensionality is DEFINITIONAL:
+-- If ∀ x. f x = g x, then f = g (no axiom needed!)
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation → Proof Obligation}
+\pre{\startverb
+// Move invariant
+// assert!(sum % 3 == 0, E_CONSERVATION_VIOLATED);
+\stopverb}
+
+\pre{\startverb
+-- Narya theorem
+def conservation : (trits : List Trit) →
+  Id(I32)(mod (sum (map value trits)) 3, 0) :=
+  -- Proof term here
+\stopverb}
+}
+}
+
+\subtree{
+\title{Bridge Types for GF(3)}
+\p{Narya's bridge types provide "baby equality" without full symmetry/transitivity. This maps perfectly to GF(3) role relationships:}
+
+\pre{\startverb
+-- Bridge type: GENERATOR and VALIDATOR are related through COORDINATOR
+def gf3_bridge : Br(Trit) plus minus :=
+  -- Bridge through ergodic
+  comp_bridge (bridge_to_ergodic plus) (bridge_from_ergodic minus)
+
+-- The roles are related but not equal
+-- This captures the asymmetry of the triad
+\stopverb}
+}
+
+\subtree{
+\title{Verification Workflow}
+\pre{\startverb
+# 1. Extract Move module specification
+just move-spec-extract sources/gf3_move23.move > gf3.spec
+
+# 2. Translate to Narya
+just move-narya-translate gf3.spec > gf3.narya
+
+# 3. Type-check in Narya
+narya check gf3.narya
+
+# 4. Generate proof obligations
+narya holes gf3.narya
+
+# 5. Fill proofs interactively
+narya interactive gf3.narya
+\stopverb}
+}
+
+\subtree{
+\title{Key Translations}
+\pre{\startverb
+| Move Concept | Narya Concept | Notes |
+|--------------|---------------|-------|
+| `struct` | `sig` (record) | Direct mapping |
+| `has store` | Linear annotation | Resource tracking |
+| `public fun` | `def` with arrow type | Morphism |
+| `assert!` | Proof obligation | Must prove |
+| `#[test]` | Example checking | Automatic |
+| Module | Namespace | Direct |
+\stopverb}
+}
+
+\subtree{
+\title{Example: GF(3) Module Translation}
+\subtree{
+\title{Input (Move)}
+\pre{\startverb
+module plurigrid::gf3 {
+    struct Trit has store, copy, drop {
+        value: i8,
+    }
+
+    const MINUS: i8 = -1;
+    const ERGODIC: i8 = 0;
+    const PLUS: i8 = 1;
+
+    public fun add(a: Trit, b: Trit): Trit {
+        Trit { value: normalize(a.value + b.value) }
+    }
+
+    public fun is_conserved(trits: &vector<Trit>): bool {
+        let sum: i32 = 0;
+        // ... compute sum
+        sum % 3 == 0
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Output (Narya)}
+\pre{\startverb
+-- GF(3) Balanced Ternary in Narya HOTT
+-- Auto-translated by move-narya-bridge
+
+section GF3
+
+def I8 : Type := -- primitive signed 8-bit
+
+def Trit : Type := sig (
+  value : I8,
+  valid : Id(Bool)(and (leq (neg 1) value) (leq value 1), true)
+)
+
+def MINUS : Trit := (value := neg 1, valid := refl)
+def ERGODIC : Trit := (value := 0, valid := refl)
+def PLUS : Trit := (value := 1, valid := refl)
+
+-- Addition with normalization
+def normalize : I8 → I8 := λ v.
+  if (gt v 1) then (sub v 3)
+  else if (lt v (neg 1)) then (add v 3)
+  else v
+
+def add : Trit → Trit → Trit := λ a b.
+  let raw := add_i8 a.value b.value in
+  (value := normalize raw, valid := normalize_preserves_valid raw)
+
+-- Conservation theorem (PROOF OBLIGATION)
+def conservation : (trits : List Trit) →
+  Id(I32)(mod (sum_trits trits) 3, 0) :=
+  {? conservation_proof ?}  -- Hole to fill
+
+-- Bridge types for role relationships
+def generator_validator_bridge : Br(Trit) PLUS MINUS :=
+  bridge_via ERGODIC
+
+end GF3
+\stopverb}
+}
+}
+
+\subtree{
+\title{Narya Compatibility Fields}
+\pre{\startverb
+| Field | Definition |
+|-------|------------|
+| `before` | Move module source |
+| `after` | Narya translation + proofs |
+| `delta` | Proof obligations (holes) |
+| `birth` | Empty module stub |
+| `impact` | 1 if all proofs complete |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad Integration}
+\pre{\startverb
+move-narya-bridge (0) ⊗ move-smith-fuzzer (-1) ⊗ aptos-governance (+1) = 0 ✓
+move-narya-bridge (0) ⊗ narya-proofs (-1) ⊗ movemate-launchpad (+1) = 0 ✓
+move-narya-bridge (0) ⊗ sheaf-cohomology (-1) ⊗ gf3-conservation (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Why Observational Equality Matters}
+\subtree{
+\title{Traditional (Axiom-based)}
+\pre{\startverb
+-- Agda: Need postulate
+postulate
+  funext : {A : Set} {B : A → Set} {f g : (x : A) → B x}
+         → ((x : A) → f x ≡ g x) → f ≡ g
+\stopverb}
+}
+
+\subtree{
+\title{Narya (Observational)}
+\pre{\startverb
+-- Narya: Function extensionality is DEFINITIONAL
+-- Id(A → B)(f, g) ≡ (x : A) → Id(B)(f x, g x)
+
+-- So if we prove ∀ x. f x = g x, we immediately have f = g
+-- No postulate, no axiom, no appeal to univalence
+\stopverb}
+
+\p{This matters for GF(3) because:}
+
+\ul{
+\li{\code{\startverb add(a, b)\stopverb} and \code{\startverb add(b, a)\stopverb} are equal if equal pointwise}
+\li{Conservation is preserved under function composition}
+\li{Bridge types give internal parametricity}
+}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Translate Move module to Narya
+just move-narya MODULE.move
+
+# Check Narya translation
+just narya-check MODULE.narya
+
+# List proof obligations (holes)
+just narya-holes MODULE.narya
+
+# Interactive proof session
+just narya-prove MODULE.narya
+
+# Verify GF(3) conservation in Narya
+just narya-verify-gf3 MODULE.narya
+\stopverb}
+}
+
+\subtree{
+\title{Performance Notes}
+\pre{\startverb
+| Operation | Expected Time |
+|-----------|---------------|
+| Translation (small module) | < 1s |
+| Type checking | < 1s for small proofs |
+| Proof search | Seconds to minutes |
+| Full verification | Depends on proof complexity |
+\stopverb}
+
+\p{Narya is research-grade, not production. Use for:}
+
+\ul{
+\li{Prototyping verification approaches}
+\li{Understanding observational equality}
+\li{Research into GF(3) formal semantics}
+}
+
+\p{For production verification, consider Lean 4 or Coq after prototyping in Narya.}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Narya Repository](https://github.com/gwaithimirdain/narya)}
+\li{[Towards an Implementation of HOTT](https://home.sandiego.edu/~shulman/papers/running-hott.pdf)}
+\li{[Move Language Spec](https://github.com/move-language/move)}
+\li{[GF(3) Move 2.3 Module](../nickel/aptos_society/sources/gf3_move23.move)}
+}
+}
+
+\subtree{
+\title{Cross-References (Signed Skill Interleaving)}
+\subtree{
+\title{Triad Partners}
+\pre{\startverb
+| Skill | Trit | Role | Color |
+|-------|------|------|-------|
+| `aptos-gf3-society` | +1 | GENERATOR | `#8A60CB` |
+| `move-narya-bridge` | 0 | COORDINATOR | `#3A86AF` |
+| `move-smith-fuzzer` | -1 | VALIDATOR | `#BDCA5B` |
+\stopverb}
+
+\p{\strong{Conservation}: \code{\startverb +1 + 0 + (-1) = 0\stopverb}}
+}
+
+\subtree{
+\title{Move 2.3 Type Translation}
+\pre{\startverb
+| Move Type | Narya Type | Bridge Pattern |
+|-----------|------------|----------------|
+| `i8` | `I8` | Direct mapping |
+| `i32` | `I32` | Conservation sums |
+| `Trit` | `Trit : Type` | Structural equality |
+| `vector<Trit>` | `List Trit` | Collection mapping |
+\stopverb}
+}
+
+\subtree{
+\title{Related ERGODIC Skills}
+\ul{
+\li{\code{\startverb datalog-fixpoint\stopverb} — Query coordination}
+\li{\code{\startverb structured-decomp\stopverb} — Decomposition coordination}
+\li{\code{\startverb acset-taxonomy\stopverb} — Schema coordination}
+\li{\code{\startverb triadic-skill-orchestrator\stopverb} — Dispatch coordination}
+}
+}
+
+\subtree{
+\title{Interleaving Index}
+\p{\strong{Position}: Worker 2, Sweep 1 \strong{Hex}: \code{\startverb #3A86AF\stopverb} \strong{Seed}: 4354685564936970510}
+
+\p{\strong{Skill Name}: move-narya-bridge \strong{Type}: Verification Bridge / Proof Translation \strong{Trit}: 0 (ERGODIC - COORDINATOR) \strong{GF(3)}: Coordinates between Move execution (+1) and Narya verification (-1)}
+}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

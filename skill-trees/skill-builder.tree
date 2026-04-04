@@ -1,0 +1,1056 @@
+\title{"skill builder"}
+
+\taxon{skill}
+
+\meta{description}{"Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification."}
+
+\subtree{
+\title{Skill Builder}
+\subtree{
+\title{What This Skill Does}
+\p{Creates production-ready Claude Code Skills with proper YAML frontmatter, progressive disclosure architecture, and complete file/folder structure. This skill guides you through building skills that Claude can autonomously discover and use across all surfaces (Claude.ai, Claude Code, SDK, API).}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Claude Code 2.0+ or Claude.ai with Skills support}
+\li{Basic understanding of Markdown and YAML}
+\li{Text editor or IDE}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Creating Your First Skill}
+\pre{\startverb
+# 1. Create skill directory (MUST be at top level, NOT in subdirectories!)
+mkdir -p ~/.claude/skills/my-first-skill
+
+# 2. Create SKILL.md with proper format
+cat > ~/.claude/skills/my-first-skill/SKILL.md << 'EOF'
+---
+name: "My First Skill"
+description: "Brief description of what this skill does and when Claude should use it. Maximum 1024 characters."
+---
+
+# My First Skill
+
+## What This Skill Does
+[Your instructions here]
+
+## Quick Start
+[Basic usage]
+EOF
+
+# 3. Verify skill is detected
+# Restart Claude Code or refresh Claude.ai
+\stopverb}
+}
+}
+
+\subtree{
+\title{Complete Specification}
+\subtree{
+\title{📋 YAML Frontmatter (REQUIRED)}
+\p{Every SKILL.md \strong{must} start with YAML frontmatter containing exactly two required fields:}
+
+\pre{\startverb
+---
+name: "Skill Name"                    # REQUIRED: Max 64 chars
+description: "What this skill does    # REQUIRED: Max 1024 chars
+and when Claude should use it."       # Include BOTH what & when
+---
+\stopverb}
+
+\subtree{
+\title{Field Requirements}
+\p{\strong{\code{\startverb name\stopverb}} (REQUIRED):}
+
+\ul{
+\li{\strong{Type}: String}
+\li{\strong{Max Length}: 64 characters}
+\li{\strong{Format}: Human-friendly display name}
+\li{\strong{Usage}: Shown in skill lists, UI, and loaded into Claude's system prompt}
+\li{\strong{Best Practice}: Use Title Case, be concise and descriptive}
+\li{\strong{Examples}:}
+\li{✅ "API Documentation Generator"}
+\li{✅ "React Component Builder"}
+\li{✅ "Database Schema Designer"}
+\li{❌ "skill-1" (not descriptive)}
+\li{❌ "This is a very long skill name that exceeds sixty-four characters" (too long)}
+}
+
+\p{\strong{\code{\startverb description\stopverb}} (REQUIRED):}
+
+\ul{
+\li{\strong{Type}: String}
+\li{\strong{Max Length}: 1024 characters}
+\li{\strong{Format}: Plain text or minimal markdown}
+\li{\strong{Content}: MUST include:}
+\li{\strong{What} the skill does (functionality)}
+\li{\strong{When} Claude should invoke it (trigger conditions)}
+\li{\strong{Usage}: Loaded into Claude's system prompt for autonomous matching}
+\li{\strong{Best Practice}: Front-load key trigger words, be specific about use cases}
+\li{\strong{Examples}:}
+\li{✅ "Generate OpenAPI 3.0 documentation from Express.js routes. Use when creating API docs, documenting endpoints, or building API specifications."}
+\li{✅ "Create React functional components with TypeScript, hooks, and tests. Use when scaffolding new components or converting class components."}
+\li{❌ "A comprehensive guide to API documentation" (no "when" clause)}
+\li{❌ "Documentation tool" (too vague)}
+}
+}
+
+\subtree{
+\title{YAML Formatting Rules}
+\pre{\startverb
+---
+# ✅ CORRECT: Simple string
+name: "API Builder"
+description: "Creates REST APIs with Express and TypeScript."
+
+# ✅ CORRECT: Multi-line description
+name: "Full-Stack Generator"
+description: "Generates full-stack applications with React frontend and Node.js backend. Use when starting new projects or scaffolding applications."
+
+# ✅ CORRECT: Special characters quoted
+name: "JSON:API Builder"
+description: "Creates JSON:API compliant endpoints: pagination, filtering, relationships."
+
+# ❌ WRONG: Missing quotes with special chars
+name: API:Builder  # YAML parse error!
+
+# ❌ WRONG: Extra fields (ignored but discouraged)
+name: "My Skill"
+description: "My description"
+version: "1.0.0"       # NOT part of spec
+author: "Me"           # NOT part of spec
+tags: ["dev", "api"]   # NOT part of spec
+---
+\stopverb}
+
+\p{\strong{Critical}: Only \code{\startverb name\stopverb} and \code{\startverb description\stopverb} are used by Claude. Additional fields are ignored.}
+}
+}
+
+\subtree{
+\title{📂 Directory Structure}
+\subtree{
+\title{Minimal Skill (Required)}
+\pre{\startverb
+~/.claude/skills/                    # Personal skills location
+└── my-skill/                        # Skill directory (MUST be at top level!)
+    └── SKILL.md                     # REQUIRED: Main skill file
+\stopverb}
+
+\p{\strong{IMPORTANT}: Skills MUST be directly under \code{\startverb ~/.claude/skills/[skill-name]/\stopverb}. Claude Code does NOT support nested subdirectories or namespaces!}
+}
+
+\subtree{
+\title{Full-Featured Skill (Recommended)}
+\pre{\startverb
+~/.claude/skills/
+└── my-skill/                        # Top-level skill directory
+        ├── SKILL.md                 # REQUIRED: Main skill file
+        ├── README.md                # Optional: Human-readable docs
+        ├── scripts/                 # Optional: Executable scripts
+        │   ├── setup.sh
+        │   ├── validate.js
+        │   └── deploy.py
+        ├── resources/               # Optional: Supporting files
+        │   ├── templates/
+        │   │   ├── api-template.js
+        │   │   └── component.tsx
+        │   ├── examples/
+        │   │   └── sample-output.json
+        │   └── schemas/
+        │       └── config-schema.json
+        └── docs/                    # Optional: Additional documentation
+            ├── ADVANCED.md
+            ├── TROUBLESHOOTING.md
+            └── API_REFERENCE.md
+\stopverb}
+}
+
+\subtree{
+\title{Skills Locations}
+\p{\strong{Personal Skills} (available across all projects):}
+
+\pre{\startverb
+~/.claude/skills/
+└── [your-skills]/
+\stopverb}
+
+\ul{
+\li{\strong{Path}: \code{\startverb ~/.claude/skills/\stopverb} or \code{\startverb $HOME/.claude/skills/\stopverb}}
+\li{\strong{Scope}: Available in all projects for this user}
+\li{\strong{Version Control}: NOT committed to git (outside repo)}
+\li{\strong{Use Case}: Personal productivity tools, custom workflows}
+}
+
+\p{\strong{Project Skills} (team-shared, version controlled):}
+
+\pre{\startverb
+<project-root>/.claude/skills/
+└── [team-skills]/
+\stopverb}
+
+\ul{
+\li{\strong{Path}: \code{\startverb .claude/skills/\stopverb} in project root}
+\li{\strong{Scope}: Available only in this project}
+\li{\strong{Version Control}: SHOULD be committed to git}
+\li{\strong{Use Case}: Team workflows, project-specific tools, shared knowledge}
+}
+}
+}
+
+\subtree{
+\title{🎯 Progressive Disclosure Architecture}
+\p{Claude Code uses a \strong{3-level progressive disclosure system} to scale to 100+ skills without context penalty:}
+
+\subtree{
+\title{Level 1: Metadata (Name + Description)}
+\p{\strong{Loaded}: At Claude Code startup, always \strong{Size}: ~200 chars per skill \strong{Purpose}: Enable autonomous skill matching \strong{Context}: Loaded into system prompt for ALL skills}
+
+\pre{\startverb
+---
+name: "API Builder"                   # 11 chars
+description: "Creates REST APIs..."   # ~50 chars
+---
+# Total: ~61 chars per skill
+# 100 skills = ~6KB context (minimal!)
+\stopverb}
+}
+
+\subtree{
+\title{Level 2: SKILL.md Body}
+\p{\strong{Loaded}: When skill is triggered/matched \strong{Size}: ~1-10KB typically \strong{Purpose}: Main instructions and procedures \strong{Context}: Only loaded for ACTIVE skills}
+
+\pre{\startverb
+# API Builder
+
+## What This Skill Does
+[Main instructions - loaded only when skill is active]
+
+## Quick Start
+[Basic procedures]
+
+## Step-by-Step Guide
+[Detailed instructions]
+\stopverb}
+}
+
+\subtree{
+\title{Level 3+: Referenced Files}
+\p{\strong{Loaded}: On-demand as Claude navigates \strong{Size}: Variable (KB to MB) \strong{Purpose}: Deep reference, examples, schemas \strong{Context}: Loaded only when Claude accesses specific files}
+
+\pre{\startverb
+# In SKILL.md
+See [Advanced Configuration](docs/ADVANCED.md) for complex scenarios.
+See [API Reference](docs/API_REFERENCE.md) for complete documentation.
+Use template: `resources/templates/api-template.js`
+
+# Claude will load these files ONLY if needed
+\stopverb}
+
+\p{\strong{Benefit}: Install 100+ skills with ~6KB context. Only active skill content (1-10KB) enters context.}
+}
+}
+
+\subtree{
+\title{📝 SKILL.md Content Structure}
+\subtree{
+\title{Recommended 4-Level Structure}
+\pre{\startverb
+---
+name: "Your Skill Name"
+description: "What it does and when to use it"
+---
+
+# Your Skill Name
+
+## Level 1: Overview (Always Read First)
+Brief 2-3 sentence description of the skill.
+
+## Prerequisites
+- Requirement 1
+- Requirement 2
+
+## What This Skill Does
+1. Primary function
+2. Secondary function
+3. Key benefit
+
+---
+
+## Level 2: Quick Start (For Fast Onboarding)
+
+### Basic Usage
+\stopverb}
+}
+}
+}
+}
+
+\subtree{
+\title{Simplest use case}
+\p{command --option value}
+
+\pre{\startverb
+
+### Common Scenarios
+1. **Scenario 1**: How to...
+2. **Scenario 2**: How to...
+
+---
+
+## Level 3: Detailed Instructions (For Deep Work)
+
+### Step-by-Step Guide
+
+#### Step 1: Initial Setup
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+Expected output:
+\stopverb}
+
+\p{Success message}
+
+\pre{\startverb
+
+#### Step 2: Configuration
+- Configuration option 1
+- Configuration option 2
+
+#### Step 3: Execution
+- Run the main command
+- Verify results
+
+### Advanced Options
+
+#### Option 1: Custom Configuration
+\stopverb}
+}
+
+\subtree{
+\title{Advanced usage}
+\pre{\startverb
+
+#### Option 2: Integration
+\stopverb}
+}
+
+\subtree{
+\title{Integration steps}
+\pre{\startverb
+
+---
+
+## Level 4: Reference (Rarely Needed)
+
+### Troubleshooting
+
+#### Issue: Common Problem
+**Symptoms**: What you see
+**Cause**: Why it happens
+**Solution**: How to fix
+\stopverb}
+}
+
+\subtree{
+\title{Fix command}
+\pre{\startverb
+
+#### Issue: Another Problem
+**Solution**: Steps to resolve
+
+### Complete API Reference
+See [API_REFERENCE.md](docs/API_REFERENCE.md)
+
+### Examples
+See [examples/](resources/examples/)
+
+### Related Skills
+- [Related Skill 1](#)
+- [Related Skill 2](#)
+
+### Resources
+- [External Link 1](https://example.com)
+- [Documentation](https://docs.example.com)
+\stopverb}
+
+\subtree{
+\title{🎨 Content Best Practices}
+\subtree{
+\title{Writing Effective Descriptions}
+\p{\strong{Front-Load Keywords}:}
+
+\pre{\startverb
+# ✅ GOOD: Keywords first
+description: "Generate TypeScript interfaces from JSON schema. Use when converting schemas, creating types, or building API clients."
+
+# ❌ BAD: Keywords buried
+description: "This skill helps developers who need to work with JSON schemas by providing a way to generate TypeScript interfaces."
+\stopverb}
+
+\p{\strong{Include Trigger Conditions}:}
+
+\pre{\startverb
+# ✅ GOOD: Clear "when" clause
+description: "Debug React performance issues using Chrome DevTools. Use when components re-render unnecessarily, investigating slow updates, or optimizing bundle size."
+
+# ❌ BAD: No trigger conditions
+description: "Helps with React performance debugging."
+\stopverb}
+
+\p{\strong{Be Specific}:}
+
+\pre{\startverb
+# ✅ GOOD: Specific technologies
+description: "Create Express.js REST endpoints with Joi validation, Swagger docs, and Jest tests. Use when building new APIs or adding endpoints."
+
+# ❌ BAD: Too generic
+description: "Build API endpoints with proper validation and testing."
+\stopverb}
+}
+
+\subtree{
+\title{Progressive Disclosure Writing}
+\p{\strong{Keep Level 1 Brief} (Overview):}
+
+\pre{\startverb
+## What This Skill Does
+Creates production-ready React components with TypeScript, hooks, and tests in 3 steps.
+\stopverb}
+
+\p{\strong{Level 2 for Common Paths} (Quick Start):}
+
+\pre{\startverb
+## Quick Start
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Most common use case (80\% of users)}
+\p{generate-component MyComponent}
+
+\pre{\startverb
+
+\stopverb}
+
+\p{\strong{Level 3 for Details} (Step-by-Step):}
+
+\pre{\startverb
+## Step-by-Step Guide
+
+### Creating a Basic Component
+1. Run generator
+2. Choose template
+3. Customize options
+[Detailed explanations]
+\stopverb}
+
+\p{\strong{Level 4 for Edge Cases} (Reference):}
+
+\pre{\startverb
+## Advanced Configuration
+For complex scenarios like HOCs, render props, or custom hooks, see [ADVANCED.md](docs/ADVANCED.md).
+\stopverb}
+
+\subtree{
+\title{🛠️ Adding Scripts and Resources}
+\subtree{
+\title{Scripts Directory}
+\p{\strong{Purpose}: Executable scripts that Claude can run \strong{Location}: \code{\startverb scripts/\stopverb} in skill directory \strong{Usage}: Referenced from SKILL.md}
+
+\p{Example:}
+
+\pre{\startverb
+# In skill directory
+scripts/
+├── setup.sh          # Initialization script
+├── validate.js       # Validation logic
+├── generate.py       # Code generation
+└── deploy.sh         # Deployment script
+\stopverb}
+
+\p{Reference from SKILL.md:}
+
+\pre{\startverb
+## Setup
+Run the setup script:
+\stopverb}
+
+\p{./scripts/setup.sh}
+
+\pre{\startverb
+
+## Validation
+Validate your configuration:
+\stopverb}
+
+\p{node scripts/validate.js config.json}
+
+\pre{\startverb
+
+\stopverb}
+}
+
+\subtree{
+\title{Resources Directory}
+\p{\strong{Purpose}: Templates, examples, schemas, static files \strong{Location}: \code{\startverb resources/\stopverb} in skill directory \strong{Usage}: Referenced or copied by scripts}
+
+\p{Example:}
+
+\pre{\startverb
+resources/
+├── templates/
+│   ├── component.tsx.template
+│   ├── test.spec.ts.template
+│   └── story.stories.tsx.template
+├── examples/
+│   ├── basic-example/
+│   ├── advanced-example/
+│   └── integration-example/
+└── schemas/
+    ├── config.schema.json
+    └── output.schema.json
+\stopverb}
+
+\p{Reference from SKILL.md:}
+
+\pre{\startverb
+## Templates
+Use the component template:
+\stopverb}
+
+\p{cp resources/templates/component.tsx.template src/components/MyComponent.tsx}
+
+\pre{\startverb
+
+## Examples
+See working examples in `resources/examples/`:
+- `basic-example/` - Simple component
+- `advanced-example/` - With hooks and context
+\stopverb}
+}
+}
+
+\subtree{
+\title{🔗 File References and Navigation}
+\p{Claude can navigate to referenced files automatically. Use these patterns:}
+
+\subtree{
+\title{Markdown Links}
+\pre{\startverb
+See [Advanced Configuration](docs/ADVANCED.md) for complex scenarios.
+See [Troubleshooting Guide](docs/TROUBLESHOOTING.md) if you encounter errors.
+\stopverb}
+}
+
+\subtree{
+\title{Relative File Paths}
+\pre{\startverb
+Use the template located at `resources/templates/api-template.js`
+See examples in `resources/examples/basic-usage/`
+\stopverb}
+}
+
+\subtree{
+\title{Inline File Content}
+\pre{\startverb
+## Example Configuration
+See `resources/examples/config.json`:
+\stopverb}
+
+\p{{ "option": "value" }}
+
+\pre{\startverb
+
+\stopverb}
+
+\p{\strong{Best Practice}: Keep SKILL.md lean (~2-5KB). Move lengthy content to separate files and reference them. Claude will load only what's needed.}
+}
+}
+
+\subtree{
+\title{✅ Validation Checklist}
+\p{Before publishing a skill, verify:}
+
+\p{\strong{YAML Frontmatter}:}
+
+\ul{
+\li{[ ] Starts with \code{\startverb ---\stopverb}}
+\li{[ ] Contains \code{\startverb name\stopverb} field (max 64 chars)}
+\li{[ ] Contains \code{\startverb description\stopverb} field (max 1024 chars)}
+\li{[ ] Description includes "what" and "when"}
+\li{[ ] Ends with \code{\startverb ---\stopverb}}
+\li{[ ] No YAML syntax errors}
+}
+
+\p{\strong{File Structure}:}
+
+\ul{
+\li{[ ] SKILL.md exists in skill directory}
+\li{[ ] Directory is DIRECTLY in \code{\startverb ~/.claude/skills/[skill-name]/\stopverb} or \code{\startverb .claude/skills/[skill-name]/\stopverb}}
+\li{[ ] Uses clear, descriptive directory name}
+\li{[ ] \strong{NO nested subdirectories} (Claude Code requires top-level structure)}
+}
+
+\p{\strong{Content Quality}:}
+
+\ul{
+\li{[ ] Level 1 (Overview) is brief and clear}
+\li{[ ] Level 2 (Quick Start) shows common use case}
+\li{[ ] Level 3 (Details) provides step-by-step guide}
+\li{[ ] Level 4 (Reference) links to advanced content}
+\li{[ ] Examples are concrete and runnable}
+\li{[ ] Troubleshooting section addresses common issues}
+}
+
+\p{\strong{Progressive Disclosure}:}
+
+\ul{
+\li{[ ] Core instructions in SKILL.md (~2-5KB)}
+\li{[ ] Advanced content in separate docs/}
+\li{[ ] Large resources in resources/ directory}
+\li{[ ] Clear navigation between levels}
+}
+
+\p{\strong{Testing}:}
+
+\ul{
+\li{[ ] Skill appears in Claude's skill list}
+\li{[ ] Description triggers on relevant queries}
+\li{[ ] Instructions are clear and actionable}
+\li{[ ] Scripts execute successfully (if included)}
+\li{[ ] Examples work as documented}
+}
+}
+
+\subtree{
+\title{Skill Builder Templates}
+\subtree{
+\title{Template 1: Basic Skill (Minimal)}
+\pre{\startverb
+---
+name: "My Basic Skill"
+description: "One sentence what. One sentence when to use."
+---
+
+# My Basic Skill
+
+## What This Skill Does
+[2-3 sentences describing functionality]
+
+## Quick Start
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Single command to get started}
+\pre{\startverb
+
+## Step-by-Step Guide
+
+### Step 1: Setup
+[Instructions]
+
+### Step 2: Usage
+[Instructions]
+
+### Step 3: Verify
+[Instructions]
+
+## Troubleshooting
+- **Issue**: Problem description
+  - **Solution**: Fix description
+\stopverb}
+
+\subtree{
+\title{Template 2: Intermediate Skill (With Scripts)}
+\pre{\startverb
+---
+name: "My Intermediate Skill"
+description: "Detailed what with key features. When to use with specific triggers: scaffolding, generating, building."
+---
+
+# My Intermediate Skill
+
+## Prerequisites
+- Requirement 1
+- Requirement 2
+
+## What This Skill Does
+1. Primary function
+2. Secondary function
+3. Integration capability
+
+## Quick Start
+\stopverb}
+
+\p{./scripts/setup.sh ./scripts/generate.sh my-project}
+
+\pre{\startverb
+
+## Configuration
+Edit `config.json`:
+\stopverb}
+
+\p{{ "option1": "value1", "option2": "value2" }}
+
+\pre{\startverb
+
+## Step-by-Step Guide
+
+### Basic Usage
+[Steps for 80% use case]
+
+### Advanced Usage
+[Steps for complex scenarios]
+
+## Available Scripts
+- `scripts/setup.sh` - Initial setup
+- `scripts/generate.sh` - Code generation
+- `scripts/validate.sh` - Validation
+
+## Resources
+- Templates: `resources/templates/`
+- Examples: `resources/examples/`
+
+## Troubleshooting
+[Common issues and solutions]
+\stopverb}
+}
+
+\subtree{
+\title{Template 3: Advanced Skill (Full-Featured)}
+\pre{\startverb
+---
+name: "My Advanced Skill"
+description: "Comprehensive what with all features and integrations. Use when [trigger 1], [trigger 2], or [trigger 3]. Supports [technology stack]."
+---
+
+# My Advanced Skill
+
+## Overview
+[Brief 2-3 sentence description]
+
+## Prerequisites
+- Technology 1 (version X+)
+- Technology 2 (version Y+)
+- API keys or credentials
+
+## What This Skill Does
+1. **Core Feature**: Description
+2. **Integration**: Description
+3. **Automation**: Description
+
+---
+
+## Quick Start (60 seconds)
+
+### Installation
+\stopverb}
+
+\p{./scripts/install.sh}
+
+\pre{\startverb
+
+### First Use
+\stopverb}
+
+\p{./scripts/quickstart.sh}
+
+\pre{\startverb
+
+Expected output:
+\stopverb}
+
+\p{✓ Setup complete ✓ Configuration validated → Ready to use}
+
+\pre{\startverb
+
+---
+
+## Configuration
+
+### Basic Configuration
+Edit `config.json`:
+\stopverb}
+
+\p{{ "mode": "production", "features": ["feature1", "feature2"] }}
+
+\pre{\startverb
+
+### Advanced Configuration
+See [Configuration Guide](docs/CONFIGURATION.md)
+
+---
+
+## Step-by-Step Guide
+
+### 1. Initial Setup
+[Detailed steps]
+
+### 2. Core Workflow
+[Main procedures]
+
+### 3. Integration
+[Integration steps]
+
+---
+
+## Advanced Features
+
+### Feature 1: Custom Templates
+\stopverb}
+
+\p{./scripts/generate.sh --template custom}
+
+\pre{\startverb
+
+### Feature 2: Batch Processing
+\stopverb}
+
+\p{./scripts/batch.sh --input data.json}
+
+\pre{\startverb
+
+### Feature 3: CI/CD Integration
+See [CI/CD Guide](docs/CICD.md)
+
+---
+
+## Scripts Reference
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `install.sh` | Install dependencies | `./scripts/install.sh` |
+| `generate.sh` | Generate code | `./scripts/generate.sh [name]` |
+| `validate.sh` | Validate output | `./scripts/validate.sh` |
+| `deploy.sh` | Deploy to environment | `./scripts/deploy.sh [env]` |
+
+---
+
+## Resources
+
+### Templates
+- `resources/templates/basic.template` - Basic template
+- `resources/templates/advanced.template` - Advanced template
+
+### Examples
+- `resources/examples/basic/` - Simple example
+- `resources/examples/advanced/` - Complex example
+- `resources/examples/integration/` - Integration example
+
+### Schemas
+- `resources/schemas/config.schema.json` - Configuration schema
+- `resources/schemas/output.schema.json` - Output validation
+
+---
+
+## Troubleshooting
+
+### Issue: Installation Failed
+**Symptoms**: Error during `install.sh`
+**Cause**: Missing dependencies
+**Solution**:
+\stopverb}
+}
+}
+
+\subtree{
+\title{Install prerequisites}
+\p{npm install -g required-package ./scripts/install.sh --force}
+
+\pre{\startverb
+
+### Issue: Validation Errors
+**Symptoms**: Validation script fails
+**Solution**: See [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
+
+---
+
+## API Reference
+Complete API documentation: [API_REFERENCE.md](docs/API_REFERENCE.md)
+
+## Related Skills
+- [Related Skill 1](../related-skill-1/)
+- [Related Skill 2](../related-skill-2/)
+
+## Resources
+- [Official Documentation](https://example.com/docs)
+- [GitHub Repository](https://github.com/example/repo)
+- [Community Forum](https://forum.example.com)
+
+---
+
+**Created**: 2025-10-19
+**Category**: Advanced
+**Difficulty**: Intermediate
+**Estimated Time**: 15-30 minutes
+\stopverb}
+
+\subtree{
+\title{Examples from the Wild}
+\subtree{
+\title{Example 1: Simple Documentation Skill}
+\pre{\startverb
+---
+name: "README Generator"
+description: "Generate comprehensive README.md files for GitHub repositories. Use when starting new projects, documenting code, or improving existing READMEs."
+---
+
+# README Generator
+
+## What This Skill Does
+Creates well-structured README.md files with badges, installation, usage, and contribution sections.
+
+## Quick Start
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Answer a few questions}
+\p{./scripts/generate-readme.sh}
+}
+
+\subtree{
+\title{README.md created with:}
+
+}
+
+\subtree{
+\title{- Project title and description}
+
+}
+
+\subtree{
+\title{- Installation instructions}
+
+}
+
+\subtree{
+\title{- Usage examples}
+
+}
+
+\subtree{
+\title{- Contribution guidelines}
+\pre{\startverb
+
+## Customization
+Edit sections in `resources/templates/sections/` before generating.
+\stopverb}
+
+\subtree{
+\title{Example 2: Code Generation Skill}
+\pre{\startverb
+---
+name: "React Component Generator"
+description: "Generate React functional components with TypeScript, hooks, tests, and Storybook stories. Use when creating new components, scaffolding UI, or following component architecture patterns."
+---
+
+# React Component Generator
+
+## Prerequisites
+- Node.js 18+
+- React 18+
+- TypeScript 5+
+
+## Quick Start
+\stopverb}
+
+\p{./scripts/generate-component.sh MyComponent}
+}
+}
+
+\subtree{
+\title{Creates:}
+
+}
+
+\subtree{
+\title{- src/components/MyComponent/MyComponent.tsx}
+
+}
+
+\subtree{
+\title{- src/components/MyComponent/MyComponent.test.tsx}
+
+}
+
+\subtree{
+\title{- src/components/MyComponent/MyComponent.stories.tsx}
+
+}
+
+\subtree{
+\title{- src/components/MyComponent/index.ts}
+\pre{\startverb
+
+## Step-by-Step Guide
+
+### 1. Run Generator
+\stopverb}
+
+\p{./scripts/generate-component.sh ComponentName}
+
+\pre{\startverb
+
+### 2. Choose Template
+- Basic: Simple functional component
+- With State: useState hooks
+- With Context: useContext integration
+- With API: Data fetching component
+
+### 3. Customize
+Edit generated files in `src/components/ComponentName/`
+
+## Templates
+See `resources/templates/` for available component templates.
+\stopverb}
+
+\subtree{
+\title{Learn More}
+\subtree{
+\title{Official Resources}
+\ul{
+\li{[Anthropic Agent Skills Documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills)}
+\li{[GitHub Skills Repository](https://github.com/anthropics/skills)}
+\li{[Claude Code Documentation](https://docs.claude.com/en/docs/claude-code)}
+}
+}
+
+\subtree{
+\title{Community}
+\ul{
+\li{[Skills Marketplace](https://github.com/anthropics/skills) - Browse community skills}
+\li{[Anthropic Discord](https://discord.gg/anthropic) - Get help from community}
+}
+}
+
+\subtree{
+\title{Advanced Topics}
+\ul{
+\li{Multi-file skills with complex navigation}
+\li{Skills that spawn other skills}
+\li{Integration with MCP tools}
+\li{Dynamic skill generation}
+}
+
+\p{\strong{Created}: 2025-10-19 \strong{Version}: 1.0.0 \strong{Maintained By}: agentic-flow team \strong{License}: MIT}
+}
+}
+}

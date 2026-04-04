@@ -1,0 +1,137 @@
+\title{Adaptyv}
+
+\taxon{skill}
+
+\meta{description}{Cloud laboratory platform for automated protein testing and validation. Use when designing proteins and needing experimental validation including binding assays, expression testing, thermostability measurements, enzyme activity assays, or protein sequence optimization. Also use for submitting experiments via API, tracking experiment status, downloading results, optimizing protein sequences for better expression using computational tools (NetSolP, SoluProt, SolubleMPNN, ESM), or managing protein design workflows with wet-lab validation.}
+
+\subtree{
+\title{Adaptyv}
+\p{Adaptyv is a cloud laboratory platform that provides automated protein testing and validation services. Submit protein sequences via API or web interface and receive experimental results in approximately 21 days.}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Authentication Setup}
+\p{Adaptyv requires API authentication. Set up your credentials:}
+
+\ol{
+\li{Contact support@adaptyvbio.com to request API access (platform is in alpha/beta)}
+\li{Receive your API access token}
+\li{Set environment variable:}
+}
+
+\pre{\startverb
+export ADAPTYV_API_KEY="your_api_key_here"
+\stopverb}
+
+\p{Or create a \code{\startverb .env\stopverb} file:}
+
+\pre{\startverb
+ADAPTYV_API_KEY=your_api_key_here
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\p{Install the required package using uv:}
+
+\pre{\startverb
+uv pip install requests python-dotenv
+\stopverb}
+}
+
+\subtree{
+\title{Basic Usage}
+\p{Submit protein sequences for testing:}
+
+\pre{\startverb
+import os
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+api_key = os.getenv("ADAPTYV_API_KEY")
+base_url = "https://kq5jp7qj7wdqklhsxmovkzn4l40obksv.lambda-url.eu-central-1.on.aws"
+
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
+
+# Submit experiment
+response = requests.post(
+    f"{base_url}/experiments",
+    headers=headers,
+    json={
+        "sequences": ">protein1\nMKVLWALLGLLGAA...",
+        "experiment_type": "binding",
+        "webhook_url": "https://your-webhook.com/callback"
+    }
+)
+
+experiment_id = response.json()["experiment_id"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Available Experiment Types}
+\p{Adaptyv supports multiple assay types:}
+
+\ul{
+\li{\strong{Binding assays} - Test protein-target interactions using biolayer interferometry}
+\li{\strong{Expression testing} - Measure protein expression levels}
+\li{\strong{Thermostability} - Characterize protein thermal stability}
+\li{\strong{Enzyme activity} - Assess enzymatic function}
+}
+
+\p{See \code{\startverb reference/experiments.md\stopverb} for detailed information on each experiment type and workflows.}
+}
+
+\subtree{
+\title{Protein Sequence Optimization}
+\p{Before submitting sequences, optimize them for better expression and stability:}
+
+\p{\strong{Common issues to address:}}
+
+\ul{
+\li{Unpaired cysteines that create unwanted disulfides}
+\li{Excessive hydrophobic regions causing aggregation}
+\li{Poor solubility predictions}
+}
+
+\p{\strong{Recommended tools:}}
+
+\ul{
+\li{NetSolP / SoluProt - Initial solubility filtering}
+\li{SolubleMPNN - Sequence redesign for improved solubility}
+\li{ESM - Sequence likelihood scoring}
+\li{ipTM - Interface stability assessment}
+\li{pSAE - Hydrophobic exposure quantification}
+}
+
+\p{See \code{\startverb reference/protein_optimization.md\stopverb} for detailed optimization workflows and tool usage.}
+}
+
+\subtree{
+\title{API Reference}
+\p{For complete API documentation including all endpoints, request/response formats, and authentication details, see \code{\startverb reference/api_reference.md\stopverb}.}
+}
+
+\subtree{
+\title{Examples}
+\p{For concrete code examples covering common use cases (experiment submission, status tracking, result retrieval, batch processing), see \code{\startverb reference/examples.md\stopverb}.}
+}
+
+\subtree{
+\title{Important Notes}
+\ul{
+\li{Platform is currently in alpha/beta phase with features subject to change}
+\li{Not all platform features are available via API yet}
+\li{Results typically delivered in ~21 days}
+\li{Contact support@adaptyvbio.com for access requests or questions}
+\li{Suitable for high-throughput AI-driven protein design workflows}
+}
+}
+}

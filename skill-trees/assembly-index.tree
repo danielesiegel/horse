@@ -1,0 +1,115 @@
+\title{Assembly Index}
+
+\taxon{skill}
+
+\meta{description}{Lee Cronin's Assembly Theory for molecular complexity measurement and}
+
+\subtree{
+\title{Assembly Index Skill: Molecular Complexity Validation}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - validator/constraint) \strong{Color}: #2626D8 (Blue) \strong{Principle}: Complexity threshold → Life signature \strong{Frame}: Assembly pathways with minimal step counting}
+
+\subtree{
+\title{Overview}
+\p{\strong{Assembly Index} measures molecular complexity by counting the minimum number of joining operations needed to construct a molecule from basic building blocks. Molecules with assembly index > 15 are biosignatures—too complex for random chemistry.}
+
+\ol{
+\li{\strong{Assembly pathway}: Shortest construction sequence}
+\li{\strong{Copy number threshold}: Abundance × complexity = life signal}
+\li{\strong{Molecular DAG}: Directed acyclic graph of substructures}
+\li{\strong{Mass spectrometry integration}: MA(m/z) measurement}
+}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+MA(molecule) = min |steps| to construct from primitives
+Life threshold: MA > 15 with copy_number > 1
+\stopverb}
+
+\pre{\startverb
+def assembly_index(molecule: Molecule) -> int:
+    """Compute minimum assembly steps via dynamic programming."""
+    substructures = enumerate_substructures(molecule)
+    dag = build_assembly_dag(substructures)
+    return shortest_path_length(dag, source="primitives", target=molecule)
+\stopverb}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{1. Assembly Pathway Enumeration}
+\pre{\startverb
+class AssemblyPathway:
+    def __init__(self, molecule):
+        self.mol = molecule
+        self.fragments = self.decompose()
+    
+    def decompose(self) -> list[Fragment]:
+        """Find all valid bond-breaking decompositions."""
+        return [split for split in self.mol.bonds 
+                if split.yields_valid_fragments()]
+    
+    def minimal_pathway(self) -> list[JoinOperation]:
+        """DP over fragment DAG for minimum steps."""
+        memo = {}
+        return self._dp_assemble(self.mol, memo)
+\stopverb}
+}
+
+\subtree{
+\title{2. Copy Number Amplification}
+\pre{\startverb
+def is_biosignature(molecule, sample) -> bool:
+    ma = assembly_index(molecule)
+    copies = sample.count(molecule)
+    # Life creates copies of complex molecules
+    return ma > 15 and copies > 1
+\stopverb}
+}
+
+\subtree{
+\title{3. Tandem Mass Spectrometry Integration}
+\pre{\startverb
+def ma_from_ms2(spectrum: MS2Spectrum) -> float:
+    """Estimate assembly index from fragmentation pattern."""
+    fragments = spectrum.peaks
+    dag = reconstruct_assembly_dag(fragments)
+    return dag.longest_path()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Compute assembly index
+just assembly-index molecule.sdf
+
+# Validate biosignature threshold
+just assembly-validate sample.ms2
+
+# Compare assembly pathways
+just assembly-compare mol1.sdf mol2.sdf
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\pre{\startverb
+assembly-index (-1) ⊗ turing-chemputer (0) ⊗ crn-topology (+1) = 0 ✓  [Molecular Complexity]
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{turing-chemputer} (0): Execute chemical synthesis programs}
+\li{\strong{crn-topology} (+1): Generate reaction network topologies}
+\li{\strong{kolmogorov-compression} (-1): Algorithmic complexity baseline}
+}
+
+\p{\strong{Skill Name}: assembly-index \strong{Type}: Complexity Validator \strong{Trit}: -1 (MINUS) \strong{Color}: #2626D8 (Blue)}
+}
+}

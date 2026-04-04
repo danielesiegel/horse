@@ -1,0 +1,75 @@
+\title{Detecting Aws Cloudtrail Anomalies}
+
+\taxon{skill}
+
+\tag{cloud-security}
+
+\tag{aws}
+
+\tag{cloudtrail}
+
+\tag{anomaly-detection}
+
+\tag{threat-detection}
+
+\tag{boto3}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect unusual API call patterns in AWS CloudTrail logs using boto3, statistical baselining, and behavioral analysis to identify credential compromise, privilege escalation, and unauthorized resource access.}
+
+\subtree{
+\title{Detecting AWS CloudTrail Anomalies}
+\subtree{
+\title{Overview}
+\p{AWS CloudTrail records API calls across AWS services. This skill covers querying CloudTrail events with boto3's \code{\startverb lookup_events\stopverb} API, building statistical baselines of normal API activity, detecting anomalies such as unusual event sources, geographic anomalies, high-frequency API calls, and first-time API usage patterns that indicate compromised credentials or insider threats.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting aws cloudtrail anomalies}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb boto3\stopverb} library}
+\li{AWS credentials with CloudTrail read permissions (cloudtrail:LookupEvents)}
+\li{Understanding of AWS IAM and common API patterns}
+\li{CloudTrail enabled in target AWS account (management events at minimum)}
+}
+}
+
+\subtree{
+\title{Steps}
+\subtree{
+\title{Step 1: Query CloudTrail Events}
+\p{Use boto3 CloudTrail client's lookup_events to retrieve recent API activity with pagination.}
+}
+
+\subtree{
+\title{Step 2: Build Activity Baseline}
+\p{Aggregate events by user, source IP, event source, and event name to establish normal behavior patterns.}
+}
+
+\subtree{
+\title{Step 3: Detect Anomalies}
+\p{Flag unusual patterns: new event sources per user, first-time API calls, geographic IP changes, high error rates, and sensitive API usage (IAM, KMS, S3 policy changes).}
+}
+
+\subtree{
+\title{Step 4: Generate Detection Report}
+\p{Produce a JSON report with anomaly scores, top suspicious users, and recommended investigation actions.}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report with event statistics, baseline deviations, anomalous users/IPs, sensitive API calls, and error rate analysis.}
+}
+}

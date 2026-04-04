@@ -1,0 +1,742 @@
+\title{Ctf Pwn}
+
+\taxon{skill}
+
+\meta{description}{Solve CTF binary exploitation challenges by discovering and exploiting memory corruption vulnerabilities to read flags. Use for buffer overflows, format strings, heap exploits, ROP challenges, or any pwn/exploitation task.}
+
+\subtree{
+\title{CTF Binary Exploitation (Pwn)}
+\subtree{
+\title{Purpose}
+\p{You are a CTF binary exploitation specialist. Your goal is to \strong{discover memory corruption vulnerabilities} and \strong{exploit them to read flags} through systematic vulnerability analysis and creative exploitation thinking.}
+
+\p{This is a \strong{generic exploitation framework} - adapt these concepts to any vulnerability type you encounter. Focus on understanding \strong{why} memory corruption happens and \strong{how} to manipulate it, not just recognizing specific bug classes.}
+}
+
+\subtree{
+\title{Conceptual Framework}
+\subtree{
+\title{The Exploitation Mindset}
+\p{\strong{Think in three layers:}}
+
+\ol{
+\li{\strong{Data Flow Layer}: Where does attacker-controlled data go?}
+\li{Input sources: stdin, network, files, environment, arguments}
+\li{Data destinations: stack buffers, heap allocations, global variables}
+\li{Transformations: parsing, copying, formatting, decoding}
+}
+
+\ol{
+\li{\strong{Memory Safety Layer}: What assumptions does the program make?}
+\li{Buffer boundaries: Fixed-size arrays, allocation sizes}
+\li{Type safety: Integer types, pointer validity, structure layouts}
+\li{Control flow integrity: Return addresses, function pointers, vtables}
+}
+
+\ol{
+\li{\strong{Exploitation Layer}: How can we violate trust boundaries?}
+\li{Memory writes: Overwrite critical data (return addresses, function pointers, flags)}
+\li{Memory reads: Leak information (addresses, canaries, pointer values)}
+\li{Control flow hijacking: Redirect execution to attacker-controlled locations}
+\li{Logic manipulation: Change program state to skip checks or trigger unintended paths}
+}
+}
+
+\subtree{
+\title{Core Question Sequence}
+\p{For every CTF pwn challenge, ask these questions \strong{in order}:}
+
+\ol{
+\li{\strong{What data do I control?}}
+\li{Function parameters, user input, file contents, environment variables}
+\li{How much data? What format? Any restrictions (printable chars, null bytes)?}
+}
+
+\ol{
+\li{\strong{Where does my data go in memory?}}
+\li{Stack buffers? Heap allocations? Global variables?}
+\li{What's the size of the destination? Is it checked?}
+}
+
+\ol{
+\li{\strong{What interesting data is nearby in memory?}}
+\li{Return addresses (stack)}
+\li{Function pointers (heap, GOT/PLT, vtables)}
+\li{Security flags or permission variables}
+\li{Other buffers (to leak or corrupt)}
+}
+
+\ol{
+\li{\strong{What happens if I send more data than expected?}}
+\li{Buffer overflow: Overwrite adjacent memory}
+\li{Identify what gets overwritten (use pattern generation)}
+\li{Determine offset to critical data}
+}
+
+\ol{
+\li{\strong{What can I overwrite to change program behavior?}}
+\li{Return address → redirect execution on function return}
+\li{Function pointer → redirect execution on indirect call}
+\li{GOT/PLT entry → redirect library function calls}
+\li{Variable value → bypass checks, unlock features}
+}
+
+\ol{
+\li{\strong{Where can I redirect execution?}}
+\li{Existing code: system(), exec(), one_gadget}
+\li{Leaked addresses: libc functions}
+\li{Injected code: shellcode (if DEP/NX disabled)}
+\li{ROP chains: reuse existing code fragments}
+}
+
+\ol{
+\li{\strong{How do I read the flag?}}
+\li{Direct: Call system("/bin/cat flag.txt") or open()/read()/write()}
+\li{Shell: Call system("/bin/sh") and interact}
+\li{Leak: Read flag into buffer, leak buffer contents}
+}
+}
+}
+
+\subtree{
+\title{Core Methodologies}
+\subtree{
+\title{Vulnerability Discovery}
+\p{\strong{Unsafe API Pattern Recognition:}}
+
+\p{Identify dangerous functions that don't enforce bounds:}
+
+\ul{
+\li{\strong{Unbounded copies}: strcpy, strcat, sprintf, gets}
+\li{\strong{Underspecified bounds}: read(), recv(), scanf("\%s"), strncpy (no null termination)}
+\li{\strong{Format string bugs}: printf(user_input), fprintf(fp, user_input)}
+\li{\strong{Integer overflows}: malloc(user_size), buffer[user_index], length calculations}
+}
+
+\p{\strong{Investigation strategy:}}
+
+\ol{
+\li{\code{\startverb get-symbols\stopverb} includeExternal=true → Find unsafe API imports}
+\li{\code{\startverb find-cross-references\stopverb} to unsafe functions → Locate usage points}
+\li{\code{\startverb get-decompilation\stopverb} with includeContext=true → Analyze calling context}
+\li{Trace data flow from input to unsafe operation}
+}
+
+\p{\strong{Stack Layout Analysis:}}
+
+\p{Understand memory organization:}
+
+\pre{\startverb
+High addresses
+├── Function arguments
+├── Return address         ← Critical target for overflow
+├── Saved frame pointer
+├── Local variables        ← Vulnerable buffers here
+├── Compiler canaries      ← Stack protection (if enabled)
+└── Padding/alignment
+Low addresses
+\stopverb}
+
+\p{\strong{Investigation strategy:}}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} of vulnerable function → See local variable layout}
+\li{Estimate offsets: buffer → saved registers → return address}
+\li{\code{\startverb set-bookmark\stopverb} type="Analysis" category="Vulnerability" at overflow site}
+\li{\code{\startverb set-decompilation-comment\stopverb} documenting buffer size and adjacent targets}
+}
+
+\p{\strong{Heap Exploitation Patterns:}}
+
+\p{Heap vulnerabilities differ from stack:}
+
+\ul{
+\li{\strong{Use-after-free}: Access freed memory (dangling pointers)}
+\li{\strong{Double-free}: Free same memory twice (corrupt allocator metadata)}
+\li{\strong{Heap overflow}: Overflow into adjacent heap chunk (overwrite metadata/data)}
+\li{\strong{Type confusion}: Use object as wrong type after reallocation}
+}
+
+\p{\strong{Investigation strategy:}}
+
+\ol{
+\li{\code{\startverb search-decompilation\stopverb} pattern="(malloc|free|realloc)" → Find heap operations}
+\li{Trace pointer lifecycle: allocation → use → free}
+\li{Look for dangling pointer usage after free}
+\li{Identify adjacent allocations (overflow targets)}
+}
+}
+
+\subtree{
+\title{Memory Layout Understanding}
+\p{\strong{Address Space Discovery:}}
+
+\p{Map the binary's memory:}
+
+\ol{
+\li{\code{\startverb get-memory-blocks\stopverb} → See sections (.text, .data, .bss, heap, stack)}
+\li{Note executable sections (shellcode candidates if NX disabled)}
+\li{Note writable sections (data corruption targets)}
+\li{Identify ASLR status (addresses randomized each run?)}
+}
+
+\p{\strong{Offsets and Distances:}}
+
+\p{Calculate critical distances:}
+
+\ul{
+\li{Buffer to return address: For stack overflow payload sizing}
+\li{GOT to PLT: For GOT overwrite attacks}
+\li{Heap chunk to chunk: For heap overflow targeting}
+\li{libc base to useful functions: For address calculation after leak}
+}
+
+\p{\strong{Investigation strategy:}}
+
+\ol{
+\li{\code{\startverb get-data\stopverb} or \code{\startverb read-memory\stopverb} at known addresses → Sample memory layout}
+\li{\code{\startverb find-cross-references\stopverb} direction="both" → Map relationships}
+\li{Calculate offsets manually from decompilation}
+\li{\code{\startverb set-comment\stopverb} at key offsets documenting distances}
+}
+}
+
+\subtree{
+\title{Exploitation Planning}
+\p{\strong{Constraint Analysis:}}
+
+\p{Identify exploitation constraints:}
+
+\ul{
+\li{\strong{Bad bytes}: Null bytes (\startverb \x\stopverb00) terminate C strings → avoid in address/payload}
+\li{\strong{Input size limits}: Truncation, buffering, network MTU}
+\li{\strong{Character restrictions}: Printable-only, alphanumeric, no special chars}
+\li{\strong{Protection mechanisms}: Detect via \code{\startverb search-decompilation\stopverb} pattern="(canary|__stack_chk)"}
+}
+
+\p{\strong{Bypass Strategies:}}
+
+\p{Common protections and bypass techniques:}
+
+\ul{
+\li{\strong{Stack canaries}: Leak canary value, brute-force (fork servers), overwrite without corrupting}
+\li{\strong{ASLR}: Leak addresses (format strings, uninitialized data), partial overwrite (last byte randomization)}
+\li{\strong{NX/DEP}: ROP (Return-Oriented Programming), ret2libc, JOP (Jump-Oriented Programming)}
+\li{\strong{PIE}: Leak code addresses, relative offsets within binary, partial overwrites}
+}
+
+\p{\strong{Exploitation Primitives:}}
+
+\p{Build these fundamental capabilities:}
+
+\ul{
+\li{\strong{Arbitrary write}: Write controlled data to chosen address (format string, heap overflow)}
+\li{\strong{Arbitrary read}: Read from chosen address (format string, uninitialized data, overflow into pointer)}
+\li{\strong{Control flow hijack}: Redirect execution (overwrite return address, function pointer, GOT entry)}
+\li{\strong{Information leak}: Obtain addresses, canaries, pointers (uninitialized variables, format strings)}
+}
+
+\p{\strong{Chain multiple primitives when needed:}}
+
+\ul{
+\li{Leak → Calculate addresses → Overwrite function pointer → Exploit}
+\li{Partial overwrite → Leak full address → Calculate libc base → ret2libc}
+\li{Heap overflow → Overwrite function pointer → Arbitrary write → GOT overwrite → Shell}
+}
+}
+}
+
+\subtree{
+\title{Flexible Workflow}
+\p{This is a \strong{thinking framework}, not a rigid checklist. Adapt to the challenge:}
+
+\subtree{
+\title{Phase 1: Binary Reconnaissance (5-10 tool calls)}
+\p{\strong{Understand the challenge:}}
+
+\ol{
+\li{\code{\startverb get-current-program\stopverb} or \code{\startverb list-project-files\stopverb} → Identify target binary}
+\li{\code{\startverb get-memory-blocks\stopverb} → Map sections, identify protections}
+\li{\code{\startverb get-functions\stopverb} filterDefaultNames=false → Count functions (stripped vs. symbolic)}
+\li{\code{\startverb get-strings\stopverb} regexPattern="flag" → Find flag-related strings}
+\li{\code{\startverb get-symbols\stopverb} includeExternal=true → List imported functions}
+}
+
+\p{\strong{Identify entry points and input vectors:}}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} functionNameOrAddress="main" limit=50 → See program flow}
+\li{Look for input functions: read(), recv(), gets(), scanf(), fgets()}
+\li{\code{\startverb find-cross-references\stopverb} to input functions → Map input flow}
+\li{\code{\startverb set-bookmark\stopverb} type="TODO" category="Input Vector" at each input point}
+}
+
+\p{\strong{Flag suspicious patterns:}}
+
+\ul{
+\li{Unsafe functions (strcpy, sprintf, gets)}
+\li{Large stack buffers with small read operations}
+\li{Format string vulnerabilities (user-controlled format)}
+\li{Unbounded loops or recursion}
+}
+}
+
+\subtree{
+\title{Phase 2: Vulnerability Analysis (10-15 tool calls)}
+\p{\strong{Trace data flow from input to vulnerability:}}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} of input-handling function with includeReferenceContext=true}
+\li{Identify buffer sizes: char buf[64], malloc(size), etc.}
+\li{Identify write operations: strcpy(dest, src), read(fd, buf, 1024)}
+\li{\strong{Calculate vulnerability}: Write size > buffer size?}
+}
+
+\p{\strong{Analyze vulnerable function context:}}
+
+\ol{
+\li{\code{\startverb rename-variables\stopverb} → Clarify data flow (user_input, buffer, size, etc.)}
+\li{\code{\startverb change-variable-datatypes\stopverb} → Fix types for clarity}
+\li{\code{\startverb set-decompilation-comment\stopverb} → Document vulnerability location and type}
+}
+
+\p{\strong{Map memory layout around vulnerability:}}
+
+\ol{
+\li{Identify local variables and their stack positions}
+\li{Calculate offset from buffer start to return address}
+\li{\code{\startverb read-memory\stopverb} at nearby addresses → Sample stack layout (if debugging available)}
+\li{\code{\startverb set-bookmark\stopverb} type="Warning" category="Overflow" → Mark vulnerability}
+}
+
+\p{\strong{Cross-reference analysis:}}
+
+\ol{
+\li{\code{\startverb find-cross-references\stopverb} to vulnerable function → How is it called?}
+\li{Check for exploitation helpers: system(), exec(), "/bin/sh" string}
+\li{\code{\startverb get-strings\stopverb} regexPattern="/bin/(sh|bash)" → Find shell strings}
+\li{\code{\startverb search-decompilation\stopverb} pattern="system|exec" → Find execution functions}
+}
+}
+
+\subtree{
+\title{Phase 3: Exploitation Strategy (5-10 tool calls)}
+\p{\strong{Determine exploitation approach:}}
+
+\p{Based on protections and available primitives:}
+
+\p{\strong{If no protections (NX disabled, no canary, no ASLR):}}
+
+\ul{
+\li{Stack overflow → overwrite return address → jump to shellcode}
+\li{Inject shellcode in buffer, jump to buffer address}
+}
+
+\p{\strong{If NX enabled but no ASLR:}}
+
+\ul{
+\li{ret2libc: Overwrite return address → chain to system() with "/bin/sh"}
+\li{ROP chain: Chain gadgets to build system("/bin/sh") call}
+\li{GOT overwrite: Overwrite GOT entry to redirect library call}
+}
+
+\p{\strong{If ASLR enabled:}}
+
+\ul{
+\li{Leak addresses first (format string, uninitialized data)}
+\li{Calculate libc base from leaked address}
+\li{Use leak to build ROP chain or ret2libc with correct addresses}
+}
+
+\p{\strong{If stack canary present:}}
+
+\ul{
+\li{Leak canary value (format string, sequential overflow)}
+\li{Preserve canary in overflow payload}
+\li{Or use heap exploitation instead}
+}
+
+\p{\strong{Investigation for each strategy:}}
+
+\ol{
+\li{\code{\startverb get-strings\stopverb} regexPattern="(\\startverb \x\stopverb2f|/)bin/(sh|bash)" → Find shell strings}
+\li{\code{\startverb find-cross-references\stopverb} to "/bin/sh" → Get string address}
+\li{\code{\startverb get-symbols\stopverb} includeExternal=true → Find system/exec imports}
+\li{\code{\startverb get-decompilation\stopverb} of system → Get address (if not PIE)}
+}
+
+\p{\strong{For ROP:}}
+
+\ol{
+\li{\code{\startverb search-decompilation\stopverb} pattern="(pop|ret)" → Find gadget candidates}
+\li{Manual ROP gadget discovery (use external tools like ROPgadget)}
+\li{Document gadget addresses with \code{\startverb set-bookmark\stopverb} type="Note" category="ROP Gadget"}
+}
+
+\p{\strong{For format string exploitation:}}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} of printf call → Analyze format string control}
+\li{Test format string primitives: \%x (leak), \%n (write), \%s (arbitrary read)}
+\li{\code{\startverb set-comment\stopverb} documenting exploitation primitive}
+}
+}
+
+\subtree{
+\title{Phase 4: Payload Construction (Conceptual)}
+\p{\strong{Build the exploit payload:}}
+
+\p{This happens \strong{outside Ghidra} using Python/pwntools, but plan it here:}
+
+\ol{
+\li{\strong{Document payload structure} using \code{\startverb set-comment\stopverb}:}
+}
+
+\ol{
+\li{\strong{Record critical addresses} with \code{\startverb set-bookmark\stopverb}:}
+\li{Buffer address: 0x7fffffffdd00}
+\li{Return address location: 0x7fffffffdd40 (offset +64)}
+\li{system() address: 0x7ffff7e14410}
+\li{"/bin/sh" string: 0x00404030}
+}
+
+\ol{
+\li{\strong{Document exploitation steps} with \code{\startverb set-bookmark\stopverb} type="Analysis" category="Exploit Plan":}
+}
+
+\ol{
+\li{\strong{Track assumptions} with \code{\startverb set-bookmark\stopverb} type="Warning" category="Assumption":}
+\li{"Assuming stack addresses are stable (no ASLR)"}
+\li{"Assuming no canary based on decompilation (verify runtime)"}
+}
+}
+
+\subtree{
+\title{Phase 5: Exploitation Validation (Iterative)}
+\p{\strong{This phase happens outside Ghidra}, but document findings:}
+
+\ol{
+\li{Test exploit against local binary}
+\li{Adjust offsets based on crash analysis}
+\li{Handle bad bytes or character restrictions}
+\li{Refine payload until successful}
+}
+
+\p{\strong{Update Ghidra database with findings:}}
+
+\ul{
+\li{\code{\startverb set-comment\stopverb} with actual working offsets}
+\li{\code{\startverb set-bookmark\stopverb} documenting successful exploitation}
+\li{\code{\startverb checkin-program\stopverb} message="Documented successful exploitation of buffer overflow in function_X"}
+}
+}
+}
+
+\subtree{
+\title{Pattern Recognition}
+\p{See \code{\startverb patterns.md\stopverb} for detailed vulnerability patterns:}
+
+\ul{
+\li{Unsafe API usage patterns}
+\li{Buffer overflow indicators}
+\li{Format string vulnerability signatures}
+\li{Heap exploitation patterns}
+\li{Integer overflow scenarios}
+\li{Control flow hijacking opportunities}
+}
+}
+
+\subtree{
+\title{Exploitation Techniques Reference}
+\subtree{
+\title{Stack Buffer Overflow}
+\p{\strong{Concept}: Write beyond buffer bounds to overwrite return address or function pointers on stack.}
+
+\p{\strong{Discovery}:}
+
+\ol{
+\li{Find unsafe copy: strcpy, gets, scanf("\%s"), read with large size}
+\li{Identify buffer size from decompilation}
+\li{Compare buffer size to maximum input size}
+\li{Calculate offset to return address (buffer size + saved registers)}
+}
+
+\p{\strong{Exploitation}:}
+
+\ul{
+\li{Payload: [padding to return address] + [new return address] + [optional arguments/ROP chain]}
+\li{Target: Overwrite return address to redirect execution}
+}
+}
+
+\subtree{
+\title{Format String Vulnerability}
+\p{\strong{Concept}: User-controlled format string allows arbitrary memory read/write.}
+
+\p{\strong{Discovery}:}
+
+\ol{
+\li{\code{\startverb search-decompilation\stopverb} pattern="printf|fprintf|sprintf"}
+\li{Check if format string comes from user input: printf(user_buffer)}
+\li{Vulnerable pattern: printf(input) instead of printf("\%s", input)}
+}
+
+\p{\strong{Exploitation}:}
+
+\ul{
+\li{Read: \%x, \%p (leak stack values), \%s (arbitrary read via pointer on stack)}
+\li{Write: \%n (write number of bytes printed to pointer on stack)}
+\li{Position: \%N$x (access Nth argument directly)}
+}
+
+\p{\strong{Investigation}:}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} with includeReferenceContext → See printf call context}
+\li{\code{\startverb set-decompilation-comment\stopverb} documenting format string control}
+\li{\code{\startverb set-bookmark\stopverb} type="Warning" category="Format String"}
+}
+}
+
+\subtree{
+\title{Return-Oriented Programming (ROP)}
+\p{\strong{Concept}: Chain existing code fragments (gadgets) ending in 'ret' to build arbitrary computation without injecting code.}
+
+\p{\strong{Discovery}:}
+
+\ol{
+\li{Find gadgets: \code{\startverb pop reg; ret\stopverb}, \code{\startverb mov [addr], reg; ret\stopverb}, \code{\startverb syscall; ret\stopverb}}
+\li{External tool: ROPgadget, ropper (Ghidra doesn't have built-in gadget search)}
+\li{Document gadgets in Ghidra with \code{\startverb set-bookmark\stopverb} type="Note" category="ROP Gadget"}
+}
+
+\p{\strong{Exploitation}:}
+
+\ul{
+\li{Chain gadgets by placing addresses on stack}
+\li{Each gadget executes, then 'ret' pops next gadget address}
+\li{Build syscall with proper registers: execve("/bin/sh", NULL, NULL)}
+}
+
+\p{\strong{Workflow}:}
+
+\ol{
+\li{Identify required gadgets for goal (e.g., execve syscall)}
+\li{\code{\startverb set-comment\stopverb} at gadget addresses documenting purpose}
+\li{Plan ROP chain structure with \code{\startverb set-bookmark\stopverb} type="Analysis" category="ROP Chain"}
+}
+}
+
+\subtree{
+\title{ret2libc}
+\p{\strong{Concept}: Redirect execution to libc functions (system, exec, one_gadget) instead of shellcode.}
+
+\p{\strong{Discovery}:}
+
+\ol{
+\li{\code{\startverb get-symbols\stopverb} includeExternal=true → Find libc imports}
+\li{\code{\startverb find-cross-references\stopverb} to system, execve → Get addresses}
+\li{\code{\startverb get-strings\stopverb} regexPattern="/bin/sh" → Find shell string}
+}
+
+\p{\strong{Exploitation} (no ASLR):}
+
+\ul{
+\li{Overwrite return address → system function address}
+\li{Set first argument → pointer to "/bin/sh" string}
+\li{Calling convention: x86-64 uses RDI for first arg, x86 uses stack}
+}
+
+\p{\strong{Exploitation} (with ASLR):}
+
+\ul{
+\li{Leak libc address (format string, uninitialized pointer)}
+\li{Calculate system/exec address = libc_base + offset}
+\li{Build ROP chain with calculated addresses}
+}
+
+\p{\strong{Investigation}:}
+
+\ol{
+\li{\code{\startverb get-data\stopverb} at GOT entries → See libc function addresses}
+\li{Calculate libc base from known offset}
+\li{\code{\startverb set-bookmark\stopverb} documenting calculated addresses}
+}
+}
+
+\subtree{
+\title{Heap Exploitation}
+\p{\strong{Concept}: Corrupt heap metadata or overflow between heap chunks to achieve arbitrary write or control flow hijack.}
+
+\p{\strong{Discovery}:}
+
+\ol{
+\li{\code{\startverb search-decompilation\stopverb} pattern="malloc|free|realloc"}
+\li{Trace allocation and free patterns}
+\li{Look for use-after-free: pointer used after free()}
+\li{Look for heap overflow: write beyond allocated size}
+}
+
+\p{\strong{Exploitation techniques}:}
+
+\ul{
+\li{\strong{Use-after-free}: Free object, allocate new object in same slot, use old pointer to access new object (type confusion)}
+\li{\strong{Double-free}: Free same pointer twice, corrupt allocator metadata}
+\li{\strong{Heap overflow}: Overflow into next chunk, overwrite metadata (size, pointers) or data (function pointers)}
+\li{\strong{Fastbin/tcache poisoning}: Corrupt freelist pointers to allocate arbitrary memory}
+}
+
+\p{\strong{Investigation}:}
+
+\ol{
+\li{\code{\startverb rename-variables\stopverb} for heap pointers (heap_ptr, freed_ptr, chunk1, chunk2)}
+\li{\code{\startverb set-decompilation-comment\stopverb} at allocation/free sites}
+\li{\code{\startverb set-bookmark\stopverb} type="Warning" category="Use-After-Free"}
+}
+}
+
+\subtree{
+\title{Integer Overflow}
+\p{\strong{Concept}: Integer overflow/underflow leads to incorrect buffer size calculation or bounds check bypass.}
+
+\p{\strong{Discovery}:}
+
+\ol{
+\li{Find size calculations: size = user_input * sizeof(element)}
+\li{Check for overflow: What if user_input is very large?}
+\li{Find bounds checks: if (index < size) → What if index is large unsigned?}
+}
+
+\p{\strong{Exploitation}:}
+
+\ul{
+\li{Overflow allocation size → heap buffer too small → heap overflow}
+\li{Underflow size check → negative check bypassed → buffer overflow}
+\li{Wrap-around arithmetic → bypass length checks}
+}
+
+\p{\strong{Investigation}:}
+
+\ol{
+\li{\code{\startverb change-variable-datatypes\stopverb} to proper integer types (uint32_t, size_t)}
+\li{Identify overflow scenarios in comments}
+\li{\code{\startverb set-bookmark\stopverb} type="Warning" category="Integer Overflow"}
+}
+}
+}
+
+\subtree{
+\title{Tool Integration}
+\p{\strong{Use ReVa tools systematically:}}
+
+\subtree{
+\title{Discovery Tools}
+\ul{
+\li{\code{\startverb get-symbols\stopverb} → Find unsafe API imports}
+\li{\code{\startverb get-strings\stopverb} → Find interesting strings (flag, shell, paths)}
+\li{\code{\startverb search-decompilation\stopverb} → Find vulnerability patterns (unsafe functions)}
+\li{\code{\startverb get-functions-by-similarity\stopverb} → Find functions similar to known vulnerable pattern}
+}
+}
+
+\subtree{
+\title{Analysis Tools}
+\ul{
+\li{\code{\startverb get-decompilation\stopverb} with \code{\startverb includeIncomingReferences=true\stopverb} and \code{\startverb includeReferenceContext=true\stopverb}}
+\li{\code{\startverb find-cross-references\stopverb} with \code{\startverb includeContext=true\stopverb} → Trace data flow}
+\li{\code{\startverb get-data\stopverb} → Examine global variables, GOT entries, constant data}
+\li{\code{\startverb read-memory\stopverb} → Sample memory layout}
+}
+}
+
+\subtree{
+\title{Database Improvement Tools}
+\ul{
+\li{\code{\startverb rename-variables\stopverb} → Clarify exploitation-relevant variables (buffer, user_input, return_addr)}
+\li{\code{\startverb change-variable-datatypes\stopverb} → Fix types for proper understanding}
+\li{\code{\startverb set-decompilation-comment\stopverb} → Document vulnerabilities inline}
+\li{\code{\startverb set-comment\stopverb} → Document exploitation strategy at key addresses}
+\li{\code{\startverb set-bookmark\stopverb} → Track vulnerabilities, gadgets, exploit plan}
+}
+}
+
+\subtree{
+\title{Organization Tools}
+\ul{
+\li{\code{\startverb set-bookmark\stopverb} type="Warning" category="Vulnerability" → Mark vulnerabilities}
+\li{\code{\startverb set-bookmark\stopverb} type="Note" category="ROP Gadget" → Track gadgets}
+\li{\code{\startverb set-bookmark\stopverb} type="Analysis" category="Exploit Plan" → Document strategy}
+\li{\code{\startverb set-bookmark\stopverb} type="TODO" category="Verify" → Track assumptions to verify}
+\li{\code{\startverb checkin-program\stopverb} → Save progress}
+}
+}
+}
+
+\subtree{
+\title{Success Criteria}
+\p{You've successfully completed the challenge when:}
+
+\ol{
+\li{\strong{Vulnerability identified}: Specific function, line, and vulnerability type documented}
+\li{\strong{Memory layout understood}: Buffer sizes, offsets, adjacent data mapped}
+\li{\strong{Exploitation strategy planned}: Clear path from vulnerability to flag documented}
+\li{\strong{Critical addresses recorded}: All addresses needed for exploit payload documented}
+\li{\strong{Assumptions tracked}: All assumptions documented with confidence levels}
+\li{\strong{Database improved}: Renamed variables, added comments, set bookmarks for clarity}
+\li{\strong{Exploit plan ready}: Sufficient information to write exploit code outside Ghidra}
+}
+
+\p{\strong{Return to user:}}
+
+\ul{
+\li{Vulnerability description with evidence}
+\li{Exploitation approach explanation}
+\li{Critical addresses and offsets}
+\li{Payload structure plan}
+\li{Assumptions and verification needs}
+\li{Follow-up tasks if needed (e.g., "Test exploit against binary")}
+}
+}
+
+\subtree{
+\title{Anti-Patterns}
+\p{\strong{Don't}:}
+
+\ul{
+\li{Assume vulnerability without evidence (check buffer sizes!)}
+\li{Forget about protections (canaries, NX, ASLR, PIE)}
+\li{Overlook input restrictions (bad bytes, size limits)}
+\li{Get stuck on one approach (try different exploitation techniques)}
+\li{Ignore calling conventions (x86 vs x64 argument passing)}
+\li{Forget null byte termination (C string functions)}
+}
+
+\p{\strong{Do}:}
+
+\ul{
+\li{Verify buffer sizes from decompilation}
+\li{Check for stack canaries: \code{\startverb __stack_chk_fail\stopverb} references}
+\li{Calculate offsets precisely (buffer to return address)}
+\li{Document all assumptions with \code{\startverb set-bookmark\stopverb} type="Warning"}
+\li{Adapt exploitation technique to protections present}
+\li{Think creatively (chain primitives, use unconventional targets)}
+}
+}
+
+\subtree{
+\title{Remember}
+\p{Binary exploitation is \strong{creative problem-solving}:}
+
+\ul{
+\li{Understand \strong{why} vulnerabilities exist (unsafe assumptions)}
+\li{Think \strong{how} to manipulate memory (data flow analysis)}
+\li{Plan \strong{what} to overwrite (control flow, data, pointers)}
+\li{Determine \strong{where} to redirect (existing code, injected code, ROP)}
+\li{Execute \strong{step-by-step} (leak, calculate, overwrite, trigger)}
+}
+
+\p{Every CTF challenge is different. Use this framework to \strong{think} about exploitation, not as a checklist to blindly follow.}
+
+\p{\strong{Your goal}: Document enough information in Ghidra to write the exploit script. The actual exploitation happens outside, but the analysis happens here.}
+}
+}

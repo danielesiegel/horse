@@ -1,0 +1,1055 @@
+\title{Gget}
+
+\taxon{skill}
+
+\meta{description}{"CLI/Python toolkit for rapid bioinformatics queries. Preferred for quick BLAST searches. Access to 20+ databases: gene info (Ensembl/UniProt), AlphaFold, ARCHS4, Enrichr, OpenTargets, COSMIC, genome downloads. For advanced BLAST/batch processing, use biopython. For multi-database integration, use bioservices."}
+
+\subtree{
+\title{gget}
+\subtree{
+\title{Overview}
+\p{gget is a command-line bioinformatics tool and Python package providing unified access to 20+ genomic databases and analysis methods. Query gene information, sequence analysis, protein structures, expression data, and disease associations through a consistent interface. All gget modules work both as command-line tools and as Python functions.}
+
+\p{\strong{Important}: The databases queried by gget are continuously updated, which sometimes changes their structure. gget modules are tested automatically on a biweekly basis and updated to match new database structures when necessary.}
+}
+
+\subtree{
+\title{Installation}
+\p{Install gget in a clean virtual environment to avoid conflicts:}
+
+\pre{\startverb
+# Using uv (recommended)
+uv uv pip install gget
+
+# Or using pip
+uv pip install --upgrade gget
+
+# In Python/Jupyter
+import gget
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Basic usage pattern for all modules:}
+
+\pre{\startverb
+# Command-line
+gget <module> [arguments] [options]
+
+# Python
+gget.module(arguments, options)
+\stopverb}
+
+\p{Most modules return:}
+
+\ul{
+\li{\strong{Command-line}: JSON (default) or CSV with \code{\startverb -csv\stopverb} flag}
+\li{\strong{Python}: DataFrame or dictionary}
+}
+
+\p{Common flags across modules:}
+
+\ul{
+\li{\code{\startverb -o/--out\stopverb}: Save results to file}
+\li{\code{\startverb -q/--quiet\stopverb}: Suppress progress information}
+\li{\code{\startverb -csv\stopverb}: Return CSV format (command-line only)}
+}
+}
+
+\subtree{
+\title{Module Categories}
+\subtree{
+\title{1. Reference & Gene Information}
+\subtree{
+\title{gget ref - Reference Genome Downloads}
+\p{Retrieve download links and metadata for Ensembl reference genomes.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb species\stopverb}: Genus_species format (e.g., 'homo_sapiens', 'mus_musculus'). Shortcuts: 'human', 'mouse'}
+\li{\code{\startverb -w/--which\stopverb}: Specify return types (gtf, cdna, dna, cds, cdrna, pep). Default: all}
+\li{\code{\startverb -r/--release\stopverb}: Ensembl release number (default: latest)}
+\li{\code{\startverb -l/--list_species\stopverb}: List available vertebrate species}
+\li{\code{\startverb -liv/--list_iv_species\stopverb}: List available invertebrate species}
+\li{\code{\startverb -ftp\stopverb}: Return only FTP links}
+\li{\code{\startverb -d/--download\stopverb}: Download files (requires curl)}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# List available species
+gget ref --list_species
+
+# Get all reference files for human
+gget ref homo_sapiens
+
+# Download only GTF annotation for mouse
+gget ref -w gtf -d mouse
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.ref("homo_sapiens")
+gget.ref("mus_musculus", which="gtf", download=True)
+\stopverb}
+}
+
+\subtree{
+\title{gget search - Gene Search}
+\p{Locate genes by name or description across species.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb searchwords\stopverb}: One or more search terms (case-insensitive)}
+\li{\code{\startverb -s/--species\stopverb}: Target species (e.g., 'homo_sapiens', 'mouse')}
+\li{\code{\startverb -r/--release\stopverb}: Ensembl release number}
+\li{\code{\startverb -t/--id_type\stopverb}: Return 'gene' (default) or 'transcript'}
+\li{\code{\startverb -ao/--andor\stopverb}: 'or' (default) finds ANY searchword; 'and' requires ALL}
+\li{\code{\startverb -l/--limit\stopverb}: Maximum results to return}
+}
+
+\p{\strong{Returns}: ensembl_id, gene_name, ensembl_description, ext_ref_description, biotype, URL}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Search for GABA-related genes in human
+gget search -s human gaba gamma-aminobutyric
+
+# Find specific gene, require all terms
+gget search -s mouse -ao and pax7 transcription
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.search(["gaba", "gamma-aminobutyric"], species="homo_sapiens")
+\stopverb}
+}
+
+\subtree{
+\title{gget info - Gene/Transcript Information}
+\p{Retrieve comprehensive gene and transcript metadata from Ensembl, UniProt, and NCBI.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb ens_ids\stopverb}: One or more Ensembl IDs (also supports WormBase, Flybase IDs). Limit: ~1000 IDs}
+\li{\code{\startverb -n/--ncbi\stopverb}: Disable NCBI data retrieval}
+\li{\code{\startverb -u/--uniprot\stopverb}: Disable UniProt data retrieval}
+\li{\code{\startverb -pdb\stopverb}: Include PDB identifiers (increases runtime)}
+}
+
+\p{\strong{Returns}: UniProt ID, NCBI gene ID, primary gene name, synonyms, protein names, descriptions, biotype, canonical transcript}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Get info for multiple genes
+gget info ENSG00000034713 ENSG00000104853 ENSG00000170296
+
+# Include PDB IDs
+gget info ENSG00000034713 -pdb
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.info(["ENSG00000034713", "ENSG00000104853"], pdb=True)
+\stopverb}
+}
+
+\subtree{
+\title{gget seq - Sequence Retrieval}
+\p{Fetch nucleotide or amino acid sequences for genes and transcripts.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb ens_ids\stopverb}: One or more Ensembl identifiers}
+\li{\code{\startverb -t/--translate\stopverb}: Fetch amino acid sequences instead of nucleotide}
+\li{\code{\startverb -iso/--isoforms\stopverb}: Return all transcript variants (gene IDs only)}
+}
+
+\p{\strong{Returns}: FASTA format sequences}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Get nucleotide sequences
+gget seq ENSG00000034713 ENSG00000104853
+
+# Get all protein isoforms
+gget seq -t -iso ENSG00000034713
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.seq(["ENSG00000034713"], translate=True, isoforms=True)
+\stopverb}
+}
+}
+
+\subtree{
+\title{2. Sequence Analysis & Alignment}
+\subtree{
+\title{gget blast - BLAST Searches}
+\p{BLAST nucleotide or amino acid sequences against standard databases.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb sequence\stopverb}: Sequence string or path to FASTA/.txt file}
+\li{\code{\startverb -p/--program\stopverb}: blastn, blastp, blastx, tblastn, tblastx (auto-detected)}
+\li{\code{\startverb -db/--database\stopverb}:}
+\li{Nucleotide: nt, refseq_rna, pdbnt}
+\li{Protein: nr, swissprot, pdbaa, refseq_protein}
+\li{\code{\startverb -l/--limit\stopverb}: Max hits (default: 50)}
+\li{\code{\startverb -e/--expect\stopverb}: E-value cutoff (default: 10.0)}
+\li{\code{\startverb -lcf/--low_comp_filt\stopverb}: Enable low complexity filtering}
+\li{\code{\startverb -mbo/--megablast_off\stopverb}: Disable MegaBLAST (blastn only)}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# BLAST protein sequence
+gget blast MKWMFKEDHSLEHRCVESAKIRAKYPDRVPVIVEKVSGSQIVDIDKRKYLVPSDITVAQFMWIIRKRIQLPSEKAIFLFVDKTVPQSR
+
+# BLAST from file with specific database
+gget blast sequence.fasta -db swissprot -l 10
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.blast("MKWMFK...", database="swissprot", limit=10)
+\stopverb}
+}
+
+\subtree{
+\title{gget blat - BLAT Searches}
+\p{Locate genomic positions of sequences using UCSC BLAT.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb sequence\stopverb}: Sequence string or path to FASTA/.txt file}
+\li{\code{\startverb -st/--seqtype\stopverb}: 'DNA', 'protein', 'translated\%20RNA', 'translated\%20DNA' (auto-detected)}
+\li{\code{\startverb -a/--assembly\stopverb}: Target assembly (default: 'human'/hg38; options: 'mouse'/mm39, 'zebrafinch'/taeGut2, etc.)}
+}
+
+\p{\strong{Returns}: genome, query size, alignment positions, matches, mismatches, alignment percentage}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Find genomic location in human
+gget blat ATCGATCGATCGATCG
+
+# Search in different assembly
+gget blat -a mm39 ATCGATCGATCGATCG
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.blat("ATCGATCGATCGATCG", assembly="mouse")
+\stopverb}
+}
+
+\subtree{
+\title{gget muscle - Multiple Sequence Alignment}
+\p{Align multiple nucleotide or amino acid sequences using Muscle5.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb fasta\stopverb}: Sequences or path to FASTA/.txt file}
+\li{\code{\startverb -s5/--super5\stopverb}: Use Super5 algorithm for faster processing (large datasets)}
+}
+
+\p{\strong{Returns}: Aligned sequences in ClustalW format or aligned FASTA (.afa)}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Align sequences from file
+gget muscle sequences.fasta -o aligned.afa
+
+# Use Super5 for large dataset
+gget muscle large_dataset.fasta -s5
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.muscle("sequences.fasta", save=True)
+\stopverb}
+}
+
+\subtree{
+\title{gget diamond - Local Sequence Alignment}
+\p{Perform fast local protein or translated DNA alignment using DIAMOND.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{Query: Sequences (string/list) or FASTA file path}
+\li{\code{\startverb --reference\stopverb}: Reference sequences (string/list) or FASTA file path (required)}
+\li{\code{\startverb --sensitivity\stopverb}: fast, mid-sensitive, sensitive, more-sensitive, very-sensitive (default), ultra-sensitive}
+\li{\code{\startverb --threads\stopverb}: CPU threads (default: 1)}
+\li{\code{\startverb --diamond_db\stopverb}: Save database for reuse}
+\li{\code{\startverb --translated\stopverb}: Enable nucleotide-to-amino acid alignment}
+}
+
+\p{\strong{Returns}: Identity percentage, sequence lengths, match positions, gap openings, E-values, bit scores}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Align against reference
+gget diamond GGETISAWESQME -ref reference.fasta --threads 4
+
+# Save database for reuse
+gget diamond query.fasta -ref ref.fasta --diamond_db my_db.dmnd
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.diamond("GGETISAWESQME", reference="reference.fasta", threads=4)
+\stopverb}
+}
+}
+
+\subtree{
+\title{3. Structural & Protein Analysis}
+\subtree{
+\title{gget pdb - Protein Structures}
+\p{Query RCSB Protein Data Bank for structure and metadata.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb pdb_id\stopverb}: PDB identifier (e.g., '7S7U')}
+\li{\code{\startverb -r/--resource\stopverb}: Data type (pdb, entry, pubmed, assembly, entity types)}
+\li{\code{\startverb -i/--identifier\stopverb}: Assembly, entity, or chain ID}
+}
+
+\p{\strong{Returns}: PDB format (structures) or JSON (metadata)}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Download PDB structure
+gget pdb 7S7U -o 7S7U.pdb
+
+# Get metadata
+gget pdb 7S7U -r entry
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.pdb("7S7U", save=True)
+\stopverb}
+}
+
+\subtree{
+\title{gget alphafold - Protein Structure Prediction}
+\p{Predict 3D protein structures using simplified AlphaFold2.}
+
+\p{\strong{Setup Required}:}
+
+\pre{\startverb
+# Install OpenMM first
+uv pip install openmm
+
+# Then setup AlphaFold
+gget setup alphafold
+\stopverb}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb sequence\stopverb}: Amino acid sequence (string), multiple sequences (list), or FASTA file. Multiple sequences trigger multimer modeling}
+\li{\code{\startverb -mr/--multimer_recycles\stopverb}: Recycling iterations (default: 3; recommend 20 for accuracy)}
+\li{\code{\startverb -mfm/--multimer_for_monomer\stopverb}: Apply multimer model to single proteins}
+\li{\code{\startverb -r/--relax\stopverb}: AMBER relaxation for top-ranked model}
+\li{\code{\startverb plot\stopverb}: Python-only; generate interactive 3D visualization (default: True)}
+\li{\code{\startverb show_sidechains\stopverb}: Python-only; include side chains (default: True)}
+}
+
+\p{\strong{Returns}: PDB structure file, JSON alignment error data, optional 3D visualization}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Predict single protein structure
+gget alphafold MKWMFKEDHSLEHRCVESAKIRAKYPDRVPVIVEKVSGSQIVDIDKRKYLVPSDITVAQFMWIIRKRIQLPSEKAIFLFVDKTVPQSR
+
+# Predict multimer with higher accuracy
+gget alphafold sequence1.fasta -mr 20 -r
+\stopverb}
+
+\pre{\startverb
+# Python with visualization
+gget.alphafold("MKWMFK...", plot=True, show_sidechains=True)
+
+# Multimer prediction
+gget.alphafold(["sequence1", "sequence2"], multimer_recycles=20)
+\stopverb}
+}
+
+\subtree{
+\title{gget elm - Eukaryotic Linear Motifs}
+\p{Predict Eukaryotic Linear Motifs in protein sequences.}
+
+\p{\strong{Setup Required}:}
+
+\pre{\startverb
+gget setup elm
+\stopverb}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb sequence\stopverb}: Amino acid sequence or UniProt Acc}
+\li{\code{\startverb -u/--uniprot\stopverb}: Indicates sequence is UniProt Acc}
+\li{\code{\startverb -e/--expand\stopverb}: Include protein names, organisms, references}
+\li{\code{\startverb -s/--sensitivity\stopverb}: DIAMOND alignment sensitivity (default: "very-sensitive")}
+\li{\code{\startverb -t/--threads\stopverb}: Number of threads (default: 1)}
+}
+
+\p{\strong{Returns}: Two outputs:}
+
+\ol{
+\li{\strong{ortholog_df}: Linear motifs from orthologous proteins}
+\li{\strong{regex_df}: Motifs directly matched in input sequence}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Predict motifs from sequence
+gget elm LIAQSIGQASFV -o results
+
+# Use UniProt accession with expanded info
+gget elm --uniprot Q02410 -e
+\stopverb}
+
+\pre{\startverb
+# Python
+ortholog_df, regex_df = gget.elm("LIAQSIGQASFV")
+\stopverb}
+}
+}
+
+\subtree{
+\title{4. Expression & Disease Data}
+\subtree{
+\title{gget archs4 - Gene Correlation & Tissue Expression}
+\p{Query ARCHS4 database for correlated genes or tissue expression data.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb gene\stopverb}: Gene symbol or Ensembl ID (with \code{\startverb --ensembl\stopverb} flag)}
+\li{\code{\startverb -w/--which\stopverb}: 'correlation' (default, returns 100 most correlated genes) or 'tissue' (expression atlas)}
+\li{\code{\startverb -s/--species\stopverb}: 'human' (default) or 'mouse' (tissue data only)}
+\li{\code{\startverb -e/--ensembl\stopverb}: Input is Ensembl ID}
+}
+
+\p{\strong{Returns}:}
+
+\ul{
+\li{\strong{Correlation mode}: Gene symbols, Pearson correlation coefficients}
+\li{\strong{Tissue mode}: Tissue identifiers, min/Q1/median/Q3/max expression values}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Get correlated genes
+gget archs4 ACE2
+
+# Get tissue expression
+gget archs4 -w tissue ACE2
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.archs4("ACE2", which="tissue")
+\stopverb}
+}
+
+\subtree{
+\title{gget cellxgene - Single-Cell RNA-seq Data}
+\p{Query CZ CELLxGENE Discover Census for single-cell data.}
+
+\p{\strong{Setup Required}:}
+
+\pre{\startverb
+gget setup cellxgene
+\stopverb}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb --gene\stopverb} (-g): Gene names or Ensembl IDs (case-sensitive! 'PAX7' for human, 'Pax7' for mouse)}
+\li{\code{\startverb --tissue\stopverb}: Tissue type(s)}
+\li{\code{\startverb --cell_type\stopverb}: Specific cell type(s)}
+\li{\code{\startverb --species\stopverb} (-s): 'homo_sapiens' (default) or 'mus_musculus'}
+\li{\code{\startverb --census_version\stopverb} (-cv): Version ("stable", "latest", or dated)}
+\li{\code{\startverb --ensembl\stopverb} (-e): Use Ensembl IDs}
+\li{\code{\startverb --meta_only\stopverb} (-mo): Return metadata only}
+\li{Additional filters: disease, development_stage, sex, assay, dataset_id, donor_id, ethnicity, suspension_type}
+}
+
+\p{\strong{Returns}: AnnData object with count matrices and metadata (or metadata-only dataframes)}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Get single-cell data for specific genes and cell types
+gget cellxgene --gene ACE2 ABCA1 --tissue lung --cell_type "mucus secreting cell" -o lung_data.h5ad
+
+# Metadata only
+gget cellxgene --gene PAX7 --tissue muscle --meta_only -o metadata.csv
+\stopverb}
+
+\pre{\startverb
+# Python
+adata = gget.cellxgene(gene=["ACE2", "ABCA1"], tissue="lung", cell_type="mucus secreting cell")
+\stopverb}
+}
+
+\subtree{
+\title{gget enrichr - Enrichment Analysis}
+\p{Perform ontology enrichment analysis on gene lists using Enrichr.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb genes\stopverb}: Gene symbols or Ensembl IDs}
+\li{\code{\startverb -db/--database\stopverb}: Reference database (supports shortcuts: 'pathway', 'transcription', 'ontology', 'diseases_drugs', 'celltypes')}
+\li{\code{\startverb -s/--species\stopverb}: human (default), mouse, fly, yeast, worm, fish}
+\li{\code{\startverb -bkg_l/--background_list\stopverb}: Background genes for comparison}
+\li{\code{\startverb -ko/--kegg_out\stopverb}: Save KEGG pathway images with highlighted genes}
+\li{\code{\startverb plot\stopverb}: Python-only; generate graphical results}
+}
+
+\p{\strong{Database Shortcuts}:}
+
+\ul{
+\li{'pathway' → KEGG_2021_Human}
+\li{'transcription' → ChEA_2016}
+\li{'ontology' → GO_Biological_Process_2021}
+\li{'diseases_drugs' → GWAS_Catalog_2019}
+\li{'celltypes' → PanglaoDB_Augmented_2021}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Enrichment analysis for ontology
+gget enrichr -db ontology ACE2 AGT AGTR1
+
+# Save KEGG pathways
+gget enrichr -db pathway ACE2 AGT AGTR1 -ko ./kegg_images/
+\stopverb}
+
+\pre{\startverb
+# Python with plot
+gget.enrichr(["ACE2", "AGT", "AGTR1"], database="ontology", plot=True)
+\stopverb}
+}
+
+\subtree{
+\title{gget bgee - Orthology & Expression}
+\p{Retrieve orthology and gene expression data from Bgee database.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb ens_id\stopverb}: Ensembl gene ID or NCBI gene ID (for non-Ensembl species). Multiple IDs supported when \code{\startverb type=expression\stopverb}}
+\li{\code{\startverb -t/--type\stopverb}: 'orthologs' (default) or 'expression'}
+}
+
+\p{\strong{Returns}:}
+
+\ul{
+\li{\strong{Orthologs mode}: Matching genes across species with IDs, names, taxonomic info}
+\li{\strong{Expression mode}: Anatomical entities, confidence scores, expression status}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Get orthologs
+gget bgee ENSG00000169194
+
+# Get expression data
+gget bgee ENSG00000169194 -t expression
+
+# Multiple genes
+gget bgee ENSBTAG00000047356 ENSBTAG00000018317 -t expression
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.bgee("ENSG00000169194", type="orthologs")
+\stopverb}
+}
+
+\subtree{
+\title{gget opentargets - Disease & Drug Associations}
+\p{Retrieve disease and drug associations from OpenTargets.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{Ensembl gene ID (required)}
+\li{\code{\startverb -r/--resource\stopverb}: diseases (default), drugs, tractability, pharmacogenetics, expression, depmap, interactions}
+\li{\code{\startverb -l/--limit\stopverb}: Cap results count}
+\li{Filter arguments (vary by resource):}
+\li{drugs: \code{\startverb --filter_disease\stopverb}}
+\li{pharmacogenetics: \code{\startverb --filter_drug\stopverb}}
+\li{expression/depmap: \code{\startverb --filter_tissue\stopverb}, \code{\startverb --filter_anat_sys\stopverb}, \code{\startverb --filter_organ\stopverb}}
+\li{interactions: \code{\startverb --filter_protein_a\stopverb}, \code{\startverb --filter_protein_b\stopverb}, \code{\startverb --filter_gene_b\stopverb}}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Get associated diseases
+gget opentargets ENSG00000169194 -r diseases -l 5
+
+# Get associated drugs
+gget opentargets ENSG00000169194 -r drugs -l 10
+
+# Get tissue expression
+gget opentargets ENSG00000169194 -r expression --filter_tissue brain
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.opentargets("ENSG00000169194", resource="diseases", limit=5)
+\stopverb}
+}
+
+\subtree{
+\title{gget cbio - cBioPortal Cancer Genomics}
+\p{Plot cancer genomics heatmaps using cBioPortal data.}
+
+\p{\strong{Two subcommands}:}
+
+\p{\strong{search} - Find study IDs:}
+
+\pre{\startverb
+gget cbio search breast lung
+\stopverb}
+
+\p{\strong{plot} - Generate heatmaps:}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb -s/--study_ids\stopverb}: Space-separated cBioPortal study IDs (required)}
+\li{\code{\startverb -g/--genes\stopverb}: Space-separated gene names or Ensembl IDs (required)}
+\li{\code{\startverb -st/--stratification\stopverb}: Column to organize data (tissue, cancer_type, cancer_type_detailed, study_id, sample)}
+\li{\code{\startverb -vt/--variation_type\stopverb}: Data type (mutation_occurrences, cna_nonbinary, sv_occurrences, cna_occurrences, Consequence)}
+\li{\code{\startverb -f/--filter\stopverb}: Filter by column value (e.g., 'study_id:msk_impact_2017')}
+\li{\code{\startverb -dd/--data_dir\stopverb}: Cache directory (default: ./gget_cbio_cache)}
+\li{\code{\startverb -fd/--figure_dir\stopverb}: Output directory (default: ./gget_cbio_figures)}
+\li{\code{\startverb -dpi\stopverb}: Resolution (default: 100)}
+\li{\code{\startverb -sh/--show\stopverb}: Display plot in window}
+\li{\code{\startverb -nc/--no_confirm\stopverb}: Skip download confirmations}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Search for studies
+gget cbio search esophag ovary
+
+# Create heatmap
+gget cbio plot -s msk_impact_2017 -g AKT1 ALK BRAF -st tissue -vt mutation_occurrences
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.cbio_search(["esophag", "ovary"])
+gget.cbio_plot(["msk_impact_2017"], ["AKT1", "ALK"], stratification="tissue")
+\stopverb}
+}
+
+\subtree{
+\title{gget cosmic - COSMIC Database}
+\p{Search COSMIC (Catalogue Of Somatic Mutations In Cancer) database.}
+
+\p{\strong{Important}: License fees apply for commercial use. Requires COSMIC account credentials.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb searchterm\stopverb}: Gene name, Ensembl ID, mutation notation, or sample ID}
+\li{\code{\startverb -ctp/--cosmic_tsv_path\stopverb}: Path to downloaded COSMIC TSV file (required for querying)}
+\li{\code{\startverb -l/--limit\stopverb}: Maximum results (default: 100)}
+}
+
+\p{\strong{Database download flags}:}
+
+\ul{
+\li{\code{\startverb -d/--download_cosmic\stopverb}: Activate download mode}
+\li{\code{\startverb -gm/--gget_mutate\stopverb}: Create version for gget mutate}
+\li{\code{\startverb -cp/--cosmic_project\stopverb}: Database type (cancer, census, cell_line, resistance, genome_screen, targeted_screen)}
+\li{\code{\startverb -cv/--cosmic_version\stopverb}: COSMIC version}
+\li{\code{\startverb -gv/--grch_version\stopverb}: Human reference genome (37 or 38)}
+\li{\code{\startverb --email\stopverb}, \code{\startverb --password\stopverb}: COSMIC credentials}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# First download database
+gget cosmic -d --email user@example.com --password xxx -cp cancer
+
+# Then query
+gget cosmic EGFR -ctp cosmic_data.tsv -l 10
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.cosmic("EGFR", cosmic_tsv_path="cosmic_data.tsv", limit=10)
+\stopverb}
+}
+}
+
+\subtree{
+\title{5. Additional Tools}
+\subtree{
+\title{gget mutate - Generate Mutated Sequences}
+\p{Generate mutated nucleotide sequences from mutation annotations.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb sequences\stopverb}: FASTA file path or direct sequence input (string/list)}
+\li{\code{\startverb -m/--mutations\stopverb}: CSV/TSV file or DataFrame with mutation data (required)}
+\li{\code{\startverb -mc/--mut_column\stopverb}: Mutation column name (default: 'mutation')}
+\li{\code{\startverb -sic/--seq_id_column\stopverb}: Sequence ID column (default: 'seq_ID')}
+\li{\code{\startverb -mic/--mut_id_column\stopverb}: Mutation ID column}
+\li{\code{\startverb -k/--k\stopverb}: Length of flanking sequences (default: 30 nucleotides)}
+}
+
+\p{\strong{Returns}: Mutated sequences in FASTA format}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Single mutation
+gget mutate ATCGCTAAGCT -m "c.4G>T"
+
+# Multiple sequences with mutations from file
+gget mutate sequences.fasta -m mutations.csv -o mutated.fasta
+\stopverb}
+
+\pre{\startverb
+# Python
+import pandas as pd
+mutations_df = pd.DataFrame({"seq_ID": ["seq1"], "mutation": ["c.4G>T"]})
+gget.mutate(["ATCGCTAAGCT"], mutations=mutations_df)
+\stopverb}
+}
+
+\subtree{
+\title{gget gpt - OpenAI Text Generation}
+\p{Generate natural language text using OpenAI's API.}
+
+\p{\strong{Setup Required}:}
+
+\pre{\startverb
+gget setup gpt
+\stopverb}
+
+\p{\strong{Important}: Free tier limited to 3 months after account creation. Set monthly billing limits.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb prompt\stopverb}: Text input for generation (required)}
+\li{\code{\startverb api_key\stopverb}: OpenAI authentication (required)}
+\li{Model configuration: temperature, top_p, max_tokens, frequency_penalty, presence_penalty}
+\li{Default model: gpt-3.5-turbo (configurable)}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+gget gpt "Explain CRISPR" --api_key your_key_here
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.gpt("Explain CRISPR", api_key="your_key_here")
+\stopverb}
+}
+
+\subtree{
+\title{gget setup - Install Dependencies}
+\p{Install/download third-party dependencies for specific modules.}
+
+\p{\strong{Parameters}:}
+
+\ul{
+\li{\code{\startverb module\stopverb}: Module name requiring dependency installation}
+\li{\code{\startverb -o/--out\stopverb}: Output folder path (elm module only)}
+}
+
+\p{\strong{Modules requiring setup}:}
+
+\ul{
+\li{\code{\startverb alphafold\stopverb} - Downloads ~4GB of model parameters}
+\li{\code{\startverb cellxgene\stopverb} - Installs cellxgene-census (may not support latest Python)}
+\li{\code{\startverb elm\stopverb} - Downloads local ELM database}
+\li{\code{\startverb gpt\stopverb} - Configures OpenAI integration}
+}
+
+\p{\strong{Examples}:}
+
+\pre{\startverb
+# Setup AlphaFold
+gget setup alphafold
+
+# Setup ELM with custom directory
+gget setup elm -o /path/to/elm_data
+\stopverb}
+
+\pre{\startverb
+# Python
+gget.setup("alphafold")
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Gene Discovery to Sequence Analysis}
+\p{Find and analyze genes of interest:}
+
+\pre{\startverb
+# 1. Search for genes
+results = gget.search(["GABA", "receptor"], species="homo_sapiens")
+
+# 2. Get detailed information
+gene_ids = results["ensembl_id"].tolist()
+info = gget.info(gene_ids[:5])
+
+# 3. Retrieve sequences
+sequences = gget.seq(gene_ids[:5], translate=True)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Sequence Alignment and Structure}
+\p{Align sequences and predict structures:}
+
+\pre{\startverb
+# 1. Align multiple sequences
+alignment = gget.muscle("sequences.fasta")
+
+# 2. Find similar sequences
+blast_results = gget.blast(my_sequence, database="swissprot", limit=10)
+
+# 3. Predict structure
+structure = gget.alphafold(my_sequence, plot=True)
+
+# 4. Find linear motifs
+ortholog_df, regex_df = gget.elm(my_sequence)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 3: Gene Expression and Enrichment}
+\p{Analyze expression patterns and functional enrichment:}
+
+\pre{\startverb
+# 1. Get tissue expression
+tissue_expr = gget.archs4("ACE2", which="tissue")
+
+# 2. Find correlated genes
+correlated = gget.archs4("ACE2", which="correlation")
+
+# 3. Get single-cell data
+adata = gget.cellxgene(gene=["ACE2"], tissue="lung", cell_type="epithelial cell")
+
+# 4. Perform enrichment analysis
+gene_list = correlated["gene_symbol"].tolist()[:50]
+enrichment = gget.enrichr(gene_list, database="ontology", plot=True)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 4: Disease and Drug Analysis}
+\p{Investigate disease associations and therapeutic targets:}
+
+\pre{\startverb
+# 1. Search for genes
+genes = gget.search(["breast cancer"], species="homo_sapiens")
+
+# 2. Get disease associations
+diseases = gget.opentargets("ENSG00000169194", resource="diseases")
+
+# 3. Get drug associations
+drugs = gget.opentargets("ENSG00000169194", resource="drugs")
+
+# 4. Query cancer genomics data
+study_ids = gget.cbio_search(["breast"])
+gget.cbio_plot(study_ids[:2], ["BRCA1", "BRCA2"], stratification="cancer_type")
+
+# 5. Search COSMIC for mutations
+cosmic_results = gget.cosmic("BRCA1", cosmic_tsv_path="cosmic.tsv")
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 5: Comparative Genomics}
+\p{Compare proteins across species:}
+
+\pre{\startverb
+# 1. Get orthologs
+orthologs = gget.bgee("ENSG00000169194", type="orthologs")
+
+# 2. Get sequences for comparison
+human_seq = gget.seq("ENSG00000169194", translate=True)
+mouse_seq = gget.seq("ENSMUSG00000026091", translate=True)
+
+# 3. Align sequences
+alignment = gget.muscle([human_seq, mouse_seq])
+
+# 4. Compare structures
+human_structure = gget.pdb("7S7U")
+mouse_structure = gget.alphafold(mouse_seq)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 6: Building Reference Indices}
+\p{Prepare reference data for downstream analysis (e.g., kallisto|bustools):}
+
+\pre{\startverb
+# 1. List available species
+gget ref --list_species
+
+# 2. Download reference files
+gget ref -w gtf -w cdna -d homo_sapiens
+
+# 3. Build kallisto index
+kallisto index -i transcriptome.idx transcriptome.fasta
+
+# 4. Download genome for alignment
+gget ref -w dna -d homo_sapiens
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Data Retrieval}
+\ul{
+\li{Use \code{\startverb --limit\stopverb} to control result sizes for large queries}
+\li{Save results with \code{\startverb -o/--out\stopverb} for reproducibility}
+\li{Check database versions/releases for consistency across analyses}
+\li{Use \code{\startverb --quiet\stopverb} in production scripts to reduce output}
+}
+}
+
+\subtree{
+\title{Sequence Analysis}
+\ul{
+\li{For BLAST/BLAT, start with default parameters, then adjust sensitivity}
+\li{Use \code{\startverb gget diamond\stopverb} with \code{\startverb --threads\stopverb} for faster local alignment}
+\li{Save DIAMOND databases with \code{\startverb --diamond_db\stopverb} for repeated queries}
+\li{For multiple sequence alignment, use \code{\startverb -s5/--super5\stopverb} for large datasets}
+}
+}
+
+\subtree{
+\title{Expression and Disease Data}
+\ul{
+\li{Gene symbols are case-sensitive in cellxgene (e.g., 'PAX7' vs 'Pax7')}
+\li{Run \code{\startverb gget setup\stopverb} before first use of alphafold, cellxgene, elm, gpt}
+\li{For enrichment analysis, use database shortcuts for convenience}
+\li{Cache cBioPortal data with \code{\startverb -dd\stopverb} to avoid repeated downloads}
+}
+}
+
+\subtree{
+\title{Structure Prediction}
+\ul{
+\li{AlphaFold multimer predictions: use \code{\startverb -mr 20\stopverb} for higher accuracy}
+\li{Use \code{\startverb -r\stopverb} flag for AMBER relaxation of final structures}
+\li{Visualize results in Python with \code{\startverb plot=True\stopverb}}
+\li{Check PDB database first before running AlphaFold predictions}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\ul{
+\li{Database structures change; update gget regularly: \code{\startverb uv pip install --upgrade gget\stopverb}}
+\li{Process max ~1000 Ensembl IDs at once with gget info}
+\li{For large-scale analyses, implement rate limiting for API queries}
+\li{Use virtual environments to avoid dependency conflicts}
+}
+}
+}
+
+\subtree{
+\title{Output Formats}
+\subtree{
+\title{Command-line}
+\ul{
+\li{Default: JSON}
+\li{CSV: Add \code{\startverb -csv\stopverb} flag}
+\li{FASTA: gget seq, gget mutate}
+\li{PDB: gget pdb, gget alphafold}
+\li{PNG: gget cbio plot}
+}
+}
+
+\subtree{
+\title{Python}
+\ul{
+\li{Default: DataFrame or dictionary}
+\li{JSON: Add \code{\startverb json=True\stopverb} parameter}
+\li{Save to file: Add \code{\startverb save=True\stopverb} or specify \code{\startverb out="filename"\stopverb}}
+\li{AnnData: gget cellxgene}
+}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes reference documentation for detailed module information:}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb module_reference.md\stopverb} - Comprehensive parameter reference for all modules}
+\li{\code{\startverb database_info.md\stopverb} - Information about queried databases and their update frequencies}
+\li{\code{\startverb workflows.md\stopverb} - Extended workflow examples and use cases}
+}
+
+\p{For additional help:}
+
+\ul{
+\li{Official documentation: https://pachterlab.github.io/gget/}
+\li{GitHub issues: https://github.com/pachterlab/gget/issues}
+\li{Citation: Luebbert, L. & Pachter, L. (2023). Efficient querying of genomic reference databases with gget. Bioinformatics. https://doi.org/10.1093/bioinformatics/btac836}
+}
+}
+}
+}

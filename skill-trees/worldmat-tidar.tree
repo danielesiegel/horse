@@ -1,0 +1,186 @@
+\title{Worldmat Tidar}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'worldmat-tidar'}
+
+\subtree{
+\title{worldmat-tidar}
+\blockquote{World Matrices via TiDAR Executions: 3×3×3 Parallel Triadic Computation}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: 0 (ERGODIC - coordinates execution) \strong{Color}: #55D9A0}
+
+\subtree{
+\title{Overview}
+\p{\strong{Worldmat} is a 3×3×3 matrix of TiDAR executions where:}
+
+\ul{
+\li{\strong{Rows}: MINUS/ERGODIC/PLUS polarities (GF(3) agents)}
+\li{\strong{Columns}: PAST/PRESENT/FUTURE temporal phases}
+\li{\strong{Depth}: OBSERVATION/ACTION/PREDICTION modalities}
+}
+
+\p{Each cell executes the TiDAR pattern:}
+
+\ol{
+\li{\strong{DIFFUSION}: Draft tokens in parallel (like SplitRng.split)}
+\li{\strong{AR VERIFY}: Verify sequentially (autoregressive)}
+}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+                    TEMPORAL AXIS
+                 PAST    PRESENT   FUTURE
+                  ↓        ↓        ↓
+            ┌─────────────────────────────┐
+            │  ┌───┐ ┌───┐ ┌───┐         │
+     MINUS  │  │-1 │ │ 0 │ │+1 │  ← GF(3)=0
+            │  └───┘ └───┘ └───┘         │
+POLARITY    │  ┌───┐ ┌───┐ ┌───┐         │
+     ERGODIC│  │ 0 │ │+1 │ │-1 │  ← GF(3)=0
+            │  └───┘ └───┘ └───┘         │
+            │  ┌───┐ ┌───┐ ┌───┐         │
+     PLUS   │  │+1 │ │-1 │ │ 0 │  ← GF(3)=0
+            │  └───┘ └───┘ └───┘         │
+            └─────────────────────────────┘
+                  ↑    ↑    ↑
+               GF(3)=0 for each column
+\stopverb}
+}
+
+\subtree{
+\title{Key Properties}
+\pre{\startverb
+| Property | Value | Guarantee |
+|----------|-------|-----------|
+| **GF(3) Conservation** | All slices sum to 0 | Row, Column, Depth |
+| **SPI** | Same seed → Same result | Parallel or Sequential |
+| **Spectral Gap** | 0.25 (1/4) | Ergodic mixing |
+| **Cells** | 27 | 3³ TiDAR executions |
+\stopverb}
+}
+
+\subtree{
+\title{TiDAR Pattern (arXiv:2511.08923)}
+\pre{\startverb
+# Phase 1: DIFFUSION (parallel drafting)
+def diffusion_draft(self, n_tokens: int = 8):
+    streams = self.rng.split(n_tokens)
+    return [stream.next()[0] for stream in streams]
+
+# Phase 2: AR VERIFY (sequential verification)
+def ar_verify(self):
+    prev = self.seed
+    for token in self.draft_tokens:
+        verified = mix64(prev ^ token)
+        self.verified_tokens.append(verified)
+        prev = verified
+\stopverb}
+}
+
+\subtree{
+\title{Work Stealing}
+\p{Idle agents steal work from busy agents:}
+
+\pre{\startverb
+class WorkStealingScheduler:
+    def steal_work(self, thief: Polarity) -> Optional[TiDARCell]:
+        busiest = max(self.queues.keys(), key=lambda p: len(self.queues[p]))
+        if busiest != thief and self.queues[busiest]:
+            return self.queues[busiest].pop(0)
+        return None
+\stopverb}
+}
+
+\subtree{
+\title{ACSet Export}
+\pre{\startverb
+wm = Worldmat(master_seed=0x87079c9f1d3b0474)
+wm.execute_parallel()
+acset = wm.to_acset()
+# Returns: {schema, parts, subparts, metadata}
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run demo
+python worldmat.py
+
+# Verify SPI
+python worldmat.py verify
+
+# Export ACSet
+python worldmat.py acset > worldmat.json
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+worldmat-tidar (0) forms balanced triads:
+
+three-match (-1) ⊗ worldmat-tidar (0) ⊗ gay-mcp (+1) = 0 ✓
+spi-parallel-verify (-1) ⊗ worldmat-tidar (0) ⊗ triad-interleave (+1) = 0 ✓
+tidar_streaming (-1) ⊗ worldmat-tidar (0) ⊗ gay_triadic_exo (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Integration}
+\subtree{
+\title{With OpenAI ACSet}
+\pre{\startverb
+from worldmat import Worldmat
+from openai_acset import build_openai_acset
+
+# Process conversations through worldmat
+wm = Worldmat(master_seed=conv_fingerprint)
+wm.execute_parallel()
+
+# Each message → cell in worldmat
+# Role (user/assistant/tool) → polarity
+# Time → temporal phase
+# Type (obs/action/pred) → modality
+\stopverb}
+}
+
+\subtree{
+\title{With Gay-MCP}
+\pre{\startverb
+from gay import SplitMixTernary
+
+# Worldmat colors from Gay-MCP
+gen = SplitMixTernary(seed=worldmat.fingerprint())
+palette = gen.palette_hex(n=27)  # One color per cell
+\stopverb}
+}
+}
+
+\subtree{
+\title{Files}
+\pre{\startverb
+| File | Purpose |
+|------|---------|
+| `worldmat.py` | Core implementation |
+| `SKILL.md` | This documentation |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{TiDAR: arXiv:2511.08923}
+\li{Gay.jl/src/spc_repl.jl - Whale synergy matrix}
+\li{rio/gayzip/tidar_streaming.py - TiDAR ZIP implementation}
+\li{gay_triadic_exo.py - Triadic agent orchestration}
+}
+
+\p{Base directory: file:///Users/bob/.claude/skills/worldmat-tidar}
+}
+}

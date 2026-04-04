@@ -1,0 +1,260 @@
+\title{Building Identity Federation With Saml Azure Ad}
+
+\taxon{skill}
+
+\tag{saml}
+
+\tag{azure-ad}
+
+\tag{entra-id}
+
+\tag{federation}
+
+\tag{identity}
+
+\tag{sso}
+
+\tag{adfs}
+
+\tag{hybrid-identity}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Establish SAML 2.0 identity federation between on-premises Active Directory and Azure AD (Microsoft Entra ID) for seamless cross-domain authentication and SSO to cloud applications.}
+
+\subtree{
+\title{Building Identity Federation with SAML Azure AD}
+\subtree{
+\title{Overview}
+\p{Identity federation enables users authenticated by one identity provider to access resources managed by another without maintaining separate credentials. This skill covers establishing SAML 2.0 federation between an organization's on-premises Active Directory (via AD FS or third-party IdP) and Microsoft Entra ID (formerly Azure AD), as well as configuring federated SSO for third-party SaaS applications. Federation eliminates password synchronization concerns and keeps authentication authority on-premises while extending SSO to cloud resources.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring building identity federation with saml azure ad capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{On-premises Active Directory domain}
+\li{AD FS 2019+ or third-party SAML IdP (Okta, Ping, etc.)}
+\li{Microsoft Entra ID tenant (P1 or P2 license recommended)}
+\li{Azure AD Connect (if using hybrid identity with password hash sync as backup)}
+\li{Public TLS certificate for federation endpoint}
+\li{DNS records for federation service name}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Federation Models}
+\pre{\startverb
+| Model | Authentication Authority | Use Case |
+|-------|------------------------|----------|
+| Federated (AD FS) | On-premises AD FS | Regulatory requirement to keep auth on-prem |
+| Managed (PHS) | Azure AD with password hash sync | Simplest cloud auth, AD FS not needed |
+| Managed (PTA) | On-premises via pass-through agent | Cloud auth validated against on-prem AD |
+| Third-Party Federation | External IdP (Okta, Ping) | Multi-IdP environment |
+\stopverb}
+}
+
+\subtree{
+\title{SAML Federation Architecture}
+\pre{\startverb
+User → Cloud App (SP)
+   │
+   └── Redirect to Azure AD
+          │
+          ├── Azure AD checks federated domain
+          │
+          └── Redirect to on-premises AD FS
+                 │
+                 ├── AD FS authenticates against Active Directory
+                 │
+                 ├── AD FS issues SAML token
+                 │
+                 └── Token posted back to Azure AD
+                        │
+                        ├── Azure AD validates federation trust
+                        │
+                        ├── Azure AD issues its own token
+                        │
+                        └── User receives access token for cloud app
+\stopverb}
+}
+
+\subtree{
+\title{Federation Trust Components}
+\pre{\startverb
+| Component | Description |
+|-----------|-------------|
+| Token-Signing Certificate | X.509 certificate used by IdP to sign SAML assertions |
+| Federation Metadata | XML document describing IdP endpoints and capabilities |
+| Relying Party Trust | Configuration in AD FS for each SP (Azure AD) |
+| Claims Rules | Transform AD attributes into SAML claims |
+| Issuer URI | Unique identifier for the IdP (entity ID) |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Prepare AD FS Infrastructure}
+\pre{\startverb
+# Install AD FS role
+Install-WindowsFeature ADFS-Federation -IncludeManagementTools
+
+# Configure AD FS farm
+Install-AdfsFarm `
+    -CertificateThumbprint $certThumbprint `
+    -FederationServiceDisplayName "Corp Federation Service" `
+    -FederationServiceName "fs.corp.example.com" `
+    -ServiceAccountCredential $gmsaCredential
+
+# Verify AD FS is operational
+Get-AdfsProperties | Select-Object HostName, Identifier, FederationPassiveAddress
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Configure Azure AD Federated Domain}
+\pre{\startverb
+# Install Microsoft Graph PowerShell module
+Install-Module Microsoft.Graph -Scope CurrentUser
+
+# Connect to Microsoft Graph
+Connect-MgGraph -Scopes "Domain.ReadWrite.All"
+
+# Convert managed domain to federated
+# Using AD FS federation metadata URL
+$domainId = "corp.example.com"
+$federationConfig = @{
+    issuerUri = "http://fs.corp.example.com/adfs/services/trust"
+    metadataExchangeUri = "https://fs.corp.example.com/adfs/services/trust/mex"
+    passiveSignInUri = "https://fs.corp.example.com/adfs/ls/"
+    signOutUri = "https://fs.corp.example.com/adfs/ls/?wa=wsignout1.0"
+    signingCertificate = $base64Cert
+    preferredAuthenticationProtocol = "saml"
+}
+
+# Apply federation settings to domain
+New-MgDomainFederationConfiguration -DomainId $domainId -BodyParameter $federationConfig
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Configure AD FS Claims Rules}
+\pre{\startverb
+# Add Relying Party Trust for Azure AD
+Add-AdfsRelyingPartyTrust `
+    -Name "Microsoft Office 365 Identity Platform" `
+    -MetadataUrl "https://nexus.microsoftonline-p.com/federationmetadata/2007-06/federationmetadata.xml"
+
+# Configure claim rules
+$rules = @"
+@RuleTemplate = "LdapClaims"
+@RuleName = "Extract AD Attributes"
+c:[Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname",
+   Issuer == "AD AUTHORITY"]
+=> issue(store = "Active Directory",
+   types = ("http://schemas.xmlsoap.org/claims/UPN",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"),
+   query = ";userPrincipalName,mail,givenName,sn;{0}",
+   param = c.Value);
+
+@RuleTemplate = "PassThroughClaims"
+@RuleName = "Pass Through UPN as NameID"
+c:[Type == "http://schemas.xmlsoap.org/claims/UPN"]
+=> issue(Type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+   Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer,
+   Value = c.Value,
+   ValueType = c.ValueType,
+   Properties["http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format"]
+       = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent");
+"@
+
+Set-AdfsRelyingPartyTrust `
+    -TargetName "Microsoft Office 365 Identity Platform" `
+    -IssuanceTransformRules $rules
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Configure Third-Party SaaS Federation}
+\p{For each SaaS application that supports SAML SSO via Azure AD:}
+
+\ol{
+\li{Navigate to Microsoft Entra Admin Center > Enterprise Applications}
+\li{Add the application from the gallery (or create custom SAML)}
+\li{Configure Single Sign-On > SAML:}
+\li{Identifier (Entity ID): Application's entity ID}
+\li{Reply URL (ACS): Application's assertion consumer service URL}
+\li{Sign-on URL: Application's login URL}
+\li{Map user attributes/claims:}
+\li{NameID: user.userprincipalname (email format)}
+\li{Additional claims as required by the application}
+\li{Download the Federation Metadata XML or certificate}
+\li{Configure the SaaS app with Azure AD's federation details}
+}
+}
+
+\subtree{
+\title{Step 5: Certificate Lifecycle Management}
+\p{AD FS token-signing certificates expire and must be renewed:}
+
+\pre{\startverb
+# Check current certificate expiration
+Get-AdfsCertificate -CertificateType Token-Signing | Select-Object Thumbprint, NotAfter
+
+# AD FS supports auto-rollover (enabled by default)
+Get-AdfsProperties | Select-Object AutoCertificateRollover
+
+# If manual rotation is needed:
+# 1. Add new certificate as secondary
+Set-AdfsCertificate -CertificateType Token-Signing -Thumbprint $newThumbprint -IsPrimary $false
+# 2. Update Azure AD with new certificate
+# 3. Promote to primary
+Set-AdfsCertificate -CertificateType Token-Signing -Thumbprint $newThumbprint -IsPrimary $true
+# 4. Remove old certificate
+Remove-AdfsCertificate -CertificateType Token-Signing -Thumbprint $oldThumbprint
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] AD FS farm operational with valid TLS and token-signing certificates}
+\li{[ ] Azure AD domain configured as federated with correct metadata}
+\li{[ ] Claims rules properly transform AD attributes to SAML assertions}
+\li{[ ] Test user can authenticate through federation flow end-to-end}
+\li{[ ] MFA enforced at AD FS or Azure AD conditional access level}
+\li{[ ] Certificate auto-rollover enabled or manual rotation scheduled}
+\li{[ ] Federation metadata endpoint publicly accessible}
+\li{[ ] Smart lockout configured to prevent brute force}
+\li{[ ] Extranet lockout policies configured on AD FS}
+\li{[ ] Monitoring configured for AD FS health and certificate expiry}
+\li{[ ] Disaster recovery: managed authentication fallback documented}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Microsoft Entra Federation Documentation](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/whatis-fed)}
+\li{[AD FS Design Guide](https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/design/ad-fs-design-guide)}
+\li{[Configure AD FS for Azure AD Federation](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-management)}
+\li{[SAML 2.0 Authentication - OASIS](https://docs.oasis-open.org/security/saml/v2.0/)}
+}
+}
+}

@@ -1,0 +1,226 @@
+\title{Binary Triage}
+
+\taxon{skill}
+
+\meta{description}{Performs initial binary triage by surveying memory layout, strings, imports/exports, and functions to quickly understand what a binary does and identify suspicious behavior. Use when first examining a binary, when user asks to triage/survey/analyze a program, or wants an overview before deeper reverse engineering.}
+
+\subtree{
+\title{Binary Triage}
+\subtree{
+\title{Instructions}
+\p{We are triaging a binary to quickly understand what it does. This is an initial survey, not deep analysis. Our goal is to:}
+
+\ol{
+\li{Identify key components and behaviors}
+\li{Flag suspicious or interesting areas}
+\li{Create a task list of next steps for deeper investigation}
+}
+}
+
+\subtree{
+\title{Binary triage with ReVa}
+\p{Follow this systematic workflow using ReVa's MCP tools:}
+
+\subtree{
+\title{1. Identify the Program}
+\ul{
+\li{Use \code{\startverb get-current-program\stopverb} to see the active program}
+\li{Or use \code{\startverb list-project-files\stopverb} to see available programs in the project}
+\li{Note the \code{\startverb programPath\stopverb} (e.g., "/Hatchery.exe") for use in subsequent tools}
+}
+}
+
+\subtree{
+\title{2. Survey Memory Layout}
+\ul{
+\li{Use \code{\startverb get-memory-blocks\stopverb} to understand the binary structure}
+\li{Examine key sections:}
+\li{\code{\startverb .text\stopverb} - executable code}
+\li{\code{\startverb .data\stopverb} - initialized data}
+\li{\code{\startverb .rodata\stopverb} - read-only data (strings, constants)}
+\li{\code{\startverb .bss\stopverb} - uninitialized data}
+\li{Flag unusual characteristics:}
+\li{Unusually large sections}
+\li{Packed/encrypted sections}
+\li{Executable data sections}
+\li{Writable code sections}
+}
+}
+
+\subtree{
+\title{3. Survey Strings}
+\ul{
+\li{Use \code{\startverb get-strings-count\stopverb} to see total string count}
+\li{Use \code{\startverb get-strings\stopverb} with pagination (100-200 strings at a time)}
+\li{Look for indicators of functionality or malicious behavior:}
+\li{\strong{Network}: URLs, IP addresses, domain names, API endpoints}
+\li{\strong{File System}: File paths, registry keys, configuration files}
+\li{\strong{APIs}: Function names, library references}
+\li{\strong{Messages}: Error messages, debug strings, log messages}
+\li{\strong{Suspicious Keywords}: admin, password, credential, token, crypto, encrypt, decrypt, download, execute, inject, shellcode, payload}
+}
+}
+
+\subtree{
+\title{4. Survey Symbols and Imports}
+\ul{
+\li{Use \code{\startverb get-symbols-count\stopverb} with \code{\startverb includeExternal=true\stopverb} to count imports}
+\li{Use \code{\startverb get-symbols\stopverb} with \code{\startverb includeExternal=true\stopverb} and \code{\startverb filterDefaultNames=true\stopverb}}
+\li{Focus on external symbols (imports from libraries)}
+\li{Flag interesting/suspicious imports by category:}
+\li{\strong{Network APIs}: connect, send, recv, WSAStartup, getaddrinfo, curl_*, socket}
+\li{\strong{File I/O}: CreateFile, WriteFile, ReadFile, fopen, fwrite, fread}
+\li{\strong{Process Manipulation}: CreateProcess, exec, fork, system, WinExec, ShellExecute}
+\li{\strong{Memory Operations}: VirtualAlloc, VirtualProtect, mmap, mprotect}
+\li{\strong{Crypto}: CryptEncrypt, CryptDecrypt, EVP_*, AES_*, bcrypt, RC4}
+\li{\strong{Anti-Analysis}: IsDebuggerPresent, CheckRemoteDebuggerPresent, ptrace}
+\li{\strong{Registry}: RegOpenKey, RegSetValue, RegQueryValue}
+\li{Note the ratio of imports to total symbols (heavy import usage may indicate reliance on libraries)}
+}
+}
+
+\subtree{
+\title{5. Survey Functions}
+\ul{
+\li{Use \code{\startverb get-function-count\stopverb} with \code{\startverb filterDefaultNames=true\stopverb} to count named functions}
+\li{Use \code{\startverb get-function-count\stopverb} with \code{\startverb filterDefaultNames=false\stopverb} to count all functions}
+\li{Calculate ratio of named vs unnamed functions (high unnamed ratio = stripped binary)}
+\li{Use \code{\startverb get-functions\stopverb} with \code{\startverb filterDefaultNames=true\stopverb} to list named functions}
+\li{Identify key functions:}
+\li{\strong{Entry points}: \code{\startverb entry\stopverb}, \code{\startverb start\stopverb}, \code{\startverb _start\stopverb}}
+\li{\strong{Main functions}: \code{\startverb main\stopverb}, \code{\startverb WinMain\stopverb}, \code{\startverb DllMain\stopverb}, \code{\startverb _main\stopverb}}
+\li{\strong{Suspicious names}: If not stripped, look for revealing function names}
+}
+}
+
+\subtree{
+\title{6. Cross-Reference Analysis for Key Findings}
+\ul{
+\li{For interesting strings found in Step 3:}
+\li{Use \code{\startverb find-cross-references\stopverb} with \code{\startverb direction="to"\stopverb} and \code{\startverb includeContext=true\stopverb}}
+\li{Identify which functions reference suspicious strings}
+\li{For suspicious imports found in Step 4:}
+\li{Use \code{\startverb find-cross-references\stopverb} with \code{\startverb direction="to"\stopverb} and \code{\startverb includeContext=true\stopverb}}
+\li{Identify which functions call suspicious APIs}
+\li{This helps prioritize which functions need detailed examination}
+}
+}
+
+\subtree{
+\title{7. Selective Initial Decompilation}
+\ul{
+\li{Use \code{\startverb get-decompilation\stopverb} on entry point or main function}
+\li{Set \code{\startverb limit=30\stopverb} to get ~30 lines initially}
+\li{Set \code{\startverb includeIncomingReferences=true\stopverb} to see callers}
+\li{Set \code{\startverb includeReferenceContext=true\stopverb} for context snippets}
+\li{Use \code{\startverb get-decompilation\stopverb} on 1-2 suspicious functions identified in Step 6}
+\li{Set \code{\startverb limit=20-30\stopverb} for quick overview}
+\li{Look for high-level patterns:}
+\li{Loops (encryption/decryption routines)}
+\li{Network operations}
+\li{File operations}
+\li{Process creation}
+\li{Suspicious control flow (obfuscation indicators)}
+\li{\strong{Do not do deep analysis yet} - this is just to understand general behavior}
+}
+}
+
+\subtree{
+\title{8. Document Findings and Create Task List}
+\ul{
+\li{Use the \code{\startverb TodoWrite\stopverb} tool to create an actionable task list with items like:}
+\li{"Investigate string 'http://malicious-c2.com' (referenced at 0x00401234)"}
+\li{"Decompile function sub_401000 (calls VirtualAlloc + memcpy + CreateThread)"}
+\li{"Analyze crypto usage in function encrypt_payload (uses CryptEncrypt)"}
+\li{"Trace anti-debugging checks (IsDebuggerPresent at 0x00402000)"}
+\li{"Examine packed section .UPX0 for unpacking routine"}
+\li{Each todo should be:}
+\li{Specific (include addresses, function names, strings)}
+\li{Actionable (what needs to be investigated)}
+\li{Prioritized (most suspicious first)}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\p{Present triage findings to the user in this structured format:}
+
+\subtree{
+\title{Program Overview}
+\ul{
+\li{\strong{Name}: [Program name from programPath]}
+\li{\strong{Type}: [Executable type - PE, ELF, Mach-O, etc.]}
+\li{\strong{Platform}: [Windows, Linux, macOS, etc.]}
+}
+}
+
+\subtree{
+\title{Memory Layout}
+\ul{
+\li{\strong{Total Size}: [Size in bytes/KB/MB]}
+\li{\strong{Key Sections}: [List main sections with sizes and permissions]}
+\li{\strong{Unusual Characteristics}: [Any packed/encrypted/suspicious sections]}
+}
+}
+
+\subtree{
+\title{String Analysis}
+\ul{
+\li{\strong{Total Strings}: [Count from get-strings-count]}
+\li{\strong{Notable Findings}: [Bullet list of interesting strings with context]}
+\li{\strong{Suspicious Indicators}: [URLs, IPs, suspicious keywords found]}
+}
+}
+
+\subtree{
+\title{Import Analysis}
+\ul{
+\li{\strong{Total Symbols}: [Count from get-symbols-count]}
+\li{\strong{External Imports}: [Count of external symbols]}
+\li{\strong{Key Libraries}: [Main libraries imported]}
+\li{\strong{Suspicious APIs}: [Categorized list of concerning imports]}
+}
+}
+
+\subtree{
+\title{Function Analysis}
+\ul{
+\li{\strong{Total Functions}: [Count with filterDefaultNames=false]}
+\li{\strong{Named Functions}: [Count with filterDefaultNames=true]}
+\li{\strong{Stripped Status}: [Yes/No based on ratio]}
+\li{\strong{Entry Point}: [Address and name]}
+\li{\strong{Main Function}: [Address and name]}
+\li{\strong{Key Functions}: [List of important functions identified]}
+}
+}
+
+\subtree{
+\title{Suspicious Indicators}
+\p{[Bulleted list of red flags discovered, prioritized by severity]}
+}
+
+\subtree{
+\title{Recommended Next Steps}
+\p{[Present the task list created in Step 8]}
+
+\ul{
+\li{Each item should be specific and actionable}
+\li{Prioritize by severity/importance}
+\li{Include addresses, function names, and context}
+}
+}
+}
+
+\subtree{
+\title{Important Notes}
+\ul{
+\li{\strong{Speed over depth}: This is triage, not full analysis. Move quickly through steps.}
+\li{\strong{Use pagination}: Don't request thousands of strings/functions at once. Use chunks of 100-200.}
+\li{\strong{Focus on anomalies}: Flag things that are unusual, suspicious, or interesting.}
+\li{\strong{Context is key}: When using cross-references, enable \code{\startverb includeContext=true\stopverb} for code snippets.}
+\li{\strong{Create actionable todos}: Each next step should be specific enough for another agent to execute.}
+\li{\strong{Be systematic}: Follow all 8 steps in order for comprehensive coverage.}
+}
+}
+}

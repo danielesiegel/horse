@@ -1,0 +1,214 @@
+\title{Aptos Gf3 Society}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Aptos GF(3) Society Skill}
+
+\subtree{
+\title{aptos-gf3-society Skill}
+\blockquote{*"The society that sums to zero is the society that sustains."*}
+
+\subtree{
+\title{Overview}
+\p{\strong{Aptos GF(3) Society} implements on-chain triadic coordination using Move smart contracts. Every operation maintains GF(3) conservation: the sum of all trit assignments is congruent to 0 (mod 3).}
+}
+
+\subtree{
+\title{GF(3) Trit Encoding (Move 1.x Compatible)}
+\pre{\startverb
+const TRIT_ERGODIC: u8 = 0;  // COORDINATOR (0)
+const TRIT_MINUS: u8 = 1;    // VALIDATOR (-1)
+const TRIT_PLUS: u8 = 2;     // GENERATOR (+1)
+\stopverb}
+
+\pre{\startverb
+| Role | Trit | u8 | Function |
+|------|------|-----|----------|
+| GENERATOR | +1 | 2 | Creates, proposes, stakes |
+| COORDINATOR | 0 | 0 | Mediates, balances, votes |
+| VALIDATOR | -1 | 1 | Verifies, challenges, audits |
+\stopverb}
+}
+
+\subtree{
+\title{Denotation}
+\blockquote{\strong{This skill generates Aptos Move modules that implement GF(3)-balanced governance, staking, and asset management with automatic conservation enforcement.}}
+
+\pre{\startverb
+Society : (Members × Roles) → OnChainState
+Invariant: ∀ state ∈ Society: Σ(trits) ≡ 0 (mod 3)
+Effect: Proposals, votes, and stakes all preserve GF(3) balance
+\stopverb}
+}
+
+\subtree{
+\title{Core Modules}
+\subtree{
+\title{1. PyUSD Staking (\code{\startverb pyusd_staking.move\stopverb})}
+\pre{\startverb
+module aptos_society::pyusd_staking {
+    struct StakingPool has key {
+        generator_stake: u64,   // trit = PLUS (2)
+        coordinator_stake: u64, // trit = ERGODIC (0)
+        validator_stake: u64,   // trit = MINUS (1)
+    }
+
+    /// GF(3) balance check: generator ≈ validator stakes
+    fun check_gf3_balance(pool: &StakingPool): bool {
+        let gen = pool.generator_stake;
+        let val = pool.validator_stake;
+        if (gen == 0 && val == 0) { return true };
+        ((larger - smaller) * 100 / larger) <= 10  // 10% tolerance
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{2. IECsat Tiles (\code{\startverb plus_codes.move\stopverb})}
+\p{Plus Code tiles with 69-byte mutual awareness:}
+
+\pre{\startverb
+69 = 3 × 23 (triadic structure)
+
+Per tile:
+  PLUS (+1):    23 bytes → GENERATOR state
+  ERGODIC (0):  23 bytes → COORDINATOR state
+  MINUS (-1):   23 bytes → VALIDATOR state
+\stopverb}
+}
+
+\subtree{
+\title{3. Audit Database (\code{\startverb aptos_audits.duckdb\stopverb})}
+\p{18 audit reports from 6 auditors, all GF(3) balanced:}
+
+\pre{\startverb
+SELECT * FROM gf3_audit_triads;
+-- auditor(+1) ⊗ protocol(0) ⊗ report(-1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Officially Audited Modules}
+\p{From \code{\startverb aptos_audits.duckdb\stopverb}, safe for production use:}
+
+\pre{\startverb
+| Module | Verification | Requirement |
+|--------|--------------|-------------|
+| `coin` | Move Prover | Conservation: result.value == amount |
+| `account` | Move Prover | exists<Account>(new_address) |
+| `timestamp` | Move Prover | Monotonicity: new >= current |
+| `stake` | Move Prover | Validator management |
+| `fungible_asset` | Move Prover | Supply conservation |
+\stopverb}
+}
+
+\subtree{
+\title{Storage Cost Analysis}
+\pre{\startverb
+Precision | Tiles           | Storage    | APT Cost    | USD Cost
+----------|-----------------|------------|-------------|------------
+10-char   | 4.1 trillion    | 286 TB     | 2.9M APT    | $34 billion
+11-char   | 83 trillion     | 5.7 PB     | 57M APT     | $687 billion
+17-char   | 5.3 sextillion  | 366 ZB     | 3.7 quad    | $44 quint
+\stopverb}
+
+\p{\strong{Strategy}: Hierarchical lazy loading}
+
+\ul{
+\li{On-chain: 10-char root tiles + Merkle roots}
+\li{Off-chain: 11-17 char tiles in Arweave/IPFS}
+\li{Proof: Merkle path from root → leaf}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+pyusd_staking (+1) ⊗ datalog-fixpoint (0) ⊗ merkle-validation (-1) = 0 ✓
+aptos-gf3-society (+1) ⊗ move-narya-bridge (0) ⊗ move-smith-fuzzer (-1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Invariant Set}
+\pre{\startverb
+| Invariant | Definition | Enforcement |
+|-----------|------------|-------------|
+| `GF3Conservation` | Σ(trit) ≡ 0 (mod 3) | Runtime assert |
+| `TriadCompleteness` | Every action requires G+C+V | Vote counting |
+| `StakeNonNegative` | Stakes ≥ 0 | u64 type |
+| `CooldownEnforced` | 24h minimum stake | Timestamp check |
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Query audit database
+duckdb src/nickel/aptos_society/aptos_audits.duckdb \
+  -c "SELECT * FROM formally_verified_modules"
+
+# Build Move contracts
+cd src/nickel/aptos_society && aptos move compile
+
+# Deploy to testnet
+aptos move publish --profile testnet
+
+# Check GF(3) conservation
+duckdb aptos_audits.duckdb -c "SELECT * FROM gf3_audit_triads"
+\stopverb}
+}
+
+\subtree{
+\title{Files}
+\pre{\startverb
+src/nickel/aptos_society/
+├── Move.toml                 # Package config
+├── aptos_audits.sql          # Audit schema
+├── aptos_audits.duckdb       # Queryable audit data
+├── aptos_llms_acset.clj      # Lazy docs ACSet
+└── sources/
+    ├── pyusd_staking.move    # GF(3) staking
+    ├── society.move          # Governance
+    └── gf3_move23.move       # Move 2.3 primitives
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Aptos Framework Formal Verification](https://medium.com/aptoslabs/securing-the-aptos-framework-through-formal-verification)}
+\li{[Move Prover Documentation](https://aptos.dev/build/smart-contracts/prover)}
+\li{[PyUSD Contract Addresses](https://www.paypal.com/us/digital-wallet/manage-money/crypto/pyusd)}
+}
+
+\p{\strong{Skill Name}: aptos-gf3-society \strong{Type}: On-Chain Governance / Smart Contracts \strong{Trit}: +1 (PLUS - GENERATOR) \strong{GF(3)}: Creates societies that maintain conservation}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to Cat# = Comod(P) as a bicomodule in the Prof home:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof (profunctors/bimodules)
+Poly Op: ⊗ (parallel composition)
+Kan Role: Adj (adjunction bridge)
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads where:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

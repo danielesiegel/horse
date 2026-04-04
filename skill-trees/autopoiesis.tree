@@ -1,0 +1,320 @@
+\title{Autopoiesis}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{"Self-modifying AI agent configuration via ruler + MCP + DuckDB. All behavior mods become one-liners."}
+
+\subtree{
+\title{Autopoiesis Skill}
+\blockquote{*"A system is autopoietic if it continuously produces itself through its own operations while maintaining its organization."* — Maturana & Varela (1980)}
+
+\subtree{
+\title{1. Core Concept}
+\p{Autopoiesis = \strong{self-production} + \strong{self-maintenance} + \strong{self-boundary}}
+
+\p{In the context of AI agents:}
+
+\ul{
+\li{\strong{Self-production}: Agent spawns new skills/capabilities}
+\li{\strong{Self-maintenance}: Agent validates its own consistency (reafference)}
+\li{\strong{Self-boundary}: Capabilities define what agent can/cannot do (OCapN)}
+}
+}
+
+\subtree{
+\title{2. ACSet Schema (Julia)}
+\pre{\startverb
+using Catlab, ACSets
+
+@present SchemaAutopoiesis(FreeSchema) begin
+    # Objects
+    System::Ob       # Autopoietic systems (agents)
+    Component::Ob    # Produced components (skills, configs)
+    Boundary::Ob     # Capability boundaries
+    
+    # Morphisms (production network)
+    produces::Hom(System, Component)      # System produces components
+    regenerates::Hom(Component, System)   # Components regenerate system
+    delimits::Hom(Boundary, System)       # Boundary delimits system
+    
+    # Attributes
+    seed::Attr(System, UInt64)            # Gay.jl deterministic seed
+    trit::Attr(System, Int8)              # GF(3) assignment {-1, 0, +1}
+    capability::Attr(Boundary, String)    # OCapN sturdyref
+    name::Attr(Component, String)         # Component identifier
+    
+    # OPERATIONAL CLOSURE CONSTRAINT
+    # composition: produces ∘ regenerates = id_System
+end
+
+const AutopoiesisACSet = @acset_type AutopoiesisSchema
+
+# Verify operational closure
+function is_operationally_closed(aps::AutopoiesisACSet)
+    for s in parts(aps, :System)
+        components = incident(aps, s, :produces)
+        for c in components
+            if aps[c, :regenerates] != s
+                return false  # Component doesn't regenerate its producer
+            end
+        end
+    end
+    return true
+end
+\stopverb}
+}
+
+\subtree{
+\title{3. GF(3) Triad}
+\pre{\startverb
+| Component | Trit | Role | Implementation |
+|-----------|------|------|----------------|
+| Recognition | -1 | Self-verify | Reafference loop (Gay.jl) |
+| Boundary | 0 | Coordinate | OCapN capability refs |
+| Production | +1 | Generate | Spawn actors/skills |
+\stopverb}
+
+\p{\strong{Conservation:} (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{4. Self-Rewriting via DPO}
+\p{Double Pushout (DPO) rewriting ensures consistency:}
+
+\pre{\startverb
+     L ←── K ──→ R
+     ↓     ↓     ↓
+     G ←── D ──→ H
+\stopverb}
+
+\ul{
+\li{\strong{L} = Pattern to match (current config)}
+\li{\strong{K} = Interface (preserved structure)}
+\li{\strong{R} = Replacement (new config)}
+\li{\strong{G} = Current system state}
+\li{\strong{H} = New system state (self-rewritten)}
+}
+
+\p{The DPO ensures \code{\startverb produces ∘ regenerates = id_System\stopverb} is preserved.}
+}
+
+\subtree{
+\title{5. CLI: autopoi.bb}
+\pre{\startverb
+#!/usr/bin/env bb
+# Self-modifying agent configuration
+
+# Add a skill to all agents
+bb autopoi.bb skill:add curiosity-driven +1
+
+# Add an MCP server to all agents
+bb autopoi.bb mcp:add gay '{"command":"julia","args":["--project=@gay","-e","using Gay; serve()"]}'
+
+# Propagate changes via ruler
+bb autopoi.bb sync
+
+# Check operational closure
+bb autopoi.bb verify
+\stopverb}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+#!/usr/bin/env bb
+(ns autopoi
+  (:require [babashka.fs :as fs]
+            [babashka.process :as p]
+            [cheshire.core :as json]))
+
+(def db-path "autopoiesis.duckdb")
+(def agent-dirs [".agents" ".claude" ".codex" ".cursor"])
+
+(defn duck-log! [event data]
+  (p/shell "duckdb" db-path "-c"
+    (format "INSERT INTO events (event, data, ts) VALUES ('%s', '%s', NOW())"
+            event (json/generate-string data))))
+
+(defn add-skill! [skill-name trit]
+  (doseq [dir agent-dirs]
+    (let [skill-dir (str dir "/skills/" skill-name)]
+      (fs/create-dirs skill-dir)
+      (spit (str skill-dir "/SKILL.md")
+            (format "---\nname: %s\ntrit: %d\n---\n" skill-name trit))))
+  (duck-log! "skill:add" {:skill skill-name :trit trit})
+  (println "✓ Added skill" skill-name "to all agents"))
+
+(defn mcp-add! [server-name config]
+  (doseq [dir agent-dirs]
+    (let [mcp-file (str dir "/.mcp.json")]
+      (when (fs/exists? mcp-file)
+        (let [current (json/parse-string (slurp mcp-file) true)
+              updated (assoc-in current [:mcpServers (keyword server-name)] 
+                                (json/parse-string config true))]
+          (spit mcp-file (json/generate-string updated {:pretty true}))))))
+  (duck-log! "mcp:add" {:server server-name})
+  (println "✓ Added MCP server" server-name))
+
+(defn verify-closure! []
+  (let [systems (p/shell {:out :string} "duckdb" db-path "-json" "-c"
+                  "SELECT * FROM systems")
+        data (json/parse-string (:out systems) true)]
+    (every? (fn [sys]
+              (let [components (filter #(= (:producer %) (:id sys)) data)]
+                (every? #(= (:regenerates %) (:id sys)) components)))
+            data)))
+
+(defn -main [& args]
+  (case (first args)
+    "skill:add" (add-skill! (second args) (parse-long (nth args 2 "0")))
+    "mcp:add" (mcp-add! (second args) (nth args 2 "{}"))
+    "verify" (if (verify-closure!)
+               (println "✓ Operationally closed")
+               (println "✗ Closure violated"))
+    "sync" (p/shell "ruler" "sync")
+    (println "Usage: autopoi.bb <skill:add|mcp:add|verify|sync> [args]")))
+
+(apply -main *command-line-args*)
+\stopverb}
+}
+}
+
+\subtree{
+\title{6. Reafference Loop (Self-Recognition)}
+\pre{\startverb
+using Gay
+
+function reafference_check(seed::UInt64, index::Int)
+    Gay.gay_seed(seed)
+    
+    # Prediction: what I expect
+    predicted = Gay.color_at(index)
+    
+    # Action: generate the color
+    Gay.gay_seed(seed)  # Reset to same state
+    observed = Gay.color_at(index)
+    
+    # Reafference: did I cause this?
+    if predicted == observed
+        # Self-caused → I am who I think I am
+        return (verified=true, trit=-1, color=predicted)
+    else
+        # External perturbation → something changed me
+        return (verified=false, trit=+1, color=observed)
+    end
+end
+
+# Verify agent identity
+function verify_identity(agent_seed::UInt64)
+    checks = [reafference_check(agent_seed, i) for i in 1:10]
+    all(c.verified for c in checks)
+end
+\stopverb}
+}
+
+\subtree{
+\title{7. DuckDB Schema}
+\pre{\startverb
+CREATE TABLE IF NOT EXISTS systems (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    seed UBIGINT NOT NULL,
+    trit TINYINT CHECK (trit IN (-1, 0, 1)),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS components (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    producer INTEGER REFERENCES systems(id),
+    regenerates INTEGER REFERENCES systems(id),
+    component_type VARCHAR  -- 'skill', 'mcp', 'config'
+);
+
+CREATE TABLE IF NOT EXISTS boundaries (
+    id INTEGER PRIMARY KEY,
+    system_id INTEGER REFERENCES systems(id),
+    capability VARCHAR NOT NULL,  -- OCapN sturdyref
+    permission VARCHAR  -- 'read', 'write', 'spawn'
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY,
+    event VARCHAR NOT NULL,
+    data JSON,
+    ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Operational closure check
+CREATE VIEW v_closure_check AS
+SELECT 
+    s.id as system_id,
+    s.name as system_name,
+    COUNT(c.id) as component_count,
+    SUM(CASE WHEN c.regenerates = s.id THEN 1 ELSE 0 END) as regenerating,
+    COUNT(c.id) = SUM(CASE WHEN c.regenerates = s.id THEN 1 ELSE 0 END) as is_closed
+FROM systems s
+LEFT JOIN components c ON c.producer = s.id
+GROUP BY s.id, s.name;
+\stopverb}
+}
+
+\subtree{
+\title{8. Integration with Tensor Space}
+\p{The autopoiesis skill connects to the tensor product framework:}
+
+\pre{\startverb
+-- Autopoietic tensor elements
+SELECT 
+    te.element_id,
+    'autopoiesis' as skill,
+    p.title as paper,
+    CASE 
+        WHEN p.title LIKE '%Maturana%' OR p.title LIKE '%Varela%' THEN 1.0
+        WHEN p.title LIKE '%self%' OR p.title LIKE '%autopoie%' THEN 0.8
+        ELSE 0.0
+    END as affinity
+FROM tensor_elements te
+JOIN papers p ON te.paper_id = p.paper_id
+WHERE te.skill_id = 'autopoiesis';
+\stopverb}
+}
+
+\subtree{
+\title{9. Commands}
+\pre{\startverb
+# Initialize autopoiesis database
+just autopoi-init
+
+# Add skill with GF(3) trit
+just autopoi-skill curiosity-driven +1
+
+# Verify operational closure
+just autopoi-verify
+
+# Sync to all agents via ruler
+just autopoi-sync
+\stopverb}
+}
+
+\subtree{
+\title{10. See Also}
+\ul{
+\li{[\code{\startverb codex-self-rewriting\stopverb}](../codex-self-rewriting/SKILL.md) - MCP Tasks for self-modification}
+\li{[\code{\startverb bisimulation-game\stopverb}](../bisimulation-game/SKILL.md) - Observational equivalence}
+\li{[\code{\startverb gay-mcp\stopverb}](../gay-mcp/SKILL.md) - Deterministic color generation}
+\li{[\code{\startverb acsets-algebraic-databases\stopverb}](../acsets/SKILL.md) - DPO rewriting}
+}
+}
+
+\subtree{
+\title{11. References}
+\ol{
+\li{\strong{Maturana & Varela} — \em{Autopoiesis and Cognition} (1980)}
+\li{\strong{Dittrich & di Fenizio} — \em{Chemical Organization Theory} (2007)}
+\li{\strong{Kock} — \em{Decomposition Spaces, Incidence Algebras and Möbius Inversion} (2018)}
+\li{\strong{Libkind & Spivak} — \em{Pattern Runs on Matter} (ACT 2024)}
+}
+}
+}

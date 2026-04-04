@@ -1,0 +1,53 @@
+\title{Bifurcation Generator}
+
+\taxon{skill}
+
+\meta{description}{Generate bifurcation diagrams for dynamical systems. Use when visualizing parameter-dependent behavior transitions.}
+
+\subtree{
+\title{Bifurcation Generator}
+\p{Generates bifurcation diagrams showing how system behavior changes with parameters.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Visualizing Hopf, pitchfork, saddle-node bifurcations}
+\li{Parameter sweeps in dynamical systems}
+\li{Stability boundary identification}
+}
+}
+
+\subtree{
+\title{GF(3) Role}
+\p{PLUS (+1) Generator - creates visual outputs from system parameters.}
+}
+
+\subtree{
+\title{Quick Examples}
+\pre{\startverb
+# Logistic map bifurcation
+import numpy as np
+import matplotlib.pyplot as plt
+
+def logistic_bifurcation(r_min=2.5, r_max=4.0, steps=1000):
+    r_vals = np.linspace(r_min, r_max, steps)
+    x = 0.5
+    for r in r_vals:
+        for _ in range(100):  # transient
+            x = r * x * (1 - x)
+        for _ in range(50):   # attractor
+            x = r * x * (1 - x)
+            yield r, x
+\stopverb}
+}
+
+\subtree{
+\title{Integration with bifurcation (0) skill}
+\p{This skill (PLUS +1) pairs with \code{\startverb bifurcation\stopverb} (ERGODIC 0) for balanced analysis:}
+
+\ul{
+\li{bifurcation: detects and classifies transitions}
+\li{bifurcation-generator: visualizes parameter space}
+}
+}
+}

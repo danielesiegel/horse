@@ -1,0 +1,445 @@
+\title{Plurigrid Polyglot}
+
+\taxon{skill}
+
+\meta{description}{Polyglot skill orchestration system integrating Go, Clojure, Hy, and Zig. Provides skill discovery, GF(3) validation, cross-language dispatch, and pluralistic consensus. Use for coordinating multi-language skill ecosystems and maintaining GF(3) conservation across polyglot systems.}
+
+\subtree{
+\title{plurigrid-polyglot - Polyglot Skill Orchestration}
+\subtree{
+\title{Overview}
+\p{\strong{plurigrid-polyglot} coordinates diverse skill ecosystems across multiple programming languages, maintaining GF(3) conservation laws and enabling triadic consensus. It provides the infrastructure for pluralistic scientific skill interfaces (SCI) where validators, coordinators, and generators work together regardless of implementation language.}
+
+\p{\strong{Role}: Universal ERGODIC coordinator - bridges all language-specific skills in a coherent GF(3) framework.}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{Language Ecosystem}
+\pre{\startverb
+                  plurigrid-polyglot
+                         │
+        ┌────────────────┼────────────────┬──────────────┐
+        │                │                │              │
+    [joker]        [jo-clojure]      [hy-regime]   [zig-systems]
+      (Go)          (Clojure)        (Hylang)         (Zig)
+    MINUS(-1)      ERGODIC(0)        PLUS(+1)       ERGODIC(0)
+   Validator      Coordinator       Generator      Coordinator
+       │                │               │              │
+       └────────────────┴───────────────┴──────────────┘
+                        │
+                 GF(3) Conservation
+                ∑ trits ≡ 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{Skill Trit Assignment}
+\pre{\startverb
+| Skill | Language | Trit | Role | Domain |
+|-------|----------|------|------|--------|
+| **joker-sims-parser** | Go | -1 | Validator | File format validation |
+| **jo-clojure** | Clojure | 0 | Coordinator | JVM ecosystem, skill routing |
+| **hy-regime** | Hy | +1 | Generator | Message analysis, prediction |
+| **zig-systems** | Zig | 0 | Coordinator | Systems performance, low-level |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Balance Principle}
+\p{Every composition maintains:}
+
+\pre{\startverb
+∑ trits ≡ 0 (mod 3)
+
+Examples:
+  joker(-1) + jo-clojure(0) + hy-regime(+1) = 0 ✓
+  joker(-1) + zig-systems(0) + [new-gen(+1)] = 0 ✓
+  Multiple coordinators allowed in different domains
+\stopverb}
+}
+}
+
+\subtree{
+\title{Skill Discovery}
+\subtree{
+\title{List All Skills}
+\pre{\startverb
+plurigrid list-skills /Users/bob/i/boxxy/skills
+\stopverb}
+
+\p{Output:}
+
+\pre{\startverb
+Skill                 Language  Trit    Role         Status
+────────────────────────────────────────────────────────────────
+joker-sims-parser     Go        -1      Validator    ✓ Ready
+jo-clojure           Clojure    0       Coordinator  ✓ Ready
+hy-regime            Hy         +1      Generator    ✓ Ready
+zig-systems          Zig        0       Coordinator  ✓ Ready
+\stopverb}
+}
+
+\subtree{
+\title{Validate GF(3) Balance}
+\pre{\startverb
+plurigrid validate-triad joker-sims-parser jo-clojure hy-regime
+\stopverb}
+
+\p{Output:}
+
+\pre{\startverb
+Triad Validation
+────────────────────────────────
+Skills:    [joker-sims-parser, jo-clojure, hy-regime]
+Trits:     [-1, 0, +1]
+Sum:       0 ✓ BALANCED
+Status:    ✓ GF(3) conservative
+\stopverb}
+}
+}
+
+\subtree{
+\title{Cross-Language Dispatch}
+\subtree{
+\title{Generic Skill Invocation}
+\pre{\startverb
+plurigrid invoke <skill> <command> [args...]
+
+# Examples:
+plurigrid invoke joker-sims-parser parse ~/save.sims3pack
+plurigrid invoke jo-clojure list-skills
+plurigrid invoke hy-regime analyze batch.txt
+plurigrid invoke zig-systems compress input.dat
+\stopverb}
+}
+
+\subtree{
+\title{Dispatch Logic}
+\ol{
+\li{\strong{Discover skill} in \code{\startverb /skills/<name>/SKILL.md\stopverb}}
+\li{\strong{Determine language} from metadata or shebang}
+\li{\strong{Select executor}:}
+\li{Go: Call binary directly}
+\li{Clojure: Run with \code{\startverb clojure\stopverb}}
+\li{Hy: Run with \code{\startverb hy\stopverb}}
+\li{Zig: Execute compiled binary}
+\li{\strong{Route arguments} appropriately}
+\li{\strong{Capture output} and return}
+}
+}
+
+\subtree{
+\title{Implementation Pattern}
+\pre{\startverb
+// Pseudocode for dispatcher
+type SkillDispatch struct {
+    Name     string
+    Language string
+    Binary   string
+    Args     []string
+}
+
+func (d SkillDispatch) Invoke() (string, error) {
+    switch d.Language {
+    case "go":
+        return shell.Execute(d.Binary, d.Args...)
+    case "clojure":
+        return shell.Execute("clojure", append([]string{"-X", d.Binary}, d.Args...)...)
+    case "hy":
+        return shell.Execute("hy", append([]string{d.Binary}, d.Args...)...)
+    case "zig":
+        return shell.Execute(d.Binary, d.Args...)
+    }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Polyglot Composition Patterns}
+\subtree{
+\title{Pattern 1: Validator → Coordinator → Generator Pipeline}
+\pre{\startverb
+# Validate Sims file (joker)
+plurigrid invoke joker-sims-parser parse save.sims3pack > validation.json
+
+# Coordinate JVM skills (jo-clojure)
+plurigrid invoke jo-clojure process-result validation.json > coordination.json
+
+# Generate predictions (hy-regime)
+plurigrid invoke hy-regime predict coordination.json > predictions.json
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Parallel Coordinator Invocation}
+\pre{\startverb
+# Get system stats via Zig
+plurigrid invoke zig-systems bench input.dat > perf.json &
+
+# Analyze regime via Hy
+plurigrid invoke hy-regime analyze batch.txt > regime.json &
+
+# Coordinate results (Clojure)
+plurigrid invoke jo-clojure merge perf.json regime.json
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Language Bridging}
+\pre{\startverb
+# Output from Go skill
+joker parse file.sims3pack | \
+  # Pipe to Clojure coordinator
+  clojure -e "(require '[clojure.data.json]) (json/parse)" | \
+  # Send to Hy for prediction
+  hy -e "(analyze (read-json))"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Color Generation}
+\p{Maps skills to deterministic colors via Gay.jl:}
+
+\pre{\startverb
+joker-sims-parser    → #FF4444 (red,    trit -1, validator)
+jo-clojure          → #44FF44 (green,  trit  0, coordinator)
+hy-regime           → #4444FF (blue,   trit +1, generator)
+zig-systems         → #FFFF44 (yellow, trit  0, secondary coordinator)
+\stopverb}
+}
+
+\subtree{
+\title{Setup and Installation}
+\subtree{
+\title{1. Create Skill Directory Structure}
+\pre{\startverb
+mkdir -p /Users/bob/i/boxxy/skills/{joker-sims-parser,jo-clojure,hy-regime,zig-systems}
+cd /Users/bob/i/boxxy/skills
+\stopverb}
+}
+
+\subtree{
+\title{2. Install Language Runtimes}
+\pre{\startverb
+# Go (for joker)
+go version  # Should be 1.21+
+
+# Clojure
+clojure -version  # Should be 1.11+
+
+# Hy
+pip install hy==0.27.0
+
+# Zig
+brew install zig  # or download from ziglang.org
+
+# Verify all
+for lang in go clojure hy zig; do
+  echo -n "$lang: " && which $lang || echo "NOT FOUND"
+done
+\stopverb}
+}
+
+\subtree{
+\title{3. Build All Skills}
+\pre{\startverb
+# Go: joker
+(cd /Users/bob/i/boxxy/cmd/joker && go build -o ../../bin/joker .)
+
+# Clojure: verify installation
+clojure -version
+
+# Hy: verify installation
+hy --version
+
+# Zig: build (if needed)
+cd zig-systems && zig build
+\stopverb}
+}
+
+\subtree{
+\title{4. Validate Skill Ecosystem}
+\pre{\startverb
+plurigrid validate-ecosystem /Users/bob/i/boxxy/skills
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Global Clojure Configuration}
+\p{Update \code{\startverb ~/.clojure/deps.edn\stopverb}:}
+
+\pre{\startverb
+{
+  :aliases {
+    :skill-jvm {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}
+                             nrepl/nrepl {:mvn/version "0.9.1"}
+                             cider/cider-nrepl {:mvn/version "0.28.4"}}}
+
+    :gf3-validate {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}
+                                org.clojure/math.numeric-tower {:mvn/version "0.0.4"}}}
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Environment Variables}
+\pre{\startverb
+# Add to ~/.zshrc or ~/.bashrc
+export BOXXY_SKILLS_DIR="/Users/bob/i/boxxy/skills"
+export BOXXY_BIN="/Users/bob/i/boxxy/bin"
+export PATH="${BOXXY_BIN}:${PATH}"
+
+# Clojure
+export CLJ_CONFIG="~/.clojure"
+
+# Hy
+export HY_VERSION="0.27.0"
+
+# Zig
+export ZIG_CACHE_DIR="/tmp/zig-cache"
+\stopverb}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{\strong{Coordinating multi-language systems}: Need Go, Clojure, Hy, Zig together}
+\li{\strong{Maintaining GF(3) balance}: Ensuring skill triads are conservative}
+\li{\strong{Skill discovery and routing}: Find and invoke skills by name}
+\li{\strong{Pluralistic development}: Mix languages for their strengths}
+\li{\strong{Triadic consensus validation}: Check group decision making}
+\li{\strong{Cross-language FFI}: Call between different language runtimes}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Single-language projects (use language-specific tools)}
+\li{Monolithic applications (better as single large project)}
+\li{Performance-critical hot paths (overhead from dispatch)}
+\li{Simple scripts (overkill for small tasks)}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Skill Not Found}
+\pre{\startverb
+# Verify directory structure
+ls /Users/bob/i/boxxy/skills/*/SKILL.md
+
+# Check skill name matches directory
+grep "^name:" /Users/bob/i/boxxy/skills/*/SKILL.md
+\stopverb}
+}
+
+\subtree{
+\title{Language Runtime Not Available}
+\pre{\startverb
+# Check which runtimes are installed
+for cmd in go clojure hy zig java python3; do
+  which $cmd 2>/dev/null && echo "$cmd: $(($cmd --version 2>/dev/null || echo 'version unknown'))"
+done
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Validation Fails}
+\pre{\startverb
+# Check trit assignments
+grep "gf3-trit:" /Users/bob/i/boxxy/skills/*/SKILL.md
+
+# Manually sum
+plurigrid validate-triad joker-sims-parser jo-clojure hy-regime
+# Should output: Sum: 0 ✓ BALANCED
+\stopverb}
+}
+
+\subtree{
+\title{Invocation Fails}
+\pre{\startverb
+# Test skill directly
+plurigrid invoke joker-sims-parser help
+
+# Check exit code
+echo $?  # Should be 0 for success
+
+# Enable verbose logging
+PLURIGRID_DEBUG=1 plurigrid invoke <skill> <cmd>
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Skill System Architecture](references/SKILL_ARCHITECTURE.md)}
+\li{[GF(3) Theory and Implementation](references/GF3_CONSERVATION.md)}
+\li{[Cross-Language Dispatch Guide](references/DISPATCH_GUIDE.md)}
+\li{[Polyglot Composition Patterns](references/COMPOSITION_PATTERNS.md)}
+\li{[Performance Benchmarking](references/PERFORMANCE_GUIDE.md)}
+}
+}
+
+\subtree{
+\title{Future Enhancements}
+\subtree{
+\title{Phase 1: Foundation (Current)}
+\ul{
+\li{✓ Go (joker)}
+\li{✓ Clojure (jo-clojure)}
+\li{✓ Hy (hy-regime)}
+\li{✓ Zig (zig-systems)}
+}
+}
+
+\subtree{
+\title{Phase 2: Extended Languages}
+\ul{
+\li{Python (numpy, scipy skills)}
+\li{Rust (performance-critical modules)}
+\li{Julia (numerical computation)}
+\li{Scheme (logic programming)}
+\li{WASM (web and edge deployment)}
+}
+}
+
+\subtree{
+\title{Phase 3: Advanced Features}
+\ul{
+\li{Live skill hot-reloading}
+\li{Skill versioning and compatibility}
+\li{Distributed skill invocation (across machines)}
+\li{Skill marketplace and discoverability}
+\li{Runtime profiling and optimization}
+}
+}
+}
+
+\subtree{
+\title{Ecosystem Statistics}
+\pre{\startverb
+Total Skills:     4
+Languages:        4 (Go, Clojure, Hy, Zig)
+GF(3) Balance:    ✓ Conservative
+Total LOC:        ~2500 (implementation)
+Total Docs:       ~5000 lines (reference)
+Build Time:       ~5 seconds
+Binary Size:      ~10MB (all compiled skills)
+Startup Time:     <100ms (avg)
+\stopverb}
+
+\p{\strong{This skill is the keystone of Boxxy's plurigrid polyglot ecosystem. Use it to compose, validate, and orchestrate diverse skill systems while maintaining GF(3) conservation and scientific rigor.}}
+}
+}

@@ -1,0 +1,612 @@
+\title{Constant Time Testing}
+
+\taxon{skill}
+
+\meta{description}{Constant-time testing detects timing side channels in cryptographic code. Use when auditing crypto implementations for timing vulnerabilities.}
+
+\subtree{
+\title{Constant-Time Testing}
+\p{Timing attacks exploit variations in execution time to extract secret information from cryptographic implementations. Unlike cryptanalysis that targets theoretical weaknesses, timing attacks leverage implementation flaws - and they can affect any cryptographic code.}
+
+\subtree{
+\title{Background}
+\p{Timing attacks were introduced by [Kocher](https://paulkocher.com/doc/TimingAttacks.pdf) in 1996. Since then, researchers have demonstrated practical attacks on RSA ([Schindler](https://link.springer.com/content/pdf/10.1007/3-540-44499-8_8.pdf)), OpenSSL ([Brumley and Boneh](https://crypto.stanford.edu/~dabo/papers/ssl-timing.pdf)), AES implementations, and even post-quantum algorithms like [Kyber](https://eprint.iacr.org/2024/1049.pdf).}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| Constant-time | Code path and memory accesses independent of secret data |
+| Timing leakage | Observable execution time differences correlated with secrets |
+| Side channel | Information extracted from implementation rather than algorithm |
+| Microarchitecture | CPU-level timing differences (cache, division, shifts) |
+\stopverb}
+}
+
+\subtree{
+\title{Why This Matters}
+\p{Timing vulnerabilities can:}
+
+\ul{
+\li{\strong{Expose private keys} - Extract secret exponents in RSA/ECDH}
+\li{\strong{Enable remote attacks} - Network-observable timing differences}
+\li{\strong{Bypass cryptographic security} - Undermine theoretical guarantees}
+\li{\strong{Persist silently} - Often undetected without specialized analysis}
+}
+
+\p{Two prerequisites enable exploitation:}
+
+\ol{
+\li{\strong{Access to oracle} - Sufficient queries to the vulnerable implementation}
+\li{\strong{Timing dependency} - Correlation between execution time and secret data}
+}
+}
+
+\subtree{
+\title{Common Constant-Time Violation Patterns}
+\p{Four patterns account for most timing vulnerabilities:}
+
+\pre{\startverb
+// 1. Conditional jumps - most severe timing differences
+if(secret == 1) { ... }
+while(secret > 0) { ... }
+
+// 2. Array access - cache-timing attacks
+lookup_table[secret];
+
+// 3. Integer division (processor dependent)
+data = secret / m;
+
+// 4. Shift operation (processor dependent)
+data = a << secret;
+\stopverb}
+
+\p{\strong{Conditional jumps} cause different code paths, leading to vast timing differences.}
+
+\p{\strong{Array access} dependent on secrets enables cache-timing attacks, as shown in [AES cache-timing research](https://cr.yp.to/antiforgery/cachetiming-20050414.pdf).}
+
+\p{\strong{Integer division and shift operations} leak secrets on certain CPU architectures and compiler configurations.}
+
+\p{When patterns cannot be avoided, employ [masking techniques](https://link.springer.com/chapter/10.1007/978-3-642-38348-9_9) to remove correlation between timing and secrets.}
+}
+
+\subtree{
+\title{Example: Modular Exponentiation Timing Attacks}
+\p{Modular exponentiation (used in RSA and Diffie-Hellman) is susceptible to timing attacks. RSA decryption computes:}
+
+\p{$$ct^{d} \startverb \mod\stopverb{N}$$}
+
+\p{where $d$ is the secret exponent. The \em{exponentiation by squaring} optimization reduces multiplications to $\startverb \log\stopverb{d}$:}
+
+\p{$$ \startverb \begin\stopverb{align*} & \startverb \textbf\stopverb{Input: } \startverb \text\stopverb{base }y,\startverb \text\stopverb{exponent } d=\{d_n,\startverb \cdots\stopverb,d_0\}_2,\startverb \text\stopverb{modulus } N \\ & r = 1 \\ & \startverb \textbf\stopverb{for } i=|n| \startverb \text\stopverb{ downto } 0: \\ & \startverb \quad\stopverb\startverb \textbf\stopverb{if } d_i == 1: \\ & \startverb \quad\stopverb\startverb \quad\stopverb r = r * y \startverb \mod\stopverb{N} \\ & \startverb \quad\stopverb y = y * y \startverb \mod\stopverb{N} \\ & \startverb \textbf\stopverb{return }r \startverb \end\stopverb{align*} $$}
+
+\p{The code branches on exponent bit $d_i$, violating constant-time principles. When $d_i = 1$, an additional multiplication occurs, increasing execution time and leaking bit information.}
+
+\p{Montgomery multiplication (commonly used for modular arithmetic) also leaks timing: when intermediate values exceed modulus $N$, an additional reduction step is required. An attacker constructs inputs $y$ and $y'$ such that:}
+
+\p{$$ \startverb \begin\stopverb{align*} y^2 < y^3 < N \\ y'^2 < N \startverb \leq\stopverb y'^3 \startverb \end\stopverb{align*} $$}
+
+\p{For $y$, both multiplications take time $t_1+t_1$. For $y'$, the second multiplication requires reduction, taking time $t_1+t_2$. This timing difference reveals whether $d_i$ is 0 or 1.}
+}
+}
+
+\subtree{
+\title{When to Use}
+\p{\strong{Apply constant-time analysis when:}}
+
+\ul{
+\li{Auditing cryptographic implementations (primitives, protocols)}
+\li{Code handles secret keys, passwords, or sensitive cryptographic material}
+\li{Implementing crypto algorithms from scratch}
+\li{Reviewing PRs that touch crypto code}
+\li{Investigating potential timing vulnerabilities}
+}
+
+\p{\strong{Consider alternatives when:}}
+
+\ul{
+\li{Code does not process secret data}
+\li{Public algorithms with no secret inputs}
+\li{Non-cryptographic timing requirements (performance optimization)}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Scenario | Recommended Approach | Skill |
+|----------|---------------------|-------|
+| Prove absence of leaks | Formal verification | SideTrail, ct-verif, FaCT |
+| Detect statistical timing differences | Statistical testing | **dudect** |
+| Track secret data flow at runtime | Dynamic analysis | **timecop** |
+| Find cache-timing vulnerabilities | Symbolic execution | Binsec, pitchfork |
+\stopverb}
+}
+
+\subtree{
+\title{Constant-Time Tooling Categories}
+\p{The cryptographic community has developed four categories of timing analysis tools:}
+
+\pre{\startverb
+| Category | Approach | Pros | Cons |
+|----------|----------|------|------|
+| **Formal** | Mathematical proof on model | Guarantees absence of leaks | Complexity, modeling assumptions |
+| **Symbolic** | Symbolic execution paths | Concrete counterexamples | Time-intensive path exploration |
+| **Dynamic** | Runtime tracing with marked secrets | Granular, flexible | Limited coverage to executed paths |
+| **Statistical** | Measure real execution timing | Practical, simple setup | No root cause, noise sensitivity |
+\stopverb}
+
+\subtree{
+\title{1. Formal Tools}
+\p{Formal verification mathematically proves timing properties on an abstraction (model) of code. Tools create a model from source/binary and verify it satisfies specified properties (e.g., variables annotated as secret).}
+
+\p{\strong{Popular tools:}}
+
+\ul{
+\li{[SideTrail](https://github.com/aws/s2n-tls/tree/main/tests/sidetrail)}
+\li{[ct-verif](https://github.com/imdea-software/verifying-constant-time)}
+\li{[FaCT](https://github.com/plsyssec/fact)}
+}
+
+\p{\strong{Strengths:} Proof of absence, language-agnostic (LLVM bytecode) \strong{Weaknesses:} Requires expertise, modeling assumptions may miss real-world issues}
+}
+
+\subtree{
+\title{2. Symbolic Tools}
+\p{Symbolic execution analyzes how paths and memory accesses depend on symbolic variables (secrets). Provides concrete counterexamples. Focus on cache-timing attacks.}
+
+\p{\strong{Popular tools:}}
+
+\ul{
+\li{[Binsec](https://github.com/binsec/binsec)}
+\li{[pitchfork](https://github.com/PLSysSec/haybale-pitchfork)}
+}
+
+\p{\strong{Strengths:} Concrete counterexamples aid debugging \strong{Weaknesses:} Path explosion leads to long execution times}
+}
+
+\subtree{
+\title{3. Dynamic Tools}
+\p{Dynamic analysis marks sensitive memory regions and traces execution to detect timing-dependent operations.}
+
+\p{\strong{Popular tools:}}
+
+\ul{
+\li{[Memsan](https://clang.llvm.org/docs/MemorySanitizer.html): [Tutorial](https://crocs-muni.github.io/ct-tools/tutorials/memsan)}
+\li{\strong{Timecop} (see below)}
+}
+
+\p{\strong{Strengths:} Granular control, targeted analysis \strong{Weaknesses:} Coverage limited to executed paths}
+
+\blockquote{\strong{Detailed Guidance:} See the \strong{timecop} skill for setup and usage.}
+}
+
+\subtree{
+\title{4. Statistical Tools}
+\p{Execute code with various inputs, measure elapsed time, and detect inconsistencies. Tests actual implementation including compiler optimizations and architecture.}
+
+\p{\strong{Popular tools:}}
+
+\ul{
+\li{\strong{dudect} (see below)}
+\li{[tlsfuzzer](https://github.com/tlsfuzzer/tlsfuzzer)}
+}
+
+\p{\strong{Strengths:} Simple setup, practical real-world results \strong{Weaknesses:} No root cause info, noise obscures weak signals}
+
+\blockquote{\strong{Detailed Guidance:} See the \strong{dudect} skill for setup and usage.}
+}
+}
+
+\subtree{
+\title{Testing Workflow}
+\pre{\startverb
+Phase 1: Static Analysis        Phase 2: Statistical Testing
+┌─────────────────┐            ┌─────────────────┐
+│ Identify secret │      →     │ Detect timing   │
+│ data flow       │            │ differences     │
+│ Tool: ct-verif  │            │ Tool: dudect    │
+└─────────────────┘            └─────────────────┘
+         ↓                              ↓
+Phase 4: Root Cause             Phase 3: Dynamic Tracing
+┌─────────────────┐            ┌─────────────────┐
+│ Pinpoint leak   │      ←     │ Track secret    │
+│ location        │            │ propagation     │
+│ Tool: Timecop   │            │ Tool: Timecop   │
+└─────────────────┘            └─────────────────┘
+\stopverb}
+
+\p{\strong{Recommended approach:}}
+
+\ol{
+\li{\strong{Start with dudect} - Quick statistical check for timing differences}
+\li{\strong{If leaks found} - Use Timecop to pinpoint root cause}
+\li{\strong{For high-assurance} - Apply formal verification (ct-verif, SideTrail)}
+\li{\strong{Continuous monitoring} - Integrate dudect into CI pipeline}
+}
+}
+
+\subtree{
+\title{Tools and Approaches}
+\subtree{
+\title{Dudect - Statistical Analysis}
+\p{[Dudect](https://github.com/oreparaz/dudect/) measures execution time for two input classes (fixed vs random) and uses Welch's t-test to detect statistically significant differences.}
+
+\blockquote{\strong{Detailed Guidance:} See the \strong{dudect} skill for complete setup, usage patterns, and CI integration.}
+
+\subtree{
+\title{Quick Start for Constant-Time Analysis}
+\pre{\startverb
+#define DUDECT_IMPLEMENTATION
+#include "dudect.h"
+
+uint8_t do_one_computation(uint8_t *data) {
+    // Code to measure goes here
+}
+
+void prepare_inputs(dudect_config_t *c, uint8_t *input_data, uint8_t *classes) {
+    for (size_t i = 0; i < c->number_measurements; i++) {
+        classes[i] = randombit();
+        uint8_t *input = input_data + (size_t)i * c->chunk_size;
+        if (classes[i] == 0) {
+            // Fixed input class
+        } else {
+            // Random input class
+        }
+    }
+}
+\stopverb}
+
+\p{\strong{Key advantages:}}
+
+\ul{
+\li{Simple C header-only integration}
+\li{Statistical rigor via Welch's t-test}
+\li{Works with compiled binaries (real-world conditions)}
+}
+
+\p{\strong{Key limitations:}}
+
+\ul{
+\li{No root cause information when leak detected}
+\li{Sensitive to measurement noise}
+\li{Cannot guarantee absence of leaks (statistical confidence only)}
+}
+}
+}
+
+\subtree{
+\title{Timecop - Dynamic Tracing}
+\p{[Timecop](https://post-apocalyptic-crypto.org/timecop/) wraps Valgrind to detect runtime operations dependent on secret memory regions.}
+
+\blockquote{\strong{Detailed Guidance:} See the \strong{timecop} skill for installation, examples, and debugging.}
+
+\subtree{
+\title{Quick Start for Constant-Time Analysis}
+\pre{\startverb
+#include "valgrind/memcheck.h"
+
+#define poison(addr, len) VALGRIND_MAKE_MEM_UNDEFINED(addr, len)
+#define unpoison(addr, len) VALGRIND_MAKE_MEM_DEFINED(addr, len)
+
+int main() {
+    unsigned long long secret_key = 0x12345678;
+
+    // Mark secret as poisoned
+    poison(&secret_key, sizeof(secret_key));
+
+    // Any branching or memory access dependent on secret_key
+    // will be reported by Valgrind
+    crypto_operation(secret_key);
+
+    unpoison(&secret_key, sizeof(secret_key));
+}
+\stopverb}
+
+\p{Run with Valgrind:}
+
+\pre{\startverb
+valgrind --leak-check=full --track-origins=yes ./binary
+\stopverb}
+
+\p{\strong{Key advantages:}}
+
+\ul{
+\li{Pinpoints exact line of timing leak}
+\li{No code instrumentation required}
+\li{Tracks secret propagation through execution}
+}
+
+\p{\strong{Key limitations:}}
+
+\ul{
+\li{Cannot detect microarchitecture timing differences}
+\li{Coverage limited to executed paths}
+\li{Performance overhead (runs on synthetic CPU)}
+}
+}
+}
+}
+
+\subtree{
+\title{Implementation Guide}
+\subtree{
+\title{Phase 1: Initial Assessment}
+\p{\strong{Identify cryptographic code handling secrets:}}
+
+\ul{
+\li{Private keys, exponents, nonces}
+\li{Password hashes, authentication tokens}
+\li{Encryption/decryption operations}
+}
+
+\p{\strong{Quick statistical check:}}
+
+\ol{
+\li{Write dudect harness for the crypto function}
+\li{Run for 5-10 minutes with \code{\startverb timeout 600 ./ct_test\stopverb}}
+\li{Monitor t-value: high absolute values indicate leakage}
+}
+
+\p{\strong{Tools:} dudect \strong{Expected time:} 1-2 hours (harness writing + initial run)}
+}
+
+\subtree{
+\title{Phase 2: Detailed Analysis}
+\p{If dudect detects leakage:}
+
+\p{\strong{Root cause investigation:}}
+
+\ol{
+\li{Mark secret variables with Timecop \code{\startverb poison()\stopverb}}
+\li{Run under Valgrind to identify exact line}
+\li{Review the four common violation patterns}
+\li{Check assembly output for conditional branches}
+}
+
+\p{\strong{Tools:} Timecop, compiler output (\code{\startverb objdump -d\stopverb})}
+}
+
+\subtree{
+\title{Phase 3: Remediation}
+\p{\strong{Fix the timing leak:}}
+
+\ul{
+\li{Replace conditional branches with constant-time selection (bitwise operations)}
+\li{Use constant-time comparison functions}
+\li{Replace array lookups with constant-time alternatives or masking}
+\li{Verify compiler doesn't optimize away constant-time code}
+}
+
+\p{\strong{Re-verify:}}
+
+\ol{
+\li{Run dudect again for extended period (30+ minutes)}
+\li{Test across different compilers and optimization levels}
+\li{Test on different CPU architectures}
+}
+}
+
+\subtree{
+\title{Phase 4: Continuous Monitoring}
+\p{\strong{Integrate into CI:}}
+
+\ul{
+\li{Add dudect tests to test suite}
+\li{Run for fixed duration (5-10 minutes in CI)}
+\li{Fail build if leakage detected}
+}
+
+\p{See the \strong{dudect} skill for CI integration examples.}
+}
+}
+
+\subtree{
+\title{Common Vulnerabilities}
+\pre{\startverb
+| Vulnerability | Description | Detection | Severity |
+|---------------|-------------|-----------|----------|
+| Secret-dependent branch | `if (secret_bit) { ... }` | dudect, Timecop | CRITICAL |
+| Secret-dependent array access | `table[secret_index]` | Timecop, Binsec | HIGH |
+| Variable-time division | `result = x / secret` | Timecop | MEDIUM |
+| Variable-time shift | `result = x << secret` | Timecop | MEDIUM |
+| Montgomery reduction leak | Extra reduction when intermediate > N | dudect | HIGH |
+\stopverb}
+
+\subtree{
+\title{Secret-Dependent Branch: Deep Dive}
+\p{\strong{The vulnerability:} Execution time differs based on whether branch is taken. Common in optimized modular exponentiation (square-and-multiply).}
+
+\p{\strong{How to detect with dudect:}}
+
+\pre{\startverb
+uint8_t do_one_computation(uint8_t *data) {
+    uint64_t base = ((uint64_t*)data)[0];
+    uint64_t exponent = ((uint64_t*)data)[1]; // Secret!
+    return mod_exp(base, exponent, MODULUS);
+}
+
+void prepare_inputs(dudect_config_t *c, uint8_t *input_data, uint8_t *classes) {
+    for (size_t i = 0; i < c->number_measurements; i++) {
+        classes[i] = randombit();
+        uint64_t *input = (uint64_t*)(input_data + i * c->chunk_size);
+        input[0] = rand(); // Random base
+        input[1] = (classes[i] == 0) ? FIXED_EXPONENT : rand(); // Fixed vs random
+    }
+}
+\stopverb}
+
+\p{\strong{How to detect with Timecop:}}
+
+\pre{\startverb
+poison(&exponent, sizeof(exponent));
+result = mod_exp(base, exponent, modulus);
+unpoison(&exponent, sizeof(exponent));
+\stopverb}
+
+\p{Valgrind will report:}
+
+\pre{\startverb
+Conditional jump or move depends on uninitialised value(s)
+  at 0x40115D: mod_exp (example.c:14)
+\stopverb}
+
+\p{\strong{Related skill:} \strong{dudect}, \strong{timecop}}
+}
+}
+
+\subtree{
+\title{Case Studies}
+\subtree{
+\title{Case Study: OpenSSL RSA Timing Attack}
+\p{Brumley and Boneh (2005) extracted RSA private keys from OpenSSL over a network. The vulnerability exploited Montgomery multiplication's variable-time reduction step.}
+
+\p{\strong{Attack vector:} Timing differences in modular exponentiation \strong{Detection approach:} Statistical analysis (precursor to dudect) \strong{Impact:} Remote key extraction}
+
+\p{\strong{Tools used:} Custom timing measurement \strong{Techniques applied:} Statistical analysis, chosen-ciphertext queries}
+}
+
+\subtree{
+\title{Case Study: KyberSlash}
+\p{Post-quantum algorithm Kyber's reference implementation contained timing vulnerabilities in polynomial operations. Division operations leaked secret coefficients.}
+
+\p{\strong{Attack vector:} Secret-dependent division timing \strong{Detection approach:} Dynamic analysis and statistical testing \strong{Impact:} Secret key recovery in post-quantum cryptography}
+
+\p{\strong{Tools used:} Timing measurement tools \strong{Techniques applied:} Differential timing analysis}
+}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{Tips and Tricks}
+\pre{\startverb
+| Tip | Why It Helps |
+|-----|--------------|
+| Pin dudect to isolated CPU core (`taskset -c 2`) | Reduces OS noise, improves signal detection |
+| Test multiple compilers (gcc, clang, MSVC) | Optimizations may introduce or remove leaks |
+| Run dudect for extended periods (hours) | Increases statistical confidence |
+| Minimize non-crypto code in harness | Reduces noise that masks weak signals |
+| Check assembly output (`objdump -d`) | Verify compiler didn't introduce branches |
+| Use `-O3 -march=native` in testing | Matches production optimization levels |
+\stopverb}
+}
+
+\subtree{
+\title{Common Mistakes}
+\pre{\startverb
+| Mistake | Why It's Wrong | Correct Approach |
+|---------|----------------|------------------|
+| Only testing one input distribution | May miss leaks visible with other patterns | Test fixed-vs-random, fixed-vs-fixed-different, etc. |
+| Short dudect runs (< 1 minute) | Insufficient measurements for weak signals | Run 5-10+ minutes, longer for high assurance |
+| Ignoring compiler optimization levels | `-O0` may hide leaks present in `-O3` | Test at production optimization level |
+| Not testing on target architecture | x86 vs ARM have different timing characteristics | Test on deployment platform |
+| Marking too much as secret in Timecop | False positives, unclear results | Mark only true secrets (keys, not public data) |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\subtree{
+\title{Tool Skills}
+\pre{\startverb
+| Skill | Primary Use in Constant-Time Analysis |
+|-------|---------------------------------------|
+| **dudect** | Statistical detection of timing differences via Welch's t-test |
+| **timecop** | Dynamic tracing to pinpoint exact location of timing leaks |
+\stopverb}
+}
+
+\subtree{
+\title{Technique Skills}
+\pre{\startverb
+| Skill | When to Apply |
+|-------|---------------|
+| **coverage-analysis** | Ensure test inputs exercise all code paths in crypto function |
+| **ci-integration** | Automate constant-time testing in continuous integration pipeline |
+\stopverb}
+}
+
+\subtree{
+\title{Related Domain Skills}
+\pre{\startverb
+| Skill | Relationship |
+|-------|--------------|
+| **crypto-testing** | Constant-time analysis is essential component of cryptographic testing |
+| **fuzzing** | Fuzzing crypto code may trigger timing-dependent paths |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Skill Dependency Map}
+\pre{\startverb
+                    ┌─────────────────────────┐
+                    │  constant-time-analysis │
+                    │     (this skill)        │
+                    └───────────┬─────────────┘
+                                │
+                ┌───────────────┴───────────────┐
+                │                               │
+                ▼                               ▼
+    ┌───────────────────┐           ┌───────────────────┐
+    │      dudect       │           │     timecop       │
+    │  (statistical)    │           │    (dynamic)      │
+    └────────┬──────────┘           └────────┬──────────┘
+             │                               │
+             └───────────────┬───────────────┘
+                             │
+                             ▼
+              ┌──────────────────────────────┐
+              │   Supporting Techniques      │
+              │ coverage, CI integration     │
+              └──────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{Key External Resources}
+\p{\strong{[These results must be false: A usability evaluation of constant-time analysis tools](https://www.usenix.org/system/files/sec24fall-prepub-760-fourne.pdf)} Comprehensive usability study of constant-time analysis tools. Key findings: developers struggle with false positives, need better error messages, and benefit from tool integration. Evaluates FaCT, ct-verif, dudect, and Memsan across multiple cryptographic implementations. Recommends improved tooling UX and better documentation.}
+
+\p{\strong{[List of constant-time tools - CROCS](https://crocs-muni.github.io/ct-tools/)} Curated catalog of constant-time analysis tools with tutorials. Covers formal tools (ct-verif, FaCT), dynamic tools (Memsan, Timecop), symbolic tools (Binsec), and statistical tools (dudect). Includes practical tutorials for setup and usage.}
+
+\p{\strong{[Paul Kocher: Timing Attacks on Implementations of Diffie-Hellman, RSA, DSS, and Other Systems](https://paulkocher.com/doc/TimingAttacks.pdf)} Original 1996 paper introducing timing attacks. Demonstrates attacks on modular exponentiation in RSA and Diffie-Hellman. Essential historical context for understanding timing vulnerabilities.}
+
+\p{\strong{[Remote Timing Attacks are Practical (Brumley & Boneh)](https://crypto.stanford.edu/~dabo/papers/ssl-timing.pdf)} Demonstrates practical remote timing attacks against OpenSSL. Shows network-level timing differences are sufficient to extract RSA keys. Proves timing attacks work in realistic network conditions.}
+
+\p{\strong{[Cache-timing attacks on AES](https://cr.yp.to/antiforgery/cachetiming-20050414.pdf)} Shows AES implementations using lookup tables are vulnerable to cache-timing attacks. Demonstrates practical attacks extracting AES keys via cache timing side channels.}
+
+\p{\strong{[KyberSlash: Division Timings Leak Secrets](https://eprint.iacr.org/2024/1049.pdf)} Recent discovery of timing vulnerabilities in Kyber (NIST post-quantum standard). Shows division operations leak secret coefficients. Highlights that constant-time issues persist even in modern post-quantum cryptography.}
+}
+
+\subtree{
+\title{IACR References}
+\pre{\startverb
+| Topic | IACR Paper |
+|-------|------------|
+| ct-verif (LLVM-based CT verification) | https://eprint.iacr.org/2016/086 |
+| Cache-timing attacks on AES | https://eprint.iacr.org/2005/271 (Bernstein) |
+| Remote timing on OpenSSL RSA | https://eprint.iacr.org/2003/174 (Brumley-Boneh) |
+| Flush+Reload cache attack | https://eprint.iacr.org/2013/448 |
+| Spectre | https://eprint.iacr.org/2019/812 |
+| KyberSlash (PQC timing) | https://eprint.iacr.org/2024/1049 |
+| dudect (online timing test) | https://eprint.iacr.org/2016/1123 |
+| Raccoon attack (DH timing) | https://eprint.iacr.org/2020/1221 |
+| Hertzbleed (frequency side channel) | https://eprint.iacr.org/2022/274 |
+\stopverb}
+
+\p{Search: \code{\startverb https://eprint.iacr.org/search?q=constant+time\stopverb}}
+}
+
+\subtree{
+\title{Video Resources}
+\ul{
+\li{[Trail of Bits: Constant-Time Programming](https://www.youtube.com/watch?v=vW6wqTzfz5g) - Overview of constant-time programming principles and tools}
+}
+}
+}
+}

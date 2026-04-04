@@ -1,0 +1,55 @@
+\title{Hunting For Domain Fronting C2 Traffic}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect domain fronting C2 traffic by analyzing SNI vs HTTP Host header mismatches in proxy logs and TLS certificate discrepancies using pyOpenSSL for certificate inspection}
+
+\subtree{
+\title{Hunting for Domain Fronting C2 Traffic}
+\subtree{
+\title{Overview}
+\p{Domain fronting (MITRE ATT&CK T1090.004) is a technique where attackers use different domain names in the TLS SNI field and the HTTP Host header to disguise C2 traffic behind legitimate CDN-hosted domains. This skill detects domain fronting by parsing proxy/web gateway logs for SNI-Host header mismatches, analyzing TLS certificates for CDN provider identification, flagging connections where the SNI points to a high-reputation domain but the Host header targets an attacker-controlled domain, and correlating with known CDN provider IP ranges.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for domain fronting c2 traffic}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Web proxy or secure web gateway logs with SNI and Host header fields}
+\li{Python 3.8+ with pyOpenSSL and cryptography libraries}
+\li{TLS inspection enabled on proxy for Host header visibility}
+\li{CDN provider IP range lists (CloudFront, Azure CDN, Cloudflare)}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Parse proxy logs for connections with both SNI and Host header fields}
+\li{Compare SNI domain against HTTP Host header for mismatches}
+\li{Extract TLS certificate Subject and SAN fields using pyOpenSSL}
+\li{Identify CDN-hosted connections via certificate issuer and IP ranges}
+\li{Flag high-confidence domain fronting where SNI and Host differ on CDN IPs}
+\li{Score alerts based on domain reputation differential}
+\li{Generate detection report with network flow context}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report containing detected domain fronting indicators with SNI-Host pairs, certificate details, CDN provider identification, confidence scores, and MITRE ATT&CK technique mapping.}
+}
+}

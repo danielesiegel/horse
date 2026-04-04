@@ -1,0 +1,254 @@
+\title{Semgrep Rule Variant Creator}
+
+\taxon{skill}
+
+\meta{description}{Creates language variants of existing Semgrep rules. Use when porting a Semgrep rule to specified target languages. Takes an existing rule and target languages as input, produces independent rule+test directories for each language.}
+
+\subtree{
+\title{Semgrep Rule Variant Creator}
+\p{Port existing Semgrep rules to new target languages with proper applicability analysis and test-driven validation.}
+
+\subtree{
+\title{When to Use}
+\p{\strong{Ideal scenarios:}}
+
+\ul{
+\li{Porting an existing Semgrep rule to one or more target languages}
+\li{Creating language-specific variants of a universal vulnerability pattern}
+\li{Expanding rule coverage across a polyglot codebase}
+\li{Translating rules between languages with equivalent constructs}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\p{Do NOT use this skill for:}
+
+\ul{
+\li{Creating a new Semgrep rule from scratch (use \code{\startverb semgrep-rule-creator\stopverb} instead)}
+\li{Running existing rules against code}
+\li{Languages where the vulnerability pattern fundamentally doesn't apply}
+\li{Minor syntax variations within the same language}
+}
+}
+
+\subtree{
+\title{Input Specification}
+\p{This skill requires:}
+
+\ol{
+\li{\strong{Existing Semgrep rule} - YAML file path or YAML rule content}
+\li{\strong{Target languages} - One or more languages to port to (e.g., "Golang and Java")}
+}
+}
+
+\subtree{
+\title{Output Specification}
+\p{For each applicable target language, produces:}
+
+\pre{\startverb
+<original-rule-id>-<language>/
+├── <original-rule-id>-<language>.yaml     # Ported Semgrep rule
+└── <original-rule-id>-<language>.<ext>    # Test file with annotations
+\stopverb}
+
+\p{Example output for porting \code{\startverb sql-injection\stopverb} to Go and Java:}
+
+\pre{\startverb
+sql-injection-golang/
+├── sql-injection-golang.yaml
+└── sql-injection-golang.go
+
+sql-injection-java/
+├── sql-injection-java.yaml
+└── sql-injection-java.java
+\stopverb}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\p{When porting Semgrep rules, reject these common shortcuts:}
+
+\pre{\startverb
+| Rationalization | Why It Fails | Correct Approach |
+|-----------------|--------------|------------------|
+| "Pattern structure is identical" | Different ASTs across languages | Always dump AST for target language |
+| "Same vulnerability, same detection" | Data flow differs between languages | Analyze target language idioms |
+| "Rule doesn't need tests since original worked" | Language edge cases differ | Write NEW test cases for target |
+| "Skip applicability - it obviously applies" | Some patterns are language-specific | Complete applicability analysis first |
+| "I'll create all variants then test" | Errors compound, hard to debug | Complete full cycle per language |
+| "Library equivalent is close enough" | Surface similarity hides differences | Verify API semantics match |
+| "Just translate the syntax 1:1" | Languages have different idioms | Research target language patterns |
+\stopverb}
+}
+
+\subtree{
+\title{Strictness Level}
+\p{This workflow is \strong{strict} - do not skip steps:}
+
+\ul{
+\li{\strong{Applicability analysis is mandatory}: Don't assume patterns translate}
+\li{\strong{Each language is independent}: Complete full cycle before moving to next}
+\li{\strong{Test-first for each variant}: Never write a rule without test cases}
+\li{\strong{100\% test pass required}: "Most tests pass" is not acceptable}
+}
+}
+
+\subtree{
+\title{Overview}
+\p{This skill guides the creation of language-specific variants of existing Semgrep rules. Each target language goes through an independent 4-phase cycle:}
+
+\pre{\startverb
+FOR EACH target language:
+  Phase 1: Applicability Analysis → Verdict
+  Phase 2: Test Creation (Test-First)
+  Phase 3: Rule Creation
+  Phase 4: Validation
+  (Complete full cycle before moving to next language)
+\stopverb}
+}
+
+\subtree{
+\title{Foundational Knowledge}
+\p{\strong{The \code{\startverb semgrep-rule-creator\stopverb} skill is the authoritative reference for Semgrep rule creation fundamentals.} While this skill focuses on porting existing rules to new languages, the core principles of writing quality rules remain the same.}
+
+\p{Consult \code{\startverb semgrep-rule-creator\stopverb} for guidance on:}
+
+\ul{
+\li{\strong{When to use taint mode vs pattern matching} - Choosing the right approach for the vulnerability type}
+\li{\strong{Test-first methodology} - Why tests come before rules and how to write effective test cases}
+\li{\strong{Anti-patterns to avoid} - Common mistakes like overly broad or overly specific patterns}
+\li{\strong{Iterating until tests pass} - The validation loop and debugging techniques}
+\li{\strong{Rule optimization} - Removing redundant patterns after tests pass}
+}
+
+\p{When porting a rule, you're applying these same principles in a new language context. If uncertain about rule structure or approach, refer to \code{\startverb semgrep-rule-creator\stopverb} first.}
+}
+
+\subtree{
+\title{Four-Phase Workflow}
+\subtree{
+\title{Phase 1: Applicability Analysis}
+\p{Before porting, determine if the pattern applies to the target language.}
+
+\p{\strong{Analysis criteria:}}
+
+\ol{
+\li{Does the vulnerability class exist in the target language?}
+\li{Does an equivalent construct exist (function, pattern, library)?}
+\li{Are the semantics similar enough for meaningful detection?}
+}
+
+\p{\strong{Verdict options:}}
+
+\ul{
+\li{\code{\startverb APPLICABLE\stopverb} → Proceed with variant creation}
+\li{\code{\startverb APPLICABLE_WITH_ADAPTATION\stopverb} → Proceed but significant changes needed}
+\li{\code{\startverb NOT_APPLICABLE\stopverb} → Skip this language, document why}
+}
+
+\p{See [applicability-analysis.md]({baseDir}/references/applicability-analysis.md) for detailed guidance.}
+}
+
+\subtree{
+\title{Phase 2: Test Creation (Test-First)}
+\p{\strong{Always write tests before the rule.}}
+
+\p{Create test file with target language idioms:}
+
+\ul{
+\li{Minimum 2 vulnerable cases (\code{\startverb ruleid:\stopverb})}
+\li{Minimum 2 safe cases (\code{\startverb ok:\stopverb})}
+\li{Include language-specific edge cases}
+}
+
+\pre{\startverb
+// ruleid: sql-injection-golang
+db.Query("SELECT * FROM users WHERE id = " + userInput)
+
+// ok: sql-injection-golang
+db.Query("SELECT * FROM users WHERE id = ?", userInput)
+\stopverb}
+}
+
+\subtree{
+\title{Phase 3: Rule Creation}
+\ol{
+\li{\strong{Analyze AST}: \code{\startverb semgrep --dump-ast -l <lang> test-file\stopverb}}
+\li{\strong{Translate patterns} to target language syntax}
+\li{\strong{Update metadata}: language key, message, rule ID}
+\li{\strong{Adapt for idioms}: Handle language-specific constructs}
+}
+
+\p{See [language-syntax-guide.md]({baseDir}/references/language-syntax-guide.md) for translation guidance.}
+}
+
+\subtree{
+\title{Phase 4: Validation}
+\pre{\startverb
+# Validate YAML
+semgrep --validate --config rule.yaml
+
+# Run tests
+semgrep --test --config rule.yaml test-file
+\stopverb}
+
+\p{\strong{Checkpoint}: Output MUST show \code{\startverb All tests passed\stopverb}.}
+
+\p{For taint rule debugging:}
+
+\pre{\startverb
+semgrep --dataflow-traces -f rule.yaml test-file
+\stopverb}
+
+\p{See [workflow.md]({baseDir}/references/workflow.md) for detailed workflow and troubleshooting.}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Task | Command |
+|------|---------|
+| Run tests | `semgrep --test --config rule.yaml test-file` |
+| Validate YAML | `semgrep --validate --config rule.yaml` |
+| Dump AST | `semgrep --dump-ast -l <lang> <file>` |
+| Debug taint flow | `semgrep --dataflow-traces -f rule.yaml file` |
+\stopverb}
+}
+
+\subtree{
+\title{Key Differences from Rule Creation}
+\pre{\startverb
+| Aspect | semgrep-rule-creator | This skill |
+|--------|---------------------|------------|
+| Input | Bug pattern description | Existing rule + target languages |
+| Output | Single rule+test | Multiple rule+test directories |
+| Workflow | Single creation cycle | Independent cycle per language |
+| Phase 1 | Problem analysis | Applicability analysis per language |
+| Library research | Always relevant | Optional (when original uses libraries) |
+\stopverb}
+}
+
+\subtree{
+\title{Documentation}
+\p{\strong{REQUIRED}: Before porting rules, read relevant Semgrep documentation:}
+
+\ul{
+\li{[Rule Syntax](https://semgrep.dev/docs/writing-rules/rule-syntax) - YAML structure and operators}
+\li{[Pattern Syntax](https://semgrep.dev/docs/writing-rules/pattern-syntax) - Pattern matching and metavariables}
+\li{[Pattern Examples](https://semgrep.dev/docs/writing-rules/pattern-examples) - Per-language pattern references}
+\li{[Testing Rules](https://semgrep.dev/docs/writing-rules/testing-rules) - Testing annotations}
+\li{[Trail of Bits Testing Handbook](https://appsec.guide/docs/static-analysis/semgrep/advanced/) - Advanced patterns}
+}
+}
+
+\subtree{
+\title{Next Steps}
+\ul{
+\li{For applicability analysis guidance, see [applicability-analysis.md]({baseDir}/references/applicability-analysis.md)}
+\li{For language translation guidance, see [language-syntax-guide.md]({baseDir}/references/language-syntax-guide.md)}
+\li{For detailed workflow and examples, see [workflow.md]({baseDir}/references/workflow.md)}
+}
+}
+}

@@ -1,0 +1,74 @@
+\title{Asi Agent Orama}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'ASI Agent-O-Rama Skill'}
+
+\subtree{
+\title{ASI Agent-O-Rama Skill}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: 0 (ERGODIC - coordinator) \strong{Integration}: Red Planet Labs Rama + ASI patterns}
+
+\subtree{
+\title{Overview}
+\p{Bridge between Agent-O-Rama (Rama-based agent platform) and ASI (Autonomous Superintelligence) patterns. Enables triadic agent orchestration with GF(3) conservation on Rama's distributed topology.}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{TIDAR Integration}
+\pre{\startverb
+;; Tree-structured Iterative Decomposition And Recombination
+(defn tidar-agent [task seed]
+  (let [children (splitmix-fork seed 3)]
+    {:minus  (spawn-agent :validate task (nth children 0))
+     :ergodic (spawn-agent :coordinate task (nth children 1))
+     :plus   (spawn-agent :execute task (nth children 2))}))
+\stopverb}
+}
+
+\subtree{
+\title{Rama Module Bridge}
+\pre{\startverb
+(defagentmodule ASIAgentModule [setup topologies]
+  (<<sources
+    (source> *asi-tasks :> task)
+    ;; Triadic decomposition
+    (tidar-forward task :> subtasks)
+    (batch<- subtasks :> results)
+    (tidar-backward results :> final)
+    (aor/result! final)))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just asi-agent-start        # Start ASI agent module
+just asi-tidar "task" seed  # Run TIDAR pipeline
+just asi-gf3-verify         # Verify GF(3) conservation
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Invariant}
+\pre{\startverb
+Σ(validator, coordinator, executor) = (-1) + (0) + (+1) = 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb rama-gay-clojure\stopverb} - Rama with deterministic coloring}
+\li{\code{\startverb tidar\stopverb} - TIDAR orchestration patterns}
+\li{\code{\startverb gay-mcp\stopverb} - Color generation backend}
+\li{\code{\startverb bisimulation-game\stopverb} - Skill dispersal with GF(3)}
+}
+
+\p{\strong{Skill Name}: asi-agent-orama \strong{Type}: Agent Platform Bridge \strong{Trit}: 0 (ERGODIC) \strong{GF(3)}: Conserved via triadic spawn}
+}
+}

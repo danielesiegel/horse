@@ -1,0 +1,304 @@
+\title{Codeql}
+
+\taxon{skill}
+
+\meta{description}{>-}
+
+\subtree{
+\title{CodeQL Analysis}
+\p{Supported languages: Python, JavaScript/TypeScript, Go, Java/Kotlin, C/C++, C#, Ruby, Swift.}
+
+\p{\strong{Skill resources:} Reference files and templates are located at \code{\startverb {baseDir}/references/\stopverb} and \code{\startverb {baseDir}/workflows/\stopverb}.}
+
+\subtree{
+\title{Essential Principles}
+\ol{
+\li{\strong{Database quality is non-negotiable.} A database that builds is not automatically good. Always run quality assessment (file counts, baseline LoC, extractor errors) and compare against expected source files. A cached build produces zero useful extraction.}
+}
+
+\ol{
+\li{\strong{Data extensions catch what CodeQL misses.} Even projects using standard frameworks (Django, Spring, Express) have custom wrappers around database calls, request parsing, or shell execution. Skipping the create-data-extensions workflow means missing vulnerabilities in project-specific code paths.}
+}
+
+\ol{
+\li{\strong{Explicit suite references prevent silent query dropping.} Never pass pack names directly to \code{\startverb codeql database analyze\stopverb} — each pack's \code{\startverb defaultSuiteFile\stopverb} applies hidden filters that can produce zero results. Always generate a custom \code{\startverb .qls\stopverb} suite file.}
+}
+
+\ol{
+\li{\strong{Zero findings needs investigation, not celebration.} Zero results can indicate poor database quality, missing models, wrong query packs, or silent suite filtering. Investigate before reporting clean.}
+}
+
+\ol{
+\li{\strong{macOS Apple Silicon requires workarounds for compiled languages.} Exit code 137 is \code{\startverb arm64e\stopverb}/\code{\startverb arm64\stopverb} mismatch, not a build failure. Try Homebrew arm64 tools or Rosetta before falling back to \code{\startverb build-mode=none\stopverb}.}
+}
+
+\ol{
+\li{\strong{Follow workflows step by step.} Once a workflow is selected, execute it step by step without skipping phases. Each phase gates the next — skipping quality assessment or data extensions leads to incomplete analysis.}
+}
+}
+
+\subtree{
+\title{Output Directory}
+\p{All generated files (database, build logs, diagnostics, extensions, results) are stored in a single output directory.}
+
+\ul{
+\li{\strong{If the user specifies an output directory} in their prompt, use it as \code{\startverb OUTPUT_DIR\stopverb}.}
+\li{\strong{If not specified}, default to \code{\startverb ./static_analysis_codeql_1\stopverb}. If that already exists, increment to \code{\startverb _2\stopverb}, \code{\startverb _3\stopverb}, etc.}
+}
+
+\p{In both cases, \strong{always create the directory} with \code{\startverb mkdir -p\stopverb} before writing any files.}
+
+\pre{\startverb
+# Resolve output directory
+if [ -n "$USER_SPECIFIED_DIR" ]; then
+  OUTPUT_DIR="$USER_SPECIFIED_DIR"
+else
+  BASE="static_analysis_codeql"
+  N=1
+  while [ -e "${BASE}_${N}" ]; do
+    N=$((N + 1))
+  done
+  OUTPUT_DIR="${BASE}_${N}"
+fi
+mkdir -p "$OUTPUT_DIR"
+\stopverb}
+
+\p{The output directory is resolved \strong{once} at the start before any workflow executes. All workflows receive \code{\startverb $OUTPUT_DIR\stopverb} and store their artifacts there:}
+
+\pre{\startverb
+$OUTPUT_DIR/
+├── rulesets.txt                 # Selected query packs (logged after Step 3)
+├── codeql.db/                   # CodeQL database (dir containing codeql-database.yml)
+├── build.log                    # Build log
+├── codeql-config.yml            # Exclusion config (interpreted languages)
+├── diagnostics/                 # Diagnostic queries and CSVs
+├── extensions/                  # Data extension YAMLs
+├── raw/                         # Unfiltered analysis output
+│   ├── results.sarif
+│   └── <mode>.qls
+└── results/                     # Final results (filtered for important-only, copied for run-all)
+    └── results.sarif
+\stopverb}
+
+\subtree{
+\title{Database Discovery}
+\p{A CodeQL database is identified by the presence of a \code{\startverb codeql-database.yml\stopverb} marker file inside its directory. When searching for existing databases, \strong{always collect all matches} — there may be multiple databases from previous runs or for different languages.}
+
+\p{\strong{Discovery command:}}
+
+\pre{\startverb
+# Find ALL CodeQL databases (top-level and one subdirectory deep)
+find . -maxdepth 3 -name "codeql-database.yml" -not -path "*/\.*" 2>/dev/null \
+  | while read -r yml; do dirname "$yml"; done
+\stopverb}
+
+\ul{
+\li{\strong{Inside \code{\startverb $OUTPUT_DIR\stopverb}:} \code{\startverb find "$OUTPUT_DIR" -maxdepth 2 -name "codeql-database.yml"\stopverb}}
+\li{\strong{Project-wide (for auto-detection):} \code{\startverb find . -maxdepth 3 -name "codeql-database.yml"\stopverb} — covers databases at the project top level (\code{\startverb ./db-name/\stopverb}) and one subdirectory deep (\code{\startverb ./subdir/db-name/\stopverb}). Does not search deeper.}
+}
+
+\p{Never assume a database is named \code{\startverb codeql.db\stopverb} — discover it by its marker file.}
+
+\p{\strong{When multiple databases are found:}}
+
+\p{For each discovered database, collect metadata to help the user choose:}
+
+\pre{\startverb
+# For each database, extract language and creation time
+for db in $FOUND_DBS; do
+  CODEQL_LANG=$(codeql resolve database --format=json -- "$db" 2>/dev/null | jq -r '.languages[0]')
+  CREATED=$(grep '^creationMetadata:' -A5 "$db/codeql-database.yml" 2>/dev/null | grep 'creationTime' | awk '{print $2}')
+  echo "$db — language: $CODEQL_LANG, created: $CREATED"
+done
+\stopverb}
+
+\p{Then use \code{\startverb AskUserQuestion\stopverb} to let the user select which database to use, or to build a new one. \strong{Skip \code{\startverb AskUserQuestion\stopverb} if the user explicitly stated which database to use or to build a new one in their prompt.}}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\p{For the common case ("scan this codebase for vulnerabilities"):}
+
+\pre{\startverb
+# 1. Verify CodeQL is installed
+if ! command -v codeql >/dev/null 2>&1; then
+  echo "NOT INSTALLED: codeql binary not found on PATH"
+else
+  codeql --version || echo "ERROR: codeql found but --version failed (check installation)"
+fi
+
+# 2. Resolve output directory
+BASE="static_analysis_codeql"; N=1
+while [ -e "${BASE}_${N}" ]; do N=$((N + 1)); done
+OUTPUT_DIR="${BASE}_${N}"; mkdir -p "$OUTPUT_DIR"
+\stopverb}
+
+\p{Then execute the full pipeline: \strong{build database → create data extensions → run analysis} using the workflows below.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Scanning a codebase for security vulnerabilities with deep data flow analysis}
+\li{Building a CodeQL database from source code (with build capability for compiled languages)}
+\li{Finding complex vulnerabilities that require interprocedural taint tracking or AST/CFG analysis}
+\li{Performing comprehensive security audits with multiple query packs}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{\strong{Writing custom queries} - Use a dedicated query development skill}
+\li{\strong{CI/CD integration} - Use GitHub Actions documentation directly}
+\li{\strong{Quick pattern searches} - Use Semgrep or grep for speed}
+\li{\strong{No build capability} for compiled languages - Consider Semgrep instead}
+\li{\strong{Single-file or lightweight analysis} - Semgrep is faster for simple pattern matching}
+}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\p{These shortcuts lead to missed findings. Do not accept them:}
+
+\ul{
+\li{\strong{"security-extended is enough"} - It is the baseline. Always check if Trail of Bits packs and Community Packs are available for the language. They catch categories \code{\startverb security-extended\stopverb} misses entirely.}
+\li{\strong{"The database built, so it's good"} - A database that builds does not mean it extracted well. Always run quality assessment and check file counts against expected source files.}
+\li{\strong{"Data extensions aren't needed for standard frameworks"} - Even Django/Spring apps have custom wrappers that CodeQL does not model. Skipping extensions means missing vulnerabilities.}
+\li{\strong{"build-mode=none is fine for compiled languages"} - It produces severely incomplete analysis. Only use as an absolute last resort. On macOS, try the arm64 toolchain workaround or Rosetta first.}
+\li{\strong{"The build fails on macOS, just use build-mode=none"} - Exit code 137 is caused by \code{\startverb arm64e\stopverb}/\code{\startverb arm64\stopverb} mismatch, not a fundamental build failure. See [macos-arm64e-workaround.md](references/macos-arm64e-workaround.md).}
+\li{\strong{"No findings means the code is secure"} - Zero findings can indicate poor database quality, missing models, or wrong query packs. Investigate before reporting clean results.}
+\li{\strong{"I'll just run the default suite"} / \strong{"I'll just pass the pack names directly"} - Each pack's \code{\startverb defaultSuiteFile\stopverb} applies hidden filters and can produce zero results. Always use an explicit suite reference.}
+\li{\strong{"I'll put files in the current directory"} - All generated files must go in \code{\startverb $OUTPUT_DIR\stopverb}. Scattering files in the working directory makes cleanup impossible and risks overwriting previous runs.}
+\li{\strong{"Just use the first database I find"} - Multiple databases may exist for different languages or from previous runs. When more than one is found, present all options to the user. Only skip the prompt when the user already specified which database to use.}
+\li{\strong{"The user said 'scan', that means they want me to pick a database"} - "Scan" is not database selection. If multiple databases exist and the user didn't name one, ask.}
+}
+}
+
+\subtree{
+\title{Workflow Selection}
+\p{This skill has three workflows. \strong{Once a workflow is selected, execute it step by step without skipping phases.}}
+
+\pre{\startverb
+| Workflow | Purpose |
+|----------|---------|
+| [build-database](workflows/build-database.md) | Create CodeQL database using build methods in sequence |
+| [create-data-extensions](workflows/create-data-extensions.md) | Detect or generate data extension models for project APIs |
+| [run-analysis](workflows/run-analysis.md) | Select rulesets, execute queries, process results |
+\stopverb}
+
+\subtree{
+\title{Auto-Detection Logic}
+\p{\strong{If user explicitly specifies} what to do (e.g., "build a database", "run analysis on ./my-db"), execute that workflow directly. \strong{Do NOT call \code{\startverb AskUserQuestion\stopverb} for database selection if the user's prompt already makes their intent clear} — e.g., "build a new database", "analyze the codeql database in static_analysis_codeql_2", "run a full scan from scratch".}
+
+\p{\strong{Default pipeline for "test", "scan", "analyze", or similar:} Discover existing databases first, then decide.}
+
+\pre{\startverb
+# Find ALL CodeQL databases by looking for codeql-database.yml marker file
+# Search top-level dirs and one subdirectory deep
+FOUND_DBS=()
+while IFS= read -r yml; do
+  db_dir=$(dirname "$yml")
+  codeql resolve database -- "$db_dir" >/dev/null 2>&1 && FOUND_DBS+=("$db_dir")
+done < <(find . -maxdepth 3 -name "codeql-database.yml" -not -path "*/\.*" 2>/dev/null)
+
+echo "Found ${#FOUND_DBS[@]} existing database(s)"
+\stopverb}
+
+\pre{\startverb
+| Condition | Action |
+|-----------|--------|
+| No databases found | Resolve new `$OUTPUT_DIR`, execute build → extensions → analysis (full pipeline) |
+| One database found | Use `AskUserQuestion`: reuse it or build new? |
+| Multiple databases found | Use `AskUserQuestion`: list all with metadata, let user pick one or build new |
+| User explicitly stated intent | Skip `AskUserQuestion`, act on their instructions directly |
+\stopverb}
+}
+
+\subtree{
+\title{Database Selection Prompt}
+\p{When existing databases are found \strong{and the user did not explicitly specify which to use}, present via \code{\startverb AskUserQuestion\stopverb}:}
+
+\pre{\startverb
+header: "Existing CodeQL Databases"
+question: "I found existing CodeQL database(s). What would you like to do?"
+options:
+  - label: "<db_path_1> (language: python, created: 2026-02-24)"
+    description: "Reuse this database"
+  - label: "<db_path_2> (language: cpp, created: 2026-02-23)"
+    description: "Reuse this database"
+  - label: "Build a new database"
+    description: "Create a fresh database in a new output directory"
+\stopverb}
+
+\p{After selection:}
+
+\ul{
+\li{\strong{If user picks an existing database:} Set \code{\startverb $OUTPUT_DIR\stopverb} to its parent directory (or the directory containing it), set \code{\startverb $DB_NAME\stopverb} to the selected path, then proceed to extensions → analysis.}
+\li{\strong{If user picks "Build new":} Resolve a new \code{\startverb $OUTPUT_DIR\stopverb}, execute build → extensions → analysis.}
+}
+}
+
+\subtree{
+\title{General Decision Prompt}
+\p{If the user's intent is ambiguous (neither database selection nor workflow is clear), ask:}
+
+\pre{\startverb
+I can help with CodeQL analysis. What would you like to do?
+
+1. **Full scan (Recommended)** - Build database, create extensions, then run analysis
+2. **Build database** - Create a new CodeQL database from this codebase
+3. **Create data extensions** - Generate custom source/sink models for project APIs
+4. **Run analysis** - Run security queries on existing database
+
+[If databases found: "I found N existing database(s): <list paths with language>"]
+[Show output directory: "Output will be stored in <OUTPUT_DIR>"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reference Index}
+\pre{\startverb
+| File | Content |
+|------|---------|
+| **Workflows** | |
+| [workflows/build-database.md](workflows/build-database.md) | Database creation with build method sequence |
+| [workflows/create-data-extensions.md](workflows/create-data-extensions.md) | Data extension generation pipeline |
+| [workflows/run-analysis.md](workflows/run-analysis.md) | Query execution and result processing |
+| **References** | |
+| [references/macos-arm64e-workaround.md](references/macos-arm64e-workaround.md) | Apple Silicon build tracing workarounds |
+| [references/build-fixes.md](references/build-fixes.md) | Build failure fix catalog |
+| [references/quality-assessment.md](references/quality-assessment.md) | Database quality metrics and improvements |
+| [references/extension-yaml-format.md](references/extension-yaml-format.md) | Data extension YAML column definitions and examples |
+| [references/sarif-processing.md](references/sarif-processing.md) | jq commands for SARIF output processing |
+| [references/diagnostic-query-templates.md](references/diagnostic-query-templates.md) | QL queries for source/sink enumeration |
+| [references/important-only-suite.md](references/important-only-suite.md) | Important-only suite template and generation |
+| [references/run-all-suite.md](references/run-all-suite.md) | Run-all suite template |
+| [references/ruleset-catalog.md](references/ruleset-catalog.md) | Available query packs by language |
+| [references/threat-models.md](references/threat-models.md) | Threat model configuration |
+| [references/language-details.md](references/language-details.md) | Language-specific build and extraction details |
+| [references/performance-tuning.md](references/performance-tuning.md) | Memory, threading, and timeout configuration |
+\stopverb}
+}
+
+\subtree{
+\title{Success Criteria}
+\p{A complete CodeQL analysis run should satisfy:}
+
+\ul{
+\li{[ ] Output directory resolved (user-specified or auto-incremented default)}
+\li{[ ] All generated files stored inside \code{\startverb $OUTPUT_DIR\stopverb}}
+\li{[ ] Database built (discovered via \code{\startverb codeql-database.yml\stopverb} marker) with quality assessment passed (baseline LoC > 0, errors < 5\%)}
+\li{[ ] Data extensions evaluated — either created in \code{\startverb $OUTPUT_DIR/extensions/\stopverb} or explicitly skipped with justification}
+\li{[ ] Analysis run with explicit suite reference (not default pack suite)}
+\li{[ ] All installed query packs (official + Trail of Bits + Community) used or explicitly excluded}
+\li{[ ] Selected query packs logged to \code{\startverb $OUTPUT_DIR/rulesets.txt\stopverb}}
+\li{[ ] Unfiltered results preserved in \code{\startverb $OUTPUT_DIR/raw/results.sarif\stopverb}}
+\li{[ ] Final results in \code{\startverb $OUTPUT_DIR/results/results.sarif\stopverb} (filtered for important-only, copied for run-all)}
+\li{[ ] Zero-finding results investigated (database quality, model coverage, suite selection)}
+\li{[ ] Build log preserved at \code{\startverb $OUTPUT_DIR/build.log\stopverb} with all commands, fixes, and quality assessments}
+}
+}
+}

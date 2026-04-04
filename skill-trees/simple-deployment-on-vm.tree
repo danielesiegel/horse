@@ -1,0 +1,125 @@
+\title{Simple Deployment On Vm}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{How to do simple but secure deployments using virtual machines on different cloud providers}
+
+\subtree{
+\title{Deploying  applications with a simple but secure setup}
+\subtree{
+\title{Core Principles:}
+\ul{
+\li{avoid assumptions}
+\li{use only CLI tools}
+\li{avoid deleting any existing cloud resource, to not disrupt operations}
+}
+}
+
+\subtree{
+\title{Guidelines:}
+\ul{
+\li{use wait commands whenever possible instead of polling}
+\li{make sure to create and store SSH keys to access deployment machines/instances instead of passwords}
+\li{do not delete the SSH Keys you create otherwise you'd be locked out}
+\li{always try using CLI tools with default env vars before asking for credentials}
+}
+}
+
+\subtree{
+\title{Deployment Requirements:}
+\subtree{
+\title{1) Infrastructure}
+\ul{
+\li{prefer Virtual Machines over PaaS solutions}
+\li{ensure VMs are in public subnets with public IPs}
+\li{enable SSH access to VMs}
+\li{make sure to provision compute instances with the appropriate CPU and Memory requirements, otherwise you might not be able to run the app successfully}
+}
+}
+
+\subtree{
+\title{2) Networking:}
+\ul{
+\li{configure domain names (if requested)}
+}
+
+\ul{
+\li{add any DNS records needed yoruself when possible}
+\li{if TLS is required}
+}
+
+\ul{
+\li{use let's encrypt unless the user prefers other services}
+\li{DNS must be configured properly for let's encrypt to work}
+\li{use both ports 80 (HTTP), and 443 (HTTPS) to be able to pass let's encrypt http challenge}
+\li{if using AWS}
+}
+
+\ul{
+\li{remember to enable DNS hostnames and resolution (these must be enabled in a separate command after creating the VPC)}
+\li{if using Cloudflare}
+}
+
+\ul{
+\li{prefer using cloudflare in proxy mode to protect sites}
+}
+}
+
+\subtree{
+\title{3) Database (optional)}
+\ul{
+\li{deploy appropriate database type and version when required}
+\li{prefer managed database services in the cloud provider of choice}
+\li{configure proper database credentials and connectivity}
+}
+
+\ul{
+\li{make sure to set the correct application environment variables so the app can connect successfully to the database}
+\li{you must copy over the database password so it's accessible by the deployed application}
+\li{credentials}
+}
+
+\ul{
+\li{you MUST generate a random secure password (e.g. use openssl cli)}
+\li{store passwords in files, never print passwords in plain text}
+\li{the password should be at least 15 characters long}
+\li{some databases have restrictions on the character set allowed, so only use alphaneumeric characters}
+}
+}
+
+\subtree{
+\title{4) Quality Assurance}
+\ul{
+\li{monitor resource readiness before proceeding with downstream dependencies}
+\li{test application functionality}
+}
+
+\ul{
+\li{you MUST check application logs to make sure there are no errors}
+\li{you MUST make a web request as a health check and get status code 200}
+\li{make sure your deployments are secure and production-ready}
+}
+}
+}
+
+\subtree{
+\title{Mandatory User Confirmation}
+\ul{
+\li{domain name configuration preferences}
+\li{TLS/HTTPS requirements}
+\li{database requirements and preferences}
+}
+}
+
+\subtree{
+\title{Success Criteria}
+\ul{
+\li{\#1 Application is deployed and functional}
+\li{\#2 All required services are properly configured}
+\li{\#3 Deployment is production-ready}
+\li{\#4 All credentials and access points are documented}
+}
+}
+}

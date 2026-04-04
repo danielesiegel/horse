@@ -1,0 +1,291 @@
+\title{Performing Alert Triage With Elastic Siem}
+
+\taxon{skill}
+
+\tag{elastic}
+
+\tag{siem}
+
+\tag{alert-triage}
+
+\tag{soc}
+
+\tag{elastic-security}
+
+\tag{detection}
+
+\tag{esql}
+
+\tag{kibana}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Perform systematic alert triage in Elastic Security SIEM to rapidly classify, prioritize, and investigate security alerts for SOC operations.}
+
+\subtree{
+\title{Performing Alert Triage with Elastic SIEM}
+\subtree{
+\title{Overview}
+\p{Alert triage in Elastic Security is the systematic process of reviewing, classifying, and prioritizing security alerts to determine which represent genuine threats. Elastic's AI-driven Attack Discovery feature can triage hundreds of alerts down to discrete attack chains, but skilled analyst triage remains essential. A structured triage workflow typically takes 5-10 minutes per alert cluster using Elastic's built-in tools.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing alert triage with elastic siem}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Elastic Security deployed (version 8.x or later)}
+\li{Elastic Agent or Beats configured for endpoint and network data collection}
+\li{Detection rules enabled and generating alerts}
+\li{Elastic Common Schema (ECS) compliance across data sources}
+\li{Analyst access to Kibana Security app with appropriate privileges}
+}
+}
+
+\subtree{
+\title{Alert Triage Workflow}
+\subtree{
+\title{Step 1: Initial Alert Assessment (2 minutes)}
+\p{When viewing an alert in Elastic Security, review the alert details panel:}
+
+\pre{\startverb
+Alert Details Panel:
+- Rule Name and Description
+- Severity and Risk Score
+- MITRE ATT&CK Mapping
+- Host and User Context
+- Process Tree (for endpoint alerts)
+- Timeline of related events
+\stopverb}
+
+\subtree{
+\title{Key Fields to Examine First}
+\pre{\startverb
+| Field | Purpose | ECS Field |
+|---|---|---|
+| Rule severity | Initial priority assessment | `kibana.alert.severity` |
+| Risk score | Quantified threat level | `kibana.alert.risk_score` |
+| Host name | Affected system | `host.name` |
+| User name | Affected identity | `user.name` |
+| Process name | Executing process | `process.name` |
+| Source IP | Origin of activity | `source.ip` |
+| Destination IP | Target of activity | `destination.ip` |
+| MITRE tactic | Attack stage | `threat.tactic.name` |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 2: Context Gathering (3 minutes)}
+\subtree{
+\title{Query Related Events with ES|QL}
+\pre{\startverb
+FROM logs-endpoint.events.*
+| WHERE host.name == "affected-host" AND @timestamp > NOW() - 1 HOUR
+| STATS count = COUNT(*) BY event.category, event.action
+| SORT count DESC
+\stopverb}
+}
+
+\subtree{
+\title{Find All Activity from Suspicious User}
+\pre{\startverb
+FROM logs-*
+| WHERE user.name == "suspicious-user" AND @timestamp > NOW() - 24 HOURS
+| STATS count = COUNT(*), unique_hosts = COUNT_DISTINCT(host.name) BY event.category
+| SORT count DESC
+\stopverb}
+}
+
+\subtree{
+\title{Check for Related Alerts from Same Source}
+\pre{\startverb
+FROM .alerts-security.alerts-default
+| WHERE source.ip == "10.0.0.50" AND @timestamp > NOW() - 24 HOURS
+| STATS alert_count = COUNT(*) BY kibana.alert.rule.name, kibana.alert.severity
+| SORT alert_count DESC
+\stopverb}
+}
+
+\subtree{
+\title{Investigate Lateral Movement from Same IP}
+\pre{\startverb
+FROM logs-system.auth-*
+| WHERE source.ip == "10.0.0.50" AND event.outcome == "success"
+| STATS login_count = COUNT(*), hosts = COUNT_DISTINCT(host.name) BY user.name
+| WHERE hosts > 3
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 3: Threat Intelligence Enrichment (2 minutes)}
+\p{Check indicators against threat intelligence:}
+
+\pre{\startverb
+FROM logs-ti_*
+| WHERE threat.indicator.ip == "203.0.113.50"
+| KEEP threat.indicator.type, threat.indicator.provider, threat.indicator.confidence, threat.feed.name
+\stopverb}
+
+\subtree{
+\title{Check File Hash Against Known Threats}
+\pre{\startverb
+FROM logs-endpoint.events.file-*
+| WHERE file.hash.sha256 == "abc123..."
+| STATS occurrences = COUNT(*) BY host.name, file.path, user.name
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 4: Classification Decision (2 minutes)}
+\pre{\startverb
+| Classification | Criteria | Action |
+|---|---|---|
+| True Positive | Confirmed malicious activity | Escalate to incident, begin containment |
+| Benign True Positive | Expected behavior matching rule | Document in alert notes, acknowledge |
+| False Positive | Rule triggered on benign activity | Mark as false positive, create tuning task |
+| Needs Investigation | Insufficient data for determination | Assign for deeper investigation |
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Documentation and Escalation (1 minute)}
+\p{For each triaged alert, document:}
+
+\ul{
+\li{Classification decision with rationale}
+\li{Evidence artifacts examined}
+\li{Related alerts or investigations}
+\li{Recommended next steps}
+}
+}
+}
+
+\subtree{
+\title{Detection Rules for Triage}
+\subtree{
+\title{Pre-Built Detection Rules}
+\p{Elastic Security includes 1000+ pre-built detection rules organized by:}
+
+\ul{
+\li{\strong{MITRE ATT&CK Tactic}: Initial Access, Execution, Persistence, etc.}
+\li{\strong{Platform}: Windows, Linux, macOS, Cloud}
+\li{\strong{Data Source}: Endpoint, Network, Cloud, Identity}
+}
+}
+
+\subtree{
+\title{Custom Alert Correlation Rule}
+\pre{\startverb
+{
+  "name": "Multiple Failed Logins Followed by Success",
+  "type": "threshold",
+  "query": "event.category:authentication AND event.outcome:failure",
+  "threshold": {
+    "field": ["source.ip", "user.name"],
+    "value": 5,
+    "cardinality": [
+      {
+        "field": "user.name",
+        "value": 3
+      }
+    ]
+  },
+  "severity": "high",
+  "risk_score": 73,
+  "threat": [
+    {
+      "framework": "MITRE ATT&CK",
+      "tactic": {
+        "id": "TA0006",
+        "name": "Credential Access"
+      },
+      "technique": [
+        {
+          "id": "T1110",
+          "name": "Brute Force"
+        }
+      ]
+    }
+  ]
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{AI-Assisted Triage}
+\subtree{
+\title{Elastic AI Assistant Integration}
+\ol{
+\li{Open alert in Elastic Security}
+\li{Click AI Assistant panel}
+\li{Use quick prompts:}
+\li{"Summarize this alert" - Get initial assessment}
+\li{"Generate ES|QL query to find related activity" - Expand investigation}
+\li{"What are the recommended response actions?" - Get playbook guidance}
+\li{"Is this likely a false positive?" - Get AI confidence assessment}
+}
+}
+
+\subtree{
+\title{Attack Discovery}
+\p{Elastic's Attack Discovery automatically:}
+
+\ul{
+\li{Groups related alerts into attack chains}
+\li{Maps alerts to MITRE ATT&CK kill chain stages}
+\li{Filters false positives using ML models}
+\li{Prioritizes based on business impact}
+\li{Provides narrative summary of the attack}
+}
+}
+}
+
+\subtree{
+\title{Triage Prioritization Matrix}
+\pre{\startverb
+| Risk Score | Severity | Asset Criticality | Response SLA |
+|---|---|---|---|
+| 90-100 | Critical | High | 15 minutes |
+| 70-89 | High | High | 30 minutes |
+| 70-89 | High | Medium | 1 hour |
+| 50-69 | Medium | Any | 4 hours |
+| 21-49 | Low | Any | 8 hours |
+| 1-20 | Informational | Any | 24 hours |
+\stopverb}
+}
+
+\subtree{
+\title{Triage Metrics and KPIs}
+\pre{\startverb
+| Metric | Target | Measurement |
+|---|---|---|
+| Mean Time to Triage (MTTT) | < 10 minutes | Time from alert creation to classification |
+| False Positive Rate | < 30% | False positives / total alerts |
+| Escalation Rate | 10-20% | Escalated alerts / total alerts |
+| Alert Coverage | > 80% | Triaged alerts / generated alerts per shift |
+| Reclassification Rate | < 5% | Changed classifications / total classified |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Elastic Security - Triage Alerts Documentation](https://www.elastic.co/docs/solutions/security/ai/triage-alerts)}
+\li{[SOC Analyst's Guide to Triage with Elastic](https://systemweakness.com/from-alert-to-action-a-soc-analysts-guide-to-triage-with-elastic-\%EF\%B8\%8F-4e5354ab5da9)}
+\li{[Elastic Blog - AI and 2025 SIEM Landscape](https://www.elastic.co/blog/ai-siem-landscape)}
+\li{[Reducing False Positives with Elastic and Tines](https://www.elastic.co/blog/false-positives-automated-siem-investigations-elastic-tines)}
+}
+}
+}

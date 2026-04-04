@@ -1,0 +1,136 @@
+\title{Nickel}
+
+\taxon{skill}
+
+\meta{description}{Nickel configuration language with gradual typing, contracts, and dynamic sufficiency verification. Use for type-safe configs, transformation contracts, and validation pipelines.}
+
+\subtree{
+\title{Nickel Configuration Language}
+\p{Gradual typing + contracts for configuration that composes correctly.}
+
+\subtree{
+\title{Dynamic Sufficiency}
+\p{A Nickel config is \strong{dynamically sufficient} when:}
+
+\ol{
+\li{\strong{Structural}: Contract coverage is complete (all fields typed)}
+\li{\strong{Computational}: Same outputs for all valid inputs}
+\li{\strong{Semantic}: Olog types preserved through transformations}
+}
+
+\pre{\startverb
+# Sufficiency levels (from dynamic_sufficiency.jl)
+let SufficiencyLevel = [|
+  'NOT_SUFFICIENT,           # Different behavior
+  'WEAKLY_SUFFICIENT,        # Same structure, different labels  
+  'COMPUTATIONALLY_SUFFICIENT,  # Same outputs
+  'SEMANTICALLY_SUFFICIENT      # Same olog meaning
+|]
+\stopverb}
+}
+
+\subtree{
+\title{Core Contracts}
+\p{Import from workspace:}
+
+\pre{\startverb
+let contracts = import ".topos/nickel/contracts/transformation-contracts.ncl"
+\stopverb}
+
+\p{Available contracts:}
+
+\ul{
+\li{\code{\startverb TransformationPattern\stopverb} - rename/refactor operations}
+\li{\code{\startverb TransformationStrategy\stopverb} - checkpoint + rollback + validation}
+\li{\code{\startverb BalancedTernarySelector\stopverb} - GF(3) strategy selection (seed 1069)}
+\li{\code{\startverb ValidationResult\stopverb} - gate pass/fail with exit codes}
+}
+}
+
+\subtree{
+\title{Gradual Typing Pattern}
+\pre{\startverb
+# Untyped (dynamic) - simple configs
+{ name = "example", count = 42 }
+
+# Typed block - contract enforcement
+let typed_config : { name: String, count: Number } = 
+  { name = "example", count = 42 }
+
+# Contract annotation - runtime validation
+let validated = config | TransformationStrategy
+\stopverb}
+}
+
+\subtree{
+\title{Idempotent Contracts}
+\pre{\startverb
+# Good: applying twice yields same result
+let Positive = std.contract.from_predicate (fun x => x > 0)
+5 | Positive | Positive  # ✓ idempotent
+
+# Key property for dynamic sufficiency:
+# ∀c: Contract, ∀x: (x | c) | c ≡ x | c
+\stopverb}
+}
+
+\subtree{
+\title{Workspace Integration}
+\pre{\startverb
+| Path | Purpose |
+|------|---------|
+| `.topos/nickel/contracts/` | Reusable contract library |
+| `.topos/nickel/examples/` | Transformation examples |
+| `environment-specs/environments.ncl` | Flox env specs |
+| `seth-rs/nickel/` | Pipeline + telemetry modules |
+\stopverb}
+}
+
+\subtree{
+\title{CLI Usage}
+\pre{\startverb
+# Evaluate config
+nickel eval config.ncl
+
+# Type-check without eval
+nickel typecheck config.ncl
+
+# Export to JSON
+nickel export config.ncl --format json
+
+# REPL
+nickel repl
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+Trit: 0 (ERGODIC - synthesis/validation)
+Home: Prof
+Poly Op: ⊗
+Color: #FFFF00
+\stopverb}
+
+\p{Triadic pairing:}
+
+\ul{
+\li{\code{\startverb dune-analytics\stopverb} (+1) - expanding/querying}
+\li{\code{\startverb nickel\stopverb} (0) - contract validation}
+\li{\code{\startverb sicp\stopverb} (-1) - foundational evaluation}
+}
+}
+
+\subtree{
+\title{Dynamic Sufficiency Verification}
+\pre{\startverb
+# Verify sufficiency between two configs
+let verify_sufficiency = fun cfg1 cfg2 =>
+  let fields1 = std.record.fields cfg1 in
+  let fields2 = std.record.fields cfg2 in
+  if std.array.all (fun f => std.array.elem f fields2) fields1
+  then 'COMPUTATIONALLY_SUFFICIENT
+  else 'NOT_SUFFICIENT
+\stopverb}
+}
+}

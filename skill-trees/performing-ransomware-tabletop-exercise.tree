@@ -1,0 +1,285 @@
+\title{Performing Ransomware Tabletop Exercise}
+
+\taxon{skill}
+
+\tag{ransomware}
+
+\tag{incident-response}
+
+\tag{tabletop-exercise}
+
+\tag{defense}
+
+\tag{preparedness}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Plans and facilitates tabletop exercises simulating ransomware incidents to test organizational readiness, decision-making, and communication procedures. Designs realistic scenarios based on current ransomware threat actors (LockBit, ALPHV/BlackCat, Cl0p), injects covering double extortion, backup destruction, and regulatory notification requirements. Evaluates participant responses against NIST CSF and CISA guidelines. Activates for requests involving ransomware tabletop, incident response exercise, or ransomware readiness drill.}
+
+\subtree{
+\title{Performing Ransomware Tabletop Exercise}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Testing organizational ransomware response procedures annually or after major infrastructure changes}
+\li{Validating decision-making processes for ransom payment, regulatory notification, and public disclosure}
+\li{Training executives, IT, legal, PR, and operations teams on their roles during a ransomware incident}
+\li{Meeting cyber insurance policy requirements for documented incident response testing}
+\li{Identifying gaps in recovery playbooks, communication plans, and backup procedures}
+}
+
+\p{\strong{Do not use} as a substitute for technical controls testing. Tabletop exercises validate procedures and decision-making, not technical detection or prevention capabilities.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Documented incident response plan (IRP) that participants should have read before the exercise}
+\li{Identified exercise participants from: executive leadership, IT/security, legal, communications/PR, HR, operations, and external counsel}
+\li{Facilitator who is independent from the IR team (to provide objective evaluation)}
+\li{Ransomware scenario designed with injects that escalate over multiple rounds}
+\li{Evaluation criteria aligned to NIST CSF Respond/Recover functions}
+\li{Conference room or virtual meeting for 2-4 hours with no interruptions}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Design the Exercise Scenario}
+\p{Build a realistic scenario based on current threat actor TTPs:}
+
+\p{\strong{Scenario Structure:}}
+
+\pre{\startverb
+Phase 1: Initial Detection (30 min)
+  - SOC receives alert for suspicious process execution on file server
+  - EDR detects Cobalt Strike beacon on 3 workstations
+  - Inject: External threat intel report links C2 IP to LockBit affiliate
+
+Phase 2: Escalation (30 min)
+  - Ransomware executes on 40% of servers during overnight hours
+  - Ransom note demands $2M in Bitcoin with 72-hour deadline
+  - Inject: Attackers contact media claiming data theft of customer PII
+
+Phase 3: Decision Points (45 min)
+  - Backup assessment reveals immutable copies are intact but primary backups encrypted
+  - Legal advises on breach notification timeline (72 hours GDPR, varies by US state)
+  - Inject: Threat actor publishes sample of stolen data on leak site
+
+Phase 4: Recovery and Communication (45 min)
+  - Recovery time estimate: 5-7 days from immutable backups
+  - Insurance carrier engages negotiation firm
+  - Inject: Major customer threatens contract termination without update within 24 hours
+\stopverb}
+
+\p{\strong{Scenario Variables to Customize:}}
+
+\ul{
+\li{Threat actor group and known TTPs}
+\li{Percentage of infrastructure encrypted}
+\li{Whether backups are intact, partially compromised, or fully destroyed}
+\li{Type of data exfiltrated (PII, PHI, financial, trade secrets)}
+\li{Applicable regulatory frameworks (GDPR, HIPAA, PCI DSS, SEC rules)}
+\li{Ransom amount and payment deadline}
+}
+}
+
+\subtree{
+\title{Step 2: Prepare Exercise Materials}
+\p{Create the following documents for participants:}
+
+\ol{
+\li{\strong{Exercise Overview Briefing} - Ground rules, objectives, scope, and participants}
+\li{\strong{Situation Reports (SITREPs)} - One per phase, distributed as the exercise progresses}
+\li{\strong{Inject Cards} - New information introduced at specific times to force decision-making}
+\li{\strong{Decision Point Worksheets} - Structured forms for documenting group decisions}
+\li{\strong{Evaluation Scorecard} - Criteria for assessing response quality}
+}
+
+\p{\strong{Key Decision Points to Include:}}
+
+\ul{
+\li{When to activate the incident response team}
+\li{Whether to shut down systems or contain selectively}
+\li{Whether to engage law enforcement (FBI IC3, CISA)}
+\li{Whether to pay the ransom and under what conditions}
+\li{When and how to notify regulators, customers, and the public}
+\li{How to prioritize system recovery order}
+}
+}
+
+\subtree{
+\title{Step 3: Facilitate the Exercise}
+\p{\strong{Facilitator Responsibilities:}}
+
+\ul{
+\li{Present each phase scenario and distribute SITREPs}
+\li{Introduce injects at predetermined times to increase pressure}
+\li{Ask probing questions to test decision-making reasoning}
+\li{Ensure all participant groups contribute (prevent IT from dominating)}
+\li{Document all decisions, rationales, and action items}
+\li{Track time management (many teams lose time on early phases)}
+}
+
+\p{\strong{Probing Questions by Phase:}}
+
+\p{Phase 1 - Detection:}
+
+\ul{
+\li{Who makes the call to declare an incident? What criteria trigger it?}
+\li{How do we determine the scope of compromise from initial alerts?}
+\li{Do we have the forensic capability to investigate or do we need external help?}
+}
+
+\p{Phase 2 - Escalation:}
+
+\ul{
+\li{What is our communication plan for employees? Do they know not to turn on affected machines?}
+\li{Have we isolated the network to prevent further encryption?}
+\li{Who authorizes system shutdowns that impact business operations?}
+}
+
+\p{Phase 3 - Decision:}
+
+\ul{
+\li{Under what conditions would we consider paying the ransom?}
+\li{What are the legal obligations for notification at this point?}
+\li{How do we handle the public leak of customer data?}
+}
+
+\p{Phase 4 - Recovery:}
+
+\ul{
+\li{What is the recovery priority order? Is it documented or decided ad hoc?}
+\li{How long until critical business operations resume?}
+\li{What evidence preservation is required for law enforcement and insurance?}
+}
+}
+
+\subtree{
+\title{Step 4: Evaluate and Score Responses}
+\p{Score each functional area against defined criteria:}
+
+\pre{\startverb
+| Evaluation Area | Score (1-5) | Criteria |
+|----------------|-------------|----------|
+| Detection & Escalation | | Timely incident declaration, proper chain of command |
+| Containment | | Network isolation, credential reset, scope assessment |
+| Communication - Internal | | Employee notification, executive briefing, documented decisions |
+| Communication - External | | Regulatory notification, customer communication, media response |
+| Recovery Planning | | Backup verification, recovery priority, RTO tracking |
+| Legal & Compliance | | Breach notification timelines, evidence preservation, law enforcement engagement |
+| Business Continuity | | Manual operations, customer impact mitigation, revenue loss estimation |
+| Payment Decision | | Structured framework, legal review, OFAC sanctions check |
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Document Findings and Remediation Plan}
+\p{Produce an after-action report (AAR) within 5 business days:}
+
+\p{\strong{AAR Contents:}}
+
+\ol{
+\li{Exercise overview and objectives}
+\li{Scenario summary and injects}
+\li{Key decisions made and rationale}
+\li{Strengths observed}
+\li{Gaps identified with severity rating}
+\li{Remediation actions with owners and deadlines}
+\li{Comparison to previous exercise results (if applicable)}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Tabletop Exercise (TTX)** | Discussion-based exercise where participants walk through a simulated incident scenario to test plans and procedures |
+| **Inject** | New information introduced during the exercise to change the scenario and force additional decision-making |
+| **SITREP** | Situation Report providing current status of the simulated incident at each exercise phase |
+| **After-Action Report (AAR)** | Post-exercise document capturing findings, gaps, strengths, and remediation actions |
+| **Double Extortion** | Ransomware tactic where attackers both encrypt data and threaten to publish stolen data unless ransom is paid |
+| **OFAC Check** | Verification that ransom payment recipient is not on the US Treasury OFAC sanctions list, which would make payment illegal |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{CISA Tabletop Exercise Packages (CTEPs)}: Free scenario packages from CISA designed for critical infrastructure sectors}
+\li{\strong{FEMA Homeland Security Exercise and Evaluation Program (HSEEP)}: Methodology for designing, conducting, and evaluating exercises}
+\li{\strong{Immersive Labs}: Platform providing interactive cyber crisis simulations with real-time scoring}
+\li{\strong{Tabletop Scenarios (from NCSC UK)}: Exercise in a Box tool providing free guided tabletop exercises}
+\li{\strong{Ransomware Readiness Assessment (CISA)}: Self-assessment tool for evaluating ransomware preparedness}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Healthcare System Double Extortion Exercise}
+\p{\strong{Context}: A 5-hospital healthcare system conducts an annual ransomware tabletop. Previous exercise revealed gaps in HIPAA breach notification and clinical system recovery priority. This year's scenario simulates a double extortion attack targeting the EMR system.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Design scenario based on Cl0p MOO (Managed Operations Operator) TTPs: exploitation of MOVEit vulnerability for initial access, data exfiltration of 500,000 patient records, followed by encryption of EMR database servers}
+\li{Participants: CISO, CIO, CMO (Chief Medical Officer), General Counsel, VP Communications, Director of Clinical Operations, Privacy Officer, External IR firm representative}
+\li{Phase 1 inject: EMR system down, emergency department diverting patients to neighboring hospital}
+\li{Phase 2 inject: HHS OCR (Office for Civil Rights) contacts organization about reports of patient data on dark web}
+\li{Phase 3 inject: Attacker provides decryption key sample for $3.5M, 48-hour deadline}
+\li{Key finding: Organization lacks documented criteria for ransom payment decision and had not pre-identified an OFAC-compliant payment mechanism}
+\li{Remediation: Establish payment decision framework, pre-engage ransomware negotiation firm, update HIPAA breach notification procedures with specific timelines}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Designing unrealistic scenarios that do not reflect actual ransomware TTPs, reducing exercise credibility}
+\li{Allowing technical teams to dominate the exercise while business and legal participants remain passive}
+\li{Not testing the communication plan (many organizations discover their notification list is outdated during the actual incident)}
+\li{Failing to follow up on remediation actions identified in the AAR, negating the exercise value}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Ransomware Tabletop Exercise - After Action Report
+
+**Exercise Date**: [Date]
+**Facilitator**: [Name]
+**Scenario**: [Brief description]
+**Duration**: [Hours]
+**Participants**: [Count by department]
+
+### Exercise Objectives
+1. [Objective] - Met / Partially Met / Not Met
+2. [Objective] - Met / Partially Met / Not Met
+
+### Key Decisions Log
+| Time | Decision Point | Decision Made | Rationale | Assessment |
+|------|---------------|--------------|-----------|------------|
+
+### Strengths Observed
+1. [Strength]
+
+### Gaps Identified
+| Gap | Severity | Affected Area | Current State | Desired State |
+|-----|----------|--------------|---------------|---------------|
+
+### Remediation Actions
+| Action | Owner | Deadline | Priority | Status |
+|--------|-------|----------|----------|--------|
+
+### Comparison to Previous Exercise
+| Area | Previous Score | Current Score | Trend |
+|------|---------------|--------------|-------|
+\stopverb}
+}
+}

@@ -1,0 +1,161 @@
+\title{Dialectica}
+
+\taxon{skill}
+
+\meta{description}{Dialectica Skill (ERGODIC 0)}
+
+\subtree{
+\title{Dialectica Skill (ERGODIC 0)}
+\blockquote{Proof-as-game interpretation via Gödel's Dialectica}
+
+\p{\strong{Trit}: 0 (ERGODIC) \strong{Color}: #26D826 (Green) \strong{Role}: Coordinator/Transporter}
+
+\subtree{
+\title{Core Concept}
+\p{Dialectica transforms proofs into games:}
+
+\pre{\startverb
+A ⊢ B  becomes  ∃x. ∀y. R(x, y)
+\stopverb}
+
+\p{Where:}
+
+\ul{
+\li{\strong{x} = Proponent's move (witness/strategy)}
+\li{\strong{y} = Opponent's challenge}
+\li{\strong{R(x,y)} = Winning condition (atomic)}
+}
+}
+
+\subtree{
+\title{The Dialectica Interpretation}
+\subtree{
+\title{For Logical Connectives}
+\pre{\startverb
+D(A ∧ B) = ∃(x,x').∀(y,y'). D(A)[x,y] ∧ D(B)[x',y']
+
+D(A → B) = ∃f,F. ∀x,y. D(A)[x, F(x,y)] → D(B)[f(x), y]
+
+D(∀z.A) = ∃f. ∀z,y. D(A)[f(z), y]
+
+D(∃z.A) = ∃(z,x). ∀y. D(A)[x, y]
+\stopverb}
+}
+
+\subtree{
+\title{Key Insight: Functions as Strategies}
+\ul{
+\li{\strong{f} extracts witnesses from proofs}
+\li{\strong{F} back-propagates challenges}
+\li{Composition = strategy composition}
+}
+}
+}
+
+\subtree{
+\title{Integration with Glass Bead Game}
+\pre{\startverb
+# World hop via Dialectica
+def dialectica_hop(proposition, world_state)
+  # Transform proposition to game
+  game = {
+    proponent_moves: extract_witnesses(proposition),
+    opponent_moves: extract_challenges(proposition),
+    winning: atomic_condition(proposition)
+  }
+  
+  # Play generates new world
+  new_world = play_game(game, world_state)
+  
+  # GF(3) conservation check
+  verify_gf3(world_state, new_world)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Attack/Defense Structure}
+\pre{\startverb
+        Proponent (∃)
+            ↓ witness x
+        Opponent (∀)
+            ↓ challenge y
+        Proponent
+            ↓ response (via f, F)
+           ...
+        Atomic check R(x,y)
+\stopverb}
+}
+
+\subtree{
+\title{Linear Logic Decomposition}
+\p{Dialectica splits into multiplicative/additive:}
+
+\pre{\startverb
+A ⊸ B = (A⊥ ⅋ B)    # Linear implication
+A ⊗ B               # Tensor (both needed)
+A & B               # With (choice)
+A ⊕ B               # Plus (given)
+!A                  # Of course (reusable)
+?A                  # Why not (garbage)
+\stopverb}
+
+\subtree{
+\title{Chu Construction}
+\pre{\startverb
+Chu(Set, ⊥) ≃ *-autonomous category
+Objects: (A⁺, A⁻, ⟨-,-⟩: A⁺ × A⁻ → ⊥)
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+three-match (-1) ⊗ dialectica (0) ⊗ gay-mcp (+1) = 0 ✓
+proofgeneral-narya (-1) ⊗ dialectica (0) ⊗ rubato-composer (+1) = 0 ✓
+clj-kondo-3color (-1) ⊗ dialectica (0) ⊗ cider-clojure (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Transform proof to game
+just dialectica-game "A → B"
+
+# Play one round
+just dialectica-play witness challenge
+
+# Check linear decomposition
+just dialectica-linear prop
+\stopverb}
+}
+
+\subtree{
+\title{de Paiva Categories}
+\p{Dialectica produces:}
+
+\ol{
+\li{\strong{Dial(Set)}: Dialectica category over Set}
+\li{\strong{Morphisms}: (f, F) pairs with coherence}
+\li{\strong{Tensor}: Product of games}
+\li{\strong{Internal hom}: Strategy space}
+}
+
+\pre{\startverb
+Hom_Dial((A,X,α), (B,Y,β)) = 
+  { (f,F) : A×Y → B, A×Y → X | 
+    α(a, F(a,y)) ≤ β(f(a,y), y) }
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Gödel, "Über eine bisher noch nicht benützte Erweiterung" (1958)}
+\li{de Paiva, "The Dialectica Categories"}
+\li{Shulman, "Linear Logic for Constructive Mathematics"}
+}
+}
+}

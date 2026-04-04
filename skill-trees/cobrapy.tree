@@ -1,0 +1,513 @@
+\title{Cobrapy}
+
+\taxon{skill}
+
+\meta{description}{"Constraint-based metabolic modeling (COBRA). FBA, FVA, gene knockouts, flux sampling, SBML models, for systems biology and metabolic engineering analysis."}
+
+\subtree{
+\title{COBRApy - Constraint-Based Reconstruction and Analysis}
+\subtree{
+\title{Overview}
+\p{COBRApy is a Python library for constraint-based reconstruction and analysis (COBRA) of metabolic models, essential for systems biology research. Work with genome-scale metabolic models, perform computational simulations of cellular metabolism, conduct metabolic engineering analyses, and predict phenotypic behaviors.}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{COBRApy provides comprehensive tools organized into several key areas:}
+
+\subtree{
+\title{1. Model Management}
+\p{Load existing models from repositories or files:}
+
+\pre{\startverb
+from cobra.io import load_model
+
+# Load bundled test models
+model = load_model("textbook")  # E. coli core model
+model = load_model("ecoli")     # Full E. coli model
+model = load_model("salmonella")
+
+# Load from files
+from cobra.io import read_sbml_model, load_json_model, load_yaml_model
+model = read_sbml_model("path/to/model.xml")
+model = load_json_model("path/to/model.json")
+model = load_yaml_model("path/to/model.yml")
+\stopverb}
+
+\p{Save models in various formats:}
+
+\pre{\startverb
+from cobra.io import write_sbml_model, save_json_model, save_yaml_model
+write_sbml_model(model, "output.xml")  # Preferred format
+save_json_model(model, "output.json")  # For Escher compatibility
+save_yaml_model(model, "output.yml")   # Human-readable
+\stopverb}
+}
+
+\subtree{
+\title{2. Model Structure and Components}
+\p{Access and inspect model components:}
+
+\pre{\startverb
+# Access components
+model.reactions      # DictList of all reactions
+model.metabolites    # DictList of all metabolites
+model.genes          # DictList of all genes
+
+# Get specific items by ID or index
+reaction = model.reactions.get_by_id("PFK")
+metabolite = model.metabolites[0]
+
+# Inspect properties
+print(reaction.reaction)        # Stoichiometric equation
+print(reaction.bounds)          # Flux constraints
+print(reaction.gene_reaction_rule)  # GPR logic
+print(metabolite.formula)       # Chemical formula
+print(metabolite.compartment)   # Cellular location
+\stopverb}
+}
+
+\subtree{
+\title{3. Flux Balance Analysis (FBA)}
+\p{Perform standard FBA simulation:}
+
+\pre{\startverb
+# Basic optimization
+solution = model.optimize()
+print(f"Objective value: {solution.objective_value}")
+print(f"Status: {solution.status}")
+
+# Access fluxes
+print(solution.fluxes["PFK"])
+print(solution.fluxes.head())
+
+# Fast optimization (objective value only)
+objective_value = model.slim_optimize()
+
+# Change objective
+model.objective = "ATPM"
+solution = model.optimize()
+\stopverb}
+
+\p{Parsimonious FBA (minimize total flux):}
+
+\pre{\startverb
+from cobra.flux_analysis import pfba
+solution = pfba(model)
+\stopverb}
+
+\p{Geometric FBA (find central solution):}
+
+\pre{\startverb
+from cobra.flux_analysis import geometric_fba
+solution = geometric_fba(model)
+\stopverb}
+}
+
+\subtree{
+\title{4. Flux Variability Analysis (FVA)}
+\p{Determine flux ranges for all reactions:}
+
+\pre{\startverb
+from cobra.flux_analysis import flux_variability_analysis
+
+# Standard FVA
+fva_result = flux_variability_analysis(model)
+
+# FVA at 90% optimality
+fva_result = flux_variability_analysis(model, fraction_of_optimum=0.9)
+
+# Loopless FVA (eliminates thermodynamically infeasible loops)
+fva_result = flux_variability_analysis(model, loopless=True)
+
+# FVA for specific reactions
+fva_result = flux_variability_analysis(
+    model,
+    reaction_list=["PFK", "FBA", "PGI"]
+)
+\stopverb}
+}
+
+\subtree{
+\title{5. Gene and Reaction Deletion Studies}
+\p{Perform knockout analyses:}
+
+\pre{\startverb
+from cobra.flux_analysis import (
+    single_gene_deletion,
+    single_reaction_deletion,
+    double_gene_deletion,
+    double_reaction_deletion
+)
+
+# Single deletions
+gene_results = single_gene_deletion(model)
+reaction_results = single_reaction_deletion(model)
+
+# Double deletions (uses multiprocessing)
+double_gene_results = double_gene_deletion(
+    model,
+    processes=4  # Number of CPU cores
+)
+
+# Manual knockout using context manager
+with model:
+    model.genes.get_by_id("b0008").knock_out()
+    solution = model.optimize()
+    print(f"Growth after knockout: {solution.objective_value}")
+# Model automatically reverts after context exit
+\stopverb}
+}
+
+\subtree{
+\title{6. Growth Media and Minimal Media}
+\p{Manage growth medium:}
+
+\pre{\startverb
+# View current medium
+print(model.medium)
+
+# Modify medium (must reassign entire dict)
+medium = model.medium
+medium["EX_glc__D_e"] = 10.0  # Set glucose uptake
+medium["EX_o2_e"] = 0.0       # Anaerobic conditions
+model.medium = medium
+
+# Calculate minimal media
+from cobra.medium import minimal_medium
+
+# Minimize total import flux
+min_medium = minimal_medium(model, minimize_components=False)
+
+# Minimize number of components (uses MILP, slower)
+min_medium = minimal_medium(
+    model,
+    minimize_components=True,
+    open_exchanges=True
+)
+\stopverb}
+}
+
+\subtree{
+\title{7. Flux Sampling}
+\p{Sample the feasible flux space:}
+
+\pre{\startverb
+from cobra.sampling import sample
+
+# Sample using OptGP (default, supports parallel processing)
+samples = sample(model, n=1000, method="optgp", processes=4)
+
+# Sample using ACHR
+samples = sample(model, n=1000, method="achr")
+
+# Validate samples
+from cobra.sampling import OptGPSampler
+sampler = OptGPSampler(model, processes=4)
+sampler.sample(1000)
+validation = sampler.validate(sampler.samples)
+print(validation.value_counts())  # Should be all 'v' for valid
+\stopverb}
+}
+
+\subtree{
+\title{8. Production Envelopes}
+\p{Calculate phenotype phase planes:}
+
+\pre{\startverb
+from cobra.flux_analysis import production_envelope
+
+# Standard production envelope
+envelope = production_envelope(
+    model,
+    reactions=["EX_glc__D_e", "EX_o2_e"],
+    objective="EX_ac_e"  # Acetate production
+)
+
+# With carbon yield
+envelope = production_envelope(
+    model,
+    reactions=["EX_glc__D_e", "EX_o2_e"],
+    carbon_sources="EX_glc__D_e"
+)
+
+# Visualize (use matplotlib or pandas plotting)
+import matplotlib.pyplot as plt
+envelope.plot(x="EX_glc__D_e", y="EX_o2_e", kind="scatter")
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{9. Gapfilling}
+\p{Add reactions to make models feasible:}
+
+\pre{\startverb
+from cobra.flux_analysis import gapfill
+
+# Prepare universal model with candidate reactions
+universal = load_model("universal")
+
+# Perform gapfilling
+with model:
+    # Remove reactions to create gaps for demonstration
+    model.remove_reactions([model.reactions.PGI])
+
+    # Find reactions needed
+    solution = gapfill(model, universal)
+    print(f"Reactions to add: {solution}")
+\stopverb}
+}
+
+\subtree{
+\title{10. Model Building}
+\p{Build models from scratch:}
+
+\pre{\startverb
+from cobra import Model, Reaction, Metabolite
+
+# Create model
+model = Model("my_model")
+
+# Create metabolites
+atp_c = Metabolite("atp_c", formula="C10H12N5O13P3",
+                   name="ATP", compartment="c")
+adp_c = Metabolite("adp_c", formula="C10H12N5O10P2",
+                   name="ADP", compartment="c")
+pi_c = Metabolite("pi_c", formula="HO4P",
+                  name="Phosphate", compartment="c")
+
+# Create reaction
+reaction = Reaction("ATPASE")
+reaction.name = "ATP hydrolysis"
+reaction.subsystem = "Energy"
+reaction.lower_bound = 0.0
+reaction.upper_bound = 1000.0
+
+# Add metabolites with stoichiometry
+reaction.add_metabolites({
+    atp_c: -1.0,
+    adp_c: 1.0,
+    pi_c: 1.0
+})
+
+# Add gene-reaction rule
+reaction.gene_reaction_rule = "(gene1 and gene2) or gene3"
+
+# Add to model
+model.add_reactions([reaction])
+
+# Add boundary reactions
+model.add_boundary(atp_c, type="exchange")
+model.add_boundary(adp_c, type="demand")
+
+# Set objective
+model.objective = "ATPASE"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Load Model and Predict Growth}
+\pre{\startverb
+from cobra.io import load_model
+
+# Load model
+model = load_model("ecoli")
+
+# Run FBA
+solution = model.optimize()
+print(f"Growth rate: {solution.objective_value:.3f} /h")
+
+# Show active pathways
+print(solution.fluxes[solution.fluxes.abs() > 1e-6])
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Gene Knockout Screen}
+\pre{\startverb
+from cobra.io import load_model
+from cobra.flux_analysis import single_gene_deletion
+
+# Load model
+model = load_model("ecoli")
+
+# Perform single gene deletions
+results = single_gene_deletion(model)
+
+# Find essential genes (growth < threshold)
+essential_genes = results[results["growth"] < 0.01]
+print(f"Found {len(essential_genes)} essential genes")
+
+# Find genes with minimal impact
+neutral_genes = results[results["growth"] > 0.9 * solution.objective_value]
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 3: Media Optimization}
+\pre{\startverb
+from cobra.io import load_model
+from cobra.medium import minimal_medium
+
+# Load model
+model = load_model("ecoli")
+
+# Calculate minimal medium for 50% of max growth
+target_growth = model.slim_optimize() * 0.5
+min_medium = minimal_medium(
+    model,
+    target_growth,
+    minimize_components=True
+)
+
+print(f"Minimal medium components: {len(min_medium)}")
+print(min_medium)
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 4: Flux Uncertainty Analysis}
+\pre{\startverb
+from cobra.io import load_model
+from cobra.flux_analysis import flux_variability_analysis
+from cobra.sampling import sample
+
+# Load model
+model = load_model("ecoli")
+
+# First check flux ranges at optimality
+fva = flux_variability_analysis(model, fraction_of_optimum=1.0)
+
+# For reactions with large ranges, sample to understand distribution
+samples = sample(model, n=1000)
+
+# Analyze specific reaction
+reaction_id = "PFK"
+import matplotlib.pyplot as plt
+samples[reaction_id].hist(bins=50)
+plt.xlabel(f"Flux through {reaction_id}")
+plt.ylabel("Frequency")
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 5: Context Manager for Temporary Changes}
+\p{Use context managers to make temporary modifications:}
+
+\pre{\startverb
+# Model remains unchanged outside context
+with model:
+    # Temporarily change objective
+    model.objective = "ATPM"
+
+    # Temporarily modify bounds
+    model.reactions.EX_glc__D_e.lower_bound = -5.0
+
+    # Temporarily knock out genes
+    model.genes.b0008.knock_out()
+
+    # Optimize with changes
+    solution = model.optimize()
+    print(f"Modified growth: {solution.objective_value}")
+
+# All changes automatically reverted
+solution = model.optimize()
+print(f"Original growth: {solution.objective_value}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{DictList Objects}
+\p{Models use \code{\startverb DictList\stopverb} objects for reactions, metabolites, and genes - behaving like both lists and dictionaries:}
+
+\pre{\startverb
+# Access by index
+first_reaction = model.reactions[0]
+
+# Access by ID
+pfk = model.reactions.get_by_id("PFK")
+
+# Query methods
+atp_reactions = model.reactions.query("atp")
+\stopverb}
+}
+
+\subtree{
+\title{Flux Constraints}
+\p{Reaction bounds define feasible flux ranges:}
+
+\ul{
+\li{\strong{Irreversible}: \code{\startverb lower_bound = 0, upper_bound > 0\stopverb}}
+\li{\strong{Reversible}: \code{\startverb lower_bound < 0, upper_bound > 0\stopverb}}
+\li{Set both bounds simultaneously with \code{\startverb .bounds\stopverb} to avoid inconsistencies}
+}
+}
+
+\subtree{
+\title{Gene-Reaction Rules (GPR)}
+\p{Boolean logic linking genes to reactions:}
+
+\pre{\startverb
+# AND logic (both required)
+reaction.gene_reaction_rule = "gene1 and gene2"
+
+# OR logic (either sufficient)
+reaction.gene_reaction_rule = "gene1 or gene2"
+
+# Complex logic
+reaction.gene_reaction_rule = "(gene1 and gene2) or (gene3 and gene4)"
+\stopverb}
+}
+
+\subtree{
+\title{Exchange Reactions}
+\p{Special reactions representing metabolite import/export:}
+
+\ul{
+\li{Named with prefix \code{\startverb EX_\stopverb} by convention}
+\li{Positive flux = secretion, negative flux = uptake}
+\li{Managed through \code{\startverb model.medium\stopverb} dictionary}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Use context managers} for temporary modifications to avoid state management issues}
+\li{\strong{Validate models} before analysis using \code{\startverb model.slim_optimize()\stopverb} to ensure feasibility}
+\li{\strong{Check solution status} after optimization - \code{\startverb optimal\stopverb} indicates successful solve}
+\li{\strong{Use loopless FVA} when thermodynamic feasibility matters}
+\li{\strong{Set fraction_of_optimum} appropriately in FVA to explore suboptimal space}
+\li{\strong{Parallelize} computationally expensive operations (sampling, double deletions)}
+\li{\strong{Prefer SBML format} for model exchange and long-term storage}
+\li{\strong{Use slim_optimize()} when only objective value needed for performance}
+\li{\strong{Validate flux samples} to ensure numerical stability}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Infeasible solutions}: Check medium constraints, reaction bounds, and model consistency \strong{Slow optimization}: Try different solvers (GLPK, CPLEX, Gurobi) via \code{\startverb model.solver\stopverb} \strong{Unbounded solutions}: Verify exchange reactions have appropriate upper bounds \strong{Import errors}: Ensure correct file format and valid SBML identifiers}
+}
+
+\subtree{
+\title{References}
+\p{For detailed workflows and API patterns, refer to:}
+
+\ul{
+\li{\code{\startverb references/workflows.md\stopverb} - Comprehensive step-by-step workflow examples}
+\li{\code{\startverb references/api_quick_reference.md\stopverb} - Common function signatures and patterns}
+}
+
+\p{Official documentation: https://cobrapy.readthedocs.io/en/latest/}
+}
+}

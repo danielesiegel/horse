@@ -1,0 +1,75 @@
+\title{Analyzing Web Server Logs For Intrusion}
+
+\taxon{skill}
+
+\tag{analyzing}
+
+\tag{web}
+
+\tag{server}
+
+\tag{logs}
+
+\meta{version}{"1.0"}
+
+\meta{description}{>-}
+
+\subtree{
+\title{Analyzing Web Server Logs for Intrusion}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing web server logs for intrusion}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with security operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\ol{
+\li{Install dependencies: \code{\startverb pip install geoip2 user-agents\stopverb}}
+\li{Collect web server access logs in Combined Log Format (Apache) or Nginx default format.}
+\li{Parse each log entry extracting: IP, timestamp, method, URI, status code, response size, user-agent, referer.}
+\li{Apply detection rules:}
+\li{SQL injection: \code{\startverb UNION SELECT\stopverb}, \code{\startverb OR 1=1\stopverb}, \code{\startverb ' OR '\stopverb}, hex encoding patterns}
+\li{LFI/Path traversal: \code{\startverb ../\stopverb}, \code{\startverb /etc/passwd\stopverb}, \code{\startverb /proc/self\stopverb}, \code{\startverb php://filter\stopverb}}
+\li{XSS: \code{\startverb <script>\stopverb}, \code{\startverb javascript:\stopverb}, \code{\startverb onerror=\stopverb}, \code{\startverb onload=\stopverb}}
+\li{Scanner signatures: nikto, sqlmap, dirbuster, gobuster, wfuzz user-agents}
+\li{Brute force: >50 POST requests to login endpoints from same IP in 5 minutes}
+\li{Enrich with GeoIP data and generate a prioritized findings report.}
+}
+
+\pre{\startverb
+python scripts/agent.py --log-file /var/log/nginx/access.log --geoip-db GeoLite2-City.mmdb --output web_intrusion_report.json
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Detect SQLi in URI}
+\pre{\startverb
+192.168.1.100 - - [15/Jan/2024:10:30:45 +0000] "GET /products?id=1' UNION SELECT username,password FROM users-- HTTP/1.1" 200 4532
+\stopverb}
+}
+
+\subtree{
+\title{Scanner User-Agent Detection}
+\pre{\startverb
+Nikto/2.1.6, sqlmap/1.7, DirBuster-1.0-RC1, gobuster/3.1.0
+\stopverb}
+}
+}
+}

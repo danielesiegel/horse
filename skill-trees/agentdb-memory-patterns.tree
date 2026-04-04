@@ -1,0 +1,391 @@
+\title{"agentdb memory patterns"}
+
+\taxon{skill}
+
+\meta{description}{"Implement persistent memory patterns for AI agents using AgentDB. Includes session memory, long-term storage, pattern learning, and context management. Use when building stateful agents, chat systems, or intelligent assistants."}
+
+\subtree{
+\title{AgentDB Memory Patterns}
+\subtree{
+\title{What This Skill Does}
+\p{Provides memory management patterns for AI agents using AgentDB's persistent storage and ReasoningBank integration. Enables agents to remember conversations, learn from interactions, and maintain context across sessions.}
+
+\p{\strong{Performance}: 150x-12,500x faster than traditional solutions with 100\% backward compatibility.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Node.js 18+}
+\li{AgentDB v1.0.7+ (via agentic-flow or standalone)}
+\li{Understanding of agent architectures}
+}
+}
+
+\subtree{
+\title{Quick Start with CLI}
+\subtree{
+\title{Initialize AgentDB}
+\pre{\startverb
+# Initialize vector database
+npx agentdb@latest init ./agents.db
+
+# Or with custom dimensions
+npx agentdb@latest init ./agents.db --dimension 768
+
+# Use preset configurations
+npx agentdb@latest init ./agents.db --preset large
+
+# In-memory database for testing
+npx agentdb@latest init ./memory.db --in-memory
+\stopverb}
+}
+
+\subtree{
+\title{Start MCP Server for Claude Code}
+\pre{\startverb
+# Start MCP server (integrates with Claude Code)
+npx agentdb@latest mcp
+
+# Add to Claude Code (one-time setup)
+claude mcp add agentdb npx agentdb@latest mcp
+\stopverb}
+}
+
+\subtree{
+\title{Create Learning Plugin}
+\pre{\startverb
+# Interactive plugin wizard
+npx agentdb@latest create-plugin
+
+# Use template directly
+npx agentdb@latest create-plugin -t decision-transformer -n my-agent
+
+# Available templates:
+# - decision-transformer (sequence modeling RL)
+# - q-learning (value-based learning)
+# - sarsa (on-policy TD learning)
+# - actor-critic (policy gradient)
+# - curiosity-driven (exploration-based)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quick Start with API}
+\pre{\startverb
+import { createAgentDBAdapter } from 'agentic-flow/reasoningbank';
+
+// Initialize with default configuration
+const adapter = await createAgentDBAdapter({
+  dbPath: '.agentdb/reasoningbank.db',
+  enableLearning: true,      // Enable learning plugins
+  enableReasoning: true,      // Enable reasoning agents
+  quantizationType: 'scalar', // binary | scalar | product | none
+  cacheSize: 1000,            // In-memory cache
+});
+
+// Store interaction memory
+const patternId = await adapter.insertPattern({
+  id: '',
+  type: 'pattern',
+  domain: 'conversation',
+  pattern_data: JSON.stringify({
+    embedding: await computeEmbedding('What is the capital of France?'),
+    pattern: {
+      user: 'What is the capital of France?',
+      assistant: 'The capital of France is Paris.',
+      timestamp: Date.now()
+    }
+  }),
+  confidence: 0.95,
+  usage_count: 1,
+  success_count: 1,
+  created_at: Date.now(),
+  last_used: Date.now(),
+});
+
+// Retrieve context with reasoning
+const context = await adapter.retrieveWithReasoning(queryEmbedding, {
+  domain: 'conversation',
+  k: 10,
+  useMMR: true,              // Maximal Marginal Relevance
+  synthesizeContext: true,    // Generate rich context
+});
+\stopverb}
+}
+
+\subtree{
+\title{Memory Patterns}
+\subtree{
+\title{1. Session Memory}
+\pre{\startverb
+class SessionMemory {
+  async storeMessage(role: string, content: string) {
+    return await db.storeMemory({
+      sessionId: this.sessionId,
+      role,
+      content,
+      timestamp: Date.now()
+    });
+  }
+
+  async getSessionHistory(limit = 20) {
+    return await db.query({
+      filters: { sessionId: this.sessionId },
+      orderBy: 'timestamp',
+      limit
+    });
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{2. Long-Term Memory}
+\pre{\startverb
+// Store important facts
+await db.storeFact({
+  category: 'user_preference',
+  key: 'language',
+  value: 'English',
+  confidence: 1.0,
+  source: 'explicit'
+});
+
+// Retrieve facts
+const prefs = await db.getFacts({
+  category: 'user_preference'
+});
+\stopverb}
+}
+
+\subtree{
+\title{3. Pattern Learning}
+\pre{\startverb
+// Learn from successful interactions
+await db.storePattern({
+  trigger: 'user_asks_time',
+  response: 'provide_formatted_time',
+  success: true,
+  context: { timezone: 'UTC' }
+});
+
+// Apply learned patterns
+const pattern = await db.matchPattern(currentContext);
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Patterns}
+\subtree{
+\title{Hierarchical Memory}
+\pre{\startverb
+// Organize memory in hierarchy
+await memory.organize({
+  immediate: recentMessages,    // Last 10 messages
+  shortTerm: sessionContext,    // Current session
+  longTerm: importantFacts,     // Persistent facts
+  semantic: embeddedKnowledge   // Vector search
+});
+\stopverb}
+}
+
+\subtree{
+\title{Memory Consolidation}
+\pre{\startverb
+// Periodically consolidate memories
+await memory.consolidate({
+  strategy: 'importance',       // Keep important memories
+  maxSize: 10000,              // Size limit
+  minScore: 0.5                // Relevance threshold
+});
+\stopverb}
+}
+}
+
+\subtree{
+\title{CLI Operations}
+\subtree{
+\title{Query Database}
+\pre{\startverb
+# Query with vector embedding
+npx agentdb@latest query ./agents.db "[0.1,0.2,0.3,...]"
+
+# Top-k results
+npx agentdb@latest query ./agents.db "[0.1,0.2,0.3]" -k 10
+
+# With similarity threshold
+npx agentdb@latest query ./agents.db "0.1 0.2 0.3" -t 0.75
+
+# JSON output
+npx agentdb@latest query ./agents.db "[...]" -f json
+\stopverb}
+}
+
+\subtree{
+\title{Import/Export Data}
+\pre{\startverb
+# Export vectors to file
+npx agentdb@latest export ./agents.db ./backup.json
+
+# Import vectors from file
+npx agentdb@latest import ./backup.json
+
+# Get database statistics
+npx agentdb@latest stats ./agents.db
+\stopverb}
+}
+
+\subtree{
+\title{Performance Benchmarks}
+\pre{\startverb
+# Run performance benchmarks
+npx agentdb@latest benchmark
+
+# Results show:
+# - Pattern Search: 150x faster (100µs vs 15ms)
+# - Batch Insert: 500x faster (2ms vs 1s)
+# - Large-scale Query: 12,500x faster (8ms vs 100s)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with ReasoningBank}
+\pre{\startverb
+import { createAgentDBAdapter, migrateToAgentDB } from 'agentic-flow/reasoningbank';
+
+// Migrate from legacy ReasoningBank
+const result = await migrateToAgentDB(
+  '.swarm/memory.db',           // Source (legacy)
+  '.agentdb/reasoningbank.db'   // Destination (AgentDB)
+);
+
+console.log(`✅ Migrated ${result.patternsMigrated} patterns`);
+
+// Train learning model
+const adapter = await createAgentDBAdapter({
+  enableLearning: true,
+});
+
+await adapter.train({
+  epochs: 50,
+  batchSize: 32,
+});
+
+// Get optimal strategy with reasoning
+const result = await adapter.retrieveWithReasoning(queryEmbedding, {
+  domain: 'task-planning',
+  synthesizeContext: true,
+  optimizeMemory: true,
+});
+\stopverb}
+}
+
+\subtree{
+\title{Learning Plugins}
+\subtree{
+\title{Available Algorithms (9 Total)}
+\ol{
+\li{\strong{Decision Transformer} - Sequence modeling RL (recommended)}
+\li{\strong{Q-Learning} - Value-based learning}
+\li{\strong{SARSA} - On-policy TD learning}
+\li{\strong{Actor-Critic} - Policy gradient with baseline}
+\li{\strong{Active Learning} - Query selection}
+\li{\strong{Adversarial Training} - Robustness}
+\li{\strong{Curriculum Learning} - Progressive difficulty}
+\li{\strong{Federated Learning} - Distributed learning}
+\li{\strong{Multi-task Learning} - Transfer learning}
+}
+}
+
+\subtree{
+\title{List and Manage Plugins}
+\pre{\startverb
+# List available plugins
+npx agentdb@latest list-plugins
+
+# List plugin templates
+npx agentdb@latest list-templates
+
+# Get plugin info
+npx agentdb@latest plugin-info <name>
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reasoning Agents (4 Modules)}
+\ol{
+\li{\strong{PatternMatcher} - Find similar patterns with HNSW indexing}
+\li{\strong{ContextSynthesizer} - Generate rich context from multiple sources}
+\li{\strong{MemoryOptimizer} - Consolidate similar patterns, prune low-quality}
+\li{\strong{ExperienceCurator} - Quality-based experience filtering}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Enable quantization}: Use scalar/binary for 4-32x memory reduction}
+\li{\strong{Use caching}: 1000 pattern cache for <1ms retrieval}
+\li{\strong{Batch operations}: 500x faster than individual inserts}
+\li{\strong{Train regularly}: Update learning models with new experiences}
+\li{\strong{Enable reasoning}: Automatic context synthesis and optimization}
+\li{\strong{Monitor metrics}: Use \code{\startverb stats\stopverb} command to track performance}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Issue: Memory growing too large}
+\pre{\startverb
+# Check database size
+npx agentdb@latest stats ./agents.db
+
+# Enable quantization
+# Use 'binary' (32x smaller) or 'scalar' (4x smaller)
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Slow search performance}
+\pre{\startverb
+# Enable HNSW indexing and caching
+# Results: <100µs search time
+\stopverb}
+}
+
+\subtree{
+\title{Issue: Migration from legacy ReasoningBank}
+\pre{\startverb
+# Automatic migration with validation
+npx agentdb@latest migrate --source .swarm/memory.db
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Characteristics}
+\ul{
+\li{\strong{Vector Search}: <100µs (HNSW indexing)}
+\li{\strong{Pattern Retrieval}: <1ms (with cache)}
+\li{\strong{Batch Insert}: 2ms for 100 patterns}
+\li{\strong{Memory Efficiency}: 4-32x reduction with quantization}
+\li{\strong{Backward Compatibility}: 100\% compatible with ReasoningBank API}
+}
+}
+
+\subtree{
+\title{Learn More}
+\ul{
+\li{GitHub: https://github.com/ruvnet/agentic-flow/tree/main/packages/agentdb}
+\li{Documentation: node_modules/agentic-flow/docs/AGENTDB_INTEGRATION.md}
+\li{MCP Integration: \code{\startverb npx agentdb@latest mcp\stopverb} for Claude Code}
+\li{Website: https://agentdb.ruv.io}
+}
+}
+}

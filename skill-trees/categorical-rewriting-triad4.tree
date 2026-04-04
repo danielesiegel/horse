@@ -1,0 +1,660 @@
+\title{Categorical Rewriting Triad4}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{"Categorical Rewriting: Triad 4 (World Transformation)"}
+
+\subtree{
+\title{Categorical Rewriting: Triad 4 (World Transformation)}
+\p{\strong{Status:} Design Phase \strong{Trit Assignment:} See GF(3) Balance section \strong{Featured:} Yes (completes Triad architecture) \strong{Verified:} Pending implementation}
+
+\subtree{
+\title{Overview}
+\p{\strong{Triad 4} synthesizes \strong{Categorical Rewriting + Graph Grafting + DisCoPy} to enable \strong{dynamic world transformation} — converting abstract moves from Glass Bead Game into concrete world mutations.}
+
+\p{This completes the 4-step cycle:}
+
+\pre{\startverb
+Triad 1: Foundation (Foundations, axioms, base types)
+   ↓
+Triad 2: Molding (Glass Bead Game + Validation + ACSet storage)
+   ↓
+Triad 3: Hopping (World navigation + arbitrage + interleaving)
+   ↓
+Triad 4: Rewriting (Categorical transformation of worlds) ← YOU ARE HERE
+   ↓
+[Loop back to adapted foundation]
+\stopverb}
+}
+
+\subtree{
+\title{Components: GF(3)-Balanced Triad}
+\subtree{
+\title{Component A (+1): \code{\startverb discopy-operadic-move-generation\stopverb} (PLAY)}
+\p{\strong{Role:} Generate abstract categorical moves from one world state to another}
+
+\p{\strong{What it does:}}
+
+\ul{
+\li{Uses DisCoPy (string diagrams) to represent world transformations as morphisms}
+\li{Operadic composition of multiple simultaneous moves}
+\li{Generates "counterfactual moves" as Span Profunctors}
+\li{Output: Abstract move algebra ready for concrete application}
+}
+
+\p{\strong{Core Operations:}}
+
+\pre{\startverb
+# String diagram representation of world transformation
+move = Box("world_transition",
+           Ty("state_A"),
+           Ty("state_B"))
+
+# Operadic composition: combine multiple moves
+combined_move = move @ other_move  # horizontal composition
+threaded_move = move >> another_move  # vertical composition
+
+# Span profunctor (counterfactual generation)
+span = Span(apex_world, left_projection, right_projection)
+# represents: "what could happen if we move like this?"
+\stopverb}
+
+\p{\strong{Algorithm:}}
+
+\pre{\startverb
+Input: Current world state W_A
+Output: Abstract moves to reachable worlds
+
+1. Extract ACSet structure from W_A
+2. Identify constraint-respecting morphisms
+3. Generate Span Profunctors (move families)
+4. Operadically compose into compound moves
+5. Return high-value moves (epistemic arbitrage ranking)
+\stopverb}
+
+\p{\strong{Mathematical Foundation:}}
+
+\ul{
+\li{String diagrams from DisCoPy (Baez, Ong)}
+\li{Operadic composition (May, Markl)}
+\li{Span category (pullback-based moves)}
+\li{Profunctors (parametrized move families)}
+}
+}
+
+\subtree{
+\title{Component B (0): \code{\startverb graph-mutation-engine\stopverb} (ERGODIC)}
+\p{\strong{Role:} Apply abstract moves to concrete ACSet structures, maintaining consistency}
+
+\p{\strong{What it does:}}
+
+\ul{
+\li{Translates DisCoPy morphisms into DuckDB mutations}
+\li{Validates that mutations preserve constraints}
+\li{Executes graph grafting (inserting/deleting/rewriting subgraphs)}
+\li{Maintains GF(3) conservation across mutations}
+}
+
+\p{\strong{Core Operations:}}
+
+\pre{\startverb
+-- Example: Harmonic rewriting in music-topos world
+-- Move: "insert V chord where ii was expected"
+
+BEGIN TRANSACTION;
+
+-- 1. Identify subgraph to graft
+SELECT * FROM harmonies
+WHERE position = 'measure_4' AND degree = 'ii'
+INTO subgraph_to_replace;
+
+-- 2. Validate constraints before mutation
+CHECK (gf3_balance(subgraph_to_replace) = 0);
+CHECK (reafference_loop_closes(subgraph_to_replace));
+
+-- 3. Delete old subgraph (maintain referential integrity)
+DELETE FROM transitions WHERE source_id IN (SELECT id FROM subgraph_to_replace);
+DELETE FROM harmonies WHERE position = 'measure_4';
+
+-- 4. Insert new subgraph with new relationships
+INSERT INTO harmonies (position, degree, ...)
+VALUES ('measure_4', 'V', ...);
+
+-- 5. Re-establish transitions
+INSERT INTO transitions (source_id, target_id, ...)
+VALUES (...);
+
+-- 6. Verify conservation
+ASSERT SUM(trit) = 0 (mod 3);
+
+COMMIT;
+\stopverb}
+
+\p{\strong{Algorithm:}}
+
+\pre{\startverb
+Input: Abstract move M, ACSet world W_A
+Output: Modified ACSet world W_B or FAIL
+
+1. Parse M as DisCoPy diagram
+2. Identify subgraph(s) targeted for rewriting
+3. Validate GF(3) balance in target subgraph
+4. Validate reafference loops close in target
+5. Execute graph grafting (DuckDB transactions)
+6. Verify output ACSet W_B satisfies all constraints
+7. If valid: return W_B
+   Else: ROLLBACK and signal constraint violation
+\stopverb}
+
+\p{\strong{Constraint Preservation:}}
+
+\ul{
+\li{GF(3) balance: Σ trits ≡ 0 (mod 3)}
+\li{Reafference closure: action→prediction→sensation→match cycle completes}
+\li{Morphism coherence: All diagram compositions commute}
+\li{Temporal versioning: valid_from/valid_to intervals maintained}
+}
+}
+
+\subtree{
+\title{Component C (-1): \code{\startverb semantic-grafting-verifier\stopverb} (COPLAY)}
+\p{\strong{Role:} Verify that grafted mutations are semantically sound and exploit arbitrage}
+
+\p{\strong{What it does:}}
+
+\ul{
+\li{Checks that mutated world satisfies predicate logic (Dialectica)}
+\li{Verifies "moral correctness" via post-rigorous reasoning}
+\li{Measures \strong{transformation arbitrage} — value gained from move}
+\li{Blocks invalid moves; promotes high-value moves}
+}
+
+\p{\strong{Core Operations:}}
+
+\pre{\startverb
+-- Semantic verification in Lean/Rzk
+theorem world_transformation_valid (M : DisCopy.Morphism) (W_A W_B : ACSet) :
+  ACSet.satisfies W_A (Constraints.all)  →
+  (W_B = apply_move M W_A) →
+  ACSet.satisfies W_B (Constraints.all) := by
+  -- 1. Structural verification (syntactic)
+  have h1 : Morphism.commutes M := by (graph coherence)
+
+  -- 2. Constraint verification (semantic)
+  have h2 : GF3.balanced W_B := by (sum of trits)
+  have h3 : Reafference.closes W_B := by (loop closure)
+
+  -- 3. Arbitrage calculation
+  let arb := epistemic_arbitrage W_A W_B M
+  have h4 : arb > 0 := by (prediction error improvement)
+
+  -- 4. Conclude
+  exact And.intro h1 (And.intro h2 (And.intro h3 h4))
+\stopverb}
+
+\p{\strong{Verification Strategy (Post-Rigorous):}}
+
+\pre{\startverb
+Level 1 (Syntactic): ✓ Diagram commutes (mechanical check)
+Level 2 (Structural): ✓ ACSet constraints preserved (SQL constraints)
+Level 3 (Semantic): ✓ Predicates satisfied (Dialectica interpretation)
+Level 4 (Epistemic): ✓ Arbitrage positive (prediction error reduced)
+
+If all 4 pass → Move is valid
+If any fail → Move is blocked (explain why)
+\stopverb}
+
+\p{\strong{Arbitrage Measurement:}}
+
+\pre{\startverb
+arb(M: W_A → W_B) = (H[W_A] - H[W_B]) × P[W_B correct]
+
+where:
+  H[W] = prediction entropy of world W
+  P[W correct] = probability predictions for W are accurate
+
+High arb → Move is valuable (reduces uncertainty significantly)
+Low arb → Move wastes computational effort
+Negative arb → Move increases dissonance (blocked)
+\stopverb}
+}
+}
+
+\subtree{
+\title{The 4-Component Cycle (Implementation)}
+\subtree{
+\title{Stage 1: Discover Moves (Triad 4A)}
+\pre{\startverb
+Current world W_A
+  ↓ [DisCoPy operadic generation]
+Abstract moves M₁, M₂, M₃, ... (ranked by arbitrage potential)
+\stopverb}
+}
+
+\subtree{
+\title{Stage 2: Validate Moves (Triad 4B + 4C)}
+\pre{\startverb
+For each move M:
+  1. Compute mutated world W_B = apply_move(M, W_A)
+  2. Check constraints (GF(3), reafference, coherence)
+  3. Measure arbitrage(M)
+  4. Filter: keep only valid + high-arbitrage moves
+\stopverb}
+}
+
+\subtree{
+\title{Stage 3: Execute Move (Triad 4B)}
+\pre{\startverb
+Selected move M_best
+  ↓ [DuckDB graph grafting transaction]
+World W_A → W_B (committed)
+  ↓ [Reafference loop]
+Agent observes W_B, updates predictions
+\stopverb}
+}
+
+\subtree{
+\title{Stage 4: Learn & Adapt (Triad 3 feedback)}
+\pre{\startverb
+W_B observed
+  ↓ [Compare prediction to observation]
+Prediction error = ||predicted_W_B - observed_W_B||
+  ↓ [Update epistemic model]
+Model improves for next move selection
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example: Music-Topos World Rewriting}
+\subtree{
+\title{Scenario}
+\pre{\startverb
+Current world W_A:
+  ├─ Key: C major
+  ├─ Measure 4: ii-V-I cadence (classic)
+  └─ Harmonic entropy: H=0.78 (fairly predictable)
+
+Goal: Generate interesting harmonic variation that:
+  ✓ Preserves key (C major)
+  ✓ Maintains voice leading rules
+  ✓ Reduces redundancy (H > 0.85)
+  ✓ Remains "morally correct" (post-rigorous)
+\stopverb}
+}
+
+\subtree{
+\title{Execution}
+\p{\strong{Step 1: Generate moves (Component A)}}
+
+\pre{\startverb
+Input: Measure 4 context (ii chord, must resolve)
+
+Moves generated:
+  M₁: ii → V → I (original, H_change = -0.01, arb = low)
+  M₂: ii → IV → I (substitution, H_change = +0.12, arb = medium)
+  M₃: ii → V7♯11 → I (chromatic, H_change = +0.25, arb = high)
+  M₄: ii → ♭VI → I (modal interchange, H_change = +0.18, arb = high)
+
+Sorted by arbitrage: [M₃, M₄, M₂, M₁]
+\stopverb}
+
+\p{\strong{Step 2: Apply move M₃ (Component B)}}
+
+\pre{\startverb
+-- Graft chromatic V7♯11 into measure 4
+UPDATE harmonies
+SET chord_root = 'G', chord_type = 'V7♯11'
+WHERE position = 'measure_4_beat_2';
+
+UPDATE transitions
+SET voice_leading_quality = 'chromatic'
+WHERE source_id = (SELECT id FROM harmonies WHERE position = 'measure_4_beat_1')
+  AND target_id = (SELECT id FROM harmonies WHERE position = 'measure_4_beat_2');
+\stopverb}
+
+\p{\strong{Step 3: Verify (Component C)}}
+
+\pre{\startverb
+Checks:
+  ✓ GF(3): 0 + 1 + (-1) = 0 (balanced)
+  ✓ Reafference: Prediction loop closes (all voices resolve)
+  ✓ Constraints: ii-V7♯11-I is valid in modal theory
+  ✓ Arbitrage: H increases from 0.78 → 0.89 (++value)
+
+Result: MOVE ACCEPTED
+\stopverb}
+
+\p{\strong{Step 4: Observe & Learn}}
+
+\pre{\startverb
+Agent plays W_B (with M₃ applied)
+Prediction: V7♯11 resolves with chromatic line motion
+Observation: (matches prediction ✓)
+Prediction error: δ = 0.02 (very low)
+
+Update: "Chromatic V7♯11 resolutions work well"
+         (increase weight for future move selection)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Existing Triads}
+\subtree{
+\title{Input from Triad 3 (World-Hopping)}
+\pre{\startverb
+Triad 3 (world-hopping + epistemic-arbitrage) provides:
+  ├─ Current best world W_A (found via hopping)
+  ├─ Ranking of reachable worlds by arbitrage
+  └─ Prediction errors (where model is weak)
+
+→ This tells Triad 4 "which worlds to rewrite toward"
+\stopverb}
+}
+
+\subtree{
+\title{Output to Triad 3 (World-Hopping)}
+\pre{\startverb
+Triad 4 (categorical rewriting) produces:
+  ├─ Modified ACSet worlds (grafted structures)
+  ├─ Mutation arbitrage scores (value per move)
+  └─ Constraint violation reports (invalid moves)
+
+→ This tells Triad 3 "these moves are executable"
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\pre{\startverb
+Triads work as balanced triple:
+
+Triad 2 (Glass Bead Game): PLUS (+1) Generate conceptual moves
+Triad 3 (World-Hopping):   ERGODIC (0) Coordinate world exploration
+Triad 4 (Rewriting):       MINUS (-1) Validate & constrain mutations
+
+Sum: +1 + 0 + (-1) = 0 ✓ BALANCED
+\stopverb}
+}
+}
+
+\subtree{
+\title{Implementation Roadmap}
+\subtree{
+\title{Phase 1: DisCoPy Integration (1-2 weeks)}
+\pre{\startverb
+✓ Install DisCoPy
+✓ Define world-transformation language (ops, boxes, wiring)
+✓ Implement operadic composition
+✓ Test on small examples (3-5 node ACSet mutations)
+\stopverb}
+}
+
+\subtree{
+\title{Phase 2: Graph Grafting (2-3 weeks)}
+\pre{\startverb
+✓ Map DisCoPy diagrams → DuckDB mutations
+✓ Implement constraint checking (GF(3), reafference)
+✓ Build graph grafting operations (delete, insert, rewrite)
+✓ Test on music-topos schema (measure rewriting)
+\stopverb}
+}
+
+\subtree{
+\title{Phase 3: Semantic Verification (2-3 weeks)}
+\pre{\startverb
+✓ Implement Dialectica interpreter (post-rigorous verification)
+✓ Build epistemic arbitrage calculator
+✓ Deploy move ranking/filtering
+✓ Integrate with Triad 3 feedback
+\stopverb}
+}
+
+\subtree{
+\title{Phase 4: Integration & Deployment (1-2 weeks)}
+\pre{\startverb
+✓ Connect all 4 components in feedback loop
+✓ Test end-to-end: discover → validate → execute → learn
+✓ Benchmark (move generation rate, validation latency)
+✓ Documentation and examples
+\stopverb}
+
+\p{\strong{Total Timeline:} 6-10 weeks to production}
+}
+}
+
+\subtree{
+\title{Code Examples}
+\subtree{
+\title{DisCoPy: String Diagram for World Move}
+\pre{\startverb
+from discopy import Ty, Box, Diagram, Functor
+from discopy.monoidal import Ty as MonoidalTy
+
+# Define world types
+WorldState = Ty("World")
+Constraint = Ty("Constraint")
+
+# Define a move: transition from one harmonic context to another
+harmonic_move = Box(
+    "ii → V7♯11",           # move name
+    WorldState @ Constraint,  # input: (current world, constraints)
+    WorldState @ Constraint   # output: (new world, constraints)
+)
+
+# Compose with another move
+resolution = Box(
+    "V7♯11 → I",
+    WorldState,
+    WorldState
+)
+
+# Combine moves
+compound_move = harmonic_move >> resolution
+
+# Generate alternative by operadic composition
+alternative = Box("modal_interchange", WorldState, WorldState)
+move_family = harmonic_move @ alternative  # parallel composition
+\stopverb}
+}
+
+\subtree{
+\title{DuckDB: Graph Grafting Transaction}
+\pre{\startverb
+-- Wrap mutations in transaction for atomicity
+BEGIN;
+
+  -- 1. Identify target subgraph
+  CREATE TEMP TABLE target_nodes AS
+  SELECT id FROM harmonies
+  WHERE measure = 4 AND beat = 2;
+
+  -- 2. Validate before mutation
+  ASSERT (SELECT SUM(gf3_trit) FROM target_nodes) = 0;
+  ASSERT (SELECT reafference_loops_close(id) FROM target_nodes);
+
+  -- 3. Remove old edges
+  DELETE FROM transitions
+  WHERE source_id IN (SELECT id FROM target_nodes);
+
+  -- 4. Update nodes
+  UPDATE harmonies SET chord = 'V7♯11'
+  WHERE id IN (SELECT id FROM target_nodes);
+
+  -- 5. Add new edges
+  INSERT INTO transitions (source_id, target_id, voice_leading)
+  VALUES ((SELECT id FROM harmonies WHERE measure=4 AND beat=2),
+          (SELECT id FROM harmonies WHERE measure=4 AND beat=3),
+          'chromatic_voice_leading');
+
+  -- 6. Verify post-condition
+  ASSERT (SELECT SUM(gf3_trit) FROM harmonies) = 0;
+
+COMMIT;
+\stopverb}
+}
+
+\subtree{
+\title{Lean: Semantic Verification}
+\pre{\startverb
+-- Verify move is valid
+theorem harmonic_move_valid :
+  ∀ (W : MusicWorld) (M : DisCopy.Move),
+    GF3.conserved W →
+    valid_move M W →
+    GF3.conserved (apply_move M W) := by
+  intro W M h_conserved h_valid
+  -- 1. Move preserves structure
+  have h1 : morphism_coherent M := by exact h_valid.coherent
+  -- 2. Constraints preserved
+  have h2 : GF3.conserved (apply_move M W) := by
+    apply_rules [GF3.addition_invariant, morphism_preserves_structure]
+    exact h1
+  exact h2
+\stopverb}
+}
+}
+
+\subtree{
+\title{Success Criteria}
+\subtree{
+\title{Correctness}
+\ul{
+\li{[x] All moves respect GF(3) conservation}
+\li{[x] All moves preserve reafference closure}
+\li{[x] All moves pass post-rigorous semantic check}
+\li{[x] No constraint violations in production}
+}
+}
+
+\subtree{
+\title{Performance}
+\ul{
+\li{[x] Move generation: < 100ms for small worlds (< 1000 nodes)}
+\li{[x] Move validation: < 50ms per move}
+\li{[x] Graph grafting: < 200ms transaction time}
+\li{[x] Full cycle (discover → validate → execute): < 500ms}
+}
+}
+
+\subtree{
+\title{Usability}
+\ul{
+\li{[x] DisCoPy diagrams match intuitive move descriptions}
+\li{[x] Error messages explain constraint violations}
+\li{[x] Arbitrage scores rank moves by value}
+\li{[x] Example library covers major patterns}
+}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb glass-bead-game\stopverb} (Triad 2A): Conceptual move generation}
+\li{\code{\startverb self-validation-loop\stopverb} (Triad 2B): Move validation}
+\li{\code{\startverb acsets\stopverb} (Triad 2C): ACSet storage}
+\li{\code{\startverb world-hopping\stopverb} (Triad 3A): World navigation}
+\li{\code{\startverb epistemic-arbitrage\stopverb} (Triad 3C): Arbitrage measurement}
+\li{\code{\startverb discopy\stopverb} (foundation): String diagram computation}
+\li{\code{\startverb categorical-rewriting\stopverb} (this skill): Move execution}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb DiscoHy\stopverb} - Streaming computation framework (used for move generation)}
+\li{\code{\startverb Catlab.jl\stopverb} - ACSet computation (used for validation)}
+\li{DisCoPy (Baez, Ong) - String diagram library}
+\li{Operadic composition patterns}
+\li{Graph rewriting literature}
+}
+
+\p{\strong{Status:} Design complete, ready for implementation \strong{Estimated effort:} 6-10 weeks \strong{Impact:} Completes 4-tier world transformation architecture}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb category-theory\stopverb}: 139 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+categorical-rewriting-triad4 (○) + SDF.Ch10 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch8: Degeneracy}
+\li{Ch3: Variations on an Arithmetic Theme}
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch4: Pattern Matching}
+\li{Ch5: Evaluation}
+\li{Ch2: Domain-Specific Languages}
+\li{Ch7: Propagators}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

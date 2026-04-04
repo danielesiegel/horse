@@ -1,0 +1,72 @@
+\title{Analyzing Ransomware Network Indicators}
+
+\taxon{skill}
+
+\tag{ransomware}
+
+\tag{c2-beaconing}
+
+\tag{zeek}
+
+\tag{netflow}
+
+\tag{tor}
+
+\tag{exfiltration}
+
+\tag{network-forensics}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Identify ransomware network indicators including C2 beaconing patterns, TOR exit node connections, data exfiltration flows, and encryption key exchange via Zeek conn.log and NetFlow analysis}
+
+\subtree{
+\title{Analyzing Ransomware Network Indicators}
+\subtree{
+\title{Overview}
+\p{Before and during ransomware execution, adversaries establish C2 channels, exfiltrate data, and download encryption keys. This skill analyzes Zeek conn.log and NetFlow data to detect beaconing patterns (regular-interval callbacks), connections to known TOR exit nodes, large outbound data transfers, and suspicious DNS activity associated with ransomware families.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing ransomware network indicators}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Zeek conn.log files or NetFlow CSV/JSON exports}
+\li{Python 3.8+ with standard library}
+\li{TOR exit node list (fetched from Tor Project or threat intel feeds)}
+\li{Optional: Known ransomware C2 IOC list}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{\strong{Parse Connection Logs} — Ingest Zeek conn.log (TSV) or NetFlow records into structured format}
+\li{\strong{Detect Beaconing Patterns} — Calculate connection interval statistics (mean, stddev, coefficient of variation) to identify periodic callbacks}
+\li{\strong{Check TOR Exit Node Connections} — Cross-reference destination IPs against current TOR exit node list}
+\li{\strong{Identify Data Exfiltration} — Flag connections with unusually high outbound byte ratios to external IPs}
+\li{\strong{Analyze DNS Patterns} — Detect DGA-like domain queries and high-entropy subdomains}
+\li{\strong{Score and Correlate} — Apply composite risk scoring across all indicator types}
+\li{\strong{Generate Report} — Produce structured report with timeline and MITRE ATT&CK mapping}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report with beaconing detections and interval statistics}
+\li{TOR exit node connection alerts}
+\li{Data exfiltration flow analysis}
+\li{Composite ransomware risk score with MITRE mapping (T1071, T1573, T1041)}
+}
+}
+}

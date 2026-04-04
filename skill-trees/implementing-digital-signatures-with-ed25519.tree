@@ -1,0 +1,109 @@
+\title{Implementing Digital Signatures With Ed25519}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{digital-signatures}
+
+\tag{ed25519}
+
+\tag{authentication}
+
+\tag{integrity}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Ed25519 is a high-performance digital signature algorithm using the Edwards curve Curve25519. It provides 128-bit security with 64-byte signatures and 32-byte keys, offering significant advantages ove}
+
+\subtree{
+\title{Implementing Digital Signatures with Ed25519}
+\subtree{
+\title{Overview}
+\p{Ed25519 is a high-performance digital signature algorithm using the Edwards curve Curve25519. It provides 128-bit security with 64-byte signatures and 32-byte keys, offering significant advantages over RSA and ECDSA including deterministic signatures (no random nonce needed), resistance to side-channel attacks, and fast verification. This skill covers implementing Ed25519 for document signing, code signing, and API authentication.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing digital signatures with ed25519 capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Generate Ed25519 key pairs for signing}
+\li{Sign messages and files with Ed25519}
+\li{Verify signatures against public keys}
+\li{Implement multi-signature verification}
+\li{Build a simple code signing system}
+\li{Compare Ed25519 performance with RSA and ECDSA}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Ed25519 vs RSA vs ECDSA}
+\pre{\startverb
+| Property | Ed25519 | RSA-3072 | ECDSA P-256 |
+|----------|---------|----------|-------------|
+| Security | 128-bit | 128-bit | 128-bit |
+| Public key size | 32 bytes | 384 bytes | 64 bytes |
+| Signature size | 64 bytes | 384 bytes | 64 bytes |
+| Key generation | ~50 us | ~100 ms | ~1 ms |
+| Sign | ~70 us | ~5 ms | ~200 us |
+| Verify | ~200 us | ~200 us | ~500 us |
+| Deterministic | Yes | No (PSS) | No (unless RFC 6979) |
+\stopverb}
+}
+
+\subtree{
+\title{Key Properties}
+\ul{
+\li{\strong{Deterministic}: Same message + key always produces same signature}
+\li{\strong{Collision-resistant}: No separate hash function needed}
+\li{\strong{Side-channel resistant}: Constant-time implementation}
+\li{\strong{Small keys}: 32 bytes each (public and private)}
+}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Ed25519 does not support key recovery from signatures}
+\li{Verify the full message, not a hash (Ed25519 hashes internally)}
+\li{Public keys must be validated before use (check for low-order points)}
+\li{Private keys should be stored encrypted at rest}
+\li{Ed25519 is not yet approved for all NIST use cases (Ed448 is preferred for federal)}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Key pair generation produces valid Ed25519 keys}
+\li{[ ] Signature verification succeeds for valid message}
+\li{[ ] Signature verification fails for tampered message}
+\li{[ ] Signature verification fails for wrong public key}
+\li{[ ] Deterministic: same input produces same signature}
+\li{[ ] File signing and verification works correctly}
+\li{[ ] Performance meets or exceeds RSA-3072}
+}
+}
+}

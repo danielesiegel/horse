@@ -1,0 +1,211 @@
+\title{Random Walk Fusion}
+
+\taxon{skill}
+
+\meta{description}{Navigate skill graphs via deterministic random walks. Fuses derivational chains, algebraic structure, color determinism, and bidirectional flow for skill recombination.}
+
+\subtree{
+\title{Random Walk Fusion: Skill Graph Navigation}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: +1 (PLUS - generative recombination) \strong{Principle}: skill_{n+1} = walk(seed_n, graph_n) \strong{Frame}: Skills as nodes, concepts as edges, walks as derivations}
+
+\subtree{
+\title{Overview}
+\p{\strong{Random Walk Fusion} traverses skill graphs using deterministic random walks to discover novel skill combinations. Each step derives from the previous via seed chaining, producing reproducible concept-blending paths.}
+
+\pre{\startverb
+seed₀ → skill₀ → concept₀ → seed₁ → skill₁ → concept₁ → ...
+\stopverb}
+}
+
+\subtree{
+\title{Fused Components}
+\pre{\startverb
+| Source Skill | Contribution | Integration |
+|--------------|--------------|-------------|
+| **unworld** | Derivational chains | Walk succession is derivational, not temporal |
+| **acsets** | Algebraic structure | Skills form C-set: functor from schema to Set |
+| **gay-mcp** | Color determinism | Each step gets deterministic (color, trit) |
+| **world-hopping** | Bidirectional flow | Walks are reversible via involution |
+\stopverb}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+# Walk step: derive next position from current state + skill trit
+next_seed = (current_seed ⊕ (skill_trit × γ)) × MIX  mod 2⁶⁴
+next_skill = skills[next_seed mod |skills|]
+
+where:
+  γ   = 0x9E3779B9  (golden ratio, 32-bit)
+  MIX = 0x85EBCA6B  (mixing constant)
+  ⊕   = XOR
+\stopverb}
+}
+
+\subtree{
+\title{Skill Graph Schema (ACSet)}
+\pre{\startverb
+@present SchSkillGraph(FreeSchema) begin
+  Skill::Ob          # Skill nodes
+  Concept::Ob        # Concept edges
+  Walk::Ob           # Walk trajectories
+  
+  src::Hom(Concept, Skill)
+  tgt::Hom(Concept, Skill)
+  step::Hom(Walk, Skill)
+  
+  Trit::AttrType
+  Color::AttrType
+  trit::Attr(Skill, Trit)
+  color::Attr(Walk, Color)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Walk Operations}
+\subtree{
+\title{1. Forward Walk (Derivational)}
+\pre{\startverb
+walk = RandomWalkFusion.new(seed: 0x42D, graph: skill_graph)
+path = walk.forward(steps: 7)
+# => [{skill: "unworld", concept: "derivational", color: "#D8267F", trit: +1}, ...]
+\stopverb}
+}
+
+\subtree{
+\title{2. Backward Walk (Involution)}
+\pre{\startverb
+reversed = walk.backward(path)
+# ι∘ι = id verified: returns to origin seed
+\stopverb}
+}
+
+\subtree{
+\title{3. Branching Walk (Triadic)}
+\pre{\startverb
+branches = walk.triadic_split
+# => { minus: path_minus, ergodic: path_ergodic, plus: path_plus }
+# GF(3) conserved at each step across branches
+\stopverb}
+}
+
+\subtree{
+\title{4. Hop Walk (World-Hopping)}
+\pre{\startverb
+target = skill_graph.find("epistemic-arbitrage")
+path = walk.hop_to(target, via: :triangle_inequality)
+# Uses accessibility relation and distance metric
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Each walk maintains GF(3) balance:}
+
+\pre{\startverb
+sum(trits) ≡ 0 (mod 3)
+\stopverb}
+
+\p{When imbalanced, the walk applies \strong{rebalancing moves}:}
+
+\ul{
+\li{Insert neutral (trit=0) skill}
+\li{Pair complementary trits (+1, -1)}
+\li{Branch to triadic stream}
+}
+}
+
+\subtree{
+\title{Fusion Algebra}
+\p{The fusion of concepts follows ACSet composition:}
+
+\pre{\startverb
+unworld ∘ gay-mcp = derivational color chains
+acsets ∘ world-hopping = accessible skill functors
+(unworld ∘ acsets) ∘ (gay-mcp ∘ world-hopping) = random-walk-fusion
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run random walk
+bb skill_random_walk.bb [seed]
+
+# Skill-specific walks
+just walk-skills seed=0x42D steps=12
+just walk-triadic seed=0x42D
+just walk-hop from=unworld to=acsets
+
+# Verify walk properties
+just walk-verify seed=0x42D  # Check GF(3), involution
+\stopverb}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+require 'random_walk_fusion'
+
+# Initialize walker
+fusion = RandomWalkFusion.new(
+  seed: 0x42D,
+  skills: SkillGraph.load("~/.agents/skills")
+)
+
+# Execute walk
+path = fusion.walk(steps: 7)
+
+# Get fusion concepts
+fusion.concepts
+# => ["derivational chains", "algebraic structure", "color determinism", "bidirectional flow"]
+
+# Recombine to new skill
+new_skill = fusion.recombine(path)
+\stopverb}
+}
+
+\subtree{
+\title{Example Output}
+\pre{\startverb
+╔═══════════════════════════════════════════════════════════════╗
+║  SKILL RANDOM WALK - Derivational Traversal                   ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Step 0: epistemic-arbitrage  │ knowledge gaps │ [#98FF4C] ○
+  Step 1: world-hopping        │ bidirectional flow │ [#9C4CFF] ○
+  Step 2: bisimulation-game    │ game equivalence │ [#8E4CFF] −
+  Step 3: epistemic-arbitrage  │ knowledge gaps │ [#4CA2FF] +
+  Step 4: world-hopping        │ bidirectional flow │ [#4CFF88] −
+  Step 5: triad-interleave     │ tripartite streams │ [#FF974C] ○
+  Step 6: world-hopping        │ bidirectional flow │ [#FF4CB2] −
+
+  GF(3) Sum: 1 (balanced: ✗)
+
+  Fusion Concepts:
+    → Derivational chains (unworld) guide walk succession
+    → Algebraic structure (acsets) defines skill graph schema
+    → Color determinism (gay-mcp) assigns trit/color per step
+    → Bidirectional flow (world-hopping) enables path reversal
+\stopverb}
+}
+
+\subtree{
+\title{Philosophical Foundation}
+\p{Random walks on skill graphs embody \strong{xenomodern recombination}:}
+
+\ol{
+\li{\strong{No privileged origin}: Any skill can seed the walk}
+\li{\strong{Deterministic exploration}: Same seed → same discoveries}
+\li{\strong{Compositional}: Walks compose via path concatenation}
+\li{\strong{Reversible}: Every walk has its involution dual}
+}
+
+\p{The fusion is not additive but \strong{multiplicative} — concepts don't just accumulate, they transform each other through the walk.}
+
+\p{\strong{Skill Name}: random-walk-fusion \strong{Type}: Skill Graph Navigation / Concept Recombination \strong{Trit}: +1 (PLUS) \strong{GF(3)}: Conserved via rebalancing \strong{Walk}: Derivational, deterministic, bidirectional}
+}
+}

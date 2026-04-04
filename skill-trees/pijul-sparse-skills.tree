@@ -1,0 +1,325 @@
+\title{Pijul Sparse Skills}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Sparsity-preserving skill versioning via Pijul patches with GF(3) projection gates}
+
+\subtree{
+\title{pijul-sparse-skills}
+\p{Sparsity-preserving skill versioning where changes are stored as morphisms, not materialized states.}
+
+\p{\strong{Trit}: 0 (ERGODIC) - Coordinator role for projection gate decisions}
+
+\subtree{
+\title{Philosophy}
+\subtree{
+\title{Default: SPARSE Mode}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│  SPARSE (default)                                       │
+│  - Changes stored as patches (morphisms)                │
+│  - No materialization unless required                   │
+│  - Lazy evaluation of skill state                       │
+│  - Minimal storage footprint                            │
+└─────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Projection Only When:}
+\pre{\startverb
+| Trigger | Description | GF(3) |
+|---------|-------------|-------|
+| `--materialize` | Explicit flag | Any |
+| `trit == 0` | ERGODIC coordination point | 0 |
+| `--archive` | Explicit archive | Any |
+| Conflict | Resolution requires full state | Any |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Categorical Foundation}
+\subtree{
+\title{Patches as Morphisms in Cat(Skills)}
+\pre{\startverb
+Ob(C) = { skill states }
+Mor(C) = { patches transforming states }
+
+For patches p, q:
+  p ⊥ q (independent) ⟹ p;q = q;p (commute)
+\stopverb}
+}
+
+\subtree{
+\title{Sparsity via Lazy Evaluation}
+\pre{\startverb
+# Sparse representation (default)
+struct SparseSkill
+    base_hash::UInt64      # Root state reference
+    patches::Vector{Patch}  # Morphism chain, not applied
+end
+
+# Materialized only on demand
+function materialize(s::SparseSkill)
+    foldl(apply, s.patches; init=load(s.base_hash))
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Projection Gates}
+\subtree{
+\title{Gate Logic}
+\pre{\startverb
+function should_project(skill::Skill, flags::Flags)::Bool
+    # Explicit materialization requested
+    flags.materialize && return true
+    
+    # ERGODIC trit forces coordination checkpoint
+    skill.trit == 0 && return true
+    
+    # Explicit archive
+    flags.archive && return true
+    
+    # Conflict requires full state
+    has_conflicts(skill) && return true
+    
+    # Otherwise: stay sparse
+    return false
+end
+\stopverb}
+}
+
+\subtree{
+\title{Trit-Based Behavior}
+\pre{\startverb
+trit = -1 (MINUS/Validator):
+  → Verify patch integrity without materializing
+  → Check commutativity conditions
+  → Validate GF(3) conservation
+  
+trit = 0 (ERGODIC/Coordinator):
+  → PROJECT: Create materialized checkpoint
+  → Coordinate merge points
+  → Synchronize distributed states
+  
+trit = +1 (PLUS/Generator):
+  → Generate new patches
+  → Create without materializing target
+  → Lazy forward references
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow Examples}
+\subtree{
+\title{Record Skill Change (Sparse)}
+\pre{\startverb
+cd .agents/skills/my-skill
+
+# Edit SKILL.md
+echo "new content" >> SKILL.md
+
+# Record as patch (NOT materialized)
+pijul record -m "Add GF(3) section"
+# Stores: Patch{add_lines: [...], hash: 0x...}
+\stopverb}
+}
+
+\subtree{
+\title{Sync Skills (Sparse Pull)}
+\pre{\startverb
+# Pull only patch metadata
+pijul pull --partial origin
+
+# View pending patches without applying
+pijul log --pending
+
+# Apply lazily (on access)
+cat SKILL.md  # Materializes only this file
+\stopverb}
+}
+
+\subtree{
+\title{Force Materialization (ERGODIC Gate)}
+\pre{\startverb
+# Explicit checkpoint
+pijul reset --materialize
+
+# Or via trit-aware tool
+skill-checkpoint my-skill --trit 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration Patterns}
+\subtree{
+\title{With flox-mcp}
+\pre{\startverb
+;; Install pijul via flox MCP
+(flox-install "pijul")
+
+;; Record skill change
+(shell "pijul" "record" "-m" (str "Update " skill-name))
+
+;; Sparse pull from upstream
+(shell "pijul" "pull" "--partial" upstream-url)
+\stopverb}
+}
+
+\subtree{
+\title{With structured-decomp}
+\pre{\startverb
+# Tree decomposition of skill graph
+tree = decompose(skill_graph)
+
+# Each bag gets sparse representation
+for bag in tree.bags
+    bag.skills = map(to_sparse, bag.skills)
+end
+
+# Sheaf gluing respects sparsity
+glue!(tree)  # Only materializes at boundaries
+\stopverb}
+}
+
+\subtree{
+\title{With Gay.jl Colors}
+\pre{\startverb
+using Gay
+
+# Patch hash → color for visual diff
+function patch_color(patch::Patch)
+    seed = reinterpret(UInt64, patch.hash)
+    Gay.color_at(seed, 1)
+end
+
+# GF(3) conservation across patch chain
+function verify_chain(patches::Vector{Patch})
+    trits = [patch.trit for patch in patches]
+    sum(trits) % 3 == 0
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Delta-State CRDT Bridge}
+\subtree{
+\title{Patches as Delta-States}
+\pre{\startverb
+Pijul Patch ≅ Delta-CRDT Update
+
+Both:
+  - Commutative when independent
+  - Compose via join semilattice
+  - Support partial replication
+\stopverb}
+}
+
+\subtree{
+\title{Merkle Search Tree Index}
+\pre{\startverb
+skills/
+├── .pijul/
+│   ├── patches/       # Merkle tree of patches
+│   ├── sparse-index/  # Hash → patch mapping
+│   └── projection-log # When/why materialized
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\subtree{
+\title{Check Sparsity Status}
+\pre{\startverb
+pijul-sparse status
+# Output:
+#   my-skill: SPARSE (3 pending patches)
+#   other-skill: MATERIALIZED (checkpoint 2024-01-07)
+\stopverb}
+}
+
+\subtree{
+\title{Force Projection}
+\pre{\startverb
+pijul-sparse project my-skill --reason "coordination checkpoint"
+\stopverb}
+}
+
+\subtree{
+\title{Verify Conservation}
+\pre{\startverb
+pijul-sparse verify-gf3
+# Output:
+#   Chain: patch_a(-1) + patch_b(0) + patch_c(+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[pijul skill](../pijul/SKILL.md) - Core VCS operations}
+\li{[flox-mcp skill](../flox-mcp/SKILL.md) - Environment management}
+\li{[structured-decomp skill](../structured-decomp/SKILL.md) - Tree decompositions}
+\li{Mimram/Di Giusto: Categorical Patch Theory}
+\li{Almeida et al: Delta-State CRDTs}
+\li{Merkle Search Trees (Auvolat/Taïani)}
+\li{Irmin/MRDTs (Tarides)}
+}
+}
+
+\subtree{
+\title{Triadic Composition}
+\pre{\startverb
+pijul-sparse-skills (0) + pijul (-1) + skill-creator (+1) = 0 ✓
+     Coordinator          Validator      Generator
+\stopverb}
+
+\p{This skill coordinates the projection decision while \code{\startverb pijul\stopverb} validates patches and \code{\startverb skill-creator\stopverb} generates new content.}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+pijul-sparse-skills (+) + SDF.Ch10 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch5: Evaluation}
+\li{Ch6: Layering}
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch4: Pattern Matching}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+}

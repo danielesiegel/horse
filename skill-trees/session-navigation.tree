@@ -1,0 +1,124 @@
+\title{Session Navigation}
+
+\taxon{skill}
+
+\meta{version}{1.1.0}
+
+\meta{description}{Navigate, search, and manage Droid sessions. Use when the user wants to: - List recent sessions - Search session history for specific topics or patterns - Resume a previous session - Get details about what was accomplished in a session - Find sessions by project, date, or content}
+
+\subtree{
+\title{Session navigation}
+\p{Find your way around past Droid sessions. Maybe you want to pick up where you left off, find that thing you did last week, or just see what's been happening in a project.}
+
+\subtree{
+\title{Where sessions live}
+\p{Sessions are in \code{\startverb ~/.factory/sessions/\stopverb}, organized by project folder. Each project gets its own directory with the path encoded (slashes become dashes):}
+
+\pre{\startverb
+~/.factory/sessions/
+├── -Users-enoreyes-code-work-myapp/
+│   ├── <uuid>.jsonl
+│   └── <uuid>.settings.json
+├── -Users-enoreyes-code-projects-api/
+│   ├── <uuid>.jsonl
+│   └── <uuid>.settings.json
+└── ...
+\stopverb}
+
+\p{Two files per session:}
+
+\p{\strong{The conversation} (\code{\startverb .jsonl\stopverb}): Each line is a JSON object. First line has metadata (session id, title, working directory). Rest is the back-and-forth: user messages, assistant responses, tool calls.}
+
+\p{\strong{The settings} (\code{\startverb .settings.json\stopverb}): Stats about the session. Which model, how long it ran, token counts, autonomy mode.}
+}
+
+\subtree{
+\title{Finding sessions}
+\subtree{
+\title{List project folders}
+\pre{\startverb
+# See all project folders with sessions
+ls ~/.factory/sessions/
+
+# Find folders for a specific project (partial match)
+ls ~/.factory/sessions/ | grep "myapp"
+\stopverb}
+}
+
+\subtree{
+\title{Recent sessions in a project}
+\pre{\startverb
+# List sessions by date for a project
+ls -lt ~/.factory/sessions/-Users-enoreyes-code-work-myapp/
+
+# Get titles of recent sessions
+for f in $(ls -t ~/.factory/sessions/-Users-enoreyes-code-work-myapp/*.jsonl | head -10); do
+  echo "=== $f ==="
+  head -1 "$f" | jq -r '.title // "Untitled"'
+done
+\stopverb}
+}
+
+\subtree{
+\title{Search by content}
+\pre{\startverb
+# Search across ALL sessions
+rg "authentication" ~/.factory/sessions/
+
+# Search within a specific project
+rg "bug fix" ~/.factory/sessions/-Users-enoreyes-code-work-myapp/
+
+# See matches in context
+rg -C 2 "login" ~/.factory/sessions/-Users-enoreyes-code-projects-api/
+\stopverb}
+}
+
+\subtree{
+\title{Find which project has sessions about something}
+\pre{\startverb
+# Which projects have sessions mentioning "redis"?
+rg -l "redis" ~/.factory/sessions/ | cut -d'/' -f1-5 | sort -u
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reading a session}
+\p{Once you've found a session file:}
+
+\pre{\startverb
+# The metadata (title, working directory)
+head -1 ~/.factory/sessions/-Users-enoreyes-code-work-myapp/<uuid>.jsonl | jq .
+
+# Session stats (model, tokens, duration)
+cat ~/.factory/sessions/-Users-enoreyes-code-work-myapp/<uuid>.settings.json | jq .
+
+# How long was this conversation?
+wc -l ~/.factory/sessions/-Users-enoreyes-code-work-myapp/<uuid>.jsonl
+\stopverb}
+
+\p{User messages have \code{\startverb "role": "user"\stopverb}, assistant responses have \code{\startverb "role": "assistant"\stopverb}. Tool calls show what commands ran and what files got touched.}
+}
+
+\subtree{
+\title{Common situations}
+\p{\strong{"What did I work on in this project?"} List that project's session folder, check dates, read through the conversation files.}
+
+\p{\strong{"Find that session where we fixed the login bug"} Search for "login" or "auth" across sessions. Once you find it, read the conversation.}
+
+\p{\strong{"Resume what I was doing"} Find the session, read through what happened, summarize the key decisions before continuing.}
+
+\p{\strong{"How much have I been using Droid?"} The settings files have token counts and active time. Sum across sessions if needed.}
+}
+
+\subtree{
+\title{Tips}
+\p{Use \code{\startverb rg\stopverb} (ripgrep) instead of grep. It's faster and handles nested folders better.}
+
+\p{Project paths have slashes replaced with dashes. \code{\startverb /Users/me/code/app\stopverb} becomes \code{\startverb -Users-me-code-app\stopverb}.}
+
+\p{The session title isn't always helpful. Sometimes you need to read the conversation to know what it was about.}
+
+\p{Sessions can contain sensitive stuff. Be careful about what you surface.}
+}
+}

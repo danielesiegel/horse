@@ -1,0 +1,258 @@
+\title{Pulse Mcp Stream}
+
+\taxon{skill}
+
+\meta{description}{"' Layer 1: Real-Time Social Stream Monitoring via MCP'"}
+
+\subtree{
+\title{pulse-mcp-stream}
+\blockquote{Layer 1: Real-Time Social Stream Monitoring via MCP}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: +1 (Generator - produces live data) \strong{Bundle}: acquisition}
+
+\subtree{
+\title{Overview}
+\p{Pulse-MCP-stream provides real-time monitoring of social interactions, enabling the cognitive surrogate system to stay updated with the latest patterns. It streams mentions, engagement changes, and trending topics.}
+}
+
+\subtree{
+\title{Capabilities}
+\subtree{
+\title{1. subscribe-actor}
+\p{Subscribe to real-time updates for a user.}
+
+\pre{\startverb
+from pulse_mcp_stream import PulseClient
+
+client = PulseClient(seed=0xf061ebbc2ca74d78)
+
+async for event in client.subscribe_actor("barton.bsky.social"):
+    match event.type:
+        case "post":
+            print(f"New post: {event.text[:50]}...")
+        case "reply":
+            print(f"Reply from {event.actor}: {event.text[:30]}...")
+        case "like":
+            print(f"Liked by {event.actor}")
+        case "repost":
+            print(f"Reposted by {event.actor}")
+        case "mention":
+            print(f"Mentioned by {event.actor}")
+\stopverb}
+}
+
+\subtree{
+\title{2. monitor-engagement-delta}
+\p{Track engagement changes in real-time.}
+
+\pre{\startverb
+async for delta in client.monitor_engagement_delta("barton.bsky.social"):
+    # delta = {
+    #   post_id: "at://...",
+    #   likes_delta: +5,
+    #   reposts_delta: +2,
+    #   replies_delta: +1,
+    #   timestamp: "2024-12-22T05:00:00Z",
+    #   velocity: 2.3  # engagements per minute
+    # }
+    
+    if delta.velocity > 5.0:
+        print(f"🔥 Viral post detected: {delta.post_id}")
+\stopverb}
+}
+
+\subtree{
+\title{3. trend-detect-network}
+\p{Detect trending topics in a user's network.}
+
+\pre{\startverb
+trends = await client.trend_detect_network(
+    center_user="barton.bsky.social",
+    time_window_minutes=60,
+    min_mentions=3
+)
+
+# Returns:
+# [
+#   {topic: "category theory", mentions: 12, velocity: 0.2/min},
+#   {topic: "Gay.jl", mentions: 8, velocity: 0.13/min},
+#   {topic: "MCP servers", mentions: 5, velocity: 0.08/min}
+# ]
+\stopverb}
+}
+
+\subtree{
+\title{4. firehose-filter}
+\p{Connect to Bluesky firehose with filters.}
+
+\pre{\startverb
+async for record in client.firehose_filter(
+    collections=["app.bsky.feed.post"],
+    authors=["barton.bsky.social", "friend1.bsky.social"],
+    text_contains=["GF(3)", "category", "topos"]
+):
+    await process_record(record)
+\stopverb}
+}
+
+\subtree{
+\title{5. batch-export}
+\p{Export stream data to DuckDB for analysis.}
+
+\pre{\startverb
+exporter = client.batch_exporter(
+    db_path="pulse_stream.duckdb",
+    batch_size=100,
+    flush_interval_seconds=30
+)
+
+async with exporter:
+    async for event in client.subscribe_actor("barton.bsky.social"):
+        await exporter.write(event)
+\stopverb}
+}
+}
+
+\subtree{
+\title{MCP Server Integration}
+\pre{\startverb
+// pulse-mcp-server/src/index.ts
+import { Server } from "@modelcontextprotocol/sdk/server";
+
+const server = new Server({
+  name: "pulse-mcp-stream",
+  version: "1.0.0"
+});
+
+server.setRequestHandler("subscribe", async (params) => {
+  const { actor, filters } = params;
+  
+  // Connect to Bluesky firehose
+  const stream = await connectFirehose({
+    actor,
+    collections: filters?.collections ?? ["app.bsky.feed.post"],
+  });
+  
+  return {
+    streamId: stream.id,
+    status: "connected"
+  };
+});
+
+server.setRequestHandler("poll", async (params) => {
+  const { streamId, maxEvents } = params;
+  const events = await getBufferedEvents(streamId, maxEvents);
+  return { events };
+});
+\stopverb}
+}
+
+\subtree{
+\title{DuckDB Schema}
+\pre{\startverb
+CREATE TABLE pulse_events (
+    event_id VARCHAR PRIMARY KEY,
+    event_type VARCHAR,  -- 'post', 'reply', 'like', 'repost', 'mention'
+    actor_did VARCHAR,
+    actor_handle VARCHAR,
+    subject_uri VARCHAR,
+    text TEXT,
+    created_at TIMESTAMP,
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    engagement_snapshot JSON
+);
+
+CREATE TABLE engagement_deltas (
+    delta_id VARCHAR PRIMARY KEY,
+    post_uri VARCHAR,
+    likes_delta INT,
+    reposts_delta INT,
+    replies_delta INT,
+    velocity FLOAT,
+    measured_at TIMESTAMP
+);
+
+CREATE TABLE network_trends (
+    trend_id VARCHAR PRIMARY KEY,
+    topic VARCHAR,
+    mention_count INT,
+    velocity FLOAT,
+    first_seen TIMESTAMP,
+    last_seen TIMESTAMP,
+    peak_velocity FLOAT
+);
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad Integration}
+\pre{\startverb
+| Trit | Skill | Role |
+|------|-------|------|
+| -1 | influence-propagation | Validates network patterns |
+| 0 | bisimulation-game | Coordinates equivalence |
+| +1 | **pulse-mcp-stream** | Generates live data |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{Configuration}
+\pre{\startverb
+# pulse-mcp-stream.yaml
+connection:
+  firehose_url: "wss://bsky.network/xrpc/com.atproto.sync.subscribeRepos"
+  reconnect_delay_ms: 1000
+  max_reconnect_attempts: 10
+
+filters:
+  collections:
+    - app.bsky.feed.post
+    - app.bsky.feed.like
+    - app.bsky.feed.repost
+  
+buffering:
+  max_buffer_size: 10000
+  flush_interval_seconds: 30
+
+export:
+  db_path: "pulse_stream.duckdb"
+  batch_size: 100
+
+reproducibility:
+  seed: 0xf061ebbc2ca74d78
+\stopverb}
+}
+
+\subtree{
+\title{Justfile Recipes}
+\pre{\startverb
+# Start pulse stream
+pulse-start actor="barton.bsky.social":
+    python3 -m pulse_mcp_stream subscribe "{{actor}}"
+
+# Monitor engagement
+pulse-engagement actor="barton.bsky.social":
+    python3 -m pulse_mcp_stream engagement "{{actor}}"
+
+# Detect trends
+pulse-trends actor="barton.bsky.social" window="60":
+    python3 -m pulse_mcp_stream trends "{{actor}}" --window "{{window}}"
+
+# Export to DuckDB
+pulse-export db="pulse.duckdb":
+    python3 -m pulse_mcp_stream export --db "{{db}}"
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb atproto-ingest\stopverb} (Layer 1) - Batch data collection}
+\li{\code{\startverb influence-propagation\stopverb} (Layer 7) - Network analysis}
+\li{\code{\startverb cognitive-surrogate\stopverb} (Layer 6) - Pattern consumption}
+\li{\code{\startverb duckdb-timetravel\stopverb} (Layer 3) - Data storage}
+}
+}
+}

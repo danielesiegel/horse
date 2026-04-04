@@ -1,0 +1,315 @@
+\title{Acsets Relational Thinking}
+
+\taxon{skill}
+
+\meta{description}{ACSets (Attributed C-Sets) for categorical database design and DPO rewriting}
+
+\subtree{
+\title{SKILL: ACSets Relational Thinking}
+\p{\strong{Version}: 2.0.0 \strong{Trit}: 0 (ERGODIC) \strong{Domain}: database, category-theory, rewriting \strong{Source}: Topos Institute RelationalThinking Course + AlgebraicJulia}
+
+\subtree{
+\title{Overview}
+\p{ACSets (Attributed C-Sets) are \strong{functors X: C → Set} where C is a small category (schema). This skill integrates:}
+
+\ol{
+\li{\strong{RelationalThinking Course} - Topos Institute's pedagogical approach}
+\li{\strong{DPO Rewriting} - Double Pushout graph transformation}
+\li{\strong{Self-Play Loop} - Query → Execute → Evaluate → Refine}
+\li{\strong{GF(3) Conservation} - Triadic skill composition}
+}
+}
+
+\subtree{
+\title{Core Concept: C-Set as Functor}
+\pre{\startverb
+Schema (Category C)          Instance (Functor X: C → Set)
+┌─────────────────┐          ┌─────────────────────────────┐
+│  E ──src──→ V   │    X     │  X(E) = {e1, e2, e3}        │
+│    ←──tgt──     │   ───→   │  X(V) = {v1, v2}            │
+└─────────────────┘          │  X(src): e1↦v1, e2↦v1, e3↦v2│
+                             │  X(tgt): e1↦v2, e2↦v2, e3↦v1│
+                             └─────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Schema Definition}
+\subtree{
+\title{Basic Graph Schema}
+\pre{\startverb
+using Catlab.CategoricalAlgebra
+
+@present SchGraph(FreeSchema) begin
+  V::Ob                    # Vertices (object)
+  E::Ob                    # Edges (object)
+  src::Hom(E, V)           # Source morphism
+  tgt::Hom(E, V)           # Target morphism
+end
+
+@acset_type Graph(SchGraph, index=[:src, :tgt])
+\stopverb}
+}
+
+\subtree{
+\title{Entity-Subtype Hierarchy (from RelationalThinking Ch8)}
+\pre{\startverb
+@present SchKitchen(FreeSchema) begin
+  Entity::Ob
+  
+  Food::Ob
+  food_in_on::Hom(Food, Entity)
+  food_is_entity::Hom(Food, Entity)
+  
+  Kitchenware::Ob
+  ware_in_on::Hom(Kitchenware, Entity)
+  ware_is_entity::Hom(Kitchenware, Entity)
+  
+  BreadLoaf::Ob
+  bread_loaf_is_food::Hom(BreadLoaf, Food)
+  Knife::Ob
+  knife_is_ware::Hom(Knife, Kitchenware)
+end
+
+@acset_type Kitchen(SchKitchen)
+\stopverb}
+}
+}
+
+\subtree{
+\title{DPO Rewriting (Double Pushout)}
+\subtree{
+\title{The Pattern: L ← K → R}
+\pre{\startverb
+     L ←──l── K ──r──→ R
+     │        │        │
+match│        │        │
+     ↓        ↓        ↓
+     G ←───── D ──────→ H
+       pushout      pushout
+       complement
+\stopverb}
+
+\ul{
+\li{\strong{L} = Find (what to match)}
+\li{\strong{K} = Keep (overlap preserved)}
+\li{\strong{R} = Replace (new structure)}
+\li{\strong{G} = Host graph}
+\li{\strong{H} = Result graph}
+}
+}
+
+\subtree{
+\title{Rule Definition}
+\pre{\startverb
+using AlgebraicRewriting
+
+# Slice bread rule: adds BreadSlice when knife + loaf present
+slice_bread = @migration(SchKitchen, begin
+  L => @join begin
+    loaf::BreadLoaf
+    knife::Knife
+  end
+  R => @join begin
+    loaf::BreadLoaf
+    slice::BreadSlice
+    food_in_on(bread_slice_is_food(slice)) == food_in_on(bread_loaf_is_food(loaf))
+    knife::Knife
+  end
+  K => @join begin
+    loaf::BreadLoaf
+    knife::Knife
+  end
+end)
+
+rule = make_rule(slice_bread, yKitchen)
+\stopverb}
+}
+
+\subtree{
+\title{Apply Rewrite}
+\pre{\startverb
+matches = get_matches(rule, state)
+new_state = rewrite_match(rule, matches[1])
+\stopverb}
+}
+}
+
+\subtree{
+\title{Self-Play Loop}
+\p{The ACSet self-refinement monad:}
+
+\pre{\startverb
+Query₀ → Execute → Evaluate → Mine Patterns → Refine → Query₁ → ...
+\stopverb}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+struct SelfRefinementLoop
+  schema::Presentation
+  state::ACSet
+  patterns::Vector{Pattern}
+  generation::Int
+end
+
+function step!(loop::SelfRefinementLoop, rule::Rule)
+  # Find matches
+  matches = get_matches(rule, loop.state)
+  
+  # Evaluate each match
+  evaluations = [evaluate_match(m, loop.patterns) for m in matches]
+  
+  # Mine new patterns from successful evaluations
+  new_patterns = mine_patterns(evaluations)
+  append!(loop.patterns, new_patterns)
+  
+  # Apply best match
+  best = argmax(e -> e.score, evaluations)
+  loop.state = rewrite_match(rule, matches[best.index])
+  loop.generation += 1
+  
+  loop
+end
+\stopverb}
+}
+
+\subtree{
+\title{Convergence Criterion}
+\pre{\startverb
+function converged(loop::SelfRefinementLoop; threshold=0.95)
+  recent = loop.patterns[end-10:end]
+  stability = std([p.score for p in recent])
+  stability < (1 - threshold)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\subtree{
+\title{Trit Assignment}
+\pre{\startverb
+function acset_to_trits(g::Graph, seed::UInt64)
+  rng = SplitMix64(seed)
+  trits = Int[]
+  for e in parts(g, :E)
+    h = next_u64!(rng)
+    hue = (h >> 16 & 0xffff) / 65535.0 * 360
+    trit = hue < 60 || hue >= 300 ? 1 :
+           hue < 180 ? 0 : -1
+    push!(trits, trit)
+  end
+  trits
+end
+
+# Conservation check
+gf3_conserved(trits) = sum(trits) % 3 == 0
+\stopverb}
+}
+
+\subtree{
+\title{Synergistic Triads Containing ACSets}
+\pre{\startverb
+clj-kondo-3color (-1) ⊗ acsets (0) ⊗ rama-gay-clojure (+1) = 0 ✓
+three-match (-1) ⊗ acsets (0) ⊗ gay-mcp (+1) = 0 ✓
+slime-lisp (-1) ⊗ acsets (0) ⊗ cider-clojure (+1) = 0 ✓
+hatchery-papers (-1) ⊗ acsets (0) ⊗ frontend-design (+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Orthogonal Bundles}
+\p{ACSets participates in the \strong{STRUCTURAL} bundle:}
+
+\pre{\startverb
+| Direction | Skills | Behavior |
+|-----------|--------|----------|
+| STRUCTURAL | clj-kondo(-1) ⊗ acsets(0) ⊗ rama-gay(+1) | Schema validation → transport → generation |
+| TEMPORAL | three-match(-1) ⊗ unworld(0) ⊗ gay-mcp(+1) | Reduction → derivation → coloring |
+| STRATEGIC | proofgeneral(-1) ⊗ glass-bead(0) ⊗ rubato(+1) | Verification → hopping → composition |
+\stopverb}
+}
+
+\subtree{
+\title{Visual Conventions (from RelationalThinking)}
+\pre{\startverb
+| Concept | Visual |
+|---------|--------|
+| Schema object | Gray circle |
+| Schema morphism | Colored arrow (cyan=src, blue=tgt) |
+| Instance element | Filled shape |
+| Morphism mapping | Slot/containment |
+| Pushout | Merged regions with distinct colors |
+| DPO rule | Thought bubble (L,K,R) |
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Schema operations
+just acset-schema FILE       # Display schema diagram
+just acset-instance FILE     # Display instance elements
+just acset-morphism F G      # Show homomorphism F → G
+
+# DPO rewriting
+just acset-rule RULE STATE   # Apply rewrite rule
+just acset-matches RULE STATE # Find all matches
+just acset-chain RULES STATE # Chain multiple rewrites
+
+# Self-play
+just acset-selfplay SCHEMA   # Run self-refinement loop
+just acset-patterns STATE    # Mine patterns from state
+just acset-converge SCHEMA   # Run until convergence
+
+# GF(3) operations
+just acset-trits STATE SEED  # Color state with seed
+just acset-gf3 STATE         # Check GF(3) conservation
+just acset-triads            # Show synergistic triads
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\subtree{
+\title{Topos Institute}
+\ul{
+\li{[RelationalThinking Book](https://toposinstitute.github.io/RelationalThinking-Book/)}
+\li{[RelationalThinking Code](https://github.com/ToposInstitute/RelationalThinking-code)}
+}
+}
+
+\subtree{
+\title{AlgebraicJulia}
+\ul{
+\li{[Catlab.jl](https://github.com/AlgebraicJulia/Catlab.jl)}
+\li{[ACSets.jl](https://github.com/AlgebraicJulia/ACSets.jl)}
+\li{[AlgebraicRewriting.jl](https://github.com/AlgebraicJulia/AlgebraicRewriting.jl)}
+}
+}
+
+\subtree{
+\title{Papers}
+\ul{
+\li{Patterson et al. "Categorical data structures for technical computing" (Compositionality 2022)}
+\li{Aguinaldo et al. "Categorical Representation Language for Knowledge-Based Planning" (AAAI 2023)}
+}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb rama-gay-clojure\stopverb} (+1) - Scalable backends with color tracing}
+\li{\code{\startverb clj-kondo-3color\stopverb} (-1) - Schema validation/linting}
+\li{\code{\startverb glass-bead-game\stopverb} (0) - World hopping across schemas}
+\li{\code{\startverb unworld\stopverb} (0) - Derivational chains for state evolution}
+\li{\code{\startverb discohy-streams\stopverb} (0) - DisCoPy categorical color streams}
+}
+
+\p{\strong{Skill Name}: acsets-relational-thinking \strong{Type}: Category-Theoretic Database / DPO Rewriting \strong{Trit}: 0 (ERGODIC) \strong{GF(3)}: Conserved via triadic composition}
+}
+}

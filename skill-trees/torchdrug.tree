@@ -1,0 +1,559 @@
+\title{Torchdrug}
+
+\taxon{skill}
+
+\meta{description}{"Graph-based drug discovery toolkit. Molecular property prediction (ADMET), protein modeling, knowledge graph reasoning, molecular generation, retrosynthesis, GNNs (GIN, GAT, SchNet), 40+ datasets, for PyTorch-based ML on molecules, proteins, and biomedical graphs."}
+
+\subtree{
+\title{TorchDrug}
+\subtree{
+\title{Overview}
+\p{TorchDrug is a comprehensive PyTorch-based machine learning toolbox for drug discovery and molecular science. Apply graph neural networks, pre-trained models, and task definitions to molecules, proteins, and biological knowledge graphs, including molecular property prediction, protein modeling, knowledge graph reasoning, molecular generation, retrosynthesis planning, with 40+ curated datasets and 20+ model architectures.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when working with:}
+
+\p{\strong{Data Types:}}
+
+\ul{
+\li{SMILES strings or molecular structures}
+\li{Protein sequences or 3D structures (PDB files)}
+\li{Chemical reactions and retrosynthesis}
+\li{Biomedical knowledge graphs}
+\li{Drug discovery datasets}
+}
+
+\p{\strong{Tasks:}}
+
+\ul{
+\li{Predicting molecular properties (solubility, toxicity, activity)}
+\li{Protein function or structure prediction}
+\li{Drug-target binding prediction}
+\li{Generating new molecular structures}
+\li{Planning chemical synthesis routes}
+\li{Link prediction in biomedical knowledge bases}
+\li{Training graph neural networks on scientific data}
+}
+
+\p{\strong{Libraries and Integration:}}
+
+\ul{
+\li{TorchDrug is the primary library}
+\li{Often used with RDKit for cheminformatics}
+\li{Compatible with PyTorch and PyTorch Lightning}
+\li{Integrates with AlphaFold and ESM for proteins}
+}
+}
+
+\subtree{
+\title{Getting Started}
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install torchdrug
+# Or with optional dependencies
+uv pip install torchdrug[full]
+\stopverb}
+}
+
+\subtree{
+\title{Quick Example}
+\pre{\startverb
+from torchdrug import datasets, models, tasks
+from torch.utils.data import DataLoader
+
+# Load molecular dataset
+dataset = datasets.BBBP("~/molecule-datasets/")
+train_set, valid_set, test_set = dataset.split()
+
+# Define GNN model
+model = models.GIN(
+    input_dim=dataset.node_feature_dim,
+    hidden_dims=[256, 256, 256],
+    edge_input_dim=dataset.edge_feature_dim,
+    batch_norm=True,
+    readout="mean"
+)
+
+# Create property prediction task
+task = tasks.PropertyPrediction(
+    model,
+    task=dataset.tasks,
+    criterion="bce",
+    metric=["auroc", "auprc"]
+)
+
+# Train with PyTorch
+optimizer = torch.optim.Adam(task.parameters(), lr=1e-3)
+train_loader = DataLoader(train_set, batch_size=32, shuffle=True)
+
+for epoch in range(100):
+    for batch in train_loader:
+        loss = task(batch)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Molecular Property Prediction}
+\p{Predict chemical, physical, and biological properties of molecules from structure.}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{Drug-likeness and ADMET properties}
+\li{Toxicity screening}
+\li{Quantum chemistry properties}
+\li{Binding affinity prediction}
+}
+
+\p{\strong{Key Components:}}
+
+\ul{
+\li{20+ molecular datasets (BBBP, HIV, Tox21, QM9, etc.)}
+\li{GNN models (GIN, GAT, SchNet)}
+\li{PropertyPrediction and MultipleBinaryClassification tasks}
+}
+
+\p{\strong{Reference:} See \code{\startverb references/molecular_property_prediction.md\stopverb} for:}
+
+\ul{
+\li{Complete dataset catalog}
+\li{Model selection guide}
+\li{Training workflows and best practices}
+\li{Feature engineering details}
+}
+}
+
+\subtree{
+\title{2. Protein Modeling}
+\p{Work with protein sequences, structures, and properties.}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{Enzyme function prediction}
+\li{Protein stability and solubility}
+\li{Subcellular localization}
+\li{Protein-protein interactions}
+\li{Structure prediction}
+}
+
+\p{\strong{Key Components:}}
+
+\ul{
+\li{15+ protein datasets (EnzymeCommission, GeneOntology, PDBBind, etc.)}
+\li{Sequence models (ESM, ProteinBERT, ProteinLSTM)}
+\li{Structure models (GearNet, SchNet)}
+\li{Multiple task types for different prediction levels}
+}
+
+\p{\strong{Reference:} See \code{\startverb references/protein_modeling.md\stopverb} for:}
+
+\ul{
+\li{Protein-specific datasets}
+\li{Sequence vs structure models}
+\li{Pre-training strategies}
+\li{Integration with AlphaFold and ESM}
+}
+}
+
+\subtree{
+\title{3. Knowledge Graph Reasoning}
+\p{Predict missing links and relationships in biological knowledge graphs.}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{Drug repurposing}
+\li{Disease mechanism discovery}
+\li{Gene-disease associations}
+\li{Multi-hop biomedical reasoning}
+}
+
+\p{\strong{Key Components:}}
+
+\ul{
+\li{General KGs (FB15k, WN18) and biomedical (Hetionet)}
+\li{Embedding models (TransE, RotatE, ComplEx)}
+\li{KnowledgeGraphCompletion task}
+}
+
+\p{\strong{Reference:} See \code{\startverb references/knowledge_graphs.md\stopverb} for:}
+
+\ul{
+\li{Knowledge graph datasets (including Hetionet with 45k biomedical entities)}
+\li{Embedding model comparison}
+\li{Evaluation metrics and protocols}
+\li{Biomedical applications}
+}
+}
+
+\subtree{
+\title{4. Molecular Generation}
+\p{Generate novel molecular structures with desired properties.}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{De novo drug design}
+\li{Lead optimization}
+\li{Chemical space exploration}
+\li{Property-guided generation}
+}
+
+\p{\strong{Key Components:}}
+
+\ul{
+\li{Autoregressive generation}
+\li{GCPN (policy-based generation)}
+\li{GraphAutoregressiveFlow}
+\li{Property optimization workflows}
+}
+
+\p{\strong{Reference:} See \code{\startverb references/molecular_generation.md\stopverb} for:}
+
+\ul{
+\li{Generation strategies (unconditional, conditional, scaffold-based)}
+\li{Multi-objective optimization}
+\li{Validation and filtering}
+\li{Integration with property prediction}
+}
+}
+
+\subtree{
+\title{5. Retrosynthesis}
+\p{Predict synthetic routes from target molecules to starting materials.}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{Synthesis planning}
+\li{Route optimization}
+\li{Synthetic accessibility assessment}
+\li{Multi-step planning}
+}
+
+\p{\strong{Key Components:}}
+
+\ul{
+\li{USPTO-50k reaction dataset}
+\li{CenterIdentification (reaction center prediction)}
+\li{SynthonCompletion (reactant prediction)}
+\li{End-to-end Retrosynthesis pipeline}
+}
+
+\p{\strong{Reference:} See \code{\startverb references/retrosynthesis.md\stopverb} for:}
+
+\ul{
+\li{Task decomposition (center ID → synthon completion)}
+\li{Multi-step synthesis planning}
+\li{Commercial availability checking}
+\li{Integration with other retrosynthesis tools}
+}
+}
+
+\subtree{
+\title{6. Graph Neural Network Models}
+\p{Comprehensive catalog of GNN architectures for different data types and tasks.}
+
+\p{\strong{Available Models:}}
+
+\ul{
+\li{General GNNs: GCN, GAT, GIN, RGCN, MPNN}
+\li{3D-aware: SchNet, GearNet}
+\li{Protein-specific: ESM, ProteinBERT, GearNet}
+\li{Knowledge graph: TransE, RotatE, ComplEx, SimplE}
+\li{Generative: GraphAutoregressiveFlow}
+}
+
+\p{\strong{Reference:} See \code{\startverb references/models_architectures.md\stopverb} for:}
+
+\ul{
+\li{Detailed model descriptions}
+\li{Model selection guide by task and dataset}
+\li{Architecture comparisons}
+\li{Implementation tips}
+}
+}
+
+\subtree{
+\title{7. Datasets}
+\p{40+ curated datasets spanning chemistry, biology, and knowledge graphs.}
+
+\p{\strong{Categories:}}
+
+\ul{
+\li{Molecular properties (drug discovery, quantum chemistry)}
+\li{Protein properties (function, structure, interactions)}
+\li{Knowledge graphs (general and biomedical)}
+\li{Retrosynthesis reactions}
+}
+
+\p{\strong{Reference:} See \code{\startverb references/datasets.md\stopverb} for:}
+
+\ul{
+\li{Complete dataset catalog with sizes and tasks}
+\li{Dataset selection guide}
+\li{Loading and preprocessing}
+\li{Splitting strategies (random, scaffold)}
+}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Molecular Property Prediction}
+\p{\strong{Scenario:} Predict blood-brain barrier penetration for drug candidates.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Load dataset: \code{\startverb datasets.BBBP()\stopverb}}
+\li{Choose model: GIN for molecular graphs}
+\li{Define task: \code{\startverb PropertyPrediction\stopverb} with binary classification}
+\li{Train with scaffold split for realistic evaluation}
+\li{Evaluate using AUROC and AUPRC}
+}
+
+\p{\strong{Navigation:} \code{\startverb references/molecular_property_prediction.md\stopverb} → Dataset selection → Model selection → Training}
+}
+
+\subtree{
+\title{Workflow 2: Protein Function Prediction}
+\p{\strong{Scenario:} Predict enzyme function from sequence.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Load dataset: \code{\startverb datasets.EnzymeCommission()\stopverb}}
+\li{Choose model: ESM (pre-trained) or GearNet (with structure)}
+\li{Define task: \code{\startverb PropertyPrediction\stopverb} with multi-class classification}
+\li{Fine-tune pre-trained model or train from scratch}
+\li{Evaluate using accuracy and per-class metrics}
+}
+
+\p{\strong{Navigation:} \code{\startverb references/protein_modeling.md\stopverb} → Model selection (sequence vs structure) → Pre-training strategies}
+}
+
+\subtree{
+\title{Workflow 3: Drug Repurposing via Knowledge Graphs}
+\p{\strong{Scenario:} Find new disease treatments in Hetionet.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Load dataset: \code{\startverb datasets.Hetionet()\stopverb}}
+\li{Choose model: RotatE or ComplEx}
+\li{Define task: \code{\startverb KnowledgeGraphCompletion\stopverb}}
+\li{Train with negative sampling}
+\li{Query for "Compound-treats-Disease" predictions}
+\li{Filter by plausibility and mechanism}
+}
+
+\p{\strong{Navigation:} \code{\startverb references/knowledge_graphs.md\stopverb} → Hetionet dataset → Model selection → Biomedical applications}
+}
+
+\subtree{
+\title{Workflow 4: De Novo Molecule Generation}
+\p{\strong{Scenario:} Generate drug-like molecules optimized for target binding.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Train property predictor on activity data}
+\li{Choose generation approach: GCPN for RL-based optimization}
+\li{Define reward function combining affinity, drug-likeness, synthesizability}
+\li{Generate candidates with property constraints}
+\li{Validate chemistry and filter by drug-likeness}
+\li{Rank by multi-objective scoring}
+}
+
+\p{\strong{Navigation:} \code{\startverb references/molecular_generation.md\stopverb} → Conditional generation → Multi-objective optimization}
+}
+
+\subtree{
+\title{Workflow 5: Retrosynthesis Planning}
+\p{\strong{Scenario:} Plan synthesis route for target molecule.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Load dataset: \code{\startverb datasets.USPTO50k()\stopverb}}
+\li{Train center identification model (RGCN)}
+\li{Train synthon completion model (GIN)}
+\li{Combine into end-to-end retrosynthesis pipeline}
+\li{Apply recursively for multi-step planning}
+\li{Check commercial availability of building blocks}
+}
+
+\p{\strong{Navigation:} \code{\startverb references/retrosynthesis.md\stopverb} → Task types → Multi-step planning}
+}
+}
+
+\subtree{
+\title{Integration Patterns}
+\subtree{
+\title{With RDKit}
+\p{Convert between TorchDrug molecules and RDKit:}
+
+\pre{\startverb
+from torchdrug import data
+from rdkit import Chem
+
+# SMILES → TorchDrug molecule
+smiles = "CCO"
+mol = data.Molecule.from_smiles(smiles)
+
+# TorchDrug → RDKit
+rdkit_mol = mol.to_molecule()
+
+# RDKit → TorchDrug
+rdkit_mol = Chem.MolFromSmiles(smiles)
+mol = data.Molecule.from_molecule(rdkit_mol)
+\stopverb}
+}
+
+\subtree{
+\title{With AlphaFold/ESM}
+\p{Use predicted structures:}
+
+\pre{\startverb
+from torchdrug import data
+
+# Load AlphaFold predicted structure
+protein = data.Protein.from_pdb("AF-P12345-F1-model_v4.pdb")
+
+# Build graph with spatial edges
+graph = protein.residue_graph(
+    node_position="ca",
+    edge_types=["sequential", "radius"],
+    radius_cutoff=10.0
+)
+\stopverb}
+}
+
+\subtree{
+\title{With PyTorch Lightning}
+\p{Wrap tasks for Lightning training:}
+
+\pre{\startverb
+import pytorch_lightning as pl
+
+class LightningTask(pl.LightningModule):
+    def __init__(self, torchdrug_task):
+        super().__init__()
+        self.task = torchdrug_task
+
+    def training_step(self, batch, batch_idx):
+        return self.task(batch)
+
+    def validation_step(self, batch, batch_idx):
+        pred = self.task.predict(batch)
+        target = self.task.target(batch)
+        return {"pred": pred, "target": target}
+
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.parameters(), lr=1e-3)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Technical Details}
+\p{For deep dives into TorchDrug's architecture:}
+
+\p{\strong{Core Concepts:} See \code{\startverb references/core_concepts.md\stopverb} for:}
+
+\ul{
+\li{Architecture philosophy (modular, configurable)}
+\li{Data structures (Graph, Molecule, Protein, PackedGraph)}
+\li{Model interface and forward function signature}
+\li{Task interface (predict, target, forward, evaluate)}
+\li{Training workflows and best practices}
+\li{Loss functions and metrics}
+\li{Common pitfalls and debugging}
+}
+}
+
+\subtree{
+\title{Quick Reference Cheat Sheet}
+\p{\strong{Choose Dataset:}}
+
+\ul{
+\li{Molecular property → \code{\startverb references/datasets.md\stopverb} → Molecular section}
+\li{Protein task → \code{\startverb references/datasets.md\stopverb} → Protein section}
+\li{Knowledge graph → \code{\startverb references/datasets.md\stopverb} → Knowledge graph section}
+}
+
+\p{\strong{Choose Model:}}
+
+\ul{
+\li{Molecules → \code{\startverb references/models_architectures.md\stopverb} → GNN section → GIN/GAT/SchNet}
+\li{Proteins (sequence) → \code{\startverb references/models_architectures.md\stopverb} → Protein section → ESM}
+\li{Proteins (structure) → \code{\startverb references/models_architectures.md\stopverb} → Protein section → GearNet}
+\li{Knowledge graph → \code{\startverb references/models_architectures.md\stopverb} → KG section → RotatE/ComplEx}
+}
+
+\p{\strong{Common Tasks:}}
+
+\ul{
+\li{Property prediction → \code{\startverb references/molecular_property_prediction.md\stopverb} or \code{\startverb references/protein_modeling.md\stopverb}}
+\li{Generation → \code{\startverb references/molecular_generation.md\stopverb}}
+\li{Retrosynthesis → \code{\startverb references/retrosynthesis.md\stopverb}}
+\li{KG reasoning → \code{\startverb references/knowledge_graphs.md\stopverb}}
+}
+
+\p{\strong{Understand Architecture:}}
+
+\ul{
+\li{Data structures → \code{\startverb references/core_concepts.md\stopverb} → Data Structures}
+\li{Model design → \code{\startverb references/core_concepts.md\stopverb} → Model Interface}
+\li{Task design → \code{\startverb references/core_concepts.md\stopverb} → Task Interface}
+}
+}
+
+\subtree{
+\title{Troubleshooting Common Issues}
+\p{\strong{Issue: Dimension mismatch errors} → Check \code{\startverb model.input_dim\stopverb} matches \code{\startverb dataset.node_feature_dim\stopverb} → See \code{\startverb references/core_concepts.md\stopverb} → Essential Attributes}
+
+\p{\strong{Issue: Poor performance on molecular tasks} → Use scaffold splitting, not random → Try GIN instead of GCN → See \code{\startverb references/molecular_property_prediction.md\stopverb} → Best Practices}
+
+\p{\strong{Issue: Protein model not learning} → Use pre-trained ESM for sequence tasks → Check edge construction for structure models → See \code{\startverb references/protein_modeling.md\stopverb} → Training Workflows}
+
+\p{\strong{Issue: Memory errors with large graphs} → Reduce batch size → Use gradient accumulation → See \code{\startverb references/core_concepts.md\stopverb} → Memory Efficiency}
+
+\p{\strong{Issue: Generated molecules are invalid} → Add validity constraints → Post-process with RDKit validation → See \code{\startverb references/molecular_generation.md\stopverb} → Validation and Filtering}
+}
+
+\subtree{
+\title{Resources}
+\p{\strong{Official Documentation:} https://torchdrug.ai/docs/ \strong{GitHub:} https://github.com/DeepGraphLearning/torchdrug \strong{Paper:} TorchDrug: A Powerful and Flexible Machine Learning Platform for Drug Discovery}
+}
+
+\subtree{
+\title{Summary}
+\p{Navigate to the appropriate reference file based on your task:}
+
+\ol{
+\li{\strong{Molecular property prediction} → \code{\startverb molecular_property_prediction.md\stopverb}}
+\li{\strong{Protein modeling} → \code{\startverb protein_modeling.md\stopverb}}
+\li{\strong{Knowledge graphs} → \code{\startverb knowledge_graphs.md\stopverb}}
+\li{\strong{Molecular generation} → \code{\startverb molecular_generation.md\stopverb}}
+\li{\strong{Retrosynthesis} → \code{\startverb retrosynthesis.md\stopverb}}
+\li{\strong{Model selection} → \code{\startverb models_architectures.md\stopverb}}
+\li{\strong{Dataset selection} → \code{\startverb datasets.md\stopverb}}
+\li{\strong{Technical details} → \code{\startverb core_concepts.md\stopverb}}
+}
+
+\p{Each reference provides comprehensive coverage of its domain with examples, best practices, and common use cases.}
+}
+}

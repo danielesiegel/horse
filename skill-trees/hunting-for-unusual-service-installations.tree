@@ -1,0 +1,70 @@
+\title{Hunting For Unusual Service Installations}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{T1543.003}
+
+\tag{service-installation}
+
+\tag{persistence}
+
+\tag{Event-7045}
+
+\tag{Sysmon}
+
+\tag{Windows-services}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect suspicious Windows service installations (MITRE ATT&CK T1543.003) by parsing System event logs for Event ID 7045, analyzing service binary paths, and identifying indicators of persistence mechanisms.}
+
+\subtree{
+\title{Hunting for Unusual Service Installations}
+\subtree{
+\title{Overview}
+\p{Attackers frequently install malicious Windows services for persistence and privilege escalation (MITRE ATT&CK T1543.003 — Create or Modify System Process: Windows Service). Event ID 7045 in the System event log records every new service installation. This skill parses .evtx log files to extract service installation events, flags suspicious binary paths (temp directories, PowerShell, cmd.exe, encoded commands), and correlates with known attack patterns.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for unusual service installations}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb python-evtx\stopverb}, \code{\startverb lxml\stopverb}}
+\li{Windows System event log (.evtx) files}
+\li{Access to live System event log (optional, for real-time monitoring)}
+\li{Sysmon logs for enhanced process tracking (optional)}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Parse System.evtx for Event ID 7045 (new service installed)}
+\li{Extract service name, binary path, service type, and account}
+\li{Flag services with suspicious binary paths (temp dirs, encoded commands)}
+\li{Detect PowerShell-based service creation patterns}
+\li{Identify services running as LocalSystem with unusual paths}
+\li{Cross-reference with known legitimate service baselines}
+\li{Generate threat hunting report with MITRE ATT&CK T1543.003 mapping}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing all new service installations with risk scores, suspicious indicators, and remediation recommendations}
+\li{Timeline of service installation events with binary path analysis}
+}
+}
+}

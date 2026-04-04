@@ -1,0 +1,449 @@
+\title{Hythermal}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{HyThermal Skill}
+
+\subtree{
+\title{HyThermal Skill}
+\blockquote{Hy + Thermal: Relational ACSet dynamics with Langevin temperature control}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: 0 (ERGODIC - bridges relational structure and thermal flow) \strong{Bundle}: dynamics \strong{Fusion of}: \code{\startverb hyjax-relational\stopverb} + \code{\startverb langevin-dynamics\stopverb}}
+
+\subtree{
+\title{Overview}
+\p{\strong{HyThermal} fuses relational thinking (ACSets/C-Sets) with Langevin dynamics for temperature-controlled exploration of concept spaces. Instead of treating thread analysis as static graphs, HyThermal models concepts as particles in a thermal bath:}
+
+\ul{
+\li{\strong{Concepts} = Particles with positions in embedding space}
+\li{\strong{Relations} = Potential energy between particles}
+\li{\strong{Temperature} = Exploration vs exploitation control}
+\li{\strong{Fokker-Planck} = Equilibrium distribution of concept activations}
+}
+}
+
+\subtree{
+\title{Core Equation}
+\pre{\startverb
+dC(t) = -∇E(C(t)) dt + √(2T) dW(t)
+
+Where:
+  C = concept embedding positions
+  E = relational energy (sum of edge potentials)
+  T = temperature (exploration parameter)
+  dW = Brownian motion (seeded via Gay.jl)
+\stopverb}
+
+\p{At equilibrium: \code{\startverb p∞(C) ∝ exp(-E(C)/T)\stopverb} — Concepts cluster near low-energy (high-coherence) configurations.}
+}
+
+\subtree{
+\title{Hy Syntax for Thermal ACSet}
+\pre{\startverb
+;; Define thermal schema
+(defschema ThermalThread
+  (Ob Thread Message Concept)
+  (Hom thread_msg (-> Message Thread)
+       discusses (-> Message Concept)
+       related (-> Concept Concept))
+  (Attr position (-> Concept R^n)
+        temperature (-> Thread Float)
+        energy (-> Concept Float)))
+
+;; Langevin step in Hy
+(defn thermal-step [acset dt T seed]
+  (let [concepts (parts acset :Concept)
+        gradient (compute-relational-gradient acset)
+        noise (gay-randn seed (len concepts))]
+    (for [c concepts]
+      (setv (. acset [:position c])
+            (+ (. acset [:position c])
+               (* (- dt) (get gradient c))
+               (* (sqrt (* 2 T dt)) (get noise c)))))))
+
+;; Run to equilibrium
+(defn thermal-equilibrate [acset T n-steps seed]
+  (for [step (range n-steps)]
+    (thermal-step acset 0.01 T (gay-split seed step)))
+  acset)
+\stopverb}
+}
+
+\subtree{
+\title{Colored Thermal S-expressions}
+\pre{\startverb
+(thermal-acset-gold
+  (threads-red
+    (thread T-001 :temp 0.01 :energy -4.52)
+    (thread T-002 :temp 0.1 :energy -2.18))
+  (concepts-green
+    (concept skill :pos [0.3 0.7] :trit +1)
+    (concept MCP :pos [0.5 0.2] :trit 0)
+    (concept thermal :pos [0.8 0.9] :trit -1))
+  (relations-purple
+    (edge skill MCP :weight 2 :potential -0.8)
+    (edge MCP thermal :weight 1 :potential -0.3)))
+\stopverb}
+}
+
+\subtree{
+\title{Relational Energy Function}
+\pre{\startverb
+def relational_energy(acset, positions):
+    """
+    E(C) = Σ_edges w_ij * d(c_i, c_j)^2 - Σ_hubs hub_score(c)
+
+    Low energy = Concepts tightly connected + high hub scores
+    """
+    E = 0.0
+    for edge in acset.parts('related'):
+        i, j = acset.src(edge), acset.tgt(edge)
+        w = acset.attr(edge, 'weight')
+        E += w * np.linalg.norm(positions[i] - positions[j])**2
+
+    for c in acset.parts('Concept'):
+        E -= acset.attr(c, 'hub_score')
+
+    return E
+\stopverb}
+}
+
+\subtree{
+\title{Capabilities}
+\subtree{
+\title{1. thermal-thread-analysis}
+\p{Run thermal dynamics on thread concept graph:}
+
+\pre{\startverb
+just hythermal-analyze threads.jsonl --temp 0.01 --steps 1000
+\stopverb}
+
+\p{Output:}
+
+\pre{\startverb
+HYTHERMAL ANALYSIS - 30 THREADS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Temperature: 0.01
+Steps: 1000
+Final energy: -12.45
+
+EQUILIBRIUM CONCEPT POSITIONS:
+  skill     [0.42, 0.73] trit=+1 (hub)
+  MCP       [0.38, 0.71] trit=0  (near skill)
+  thermal   [0.15, 0.22] trit=-1 (isolated)
+
+THERMAL CLUSTERS:
+  Cluster 1 (T=0.01): [skill, MCP, subagent] E=-8.2
+  Cluster 2 (T=0.01): [thermal, langevin]    E=-4.1
+\stopverb}
+}
+
+\subtree{
+\title{2. temperature-sweep}
+\p{Explore different temperatures:}
+
+\pre{\startverb
+from hythermal import temperature_sweep
+
+results = temperature_sweep(
+    acset=thread_acset,
+    temperatures=[0.001, 0.01, 0.1, 1.0],
+    n_steps=500,
+    seed=0x1069
+)
+
+for T, metrics in results.items():
+    print(f"T = {T}:")
+    print(f"  Final energy: {metrics['energy']:.3f}")
+    print(f"  Cluster count: {metrics['n_clusters']}")
+    print(f"  Mixing time: {metrics['tau_mix']:.0f}")
+\stopverb}
+}
+
+\subtree{
+\title{3. fokker-planck-concepts}
+\p{Verify concept distribution reaches Gibbs equilibrium:}
+
+\pre{\startverb
+from hythermal import verify_concept_gibbs
+
+verification = verify_concept_gibbs(
+    acset=equilibrated_acset,
+    temperature=0.01
+)
+
+print(f"KL divergence from Gibbs: {verification['kl']:.4f}")
+print(f"Converged: {verification['converged']}")
+\stopverb}
+}
+
+\subtree{
+\title{4. thermal-colored-sexp}
+\p{Generate colored S-expression with thermal annotations:}
+
+\pre{\startverb
+(defn thermal-sexp [acset]
+  `(thermal-acset-gold
+    (threads-red
+      ~@(lfor t (parts acset :Thread)
+          `(thread ~t :temp ~(. acset [:temperature t])
+                      :energy ~(thread-energy acset t))))
+    (concepts-green
+      ~@(lfor c (parts acset :Concept)
+          `(concept ~(name c)
+                    :pos ~(. acset [:position c])
+                    :trit ~(gay-trit (hash (name c))))))
+    (relations-purple
+      ~@(lfor e (parts acset :related)
+          `(edge ~(src e) ~(tgt e)
+                 :weight ~(. acset [:weight e])
+                 :potential ~(edge-potential acset e))))))
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Thermal Triad}
+\pre{\startverb
+| Trit | Skill | Thermal Role |
+|------|-------|--------------|
+| -1 | fokker-planck-analyzer | Validates equilibrium |
+| 0 | **hythermal** | Bridges structure + dynamics |
+| +1 | entropy-sequencer | Optimizes sequences |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0}
+}
+
+\subtree{
+\title{Integration Points}
+\subtree{
+\title{With hyjax-relational}
+\pre{\startverb
+;; Import relational schema
+(require hyjax-relational [SchThread parts attr])
+
+;; Extend with thermal attributes
+(defschema ThermalThread (extend SchThread)
+  (Attr position temperature energy))
+\stopverb}
+}
+
+\subtree{
+\title{With langevin-dynamics}
+\pre{\startverb
+from langevin_dynamics import LangevinSDE, solve_langevin
+from hythermal import relational_energy, relational_gradient
+
+sde = LangevinSDE(
+    loss_fn=lambda C: relational_energy(acset, C),
+    gradient_fn=lambda C: relational_gradient(acset, C),
+    temperature=0.01,
+    base_seed=0xDEADBEEF
+)
+
+solution = solve_langevin(sde, initial_positions, time_span=(0, 10))
+\stopverb}
+}
+
+\subtree{
+\title{With gay-mcp}
+\pre{\startverb
+from gay_mcp import GayIndexedRNG
+
+rng = GayIndexedRNG(base_seed=0x1069)
+
+for step in range(n_steps):
+    color = rng.color_at(step)
+    noise = rng.randn_from_color(color)
+    # Thermal noise is now auditable via color
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration}
+\pre{\startverb
+# hythermal.yaml
+thermal:
+  default_temperature: 0.01
+  dt: 0.01
+  n_steps: 1000
+
+equilibration:
+  verify_gibbs: true
+  kl_threshold: 0.01
+
+embedding:
+  dim: 64
+  method: spectral  # or random, pretrained
+
+visualization:
+  plot_trajectory: true
+  animate_dynamics: false
+
+gf3:
+  seed: 0x1069
+  verify_conservation: true
+\stopverb}
+}
+
+\subtree{
+\title{DuckDB Schema Extension}
+\pre{\startverb
+-- Extend thread schema with thermal columns
+ALTER TABLE concepts ADD COLUMN position FLOAT[];
+ALTER TABLE concepts ADD COLUMN energy FLOAT;
+ALTER TABLE threads ADD COLUMN temperature FLOAT DEFAULT 0.01;
+
+-- Thermal trajectory table
+CREATE TABLE thermal_trajectory (
+    step INT,
+    concept_id VARCHAR,
+    position FLOAT[],
+    energy FLOAT,
+    color_hex VARCHAR,
+    trit INT
+);
+
+-- View: Equilibrium state
+CREATE VIEW thermal_equilibrium AS
+SELECT
+    c.name,
+    c.position,
+    c.energy,
+    c.hub_score,
+    CASE WHEN c.energy < -1.0 THEN 'stable' ELSE 'metastable' END as state
+FROM concepts c
+WHERE EXISTS (
+    SELECT 1 FROM thermal_trajectory t
+    WHERE t.concept_id = c.concept_id
+    AND t.step = (SELECT MAX(step) FROM thermal_trajectory)
+);
+\stopverb}
+}
+
+\subtree{
+\title{Example Workflow}
+\pre{\startverb
+# 1. Load threads into thermal ACSet
+just hythermal-load threads.jsonl
+
+# 2. Initialize concept positions
+just hythermal-embed --method spectral --dim 64
+
+# 3. Run thermal dynamics
+just hythermal-run --temp 0.01 --steps 1000 --seed 0x1069
+
+# 4. Verify equilibrium
+just hythermal-verify-gibbs
+
+# 5. Generate thermal S-expression
+just hythermal-sexp > thermal-analysis.sexp
+
+# 6. Temperature sweep study
+just hythermal-sweep --temps 0.001,0.01,0.1,1.0
+\stopverb}
+}
+
+\subtree{
+\title{Philosophical Frame}
+\blockquote{*"what would it mean to become the Fokker-Planck equation—identity as probability flow?"* — bmorphism}
+
+\p{HyThermal extends this question to relational structures: \strong{What does it mean for a concept network to become its equilibrium distribution?}}
+
+\p{At low temperature, concepts crystallize into tight semantic clusters. At high temperature, they diffuse and mix. The "identity" of a thread is not a fixed point but a probability distribution over concept configurations — shaped by relational energy and thermal noise.}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb hyjax-relational\stopverb} - ACSet thread analysis}
+\li{\code{\startverb langevin-dynamics\stopverb} - SDE solver}
+\li{\code{\startverb fokker-planck-analyzer\stopverb} - Equilibrium validation}
+\li{\code{\startverb entropy-sequencer\stopverb} - Sequence optimization}
+\li{\code{\startverb gay-mcp\stopverb} - Deterministic coloring}
+}
+
+\p{\strong{Skill Name}: hythermal \strong{Type}: Analysis + Dynamics \strong{Trit}: 0 (ERGODIC) \strong{Key Property}: Bridges static relational structure with dynamic thermal exploration \strong{Status}: New}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Autodiff + Scientific Computing}
+\ul{
+\li{\strong{jax} [O] via bicomodule (thermal gradient computation)}
+\li{\strong{scipy} [O] via bicomodule (SDE integration)}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb dynamical-systems\stopverb}: 41 citations in bib.duckdb}
+\li{\code{\startverb category-theory\stopverb}: 139 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+hythermal (+) + SDF.Ch10 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch2: Domain-Specific Languages}
+\li{Ch1: Flexibility through Abstraction}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

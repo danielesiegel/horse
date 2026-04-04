@@ -1,0 +1,256 @@
+\title{Keychain Secure}
+
+\taxon{skill}
+
+\meta{description}{macOS Keychain credential management with GF(3) balanced operations}
+
+\subtree{
+\title{Keychain Secure Skill: GF(3) Balanced Credential Management}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - validator/security) \strong{Color}: #2626D8 (Blue) \strong{Principle}: Store(+1) + Retrieve(0) + Validate(-1) = 0 \strong{Frame}: Never env vars, always Keychain}
+
+\subtree{
+\title{Overview}
+\p{\strong{Keychain Secure} provides secure credential storage on macOS with GF(3) conservation. Every credential lifecycle is balanced:}
+
+\pre{\startverb
+Create (+1) → Transport (0) → Consume/Verify (-1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+keychain-secure (-1) ⊗ mdm-cobordism (0) ⊗ gay-mcp (+1) = 0 ✓  [Credential Chain]
+keychain-secure (-1) ⊗ unworld (0) ⊗ oapply-colimit (+1) = 0 ✓  [Derivation]
+keychain-secure (-1) ⊗ acsets (0) ⊗ koopman-generator (+1) = 0 ✓  [Pattern]
+\stopverb}
+}
+
+\subtree{
+\title{Why Not Environment Variables?}
+\pre{\startverb
+| Storage | Security | Problem |
+|---------|----------|---------|
+| `export API_KEY=...` | ❌ None | Visible in `ps`, logs, shell history |
+| `.env` file | ❌ Minimal | Readable, often committed to git |
+| Keychain | ✅ Encrypted | Hardware-backed, ACL-protected |
+\stopverb}
+
+\p{\strong{Rule}: Secrets belong in Keychain, never in environment.}
+}
+
+\subtree{
+\title{Commands}
+\subtree{
+\title{Store Credential (+1 Generator)}
+\pre{\startverb
+# Interactive (prompts for password)
+security add-generic-password \
+    -s "service-name" \
+    -a "$USER" \
+    -w
+
+# Non-interactive (⚠️ visible in process list briefly)
+security add-generic-password \
+    -s "service-name" \
+    -a "$USER" \
+    -w "secret-value" \
+    -U  # Update if exists
+\stopverb}
+}
+
+\subtree{
+\title{Retrieve Credential (0 Coordinator)}
+\pre{\startverb
+# Get password value
+security find-generic-password \
+    -s "service-name" \
+    -a "$USER" \
+    -w
+
+# Use in command substitution
+export API_KEY=$(security find-generic-password -s "openai" -a "$USER" -w)
+\stopverb}
+}
+
+\subtree{
+\title{Delete Credential (-1 Validator)}
+\pre{\startverb
+security delete-generic-password \
+    -s "service-name" \
+    -a "$USER"
+\stopverb}
+}
+
+\subtree{
+\title{Verify Credential (-1 Validator)}
+\pre{\startverb
+# Check if credential exists and is retrievable
+security find-generic-password -s "service-name" -a "$USER" -w >/dev/null 2>&1 \
+    && echo "valid" || echo "invalid"
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Balanced Operations}
+\subtree{
+\title{Pattern 1: Store-Retrieve-Validate}
+\pre{\startverb
+# +1: Store
+security add-generic-password -s "test" -a "$USER" -w "secret123" -U
+
+# 0: Retrieve  
+RETRIEVED=$(security find-generic-password -s "test" -a "$USER" -w)
+
+# -1: Validate
+[ "$RETRIEVED" = "secret123" ] && echo "GF(3) = 0 ✓"
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Create-Use-Rotate}
+\pre{\startverb
+# +1: Create new credential
+security add-generic-password -s "api-key-v2" -a "$USER" -w "$NEW_KEY"
+
+# 0: Use credential (transport)
+curl -H "Authorization: Bearer $(security find-generic-password -s 'api-key-v2' -a '$USER' -w)" ...
+
+# -1: Delete old credential
+security delete-generic-password -s "api-key-v1" -a "$USER"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Python API}
+\pre{\startverb
+from mdm_mcp_server import Keychain, Trit, verify_gf3
+
+# Store (+1)
+ok, trit = Keychain.store("openai", "api-key", "sk-...")
+assert trit == Trit.PLUS
+
+# Retrieve (0)
+secret, trit = Keychain.retrieve("openai", "api-key")
+assert trit == Trit.ERGODIC
+
+# Delete (-1)
+ok, trit = Keychain.delete("openai", "api-key")
+assert trit == Trit.MINUS
+
+# GF(3) balanced operation
+ok, trits = Keychain.store_then_verify("service", "account", "secret")
+assert verify_gf3(trits)  # [+1, 0, -1] = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Ruby API}
+\pre{\startverb
+require 'keychain_secure'
+
+# Store with GF(3) tracking
+KeychainSecure.store(
+  service: 'openai',
+  account: ENV['USER'],
+  secret: 'sk-...',
+  trit: :plus  # +1
+)
+
+# Balanced lifecycle
+KeychainSecure.balanced_lifecycle(
+  service: 'api-key',
+  account: ENV['USER']
+) do |secret|
+  # Use secret here (trit: 0)
+  make_api_call(secret)
+end
+# Automatic validation on block exit (trit: -1)
+\stopverb}
+}
+
+\subtree{
+\title{Access Control}
+\subtree{
+\title{Restrict to Specific Apps}
+\pre{\startverb
+security add-generic-password \
+    -s "my-service" \
+    -a "$USER" \
+    -w "secret" \
+    -T "/usr/bin/security" \
+    -T "/Applications/MyApp.app"
+\stopverb}
+}
+
+\subtree{
+\title{Require User Confirmation}
+\pre{\startverb
+# Set ACL to require confirmation
+security set-generic-password-partition-list \
+    -s "my-service" \
+    -a "$USER" \
+    -S "apple:"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with MDM}
+\pre{\startverb
+# MDM enrollment with Keychain-backed credentials
+from mdm_mcp_server import W1_GENERATE_KEY, Keychain
+
+# Store MDM push certificate
+Keychain.store("mdm-push-cert", "apns", push_cert_pem)
+
+# Retrieve for APNS connection
+push_cert, _ = Keychain.retrieve("mdm-push-cert", "apns")
+\stopverb}
+}
+
+\subtree{
+\title{Common Services}
+\pre{\startverb
+| Service | Account | Description |
+|---------|---------|-------------|
+| `openai` | `api-key` | OpenAI API key |
+| `anthropic` | `api-key` | Claude API key |
+| `github` | `pat` | Personal access token |
+| `mdm-push-cert` | `apns` | MDM push certificate |
+| `scep-challenge` | `enrollment` | SCEP challenge password |
+\stopverb}
+}
+
+\subtree{
+\title{Security Best Practices}
+\ol{
+\li{\strong{Use Access Groups} for app-to-app sharing}
+\li{\strong{Set ACLs} to require user presence for sensitive items}
+\li{\strong{Rotate credentials} periodically (create new, delete old)}
+\li{\strong{Never log secrets} — even to debug logs}
+\li{\strong{Verify GF(3)} — ensures complete credential lifecycle}
+}
+}
+
+\subtree{
+\title{Anti-Patterns}
+\pre{\startverb
+# ❌ BAD: Secret in command line (visible in ps)
+curl -H "Authorization: Bearer sk-abc123" ...
+
+# ✅ GOOD: Secret from Keychain
+curl -H "Authorization: Bearer $(security find-generic-password -s 'openai' -a '$USER' -w)" ...
+
+# ❌ BAD: Secret in environment
+export OPENAI_API_KEY="sk-abc123"
+
+# ✅ GOOD: Retrieve when needed
+OPENAI_API_KEY=$(security find-generic-password -s 'openai' -a "$USER" -w)
+\stopverb}
+
+\p{\strong{Skill Name}: keychain-secure \strong{Type}: Credential Management / Security \strong{Trit}: -1 (MINUS) \strong{Color}: #2626D8 (Blue) \strong{GF(3)}: Store(+1) + Retrieve(0) + Validate(-1) = 0 \strong{Env Vars}: Never for secrets}
+}
+}

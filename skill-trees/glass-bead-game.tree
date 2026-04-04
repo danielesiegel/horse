@@ -1,0 +1,282 @@
+\title{Glass Bead Game}
+
+\taxon{skill}
+
+\meta{description}{Hesse-inspired interdisciplinary synthesis game with Badiou triangle}
+
+\subtree{
+\title{Glass Bead Game: Topos of Music}
+\p{The Glass Bead Game (Glasperlenspiel) is an interdisciplinary synthesis engine that connects:}
+
+\ul{
+\li{\strong{Mathematics} (category theory, algebraic geometry, number theory)}
+\li{\strong{Music} (harmony, counterpoint, electronic synthesis)}
+\li{\strong{Philosophy} (Badiou's ontology, Girard's linear logic, Lawvere's topos theory)}
+}
+
+\subtree{
+\title{Core Concept: World Hopping}
+\p{Each \strong{bead} represents a concept in a specific domain. Beads connect via \strong{morphisms} that preserve essential structure. The game consists of finding paths between distant beads that illuminate hidden connections.}
+
+\subtree{
+\title{Badiou Triangle Inequality}
+\p{For any three worlds W₁, W₂, W₃:}
+
+\pre{\startverb
+d(W₁, W₃) ≤ d(W₁, W₂) + d(W₂, W₃)
+\stopverb}
+
+\p{This is the \strong{triangle inequality} that governs world hopping:}
+
+\ul{
+\li{\strong{Being}: Current ontological state (the bead's position in possibility space)}
+\li{\strong{Event}: A rupture that creates new possibilities (the hop between worlds)  }
+\li{\strong{Truth}: What persists across the transition (the invariant structure)}
+}
+}
+
+\subtree{
+\title{Distance Metric}
+\p{Distance between worlds is measured by:}
+
+\pre{\startverb
+def world_distance(w1, w2)
+  being_diff = (w1.seed ^ w2.seed).to_s(2).count('1')  # Hamming distance
+  event_diff = (w1.epoch - w2.epoch).abs               # Temporal distance
+  truth_diff = conjugacy_distance(w1.invariant, w2.invariant)
+  
+  Math.sqrt(being_diff**2 + event_diff**2 + truth_diff**2)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Bead Types}
+\subtree{
+\title{Mathematical Beads}
+\ul{
+\li{\strong{Number}: Prime, composite, transcendental, p-adic}
+\li{\strong{Structure}: Group, ring, field, category, topos}
+\li{\strong{Morphism}: Homomorphism, functor, natural transformation}
+\li{\strong{Invariant}: Fixed point, eigenvalue, cohomology class}
+}
+}
+
+\subtree{
+\title{Musical Beads}
+\ul{
+\li{\strong{Pitch}: Frequency, pitch class, interval}
+\li{\strong{Harmony}: Chord, progression, voice leading}
+\li{\strong{Rhythm}: Duration, meter, polyrhythm}
+\li{\strong{Timbre}: Spectrum, envelope, modulation}
+}
+}
+
+\subtree{
+\title{Philosophical Beads}
+\ul{
+\li{\strong{Ontological}: Being, becoming, event, void}
+\li{\strong{Logical}: Proposition, proof, cut, polarity}
+\li{\strong{Categorical}: Object, morphism, limit, adjunction}
+}
+}
+}
+
+\subtree{
+\title{Game Moves}
+\subtree{
+\title{1. CONNECT: Link Two Beads}
+\p{Find a morphism that connects bead A to bead B while preserving structure.}
+
+\pre{\startverb
+move = GlassBeadGame::Connect.new(
+  from: Bead.new(:prime, 17),
+  to: Bead.new(:pitch_class, 5),  # 17 mod 12 = 5
+  via: :modular_arithmetic
+)
+\stopverb}
+}
+
+\subtree{
+\title{2. TRANSPOSE: Shift Domain}
+\p{Apply a functor to move an entire structure to a new domain.}
+
+\pre{\startverb
+move = GlassBeadGame::Transpose.new(
+  structure: :circle_of_fifths,
+  from_domain: :music,
+  to_domain: :number_theory,
+  functor: :chromatic_to_modular
+)
+\stopverb}
+}
+
+\subtree{
+\title{3. REFLECT: Find Dual}
+\p{Discover the contravariant counterpart of a structure.}
+
+\pre{\startverb
+move = GlassBeadGame::Reflect.new(
+  structure: :major_scale,
+  reflection: :phrygian_mode,  # Dual via interval inversion
+  symmetry: :diatonic_mirror
+)
+\stopverb}
+}
+
+\subtree{
+\title{4. HOP: World Transition}
+\p{Execute a Badiou-style event that transitions between possible worlds.}
+
+\pre{\startverb
+move = GlassBeadGame::Hop.new(
+  from_world: current_world,
+  event: :modulation,
+  to_world: target_world,
+  truth_preserved: :tonal_center
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Scoring}
+\p{Points are awarded for:}
+
+\pre{\startverb
+| Move Type | Base Points | Multipliers |
+|-----------|-------------|-------------|
+| CONNECT | 10 | ×2 if cross-domain |
+| TRANSPOSE | 25 | ×3 if structure-preserving |
+| REFLECT | 15 | ×2 if self-dual found |
+| HOP | 50 | ×(1/distance) for elegant hops |
+\stopverb}
+
+\subtree{
+\title{Elegance Bonus}
+\p{Shorter paths between distant concepts receive elegance bonuses:}
+
+\pre{\startverb
+elegance = conceptual_distance / path_length
+bonus = (elegance > 3) ? elegance * 10 : 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Game Session}
+\pre{\startverb
+Turn 1: CONNECT(Ramanujan's 1729, "taxicab number")
+        → Linked to: Hardy-Littlewood circle method
+        Points: 10
+
+Turn 2: TRANSPOSE(circle method, analysis → music)
+        → Produces: Spectral analysis of timbre
+        Points: 25 × 3 = 75
+
+Turn 3: REFLECT(timbre spectrum)
+        → Dual: Temporal envelope (Fourier duality)
+        Points: 15 × 2 = 30
+
+Turn 4: HOP(acoustic → electronic)
+        → Event: Synthesis (analog → digital)
+        → Truth preserved: Harmonic ratios
+        Points: 50 × 0.8 = 40
+
+Total: 155 points
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Music Topos}
+\subtree{
+\title{Using with World Broadcast}
+\pre{\startverb
+# Create game from mathematician broadcast
+system = WorldBroadcast::TripartiteSystem.new([:ramanujan, :grothendieck, :euler])
+game = GlassBeadGame.from_broadcast(system)
+
+# Each mathematician contributes beads
+game.add_bead_from_agent(system.agents[0])  # Ramanujan's partitions
+game.add_bead_from_agent(system.agents[1])  # Grothendieck's schemes
+game.add_bead_from_agent(system.agents[2])  # Euler's series
+\stopverb}
+}
+
+\subtree{
+\title{Using with Synadia}
+\pre{\startverb
+# Publish moves to NATS
+SynadiaBroadcast.publish("game.move.connect", move.to_json)
+
+# Subscribe to opponent moves
+SynadiaBroadcast.subscribe("game.move.*") do |msg|
+  game.apply_move(GlassBeadGame::Move.from_json(msg.data))
+end
+\stopverb}
+}
+
+\subtree{
+\title{Using with Propagators}
+\pre{\startverb
+# Create propagator network for game state
+network = PropagatorNetwork.new
+
+# Cells for each bead
+beads.each { |b| network.add_cell(b.id, b.state) }
+
+# Propagators for constraints
+network.add_propagator(:triangle_inequality) do |w1, w2, w3|
+  world_distance(w1, w3) <= world_distance(w1, w2) + world_distance(w2, w3)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Philosophical Foundation}
+\subtree{
+\title{Badiou's Ontology}
+\ul{
+\li{\strong{Situation}: The current game state (set of beads and connections)}
+\li{\strong{State}: The meta-structure organizing beads (rules, scoring)}
+\li{\strong{Event}: A move that exceeds the situation (creates new possibilities)}
+\li{\strong{Truth}: The generic procedure that extends from the event}
+}
+}
+
+\subtree{
+\title{Lawvere's Topos}
+\p{The game forms a \strong{topos} where:}
+
+\ul{
+\li{Objects are beads (concepts)}
+\li{Morphisms are connections (structural mappings)}
+\li{Subobject classifier Ω distinguishes "in play" vs "potential"}
+\li{Internal logic is intuitionistic (constructive proofs via game moves)}
+}
+}
+
+\subtree{
+\title{Girard's Linear Logic}
+\p{Resources are \strong{linear} (used exactly once):}
+
+\ul{
+\li{Each bead can only be connected once per turn}
+\li{Connections consume "attention" (a limited resource)}
+\li{Exponentials (!) allow reuse of fundamental beads}
+}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just glass-bead              # Start interactive game
+just glass-bead-solo         # Single-player mode
+just glass-bead-tournament   # Multi-round competition
+just world-hop from to       # Execute world hop
+\stopverb}
+}
+}

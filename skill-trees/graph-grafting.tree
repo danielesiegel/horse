@@ -1,0 +1,187 @@
+\title{Graph Grafting}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Graph Grafting Skill}
+
+\subtree{
+\title{Graph Grafting Skill}
+\p{\strong{Trit}: 0 (ERGODIC - Coordinator) \strong{GF(3) Triad}: \code{\startverb queryable (-1) ⊗ graftable (0) ⊗ derangeable (+1) = 0\stopverb}}
+
+\subtree{
+\title{Overview}
+\p{Combinatorial complex operations replacing GraphQL with pure graph theory:}
+
+\pre{\startverb
+| Operation | Trit | Description |
+|-----------|------|-------------|
+| **Queryable** | -1 | Tree-shape decision via bag decomposition |
+| **Colorable** | 0 | GF(3) 3-coloring via sheaf |
+| **Derangeable** | +1 | Permutations with no fixed points |
+| **Graftable** | 0 | Attach rooted tree at vertex |
+\stopverb}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\p{\strong{Grafting} = attaching a rooted tree T at vertex v of graph G:}
+
+\pre{\startverb
+Graft(T, v, G) → G' where:
+  - V(G') = V(G) ∪ V(T)
+  - E(G') = E(G) ∪ E(T) ∪ {(v, root(T))}
+  - Adhesion = shared labels at attachment point
+\stopverb}
+}
+
+\subtree{
+\title{Quadrant Chart: Colorable × Derangeable}
+\pre{\startverb
+        Balanced (GF3=0)
+              │
+    Q2        │        Q1 ← OPTIMAL
+  Identity    │    PR#18, Knight Tour
+              │    SICM Galois
+──────────────┼──────────────
+    Q3        │        Q4
+  Deadlock    │    Phase Trans
+              │
+        Fixed Points → Derangement
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using .GraphGrafting
+
+c = GraftComplex(UInt64(1069))
+
+# Build PR tree
+root = GraftNode(:pr18, Int8(0), :golden, 0)
+alice = GraftNode(:alice, Int8(-1), :baseline, 1)
+bob = GraftNode(:bob, Int8(1), :original, 1)
+
+# Graft nodes
+graft!(c, root, :none, String[])
+graft!(c, alice, :pr18, ["aptos-wallet-mcp"])
+graft!(c, bob, :pr18, ["aptos-wallet-mcp"])
+
+# Operations
+tree_shape(c)           # Queryable
+trit_partition(c)       # Colorable  
+derange!(c)             # Derangeable
+compose(c1, c2, :vertex) # Graftable
+
+# Verify
+verify_gf3(c)  # → (conserved=true, sum=0)
+\stopverb}
+}
+
+\subtree{
+\title{Neighbors}
+\subtree{
+\title{High Affinity}
+\ul{
+\li{\code{\startverb three-match\stopverb} (-1): Graph coloring verification}
+\li{\code{\startverb derangeable\stopverb} (+1): No fixed points}
+\li{\code{\startverb bisimulation-game\stopverb} (-1): Attacker/Defender}
+}
+}
+
+\subtree{
+\title{Example Triad}
+\pre{\startverb
+skills: [graph-grafting, three-match, derangeable]
+sum: (0) + (-1) + (+1) = 0 ✓ CONSERVED
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Joyal, Combinatorial Species (1981)}
+\li{Flajolet & Sedgewick, Analytic Combinatorics (2009)}
+\li{Topos Institute, Observational Bridge Types}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Graph manipulation and algorithms}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb graph-theory\stopverb}: 38 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 1. Flexibility through Abstraction}
+\p{\strong{Concepts}: combinators, compose, parallel-combine, spread-combine, arity}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+graph-grafting (−) + SDF.Ch1 (+) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch4: Pattern Matching}
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Combinators compose operations. This skill provides composable abstractions.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

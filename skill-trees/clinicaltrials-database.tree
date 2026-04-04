@@ -1,0 +1,555 @@
+\title{Clinicaltrials Database}
+
+\taxon{skill}
+
+\meta{description}{"Query ClinicalTrials.gov via API v2. Search trials by condition, drug, location, status, or phase. Retrieve trial details by NCT ID, export data, for clinical research and patient matching."}
+
+\subtree{
+\title{ClinicalTrials.gov Database}
+\subtree{
+\title{Overview}
+\p{ClinicalTrials.gov is a comprehensive registry of clinical studies conducted worldwide, maintained by the U.S. National Library of Medicine. Access API v2 to search for trials, retrieve detailed study information, filter by various criteria, and export data for analysis. The API is public (no authentication required) with rate limits of ~50 requests per minute, supporting JSON and CSV formats.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when working with clinical trial data in scenarios such as:}
+
+\ul{
+\li{\strong{Patient matching} - Finding recruiting trials for specific conditions or patient populations}
+\li{\strong{Research analysis} - Analyzing clinical trial trends, outcomes, or study designs}
+\li{\strong{Drug/intervention research} - Identifying trials testing specific drugs or interventions}
+\li{\strong{Geographic searches} - Locating trials in specific locations or regions}
+\li{\strong{Sponsor/organization tracking} - Finding trials conducted by specific institutions}
+\li{\strong{Data export} - Extracting clinical trial data for further analysis or reporting}
+\li{\strong{Trial monitoring} - Tracking status updates or results for specific trials}
+\li{\strong{Eligibility screening} - Reviewing inclusion/exclusion criteria for trials}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Basic Search Query}
+\p{Search for clinical trials using the helper script:}
+
+\pre{\startverb
+cd scientific-databases/clinicaltrials-database/scripts
+python3 query_clinicaltrials.py
+\stopverb}
+
+\p{Or use Python directly with the \code{\startverb requests\stopverb} library:}
+
+\pre{\startverb
+import requests
+
+url = "https://clinicaltrials.gov/api/v2/studies"
+params = {
+    "query.cond": "breast cancer",
+    "filter.overallStatus": "RECRUITING",
+    "pageSize": 10
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Found {data['totalCount']} trials")
+\stopverb}
+}
+
+\subtree{
+\title{Retrieve Specific Trial}
+\p{Get detailed information about a trial using its NCT ID:}
+
+\pre{\startverb
+import requests
+
+nct_id = "NCT04852770"
+url = f"https://clinicaltrials.gov/api/v2/studies/{nct_id}"
+
+response = requests.get(url)
+study = response.json()
+
+# Access specific modules
+title = study['protocolSection']['identificationModule']['briefTitle']
+status = study['protocolSection']['statusModule']['overallStatus']
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Search by Condition/Disease}
+\p{Find trials studying specific medical conditions or diseases using the \code{\startverb query.cond\stopverb} parameter.}
+
+\p{\strong{Example: Find recruiting diabetes trials}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+results = search_studies(
+    condition="type 2 diabetes",
+    status="RECRUITING",
+    page_size=20,
+    sort="LastUpdatePostDate:desc"
+)
+
+print(f"Found {results['totalCount']} recruiting diabetes trials")
+for study in results['studies']:
+    protocol = study['protocolSection']
+    nct_id = protocol['identificationModule']['nctId']
+    title = protocol['identificationModule']['briefTitle']
+    print(f"{nct_id}: {title}")
+\stopverb}
+
+\p{\strong{Common use cases:}}
+
+\ul{
+\li{Finding trials for rare diseases}
+\li{Identifying trials for comorbid conditions}
+\li{Tracking trial availability for specific diagnoses}
+}
+}
+
+\subtree{
+\title{2. Search by Intervention/Drug}
+\p{Search for trials testing specific interventions, drugs, devices, or procedures using the \code{\startverb query.intr\stopverb} parameter.}
+
+\p{\strong{Example: Find Phase 3 trials testing Pembrolizumab}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+results = search_studies(
+    intervention="Pembrolizumab",
+    status=["RECRUITING", "ACTIVE_NOT_RECRUITING"],
+    page_size=50
+)
+
+# Filter by phase in results
+phase3_trials = [
+    study for study in results['studies']
+    if 'PHASE3' in study['protocolSection'].get('designModule', {}).get('phases', [])
+]
+\stopverb}
+
+\p{\strong{Common use cases:}}
+
+\ul{
+\li{Drug development tracking}
+\li{Competitive intelligence for pharmaceutical companies}
+\li{Treatment option research for clinicians}
+}
+}
+
+\subtree{
+\title{3. Geographic Search}
+\p{Find trials in specific locations using the \code{\startverb query.locn\stopverb} parameter.}
+
+\p{\strong{Example: Find cancer trials in New York}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+results = search_studies(
+    condition="cancer",
+    location="New York",
+    status="RECRUITING",
+    page_size=100
+)
+
+# Extract location details
+for study in results['studies']:
+    locations_module = study['protocolSection'].get('contactsLocationsModule', {})
+    locations = locations_module.get('locations', [])
+    for loc in locations:
+        if 'New York' in loc.get('city', ''):
+            print(f"{loc['facility']}: {loc['city']}, {loc.get('state', '')}")
+\stopverb}
+
+\p{\strong{Common use cases:}}
+
+\ul{
+\li{Patient referrals to local trials}
+\li{Geographic trial distribution analysis}
+\li{Site selection for new trials}
+}
+}
+
+\subtree{
+\title{4. Search by Sponsor/Organization}
+\p{Find trials conducted by specific organizations using the \code{\startverb query.spons\stopverb} parameter.}
+
+\p{\strong{Example: Find trials sponsored by NCI}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+results = search_studies(
+    sponsor="National Cancer Institute",
+    page_size=100
+)
+
+# Extract sponsor information
+for study in results['studies']:
+    sponsor_module = study['protocolSection']['sponsorCollaboratorsModule']
+    lead_sponsor = sponsor_module['leadSponsor']['name']
+    collaborators = sponsor_module.get('collaborators', [])
+    print(f"Lead: {lead_sponsor}")
+    if collaborators:
+        print(f"  Collaborators: {', '.join([c['name'] for c in collaborators])}")
+\stopverb}
+
+\p{\strong{Common use cases:}}
+
+\ul{
+\li{Tracking institutional research portfolios}
+\li{Analyzing funding organization priorities}
+\li{Identifying collaboration opportunities}
+}
+}
+
+\subtree{
+\title{5. Filter by Study Status}
+\p{Filter trials by recruitment or completion status using the \code{\startverb filter.overallStatus\stopverb} parameter.}
+
+\p{\strong{Valid status values:}}
+
+\ul{
+\li{\code{\startverb RECRUITING\stopverb} - Currently recruiting participants}
+\li{\code{\startverb NOT_YET_RECRUITING\stopverb} - Not yet open for recruitment}
+\li{\code{\startverb ENROLLING_BY_INVITATION\stopverb} - Only enrolling by invitation}
+\li{\code{\startverb ACTIVE_NOT_RECRUITING\stopverb} - Active but no longer recruiting}
+\li{\code{\startverb SUSPENDED\stopverb} - Temporarily halted}
+\li{\code{\startverb TERMINATED\stopverb} - Stopped prematurely}
+\li{\code{\startverb COMPLETED\stopverb} - Study has concluded}
+\li{\code{\startverb WITHDRAWN\stopverb} - Withdrawn prior to enrollment}
+}
+
+\p{\strong{Example: Find recently completed trials with results}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+results = search_studies(
+    condition="alzheimer disease",
+    status="COMPLETED",
+    sort="LastUpdatePostDate:desc",
+    page_size=50
+)
+
+# Filter for trials with results
+trials_with_results = [
+    study for study in results['studies']
+    if study.get('hasResults', False)
+]
+
+print(f"Found {len(trials_with_results)} completed trials with results")
+\stopverb}
+}
+
+\subtree{
+\title{6. Retrieve Detailed Study Information}
+\p{Get comprehensive information about specific trials including eligibility criteria, outcomes, contacts, and locations.}
+
+\p{\strong{Example: Extract eligibility criteria}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import get_study_details
+
+study = get_study_details("NCT04852770")
+eligibility = study['protocolSection']['eligibilityModule']
+
+print(f"Eligible Ages: {eligibility.get('minimumAge')} - {eligibility.get('maximumAge')}")
+print(f"Eligible Sex: {eligibility.get('sex')}")
+print(f"\nInclusion Criteria:")
+print(eligibility.get('eligibilityCriteria'))
+\stopverb}
+
+\p{\strong{Example: Extract contact information}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import get_study_details
+
+study = get_study_details("NCT04852770")
+contacts_module = study['protocolSection']['contactsLocationsModule']
+
+# Overall contacts
+if 'centralContacts' in contacts_module:
+    for contact in contacts_module['centralContacts']:
+        print(f"Contact: {contact.get('name')}")
+        print(f"Phone: {contact.get('phone')}")
+        print(f"Email: {contact.get('email')}")
+
+# Study locations
+if 'locations' in contacts_module:
+    for location in contacts_module['locations']:
+        print(f"\nFacility: {location.get('facility')}")
+        print(f"City: {location.get('city')}, {location.get('state')}")
+        if location.get('status'):
+            print(f"Status: {location['status']}")
+\stopverb}
+}
+
+\subtree{
+\title{7. Pagination and Bulk Data Retrieval}
+\p{Handle large result sets efficiently using pagination.}
+
+\p{\strong{Example: Retrieve all matching trials}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_with_all_results
+
+# Get all trials (automatically handles pagination)
+all_trials = search_with_all_results(
+    condition="rare disease",
+    status="RECRUITING"
+)
+
+print(f"Retrieved {len(all_trials)} total trials")
+\stopverb}
+
+\p{\strong{Example: Manual pagination with control}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+all_studies = []
+page_token = None
+max_pages = 10  # Limit to avoid excessive requests
+
+for page in range(max_pages):
+    results = search_studies(
+        condition="cancer",
+        page_size=1000,  # Max page size
+        page_token=page_token
+    )
+
+    all_studies.extend(results['studies'])
+
+    # Check for next page
+    page_token = results.get('pageToken')
+    if not page_token:
+        break
+
+print(f"Retrieved {len(all_studies)} studies across {page + 1} pages")
+\stopverb}
+}
+
+\subtree{
+\title{8. Data Export to CSV}
+\p{Export trial data to CSV format for analysis in spreadsheet software or data analysis tools.}
+
+\p{\strong{Example: Export to CSV file}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+# Request CSV format
+results = search_studies(
+    condition="heart disease",
+    status="RECRUITING",
+    format="csv",
+    page_size=1000
+)
+
+# Save to file
+with open("heart_disease_trials.csv", "w") as f:
+    f.write(results)
+
+print("Data exported to heart_disease_trials.csv")
+\stopverb}
+
+\p{\strong{Note:} CSV format returns a string instead of JSON dictionary.}
+}
+
+\subtree{
+\title{9. Extract and Summarize Study Information}
+\p{Extract key information for quick overview or reporting.}
+
+\p{\strong{Example: Create trial summary}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import get_study_details, extract_study_summary
+
+# Get details and extract summary
+study = get_study_details("NCT04852770")
+summary = extract_study_summary(study)
+
+print(f"NCT ID: {summary['nct_id']}")
+print(f"Title: {summary['title']}")
+print(f"Status: {summary['status']}")
+print(f"Phase: {', '.join(summary['phase'])}")
+print(f"Enrollment: {summary['enrollment']}")
+print(f"Last Update: {summary['last_update']}")
+print(f"\nBrief Summary:\n{summary['brief_summary']}")
+\stopverb}
+}
+
+\subtree{
+\title{10. Combined Query Strategies}
+\p{Combine multiple filters for targeted searches.}
+
+\p{\strong{Example: Multi-criteria search}}
+
+\pre{\startverb
+from scripts.query_clinicaltrials import search_studies
+
+# Find Phase 2/3 immunotherapy trials for lung cancer in California
+results = search_studies(
+    condition="lung cancer",
+    intervention="immunotherapy",
+    location="California",
+    status=["RECRUITING", "NOT_YET_RECRUITING"],
+    page_size=100
+)
+
+# Further filter by phase
+phase2_3_trials = [
+    study for study in results['studies']
+    if any(phase in ['PHASE2', 'PHASE3']
+           for phase in study['protocolSection'].get('designModule', {}).get('phases', []))
+]
+
+print(f"Found {len(phase2_3_trials)} Phase 2/3 immunotherapy trials")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{scripts/query_clinicaltrials.py}
+\p{Comprehensive Python script providing helper functions for common query patterns:}
+
+\ul{
+\li{\code{\startverb search_studies()\stopverb} - Search for trials with various filters}
+\li{\code{\startverb get_study_details()\stopverb} - Retrieve full information for a specific trial}
+\li{\code{\startverb search_with_all_results()\stopverb} - Automatically paginate through all results}
+\li{\code{\startverb extract_study_summary()\stopverb} - Extract key information for quick overview}
+}
+
+\p{Run the script directly for example usage:}
+
+\pre{\startverb
+python3 scripts/query_clinicaltrials.py
+\stopverb}
+}
+
+\subtree{
+\title{references/api_reference.md}
+\p{Detailed API documentation including:}
+
+\ul{
+\li{Complete endpoint specifications}
+\li{All query parameters and valid values}
+\li{Response data structure and modules}
+\li{Common use cases with code examples}
+\li{Error handling and best practices}
+\li{Data standards (ISO 8601 dates, CommonMark markdown)}
+}
+
+\p{Load this reference when working with unfamiliar API features or troubleshooting issues.}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Rate Limit Management}
+\p{The API has a rate limit of approximately 50 requests per minute. For bulk data retrieval:}
+
+\ol{
+\li{Use maximum page size (1000) to minimize requests}
+\li{Implement exponential backoff on rate limit errors (429 status)}
+\li{Add delays between requests for large-scale data collection}
+}
+
+\pre{\startverb
+import time
+import requests
+
+def search_with_rate_limit(params):
+    try:
+        response = requests.get("https://clinicaltrials.gov/api/v2/studies", params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 429:
+            print("Rate limited. Waiting 60 seconds...")
+            time.sleep(60)
+            return search_with_rate_limit(params)  # Retry
+        raise
+\stopverb}
+}
+
+\subtree{
+\title{Data Structure Navigation}
+\p{The API response has a nested structure. Key paths to common information:}
+
+\ul{
+\li{\strong{NCT ID}: \code{\startverb study['protocolSection']['identificationModule']['nctId']\stopverb}}
+\li{\strong{Title}: \code{\startverb study['protocolSection']['identificationModule']['briefTitle']\stopverb}}
+\li{\strong{Status}: \code{\startverb study['protocolSection']['statusModule']['overallStatus']\stopverb}}
+\li{\strong{Phase}: \code{\startverb study['protocolSection']['designModule']['phases']\stopverb}}
+\li{\strong{Eligibility}: \code{\startverb study['protocolSection']['eligibilityModule']\stopverb}}
+\li{\strong{Locations}: \code{\startverb study['protocolSection']['contactsLocationsModule']['locations']\stopverb}}
+\li{\strong{Interventions}: \code{\startverb study['protocolSection']['armsInterventionsModule']['interventions']\stopverb}}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\p{Always implement proper error handling for network requests:}
+
+\pre{\startverb
+import requests
+
+try:
+    response = requests.get(url, params=params, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+except requests.exceptions.HTTPError as e:
+    print(f"HTTP error: {e.response.status_code}")
+except requests.exceptions.RequestException as e:
+    print(f"Request failed: {e}")
+except ValueError as e:
+    print(f"JSON decode error: {e}")
+\stopverb}
+}
+
+\subtree{
+\title{Handling Missing Data}
+\p{Not all trials have complete information. Always check for field existence:}
+
+\pre{\startverb
+# Safe navigation with .get()
+phases = study['protocolSection'].get('designModule', {}).get('phases', [])
+enrollment = study['protocolSection'].get('designModule', {}).get('enrollmentInfo', {}).get('count', 'N/A')
+
+# Check before accessing
+if 'resultsSection' in study:
+    # Process results
+    pass
+\stopverb}
+}
+}
+
+\subtree{
+\title{Technical Specifications}
+\ul{
+\li{\strong{Base URL}: \code{\startverb https://clinicaltrials.gov/api/v2\stopverb}}
+\li{\strong{Authentication}: Not required (public API)}
+\li{\strong{Rate Limit}: ~50 requests/minute per IP}
+\li{\strong{Response Formats}: JSON (default), CSV}
+\li{\strong{Max Page Size}: 1000 studies per request}
+\li{\strong{Date Format}: ISO 8601}
+\li{\strong{Text Format}: CommonMark Markdown for rich text fields}
+\li{\strong{API Version}: 2.0 (released March 2024)}
+\li{\strong{API Specification}: OpenAPI 3.0}
+}
+
+\p{For complete technical details, see \code{\startverb references/api_reference.md\stopverb}.}
+}
+}

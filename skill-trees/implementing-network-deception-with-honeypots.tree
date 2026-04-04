@@ -1,0 +1,103 @@
+\title{Implementing Network Deception With Honeypots}
+
+\taxon{skill}
+
+\tag{deception}
+
+\tag{honeypot}
+
+\tag{opencanary}
+
+\tag{cowrie}
+
+\tag{t-pot}
+
+\tag{detection}
+
+\tag{lateral-movement}
+
+\tag{network-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploy and manage network honeypots using OpenCanary, T-Pot, or Cowrie to detect unauthorized access, lateral movement, and attacker reconnaissance.}
+
+\subtree{
+\title{Implementing Network Deception with Honeypots}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying deception technology to detect lateral movement}
+\li{To create early warning indicators for network intrusion}
+\li{During security architecture design to add detection depth}
+\li{When monitoring for unauthorized internal scanning or credential theft}
+\li{To gather threat intelligence on attacker techniques and tools}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Linux server or VM for honeypot deployment (Ubuntu 22.04+ recommended)}
+\li{Python 3.8+ with pip for OpenCanary installation}
+\li{Docker for T-Pot or containerized deployment}
+\li{Network segment with appropriate VLAN configuration}
+\li{SIEM integration for alert forwarding (syslog, webhook, or file-based)}
+\li{Firewall rules allowing inbound connections to honeypot services}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Plan Deployment}: Select honeypot types and network placement strategy.}
+\li{\strong{Install Honeypot}: Deploy OpenCanary, Cowrie, or T-Pot on dedicated host.}
+\li{\strong{Configure Services}: Enable emulated services (SSH, HTTP, SMB, FTP, RDP).}
+\li{\strong{Set Up Alerting}: Configure log forwarding to SIEM and alert channels.}
+\li{\strong{Deploy Canary Tokens}: Place credential files, shares, and DNS entries.}
+\li{\strong{Monitor Interactions}: Analyze honeypot logs for attacker activity.}
+\li{\strong{Tune and Maintain}: Update configurations based on detection results.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| OpenCanary | Lightweight Python honeypot with modular service emulation |
+| Cowrie | Medium-interaction SSH/Telnet honeypot capturing commands |
+| T-Pot | Multi-honeypot platform with ELK stack visualization |
+| Canary Token | Tripwire credential or file that alerts when accessed |
+| Low-Interaction | Emulates services at protocol level without full OS |
+| High-Interaction | Full OS honeypot capturing complete attacker sessions |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| OpenCanary | Modular honeypot daemon with service emulation |
+| Cowrie | SSH/Telnet honeypot with session recording |
+| T-Pot | All-in-one multi-honeypot platform |
+| Dionaea | Malware-capturing honeypot for exploit detection |
+| Splunk/Elastic | SIEM for honeypot alert aggregation |
+\stopverb}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Alert: HONEYPOT-[SERVICE]-[DATE]-[SEQ]
+Honeypot: [Hostname/IP]
+Service: [SSH/HTTP/SMB/FTP/RDP]
+Source IP: [Attacker IP]
+Interaction: [Login attempt/Port scan/File access]
+Credentials Used: [Username:Password if applicable]
+Commands Executed: [For SSH honeypots]
+Risk Level: [Critical/High/Medium/Low]
+\stopverb}
+}
+}

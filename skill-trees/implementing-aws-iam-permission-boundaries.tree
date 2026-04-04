@@ -1,0 +1,289 @@
+\title{Implementing Aws Iam Permission Boundaries}
+
+\taxon{skill}
+
+\tag{aws}
+
+\tag{iam}
+
+\tag{permission-boundaries}
+
+\tag{least-privilege}
+
+\tag{delegation}
+
+\tag{cloud-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Configure IAM permission boundaries in AWS to delegate role creation to developers while enforcing maximum privilege limits set by the security team.}
+
+\subtree{
+\title{Implementing AWS IAM Permission Boundaries}
+\subtree{
+\title{Overview}
+\p{IAM permission boundaries are an advanced AWS feature that sets the maximum permissions an identity-based policy can grant to an IAM entity (user or role). They enable centralized security teams to safely delegate IAM role and policy creation to application developers without risking privilege escalation. The effective permissions of an entity are the intersection of its identity-based policies and its permission boundary -- even if an identity policy grants \code{\startverb AdministratorAccess\stopverb}, the permission boundary restricts it to only the allowed actions.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing aws iam permission boundaries capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{AWS account with IAM administrative access}
+\li{Understanding of AWS IAM policy language (JSON)}
+\li{AWS CLI v2 configured with appropriate credentials}
+\li{Terraform or CloudFormation for infrastructure-as-code deployment}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{How Permission Boundaries Work}
+\pre{\startverb
+Identity-Based Policy          Permission Boundary
+(What the role CAN do)    ∩    (What the role MAY do)
+        │                              │
+        └──────────┬───────────────────┘
+                   │
+          Effective Permissions
+    (Only actions in BOTH policies)
+\stopverb}
+}
+
+\subtree{
+\title{Policy Evaluation Logic}
+\p{AWS evaluates permissions in this order:}
+
+\ol{
+\li{\strong{Explicit Deny} in any policy - always wins}
+\li{\strong{Organizations SCP} - sets org-wide maximum}
+\li{\strong{Permission Boundary} - sets entity-level maximum}
+\li{\strong{Identity-Based Policy} - grants actual permissions}
+\li{\strong{Resource-Based Policy} - cross-account access (evaluated separately)}
+}
+
+\p{The entity can only perform an action if ALL applicable policy types allow it.}
+}
+
+\subtree{
+\title{Key Use Cases}
+\pre{\startverb
+| Use Case | Description |
+|----------|-------------|
+| Developer Delegation | Allow devs to create IAM roles without escalating beyond their boundary |
+| Sandbox Isolation | Limit what roles can do in sandbox/dev accounts |
+| Multi-Tenant Workloads | Ensure tenant-specific roles cannot access other tenants' resources |
+| CI/CD Pipeline Roles | Restrict automation roles to specific services |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Define the Permission Boundary Policy}
+\p{Create a managed policy that defines the maximum allowed permissions:}
+
+\pre{\startverb
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowedServices",
+            "Effect": "Allow",
+            "Action": [
+                "s3:*",
+                "dynamodb:*",
+                "lambda:*",
+                "logs:*",
+                "cloudwatch:*",
+                "sqs:*",
+                "sns:*",
+                "events:*",
+                "states:*",
+                "xray:*",
+                "ec2:Describe*",
+                "ec2:CreateTags",
+                "sts:AssumeRole",
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+                "kms:DescribeKey",
+                "secretsmanager:GetSecretValue"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "AllowIAMPassRole",
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": "arn:aws:iam::*:role/app-*",
+            "Condition": {
+                "StringEquals": {
+                    "iam:PassedToService": [
+                        "lambda.amazonaws.com",
+                        "states.amazonaws.com"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "DenyBoundaryDeletion",
+            "Effect": "Deny",
+            "Action": [
+                "iam:DeletePolicy",
+                "iam:DeletePolicyVersion",
+                "iam:CreatePolicyVersion"
+            ],
+            "Resource": "arn:aws:iam::*:policy/DeveloperBoundary"
+        },
+        {
+            "Sid": "DenyBoundaryRemoval",
+            "Effect": "Deny",
+            "Action": [
+                "iam:DeleteUserPermissionsBoundary",
+                "iam:DeleteRolePermissionsBoundary"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Create the Developer Delegation Policy}
+\p{Grant developers the ability to create IAM roles, but only with the boundary attached:}
+
+\pre{\startverb
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowCreateRoleWithBoundary",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy"
+            ],
+            "Resource": "arn:aws:iam::*:role/app-*",
+            "Condition": {
+                "StringEquals": {
+                    "iam:PermissionsBoundary": "arn:aws:iam::*:policy/DeveloperBoundary"
+                }
+            }
+        },
+        {
+            "Sid": "AllowCreatePolicyScoped",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreatePolicy",
+                "iam:DeletePolicy",
+                "iam:CreatePolicyVersion",
+                "iam:DeletePolicyVersion"
+            ],
+            "Resource": "arn:aws:iam::*:policy/app-*"
+        },
+        {
+            "Sid": "AllowViewIAM",
+            "Effect": "Allow",
+            "Action": [
+                "iam:Get*",
+                "iam:List*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Attach the Boundary}
+\pre{\startverb
+# Create the boundary policy
+aws iam create-policy \
+    --policy-name DeveloperBoundary \
+    --policy-document file://developer-boundary.json
+
+# Attach boundary to an existing role
+aws iam put-role-permissions-boundary \
+    --role-name developer-role \
+    --permissions-boundary arn:aws:iam::123456789012:policy/DeveloperBoundary
+
+# Create a new role with boundary
+aws iam create-role \
+    --role-name app-lambda-executor \
+    --assume-role-policy-document file://trust-policy.json \
+    --permissions-boundary arn:aws:iam::123456789012:policy/DeveloperBoundary
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Prevent Privilege Escalation}
+\p{The boundary must include deny statements to prevent developers from:}
+
+\ul{
+\li{Removing the boundary from their own roles}
+\li{Modifying the boundary policy itself}
+\li{Creating roles without the boundary attached}
+\li{Accessing IAM services to escalate privileges}
+}
+}
+
+\subtree{
+\title{Step 5: Deploy with Terraform}
+\pre{\startverb
+resource "aws_iam_policy" "developer_boundary" {
+  name   = "DeveloperBoundary"
+  path   = "/"
+  policy = file("${path.module}/policies/developer-boundary.json")
+}
+
+resource "aws_iam_role" "app_role" {
+  name                 = "app-lambda-executor"
+  assume_role_policy   = data.aws_iam_policy_document.lambda_trust.json
+  permissions_boundary = aws_iam_policy.developer_boundary.arn
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] Permission boundary policy created and reviewed by security team}
+\li{[ ] Boundary includes deny statements preventing self-modification}
+\li{[ ] Developer delegation policy requires boundary on all new roles}
+\li{[ ] Role naming convention enforced (e.g., \code{\startverb app-*\stopverb} prefix)}
+\li{[ ] Developers tested creating roles with and without boundary (should fail without)}
+\li{[ ] Privilege escalation paths tested and blocked}
+\li{[ ] CloudTrail logging enabled for IAM API calls}
+\li{[ ] Boundary policy versioned in source control}
+\li{[ ] Automated tests validate boundary effectiveness}
+\li{[ ] Documentation provided to development teams}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[AWS IAM Permission Boundaries Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)}
+\li{[When and Where to Use Permission Boundaries - AWS Security Blog](https://aws.amazon.com/blogs/security/when-and-where-to-use-iam-permissions-boundaries/)}
+\li{[AWS Example Permission Boundary - GitHub](https://github.com/aws-samples/example-permissions-boundary)}
+\li{[AWS Prescriptive Guidance - Creating Permission Boundaries](https://docs.aws.amazon.com/prescriptive-guidance/latest/transitioning-to-multiple-aws-accounts/creating-a-permissions-boundary.html)}
+}
+}
+}

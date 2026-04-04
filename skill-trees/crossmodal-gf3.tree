@@ -1,0 +1,252 @@
+\title{Crossmodal Gf3}
+
+\taxon{skill}
+
+\meta{description}{"GF(3) → {Tactile, Auditory, Haptic} universal bridge for accessible color perception"}
+
+\subtree{
+\title{Crossmodal GF(3) Skill}
+\blockquote{*"Color is not inherently visual. Color is INFORMATION that can be rendered through any sensory modality."*}
+
+\subtree{
+\title{The Universal Bridge}
+\p{This skill treats GF(3) trits as \strong{modality-independent} semantic units:}
+
+\pre{\startverb
+| GF(3) Trit | Visual | Tactile | Auditory | Haptic |
+|------------|--------|---------|----------|--------|
+| MINUS (−1) | Cool hues | Rough/Bumpy | Low pitch | Left/Down |
+| ERGODIC (0) | Neutral | Smooth | Mid pitch | Center |
+| PLUS (+1) | Warm hues | Ridged | High pitch | Right/Up |
+\stopverb}
+}
+
+\subtree{
+\title{Key Insight}
+\p{\strong{Visual perception is ALSO a projection from GF(3) space.}}
+
+\p{The sighted user doesn't have "the real thing" — they have π_visual(GF3). The blind user has π_tactile(GF3), π_auditory(GF3), π_haptic(GF3).}
+
+\p{All projections are \strong{isomorphic} under GF(3) conservation:}
+
+\pre{\startverb
+π_visual(W) ≅ π_tactile(W) ≅ π_auditory(W) ≅ π_haptic(W)
+\stopverb}
+}
+
+\subtree{
+\title{Implementation Files}
+\p{From Gay.jl:}
+
+\ol{
+\li{\strong{world_tactile_color.jl} — Core tactile/auditory/haptic types}
+\li{\strong{world_accessible_tensor.jl} — A ⊗ G ⊗ M ⊗ T tensor product}
+\li{\strong{world_accessible_interrupt_operad.jl} — TOAD × Amp × Knight Tour accessibility}
+}
+}
+
+\subtree{
+\title{Tactile: 3×3 Braille Extension}
+\p{Standard Braille is 2×3 (6 dots). We extend to 3×3 (9 dots):}
+
+\pre{\startverb
+┌───┬───┬───┐
+│ 1 │ 2 │ 3 │  ← Hue sector (warm/neutral/cool)
+├───┼───┼───┤
+│ 4 │ 5 │ 6 │  ← Saturation level
+├───┼───┼───┤
+│ 7 │ 8 │ 9 │  ← Lightness level
+└───┴───┴───┘
+\stopverb}
+
+\p{Dot positions encode trits:}
+
+\ul{
+\li{Left dot: MINUS (−1)}
+\li{Center dot: ERGODIC (0)}
+\li{Right dot: PLUS (+1)}
+}
+
+\subtree{
+\title{Example: Warm, Vivid, Light Color}
+\pre{\startverb
+○ ○ ⬤   ← Hue: PLUS (warm)
+○ ○ ⬤   ← Saturation: PLUS (vivid)
+○ ○ ⬤   ← Lightness: PLUS (light)
+
+Compact: +++
+\stopverb}
+}
+}
+
+\subtree{
+\title{Auditory: 3-Tone Chords}
+\p{Each color becomes a 3-frequency chord:}
+
+\pre{\startverb
+const BASE_FREQ = 440.0  # A4
+
+function trit_to_freq_ratio(t::Int)::Float64
+    t == -1 && return 0.84   # Minor third
+    t == 0 && return 1.0     # Unison
+    t == 1 && return 1.26    # Major third
+end
+
+function color_to_chord(hue_trit, sat_trit, light_trit)
+    (
+        BASE_FREQ * trit_to_freq_ratio(hue_trit),
+        BASE_FREQ * 1.5 * trit_to_freq_ratio(sat_trit),   # Fifth
+        BASE_FREQ * 2.0 * trit_to_freq_ratio(light_trit)  # Octave
+    )
+end
+\stopverb}
+
+\subtree{
+\title{Sox Sonification}
+\pre{\startverb
+# Play a single color as chord
+play -n synth 0.25 sine 440.0 : synth 0.25 sine 660.0 : synth 0.25 sine 880.0 remix - fade 0 0.25 0.05
+\stopverb}
+}
+}
+
+\subtree{
+\title{Haptic: 3D Position + Vibration}
+\pre{\startverb
+struct HapticPosition
+    x::Float64  # Hue: -1 (left) to +1 (right)
+    y::Float64  # Saturation: -1 (back) to +1 (front)
+    z::Float64  # Lightness: -1 (down) to +1 (up)
+    vibration_pattern::Symbol  # :pulse, :smooth, :buzz
+    intensity::Float64  # 0.0 to 1.0
+end
+\stopverb}
+}
+
+\subtree{
+\title{Möbius Invertibility}
+\p{Path navigability analysis using μ(path_length):}
+
+\pre{\startverb
+| μ ≠ 0 | GEODESIC | Smooth bidirectional tactile navigation |
+| μ = 0 | TANGLED | Add branching markers at squared prime positions |
+\stopverb}
+
+\subtree{
+\title{I-Thou Framework}
+\ul{
+\li{\strong{Geodesic paths}: Treat blind user as capable of autonomous navigation (I-Thou)}
+\li{\strong{Tangled paths}: Restructure the path, not the user (I-Thou), vs "accommodate" (I-It)}
+}
+}
+}
+
+\subtree{
+\title{μ(3) = -1: Action-Perception Duality}
+\p{The Möbius value μ(3) = -1 creates:}
+
+\pre{\startverb
+Action:     {−, ○, +}   (visual domain)
+Perception: {+, ○, −}   (tactile domain, Möbius-inverted)
+\stopverb}
+
+\p{Double inversion returns to original: μ ∘ μ = id.}
+}
+
+\subtree{
+\title{GF(3) Triadic Integration}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| catsharp-sonification | 0 | Auditory output |
+| **crossmodal-gf3** | **0** | **Universal bridge** |
+| sense | 0 | Content extraction |
+\stopverb}
+
+\p{Conservation: 0 + 0 + 0 = 0 ✓ (all ERGODIC coordinators)}
+
+\p{For generators/validators:}
+
+\pre{\startverb
+elevenlabs-acset (-1) ⊗ crossmodal-gf3 (0) ⊗ gesture-hypergestures (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Generate accessible color palette (Julia)
+julia -e 'using Gay; Gay.gay_seed!(137508); colors = [Gay.next_color() for _ in 1:6]'
+
+# Sonify via catsharp-sonification
+bb -e '(sonify-palette ["#DD3C3C" "#3CDD6B" "#9A3CDD"])'
+
+# Extract content accessibly
+just sense-extract reference/videos/lecture.mkv
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{catsharp-sonification} — Hue → Pitch Class → Waveform}
+\li{\strong{sense} — Video → Subtitle + Diagram + Skill Index}
+\li{\strong{buberian-relations} — I-Thou / I-It / We formalization}
+\li{\strong{gesture-hypergestures} — Continuous curves for topology teaching}
+\li{\strong{moebius-inversion} — Path invertibility analysis}
+\li{\strong{gay-julia} — Wide-gamut color with SplitMix64}
+}
+}
+
+\subtree{
+\title{Theorem}
+\p{\strong{Accessible Worlds Theorem}:}
+
+\p{For any world W with visual representation V:}
+
+\pre{\startverb
+π_visual(W) ≅ π_tactile(W) ≅ π_auditory(W) ≅ π_haptic(W)
+\stopverb}
+
+\p{where all projections π preserve GF(3) conservation:}
+
+\pre{\startverb
+∀ modality m: Σ(trits(π_m(W))) ≡ 0 (mod 3)
+\stopverb}
+
+\p{*"The most unlike skills are the most essential - they bridge what others cannot reach."*}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 6. Layering}
+\p{\strong{Concepts}: layered data, metadata, provenance, units}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+crossmodal-gf3 (+) + SDF.Ch6 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch4: Pattern Matching}
+\li{Ch10: Adventure Game Example}
+\li{Ch7: Propagators}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Layering adds metadata. This skill tracks provenance or annotations.}
+}
+}
+}

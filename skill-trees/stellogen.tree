@@ -1,0 +1,359 @@
+\title{Stellogen}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Stellogen Skill}
+
+\subtree{
+\title{Stellogen Skill}
+\p{\strong{Trit}: 0 (ERGODIC - logic-agnostic mediation) \strong{Source}: [engboris/stellogen](https://github.com/engboris/stellogen) + [bmorphism/stellogen](https://github.com/bmorphism/stellogen) \strong{License}: MIT}
+
+\subtree{
+\title{Overview}
+\p{\strong{Stellogen} is a logic-agnostic programming language based on term unification, designed from Girard's transcendental syntax. It provides:}
+
+\ol{
+\li{\strong{Constellations} - Logic programs as elementary computation bricks}
+\li{\strong{Galaxies} - Structured collections of constellations}
+\li{\strong{Interaction Nets} - Lafont-style parallel graph rewriting}
+\li{\strong{Proof-as-Program} - Coq-like tactics without fixed type system}
+}
+}
+
+\subtree{
+\title{Key Characteristics}
+\ul{
+\li{\strong{Logic-agnostic typing}: No primitive types; uses assert-like expressions}
+\li{\strong{Term unification}: Everything reduces to unification}
+\li{\strong{Multi-paradigm}: Logic, functional, imperative, object-oriented}
+}
+}
+
+\subtree{
+\title{Syntax}
+\subtree{
+\title{Polarized Rays}
+\pre{\startverb
+' Positive ray (output/producer)
++output(term)
+
+' Negative ray (input/consumer)  
+-input(term)
+
+' Constellation (logic program)
+spec nat =
+  -i(z) ok;
+  -i(s(X)) +i(X).
+\stopverb}
+}
+
+\subtree{
+\title{Galaxies (Structured Constellations)}
+\pre{\startverb
+fsm = galaxy
+  initial = -i(W) +state(W q0).
+  final = -state(e qf) accept.
+  transitions =
+    -state(0:W q0) +state(W q1);
+    -state(1:W q1) +state(W q0).
+end
+\stopverb}
+}
+
+\subtree{
+\title{Process Execution}
+\pre{\startverb
+show process #input. #galaxy. &kill. end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\p{Stellogen rays map naturally to GF(3) trits:}
+
+\pre{\startverb
+| Ray | Trit | Semantic |
+|-----|------|----------|
+| `+ray(X)` | +1 | Production/Generation |
+| `-ray(X)` | -1 | Consumption/Verification |
+| `ok` / neutral | 0 | Balance/Success |
+\stopverb}
+
+\subtree{
+\title{Conservation in Constellations}
+\pre{\startverb
+' GF(3) conserved: (-1) + (+1) = 0
+spec balanced =
+  -input(X) +output(f(X)).
+
+' Verification via interaction
+show process #data. #balanced. &kill. end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quantum Operads Extension}
+\p{From [bmorphism/stellogen-quantum-operads](https://github.com/bmorphism/stellogen-quantum-operads):}
+
+\pre{\startverb
+' Operad structure
+(:= (operad-structure P) {
+  [(+arity P N) (== N (num-inputs P))]
+  [(+composition P Q R) (== R (compose-ops P Q))]
+  [(+associativity P Q R) 
+    (== (compose-ops P (compose-ops Q R)) 
+        (compose-ops (compose-ops P Q) R))]
+})
+
+' ZX-calculus spiders
+(:= (qubit-op Type Phase) {
+  [(+z-spider Phase) (== Type z-op)]
+  [(+x-spider Phase) (== Type x-op)]
+  [(+hadamard) (== Type h-op)]
+})
+
+' Bell state preparation
+(:= bell-state-prep {
+  [(+bell-prep) (== Circuit
+    (compose-ops
+      (h-op 0)
+      (cnot 0 1)))]
+})
+\stopverb}
+}
+
+\subtree{
+\title{Interaction Nets Foundation}
+\p{Stellogen implements Lafont's interaction nets:}
+
+\pre{\startverb
+    ┌───────┐
+    │ Agent │ ← Principal port
+    └───┬───┘
+   ╱    │    ╲
+  p₁   p₂   p₃  ← Auxiliary ports
+\stopverb}
+
+\p{\strong{Interaction rules}: When two principal ports connect, rewrite fires.}
+
+\pre{\startverb
+' Addition via interaction
+spec add =
+  -add(z Y) +result(Y);
+  -add(s(X) Y) +add(X s(Y)).
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\subtree{
+\title{Via Nix}
+\pre{\startverb
+cd /path/to/stellogen
+nix develop
+dune build
+\stopverb}
+}
+
+\subtree{
+\title{Via OPAM}
+\pre{\startverb
+opam pin tsyntax https://github.com/engboris/stellogen.git
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run stellogen file
+dune exec sgen -- examples/nat.sg
+
+# Interactive mode
+dune exec sgen -- --interactive
+
+# Just commands (if available)
+just stellogen-run file.sg
+just stellogen-test
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Lambda Calculus}
+\pre{\startverb
+' Church encoding
+spec church =
+  -lam(V B A) +app(lam(V B) A);
+  -app(lam(V B) A) +subst(V A B).
+
+zero = +lam(f +lam(x +var(x))).
+succ = +lam(n +lam(f +lam(x +app(var(f) +app(app(var(n) var(f)) var(x)))))).
+\stopverb}
+}
+
+\subtree{
+\title{Linear Lambda Calculus}
+\pre{\startverb
+' Linear logic: each variable used exactly once
+spec linear_lambda =
+  -lam!(V B) +lin_abs(V B);
+  -app!(F A) +lin_app(F A);
+  -var!(X) +lin_var(X).
+\stopverb}
+}
+
+\subtree{
+\title{Turing Machine}
+\pre{\startverb
+tm = galaxy
+  tape = -read(S Pos) +write(S' Pos' State').
+  halt = -state(halt) done.
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Gay.jl}
+\p{From [GAY.md](https://github.com/bmorphism/stellogen/blob/main/GAY.md):}
+
+\pre{\startverb
+using Gay
+
+# Stellogen repo color
+gay_seed!(0x7d202e3bf2aafbb0)
+color = color_at(427)  # => #c22851
+
+# Verify SPI across stellogen examples
+chain = [next_color() for _ in 1:69]
+fp = reduce(⊻, [color_to_u64(c) for c in chain])
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+interaction-nets (-1) ⊗ stellogen (0) ⊗ operad-compose (+1) = 0 ✓
+bisimulation-game (-1) ⊗ stellogen (0) ⊗ gay-mcp (+1) = 0 ✓
+proofgeneral-narya (-1) ⊗ stellogen (0) ⊗ discopy (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Influences}
+\pre{\startverb
+| Source | Contribution |
+|--------|--------------|
+| Prolog/Datalog | Unification-based computation |
+| Smalltalk | Message-passing, minimalism |
+| Coq | Proof-as-program, tactics |
+| Scheme/Racket | Metaprogramming |
+| Girard | Transcendental syntax, linear logic |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Girard's Transcendental Syntax](https://girard.perso.math.cnrs.fr/trsy1.pdf)}
+\li{[Lafont's Interaction Nets (1990)](https://www.sciencedirect.com/science/article/pii/089054019090191H)}
+\li{[French Guide](https://tsguide.refl.fr/)}
+\li{[English Guide](https://tsguide.refl.fr/en/)}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb interaction-nets\stopverb} - Lafont's parallel λ-reduction}
+\li{\code{\startverb operad-compose\stopverb} - Colored operad composition}
+\li{\code{\startverb discopy\stopverb} - DisCoPy string diagrams}
+\li{\code{\startverb gay-mcp\stopverb} - Deterministic color generation}
+\li{\code{\startverb proofgeneral-narya\stopverb} - Proof assistant integration}
+}
+
+\p{\strong{Skill Name}: stellogen \strong{Type}: Logic-Agnostic Programming / Interaction Nets \strong{Trit}: 0 (ERGODIC - mediates between proof and computation) \strong{Repo Color}: #c22851 \strong{Status}: ✅ Available}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+stellogen (○) + SDF.Ch10 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch2: Domain-Specific Languages}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

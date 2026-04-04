@@ -1,0 +1,140 @@
+\title{Fp Check}
+
+\taxon{skill}
+
+\meta{description}{"Systematically verifies suspected security bugs to eliminate false positives. Produces TRUE POSITIVE or FALSE POSITIVE verdicts with documented evidence for each bug."}
+
+\subtree{
+\title{False Positive Check}
+\subtree{
+\title{When to Use}
+\ul{
+\li{"Is this bug real?" or "is this a true positive?"}
+\li{"Is this a false positive?" or "verify this finding"}
+\li{"Check if this vulnerability is exploitable"}
+\li{Any request to verify or validate a specific suspected bug}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Finding or hunting for bugs ("find bugs", "security analysis", "audit code")}
+\li{General code review for style, performance, or maintainability}
+\li{Feature development, refactoring, or non-security tasks}
+\li{When the user explicitly asks for a quick scan without verification}
+}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\p{If you catch yourself thinking any of these, STOP.}
+
+\pre{\startverb
+| Rationalization | Why It's Wrong | Required Action |
+|---|---|---|
+| "Rapid analysis of remaining bugs" | Every bug gets full verification | Return to task list, verify next bug through all phases |
+| "This pattern looks dangerous, so it's a vulnerability" | Pattern recognition is not analysis | Complete data flow tracing before any conclusion |
+| "Skipping full verification for efficiency" | No partial analysis allowed | Execute all steps per the chosen verification path |
+| "The code looks unsafe, reporting without tracing data flow" | Unsafe-looking code may have upstream validation | Trace the complete path from source to sink |
+| "Similar code was vulnerable elsewhere" | Each context has different validation, callers, and protections | Verify this specific instance independently |
+| "This is clearly critical" | LLMs are biased toward seeing bugs and overrating severity | Complete devil's advocate review; prove it with evidence |
+\stopverb}
+}
+
+\subtree{
+\title{Step 0: Understand the Claim and Context}
+\p{Before any analysis, restate the bug in your own words. If you cannot do this clearly, ask the user for clarification using AskUserQuestion. Half of false positives collapse at this step — the claim doesn't make coherent sense when restated precisely.}
+
+\p{Document:}
+
+\ul{
+\li{\strong{What is the exact vulnerability claim?} (e.g., "heap buffer overflow in \code{\startverb parse_header()\stopverb} when \code{\startverb content_length\stopverb} exceeds 4096")}
+\li{\strong{What is the alleged root cause?} (e.g., "missing bounds check before \code{\startverb memcpy\stopverb} at line 142")}
+\li{\strong{What is the supposed trigger?} (e.g., "attacker sends HTTP request with oversized Content-Length header")}
+\li{\strong{What is the claimed impact?} (e.g., "remote code execution via controlled heap corruption")}
+\li{\strong{What is the threat model?} What privilege level does this code run at? Is it sandboxed? What can the attacker already do before triggering this bug? (e.g., "unauthenticated remote attacker vs privileged local user"; "runs inside Chrome renderer sandbox" vs "runs as root with no sandbox")}
+\li{\strong{What is the bug class?} Classify the bug and consult [bug-class-verification.md]({baseDir}/references/bug-class-verification.md) for class-specific verification requirements that supplement the generic phases below.}
+\li{\strong{Execution context}: When and how is this code path reached during normal execution?}
+\li{\strong{Caller analysis}: What functions call this code and what input constraints do they impose?}
+\li{\strong{Architectural context}: Is this part of a larger security system with multiple protection layers?}
+\li{\strong{Historical context}: Any recent changes, known issues, or previous security reviews of this code area?}
+}
+}
+
+\subtree{
+\title{Route: Standard vs Deep Verification}
+\p{After Step 0, choose a verification path.}
+
+\subtree{
+\title{Standard Verification}
+\p{Use when ALL of these hold:}
+
+\ul{
+\li{Clear, specific vulnerability claim (not vague or ambiguous)}
+\li{Single component — no cross-component interaction in the bug path}
+\li{Well-understood bug class (buffer overflow, SQL injection, XSS, integer overflow, etc.)}
+\li{No concurrency or async involved in the trigger}
+\li{Straightforward data flow from source to sink}
+}
+
+\p{Follow [standard-verification.md]({baseDir}/references/standard-verification.md). No task creation — work through the linear checklist, documenting findings inline.}
+}
+
+\subtree{
+\title{Deep Verification}
+\p{Use when ANY of these hold:}
+
+\ul{
+\li{Ambiguous claim that could be interpreted multiple ways}
+\li{Cross-component bug path (data flows through 3+ modules or services)}
+\li{Race conditions, TOCTOU, or concurrency in the trigger mechanism}
+\li{Logic bugs without a clear spec to verify against}
+\li{Standard verification was inconclusive or escalated}
+\li{User explicitly requests full verification}
+}
+
+\p{Follow [deep-verification.md]({baseDir}/references/deep-verification.md). Create the full task dependency graph and execute phases with the plugin's agents.}
+}
+
+\subtree{
+\title{Default}
+\p{Start with standard. Standard verification has two built-in escalation checkpoints that route to deep when complexity exceeds the linear checklist.}
+}
+}
+
+\subtree{
+\title{Batch Triage}
+\p{When verifying multiple bugs at once:}
+
+\ol{
+\li{Run Step 0 for all bugs first — restating each claim often collapses obvious false positives immediately}
+\li{Route each bug independently (some may be standard, others deep)}
+\li{Process all standard-routed bugs first, then deep-routed bugs}
+\li{After all bugs are verified, check for \strong{exploit chains} — findings that individually failed gate review may combine to form a viable attack}
+}
+}
+
+\subtree{
+\title{Final Summary}
+\p{After processing ALL suspected bugs, provide:}
+
+\ol{
+\li{\strong{Counts}: X TRUE POSITIVES, Y FALSE POSITIVES}
+\li{\strong{TRUE POSITIVE list}: Each with brief vulnerability description}
+\li{\strong{FALSE POSITIVE list}: Each with brief reason for rejection}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Standard Verification]({baseDir}/references/standard-verification.md) — Linear single-pass checklist for straightforward bugs}
+\li{[Deep Verification]({baseDir}/references/deep-verification.md) — Full task-based orchestration for complex bugs}
+\li{[Gate Reviews]({baseDir}/references/gate-reviews.md) — Six mandatory gates and verdict format}
+\li{[Bug-Class Verification]({baseDir}/references/bug-class-verification.md) — Class-specific verification requirements for memory corruption, logic bugs, race conditions, integer issues, crypto, injection, info disclosure, DoS, and deserialization}
+\li{[False Positive Patterns]({baseDir}/references/false-positive-patterns.md) — 13-item checklist and red flags for common false positive patterns}
+\li{[Evidence Templates]({baseDir}/references/evidence-templates.md) — Documentation templates for data flow, mathematical proofs, attacker control, and devil's advocate reviews}
+}
+}
+}

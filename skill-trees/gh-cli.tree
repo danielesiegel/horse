@@ -1,0 +1,51 @@
+\title{Gh Cli}
+
+\taxon{skill}
+
+\meta{description}{Enforces authenticated gh CLI workflows over unauthenticated curl/WebFetch patterns. Use when working with GitHub URLs, API access, pull requests, or issues.}
+
+\subtree{
+\title{gh-cli}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Working with GitHub repositories, pull requests, issues, releases, or raw file URLs.}
+\li{You need authenticated access to private repositories or higher API rate limits.}
+\li{You are about to use \code{\startverb curl\stopverb}, \code{\startverb wget\stopverb}, or unauthenticated web fetches against GitHub.}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{The target is not GitHub.}
+\li{Plain local git operations already solve the task.}
+}
+}
+
+\subtree{
+\title{Guidance}
+\p{Prefer the authenticated \code{\startverb gh\stopverb} CLI over raw HTTP fetches for GitHub content. In particular:}
+
+\ul{
+\li{Prefer \code{\startverb gh repo view\stopverb}, \code{\startverb gh pr view\stopverb}, \code{\startverb gh pr list\stopverb}, \code{\startverb gh issue view\stopverb}, and \code{\startverb gh api\stopverb} over unauthenticated \code{\startverb curl\stopverb} or \code{\startverb wget\stopverb}.}
+\li{Prefer cloning a repository and reading files locally over fetching \code{\startverb raw.githubusercontent.com\stopverb} blobs directly.}
+\li{Avoid using GitHub API \code{\startverb /contents/\stopverb} endpoints as a substitute for cloning and reading repository files.}
+}
+
+\p{Examples:}
+
+\pre{\startverb
+gh repo view owner/repo
+gh pr view 123 --repo owner/repo
+gh api repos/owner/repo/pulls
+\stopverb}
+
+\p{For the original Claude plugin implementation, see:}
+
+\ul{
+\li{\code{\startverb plugins/gh-cli/README.md\stopverb}}
+\li{\code{\startverb plugins/gh-cli/hooks/\stopverb}}
+}
+}
+}

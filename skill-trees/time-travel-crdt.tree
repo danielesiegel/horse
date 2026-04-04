@@ -1,0 +1,340 @@
+\title{Time Travel Crdt}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'Time Travel CRDT Skill'}
+
+\subtree{
+\title{Time Travel CRDT Skill}
+\blockquote{*"Time is of the essence — but the essence is not time."* — Kleppmann & Gentle}
+
+\p{CRDTs enable time travel: branch, merge, undo, redo without central coordination. GF(3) coloring for causal consistency.}
+
+\subtree{
+\title{Overview}
+\p{Time travel in collaborative systems means:}
+
+\ol{
+\li{\strong{Branching}: Diverge from any point in history}
+\li{\strong{Merging}: Automatically reconcile divergent branches}
+\li{\strong{Undo/Redo}: Navigate the causal graph}
+\li{\strong{Replay}: Reconstruct any historical state}
+}
+
+\p{This skill connects Diamond Types, Automerge, Eg-walker, and Janus reversible computing.}
+}
+
+\subtree{
+\title{Core Algorithms}
+\subtree{
+\title{Eg-walker (Gentle & Kleppmann 2025) [ERGODIC: 0]}
+\p{The \strong{Event Graph Walker} combines the best of OT and CRDTs:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         EG-WALKER ARCHITECTURE                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   Operation Log          Event Graph              Current State              │
+│   ┌──────────┐          ┌───────────┐            ┌───────────┐              │
+│   │ Insert A │──────────│  A ───┐   │            │           │              │
+│   │ Insert B │          │       ▼   │            │  "ABCD"   │              │
+│   │ Delete C │──────────│  B ◄── D  │────────────│           │              │
+│   │ Insert D │          │       ▲   │            └───────────┘              │
+│   └──────────┘          │  C ───┘   │                                       │
+│                         └───────────┘                                       │
+│                                                                              │
+│   Time Complexity:                                                           │
+│   - Insert/Delete: O(log n) amortized                                       │
+│   - Merge: O(n) worst case, O(1) common case                                │
+│   - Memory: O(n) steady state (vs O(n²) for YATA)                           │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+\stopverb}
+
+\p{\strong{Key insight}: Walk the event graph to compute document state, caching intermediate results.}
+}
+
+\subtree{
+\title{Diamond Types [PLUS: +1]}
+\p{bmorphism's \code{\startverb eg-walker-reference\stopverb} is a TypeScript reimplementation of Diamond Types:}
+
+\pre{\startverb
+// Simplified Eg-walker from bmorphism/eg-walker-reference
+interface Op {
+  id: OpId;           // (agent, seq) tuple
+  origin: OpId | null; // causal parent
+  content: string;    // inserted content
+  deleted: boolean;   // tombstone flag
+}
+
+function merge(doc: Doc, remoteOps: Op[]): Doc {
+  // Walk the event graph, applying ops in causal order
+  for (const op of topoSort(remoteOps)) {
+    if (op.deleted) {
+      doc = deleteAt(doc, findPosition(doc, op.id));
+    } else {
+      doc = insertAt(doc, findPosition(doc, op.origin), op.content);
+    }
+  }
+  return doc;
+}
+\stopverb}
+
+\p{\strong{Performance} (EuroSys 2025):}
+
+\ul{
+\li{10x less memory than Automerge}
+\li{100x faster document loading}
+\li{Competitive merge performance}
+}
+}
+
+\subtree{
+\title{Automerge [MINUS: -1]}
+\p{The original CRDT for JSON-like documents:}
+
+\pre{\startverb
+import * as Automerge from '@automerge/automerge'
+
+// Create and modify
+let doc1 = Automerge.init()
+doc1 = Automerge.change(doc1, 'Add title', doc => {
+  doc.title = "Time Travel"
+})
+
+// Fork (branch)
+let doc2 = Automerge.clone(doc1)
+doc2 = Automerge.change(doc2, 'Edit on branch', doc => {
+  doc.title = "Time Travel CRDTs"
+})
+
+// Merge (time travel reconciliation)
+doc1 = Automerge.merge(doc1, doc2)
+\stopverb}
+}
+
+\subtree{
+\title{Yjs [MINUS: -1]}
+\p{Fast CRDT with YATA algorithm:}
+
+\pre{\startverb
+import * as Y from 'yjs'
+
+const ydoc = new Y.Doc()
+const ytext = ydoc.getText('content')
+
+// Observe changes
+ytext.observe(event => {
+  console.log('Delta:', event.delta)
+})
+
+// Time travel via undo manager
+const undoManager = new Y.UndoManager(ytext)
+undoManager.undo()
+undoManager.redo()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Janus Reversible Computing [ERGODIC: 0]}
+\p{True time travel: run programs backwards.}
+
+\pre{\startverb
+// Janus: reversible Fibonacci
+procedure fib(int n, int x1, int x2)
+  if n = 0 then
+    x1 += x2
+    x1 <=> x2
+    n += 1
+  else
+    n -= 1
+    x1 <=> x2
+    x1 -= x2
+    call fib(n, x1, x2)
+  fi x1 = x2
+
+// Run forward: fib(10, 1, 0) → (1, 55)
+// Run backward: fib(10, 1, 55) → (1, 0)
+\stopverb}
+
+\p{\strong{Key insight}: Every operation has an inverse; no information is lost.}
+}
+
+\subtree{
+\title{GF(3) Causal Consistency}
+\p{Color operations by their causal role:}
+
+\pre{\startverb
+| Trit | Color | Operation Type | Role |
+|------|-------|----------------|------|
+| +1 | Red | **Insert** | Creates content |
+| 0 | Green | **Move/Retain** | Preserves structure |
+| -1 | Blue | **Delete** | Removes content (tombstone) |
+\stopverb}
+
+\p{\strong{Conservation Law}: A well-formed edit sequence maintains:}
+
+\pre{\startverb
+Σ(trits) ≡ 0 (mod 3)  ⟺  balanced edit
+\stopverb}
+
+\p{Example:}
+
+\pre{\startverb
+Insert "hello" (+1)
+Insert "world" (+1)
+Delete "world" (-1)
+Retain structure (0)
+───────────────────
+Sum: +1 +1 -1 +0 = +1 ≢ 0 (mod 3) → unbalanced!
+
+Fix: Add one more delete or two inserts to balance.
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Unworld}
+\p{The \code{\startverb unworld\stopverb} skill replaces time with derivation chains:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    UNWORLD ↔ CRDT BRIDGE                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   DerivationChain                    CRDT Event Graph                        │
+│   ┌─────────────┐                   ┌─────────────────┐                     │
+│   │ seed_0      │                   │ (agent_0, 0)    │                     │
+│   │    ↓        │                   │      ↓          │                     │
+│   │ seed_1 = f(seed_0, trit_0)      │ (agent_0, 1) ◄──│──┐                  │
+│   │    ↓        │    ≅              │      ↓          │  │                  │
+│   │ seed_2 = f(seed_1, trit_1)      │ (agent_1, 0) ───│──┘                  │
+│   │    ↓        │                   │      ↓          │                     │
+│   │ ...         │                   │ merge point     │                     │
+│   └─────────────┘                   └─────────────────┘                     │
+│                                                                              │
+│   No time! Only derivation.         Causal order from vector clocks.        │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+\stopverb}
+
+\p{\strong{Correspondence}:}
+
+\ul{
+\li{\code{\startverb seed\stopverb} ↔ \code{\startverb OpId\stopverb}}
+\li{\code{\startverb trit\stopverb} ↔ operation type (insert/delete/retain)}
+\li{\code{\startverb derivation\stopverb} ↔ causal dependency}
+}
+}
+
+\subtree{
+\title{bmorphism Interactome}
+\p{Relevant bmorphism repositories:}
+
+\pre{\startverb
+| Repo | Description | Role |
+|------|-------------|------|
+| `eg-walker-reference` | TypeScript Eg-walker | Reference implementation |
+| `ewig` | Eternal text editor | Immutable data structures |
+| `Gay.jl` | Splittable PRNG | Deterministic colors for ops |
+| `duck` | DuckDB extensions | Time-travel queries |
+\stopverb}
+
+\p{\strong{Cobordism}: bmorphism connects Diamond Types (josephg) with Gay.jl coloring for visual debugging of CRDT merge states.}
+}
+
+\subtree{
+\title{Time Travel Queries (DuckDB)}
+\pre{\startverb
+-- Create temporal versioning table
+CREATE TABLE document_history (
+    id UUID,
+    content TEXT,
+    op_type VARCHAR,  -- 'insert', 'delete', 'retain'
+    trit INTEGER,     -- GF(3) color
+    valid_from TIMESTAMP,
+    valid_to TIMESTAMP,
+    agent_id VARCHAR,
+    seq INTEGER
+);
+
+-- Time travel query: document state at specific time
+SELECT content
+FROM document_history
+WHERE valid_from <= '2025-01-01 12:00:00'
+  AND (valid_to IS NULL OR valid_to > '2025-01-01 12:00:00')
+ORDER BY seq;
+
+-- GF(3) balance check
+SELECT 
+    SUM(trit) as trit_sum,
+    SUM(trit) % 3 as mod3,
+    CASE WHEN SUM(trit) % 3 = 0 THEN '✓ Balanced' ELSE '✗ Drift' END as status
+FROM document_history
+WHERE agent_id = 'agent_0';
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Diamond Types (Rust)
+cargo run --example edit
+
+# Eg-walker reference (TypeScript)
+cd eg-walker-reference && npm test
+
+# Automerge
+npx automerge-repo-demo
+
+# Janus reversible interpreter
+janus run program.jan --reverse
+
+# DuckDB time travel
+duckdb -c "SELECT * FROM document_history AS OF '2025-01-01';"
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Triads}
+\pre{\startverb
+# Time Travel Core
+automerge (-1) ⊗ eg-walker (0) ⊗ diamond-types (+1) = 0 ✓
+
+# Reversible Computing
+janus (-1) ⊗ unworld (0) ⊗ gay-mcp (+1) = 0 ✓
+
+# Temporal Versioning
+temporal-coalgebra (-1) ⊗ time-travel-crdt (0) ⊗ koopman-generator (+1) = 0 ✓
+
+# DuckDB Bridge
+polyglot-spi (-1) ⊗ time-travel-crdt (0) ⊗ gay-mcp (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Eg-walker Paper (EuroSys 2025)](https://arxiv.org/abs/2409.14252)}
+\li{[Diamond Types](https://github.com/josephg/diamond-types) - 1.7k★}
+\li{[Automerge](https://automerge.org/)}
+\li{[Yjs](https://yjs.dev/)}
+\li{[Janus Reversible Language](https://topps.diku.dk/pirc/janus-playground/)}
+\li{[Martin Kleppmann's Blog](https://martin.kleppmann.com/)}
+\li{[bmorphism/eg-walker-reference](https://github.com/bmorphism/eg-walker-reference)}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb unworld\stopverb} - Derivation chains replacing time}
+\li{\code{\startverb temporal-coalgebra\stopverb} - Coalgebraic observation of streams}
+\li{\code{\startverb duckdb-temporal-versioning\stopverb} - SQL time travel}
+\li{\code{\startverb reversible-computing\stopverb} - Janus and time-symmetric computation}
+}
+}
+}

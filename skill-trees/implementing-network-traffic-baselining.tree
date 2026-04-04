@@ -1,0 +1,54 @@
+\title{Implementing Network Traffic Baselining}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Build network traffic baselines from NetFlow/IPFIX data using Python pandas for statistical analysis, z-score anomaly detection, and hourly/daily traffic pattern profiling}
+
+\subtree{
+\title{Implementing Network Traffic Baselining}
+\subtree{
+\title{Overview}
+\p{Network traffic baselining establishes normal communication patterns by analyzing historical NetFlow/IPFIX data to create statistical profiles of expected behavior. This skill uses Python pandas to compute hourly and daily traffic distributions, per-host byte/packet counts, protocol ratios, and top-N talker profiles. Anomalies are detected using z-score thresholds and IQR (interquartile range) outlier methods, enabling SOC analysts to identify deviations such as data exfiltration spikes, beaconing patterns, and unusual port usage.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing network traffic baselining capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{NetFlow v5/v9 or IPFIX flow data exported as CSV or JSON}
+\li{Python 3.8+ with pandas and numpy libraries}
+\li{Historical flow data (minimum 7 days recommended for baseline)}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Ingest NetFlow/IPFIX records from CSV or JSON exports}
+\li{Compute hourly and daily traffic volume distributions (bytes, packets, flows)}
+\li{Build per-source-IP baseline profiles with mean, median, standard deviation}
+\li{Calculate protocol and port distribution baselines}
+\li{Apply z-score anomaly detection to identify statistical outliers}
+\li{Flag flows exceeding IQR-based thresholds as potential anomalies}
+\li{Generate baseline report with anomaly alerts}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report containing traffic baselines (hourly/daily profiles), per-host statistics, detected anomalies with z-scores, and top talker rankings with deviation indicators.}
+}
+}

@@ -1,0 +1,89 @@
+\title{Yoneda Directed}
+
+\taxon{skill}
+
+\meta{description}{Directed Yoneda lemma as directed path induction. Riehl-Shulman's key}
+
+\subtree{
+\title{Directed Yoneda Skill}
+\blockquote{*"The dependent Yoneda lemma is a directed analogue of path induction."* — Emily Riehl & Michael Shulman}
+
+\subtree{
+\title{The Key Insight}
+\pre{\startverb
+| Standard HoTT | Directed HoTT |
+|---------------|---------------|
+| Path induction | Directed path induction |
+| Yoneda for ∞-groupoids | Dependent Yoneda for ∞-categories |
+| Types have identity | Segal types have composition |
+\stopverb}
+}
+
+\subtree{
+\title{Core Definition (Rzk)}
+\pre{\startverb
+#lang rzk-1
+
+-- Dependent Yoneda lemma
+-- To prove P(x, f) for all x : A and f : hom A a x,
+-- it suffices to prove P(a, id_a)
+
+#define dep-yoneda
+  (A : Segal-type) (a : A)
+  (P : (x : A) → hom A a x → U)
+  (base : P a (id a))
+  : (x : A) → (f : hom A a x) → P x f
+  := λ x f. transport-along-hom P f base
+
+-- This is "directed path induction"
+#define directed-path-induction := dep-yoneda
+\stopverb}
+}
+
+\subtree{
+\title{Chemputer Semantics}
+\p{\strong{Chemical Interpretation}:}
+
+\ul{
+\li{To prove a property of all reaction products from starting material A,}
+\li{It suffices to prove it for A itself (the identity "null reaction")}
+\li{Directed induction propagates the property along all reaction pathways}
+}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+yoneda-directed (-1) ⊗ elements-infinity-cats (0) ⊗ synthetic-adjunctions (+1) = 0 ✓
+yoneda-directed (-1) ⊗ cognitive-superposition (0) ⊗ curiosity-driven (+1) = 0 ✓
+\stopverb}
+
+\p{As \strong{Validator (-1)}, yoneda-directed verifies:}
+
+\ul{
+\li{Properties propagate correctly along morphisms}
+\li{Base case at identity suffices}
+\li{Induction principle is sound}
+}
+}
+
+\subtree{
+\title{Theorem}
+\pre{\startverb
+For any Segal type A, element a : A, and type family P,
+if we have base : P(a, id_a), then for all x : A and f : hom(a, x),
+we get P(x, f).
+
+This is analogous to:
+"To prove ∀ paths from a, prove for the reflexivity path"
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Riehl, E. & Shulman, M. (2017). "A type theory for synthetic ∞-categories." §5.}
+\li{[Rzk sHoTT library](https://rzk-lang.github.io/sHoTT/)}
+}
+}
+}

@@ -1,0 +1,199 @@
+\title{Zx Calculus}
+
+\taxon{skill}
+
+\meta{trit}{-1}
+
+\meta{description}{"Coecke's ZX-calculus for quantum circuit reasoning via string diagrams with Z-spiders (green) and X-spiders (red)"}
+
+\subtree{
+\title{ZX-Calculus}
+\p{\strong{Trit}: -1 (MINUS - foundational/classical notation) \strong{Origin}: Coecke & Duncan (2008) \strong{Principle}: Quantum computation via string diagram rewriting}
+
+\subtree{
+\title{Overview}
+\p{ZX-calculus is a graphical language for quantum computing where:}
+
+\ul{
+\li{\strong{Z-spiders} (green): Phase gates in computational basis}
+\li{\strong{X-spiders} (red): Phase gates in Hadamard basis}
+\li{\strong{Wires}: Qubits}
+\li{\strong{Rewrite rules}: Simplify circuits}
+}
+}
+
+\subtree{
+\title{Basic Elements}
+\pre{\startverb
+Z-spider (green):        X-spider (red):         Hadamard:
+    │                        │                      ╲ ╱
+  ┌─┴─┐                    ┌─┴─┐                     ─
+  │ α │  = e^{iα}|0⟩⟨0|    │ α │  = H·Z(α)·H        ─
+  └─┬─┘    + |1⟩⟨1|        └─┬─┘                    ╱ ╲
+    │                        │
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Color Assignment}
+\pre{\startverb
+| Spider | Color | Trit | Basis |
+|--------|-------|------|-------|
+| Z | Green #26D826 | 0 | Computational |
+| X | Red #D82626 | +1 | Hadamard |
+| H-edge | Blue #2626D8 | -1 | Transition |
+\stopverb}
+
+\p{\strong{Conservation}: Green(0) + Red(+1) + Blue(-1) = 0 ✓}
+}
+
+\subtree{
+\title{Core Rules}
+\subtree{
+\title{Spider Fusion}
+\pre{\startverb
+  │       │           │
+┌─┴─┐   ┌─┴─┐       ┌─┴─┐
+│ α │───│ β │  =    │α+β│
+└─┬─┘   └─┬─┘       └─┬─┘
+  │       │           │
+\stopverb}
+}
+
+\subtree{
+\title{Bialgebra (Hopf)}
+\pre{\startverb
+  ╲ ╱       │ │
+   X    =   │ │
+  ╱ ╲       │ │
+\stopverb}
+}
+
+\subtree{
+\title{Color Change}
+\pre{\startverb
+┌───┐     ┌───┐
+│ Z │──H──│ X │
+└───┘     └───┘
+\stopverb}
+}
+}
+
+\subtree{
+\title{DisCoPy Implementation}
+\pre{\startverb
+from discopy.quantum.zx import Z, X, H, Id, SWAP, Cap, Cup
+
+# Bell state preparation
+bell = Cap(Z(0), Z(0)) >> (Id(1) @ H) >> CNOT
+
+# ZX diagram
+diagram = Z(1, 2, phase=0.5) >> (X(1, 1, phase=0.25) @ Z(1, 1))
+
+# Simplify via rewrite rules
+simplified = diagram.normal_form()
+
+# Extract circuit
+circuit = simplified.to_circuit()
+\stopverb}
+}
+
+\subtree{
+\title{Musical Notation (Quantum Guitar)}
+\p{From Abdyssagin & Coecke's "Bell" composition:}
+
+\pre{\startverb
+Staff 1 (Piano):     Staff 2 (Quantum Guitar):
+    ┌─Z─┐                 ┌─X─┐
+    │   │                 │   │
+────┴───┴────        ─────┴───┴─────
+    Bell pair            Measurement
+\stopverb}
+}
+
+\subtree{
+\title{PyZX Integration}
+\pre{\startverb
+import pyzx as zx
+
+# Create circuit
+circuit = zx.Circuit(2)
+circuit.add_gate("H", 0)
+circuit.add_gate("CNOT", 0, 1)
+
+# Convert to ZX graph
+graph = circuit.to_graph()
+
+# Simplify
+zx.simplify.full_reduce(graph)
+
+# Extract optimized circuit
+optimized = zx.extract_circuit(graph)
+print(f"T-count: {optimized.tcount()}")
+\stopverb}
+}
+
+\subtree{
+\title{Quantum Music Score}
+\p{ZX-calculus as musical notation:}
+
+\pre{\startverb
+| ZX Element | Musical Meaning |
+|------------|-----------------|
+| Z-spider | Sustained note (computational) |
+| X-spider | Transposed note (Hadamard) |
+| Wire | Time/voice continuation |
+| H-edge | Key change |
+| Cup/Cap | Entanglement (Bell pair) |
+\stopverb}
+}
+
+\subtree{
+\title{Applications}
+\ol{
+\li{\strong{Circuit optimization}: T-count reduction}
+\li{\strong{Verification}: Equivalence checking}
+\li{\strong{Compilation}: High-level → hardware}
+\li{\strong{Music}: Quantum score notation}
+\li{\strong{NLP}: Compositional semantics (DisCoCat)}
+}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| **zx-calculus** | **-1** | **Notation** |
+| quantum-guitar | 0 | Performance |
+| discopy | +1 | Computation |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Coecke & Duncan (2008). Interacting quantum observables}
+\li{van de Wetering (2020). ZX-calculus for the working quantum computer scientist}
+\li{Coecke (2023). Basic ZX-calculus. arXiv:2303.03163}
+}
+
+\p{\strong{Skill Name}: zx-calculus \strong{Type}: Quantum Computing / Diagrammatic Reasoning \strong{Trit}: -1 (MINUS)}
+}
+
+\subtree{
+\title{Non-Backtracking Geodesic Qualification}
+\p{\strong{Condition}: μ(n) ≠ 0 (Möbius squarefree)}
+
+\p{This skill is qualified for non-backtracking geodesic traversal:}
+
+\ol{
+\li{\strong{Prime Path}: No state revisited in skill invocation chain}
+\li{\strong{Möbius Filter}: Composite paths (backtracking) cancel via μ-inversion}
+\li{\strong{GF(3) Conservation}: Trit sum ≡ 0 (mod 3) across skill triplets}
+\li{\strong{Spectral Gap}: Ramanujan bound λ₂ ≤ 2√(k-1) for k-regular expansion}
+}
+}
+}

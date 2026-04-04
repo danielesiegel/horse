@@ -1,0 +1,229 @@
+\title{Rama Gay Zig}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{"rama-gay-zig skill"}
+
+\subtree{
+\title{rama-gay-zig}
+\p{Interleaved skill combining Rama distributed semantics, Gay.jl GF(3) color logic, and Zig package management for ASI coordination.}
+
+\subtree{
+\title{Semantic Triad (GF(3) Conserved)}
+\pre{\startverb
+| Component | Trit | Role | Hue Range |
+|-----------|------|------|-----------|
+| **Gay.jl** | -1 (MINUS) | Color assignment, SPI verification | 180-300° (cold) |
+| **Rama** | 0 (ERGODIC) | Topology coordination, dataflow | 60-180° (neutral) |
+| **Zig** | +1 (PLUS) | Build execution, package resolution | 0-60°, 300-360° (warm) |
+\stopverb}
+
+\p{\strong{Conservation invariant:} \code{\startverb Σ trits ≡ 0 (mod 3)\stopverb}}
+}
+
+\subtree{
+\title{Core Primitives}
+\subtree{
+\title{Gay.jl Color Semantics}
+\pre{\startverb
+using Gay
+
+# GF(3) trit assignment for streams
+struct GayTrit
+    value::Int8  # -1, 0, +1
+    color::GayRGB
+    fingerprint::UInt64
+end
+
+# Interleave colors with Rama primitives
+function rama_color_depot(depot_name::Symbol, trit::GayTrit)
+    verify_spi = gay_verify_spi(trit.fingerprint)
+    (depot = depot_name, color = trit.color, spi = verify_spi)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Rama Distributed Primitives}
+\pre{\startverb
+;; Rama module with Gay.jl color-tagged streams
+(defmodule GayColorModule [setup topologies]
+  ;; Depot: MINUS trit (input stream)
+  (declare-depot setup *color-events :random)
+
+  ;; PState: PLUS trit (materialized output)
+  (declare-pstate setup $$color-index
+    {Long (map-schema :fingerprint Long :color String :trit Int)})
+
+  ;; Topology: ERGODIC trit (transformation)
+  (<<sources topologies
+    (source> *color-events :> %event)
+    (|hash (:fingerprint %event))
+    (local-transform>
+      [(keypath (:fingerprint %event)) (termval %event)]
+      $$color-index)))
+\stopverb}
+}
+
+\subtree{
+\title{Zig Package Management}
+\pre{\startverb
+// build.zig.zon - Gay-Rama interop package
+.{
+    .name = "rama-gay-zig",
+    .version = "0.1.0",
+    .dependencies = .{
+        .gay_ffi = .{
+            .url = "https://github.com/bmorphism/gay.jl/archive/refs/heads/main.tar.gz",
+            .hash = "...",
+        },
+        .rama_client = .{
+            .url = "https://github.com/redplanetlabs/rama-zig-client/archive/refs/heads/main.tar.gz",
+            .hash = "...",
+        },
+    },
+}
+\stopverb}
+
+\pre{\startverb
+// src/gay_rama.zig - Trit-colored Rama client
+const std = @import("std");
+const gay = @import("gay_ffi");
+const rama = @import("rama_client");
+
+pub const Trit = enum(i8) {
+    minus = -1,  // Gay.jl: color source
+    ergodic = 0, // Rama: topology
+    plus = 1,    // Zig: execution
+
+    pub fn conserved(trits: []const Trit) bool {
+        var sum: i32 = 0;
+        for (trits) |t| sum += @as(i32, @intFromEnum(t));
+        return @mod(sum, 3) == 0;
+    }
+};
+
+pub const ColoredDepot = struct {
+    name: []const u8,
+    trit: Trit,
+    fingerprint: u64,
+
+    pub fn append(self: *ColoredDepot, data: []const u8) !void {
+        const color = gay.next_color(self.fingerprint);
+        try rama.depot_append(self.name, .{
+            .data = data,
+            .color = color,
+            .trit = @intFromEnum(self.trit),
+        });
+    }
+};
+\stopverb}
+}
+}
+
+\subtree{
+\title{Interleaving Protocol}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│                    RAMA-GAY-ZIG INTERLEAVE                      │
+├─────────────────────────────────────────────────────────────────┤
+│  Gay.jl (-1)  ──color──▶  Rama (0)  ──exec──▶  Zig (+1)        │
+│      │                       │                     │            │
+│      ▼                       ▼                     ▼            │
+│  SPI verify            Depot append           Build.zig         │
+│  Fingerprint           PState query           Package fetch     │
+│  Trit assign           Topology run           WASM compile      │
+├─────────────────────────────────────────────────────────────────┤
+│  Σ(-1 + 0 + 1) = 0 (mod 3) ✓  GF(3) CONSERVED                  │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{From Babashka (Clojure CLI)}
+\pre{\startverb
+;; Interleave Claude threads with Gay.jl colors into Rama
+(require '[babashka.process :refer [shell]])
+
+(defn gay-rama-append [thread]
+  (let [fingerprint (hash (:id thread))
+        trit (mod fingerprint 3)
+        color (case trit 0 :minus 1 :ergodic 2 :plus)]
+    (shell "curl" "-X" "POST"
+           (str "http://$RAMA_HOST:2000/rest/GayColorModule/depot/*color-events/append")
+           "-d" (json/generate-string
+                  {:data thread :trit trit :color (name color)}))))
+\stopverb}
+}
+
+\subtree{
+\title{From Zig (native)}
+\pre{\startverb
+zig build run -- --depot color-events --trit minus --fingerprint 0xDEADBEEF
+\stopverb}
+}
+
+\subtree{
+\title{From Julia (Gay.jl native)}
+\pre{\startverb
+using Gay
+
+# Create interleaved stream
+interleaver = GayInterleaver(seed=0x42)
+for (trit, color) in gay_interleave_streams([:rama, :zig, :julia])
+    @info "Stream" trit color gay_fingerprint(color)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GitHub Interactome}
+\p{This skill connects:}
+
+\ul{
+\li{\code{\startverb bmorphism/gay.jl\stopverb} - GF(3) color theory + SPI verification}
+\li{\code{\startverb redplanetlabs/rama-*\stopverb} - Distributed backend primitives}
+\li{\code{\startverb ziglang/zig\stopverb} - Build system + package manager}
+\li{\code{\startverb plurigrid/asi\stopverb} - ASI skill orchestration}
+}
+}
+
+\subtree{
+\title{Dependencies}
+\ul{
+\li{Julia 1.10+ with Gay.jl}
+\li{Rama 0.14+ (REST API enabled)}
+\li{Zig 0.13+ with build.zig.zon support}
+\li{Babashka 1.4+ for Clojure scripting}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 8. Degeneracy}
+\p{\strong{Concepts}: redundancy, fallback, multiple strategies, robustness}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+rama-gay-zig (−) + SDF.Ch8 (−) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Degeneracy provides fallbacks. This skill offers redundant strategies.}
+}
+}
+}

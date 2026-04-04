@@ -1,0 +1,186 @@
+\title{Moth Actias}
+
+\taxon{skill}
+
+\meta{trit}{+1}
+
+\meta{description}{"Moth's Actias quantum synth for qubit sonification with Bloch sphere visualization and MIDI control"}
+
+\subtree{
+\title{Moth Actias Quantum Synth}
+\p{\strong{Trit}: +1 (PLUS - generative/sonic output) \strong{Type}: Quantum Musical Instrument \strong{Principle}: Sonify qubit state via Bloch sphere mapping}
+
+\subtree{
+\title{Overview}
+\p{Actias is a quantum synthesizer that:}
+
+\ul{
+\li{Visualizes qubit state on Bloch sphere}
+\li{Maps quantum state to audio parameters}
+\li{Accepts MIDI for rotation control}
+\li{Supports measurement operations}
+}
+}
+
+\subtree{
+\title{Bloch Sphere Sonification}
+\pre{\startverb
+        |0⟩ (North pole)
+         │
+         │  θ = polar angle
+         │
+    ─────┼───── φ = azimuthal angle
+         │
+         │
+        |1⟩ (South pole)
+
+|ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩
+\stopverb}
+
+\subtree{
+\title{Audio Mapping}
+\pre{\startverb
+| Parameter | Bloch Coordinate | Sound Effect |
+|-----------|------------------|--------------|
+| θ (theta) | Polar angle | Timbre blend |0⟩↔|1⟩ |
+| φ (phi) | Azimuthal angle | Phase/detune |
+| r | Radius (purity) | Amplitude/reverb |
+\stopverb}
+}
+}
+
+\subtree{
+\title{MIDI Control}
+\subtree{
+\title{CC Mappings}
+\pre{\startverb
+| CC | Controller | Rotation |
+|----|------------|----------|
+| 1 | Expression 1 | X-axis (orange) |
+| 2 | Expression 2 | Z-axis (blue) |
+| 3 | Expression 3 | Y-axis (green) |
+| 64 | Sustain/Switch | Measurement |
+\stopverb}
+}
+
+\subtree{
+\title{Note Input}
+\pre{\startverb
+# MIDI note → qubit initialization
+def note_to_qubit(note, velocity):
+    """
+    Map MIDI note to initial qubit state.
+    
+    note: 0-127 → θ = note * π / 127
+    velocity: 0-127 → φ = velocity * 2π / 127
+    """
+    theta = note * np.pi / 127
+    phi = velocity * 2 * np.pi / 127
+    return cos(theta/2), exp(1j * phi) * sin(theta/2)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Quantum Guitar}
+\pre{\startverb
+┌─────────────┐     MIDI      ┌─────────────┐
+│   Fishman   │──────────────▶│   Actias    │
+│  MIDI Pickup│               │   Synth     │
+└─────────────┘               └──────┬──────┘
+                                     │
+┌─────────────┐     MIDI             │ Audio
+│ Boss EV-1-WL│──────────────────────┤
+│ Foot Pedals │                      │
+└─────────────┘                      ▼
+                              ┌─────────────┐
+┌─────────────┐               │    Mix      │
+│  Boss FS-6  │───Measure────▶│   Output    │
+│ Foot Switch │               └─────────────┘
+└─────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Web Interface}
+\p{Actias runs as web application with:}
+
+\ul{
+\li{Real-time Bloch sphere visualization}
+\li{MIDI device selection}
+\li{Audio output configuration}
+\li{Preset management}
+}
+
+\p{\strong{Note}: Web MIDI requires secure context (HTTPS/localhost)}
+}
+
+\subtree{
+\title{Known Issues & Workarounds}
+\p{From Coecke's tech notes:}
+
+\pre{\startverb
+| Issue | Workaround |
+|-------|------------|
+| Preset loss on MIDI reconnect | Re-add device in settings |
+| Tablet web MIDI | Use desktop only |
+| Two laptops needed | Separate Actias + DAW hosts |
+| Only Z-measurement | Rotate before measure for X |
+\stopverb}
+}
+
+\subtree{
+\title{SuperCollider Alternative}
+\pre{\startverb
+// Actias-like qubit sonification
+SynthDef(\actias, { |theta=0, phi=0, gate=1|
+    var sig, prob0, prob1, env;
+    
+    prob0 = cos(theta/2).squared;
+    prob1 = sin(theta/2).squared;
+    
+    // Blend two timbres based on |0⟩/|1⟩ probability
+    sig = (SinOsc.ar(440) * prob0) + 
+          (Saw.ar(440 * 1.5) * prob1);
+    
+    // Phase modulation from φ
+    sig = sig * (1 + (0.5 * cos(phi)));
+    
+    env = EnvGen.kr(Env.asr(0.01, 1, 0.1), gate);
+    
+    Out.ar(0, sig * env ! 2);
+}).add;
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| zx-calculus | -1 | Notation |
+| quantum-guitar | 0 | Interface |
+| **moth-actias** | **+1** | **Sonification** |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Miranda, Thomas & Itaboraí (2023). Q1Synth. Applied Sciences}
+\li{Coecke (2025). A Quantum Guitar. arXiv:2509.04526}
+\li{Moth. Actias documentation (web)}
+}
+
+\p{\strong{Skill Name}: moth-actias \strong{Type}: Quantum Synthesizer / MIDI \strong{Trit}: +1 (PLUS)}
+}
+
+\subtree{
+\title{Non-Backtracking Geodesic Qualification}
+\p{\strong{Condition}: μ(n) ≠ 0 (Möbius squarefree)}
+
+\p{This skill is qualified for non-backtracking geodesic traversal.}
+}
+}

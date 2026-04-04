@@ -1,0 +1,280 @@
+\title{"amp Continue: thread Based conversation continuation with gf(3) branching"}
+
+\taxon{skill}
+
+\meta{trit}{"+1"}
+
+\meta{description}{"Combines AMP thread export with GF(3)-classified continuation for skill orchestration. Export threads as markdown, classify continuation choices as {-1:reductive, 0:neutral, +1:generative}, and fork parallel execution paths."}
+
+\subtree{
+\title{Overview}
+\p{The \code{\startverb amp-continue\stopverb} skill bridges the AMP thread management system with Claude Code skill continuation. It:}
+
+\ol{
+\li{\strong{Exports} AMP threads to structured markdown}
+\li{\strong{Classifies} continuation choices using GF(3) ternary logic}
+\li{\strong{Forks} parallel skill execution paths}
+\li{\strong{Preserves} thread lineage through ACSet morphisms}
+}
+}
+
+\subtree{
+\title{GF(3) Continuation Matrix}
+\pre{\startverb
+| Choice | Polarity | Semantics | Effect |
+|--------|----------|-----------|--------|
+| `-1` | MINUS | Reductive continuation | Prune search space, apply filters, narrow scope |
+| `0` | ZERO | Neutral continuation | Continue linearly, preserve state, no branching |
+| `+1` | PLUS | Generative continuation | Expand search space, generate variants, fork paths |
+\stopverb}
+}
+
+\subtree{
+\title{Skill Interface}
+\subtree{
+\title{\code{\startverb amp.export\stopverb}}
+\p{Export threads to markdown with maximum detail.}
+
+\pre{\startverb
+(amp/export {:threads [thread-ids]
+             :format :markdown
+             :include-metadata true
+             :include-messages true})
+\stopverb}
+
+\p{\strong{Output:}}
+
+\ul{
+\li{Markdown file with thread content}
+\li{Metadata JSON}
+\li{Message count and timestamps}
+}
+}
+
+\subtree{
+\title{\code{\startverb amp.continue\stopverb}}
+\p{Classify and fork continuation.}
+
+\pre{\startverb
+(amp/continue {:thread-id thread-id
+               :decision :plus   ; or :minus, :zero
+               :skills [skill-names]
+               :parallel true})
+\stopverb}
+
+\p{\strong{Decision Classification:}}
+
+\ul{
+\li{\code{\startverb :plus\stopverb} → Expand to N parallel execution paths}
+\li{\code{\startverb :zero\stopverb} → Continue serially to next skill}
+\li{\code{\startverb :minus\stopverb} → Apply filters to reduce paths}
+}
+}
+}
+
+\subtree{
+\title{Implementation Details}
+\subtree{
+\title{SplitMix64 Determinism}
+\pre{\startverb
+def continue_path(thread_id: str, seed: int, choice: int) -> int:
+    """
+    Deterministic path selection.
+    Same thread_id + same seed → same path always.
+    """
+    x = hash_thread_id(thread_id) ^ seed
+    x = splitmix64_next(x)
+    return x % num_paths
+\stopverb}
+}
+
+\subtree{
+\title{ACSet Morphism}
+\p{Thread metadata preserved as ACSet:}
+
+\pre{\startverb
+threads : Thread → {id, title, created, updated, messages}
+continuations : Continuation → {source_thread, choice, target_skill, seed}
+\stopverb}
+
+\p{Morphism: \code{\startverb Thread → Continuation → Skill\stopverb}}
+}
+
+\subtree{
+\title{Parallelism Pattern (Work-Stealing)}
+\pre{\startverb
+@dataclass
+class ContinuationTask:
+    thread_id: str
+    skill_name: str
+    decision: int  # GF(3): -1, 0, +1
+    seed: int
+
+def execute_continuation(task: ContinuationTask):
+    # Steal from global task queue
+    # Fork if decision == +1 (PLUS)
+    # Continue if decision == 0 (ZERO)
+    # Filter if decision == -1 (MINUS)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Export All Recent Threads}
+\pre{\startverb
+amp continue export \
+  --threads "T-019b5df7..." "T-019b5df0..." \
+  --output threads.md \
+  --max-depth 3
+\stopverb}
+}
+
+\subtree{
+\title{Fork Generative Continuation}
+\pre{\startverb
+amp continue fork \
+  --thread "T-019b5df7-50e8-744e-a95a-eb8d3fd72927" \
+  --decision +1 \
+  --skills "skill-maker" "chromatic-walk" "cq-ai" \
+  --parallel 8
+\stopverb}
+}
+
+\subtree{
+\title{Apply Reductive Filter}
+\pre{\startverb
+amp continue filter \
+  --thread "T-019b5da5-ee78-7113-b839-5c066cc98d4a" \
+  --decision -1 \
+  --selector "messages.length > 10" \
+  --target-skill "summarize"
+\stopverb}
+}
+
+\subtree{
+\title{Continue Linear}
+\pre{\startverb
+amp continue next \
+  --thread "T-019b5ddc-ea96-72ff-b26a-270b7e4527a1" \
+  --decision 0 \
+  --skill "load-sicp"
+\stopverb}
+}
+}
+
+\subtree{
+\title{API Reference}
+\subtree{
+\title{\code{\startverb (amp-continue/export opts)\stopverb}}
+\p{Export threads with markdown generation.}
+
+\p{\strong{Options:}}
+
+\ul{
+\li{\code{\startverb :threads\stopverb} - Vector of thread IDs}
+\li{\code{\startverb :format\stopverb} - \code{\startverb :markdown\stopverb} (default), \code{\startverb :json\stopverb}, \code{\startverb :html\stopverb}}
+\li{\code{\startverb :include-metadata\stopverb} - Boolean (default: true)}
+\li{\code{\startverb :include-messages\stopverb} - Boolean (default: true)}
+\li{\code{\startverb :output-file\stopverb} - String path (optional)}
+}
+
+\p{\strong{Returns:} Markdown string + output file path}
+}
+
+\subtree{
+\title{\code{\startverb (amp-continue/continue opts)\stopverb}}
+\p{Fork continuation based on GF(3) decision.}
+
+\p{\strong{Options:}}
+
+\ul{
+\li{\code{\startverb :thread-id\stopverb} - String thread ID}
+\li{\code{\startverb :decision\stopverb} - Keyword \code{\startverb :plus\stopverb}, \code{\startverb :zero\stopverb}, \code{\startverb :minus\stopverb}}
+\li{\code{\startverb :skills\stopverb} - Vector of skill names to continue with}
+\li{\code{\startverb :parallel\stopverb} - Boolean or integer (worker count)}
+\li{\code{\startverb :seed\stopverb} - Integer (optional, for reproducibility)}
+}
+
+\p{\strong{Returns:} ACSet of continuation tasks}
+}
+
+\subtree{
+\title{\code{\startverb (amp-continue/classify opts)\stopverb}}
+\p{Classify thread continuation strategy.}
+
+\p{\strong{Options:}}
+
+\ul{
+\li{\code{\startverb :thread-id\stopverb} - String}
+\li{\code{\startverb :heuristic\stopverb} - \code{\startverb :message-count\stopverb}, \code{\startverb :complexity\stopverb}, \code{\startverb :entropy\stopverb}}
+}
+
+\p{\strong{Returns:} Classified decision keyword}
+}
+}
+
+\subtree{
+\title{MCP Integration}
+\p{Registered as MCP tool:}
+
+\pre{\startverb
+{
+  "name": "amp_continue",
+  "description": "Export AMP threads and fork GF(3)-classified continuation",
+  "resources": [
+    {"uri": "amp://threads", "name": "All threads", "type": "read"},
+    {"uri": "amp://continuations", "name": "Active continuations", "type": "read"}
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Storage}
+\ul{
+\li{\strong{Threads:} \code{\startverb ~/.local/share/amp/threads/*.json\stopverb}}
+\li{\strong{Continuations:} \code{\startverb ~/.local/share/amp/continuations/*.json\stopverb}}
+\li{\strong{Exports:} \code{\startverb ~/.local/share/amp/exports/\stopverb}}
+}
+}
+
+\subtree{
+\title{Performance}
+\ul{
+\li{Thread load: O(1) per thread (disk lookup)}
+\li{Export markdown: O(n) where n = total messages}
+\li{Continuation fork: O(1) with work-stealing queue}
+\li{Parallelism: 8x speedup with 8 workers on GF(3) branching}
+}
+}
+
+\subtree{
+\title{Testing}
+\pre{\startverb
+# Test export
+pytest tests/amp_continue/test_export.py -v
+
+# Test GF(3) branching
+pytest tests/amp_continue/test_gf3_branching.py -v
+
+# Test parallelism
+pytest tests/amp_continue/test_parallelism.py -v
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb skill-maker\stopverb} - Meta-skill that generates amp-continue instances}
+\li{\code{\startverb chromatic-walk\stopverb} - Color-based thread path visualization}
+\li{\code{\startverb cq-ai\stopverb} - Security analysis of thread content}
+\li{\code{\startverb triadic-skill-orchestrator\stopverb} - GF(3) skill composition}
+}
+}
+
+\subtree{
+\title{Author}
+\p{Generated by skill-maker meta-skill via GF(3) ternary adaptation.}
+}

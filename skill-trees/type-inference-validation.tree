@@ -1,0 +1,302 @@
+\title{Type Inference Validation}
+
+\taxon{skill}
+
+\meta{trit}{-1}
+
+\meta{description}{Static type inference and validation for navigation paths}
+
+\subtree{
+\title{Type Inference Validation}
+\subtree{
+\title{Core Concept}
+\p{Static type validation that \strong{rejects invalid path compositions before caching}. Every Navigator path must prove type compatibility with its input structure—this skill enforces that proof.}
+
+\p{Works alongside Möbius filtering as a second line of defense: Möbius eliminates topological impossibilities, Type Inference eliminates structural impossibilities.}
+}
+
+\subtree{
+\title{Why Type Validation?}
+\p{Consider this dangerous scenario:}
+
+\pre{\startverb
+data_numbers = [1, 2, 3, 4, 5]
+data_dict = Dict("x" => 10, "y" => 20)
+
+# This path makes sense for numbers
+nav1 = @late_nav([ALL, pred(iseven)])  # Type ✓: Vector → Numbers → Numbers
+
+# But what if someone mistakenly uses it on the dict?
+nav_select(nav1, data_dict, x -> [x])
+# => IndexError! (dicts don't support ALL enumeration this way)
+\stopverb}
+
+\p{\strong{Type Inference Validation prevents this at compile time}, not runtime.}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{Type System}
+\p{Each Navigator carries a \strong{type signature}:}
+
+\pre{\startverb
+Navigator{InputType, OutputType, PathSteps}
+\stopverb}
+
+\p{Examples:}
+
+\pre{\startverb
+nav_vector = Navigator{Vector, Vector, [ALL, pred(f)]}
+nav_dict = Navigator{Dict, Vector, [keypath(k), ALL]}
+nav_sexp = Navigator{SExpression, Symbol, [sexp_nth(2), SEXP_HEAD]}
+\stopverb}
+}
+
+\subtree{
+\title{Type Refinement Pipeline}
+\pre{\startverb
+Input Type
+    ↓
+@late_nav(path_expr) triggers validation
+    ↓
+Type each step in path:
+  [ALL] : Vector{T} → T
+  [keypath(k)] : Dict{K,V} → V
+  [pred(f)] : T → T (preserves type)
+  [INDEX(i)] : Vector{T} → T
+  [SEXP_HEAD] : SExpr → Symbol
+    ↓
+Unify step outputs with next step inputs
+    ↓
+Final output type computed
+    ↓
+Cache with type signature
+    ↓
+Accept or Reject
+\stopverb}
+}
+
+\subtree{
+\title{Type Incompatibility Detection}
+\pre{\startverb
+| Step | Input Type | Output Type | Valid? |
+|------|-----------|------------|--------|
+| `[ALL]` | Vector{T} | T | ✓ |
+| `[ALL]` | Dict{K,V} | ⚠️ (ambiguous) | ✗ |
+| `[keypath(k)]` | Dict{K,V} | V | ✓ |
+| `[keypath(k)]` | Vector{T} | ✗ | ✗ |
+| `[pred(f)]` | T | T | ✓ |
+| `[INDEX(i)]` | Vector{T} | T | ✓ |
+| `[INDEX(i)]` | Dict | ✗ | ✗ |
+\stopverb}
+}
+}
+
+\subtree{
+\title{API}
+\subtree{
+\title{Type Inference}
+\p{\strong{\code{\startverb infer_type(path_expr, input_type) :: Result{OutputType, Error}\stopverb}} Computes the output type of a path given an input type.}
+
+\pre{\startverb
+infer_type([ALL, pred(iseven)], Vector{Int})
+# => Result(Int)  # outputs Int values
+
+infer_type([keypath("x"), ALL], Dict{String, Vector{Int}})
+# => Result(Int)  # navigates to x, then enumerates integers
+
+infer_type([keypath("x")], Vector{Int})
+# => Result(TypeError("Cannot apply keypath to Vector"))
+\stopverb}
+
+\p{\strong{\code{\startverb validate_path(navigator::Navigator, input_type) :: Bool\stopverb}} Checks if a Navigator is compatible with a given input type.}
+
+\pre{\startverb
+nav = @late_nav([ALL, pred(f)])
+validate_path(nav, Vector{Int})      # => true
+validate_path(nav, Dict{String, Int})  # => false ✗
+
+# Causes @late_nav to reject the Navigator before caching
+\stopverb}
+}
+
+\subtree{
+\title{Type Signatures}
+\p{\strong{\code{\startverb navigator_signature(nav::Navigator) :: TypeSignature\stopverb}} Returns the full type signature of a cached Navigator.}
+
+\pre{\startverb
+nav = @late_nav([ALL, pred(iseven)])
+sig = navigator_signature(nav)
+
+# => TypeSignature(
+#     input: Vector{T},
+#     output: T,
+#     constraints: [iseven(T)],
+#     steps: [[ALL], [pred(iseven)]],
+#     valid_for: Vector{Int}, Vector{BigInt}, ...
+#   )
+\stopverb}
+}
+
+\subtree{
+\title{Polymorphic Inference}
+\p{\strong{\code{\startverb polymorphic_infer(path_expr) :: PolymorphicType\stopverb}} Infers the most general type for a path (before knowing input type).}
+
+\pre{\startverb
+polymorphic_infer([ALL, pred(iseven)])
+# => ∀T. (T ∈ Enumerable, T ∈ HasEven) → T
+
+# This means: works for ANY type T that:
+# - Can be enumerated (Vector, Set, List, etc.)
+# - Has an iseven() method defined
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Caching}
+\p{Cache keys now include type information:}
+
+\pre{\startverb
+cache_key = hash((path_expr, inferred_type))
+
+# Different input types → different cache entries
+nav_vec = @late_nav([ALL, pred(f)])   # cache for Vector
+nav_set = @late_nav([ALL, pred(f)])   # cache for Set (if compatible)
+# => Different NavigatorObjects, despite same path!
+\stopverb}
+}
+
+\subtree{
+\title{Refinement Types}
+\p{Supports \strong{refinement types} for predicates:}
+
+\pre{\startverb
+# pred(iseven) refines Int → EvenInt
+# pred(x -> x > 5) refines Int → IntGt5
+
+nav = @late_nav([ALL, pred(x -> x > 5)])
+# Type: Vector{Int} → IntGt5
+# (output is proven to be > 5)
+\stopverb}
+
+\p{Refinement types enable:}
+
+\ul{
+\li{\strong{Automatic constraint propagation} downstream}
+\li{\strong{Proof that outputs satisfy predicates} without re-checking}
+\li{\strong{Composition of constraints} with type safety}
+}
+}
+
+\subtree{
+\title{Type Mismatch Examples}
+\subtree{
+\title{❌ INVALID: Wrong container type}
+\pre{\startverb
+nav = @late_nav([keypath("name"), ALL])
+# Type error: keypath returns a string, ALL requires enumerable
+
+# KeyPath{Dict, String} → String
+# ALL{String} → ✗ (String not enumerable in that way)
+\stopverb}
+}
+
+\subtree{
+\title{❌ INVALID: Incompatible predicate}
+\pre{\startverb
+nav = @late_nav([ALL, pred(x -> x > 5)])
+# If input is Vector{String}, predicate fails
+# Type error: `(String > 5)` is nonsense
+\stopverb}
+}
+
+\subtree{
+\title{✓ VALID: Polymorphic path}
+\pre{\startverb
+nav = @late_nav([ALL, pred(identity)])  # identity always works
+# Type: ∀T. Vector{T} → T
+# Works for ANY vector type
+\stopverb}
+}
+}
+
+\subtree{
+\title{Error Messages}
+\p{\strong{Type validation errors are clear}:}
+
+\pre{\startverb
+TypeError: Path composition invalid
+  Step 1: [ALL]
+    Input: Vector{Int}
+    Output: Int
+    ✓ Type check passed
+
+  Step 2: [keypath("x")]
+    Input: Int
+    Output: ???
+    ✗ TypeError: Cannot apply keypath to Int
+       keypath requires Dict or record type
+       Got: Int
+
+Suggestion: Remove [keypath("x")] or ensure input is Dict/Struct
+\stopverb}
+}
+
+\subtree{
+\title{Performance}
+\p{All type checking happens at \strong{compile time} (during \code{\startverb @late_nav\stopverb} expansion):}
+
+\pre{\startverb
+| Operation | Complexity | Notes |
+|-----------|-----------|-------|
+| infer_type | O(\|path\|) | Single pass through steps |
+| validate_path | O(1) | Cached signature lookup |
+| polymorphic_infer | O(\|path\|) | Compute most general type |
+| **Runtime overhead** | O(0) | Zero cost—all checks are static |
+\stopverb}
+}
+
+\subtree{
+\title{Composition with Other Skills}
+\p{\strong{Works with Möbius Filtering}:}
+
+\ol{
+\li{Möbius filters topological impossibilities}
+\li{Type Inference filters structural impossibilities}
+\li{Both must pass for path to compile}
+}
+
+\p{\strong{Works with Color Envelopes}: Type signatures include color trit information:}
+
+\pre{\startverb
+nav = @late_nav([ALL, pred(f)])  # trit = -1 (filtering)
+sig = navigator_signature(nav)
+# => TypeSignature(..., trit: -1)
+
+# Type system respects color: composition must balance trits AND types
+\stopverb}
+
+\p{\strong{Enables Constraint Generalization} (next skill): Once types are proven, constraints can be composed and generalized safely.}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{möbius-path-filtering} - Topological validation (works alongside this)}
+\li{\strong{tuple-nav-composition} - Uses type signatures to compose products}
+\li{\strong{constraint-generalization} - Builds on type-proven constraints}
+\li{\strong{specter-navigator-gadget} - Uses validated types for safe composition}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Gradual typing: "Gradual Typing for Functional Languages" - Siek & Taha}
+\li{Refinement types: "Liquid Haskell: Haskell as a Theorem Prover" - Jhala et al.}
+\li{Type inference: "Algorithm W: Inference of Data Types" - Damas & Milner}
+}
+}
+}

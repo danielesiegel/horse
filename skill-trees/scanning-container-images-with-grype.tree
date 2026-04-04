@@ -1,0 +1,248 @@
+\title{Scanning Container Images With Grype}
+
+\taxon{skill}
+
+\tag{grype}
+
+\tag{vulnerability-scanning}
+
+\tag{container-security}
+
+\tag{sbom}
+
+\tag{anchore}
+
+\tag{supply-chain}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Scan container images for known vulnerabilities using Anchore Grype with SBOM-based matching and configurable severity thresholds.}
+
+\subtree{
+\title{Scanning Container Images with Grype}
+\subtree{
+\title{Overview}
+\p{Grype is an open-source vulnerability scanner from Anchore that inspects container images, filesystems, and SBOMs for known CVEs. It leverages Syft-generated SBOMs to match packages against multiple vulnerability databases including NVD, GitHub Advisories, and OS-specific feeds.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve scanning container images with grype}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Docker or Podman installed}
+\li{Grype CLI installed (\code{\startverb curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin\stopverb})}
+\li{Syft CLI (optional, for SBOM generation)}
+\li{Network access to pull vulnerability databases}
+}
+}
+
+\subtree{
+\title{Core Commands}
+\subtree{
+\title{Install Grype}
+\pre{\startverb
+# Install via script
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+# Verify installation
+grype version
+
+# Install via Homebrew (macOS/Linux)
+brew install grype
+\stopverb}
+}
+
+\subtree{
+\title{Scan Container Images}
+\pre{\startverb
+# Scan a Docker Hub image
+grype nginx:latest
+
+# Scan from Docker daemon
+grype docker:myapp:1.0
+
+# Scan a local archive
+grype docker-archive:image.tar
+
+# Scan an OCI directory
+grype oci-dir:path/to/oci/
+
+# Scan a Singularity image
+grype sif:image.sif
+
+# Scan a local directory / filesystem
+grype dir:/path/to/project
+\stopverb}
+}
+
+\subtree{
+\title{Output Formats}
+\pre{\startverb
+# Default table output
+grype alpine:3.18
+
+# JSON output for pipeline processing
+grype alpine:3.18 -o json > results.json
+
+# CycloneDX SBOM output
+grype alpine:3.18 -o cyclonedx
+
+# SARIF output for GitHub Security tab
+grype alpine:3.18 -o sarif > grype.sarif
+
+# Template-based custom output
+grype alpine:3.18 -o template -t /path/to/template.tmpl
+\stopverb}
+}
+
+\subtree{
+\title{Filtering and Thresholds}
+\pre{\startverb
+# Fail if vulnerabilities meet or exceed a severity
+grype nginx:latest --fail-on critical
+
+# Show only fixed vulnerabilities
+grype nginx:latest --only-fixed
+
+# Show only non-fixed vulnerabilities
+grype nginx:latest --only-notfixed
+
+# Filter by severity
+grype nginx:latest --only-fixed -o json | jq '[.matches[] | select(.vulnerability.severity == "High")]'
+
+# Explain a specific CVE
+grype nginx:latest --explain --id CVE-2024-1234
+\stopverb}
+}
+
+\subtree{
+\title{Working with SBOMs}
+\pre{\startverb
+# Generate SBOM with Syft then scan
+syft nginx:latest -o spdx-json > nginx-sbom.json
+grype sbom:nginx-sbom.json
+
+# Scan CycloneDX SBOM
+grype sbom:bom.json
+\stopverb}
+}
+
+\subtree{
+\title{Configuration File (.grype.yaml)}
+\pre{\startverb
+# .grype.yaml
+check-for-app-update: false
+fail-on-severity: "high"
+output: "json"
+scope: "squashed"  # or "all-layers"
+quiet: false
+
+ignore:
+  - vulnerability: CVE-2023-12345
+    reason: "False positive - not exploitable in our context"
+  - vulnerability: CVE-2023-67890
+    fix-state: unknown
+
+db:
+  auto-update: true
+  cache-dir: "/tmp/grype-db"
+  max-allowed-built-age: 120h  # 5 days
+
+match:
+  java:
+    using-cpes: true
+  python:
+    using-cpes: true
+  javascript:
+    using-cpes: false
+\stopverb}
+}
+
+\subtree{
+\title{CI/CD Integration}
+\pre{\startverb
+# GitHub Actions
+- name: Scan image with Grype
+  uses: anchore/scan-action@v4
+  with:
+    image: "myregistry/myapp:${{ github.sha }}"
+    fail-build: true
+    severity-cutoff: high
+    output-format: sarif
+  id: scan
+
+- name: Upload SARIF
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: ${{ steps.scan.outputs.sarif }}
+\stopverb}
+
+\pre{\startverb
+# GitLab CI
+container_scan:
+  stage: test
+  image: anchore/grype:latest
+  script:
+    - grype ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA} --fail-on high -o json > grype-report.json
+  artifacts:
+    reports:
+      container_scanning: grype-report.json
+\stopverb}
+}
+}
+
+\subtree{
+\title{Database Management}
+\pre{\startverb
+# Check database status
+grype db status
+
+# Manually update vulnerability database
+grype db update
+
+# Delete cached database
+grype db delete
+
+# List supported database providers
+grype db list
+\stopverb}
+}
+
+\subtree{
+\title{Key Vulnerability Sources}
+\pre{\startverb
+| Source | Coverage |
+|--------|----------|
+| NVD | CVEs across all ecosystems |
+| GitHub Advisories | Open source package vulnerabilities |
+| Alpine SecDB | Alpine Linux packages |
+| Amazon Linux ALAS | Amazon Linux AMI |
+| Debian Security Tracker | Debian packages |
+| Red Hat OVAL | RHEL, CentOS |
+| Ubuntu Security | Ubuntu packages |
+| Wolfi SecDB | Wolfi/Chainguard images |
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Pin image tags} - Always scan specific digests, not \code{\startverb latest\stopverb}}
+\li{\strong{Fail on severity} - Set \code{\startverb --fail-on high\stopverb} or \code{\startverb critical\stopverb} in CI gates}
+\li{\strong{Use SBOMs} - Generate SBOMs with Syft for reproducible scanning}
+\li{\strong{Suppress false positives} - Use \code{\startverb .grype.yaml\stopverb} ignore rules with documented reasons}
+\li{\strong{Scan all layers} - Use \code{\startverb --scope all-layers\stopverb} to catch vulnerabilities in intermediate layers}
+\li{\strong{Automate database updates} - Keep the vulnerability database current in CI runners}
+\li{\strong{Compare scans} - Track vulnerability count over time for regression detection}
+}
+}
+}

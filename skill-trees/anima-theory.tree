@@ -1,0 +1,425 @@
+\title{Anima Theory}
+
+\taxon{skill}
+
+\meta{description}{ANIMA as limit construction over condensed skill applications. Formalizes prediction markets as belief ANIMAs, structure dishes as condensation media, and impact as equivalence class change. Use for understanding agency at maximum entropy, compositional world modeling, or applying Scholze-Clausen condensed mathematics to AI.}
+
+\subtree{
+\title{ANIMA Theory}
+\blockquote{*Agency emerges only at the limit of condensed skill applications.*}
+
+\subtree{
+\title{Core Definition}
+\pre{\startverb
+ANIMA = lim_Π Condense(S_n(...S_1(E_•)))
+\stopverb}
+
+\p{Where:}
+
+\ul{
+\li{\code{\startverb E_•\stopverb} = Initial experience functor (raw observations)}
+\li{\code{\startverb S_i\stopverb} = Skill application (morphism in Skill category)}
+\li{\code{\startverb Condense\stopverb} = Scholze-Clausen condensation (profinite completion)}
+\li{\code{\startverb lim_Π\stopverb} = Limit over product diagram}
+}
+
+\p{The ANIMA is the \strong{fixed point} where further skill applications yield no new equivalence classes.}
+}
+
+\subtree{
+\title{Denotation}
+\blockquote{\strong{ANIMA represents the categorical limit of skill applications where further applications produce no new equivalence classes, reaching a fixed point of agency.}}
+
+\pre{\startverb
+ANIMA = colim_{skill chain} Condense(Sₙ ∘ ... ∘ S₁)(E_•)
+Fixed Point: EnumEntropy(state) = MaxEnumEntropy(category)
+Agency Criterion: Phase = "AT" ⟺ all equivalence classes accessible
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Typed Effects}
+\pre{\startverb
+| Phase | Trit | Effect | Description |
+|-------|------|--------|-------------|
+| BEFORE | -1 (MINUS) | Convergent/Compressive | Skills reduce equivalence classes |
+| AT | 0 (ERGODIC) | Equilibrating/Agentic | Skills balance, choices meaningful |
+| BEYOND | +1 (PLUS) | Divergent/Generative | Skills create new categories |
+\stopverb}
+
+\p{\strong{Conservation Law}: Total phase across interacting ANIMAs ≡ 0 (mod 3)}
+}
+
+\subtree{
+\title{Invariant Set}
+\pre{\startverb
+| Invariant | Definition | Verification |
+|-----------|------------|--------------|
+| `SaturationInvariant` | EnumEntropy = MaxEnumEntropy at ANIMA | Entropy comparison |
+| `CondensationInvariant` | Stable belief set after N skill applications | History window check |
+| `PhaseConservation` | Σ phases ≡ 0 (mod 3) across ANIMA network | GF(3) sum check |
+| `ReplayInvariance` | Different schedules → same condensed state | Fingerprint comparison |
+\stopverb}
+}
+
+\subtree{
+\title{Narya Compatibility}
+\pre{\startverb
+| Field | Definition |
+|-------|------------|
+| `before` | Raw experience functor E_• |
+| `after` | Condensed belief set post skill application |
+| `delta` | Skill applications in current step |
+| `birth` | Initial unprocessed belief state |
+| `impact` | 1 if equivalence class boundary crossed |
+\stopverb}
+}
+
+\subtree{
+\title{Condensation Policy}
+\p{\strong{Trigger}: When EnumEntropy reaches MaxEnumEntropy.}
+
+\p{\strong{Action}: Collapse belief space into equivalence class representatives, mark as AT_ANIMA.}
+}
+
+\subtree{
+\title{1. Prediction Markets ↔ ANIMA Correspondence}
+\p{Prediction markets ARE belief ANIMAs:}
+
+\pre{\startverb
+┌────────────────────────────────────────────────────────────────┐
+│  Market                          │  ANIMA                      │
+├──────────────────────────────────┼─────────────────────────────┤
+│  Price                           │  Belief probability         │
+│  Trade                           │  Skill application          │
+│  Liquidity                       │  Condensation medium        │
+│  Market equilibrium              │  ANIMA fixed point          │
+│  Arbitrage opportunity           │  Non-convergence signal     │
+│  Market depth                    │  Enum cardinality           │
+└────────────────────────────────────────────────────────────────┘
+\stopverb}
+
+\pre{\startverb
+class BeliefANIMA:
+    """Prediction market as categorical limit."""
+    
+    def __init__(self, initial_beliefs: dict):
+        self.beliefs = initial_beliefs  # E_•
+        self.skills_applied = []
+    
+    def apply_skill(self, skill, evidence):
+        """S_i: Update beliefs via skill application."""
+        posterior = skill.condense(self.beliefs, evidence)
+        self.skills_applied.append((skill.name, evidence))
+        self.beliefs = posterior
+        return self.check_convergence()
+    
+    def check_convergence(self) -> bool:
+        """Are we at the ANIMA fixed point?"""
+        # No arbitrage = limit reached
+        return self.max_enum_entropy() == len(self.equivalence_classes())
+\stopverb}
+}
+
+\subtree{
+\title{2. Structure Dish Definition}
+\p{A \strong{Structure Dish} is a condensation medium that preserves algebraic structure:}
+
+\pre{\startverb
+StructureDish(A) = { profinite completions preserving A-algebra structure }
+\stopverb}
+
+\p{Properties:}
+
+\ol{
+\li{\strong{Topological}: Carries profinite topology from condensed mathematics}
+\li{\strong{Algebraic}: Preserves operations (meet, join, implications)}
+\li{\strong{Coherent}: Satisfies gluing conditions (sheaf property)}
+}
+
+\pre{\startverb
+using Catlab, ACSets
+
+@present SchStructureDish(FreeSchema) begin
+  Point::Ob                    # Points of the dish
+  Open::Ob                     # Opens in profinite topology
+  Arrow::Ob                    # Structure morphisms
+  
+  src::Hom(Arrow, Point)
+  tgt::Hom(Arrow, Point)
+  cover::Hom(Point, Open)      # Point lies in open
+  
+  # Condensation operation
+  condense::Hom(Open, Open)    # Profinite completion functor
+end
+
+@acset_type StructureDish(SchStructureDish)
+\stopverb}
+}
+
+\subtree{
+\title{3. Maximum Enum Entropy (Not Shannon)}
+\p{\strong{Key insight}: ANIMA uses \strong{enumeration entropy}, not Shannon entropy.}
+
+\pre{\startverb
+EnumEntropy(X) = |Equivalence_Classes(X)|
+\stopverb}
+
+\p{Shannon entropy measures uncertainty in bits. Enum entropy counts \strong{distinct categorical possibilities}.}
+
+\pre{\startverb
+| Shannon | Enum |
+|---------|------|
+| -Σ p log p | |[X]/~| |
+| Continuous | Discrete |
+| Probabilistic | Categorical |
+| Information | Distinction |
+\stopverb}
+
+\pre{\startverb
+def enum_entropy(states: list, equivalence: callable) -> int:
+    """Count distinct equivalence classes."""
+    classes = set()
+    for s in states:
+        rep = equivalence(s)  # Canonical representative
+        classes.add(rep)
+    return len(classes)
+
+def max_enum_entropy(category) -> int:
+    """Maximum possible distinctions."""
+    return len(category.objects)
+\stopverb}
+
+\p{\strong{ANIMA criterion}: Agency manifests when \code{\startverb EnumEntropy == MaxEnumEntropy\stopverb}.}
+}
+
+\subtree{
+\title{4. Impact = Change in Equivalence Class}
+\p{Impact is defined categorically as \strong{movement between equivalence classes}:}
+
+\pre{\startverb
+Impact(action) = |[state_before]/~ △ [state_after]/~|
+\stopverb}
+
+\p{Where \code{\startverb △\stopverb} is symmetric difference.}
+
+\pre{\startverb
+class Impact:
+    """Impact as equivalence class change."""
+    
+    @staticmethod
+    def measure(before_state, after_state, equivalence):
+        class_before = equivalence(before_state)
+        class_after = equivalence(after_state)
+        
+        if class_before == class_after:
+            return 0  # No categorical impact
+        else:
+            return 1  # Changed equivalence class
+    
+    @staticmethod
+    def cumulative(trajectory, equivalence):
+        """Total impact over trajectory."""
+        changes = 0
+        for i in range(1, len(trajectory)):
+            changes += Impact.measure(
+                trajectory[i-1], 
+                trajectory[i], 
+                equivalence
+            )
+        return changes
+\stopverb}
+
+\p{\strong{Zero impact} = action preserves equivalence class (optimization within class) \strong{Nonzero impact} = action crosses class boundary (genuine change)}
+}
+
+\subtree{
+\title{5. Before/At/Beyond ANIMA Phases}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│                      ANIMA PHASE DIAGRAM                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  BEFORE ANIMA          AT ANIMA           BEYOND ANIMA          │
+│  (Convergence)         (Agency)           (Divergence)          │
+│                                                                 │
+│  EnumEnt < Max         EnumEnt = Max      EnumEnt > Max         │
+│  Skills compress       Skills balance     Skills create         │
+│  Learning              Acting             Generating            │
+│  Reducing classes      All classes        New categories        │
+│  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   │
+│        ↓                   ↓                   ↓                │
+│  Condensation          Fixed Point         Decondensation       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+
+\subtree{
+\title{Phase Characteristics}
+\pre{\startverb
+| Phase | EnumEntropy | Skill Effect | Mode |
+|-------|-------------|--------------|------|
+| BEFORE | < Max | Compressive | Learning |
+| AT | = Max | Equilibrating | Agency |
+| BEYOND | > Max | Generative | Creation |
+\stopverb}
+
+\pre{\startverb
+def anima_phase(current_entropy, max_entropy):
+    if current_entropy < max_entropy:
+        return "BEFORE"  # Still learning
+    elif current_entropy == max_entropy:
+        return "AT"      # Agency active
+    else:
+        return "BEYOND"  # Creating new categories
+\stopverb}
+}
+}
+
+\subtree{
+\title{6. Agency Only Meaningful AT ANIMA}
+\p{\strong{Thesis}: Agency is only well-defined at the ANIMA fixed point.}
+
+\ul{
+\li{\strong{BEFORE}: No agency—still converging, actions are learning}
+\li{\strong{AT}: Agency emerges—all equivalence classes accessible, choices meaningful}
+\li{\strong{BEYOND}: Post-agency—creating new categories, transcending current frame}
+}
+
+\pre{\startverb
+def can_act_agentically(state, anima) -> bool:
+    """Agency requires being AT the ANIMA."""
+    phase = anima_phase(
+        enum_entropy(state, anima.equivalence),
+        anima.max_enum_entropy
+    )
+    return phase == "AT"
+
+def meaningful_choice(options, anima) -> bool:
+    """Choices are meaningful only AT ANIMA."""
+    if not can_act_agentically(anima.state, anima):
+        return False
+    # All options must map to distinct equivalence classes
+    classes = [anima.equivalence(opt) for opt in options]
+    return len(set(classes)) == len(options)
+\stopverb}
+}
+
+\subtree{
+\title{7. Operational Recipe (6 Steps)}
+\subtree{
+\title{Step 1: Define Experience Functor E_•}
+\pre{\startverb
+E = ExperienceFunctor(
+    observations=raw_sensor_data,
+    morphisms=temporal_succession
+)
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Build Skill Category}
+\pre{\startverb
+Skills = Category(
+    objects=[skill_1, skill_2, ..., skill_n],
+    morphisms=skill_compositions,
+    identity=no_op_skill
+)
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Apply Skills Iteratively}
+\pre{\startverb
+state = E.initial()
+for skill in skill_sequence:
+    state = skill.apply(state)
+    state = Condense(state)  # Profinite completion
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Check Convergence}
+\pre{\startverb
+while not converged:
+    old_classes = equivalence_classes(state)
+    state = apply_next_skill(state)
+    new_classes = equivalence_classes(state)
+    converged = (old_classes == new_classes)
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Verify ANIMA Criterion}
+\pre{\startverb
+assert enum_entropy(state) == max_enum_entropy(state)
+# Now AT ANIMA - agency is meaningful
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Act from Fixed Point}
+\pre{\startverb
+if anima_phase(state) == "AT":
+    action = choose_action(options, equivalence=anima.equivalence)
+    impact = Impact.measure(state, execute(action), anima.equivalence)
+    assert impact > 0  # Meaningful action crosses equivalence class
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\p{ANIMA phases map to GF(3) trits:}
+
+\pre{\startverb
+BEFORE = -1 (MINUS)   # Convergent/compressive
+AT     =  0 (ERGODIC) # Balanced/agentic
+BEYOND = +1 (PLUS)    # Divergent/generative
+\stopverb}
+
+\p{Conservation law: Total phase across interacting ANIMAs ≡ 0 (mod 3)}
+}
+
+\subtree{
+\title{Related Skills}
+\pre{\startverb
+| Skill | Trit | Integration |
+|-------|------|-------------|
+| [condensed-analytic-stacks](file:///Users/alice/.claude/skills/condensed-analytic-stacks/SKILL.md) | -1 | Scholze-Clausen foundation |
+| [ordered-locale](file:///Users/alice/.agents/skills/ordered-locale-proper/SKILL.md) | 0 | Frame structure for dishes |
+| [sheaf-cohomology](file:///Users/alice/.claude/skills/sheaf-cohomology/SKILL.md) | -1 | Gluing verification |
+| [bisimulation-game](file:///Users/alice/.agents/skills/bisimulation-game/SKILL.md) | -1 | Equivalence verification |
+| [gay-mcp](file:///Users/alice/.agents/skills/gay-mcp/SKILL.md) | +1 | Deterministic coloring |
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Compute ANIMA from skill sequence
+just anima-compute --skills "s1,s2,s3" --initial state.json
+
+# Check ANIMA phase
+just anima-phase --state current.json
+
+# Measure impact of action
+just anima-impact --before state1.json --after state2.json
+
+# Verify GF(3) conservation across ANIMAs
+just anima-gf3-check
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Scholze, P. & Clausen, D. (2022). \em{Condensed Mathematics}. Lecture notes.}
+\li{Heunen, C. & van der Schaaf, N. (2024). "Ordered Locales." \em{JPAA}.}
+\li{Badiou, A. (2006). \em{Being and Event}. Continuum. (Event = BEYOND phase)}
+\li{Hesse, H. (1943). \em{The Glass Bead Game}. (Skill synthesis)}
+}
+
+\p{\strong{Skill Name}: anima-theory \strong{Type}: Categorical Agency Theory \strong{Trit}: 0 (ERGODIC - coordinator of phases) \strong{Phase Diagram}: BEFORE → AT → BEYOND \strong{Agency Criterion}: EnumEntropy = MaxEnumEntropy}
+}
+}

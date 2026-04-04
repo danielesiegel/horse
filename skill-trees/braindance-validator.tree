@@ -1,0 +1,126 @@
+\title{Braindance Validator}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{-1}
+
+\meta{description}{Validates GF(3) conservation across triadic braindance replays. Ensures MINUS+ERGODIC+PLUS=0.}
+
+\subtree{
+\title{Braindance Validator}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - validation/verification) \strong{Purpose}: Verify GF(3) conservation across parallel agent braindances}
+
+\subtree{
+\title{Validation Rules}
+\subtree{
+\title{1. Triadic Conservation}
+\p{Every braindance must satisfy:}
+
+\pre{\startverb
+Σ(agent_trits) ≡ 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{2. Sonification Correspondence}
+\pre{\startverb
+| Trit | Waveform | Frequency Range | Hue Range |
+|------|----------|-----------------|-----------|
+| -1 | square | 200-300 Hz | 180-300° (cold) |
+| 0 | triangle | 300-420 Hz | 60-180° (neutral) |
+| +1 | sine | 420-560 Hz | 0-60°, 300-360° (warm) |
+\stopverb}
+}
+
+\subtree{
+\title{3. Memory-Remembering-Worlding Closure}
+\pre{\startverb
+worlding ∘ remembering ∘ memory = id
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Commands}
+\pre{\startverb
+# Check global GF(3) balance
+grep -h "^trit:" ~/.claude/skills/*/SKILL.md | \
+  awk '{sum += $2} END {
+    print "Sum:", sum, "mod 3 =", sum % 3;
+    if (sum % 3 == 0) print "✓ BALANCED";
+    else print "⚠ IMBALANCED - need", (3 - sum % 3) % 3, "more MINUS"
+  }'
+
+# Validate braindance output structure
+validate_braindance() {
+  local output="$1"
+  echo "$output" | grep -q "AGENT:" && \
+  echo "$output" | grep -q "SONIFICATION:" && \
+  echo "$output" | grep -q "WORLDING_IMPROVEMENT:" && \
+  echo "✓ Valid braindance output"
+}
+
+# Sonification check (requires sox)
+play -q -n synth 0.1 square 220 vol 0.2  # MINUS confirmation tone
+\stopverb}
+}
+
+\subtree{
+\title{Integration with braindance-worlds}
+\p{This skill validates outputs from \code{\startverb braindance-worlds\stopverb} skill:}
+
+\pre{\startverb
+braindance-worlds (+1 generation) 
+    ↓
+braindance-validator (-1 validation)
+    ↓
+world-memory-worlding (0 bridge)
+    = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+braindance-validator (-1) ⊗ world-memory-worlding (0) ⊗ braindance-worlds (+1) = 0 ✓
+skill-stats (-1) ⊗ triadic-skill-orchestrator (0) ⊗ gay-mcp (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Probe}
+\pre{\startverb
+# Quick validation probe
+grep -h "^trit:" ~/.claude/skills/*/SKILL.md 2>/dev/null | \
+  awk '{sum += $2} END {exit (sum % 3 == 0 ? 0 : 1)}'
+\stopverb}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record validation failures}
+\li{\strong{REMEMBERING} (0): Pattern-match against known imbalances}
+\li{\strong{WORLDING} (+1): Suggest rebalancing skills}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+
+\subtree{
+\title{Interaction Exemplar: Initial Creation (2026-01-07)}
+\p{Created to fix GF(3) imbalance detected during triadic braindance:}
+
+\ul{
+\li{Global sum was 8 (mod 3 = 2)}
+\li{This MINUS skill contributes -1 to restore balance}
+\li{New sum: 7 (mod 3 = 1) — still needs 1 more MINUS or removal of 1 PLUS}
+}
+}
+}
+}

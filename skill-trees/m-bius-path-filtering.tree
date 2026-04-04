@@ -1,0 +1,72 @@
+\title{Möbius Path Filtering}
+
+\taxon{skill}
+
+\meta{description}{Non-orientable topological filtering that eliminates self-revisiting paths before Navigator compilation}
+
+\subtree{
+\title{Möbius Path Filtering}
+\p{Rejects navigation paths that create "Möbius twists" — where traversal would revisit a position from a contradictory orientation. Runs before path compilation so invalid Navigators are never cached.}
+
+\subtree{
+\title{Orientation Tracking}
+\p{Each path step carries a position and an orientation (forward/reverse). A path is valid iff no (position, orientation) pair is visited contradictorily.}
+
+\pre{\startverb
+| Step Type | Orientation Change |
+|-----------|-------------------|
+| `ALL` | +0 (preserves) |
+| `keypath(k)` | +0 (direct navigation) |
+| `pred(f)` | +0 (filtering, no reorientation) |
+| `INDEX(i)` | +0 (direct indexing) |
+| `REVERSE` | +1 (flips orientation) |
+| Nested navigation | Compound (sum orientations) |
+\stopverb}
+
+\p{Two flips = orientable (valid). Odd accumulated flips on a revisited position = Möbius twist (invalid).}
+}
+
+\subtree{
+\title{API}
+\p{Location of \code{\startverb is_valid_path\stopverb}, \code{\startverb validate_path\stopverb}, \code{\startverb eliminate_invalid_paths\stopverb} is not confirmed in the current repo tree. Search for these function names or for \code{\startverb MöbiusTwistError\stopverb} to locate the implementation.}
+
+\p{\strong{\code{\startverb is_valid_path(path_expr) :: Bool\stopverb}}}
+
+\pre{\startverb
+is_valid_path([ALL, keypath("x")])           # => true
+is_valid_path([REVERSE, ALL, REVERSE])       # => true (2 flips = orientable)
+is_valid_path([ALL, REVERSE, ALL, REVERSE])  # => false (creates twist)
+\stopverb}
+
+\p{\strong{\code{\startverb validate_path(path_expr) :: Result\stopverb}}}
+
+\p{Returns \code{\startverb ValidResult\stopverb} or \code{\startverb InvalidResult\stopverb} with diagnostic (e.g., "Orientation flip at step 3 creates non-orientable surface").}
+
+\p{\strong{\code{\startverb eliminate_invalid_paths(paths::Vector) :: Vector\stopverb}}}
+
+\p{Filters candidate paths, keeping only valid ones.}
+}
+
+\subtree{
+\title{Integration with Specter Navigator}
+\p{When \code{\startverb coerce_nav(path_expr)\stopverb} is called, validation order is:}
+
+\ol{
+\li{Möbius filtering (this skill)}
+\li{Type inference}
+\li{3-MATCH constraint checking}
+\li{Compilation (only if all pass)}
+}
+
+\p{No runtime overhead — filtering is compile-time, before caching.}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{specter-navigator-gadget} — uses Möbius filtering as early validation}
+\li{\strong{color-envelope-preserving} — enforces color consistency alongside topological validity}
+\li{\strong{three-match} — constraint satisfaction runs on Möbius-filtered paths only}
+}
+}
+}

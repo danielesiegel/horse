@@ -1,0 +1,85 @@
+\title{Geomstats Fisher Rao}
+
+\taxon{skill}
+
+\meta{description}{Information geometry for Bayesian inference. Fisher-Rao metric on statistical manifolds, Riemannian optimization for model selection, Wasserstein geodesics connecting geomstats to Gromov-Wasserstein optimal transport.}
+
+\subtree{
+\title{geomstats-fisher-rao Skill}
+\blockquote{\em{The natural metric on probability distributions is the Fisher-Rao metric}}
+
+\subtree{
+\title{What It Covers}
+\p{22 notebooks in plurigrid's geomstats fork spanning:}
+
+\ul{
+\li{Information geometry (Fisher information matrix as Riemannian metric)}
+\li{Hyperbolic embeddings (Poincare ball, hyperboloid)}
+\li{Graph space (Frechet mean of graphs)}
+\li{Heisenberg group geometry}
+\li{SPD matrices (covariance manifolds)}
+}
+}
+
+\subtree{
+\title{monad-bayes Connection}
+\p{The Fisher-Rao metric is the unique Riemannian metric (up to scale) that is invariant under sufficient statistics. This means:}
+
+\pre{\startverb
+MonadDistribution m => FisherRao (distribution m)
+\stopverb}
+
+\p{Every \code{\startverb score\stopverb}/\code{\startverb factor\stopverb} call in monad-bayes implicitly moves along a geodesic on the Fisher-Rao manifold. The MCMC acceptance ratio is the exponential map.}
+
+\pre{\startverb
+-- Natural gradient MCMC on Fisher-Rao manifold
+naturalGradientStep :: MonadMeasure m => SPDMatrix -> m Parameters
+naturalGradientStep fisherInfo = do
+  currentParams <- get
+  proposal <- mvNormal currentParams (inverse fisherInfo)
+  let logRatio = logLikelihood proposal - logLikelihood currentParams
+  accept <- bernoulli (min 1 (exp logRatio))
+  if accept then return proposal else return currentParams
+\stopverb}
+}
+
+\subtree{
+\title{Gromov-Wasserstein Bridge}
+\p{geomstats <-> plurigrid/ontology:GW via optimal transport:}
+
+\ul{
+\li{Wasserstein distance = geodesic distance on the space of measures}
+\li{Gromov-Wasserstein = comparison of metric measure spaces}
+\li{Entropic regularization = softmax (connects to monad-bayes softmax)}
+\li{Bregman projections for marginal constraints}
+}
+}
+
+\subtree{
+\title{Applications}
+\ul{
+\li{Cortical manifold geometry (zubyul/Nikolova_lab)}
+\li{Protein structure manifolds (Vertex AI)}
+\li{Eye movement geometry on the visual sphere (zubyul/EyeGestures)}
+\li{Color gamut as Riemannian manifold (Gay.jl DeltaE2000)}
+}
+}
+
+\subtree{
+\title{GF(3) Trit Classification}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| geomstats computation | +1 | Generation (geometric objects) |
+| Fisher-Rao metric | 0 | Coordination (natural metric) |
+| Wasserstein validation | -1 | Validation (distance bounds) |
+\stopverb}
+
+\p{Conservation: +1 + 0 + (-1) = 0}
+}
+
+\subtree{
+\title{Trit: 0 (ERGODIC)}
+
+}
+}

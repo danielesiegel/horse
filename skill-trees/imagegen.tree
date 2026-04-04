@@ -1,0 +1,246 @@
+\title{"imagegen"}
+
+\taxon{skill}
+
+\meta{description}{"Use when the user asks to generate or edit images via the OpenAI Image API (for example: generate image, edit/inpaint/mask, background removal or replacement, transparent background, product shots, concept art, covers, or batch variants); run the bundled CLI (`scripts/image_gen.py`) and require `OPENAI_API_KEY` for live calls."}
+
+\subtree{
+\title{Image Generation Skill}
+\p{Generates or edits images for the current project (e.g., website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, infographics). Defaults to \code{\startverb gpt-image-1.5\stopverb} and the OpenAI Image API, and prefers the bundled CLI for deterministic, reproducible runs.}
+
+\subtree{
+\title{When to use}
+\ul{
+\li{Generate a new image (concept art, product shot, cover, website hero)}
+\li{Edit an existing image (inpainting, masked edits, lighting or weather transformations, background replacement, object removal, compositing, transparent background)}
+\li{Batch runs (many prompts, or many variants across prompts)}
+}
+}
+
+\subtree{
+\title{Decision tree (generate vs edit vs batch)}
+\ul{
+\li{If the user provides an input image (or says “edit/retouch/inpaint/mask/translate/localize/change only X”) → \strong{edit}}
+\li{Else if the user needs many different prompts/assets → \strong{generate-batch}}
+\li{Else → \strong{generate}}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Decide intent: generate vs edit vs batch (see decision tree above).}
+\li{Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input image(s)/mask(s). For multi-image edits, label each input by index and role; for edits, list invariants explicitly.}
+\li{If batch: write a temporary JSONL under tmp/ (one job per line), run once, then delete the JSONL.}
+\li{Augment prompt into a short labeled spec (structure + constraints) without inventing new creative requirements.}
+\li{Run the bundled CLI (\code{\startverb scripts/image_gen.py\stopverb}) with sensible defaults (see references/cli.md).}
+\li{For complex edits/generations, inspect outputs (open/view images) and validate: subject, style, composition, text accuracy, and invariants/avoid items.}
+\li{Iterate: make a single targeted change (prompt or mask), re-run, re-check.}
+\li{Save/return final outputs and note the final prompt + flags used.}
+}
+}
+
+\subtree{
+\title{Temp and output conventions}
+\ul{
+\li{Use \code{\startverb tmp/imagegen/\stopverb} for intermediate files (for example JSONL batches); delete when done.}
+\li{Write final artifacts under \code{\startverb output/imagegen/\stopverb} when working in this repo.}
+\li{Use \code{\startverb --out\stopverb} or \code{\startverb --out-dir\stopverb} to control output paths; keep filenames stable and descriptive.}
+}
+}
+
+\subtree{
+\title{Dependencies (install if missing)}
+\p{Prefer \code{\startverb uv\stopverb} for dependency management.}
+
+\p{Python packages:}
+
+\pre{\startverb
+uv pip install openai pillow
+\stopverb}
+
+\p{If \code{\startverb uv\stopverb} is unavailable:}
+
+\pre{\startverb
+python3 -m pip install openai pillow
+\stopverb}
+}
+
+\subtree{
+\title{Environment}
+\ul{
+\li{\code{\startverb OPENAI_API_KEY\stopverb} must be set for live API calls.}
+}
+
+\p{If the key is missing, give the user these steps:}
+
+\ol{
+\li{Create an API key in the OpenAI platform UI: https://platform.openai.com/api-keys}
+\li{Set \code{\startverb OPENAI_API_KEY\stopverb} as an environment variable in their system.}
+\li{Offer to guide them through setting the environment variable for their OS/shell if needed.}
+}
+
+\ul{
+\li{Never ask the user to paste the full key in chat. Ask them to set it locally and confirm when ready.}
+}
+
+\p{If installation isn't possible in this environment, tell the user which dependency is missing and how to install it locally.}
+}
+
+\subtree{
+\title{Defaults & rules}
+\ul{
+\li{Use \code{\startverb gpt-image-1.5\stopverb} unless the user explicitly asks for \code{\startverb gpt-image-1-mini\stopverb} or explicitly prefers a cheaper/faster model.}
+\li{Assume the user wants a new image unless they explicitly ask for an edit.}
+\li{Require \code{\startverb OPENAI_API_KEY\stopverb} before any live API call.}
+\li{Use the OpenAI Python SDK (\code{\startverb openai\stopverb} package) for all API calls; do not use raw HTTP.}
+\li{If the user requests edits, use \code{\startverb client.images.edit(...)\stopverb} and include input images (and mask if provided).}
+\li{Prefer the bundled CLI (\code{\startverb scripts/image_gen.py\stopverb}) over writing new one-off scripts.}
+\li{Never modify \code{\startverb scripts/image_gen.py\stopverb}. If something is missing, ask the user before doing anything else.}
+\li{If the result isn’t clearly relevant or doesn’t satisfy constraints, iterate with small targeted prompt changes; only ask a question if a missing detail blocks success.}
+}
+}
+
+\subtree{
+\title{Prompt augmentation}
+\p{Reformat user prompts into a structured, production-oriented spec. Only make implicit details explicit; do not invent new requirements.}
+}
+
+\subtree{
+\title{Use-case taxonomy (exact slugs)}
+\p{Classify each request into one of these buckets and keep the slug consistent across prompts and references.}
+
+\p{Generate:}
+
+\ul{
+\li{photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.}
+\li{product-mockup — product/packaging shots, catalog imagery, merch concepts.}
+\li{ui-mockup — app/web interface mockups that look shippable.}
+\li{infographic-diagram — diagrams/infographics with structured layout and text.}
+\li{logo-brand — logo/mark exploration, vector-friendly.}
+\li{illustration-story — comics, children’s book art, narrative scenes.}
+\li{stylized-concept — style-driven concept art, 3D/stylized renders.}
+\li{historical-scene — period-accurate/world-knowledge scenes.}
+}
+
+\p{Edit:}
+
+\ul{
+\li{text-localization — translate/replace in-image text, preserve layout.}
+\li{identity-preserve — try-on, person-in-scene; lock face/body/pose.}
+\li{precise-object-edit — remove/replace a specific element (incl. interior swaps).}
+\li{lighting-weather — time-of-day/season/atmosphere changes only.}
+\li{background-extraction — transparent background / clean cutout.}
+\li{style-transfer — apply reference style while changing subject/scene.}
+\li{compositing — multi-image insert/merge with matched lighting/perspective.}
+\li{sketch-to-render — drawing/line art to photoreal render.}
+}
+
+\p{Quick clarification (augmentation vs invention):}
+
+\ul{
+\li{If the user says “a hero image for a landing page”, you may add \em{layout/composition constraints} that are implied by that use (e.g., “generous negative space on the right for headline text”).}
+\li{Do not introduce new creative elements the user didn’t ask for (e.g., adding a mascot, changing the subject, inventing brand names/logos).}
+}
+
+\p{Template (include only relevant lines):}
+
+\pre{\startverb
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Scene/background: <environment>
+Subject: <main subject>
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Quality: <low/medium/high/auto>
+Input fidelity (edits): <low/high>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+\stopverb}
+
+\p{Augmentation rules:}
+
+\ul{
+\li{Keep it short; add only details the user already implied or provided elsewhere.}
+\li{Always classify the request into a taxonomy slug above and tailor constraints/composition/quality to that bucket. Use the slug to find the matching example in \code{\startverb references/sample-prompts.md\stopverb}.}
+\li{If the user gives a broad request (e.g., "Generate images for this website"), use judgment to propose tasteful, context-appropriate assets and map each to a taxonomy slug.}
+\li{For edits, explicitly list invariants ("change only X; keep Y unchanged").}
+\li{If any critical detail is missing and blocks success, ask a question; otherwise proceed.}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Generation example (hero image)}
+\pre{\startverb
+Use case: stylized-concept
+Asset type: landing page hero
+Primary request: a minimal hero image of a ceramic coffee mug
+Style/medium: clean product photography
+Composition/framing: centered product, generous negative space on the right
+Lighting/mood: soft studio lighting
+Constraints: no logos, no text, no watermark
+\stopverb}
+}
+
+\subtree{
+\title{Edit example (invariants)}
+\pre{\startverb
+Use case: precise-object-edit
+Asset type: product photo background replacement
+Primary request: replace the background with a warm sunset gradient
+Constraints: change only the background; keep the product and its edges unchanged; no text; no watermark
+\stopverb}
+}
+}
+
+\subtree{
+\title{Prompting best practices (short list)}
+\ul{
+\li{Structure prompt as scene -> subject -> details -> constraints.}
+\li{Include intended use (ad, UI mock, infographic) to set the mode and polish level.}
+\li{Use camera/composition language for photorealism.}
+\li{Quote exact text and specify typography + placement.}
+\li{For tricky words, spell them letter-by-letter and require verbatim rendering.}
+\li{For multi-image inputs, reference images by index and describe how to combine them.}
+\li{For edits, repeat invariants every iteration to reduce drift.}
+\li{Iterate with single-change follow-ups.}
+\li{For latency-sensitive runs, start with quality=low; use quality=high for text-heavy or detail-critical outputs.}
+\li{For strict edits (identity/layout lock), consider input_fidelity=high.}
+\li{If results feel “tacky”, add a brief “Avoid:” line (stock-photo vibe; cheesy lens flare; oversaturated neon; harsh bloom; oversharpening; clutter) and specify restraint (“editorial”, “premium”, “subtle”).}
+}
+
+\p{More principles: \code{\startverb references/prompting.md\stopverb}. Copy/paste specs: \code{\startverb references/sample-prompts.md\stopverb}.}
+}
+
+\subtree{
+\title{Guidance by asset type}
+\p{Asset-type templates (website assets, game assets, wireframes, logo) are consolidated in \code{\startverb references/sample-prompts.md\stopverb}.}
+}
+
+\subtree{
+\title{CLI + environment notes}
+\ul{
+\li{CLI commands + examples: \code{\startverb references/cli.md\stopverb}}
+\li{API parameter quick reference: \code{\startverb references/image-api.md\stopverb}}
+\li{If network approvals / sandbox settings are getting in the way: \code{\startverb references/codex-network.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Reference map}
+\ul{
+\li{\strong{\code{\startverb references/cli.md\stopverb}}: how to \em{run} image generation/edits/batches via \code{\startverb scripts/image_gen.py\stopverb} (commands, flags, recipes).}
+\li{\strong{\code{\startverb references/image-api.md\stopverb}}: what knobs exist at the API level (parameters, sizes, quality, background, edit-only fields).}
+\li{\strong{\code{\startverb references/prompting.md\stopverb}}: prompting principles (structure, constraints/invariants, iteration patterns).}
+\li{\strong{\code{\startverb references/sample-prompts.md\stopverb}}: copy/paste prompt recipes (generate + edit workflows; examples only).}
+\li{\strong{\code{\startverb references/codex-network.md\stopverb}}: environment/sandbox/network-approval troubleshooting.}
+}
+}
+}

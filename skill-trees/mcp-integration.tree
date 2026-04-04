@@ -1,0 +1,698 @@
+\title{Mcp integration}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user asks to "add MCP server", "integrate MCP", "configure MCP in plugin", "use .mcp.json", "set up Model Context Protocol", "connect external service", mentions "${CLAUDE_PLUGIN_ROOT} with MCP", or discusses MCP server types (SSE, stdio, HTTP, WebSocket). Provides comprehensive guidance for integrating Model Context Protocol servers into Claude Code plugins for external tool and service integration.}
+
+\subtree{
+\title{MCP Integration for Claude Code Plugins}
+\subtree{
+\title{Overview}
+\p{Model Context Protocol (MCP) enables Claude Code plugins to integrate with external services and APIs by providing structured tool access. Use MCP integration to expose external service capabilities as tools within Claude Code.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Connect to external services (databases, APIs, file systems)}
+\li{Provide 10+ related tools from a single service}
+\li{Handle OAuth and complex authentication flows}
+\li{Bundle MCP servers with plugins for automatic setup}
+}
+}
+
+\subtree{
+\title{MCP Server Configuration Methods}
+\p{Plugins can bundle MCP servers in two ways:}
+
+\subtree{
+\title{Method 1: Dedicated .mcp.json (Recommended)}
+\p{Create \code{\startverb .mcp.json\stopverb} at plugin root:}
+
+\pre{\startverb
+{
+  "database-tools": {
+    "command": "${CLAUDE_PLUGIN_ROOT}/servers/db-server",
+    "args": ["--config", "${CLAUDE_PLUGIN_ROOT}/config.json"],
+    "env": {
+      "DB_URL": "${DB_URL}"
+    }
+  }
+}
+\stopverb}
+
+\p{\strong{Benefits:}}
+
+\ul{
+\li{Clear separation of concerns}
+\li{Easier to maintain}
+\li{Better for multiple servers}
+}
+}
+
+\subtree{
+\title{Method 2: Inline in plugin.json}
+\p{Add \code{\startverb mcpServers\stopverb} field to plugin.json:}
+
+\pre{\startverb
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "mcpServers": {
+    "plugin-api": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/servers/api-server",
+      "args": ["--port", "8080"]
+    }
+  }
+}
+\stopverb}
+
+\p{\strong{Benefits:}}
+
+\ul{
+\li{Single configuration file}
+\li{Good for simple single-server plugins}
+}
+}
+}
+
+\subtree{
+\title{MCP Server Types}
+\subtree{
+\title{stdio (Local Process)}
+\p{Execute local MCP servers as child processes. Best for local tools and custom servers.}
+
+\p{\strong{Configuration:}}
+
+\pre{\startverb
+{
+  "filesystem": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/allowed/path"],
+    "env": {
+      "LOG_LEVEL": "debug"
+    }
+  }
+}
+\stopverb}
+
+\p{\strong{Use cases:}}
+
+\ul{
+\li{File system access}
+\li{Local database connections}
+\li{Custom MCP servers}
+\li{NPM-packaged MCP servers}
+}
+
+\p{\strong{Process management:}}
+
+\ul{
+\li{Claude Code spawns and manages the process}
+\li{Communicates via stdin/stdout}
+\li{Terminates when Claude Code exits}
+}
+}
+
+\subtree{
+\title{SSE (Server-Sent Events)}
+\p{Connect to hosted MCP servers with OAuth support. Best for cloud services.}
+
+\p{\strong{Configuration:}}
+
+\pre{\startverb
+{
+  "asana": {
+    "type": "sse",
+    "url": "https://mcp.asana.com/sse"
+  }
+}
+\stopverb}
+
+\p{\strong{Use cases:}}
+
+\ul{
+\li{Official hosted MCP servers (Asana, GitHub, etc.)}
+\li{Cloud services with MCP endpoints}
+\li{OAuth-based authentication}
+\li{No local installation needed}
+}
+
+\p{\strong{Authentication:}}
+
+\ul{
+\li{OAuth flows handled automatically}
+\li{User prompted on first use}
+\li{Tokens managed by Claude Code}
+}
+}
+
+\subtree{
+\title{HTTP (REST API)}
+\p{Connect to RESTful MCP servers with token authentication.}
+
+\p{\strong{Configuration:}}
+
+\pre{\startverb
+{
+  "api-service": {
+    "type": "http",
+    "url": "https://api.example.com/mcp",
+    "headers": {
+      "Authorization": "Bearer ${API_TOKEN}",
+      "X-Custom-Header": "value"
+    }
+  }
+}
+\stopverb}
+
+\p{\strong{Use cases:}}
+
+\ul{
+\li{REST API-based MCP servers}
+\li{Token-based authentication}
+\li{Custom API backends}
+\li{Stateless interactions}
+}
+}
+
+\subtree{
+\title{WebSocket (Real-time)}
+\p{Connect to WebSocket MCP servers for real-time bidirectional communication.}
+
+\p{\strong{Configuration:}}
+
+\pre{\startverb
+{
+  "realtime-service": {
+    "type": "ws",
+    "url": "wss://mcp.example.com/ws",
+    "headers": {
+      "Authorization": "Bearer ${TOKEN}"
+    }
+  }
+}
+\stopverb}
+
+\p{\strong{Use cases:}}
+
+\ul{
+\li{Real-time data streaming}
+\li{Persistent connections}
+\li{Push notifications from server}
+\li{Low-latency requirements}
+}
+}
+}
+
+\subtree{
+\title{Environment Variable Expansion}
+\p{All MCP configurations support environment variable substitution:}
+
+\p{\strong{${CLAUDE_PLUGIN_ROOT}} - Plugin directory (always use for portability):}
+
+\pre{\startverb
+{
+  "command": "${CLAUDE_PLUGIN_ROOT}/servers/my-server"
+}
+\stopverb}
+
+\p{\strong{User environment variables} - From user's shell:}
+
+\pre{\startverb
+{
+  "env": {
+    "API_KEY": "${MY_API_KEY}",
+    "DATABASE_URL": "${DB_URL}"
+  }
+}
+\stopverb}
+
+\p{\strong{Best practice:} Document all required environment variables in plugin README.}
+}
+
+\subtree{
+\title{MCP Tool Naming}
+\p{When MCP servers provide tools, they're automatically prefixed:}
+
+\p{\strong{Format:} \code{\startverb mcp\strong{plugin_<plugin-name>_<server-name>}<tool-name>\stopverb}}
+
+\p{\strong{Example:}}
+
+\ul{
+\li{Plugin: \code{\startverb asana\stopverb}}
+\li{Server: \code{\startverb asana\stopverb}}
+\li{Tool: \code{\startverb create_task\stopverb}}
+\li{\strong{Full name:} \code{\startverb mcp\strong{plugin_asana_asana}asana_create_task\stopverb}}
+}
+
+\subtree{
+\title{Using MCP Tools in Commands}
+\p{Pre-allow specific MCP tools in command frontmatter:}
+
+\pre{\startverb
+---
+allowed-tools: [
+  "mcp__plugin_asana_asana__asana_create_task",
+  "mcp__plugin_asana_asana__asana_search_tasks"
+]
+---
+\stopverb}
+
+\p{\strong{Wildcard (use sparingly):}}
+
+\pre{\startverb
+---
+allowed-tools: ["mcp__plugin_asana_asana__*"]
+---
+\stopverb}
+
+\p{\strong{Best practice:} Pre-allow specific tools, not wildcards, for security.}
+}
+}
+
+\subtree{
+\title{Lifecycle Management}
+\p{\strong{Automatic startup:}}
+
+\ul{
+\li{MCP servers start when plugin enables}
+\li{Connection established before first tool use}
+\li{Restart required for configuration changes}
+}
+
+\p{\strong{Lifecycle:}}
+
+\ol{
+\li{Plugin loads}
+\li{MCP configuration parsed}
+\li{Server process started (stdio) or connection established (SSE/HTTP/WS)}
+\li{Tools discovered and registered}
+\li{Tools available as \code{\startverb mcp\strong{plugin_...}...\stopverb}}
+}
+
+\p{\strong{Viewing servers:} Use \code{\startverb /mcp\stopverb} command to see all servers including plugin-provided ones.}
+}
+
+\subtree{
+\title{Authentication Patterns}
+\subtree{
+\title{OAuth (SSE/HTTP)}
+\p{OAuth handled automatically by Claude Code:}
+
+\pre{\startverb
+{
+  "type": "sse",
+  "url": "https://mcp.example.com/sse"
+}
+\stopverb}
+
+\p{User authenticates in browser on first use. No additional configuration needed.}
+}
+
+\subtree{
+\title{Token-Based (Headers)}
+\p{Static or environment variable tokens:}
+
+\pre{\startverb
+{
+  "type": "http",
+  "url": "https://api.example.com",
+  "headers": {
+    "Authorization": "Bearer ${API_TOKEN}"
+  }
+}
+\stopverb}
+
+\p{Document required environment variables in README.}
+}
+
+\subtree{
+\title{Environment Variables (stdio)}
+\p{Pass configuration to MCP server:}
+
+\pre{\startverb
+{
+  "command": "python",
+  "args": ["-m", "my_mcp_server"],
+  "env": {
+    "DATABASE_URL": "${DB_URL}",
+    "API_KEY": "${API_KEY}",
+    "LOG_LEVEL": "info"
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration Patterns}
+\subtree{
+\title{Pattern 1: Simple Tool Wrapper}
+\p{Commands use MCP tools with user interaction:}
+
+\pre{\startverb
+# Command: create-item.md
+---
+allowed-tools: ["mcp__plugin_name_server__create_item"]
+---
+
+Steps:
+1. Gather item details from user
+2. Use mcp__plugin_name_server__create_item
+3. Confirm creation
+\stopverb}
+
+\p{\strong{Use for:} Adding validation or preprocessing before MCP calls.}
+}
+
+\subtree{
+\title{Pattern 2: Autonomous Agent}
+\p{Agents use MCP tools autonomously:}
+
+\pre{\startverb
+# Agent: data-analyzer.md
+
+Analysis Process:
+1. Query data via mcp__plugin_db_server__query
+2. Process and analyze results
+3. Generate insights report
+\stopverb}
+
+\p{\strong{Use for:} Multi-step MCP workflows without user interaction.}
+}
+
+\subtree{
+\title{Pattern 3: Multi-Server Plugin}
+\p{Integrate multiple MCP servers:}
+
+\pre{\startverb
+{
+  "github": {
+    "type": "sse",
+    "url": "https://mcp.github.com/sse"
+  },
+  "jira": {
+    "type": "sse",
+    "url": "https://mcp.jira.com/sse"
+  }
+}
+\stopverb}
+
+\p{\strong{Use for:} Workflows spanning multiple services.}
+}
+}
+
+\subtree{
+\title{Security Best Practices}
+\subtree{
+\title{Use HTTPS/WSS}
+\p{Always use secure connections:}
+
+\pre{\startverb
+✅ "url": "https://mcp.example.com/sse"
+❌ "url": "http://mcp.example.com/sse"
+\stopverb}
+}
+
+\subtree{
+\title{Token Management}
+\p{\strong{DO:}}
+
+\ul{
+\li{✅ Use environment variables for tokens}
+\li{✅ Document required env vars in README}
+\li{✅ Let OAuth flow handle authentication}
+}
+
+\p{\strong{DON'T:}}
+
+\ul{
+\li{❌ Hardcode tokens in configuration}
+\li{❌ Commit tokens to git}
+\li{❌ Share tokens in documentation}
+}
+}
+
+\subtree{
+\title{Permission Scoping}
+\p{Pre-allow only necessary MCP tools:}
+
+\pre{\startverb
+✅ allowed-tools: [
+  "mcp__plugin_api_server__read_data",
+  "mcp__plugin_api_server__create_item"
+]
+
+❌ allowed-tools: ["mcp__plugin_api_server__*"]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\subtree{
+\title{Connection Failures}
+\p{Handle MCP server unavailability:}
+
+\ul{
+\li{Provide fallback behavior in commands}
+\li{Inform user of connection issues}
+\li{Check server URL and configuration}
+}
+}
+
+\subtree{
+\title{Tool Call Errors}
+\p{Handle failed MCP operations:}
+
+\ul{
+\li{Validate inputs before calling MCP tools}
+\li{Provide clear error messages}
+\li{Check rate limiting and quotas}
+}
+}
+
+\subtree{
+\title{Configuration Errors}
+\p{Validate MCP configuration:}
+
+\ul{
+\li{Test server connectivity during development}
+\li{Validate JSON syntax}
+\li{Check required environment variables}
+}
+}
+}
+
+\subtree{
+\title{Performance Considerations}
+\subtree{
+\title{Lazy Loading}
+\p{MCP servers connect on-demand:}
+
+\ul{
+\li{Not all servers connect at startup}
+\li{First tool use triggers connection}
+\li{Connection pooling managed automatically}
+}
+}
+
+\subtree{
+\title{Batching}
+\p{Batch similar requests when possible:}
+
+\pre{\startverb
+# Good: Single query with filters
+tasks = search_tasks(project="X", assignee="me", limit=50)
+
+# Avoid: Many individual queries
+for id in task_ids:
+    task = get_task(id)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Testing MCP Integration}
+\subtree{
+\title{Local Testing}
+\ol{
+\li{Configure MCP server in \code{\startverb .mcp.json\stopverb}}
+\li{Install plugin locally (\code{\startverb .claude-plugin/\stopverb})}
+\li{Run \code{\startverb /mcp\stopverb} to verify server appears}
+\li{Test tool calls in commands}
+\li{Check \code{\startverb claude --debug\stopverb} logs for connection issues}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] MCP configuration is valid JSON}
+\li{[ ] Server URL is correct and accessible}
+\li{[ ] Required environment variables documented}
+\li{[ ] Tools appear in \code{\startverb /mcp\stopverb} output}
+\li{[ ] Authentication works (OAuth or tokens)}
+\li{[ ] Tool calls succeed from commands}
+\li{[ ] Error cases handled gracefully}
+}
+}
+}
+
+\subtree{
+\title{Debugging}
+\subtree{
+\title{Enable Debug Logging}
+\pre{\startverb
+claude --debug
+\stopverb}
+
+\p{Look for:}
+
+\ul{
+\li{MCP server connection attempts}
+\li{Tool discovery logs}
+\li{Authentication flows}
+\li{Tool call errors}
+}
+}
+
+\subtree{
+\title{Common Issues}
+\p{\strong{Server not connecting:}}
+
+\ul{
+\li{Check URL is correct}
+\li{Verify server is running (stdio)}
+\li{Check network connectivity}
+\li{Review authentication configuration}
+}
+
+\p{\strong{Tools not available:}}
+
+\ul{
+\li{Verify server connected successfully}
+\li{Check tool names match exactly}
+\li{Run \code{\startverb /mcp\stopverb} to see available tools}
+\li{Restart Claude Code after config changes}
+}
+
+\p{\strong{Authentication failing:}}
+
+\ul{
+\li{Clear cached auth tokens}
+\li{Re-authenticate}
+\li{Check token scopes and permissions}
+\li{Verify environment variables set}
+}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{MCP Server Types}
+\pre{\startverb
+| Type | Transport | Best For | Auth |
+|------|-----------|----------|------|
+| stdio | Process | Local tools, custom servers | Env vars |
+| SSE | HTTP | Hosted services, cloud APIs | OAuth |
+| HTTP | REST | API backends, token auth | Tokens |
+| ws | WebSocket | Real-time, streaming | Tokens |
+\stopverb}
+}
+
+\subtree{
+\title{Configuration Checklist}
+\ul{
+\li{[ ] Server type specified (stdio/SSE/HTTP/ws)}
+\li{[ ] Type-specific fields complete (command or url)}
+\li{[ ] Authentication configured}
+\li{[ ] Environment variables documented}
+\li{[ ] HTTPS/WSS used (not HTTP/WS)}
+\li{[ ] ${CLAUDE_PLUGIN_ROOT} used for paths}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\p{\strong{DO:}}
+
+\ul{
+\li{✅ Use ${CLAUDE_PLUGIN_ROOT} for portable paths}
+\li{✅ Document required environment variables}
+\li{✅ Use secure connections (HTTPS/WSS)}
+\li{✅ Pre-allow specific MCP tools in commands}
+\li{✅ Test MCP integration before publishing}
+\li{✅ Handle connection and tool errors gracefully}
+}
+
+\p{\strong{DON'T:}}
+
+\ul{
+\li{❌ Hardcode absolute paths}
+\li{❌ Commit credentials to git}
+\li{❌ Use HTTP instead of HTTPS}
+\li{❌ Pre-allow all tools with wildcards}
+\li{❌ Skip error handling}
+\li{❌ Forget to document setup}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\subtree{
+\title{Reference Files}
+\p{For detailed information, consult:}
+
+\ul{
+\li{\strong{\code{\startverb references/server-types.md\stopverb}} - Deep dive on each server type}
+\li{\strong{\code{\startverb references/authentication.md\stopverb}} - Authentication patterns and OAuth}
+\li{\strong{\code{\startverb references/tool-usage.md\stopverb}} - Using MCP tools in commands and agents}
+}
+}
+
+\subtree{
+\title{Example Configurations}
+\p{Working examples in \code{\startverb examples/\stopverb}:}
+
+\ul{
+\li{\strong{\code{\startverb stdio-server.json\stopverb}} - Local stdio MCP server}
+\li{\strong{\code{\startverb sse-server.json\stopverb}} - Hosted SSE server with OAuth}
+\li{\strong{\code{\startverb http-server.json\stopverb}} - REST API with token auth}
+}
+}
+
+\subtree{
+\title{External Resources}
+\ul{
+\li{\strong{Official MCP Docs}: https://modelcontextprotocol.io/}
+\li{\strong{Claude Code MCP Docs}: https://docs.claude.com/en/docs/claude-code/mcp}
+\li{\strong{MCP SDK}: @modelcontextprotocol/sdk}
+\li{\strong{Testing}: Use \code{\startverb claude --debug\stopverb} and \code{\startverb /mcp\stopverb} command}
+}
+}
+}
+
+\subtree{
+\title{Implementation Workflow}
+\p{To add MCP integration to a plugin:}
+
+\ol{
+\li{Choose MCP server type (stdio, SSE, HTTP, ws)}
+\li{Create \code{\startverb .mcp.json\stopverb} at plugin root with configuration}
+\li{Use ${CLAUDE_PLUGIN_ROOT} for all file references}
+\li{Document required environment variables in README}
+\li{Test locally with \code{\startverb /mcp\stopverb} command}
+\li{Pre-allow MCP tools in relevant commands}
+\li{Handle authentication (OAuth or tokens)}
+\li{Test error cases (connection failures, auth errors)}
+\li{Document MCP integration in plugin README}
+}
+
+\p{Focus on stdio for custom/local servers, SSE for hosted services with OAuth.}
+}
+}

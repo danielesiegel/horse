@@ -1,0 +1,299 @@
+\title{Performing Access Recertification With Saviynt}
+
+\taxon{skill}
+
+\tag{saviynt}
+
+\tag{access-recertification}
+
+\tag{identity-governance}
+
+\tag{compliance}
+
+\tag{certification-campaign}
+
+\tag{iga}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Configure and execute access recertification campaigns in Saviynt Enterprise Identity Cloud to validate user entitlements, revoke excessive access, and maintain compliance with SOX, SOC2, and HIPAA.}
+
+\subtree{
+\title{Performing Access Recertification with Saviynt}
+\subtree{
+\title{Overview}
+\p{Access recertification (also called access certification or access review) is a periodic process where designated reviewers validate that users have appropriate access to systems and data. Saviynt Enterprise Identity Cloud (EIC) automates this process through certification campaigns that present reviewers with current access assignments and collect approve/revoke/conditionally-certify decisions. Campaigns can be triggered on schedule (quarterly, semi-annually), event-driven (department transfer, role change), or on-demand. Saviynt provides intelligence features including risk scoring, usage analytics, and peer-group analysis to help reviewers make informed decisions.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing access recertification with saviynt}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Saviynt Enterprise Identity Cloud (EIC) tenant with admin access}
+\li{Identity data synchronized from authoritative sources (HR, AD, cloud)}
+\li{Entitlement data imported from target applications}
+\li{Certifier roles assigned (managers, application owners, data owners)}
+\li{Campaign templates defined for each certification type}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Campaign Types}
+\pre{\startverb
+| Type | Scope | Trigger | Certifier |
+|------|-------|---------|-----------|
+| User Manager | All access for users under a manager | Scheduled (quarterly) | Direct manager |
+| Entitlement Owner | All users with a specific entitlement | Scheduled (semi-annually) | Entitlement/app owner |
+| Application | All access to a specific application | Scheduled | Application owner |
+| Role-Based | All users assigned to a specific role | Scheduled | Role owner |
+| Event-Based | Users whose attributes changed | Attribute change trigger | New manager |
+| Micro-Certification | Single user, single entitlement | On-demand | Manager or owner |
+\stopverb}
+}
+
+\subtree{
+\title{Certification Decisions}
+\pre{\startverb
+| Decision | Effect | Use Case |
+|----------|--------|----------|
+| Certify (Approve) | Access maintained | Access is still required |
+| Revoke | Access removal ticket created | Access no longer needed |
+| Conditionally Certify | Access maintained with conditions | Access needed temporarily, review again |
+| Delegate | Reassign to another certifier | Certifier lacks knowledge to decide |
+| Abstain | No decision recorded | Conflict of interest |
+\stopverb}
+}
+
+\subtree{
+\title{Campaign Lifecycle}
+\pre{\startverb
+CONFIGURATION → PREVIEW → ACTIVE → IN PROGRESS → COMPLETED → REMEDIATION
+       │            │         │          │             │            │
+       │            │         │          │             │            └── Revoke tickets
+       │            │         │          │             │                executed
+       │            │         │          │             │
+       │            │         │          │             └── All decisions
+       │            │         │          │                 collected
+       │            │         │          │
+       │            │         │          └── Certifiers reviewing
+       │            │         │              and making decisions
+       │            │         │
+       │            │         └── Campaign launched,
+       │            │             notifications sent
+       │            │
+       │            └── Read-only preview for validation
+       │
+       └── Campaign parameters defined
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Configure Campaign Template}
+\p{In Saviynt Admin Console:}
+
+\ol{
+\li{Navigate to \strong{Certifications > Campaign > Create New Campaign}}
+\li{Define campaign parameters:}
+}
+
+\pre{\startverb
+| Parameter | Value |
+|-----------|-------|
+| Campaign Name | Q1 2025 Manager Access Review |
+| Campaign Type | User Manager |
+| Description | Quarterly review of all user access |
+| Certifier Type | Manager (dynamic - user's direct manager) |
+| Secondary Certifier | Application Owner (fallback if manager unavailable) |
+| Due Date | 14 days from launch |
+| Reminder Schedule | Day 7, Day 10, Day 13 |
+| Escalation | Auto-revoke on Day 15 if no decision |
+\stopverb}
+
+\ol{
+\li{Configure scope filters:}
+\li{Include: All active users}
+\li{Exclude: Service accounts, break-glass accounts}
+\li{Application filter: All connected applications}
+}
+
+\ol{
+\li{Configure intelligence features:}
+\li{Enable risk scoring (high-risk entitlements highlighted)}
+\li{Enable usage data (last access date shown)}
+\li{Enable peer analysis (compare access to peer group)}
+\li{Enable SoD violation flagging}
+}
+}
+
+\subtree{
+\title{Step 2: Configure Certifier Experience}
+\p{Customize what certifiers see during the review:}
+
+\p{\strong{Columns Displayed:}}
+
+\ul{
+\li{User name and title}
+\li{Application name}
+\li{Entitlement/role name}
+\li{Risk score (1-10)}
+\li{Last access date}
+\li{Peer group comparison (\% of peers with same access)}
+\li{SoD violation flag}
+}
+
+\p{\strong{Decision Options:}}
+
+\ul{
+\li{Certify with justification (free text)}
+\li{Revoke with reason (dropdown: no longer needed, SoD conflict, role change)}
+\li{Conditionally certify with expiry date}
+}
+
+\p{\strong{Bulk Actions:}}
+
+\ul{
+\li{Certify all low-risk items}
+\li{Revoke all items not accessed in 90+ days}
+\li{Filter by application, risk level, or SoD status}
+}
+}
+
+\subtree{
+\title{Step 3: Launch Campaign via API}
+\pre{\startverb
+import requests
+
+SAVIYNT_URL = "https://tenant.saviyntcloud.com"
+SAVIYNT_TOKEN = "your-api-token"
+
+def create_certification_campaign(campaign_config):
+    """Create and launch a Saviynt certification campaign."""
+    headers = {
+        "Authorization": f"Bearer {SAVIYNT_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    # Create campaign
+    response = requests.post(
+        f"{SAVIYNT_URL}/ECM/api/v5/createCampaign",
+        headers=headers,
+        json={
+            "campaignname": campaign_config["name"],
+            "campaigntype": campaign_config["type"],
+            "description": campaign_config["description"],
+            "certifier": campaign_config["certifier_type"],
+            "duedate": campaign_config["due_date"],
+            "reminderdays": campaign_config["reminder_days"],
+            "autorevoke": campaign_config.get("auto_revoke", True),
+            "autorevokedays": campaign_config.get("auto_revoke_days", 15),
+            "scope": campaign_config.get("scope", {}),
+        }
+    )
+    response.raise_for_status()
+    campaign_id = response.json().get("campaignId")
+
+    # Launch campaign
+    launch_response = requests.post(
+        f"{SAVIYNT_URL}/ECM/api/v5/launchCampaign",
+        headers=headers,
+        json={"campaignId": campaign_id}
+    )
+    launch_response.raise_for_status()
+
+    return {
+        "campaign_id": campaign_id,
+        "status": "launched",
+        "certifications_created": launch_response.json().get("certificationCount", 0)
+    }
+
+def get_campaign_status(campaign_id):
+    """Get current status and progress of a campaign."""
+    headers = {"Authorization": f"Bearer {SAVIYNT_TOKEN}"}
+    response = requests.get(
+        f"{SAVIYNT_URL}/ECM/api/v5/getCampaignDetails",
+        headers=headers,
+        params={"campaignId": campaign_id}
+    )
+    response.raise_for_status()
+    data = response.json()
+
+    return {
+        "campaign_id": campaign_id,
+        "status": data.get("status"),
+        "total_items": data.get("totalLineItems", 0),
+        "certified": data.get("certifiedCount", 0),
+        "revoked": data.get("revokedCount", 0),
+        "pending": data.get("pendingCount", 0),
+        "completion_rate": data.get("completionPercentage", 0),
+    }
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Monitor Campaign Progress}
+\p{Track certification progress and send escalations:}
+
+\ul{
+\li{\strong{Dashboard}: Saviynt provides real-time campaign dashboard with completion rates}
+\li{\strong{Reminders}: Automatic email reminders at configured intervals}
+\li{\strong{Escalation}: If certifier does not respond by due date, escalate to manager's manager or auto-revoke}
+\li{\strong{Delegation}: Allow certifiers to delegate specific items to application owners}
+}
+}
+
+\subtree{
+\title{Step 5: Execute Remediation}
+\p{After campaign closes:}
+
+\ol{
+\li{\strong{Auto-Remediation}: Saviynt automatically creates provisioning tasks to revoke denied access}
+\li{\strong{Ticket Integration}: Revocation tasks create tickets in ServiceNow/Jira for tracking}
+\li{\strong{Grace Period}: Configure a grace period (e.g., 5 business days) before access is actually removed}
+\li{\strong{Verification}: After revocation, verify access is removed from target systems}
+\li{\strong{Audit Trail}: All decisions, revocations, and remediations logged for compliance evidence}
+}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] Campaign templates configured for each certification type}
+\li{[ ] Certifier roles assigned (managers, app owners, data owners)}
+\li{[ ] Risk scoring and usage analytics enabled}
+\li{[ ] SoD violation detection configured}
+\li{[ ] Reminder and escalation schedules defined}
+\li{[ ] Auto-revoke policy for non-responsive certifiers configured}
+\li{[ ] Campaign launched and certifiers notified}
+\li{[ ] Campaign completion rate > 95\% before close}
+\li{[ ] Revocation tasks created for all denied entitlements}
+\li{[ ] Remediation completed within SLA}
+\li{[ ] Campaign report generated for compliance audit}
+\li{[ ] Evidence archived for regulatory retention period}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Saviynt Campaigns and Certifications Documentation](https://docs.saviyntcloud.com/bundle/EIC-Admin-25/page/Content/Chapter15-Campaigns-and-Certifications/Campaigns.htm)}
+\li{[Saviynt Simplifying Certifications with Intelligence](https://saviynt.com/blog/simplifying-certifications-with-intelligence)}
+\li{[Saviynt Advanced Access Reviews](https://oxfordcomputergroup.com/resources/saviynt-advanced-access-reviews/)}
+\li{[ISACA Access Recertification Best Practices](https://www.isaca.org/)}
+}
+}
+}

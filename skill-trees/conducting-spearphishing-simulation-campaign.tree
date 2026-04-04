@@ -1,0 +1,169 @@
+\title{Conducting Spearphishing Simulation Campaign}
+
+\taxon{skill}
+
+\tag{red-team}
+
+\tag{adversary-simulation}
+
+\tag{mitre-attack}
+
+\tag{exploitation}
+
+\tag{post-exploitation}
+
+\tag{spearphishing}
+
+\tag{social-engineering}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Spearphishing simulation is a targeted social engineering attack vector used by red teams to gain initial access. Unlike broad phishing campaigns, spearphishing uses OSINT-derived intelligence to craf}
+
+\subtree{
+\title{Conducting Spearphishing Simulation Campaign}
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+
+\subtree{
+\title{Overview}
+\p{Spearphishing simulation is a targeted social engineering attack vector used by red teams to gain initial access. Unlike broad phishing campaigns, spearphishing uses OSINT-derived intelligence to craft highly personalized messages targeting specific individuals. This skill covers developing pretexts, building payloads, setting up email infrastructure, executing the campaign, and tracking results.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve conducting spearphishing simulation campaign}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with red teaming concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Develop convincing pretexts tailored to specific target personnel}
+\li{Create weaponized payloads that bypass email security controls}
+\li{Set up email delivery infrastructure with proper SPF/DKIM/DMARC configuration}
+\li{Execute phishing campaigns with real-time tracking and metrics}
+\li{Document results for engagement reporting and security awareness improvement}
+}
+}
+
+\subtree{
+\title{MITRE ATT&CK Mapping}
+\ul{
+\li{\strong{T1566.001} - Phishing: Spearphishing Attachment}
+\li{\strong{T1566.002} - Phishing: Spearphishing Link}
+\li{\strong{T1566.003} - Phishing: Spearphishing via Service}
+\li{\strong{T1598.003} - Phishing for Information: Spearphishing Link}
+\li{\strong{T1204.001} - User Execution: Malicious Link}
+\li{\strong{T1204.002} - User Execution: Malicious File}
+\li{\strong{T1608.001} - Stage Capabilities: Upload Malware}
+\li{\strong{T1608.005} - Stage Capabilities: Link Target}
+\li{\strong{T1583.001} - Acquire Infrastructure: Domains}
+\li{\strong{T1585.002} - Establish Accounts: Email Accounts}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: Pretext Development}
+\ol{
+\li{Review OSINT findings for target personnel profiles}
+\li{Identify current organizational events (mergers, projects, new hires)}
+\li{Select pretext theme (IT helpdesk, HR benefits, vendor communication, executive request)}
+\li{Craft email templates with appropriate urgency and authority cues}
+\li{Create landing pages that mirror target organization's branding}
+}
+}
+
+\subtree{
+\title{Phase 2: Payload Development}
+\ol{
+\li{Select payload type based on target security controls:}
+\li{HTML smuggling for email gateway bypass}
+\li{Macro-enabled documents (if macros not blocked)}
+\li{ISO/IMG files containing LNK payloads}
+\li{OneNote files with embedded scripts}
+\li{QR codes linking to credential harvesting pages}
+\li{Test payload against target's known security stack}
+\li{Implement payload obfuscation techniques}
+\li{Configure callback to C2 infrastructure}
+}
+}
+
+\subtree{
+\title{Phase 3: Infrastructure Setup}
+\ol{
+\li{Register convincing look-alike domain}
+\li{Age domain and build reputation (minimum 2 weeks recommended)}
+\li{Configure SPF, DKIM, and DMARC records}
+\li{Set up SMTP relay with GoPhish or custom mail server}
+\li{Deploy credential harvesting pages with SSL certificates}
+\li{Configure tracking pixels and click tracking}
+}
+}
+
+\subtree{
+\title{Phase 4: Campaign Execution}
+\ol{
+\li{Send test emails to verify delivery and rendering}
+\li{Launch campaign in waves (avoid mass sending)}
+\li{Monitor email delivery rates and opens in real-time}
+\li{Track link clicks and credential submissions}
+\li{Deploy payloads to users who interact with phishing emails}
+\li{Capture screenshots and evidence for reporting}
+}
+}
+
+\subtree{
+\title{Phase 5: Post-Campaign Analysis}
+\ol{
+\li{Calculate campaign metrics (delivery rate, open rate, click rate, credential capture rate)}
+\li{Identify users who reported phishing to SOC}
+\li{Document bypass of email security controls}
+\li{Map successful compromises to MITRE ATT&CK}
+\li{Compile findings for engagement report}
+}
+}
+}
+
+\subtree{
+\title{Tools and Resources}
+\pre{\startverb
+| Tool | Purpose | License |
+|------|---------|---------|
+| GoPhish | Phishing campaign management | Open Source |
+| Evilginx2 | Real-time credential harvesting with MFA bypass | Open Source |
+| King Phisher | Phishing campaign toolkit | Open Source |
+| SET (Social Engineering Toolkit) | Multi-vector social engineering | Open Source |
+| Modlishka | Reverse proxy phishing | Open Source |
+| CredSniper | Credential harvesting framework | Open Source |
+| Fierce Phish | Phishing framework | Open Source |
+\stopverb}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Pretext tailored to specific targets with OSINT data}
+\li{[ ] Payload tested against email security controls}
+\li{[ ] Infrastructure configured with proper email authentication}
+\li{[ ] Campaign tracked with delivery and interaction metrics}
+\li{[ ] Evidence collected for engagement report}
+\li{[ ] Cleanup performed on infrastructure post-campaign}
+}
+}
+}

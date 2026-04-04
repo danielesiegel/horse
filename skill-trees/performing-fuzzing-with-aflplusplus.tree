@@ -1,0 +1,74 @@
+\title{Performing Fuzzing With Aflplusplus}
+
+\taxon{skill}
+
+\tag{fuzzing}
+
+\tag{aflplusplus}
+
+\tag{coverage-guided}
+
+\tag{crash-triage}
+
+\tag{binary-analysis}
+
+\tag{security-testing}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Perform coverage-guided fuzzing of compiled binaries using AFL++ (American Fuzzy Lop Plus Plus) to discover memory corruption, crashes, and security vulnerabilities. The tester instruments target binaries with afl-cc/afl-clang-fast, manages input corpora with afl-cmin and afl-tmin, runs parallel fuzzing campaigns with afl-fuzz, and triages crashes using CASR or GDB scripts. Activates for requests involving binary fuzzing, crash discovery, coverage-guided testing, or AFL++ fuzzing campaigns.}
+
+\subtree{
+\title{Performing Fuzzing with AFL++}
+\subtree{
+\title{Overview}
+\p{AFL++ is a community-maintained fork of American Fuzzy Lop (AFL) that provides coverage-guided fuzzing for compiled binaries. It instruments targets at compile time or via QEMU/Unicorn mode for binary-only fuzzing, then mutates input corpora to discover new code paths. AFL++ includes advanced scheduling (MOpt, rare), custom mutators, CMPLOG for input-to-state comparison solving, and persistent mode for high-throughput fuzzing.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing fuzzing with aflplusplus}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{AFL++ installed (\code{\startverb apt install afl++\stopverb} or build from source)}
+\li{Target binary source code (for compile-time instrumentation) or QEMU mode for binary-only}
+\li{Initial seed corpus of valid inputs for the target format}
+\li{Linux system with /proc/sys/kernel/core_pattern configured}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Instrument the target binary with \code{\startverb afl-cc\stopverb} or \code{\startverb afl-clang-fast\stopverb}}
+\li{Prepare seed corpus directory with minimal valid inputs}
+\li{Minimize corpus with \code{\startverb afl-cmin\stopverb} to remove redundant seeds}
+\li{Run \code{\startverb afl-fuzz\stopverb} with appropriate flags (-i input -o output)}
+\li{Monitor fuzzing progress via afl-whatsup and UI stats}
+\li{Triage crashes with \code{\startverb afl-tmin\stopverb} minimization and CASR/GDB analysis}
+\li{Report unique crashes with reproduction steps}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\pre{\startverb
++++ Findings +++
+  unique crashes: 12
+  unique hangs: 3
+  last crash: 00:02:15 ago
++++ Coverage +++
+  map density: 4.23% / 8.41%
+  paths found: 1847
+  exec speed: 2145/sec
+\stopverb}
+}
+}

@@ -1,0 +1,81 @@
+\title{Cargo Rust}
+
+\taxon{skill}
+
+\meta{description}{"Rust package manager and build system. Cargo commands, dependency management, and workspace patterns."}
+
+\subtree{
+\title{Cargo Rust Skill}
+\p{\strong{Trit}: -1 (MINUS - build verification and constraint checking) \strong{Foundation}: Cargo + rustc + crates.io}
+
+\subtree{
+\title{Core Concept}
+\p{Cargo manages Rust projects with:}
+
+\ul{
+\li{Dependency resolution}
+\li{Build orchestration  }
+\li{Testing and benchmarking}
+\li{Publishing to crates.io}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Build
+cargo build
+cargo build --release
+
+# Test
+cargo test
+cargo test --lib
+
+# Check (fast)
+cargo check
+cargo clippy
+
+# Run
+cargo run
+cargo run --release
+
+# Add dependency
+cargo add serde
+cargo add serde --features derive
+\stopverb}
+}
+
+\subtree{
+\title{Workspace Pattern}
+\pre{\startverb
+# Cargo.toml (workspace root)
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+fn trit_from_build(result: &BuildResult) -> i8 {
+    match result {
+        BuildResult::Error(_) => -1,   // MINUS: compilation failure
+        BuildResult::Warning(_) => 0,  // ERGODIC: warnings
+        BuildResult::Success => 1,     // PLUS: clean build
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Triads}
+\pre{\startverb
+cargo-rust (-1) ⊗ acsets (0) ⊗ gay-mcp (+1) = 0 ✓
+cargo-rust (-1) ⊗ nickel (0) ⊗ world-hopping (+1) = 0 ✓
+\stopverb}
+}
+}

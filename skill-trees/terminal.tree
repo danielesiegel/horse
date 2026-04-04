@@ -1,0 +1,65 @@
+\title{Terminal}
+
+\taxon{skill}
+
+\meta{description}{Terminal tools = tmux + zsh + fzf + ripgrep.}
+
+\subtree{
+\title{terminal}
+\p{Terminal tools = tmux + zsh + fzf + ripgrep.}
+
+\subtree{
+\title{Atomic Skills}
+\pre{\startverb
+| Skill | Domain |
+|-------|--------|
+| tmux | Multiplexer |
+| zsh | Shell |
+| fzf | Fuzzy finder |
+| ripgrep | Search |
+\stopverb}
+}
+
+\subtree{
+\title{Tmux}
+\pre{\startverb
+tmux new -s work
+# C-b d (detach)
+tmux attach -t work
+# C-b % (split vertical)
+# C-b " (split horizontal)
+\stopverb}
+}
+
+\subtree{
+\title{Fzf}
+\pre{\startverb
+# File picker
+vim $(fzf)
+
+# History
+C-r  # fzf history search
+
+# Directory
+cd $(find . -type d | fzf)
+\stopverb}
+}
+
+\subtree{
+\title{Ripgrep}
+\pre{\startverb
+rg "pattern"
+rg -t py "import"
+rg -l "TODO"
+rg --hidden "secret"
+\stopverb}
+}
+
+\subtree{
+\title{Integration}
+\pre{\startverb
+# fzf + rg
+rg --files | fzf | xargs vim
+\stopverb}
+}
+}

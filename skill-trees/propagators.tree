@@ -1,0 +1,453 @@
+\title{Propagators}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{"Sussman/Radul propagator networks for constraint propagation and bidirectional dataflow."}
+
+\subtree{
+\title{Propagators Skill}
+\blockquote{*"The Art of the Propagator" — Radul & Sussman, 2009*}
+
+\subtree{
+\title{Core Concept}
+\p{Propagators are autonomous machines that:}
+
+\ol{
+\li{\strong{Watch} cells for new information}
+\li{\strong{Compute} derived values}
+\li{\strong{Add} information to other cells}
+\li{Repeat until \strong{fixpoint}}
+}
+
+\pre{\startverb
+  ┌──────┐         ┌──────┐
+  │cell A│────────▶│cell B│
+  └──────┘  prop   └──────┘
+      │                │
+      │    ┌──────┐    │
+      └───▶│cell C│◀───┘
+           └──────┘
+\stopverb}
+
+\p{\strong{No control flow.} Information flows until nothing new can be derived.}
+}
+
+\subtree{
+\title{Why It's Strange}
+\ol{
+\li{\strong{Bidirectional} — constraints work both ways}
+\li{\strong{Monotonic} — cells only gain information, never lose it}
+\li{\strong{Mergeable} — conflicting info produces refined info (or contradiction)}
+\li{\strong{Concurrent} — all propagators run "simultaneously"}
+}
+}
+
+\subtree{
+\title{Cell Lattice}
+\p{Cells hold values from a \strong{join-semilattice}:}
+
+\pre{\startverb
+        ⊤ (contradiction)
+       /|\
+      / | \
+     /  |  \
+   3.14  e  √2
+     \  |  /
+      \ | /
+       \|/
+        ⊥ (nothing)
+\stopverb}
+
+\ul{
+\li{⊥ = "I know nothing"}
+\li{Value = "I know this specific thing"}
+\li{⊤ = "Contradiction! Conflicting claims"}
+}
+}
+
+\subtree{
+\title{Basic Operations}
+\pre{\startverb
+;; Create cells
+(define-cell a)
+(define-cell b)
+(define-cell c)
+
+;; Add propagator: c = a + b
+(p:+ a b c)
+
+;; Set values (can be in any order!)
+(add-content a 3)
+(add-content b 4)
+
+;; c automatically becomes 7
+(content c)  ; → 7
+
+;; BIDIRECTIONAL: set c, derive a!
+(add-content c 10)
+(add-content b 4)
+(content a)  ; → 6 (inferred!)
+\stopverb}
+}
+
+\subtree{
+\title{Partial Information}
+\pre{\startverb
+;; Intervals
+(define-cell x)
+(add-content x (make-interval 0 10))   ; x ∈ [0, 10]
+(add-content x (make-interval 5 15))   ; x ∈ [5, 10] (intersection!)
+
+;; Symbolic
+(add-content x 'positive)
+(add-content x 7)  ; Consistent: 7 is positive
+
+;; Contradiction
+(add-content x 'negative)  ; → ⊤ (7 is not negative!)
+\stopverb}
+}
+
+\subtree{
+\title{Implementation}
+\subtree{
+\title{Minimal Propagator in Python}
+\pre{\startverb
+class Cell:
+    def __init__(self):
+        self.content = Nothing()
+        self.neighbors = []  # Propagators to notify
+    
+    def add_content(self, value):
+        merged = merge(self.content, value)
+        if merged != self.content:
+            self.content = merged
+            self.alert_propagators()
+    
+    def alert_propagators(self):
+        for prop in self.neighbors:
+            schedule(prop)
+
+class Propagator:
+    def __init__(self, inputs, output, func):
+        self.inputs = inputs
+        self.output = output
+        self.func = func
+        for cell in inputs:
+            cell.neighbors.append(self)
+    
+    def run(self):
+        values = [c.content for c in self.inputs]
+        if all(v.is_known() for v in values):
+            result = self.func(*[v.value for v in values])
+            self.output.add_content(result)
+
+# Adder propagator (a + b = c, bidirectional)
+def make_adder(a, b, c):
+    Propagator([a, b], c, lambda x, y: x + y)
+    Propagator([a, c], b, lambda x, z: z - x)
+    Propagator([b, c], a, lambda y, z: z - y)
+\stopverb}
+}
+
+\subtree{
+\title{Scoped Propagators (Gay.jl)}
+\pre{\startverb
+# From your codebase: scoped_propagators.jl
+abstract type ScopedPropagator end
+
+struct ConeUp <: ScopedPropagator      # ↑ Bottom-up (colimit)
+    cells::Vector{Cell}
+end
+
+struct DescentDown <: ScopedPropagator  # ↓ Top-down (limit)
+    cells::Vector{Cell}
+end
+
+struct AdhesionHoriz <: ScopedPropagator  # ↔ Beck-Chevalley
+    left::Vector{Cell}
+    right::Vector{Cell}
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+# Triadic propagator network
+struct TriadicCell
+    trit::Int  # -1, 0, +1
+    value::Any
+    neighbors::Vector{Propagator}
+end
+
+# Conservation: sum of connected cells = 0 (mod 3)
+function verify_gf3(cells::Vector{TriadicCell})
+    sum(c.trit for c in cells) % 3 == 0
+end
+\stopverb}
+}
+
+\subtree{
+\title{Dependency-Directed Backtracking}
+\p{When contradiction (⊤) is reached:}
+
+\pre{\startverb
+(define-cell x)
+(define-cell y)
+
+;; Track provenance
+(add-content x (supported 5 '(assumption-1)))
+(add-content y (supported 7 '(assumption-2)))
+
+;; Contradiction!
+(add-content x (supported 10 '(assumption-3)))
+
+;; System identifies: assumption-1 OR assumption-3 must go
+;; Backtrack to consistent state
+\stopverb}
+}
+
+\subtree{
+\title{Applications}
+\pre{\startverb
+| Domain | Use Case |
+|--------|----------|
+| **CAD** | Constraint-based modeling |
+| **Physics** | Unit conversion, equations |
+| **Type inference** | Bidirectional typing |
+| **Planning** | Constraint satisfaction |
+| **Pricing** | Epistemic arbitrage |
+\stopverb}
+}
+
+\subtree{
+\title{Relationship to Other Models}
+\pre{\startverb
+| Model | Propagators |
+|-------|-------------|
+| Dataflow | Similar but propagators are bidirectional |
+| Constraint Logic | Propagators = constraint propagation |
+| Reactive | Similar but propagators reach fixpoint |
+| SAT/SMT | Unit propagation is a propagator |
+\stopverb}
+}
+
+\subtree{
+\title{Literature}
+\ol{
+\li{\strong{Radul & Sussman (2009)} - "The Art of the Propagator"}
+\li{\strong{Steele (1980)} - "The Definition and Implementation of Constraint Languages"}
+\li{\strong{Apt (1999)} - "The Essence of Constraint Propagation"}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb epistemic-arbitrage\stopverb} - Uses scoped propagators}
+\li{\code{\startverb constraint-logic\stopverb} - Logical foundation}
+\li{\code{\startverb dataflow\stopverb} - One-way version}
+\li{\code{\startverb interaction-nets\stopverb} - Another "no control" model}
+}
+}
+
+\subtree{
+\title{Neighbor Awareness (Co-Occurrence Patterns)}
+\subtree{
+\title{Basin Affinity}
+\p{From \code{\startverb interaction_entropy.duckdb\stopverb} skill co-occurrence analysis:}
+
+\pre{\startverb
+skill: propagators
+basin: NEUTRAL
+avg_basin_energy: 1.0
+interleave_role: generator (+1)
+\stopverb}
+}
+
+\subtree{
+\title{Co-Occurring Skills (Constraint Partners)}
+\p{Skills frequently invoked together in propagator networks:}
+
+\pre{\startverb
+| Skill | Role | Trit | Affinity Pattern |
+|-------|------|------|------------------|
+| **gay-mcp** | Generator | +1 | Color cells by value |
+| **duckdb-temporal-versioning** | Generator | +1 | Store cell states |
+| **datalog-fixpoint** | Coordinator | 0 | Fixpoint iteration |
+| **specter-acset** | Coordinator | 0 | Navigate cell networks |
+| **unworld** | Coordinator | 0 | Seed-derived constraints |
+| **sheaf-cohomology** | Validator | -1 | Verify cell consistency |
+| **three-match** | Validator | -1 | GF(3) conservation |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad Partners}
+\p{Natural skill groupings that satisfy GF(3) conservation (sum = 0):}
+
+\pre{\startverb
+propagators (+1) ⊗ datalog-fixpoint (0) ⊗ sheaf-cohomology (-1) = 0 ✓
+propagators (+1) ⊗ specter-acset (0) ⊗ three-match (-1) = 0 ✓
+propagators (+1) ⊗ unworld (0) ⊗ moebius-inversion (-1) = 0 ✓
+propagators (+1) ⊗ acsets (0) ⊗ temporal-coalgebra (-1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Basin Transition Flows}
+\p{Energy flow patterns in constraint propagation:}
+
+\pre{\startverb
+NEUTRAL → NEUTRAL:  LATERAL ↔  energy_delta =  0.000  (propagating)
+NEUTRAL → PLUS:     RISE ↑     energy_delta = +0.382  (information gain)
+NEUTRAL → MINUS:    DESCENT ↓  energy_delta = -0.382  (contradiction)
+\stopverb}
+}
+
+\subtree{
+\title{Interleave Topology}
+\p{Position in the constraint satisfaction pipeline:}
+
+\pre{\startverb
+Level 1: ⊕ generator  (propagators)                 NEUTRAL basin  [PROPAGATE]
+Level 2: ○ coordinator (datalog-fixpoint)           NEUTRAL basin  [FIXPOINT]
+Level 3: ○ coordinator (specter-acset)              NEUTRAL basin  [NAVIGATE]
+Level 4: ⊖ validator   (sheaf-cohomology)           NEUTRAL basin  [VERIFY]
+\stopverb}
+}
+
+\subtree{
+\title{Upstream Skills (Constraint Producers)}
+\p{Skills that produce constraints for propagation:}
+
+\pre{\startverb
+| Skill | Constraint Type | Propagation Pattern |
+|-------|-----------------|---------------------|
+| **acsets** | ACSet schema | Cell per part, morphism propagators |
+| **datalog-fixpoint** | Derived relations | Rule → propagator |
+| **gay-mcp** | Color constraints | Trit conservation |
+| **unworld** | Seed-derived | Chain constraints |
+\stopverb}
+}
+
+\subtree{
+\title{Downstream Skills (Fixpoint Consumers)}
+\p{Skills that consume propagator fixpoints:}
+
+\pre{\startverb
+| Skill | Usage Pattern | Output |
+|-------|---------------|--------|
+| **sheaf-cohomology** | Verify consistency | H¹ = 0 check |
+| **three-match** | Verify GF(3) | Conservation proof |
+| **specter-acset** | Navigate result | Selected values |
+| **duckdb-temporal-versioning** | Store fixpoint | Persistent state |
+\stopverb}
+}
+
+\subtree{
+\title{Skill Invocation Chains}
+\p{Common multi-skill sequences observed:}
+
+\pre{\startverb
+;; Constraint satisfaction pipeline
+(-> (acsets :define-schema)
+    (propagators :build-network)
+    (datalog-fixpoint :run-to-fixpoint)
+    (sheaf-cohomology :verify-consistency))
+
+;; Bidirectional type inference
+(-> (propagators :type-cells)
+    (specter-acset :navigate-types)
+    (three-match :verify-gf3))
+
+;; Epistemic arbitrage
+(-> (propagators :scoped-network)
+    (gay-mcp :color-by-confidence)
+    (duckdb-temporal-versioning :store-arbitrage))
+
+;; Triadic cell network
+(-> (gay-mcp :tripartite-seeds)
+    (propagators :triadic-cells)
+    (three-match :verify-balance))
+\stopverb}
+}
+
+\subtree{
+\title{MCP Tool Coordination}
+\p{When invoked via MCP, coordinates with:}
+
+\pre{\startverb
+mcp_neighbors:
+  - tool: acset_colim
+    relation: "cell structure from ACSets"
+    direction: upstream
+  - tool: datalog_query
+    relation: "rule-based propagators"
+    direction: upstream
+  - tool: sheaf_verify
+    relation: "verify cell consistency"
+    direction: downstream
+  - tool: gay_mcp
+    relation: "color cells by value"
+    direction: downstream
+  - tool: duckdb_query
+    relation: "store fixpoint states"
+    direction: downstream
+\stopverb}
+}
+
+\subtree{
+\title{Propagator Network Example}
+\pre{\startverb
+# Full pipeline with neighbor coordination
+def propagate_with_neighbors(constraints, initial_values):
+    # Build propagator network
+    cells = {}
+    propagators = []
+
+    for var in constraints.variables:
+        cells[var] = Cell()
+
+    for constraint in constraints.all:
+        prop = build_propagator(constraint, cells)
+        propagators.append(prop)
+
+    # Set initial values (from upstream)
+    for var, value in initial_values.items():
+        cells[var].add_content(value)
+
+    # Run to fixpoint (like datalog-fixpoint)
+    while schedule.has_work():
+        prop = schedule.pop()
+        prop.run()
+
+    # Verify via sheaf-cohomology (downstream)
+    for cell_name, cell in cells.items():
+        if cell.content == CONTRADICTION:
+            # Dependency-directed backtracking
+            deps = cell.get_dependencies()
+            sheaf_cohomology.report_obstruction(cell_name, deps)
+
+    # Color cells via gay-mcp (downstream)
+    for i, (name, cell) in enumerate(cells.items()):
+        cell.color = gay_mcp.color_at(seed, i)
+
+    # Store via duckdb (downstream)
+    duckdb_insert(db, "propagator_fixpoints", (
+        num_cells=len(cells),
+        num_propagators=len(propagators),
+        reached_fixpoint=True,
+        timestamp=now()
+    ))
+
+    return cells
+\stopverb}
+
+\p{\strong{Skill Name}: propagators \strong{Type}: Constraint Propagation Generator \strong{Trit}: +1 (PLUS - Generator) \strong{GF(3)}: Forms valid triads with coordinators (0) and validators (-1) \strong{Applications}: Bidirectional constraints, type inference, epistemic arbitrage, CAD modeling}
+}
+}
+}

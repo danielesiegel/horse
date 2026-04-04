@@ -1,0 +1,654 @@
+\title{Stream Chain}
+
+\taxon{skill}
+
+\tag{streaming}
+
+\tag{pipeline}
+
+\tag{chaining}
+
+\tag{multi-agent}
+
+\tag{workflow}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Stream-JSON chaining for multi-agent pipelines, data transformation, and sequential workflows}
+
+\subtree{
+\title{Stream-Chain Skill}
+\p{Execute sophisticated multi-step workflows where each agent's output flows into the next, enabling complex data transformations and sequential processing pipelines.}
+
+\subtree{
+\title{Overview}
+\p{Stream-Chain provides two powerful modes for orchestrating multi-agent workflows:}
+
+\ol{
+\li{\strong{Custom Chains} (\code{\startverb run\stopverb}): Execute custom prompt sequences with full control}
+\li{\strong{Predefined Pipelines} (\code{\startverb pipeline\stopverb}): Use battle-tested workflows for common tasks}
+}
+
+\p{Each step in a chain receives the complete output from the previous step, enabling sophisticated multi-agent coordination through streaming data flow.}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Run a Custom Chain}
+\pre{\startverb
+claude-flow stream-chain run \
+  "Analyze codebase structure" \
+  "Identify improvement areas" \
+  "Generate action plan"
+\stopverb}
+}
+
+\subtree{
+\title{Execute a Pipeline}
+\pre{\startverb
+claude-flow stream-chain pipeline analysis
+\stopverb}
+}
+}
+
+\subtree{
+\title{Custom Chains (\code{\startverb run\stopverb})}
+\p{Execute custom stream chains with your own prompts for maximum flexibility.}
+
+\subtree{
+\title{Syntax}
+\pre{\startverb
+claude-flow stream-chain run <prompt1> <prompt2> [...] [options]
+\stopverb}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{Minimum 2 prompts required}
+\li{Each prompt becomes a step in the chain}
+\li{Output flows sequentially through all steps}
+}
+}
+
+\subtree{
+\title{Options}
+\pre{\startverb
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--verbose` | Show detailed execution information | `false` |
+| `--timeout <seconds>` | Timeout per step | `30` |
+| `--debug` | Enable debug mode with full logging | `false` |
+\stopverb}
+}
+
+\subtree{
+\title{How Context Flows}
+\p{Each step receives the previous output as context:}
+
+\pre{\startverb
+Step 1: "Write a sorting function"
+Output: [function implementation]
+
+Step 2 receives:
+  "Previous step output:
+  [function implementation]
+
+  Next task: Add comprehensive tests"
+
+Step 3 receives:
+  "Previous steps output:
+  [function + tests]
+
+  Next task: Optimize performance"
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Basic Development Chain}
+\pre{\startverb
+claude-flow stream-chain run \
+  "Write a user authentication function" \
+  "Add input validation and error handling" \
+  "Create unit tests with edge cases"
+\stopverb}
+}
+
+\subtree{
+\title{Security Audit Workflow}
+\pre{\startverb
+claude-flow stream-chain run \
+  "Analyze authentication system for vulnerabilities" \
+  "Identify and categorize security issues by severity" \
+  "Propose fixes with implementation priority" \
+  "Generate security test cases" \
+  --timeout 45 \
+  --verbose
+\stopverb}
+}
+
+\subtree{
+\title{Code Refactoring Chain}
+\pre{\startverb
+claude-flow stream-chain run \
+  "Identify code smells in src/ directory" \
+  "Create refactoring plan with specific changes" \
+  "Apply refactoring to top 3 priority items" \
+  "Verify refactored code maintains behavior" \
+  --debug
+\stopverb}
+}
+
+\subtree{
+\title{Data Processing Pipeline}
+\pre{\startverb
+claude-flow stream-chain run \
+  "Extract data from API responses" \
+  "Transform data into normalized format" \
+  "Validate data against schema" \
+  "Generate data quality report"
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Predefined Pipelines (\code{\startverb pipeline\stopverb})}
+\p{Execute battle-tested workflows optimized for common development tasks.}
+
+\subtree{
+\title{Syntax}
+\pre{\startverb
+claude-flow stream-chain pipeline <type> [options]
+\stopverb}
+}
+
+\subtree{
+\title{Available Pipelines}
+\subtree{
+\title{1. Analysis Pipeline}
+\p{Comprehensive codebase analysis and improvement identification.}
+
+\pre{\startverb
+claude-flow stream-chain pipeline analysis
+\stopverb}
+
+\p{\strong{Workflow Steps:}}
+
+\ol{
+\li{\strong{Structure Analysis}: Map directory structure and identify components}
+\li{\strong{Issue Detection}: Find potential improvements and problems}
+\li{\strong{Recommendations}: Generate actionable improvement report}
+}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{New codebase onboarding}
+\li{Technical debt assessment}
+\li{Architecture review}
+\li{Code quality audits}
+}
+}
+
+\subtree{
+\title{2. Refactor Pipeline}
+\p{Systematic code refactoring with prioritization.}
+
+\pre{\startverb
+claude-flow stream-chain pipeline refactor
+\stopverb}
+
+\p{\strong{Workflow Steps:}}
+
+\ol{
+\li{\strong{Candidate Identification}: Find code needing refactoring}
+\li{\strong{Prioritization}: Create ranked refactoring plan}
+\li{\strong{Implementation}: Provide refactored code for top priorities}
+}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{Technical debt reduction}
+\li{Code quality improvement}
+\li{Legacy code modernization}
+\li{Design pattern implementation}
+}
+}
+
+\subtree{
+\title{3. Test Pipeline}
+\p{Comprehensive test generation with coverage analysis.}
+
+\pre{\startverb
+claude-flow stream-chain pipeline test
+\stopverb}
+
+\p{\strong{Workflow Steps:}}
+
+\ol{
+\li{\strong{Coverage Analysis}: Identify areas lacking tests}
+\li{\strong{Test Design}: Create test cases for critical functions}
+\li{\strong{Implementation}: Generate unit tests with assertions}
+}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{Increasing test coverage}
+\li{TDD workflow support}
+\li{Regression test creation}
+\li{Quality assurance}
+}
+}
+
+\subtree{
+\title{4. Optimize Pipeline}
+\p{Performance optimization with profiling and implementation.}
+
+\pre{\startverb
+claude-flow stream-chain pipeline optimize
+\stopverb}
+
+\p{\strong{Workflow Steps:}}
+
+\ol{
+\li{\strong{Profiling}: Identify performance bottlenecks}
+\li{\strong{Strategy}: Analyze and suggest optimization approaches}
+\li{\strong{Implementation}: Provide optimized code}
+}
+
+\p{\strong{Use Cases:}}
+
+\ul{
+\li{Performance improvement}
+\li{Resource optimization}
+\li{Scalability enhancement}
+\li{Latency reduction}
+}
+}
+}
+
+\subtree{
+\title{Pipeline Options}
+\pre{\startverb
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--verbose` | Show detailed execution | `false` |
+| `--timeout <seconds>` | Timeout per step | `30` |
+| `--debug` | Enable debug mode | `false` |
+\stopverb}
+}
+
+\subtree{
+\title{Pipeline Examples}
+\subtree{
+\title{Quick Analysis}
+\pre{\startverb
+claude-flow stream-chain pipeline analysis
+\stopverb}
+}
+
+\subtree{
+\title{Extended Refactoring}
+\pre{\startverb
+claude-flow stream-chain pipeline refactor --timeout 60 --verbose
+\stopverb}
+}
+
+\subtree{
+\title{Debug Test Generation}
+\pre{\startverb
+claude-flow stream-chain pipeline test --debug
+\stopverb}
+}
+
+\subtree{
+\title{Comprehensive Optimization}
+\pre{\startverb
+claude-flow stream-chain pipeline optimize --timeout 90 --verbose
+\stopverb}
+}
+}
+
+\subtree{
+\title{Pipeline Output}
+\p{Each pipeline execution provides:}
+
+\ul{
+\li{\strong{Progress}: Step-by-step execution status}
+\li{\strong{Results}: Success/failure per step}
+\li{\strong{Timing}: Total and per-step execution time}
+\li{\strong{Summary}: Consolidated results and recommendations}
+}
+}
+}
+
+\subtree{
+\title{Custom Pipeline Definitions}
+\p{Define reusable pipelines in \code{\startverb .claude-flow/config.json\stopverb}:}
+
+\subtree{
+\title{Configuration Format}
+\pre{\startverb
+{
+  "streamChain": {
+    "pipelines": {
+      "security": {
+        "name": "Security Audit Pipeline",
+        "description": "Comprehensive security analysis",
+        "prompts": [
+          "Scan codebase for security vulnerabilities",
+          "Categorize issues by severity (critical/high/medium/low)",
+          "Generate fixes with priority and implementation steps",
+          "Create security test suite"
+        ],
+        "timeout": 45
+      },
+      "documentation": {
+        "name": "Documentation Generation Pipeline",
+        "prompts": [
+          "Analyze code structure and identify undocumented areas",
+          "Generate API documentation with examples",
+          "Create usage guides and tutorials",
+          "Build architecture diagrams and flow charts"
+        ]
+      }
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Execute Custom Pipeline}
+\pre{\startverb
+claude-flow stream-chain pipeline security
+claude-flow stream-chain pipeline documentation
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Use Cases}
+\subtree{
+\title{Multi-Agent Coordination}
+\p{Chain different agent types for complex workflows:}
+
+\pre{\startverb
+claude-flow stream-chain run \
+  "Research best practices for API design" \
+  "Design REST API with discovered patterns" \
+  "Implement API endpoints with validation" \
+  "Generate OpenAPI specification" \
+  "Create integration tests" \
+  "Write deployment documentation"
+\stopverb}
+}
+
+\subtree{
+\title{Data Transformation Pipeline}
+\p{Process and transform data through multiple stages:}
+
+\pre{\startverb
+claude-flow stream-chain run \
+  "Extract user data from CSV files" \
+  "Normalize and validate data format" \
+  "Enrich data with external API calls" \
+  "Generate analytics report" \
+  "Create visualization code"
+\stopverb}
+}
+
+\subtree{
+\title{Code Migration Workflow}
+\p{Systematic code migration with validation:}
+
+\pre{\startverb
+claude-flow stream-chain run \
+  "Analyze legacy codebase dependencies" \
+  "Create migration plan with risk assessment" \
+  "Generate modernized code for high-priority modules" \
+  "Create migration tests" \
+  "Document migration steps and rollback procedures"
+\stopverb}
+}
+
+\subtree{
+\title{Quality Assurance Chain}
+\p{Comprehensive code quality workflow:}
+
+\pre{\startverb
+claude-flow stream-chain pipeline analysis
+claude-flow stream-chain pipeline refactor
+claude-flow stream-chain pipeline test
+claude-flow stream-chain pipeline optimize
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{1. Clear and Specific Prompts}
+\p{\strong{Good:}}
+
+\pre{\startverb
+"Analyze authentication.js for SQL injection vulnerabilities"
+\stopverb}
+
+\p{\strong{Avoid:}}
+
+\pre{\startverb
+"Check security"
+\stopverb}
+}
+
+\subtree{
+\title{2. Logical Progression}
+\p{Order prompts to build on previous outputs:}
+
+\pre{\startverb
+1. "Identify the problem"
+2. "Analyze root causes"
+3. "Design solution"
+4. "Implement solution"
+5. "Verify implementation"
+\stopverb}
+}
+
+\subtree{
+\title{3. Appropriate Timeouts}
+\ul{
+\li{Simple tasks: 30 seconds (default)}
+\li{Analysis tasks: 45-60 seconds}
+\li{Implementation tasks: 60-90 seconds}
+\li{Complex workflows: 90-120 seconds}
+}
+}
+
+\subtree{
+\title{4. Verification Steps}
+\p{Include validation in your chains:}
+
+\pre{\startverb
+claude-flow stream-chain run \
+  "Implement feature X" \
+  "Write tests for feature X" \
+  "Verify tests pass and cover edge cases"
+\stopverb}
+}
+
+\subtree{
+\title{5. Iterative Refinement}
+\p{Use chains for iterative improvement:}
+
+\pre{\startverb
+claude-flow stream-chain run \
+  "Generate initial implementation" \
+  "Review and identify issues" \
+  "Refine based on issues found" \
+  "Final quality check"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Claude Flow}
+\subtree{
+\title{Combine with Swarm Coordination}
+\pre{\startverb
+# Initialize swarm for coordination
+claude-flow swarm init --topology mesh
+
+# Execute stream chain with swarm agents
+claude-flow stream-chain run \
+  "Agent 1: Research task" \
+  "Agent 2: Implement solution" \
+  "Agent 3: Test implementation" \
+  "Agent 4: Review and refine"
+\stopverb}
+}
+
+\subtree{
+\title{Memory Integration}
+\p{Stream chains automatically store context in memory for cross-session persistence:}
+
+\pre{\startverb
+# Execute chain with memory
+claude-flow stream-chain run \
+  "Analyze requirements" \
+  "Design architecture" \
+  --verbose
+
+# Results stored in .claude-flow/memory/stream-chain/
+\stopverb}
+}
+
+\subtree{
+\title{Neural Pattern Training}
+\p{Successful chains train neural patterns for improved performance:}
+
+\pre{\startverb
+# Enable neural training
+claude-flow stream-chain pipeline optimize --debug
+
+# Patterns learned and stored for future optimizations
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Chain Timeout}
+\p{If steps timeout, increase timeout value:}
+
+\pre{\startverb
+claude-flow stream-chain run "complex task" --timeout 120
+\stopverb}
+}
+
+\subtree{
+\title{Context Loss}
+\p{If context not flowing properly, use \code{\startverb --debug\stopverb}:}
+
+\pre{\startverb
+claude-flow stream-chain run "step 1" "step 2" --debug
+\stopverb}
+}
+
+\subtree{
+\title{Pipeline Not Found}
+\p{Verify pipeline name and custom definitions:}
+
+\pre{\startverb
+# Check available pipelines
+cat .claude-flow/config.json | grep -A 10 "streamChain"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Characteristics}
+\ul{
+\li{\strong{Throughput}: 2-5 steps per minute (varies by complexity)}
+\li{\strong{Context Size}: Up to 100K tokens per step}
+\li{\strong{Memory Usage}: ~50MB per active chain}
+\li{\strong{Concurrency}: Supports parallel chain execution}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{SPARC Methodology}: Systematic development workflow}
+\li{\strong{Swarm Coordination}: Multi-agent orchestration}
+\li{\strong{Memory Management}: Persistent context storage}
+\li{\strong{Neural Patterns}: Adaptive learning}
+}
+}
+
+\subtree{
+\title{Examples Repository}
+\subtree{
+\title{Complete Development Workflow}
+\pre{\startverb
+# Full feature development chain
+claude-flow stream-chain run \
+  "Analyze requirements for user profile feature" \
+  "Design database schema and API endpoints" \
+  "Implement backend with validation" \
+  "Create frontend components" \
+  "Write comprehensive tests" \
+  "Generate API documentation" \
+  --timeout 60 \
+  --verbose
+\stopverb}
+}
+
+\subtree{
+\title{Code Review Pipeline}
+\pre{\startverb
+# Automated code review workflow
+claude-flow stream-chain run \
+  "Analyze recent git changes" \
+  "Identify code quality issues" \
+  "Check for security vulnerabilities" \
+  "Verify test coverage" \
+  "Generate code review report with recommendations"
+\stopverb}
+}
+
+\subtree{
+\title{Migration Assistant}
+\pre{\startverb
+# Framework migration helper
+claude-flow stream-chain run \
+  "Analyze current Vue 2 codebase" \
+  "Identify Vue 3 breaking changes" \
+  "Create migration checklist" \
+  "Generate migration scripts" \
+  "Provide updated code examples"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Conclusion}
+\p{Stream-Chain enables sophisticated multi-step workflows by:}
+
+\ul{
+\li{\strong{Sequential Processing}: Each step builds on previous results}
+\li{\strong{Context Preservation}: Full output history flows through chain}
+\li{\strong{Flexible Orchestration}: Custom chains or predefined pipelines}
+\li{\strong{Agent Coordination}: Natural multi-agent collaboration pattern}
+\li{\strong{Data Transformation}: Complex processing through simple steps}
+}
+
+\p{Use \code{\startverb run\stopverb} for custom workflows and \code{\startverb pipeline\stopverb} for battle-tested solutions.}
+}
+}

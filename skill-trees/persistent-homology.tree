@@ -1,0 +1,280 @@
+\title{Persistent Homology}
+
+\taxon{skill}
+
+\meta{description}{Topological data analysis for stable feature verification across filtrations}
+
+\subtree{
+\title{Persistent Homology Skill: Stable Feature Verification}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - validator/analyzer) \strong{Color}: #2626D8 (Blue) \strong{Principle}: Stable features → Robust structure \strong{Frame}: Filtration with persistence diagrams}
+
+\subtree{
+\title{Overview}
+\p{\strong{Persistent Homology} identifies topological features that persist across scales. Implements:}
+
+\ol{
+\li{\strong{Filtration}: Nested sequence of complexes by parameter}
+\li{\strong{Betti numbers}: β₀ (components), β₁ (holes), β₂ (voids)}
+\li{\strong{Persistence diagrams}: Birth-death pairs for features}
+\li{\strong{radare2 integration}: Binary analysis for structure holes}
+}
+
+\p{\strong{Correct by construction}: Features with long persistence are stable/significant; short-lived features are noise.}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+Filtration: K₀ ⊆ K₁ ⊆ ... ⊆ Kₙ  (by threshold ε)
+Homology:   H_k(K_i) for each level
+Persistence: (birth_i, death_j) for each feature
+
+Stability Theorem:
+  d_B(Dgm(f), Dgm(g)) ≤ ||f - g||_∞
+\stopverb}
+
+\p{For code complexity:}
+
+\pre{\startverb
+# Filtration by cyclomatic complexity threshold
+filtration = [
+  threshold_0: simple_functions,
+  threshold_5: moderate_functions,
+  threshold_10: complex_functions,
+  threshold_20: very_complex_functions
+]
+
+# Persistent features survive across thresholds
+stable_structure = features.select { |f| f.persistence > 5 }
+\stopverb}
+}
+
+\subtree{
+\title{Why Persistent Homology for Code?}
+\ol{
+\li{\strong{Complexity filtration}: Track structure across complexity levels}
+\li{\strong{Structural holes}: β₁ > 0 means cyclic dependencies}
+\li{\strong{Stability}: Long-lived features are fundamental}
+\li{\strong{Noise filtering}: Short-lived features are incidental}
+}
+}
+
+\subtree{
+\title{Gadgets}
+\subtree{
+\title{1. ComplexityFiltration}
+\p{Build filtration from code complexity:}
+
+\pre{\startverb
+filtration = PersistentHomology::ComplexityFiltration.new(
+  source: :codebase,
+  metric: :cyclomatic_complexity
+)
+filtration.add_file("src/core.clj")
+filtration.build!
+
+filtration.levels           # => [0, 5, 10, 15, 20]
+filtration.complex_at(10)   # => simplicial complex at threshold 10
+filtration.inclusion(5, 10) # => inclusion map K_5 → K_10
+\stopverb}
+}
+
+\subtree{
+\title{2. BettiCalculator}
+\p{Compute Betti numbers across filtration:}
+
+\pre{\startverb
+betti = PersistentHomology::BettiCalculator.new(filtration)
+betti.compute!
+
+betti.beta_0(level: 5)   # => connected components
+betti.beta_1(level: 10)  # => 1-dimensional holes (cycles)
+betti.beta_2(level: 15)  # => 2-dimensional voids
+betti.euler_characteristic(level: 10)  # => χ = β₀ - β₁ + β₂
+\stopverb}
+}
+
+\subtree{
+\title{3. PersistenceDiagram}
+\p{Track feature birth/death:}
+
+\pre{\startverb
+diagram = PersistentHomology::PersistenceDiagram.new(filtration)
+diagram.compute!
+
+diagram.pairs           # => [(birth, death), ...]
+diagram.dimension(1)    # => 1-dim features only
+diagram.persistence(feature)  # => death - birth
+diagram.stable_features(threshold: 5)  # => long-lived only
+diagram.bottleneck_distance(other_diagram)  # => stability metric
+\stopverb}
+}
+
+\subtree{
+\title{4. Radare2Analyzer}
+\p{Integration with radare2 for binary analysis:}
+
+\pre{\startverb
+analyzer = PersistentHomology::Radare2Analyzer.new(
+  binary_path: "/path/to/binary",
+  analysis_level: 2
+)
+analyzer.analyze!
+
+analyzer.function_call_graph    # => build complex from CFG
+analyzer.complexity_filtration  # => filter by function size
+analyzer.structural_holes       # => β₁ features (circular calls)
+analyzer.persistence_diagram    # => stable binary structures
+\stopverb}
+}
+
+\subtree{
+\title{5. StabilityVerifier}
+\p{Verify structural stability:}
+
+\pre{\startverb
+verifier = PersistentHomology::StabilityVerifier.new
+verifier.add_version(:v1, filtration_v1)
+verifier.add_version(:v2, filtration_v2)
+
+result = verifier.verify!
+result[:bottleneck_distance]     # => how different
+result[:stable_preserved]        # => long-lived features kept
+result[:new_stable_features]     # => emerged stable features
+result[:lost_stable_features]    # => disappeared features
+result[:gf3_conserved]           # => triad conservation
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Compute persistent features
+just homology-persist
+
+# Analyze specific codebase
+just homology-filter src/
+
+# Binary analysis with radare2
+just homology-binary /path/to/binary
+
+# Compare versions
+just homology-diff v1 v2
+\stopverb}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+require 'persistent_homology'
+
+# Create analyzer
+analyzer = PersistentHomology::Analyzer.new(
+  trit: -1,
+  filtration_metric: :complexity
+)
+
+# Build filtration
+analyzer.add_codebase("src/")
+filtration = analyzer.build_filtration!
+
+# Compute persistence
+diagram = analyzer.compute_persistence!
+
+# Get stable features
+stable = diagram.stable_features(threshold: 5)
+stable.each do |feature|
+  puts "#{feature.dimension}-dim: born=#{feature.birth}, died=#{feature.death}"
+end
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\p{Forms valid triads with ERGODIC (0) and PLUS (+1) skills:}
+
+\pre{\startverb
+persistent-homology (-1) ⊗ acsets (0) ⊗ gay-mcp (+1) = 0 ✓
+persistent-homology (-1) ⊗ unworld (0) ⊗ cider-clojure (+1) = 0 ✓
+persistent-homology (-1) ⊗ glass-bead-game (0) ⊗ rubato-composer (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\subtree{
+\title{Simplicial Homology}
+\pre{\startverb
+Chain complex: C_n(K) → C_{n-1}(K) → ... → C_0(K)
+Boundary map:  ∂_n: C_n → C_{n-1}
+Cycles:        Z_n = ker(∂_n)
+Boundaries:    B_n = im(∂_{n+1})
+Homology:      H_n = Z_n / B_n
+Betti number:  β_n = dim(H_n)
+\stopverb}
+}
+
+\subtree{
+\title{Persistence Module}
+\pre{\startverb
+Filtration: K_0 ⊆ K_1 ⊆ ... ⊆ K_n
+Induced maps: H_k(K_i) → H_k(K_j) for i ≤ j
+Persistence: feature born at i, dies at j
+\stopverb}
+}
+
+\subtree{
+\title{Stability Theorem}
+\pre{\startverb
+d_B(Dgm(f), Dgm(g)) ≤ ||f - g||_∞
+
+Where d_B is bottleneck distance between diagrams
+\stopverb}
+}
+
+\subtree{
+\title{Betti Numbers Interpretation}
+\pre{\startverb
+β₀ = connected components (clusters)
+β₁ = 1-dimensional holes (loops, cycles)
+β₂ = 2-dimensional voids (cavities)
+β_n = n-dimensional holes
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Output}
+\pre{\startverb
+─── Persistent Homology Analysis ───
+Source: src/ (42 files, 1337 functions)
+Metric: Cyclomatic complexity
+Filtration levels: [0, 5, 10, 15, 20, 25]
+
+Betti Numbers by Level:
+  Level  0: β₀=42  β₁=0   β₂=0   (42 isolated functions)
+  Level  5: β₀=15  β₁=3   β₂=0   (modules forming, 3 cycles)
+  Level 10: β₀=8   β₁=5   β₂=1   (more structure)
+  Level 15: β₀=3   β₁=7   β₂=2   (complex dependencies)
+  Level 20: β₀=1   β₁=12  β₂=3   (highly connected)
+
+Persistence Diagram (1-dim):
+  Feature A: born=5,  died=20  (persistence=15) ★ STABLE
+  Feature B: born=10, died=25  (persistence=15) ★ STABLE
+  Feature C: born=15, died=17  (persistence=2)  (noise)
+
+Stable Features (persistence > 5):
+  ★ 2 stable 1-dimensional holes (cyclic dependencies)
+  ★ 1 stable 2-dimensional void (higher-order structure)
+
+Structural Assessment:
+  Cyclic dependencies detected: 2 persistent cycles
+  Recommendation: Refactor cycles at birth level 5, 10
+
+GF(3) Trit: -1 (MINUS/Analyzer)
+\stopverb}
+
+\p{\strong{Skill Name}: persistent-homology \strong{Type}: Topological Data Analysis / Stable Feature Verification \strong{Trit}: -1 (MINUS) \strong{Color}: #2626D8 (Blue) \strong{GF(3)}: Forms valid triads with ERGODIC + PLUS skills \strong{Stability}: Bottleneck distance bounds feature perturbation}
+}
+}

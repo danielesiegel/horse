@@ -1,0 +1,53 @@
+\title{Scheme}
+
+\taxon{skill}
+
+\meta{description}{GNU Scheme ecosystem = guile + goblins + hoot + fibers.}
+
+\subtree{
+\title{scheme}
+\p{GNU Scheme ecosystem = guile + goblins + hoot + fibers.}
+
+\subtree{
+\title{Atomic Skills}
+\pre{\startverb
+| Skill | Lines | Domain |
+|-------|-------|--------|
+| guile | 67K | Interpreter |
+| goblins | 6.5K | Distributed objects |
+| hoot | 4K | WebAssembly |
+| fibers | 2K | Concurrent ML |
+| r5rs | 1K | Standard |
+\stopverb}
+}
+
+\subtree{
+\title{Compose}
+\pre{\startverb
+;; guile + goblins + hoot
+(use-modules (goblins)
+             (goblins actor-lib methods)
+             (hoot compile))
+
+(define-actor (counter bcom count)
+  (methods
+    ((get) count)
+    ((inc) (bcom (counter bcom (+ count 1))))))
+\stopverb}
+}
+
+\subtree{
+\title{Wasm Pipeline}
+\pre{\startverb
+guile -c '(compile-to-wasm "app.scm")'
+\stopverb}
+}
+
+\subtree{
+\title{FloxHub}
+\pre{\startverb
+flox pull bmorphism/effective-topos
+flox activate -d ~/.topos
+\stopverb}
+}
+}

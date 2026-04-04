@@ -1,0 +1,68 @@
+\title{Analyzing Powershell Empire Artifacts}
+
+\taxon{skill}
+
+\tag{PowerShell-Empire}
+
+\tag{threat-hunting}
+
+\tag{Script-Block-Logging}
+
+\tag{base64}
+
+\tag{stager}
+
+\tag{C2}
+
+\tag{MITRE-ATT&CK}
+
+\tag{T1059.001}
+
+\tag{forensics}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect PowerShell Empire framework artifacts in Windows event logs by identifying Base64 encoded launcher patterns, default user agents, staging URL structures, stager IOCs, and known Empire module signatures in Script Block Logging events.}
+
+\subtree{
+\title{Analyzing PowerShell Empire Artifacts}
+\subtree{
+\title{Overview}
+\p{PowerShell Empire is a post-exploitation framework consisting of listeners, stagers, and agents. Its artifacts leave detectable traces in Windows event logs, particularly PowerShell Script Block Logging (Event ID 4104) and Module Logging (Event ID 4103). This skill analyzes event logs for Empire's default launcher string (\code{\startverb powershell -noP -sta -w 1 -enc\stopverb}), Base64 encoded payloads containing \code{\startverb System.Net.WebClient\stopverb} and \code{\startverb FromBase64String\stopverb}, known module invocations (Invoke-Mimikatz, Invoke-Kerberoast, Invoke-TokenManipulation), and staging URL patterns.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing powershell empire artifacts}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with access to Windows Event Log or exported EVTX files}
+\li{PowerShell Script Block Logging (Event ID 4104) enabled via Group Policy}
+\li{Module Logging (Event ID 4103) enabled for comprehensive coverage}
+}
+}
+
+\subtree{
+\title{Key Detection Patterns}
+\ol{
+\li{\strong{Default launcher} — \code{\startverb powershell -noP -sta -w 1 -enc\stopverb} followed by Base64 blob}
+\li{\strong{Stager indicators} — \code{\startverb System.Net.WebClient\stopverb}, \code{\startverb DownloadData\stopverb}, \code{\startverb DownloadString\stopverb}, \code{\startverb FromBase64String\stopverb}}
+\li{\strong{Module signatures} — Invoke-Mimikatz, Invoke-Kerberoast, Invoke-TokenManipulation, Invoke-PSInject, Invoke-DCOM}
+\li{\strong{User agent strings} — default Empire user agents in HTTP listener configuration}
+\li{\strong{Staging URLs} — \code{\startverb /login/process.php\stopverb}, \code{\startverb /admin/get.php\stopverb} and similar default URI patterns}
+}
+}
+
+\subtree{
+\title{Output}
+\p{JSON report with matched IOCs, decoded Base64 payloads, timeline of suspicious events, MITRE ATT&CK technique mappings, and severity scores.}
+}
+}

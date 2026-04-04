@@ -1,0 +1,75 @@
+\title{Svelte Components}
+
+\taxon{skill}
+
+\meta{description}{Svelte component patterns. Use for web components, component libraries (Bits UI, Ark UI, Melt UI), form patterns, or third-party integration.}
+
+\subtree{
+\title{Svelte Components}
+\subtree{
+\title{Quick Start}
+\p{\strong{Component libraries:} Bits UI (headless) | Ark UI | Melt UI (primitives)}
+
+\p{\strong{Form trick:} Use \code{\startverb form\stopverb} attribute when form can't wrap inputs:}
+
+\pre{\startverb
+<form id="my-form" action="/submit"><!-- outside table --></form>
+<table>
+	<tr>
+		<td><input form="my-form" name="email" /></td>
+		<td><button form="my-form">Submit</button></td>
+	</tr>
+</table>
+\stopverb}
+}
+
+\subtree{
+\title{Web Components}
+\pre{\startverb
+// svelte.config.js
+export default {
+	compilerOptions: {
+		customElement: true,
+	},
+};
+\stopverb}
+
+\pre{\startverb
+<!-- MyButton.svelte -->
+<svelte:options customElement="my-button" />
+
+<button><slot /></button>
+\stopverb}
+}
+
+\subtree{
+\title{Reference Files}
+\ul{
+\li{[component-libraries.md](references/component-libraries.md) - Bits}
+\li{[web-components.md](references/web-components.md) - Building custom}
+\li{[form-patterns.md](references/form-patterns.md) - Advanced form}
+}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{Bits UI 1.0: flexible, unstyled, accessible components for Svelte}
+\li{Form \code{\startverb defaultValue\stopverb} attribute enables easy form resets}
+\li{Use snippets to wrap rich HTML in custom select options}
+\li{\strong{Last verified:} 2025-01-14}
+}
+
+\p{<!-- PROGRESSIVE DISCLOSURE GUIDELINES:}
+
+\ul{
+\li{Keep this file ~50 lines total (max ~150 lines)}
+\li{Use 1-2 code blocks only (recommend 1)}
+\li{Keep description <200 chars for Level 1 efficiency}
+\li{Move detailed docs to references/ for Level 3 loading}
+\li{This is Level 2 - quick reference ONLY, not a manual}
+}
+
+\p{-->}
+}
+}

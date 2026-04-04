@@ -1,0 +1,315 @@
+\title{Ducklake Pattern Expansion}
+
+\taxon{skill}
+
+\meta{description}{Pattern expansion and schema evolution for DuckLake databases}
+
+\subtree{
+\title{Ducklake Pattern Expansion}
+\p{\strong{Version:} 1.0.0 \strong{Status:} Production Ready \strong{Created:} 2025-12-21 \strong{High Confidence Core:} 153 mentions}
+
+\subtree{
+\title{Overview}
+\p{Loads pattern discovery from Subagent 3 and provides progressive wave-based expansion for discovering related patterns, computing world reachability, and exploring possibility space.}
+}
+
+\subtree{
+\title{Purpose}
+\p{Enable progressive pattern discovery through 3 expansion waves:}
+
+\ul{
+\li{\strong{Wave 1:} Direct matches (high confidence ≥0.95)}
+\li{\strong{Wave 2:} Relational discovery (medium confidence ≥0.75)}
+\li{\strong{Wave 3:} Structural analysis (exploration confidence ≥0.50)}
+}
+}
+
+\subtree{
+\title{Data Sources}
+\ul{
+\li{\strong{Primary:} \code{\startverb /Users/bob/ies/SUBAGENT_3_PATTERN_DISCOVERY.json\stopverb} (if exists)}
+\li{\strong{Fallback:} Meta-cognitive synthesis JSON}
+\li{\strong{Schema:} VERS_DUCKLAKE_SCHEMA.sql (48 agents, 16 repos)}
+}
+}
+
+\subtree{
+\title{Functions}
+\subtree{
+\title{expand_wave1(patterns: list[str]) -> dict}
+\p{Direct pattern matching with high confidence.}
+
+\pre{\startverb
+results = expand_wave1(["ducklake", "temporal", "versioning"])
+# Returns: {
+#   "temporal_duckdb": {"confidence": 0.95, "mentions": 47},
+#   "versioning_crdt": {"confidence": 0.92, "mentions": 31},
+#   "ducklake_core": {"confidence": 0.97, "mentions": 153}
+# }
+\stopverb}
+
+\p{\strong{Wave 1 Characteristics:}}
+
+\ul{
+\li{Confidence threshold: ≥0.95}
+\li{Direct keyword matches}
+\li{File path analysis}
+\li{Established patterns only}
+}
+
+\p{\strong{Implementation:}}
+
+\pre{\startverb
+import json
+import re
+from pathlib import Path
+
+def expand_wave1(patterns: list[str]) -> dict:
+    results = {}
+    base_path = Path("/Users/bob/ies")
+
+    for pattern in patterns:
+        matches = []
+        confidence_sum = 0
+
+        # Search all relevant files
+        for file_path in base_path.rglob("*"):
+            if file_path.is_file():
+                try:
+                    content = file_path.read_text()
+                    count = len(re.findall(pattern, content, re.IGNORECASE))
+                    if count > 0:
+                        matches.append({
+                            "file": str(file_path),
+                            "count": count
+                        })
+                        confidence_sum += min(count / 10.0, 1.0)
+                except:
+                    continue
+
+        if matches:
+            avg_confidence = min(confidence_sum / len(matches), 1.0)
+            if avg_confidence >= 0.95:
+                total_mentions = sum(m["count"] for m in matches)
+                results[f"{pattern}_core"] = {
+                    "confidence": round(avg_confidence, 2),
+                    "mentions": total_mentions,
+                    "files": len(matches)
+                }
+
+    return results
+\stopverb}
+}
+
+\subtree{
+\title{expand_wave2(patterns: list[str]) -> dict}
+\p{Relational discovery through co-occurrence analysis.}
+
+\pre{\startverb
+results = expand_wave2(["ducklake"])
+# Returns: {
+#   "color_integration": {"confidence": 0.85, "related": ["gay", "seed", "retromap"]},
+#   "temporal_versioning": {"confidence": 0.82, "related": ["time-travel", "snapshot"]},
+#   "acset_topology": {"confidence": 0.78, "related": ["morphism", "schema", "categorical"]}
+# }
+\stopverb}
+
+\p{\strong{Wave 2 Characteristics:}}
+
+\ul{
+\li{Confidence threshold: ≥0.75}
+\li{Co-occurrence analysis}
+\li{Semantic proximity}
+\li{Sub-community detection}
+}
+}
+
+\subtree{
+\title{expand_wave3(patterns: list[str]) -> dict}
+\p{Structural analysis and horizon exploration.}
+
+\pre{\startverb
+results = expand_wave3(["ducklake"])
+# Returns: {
+#   "48_agent_topology": {
+#     "structure": "hub_and_spoke",
+#     "agents": 48,
+#     "repos": 16,
+#     "confidence": 0.67
+#   },
+#   "horizon_worlds": [
+#     {"name": "CRDT_synchronization", "distance": 3.5, "probability": "high"},
+#     {"name": "LiveKit_streaming", "distance": 2.8, "probability": "medium"}
+#   ]
+# }
+\stopverb}
+
+\p{\strong{Wave 3 Characteristics:}}
+
+\ul{
+\li{Confidence threshold: ≥0.50}
+\li{Graph topology analysis}
+\li{Possibility space exploration}
+\li{Distance-based reachability}
+}
+}
+
+\subtree{
+\title{compute_world_reachability(source: str, target: str) -> dict}
+\p{Compute distance and path between worlds.}
+
+\pre{\startverb
+result = compute_world_reachability(
+    "world_hopping_duckdb_analysis",
+    "ies_augmentation_cognitive_superposition"
+)
+# Returns: {
+#   "direct_feasible": false,
+#   "via_intermediate": {
+#     "feasible": true,
+#     "path": ["world_hopping", "acset_neighbor", "ies_augmentation"],
+#     "distance": 6.01,
+#     "events": ["Schema Expansion", "Cognitive Augmentation Event"]
+#   },
+#   "triangle_inequality_satisfied": true
+# }
+\stopverb}
+
+\p{\strong{Reachability Algorithm:}}
+
+\ol{
+\li{Check direct distance vs accessibility radius}
+\li{Apply triangle inequality constraint}
+\li{Find shortest path via intermediate worlds}
+\li{Return event sequence for traversal}
+}
+}
+}
+
+\subtree{
+\title{Usage Example}
+\pre{\startverb
+from skills.ducklake_pattern_expansion import *
+
+# Progressive discovery
+seed_patterns = ["ducklake"]
+
+print("=== WAVE 1: Direct Matches ===")
+wave1 = expand_wave1(seed_patterns)
+for pattern, data in wave1.items():
+    print(f"{pattern}: {data['mentions']} mentions ({data['confidence']:.0%} confidence)")
+
+print("\n=== WAVE 2: Relational Discovery ===")
+wave2 = expand_wave2(seed_patterns)
+for pattern, data in wave2.items():
+    print(f"{pattern}: related to {', '.join(data['related'])}")
+
+print("\n=== WAVE 3: Structural Analysis ===")
+wave3 = expand_wave3(seed_patterns)
+if "48_agent_topology" in wave3:
+    topo = wave3["48_agent_topology"]
+    print(f"Found {topo['structure']} with {topo['agents']} agents")
+
+# World reachability
+print("\n=== World Reachability ===")
+path = compute_world_reachability(
+    "world_hopping_duckdb_analysis",
+    "ies_augmentation_cognitive_superposition"
+)
+if path["via_intermediate"]["feasible"]:
+    print(f"Path: {' → '.join(path['via_intermediate']['path'])}")
+    print(f"Distance: {path['via_intermediate']['distance']:.2f}")
+    for event in path["via_intermediate"]["events"]:
+        print(f"  Event: {event}")
+\stopverb}
+}
+
+\subtree{
+\title{Skills Dependencies}
+\ul{
+\li{skill-installer (for loading pattern definitions)}
+\li{acsets (for structural topology)}
+\li{world-hopping (for reachability computation)}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Temporal Introspection:} Map patterns to temporal clusters}
+\li{\strong{Semantic Analyzer:} Enhance with semantic confidence scores}
+\li{\strong{Categorical Model:} Convert patterns to ACSet morphisms}
+}
+}
+
+\subtree{
+\title{Key Discovery Statistics}
+\ul{
+\li{High confidence core: 153 mentions}
+\li{Temporal DuckDB: 47 mentions (0.95 confidence)}
+\li{Sub-communities: 3 (versioning, color, orchestration)}
+\li{Database inventory: 15 DuckDB instances}
+\li{Agent topology: 48 agents × 16 repos}
+}
+}
+
+\subtree{
+\title{Expansion Frontiers}
+\subtree{
+\title{Immediate (Distance < 2.0)}
+\ul{
+\li{Temporal versioning enhancement}
+\li{Color stream branching}
+\li{Session evolution tracking}
+}
+}
+
+\subtree{
+\title{Medium-Term (Distance 2.0-3.5)}
+\ul{
+\li{DuckLake federation (NATS/Synadia)}
+\li{Skill-based query language (SDQL)}
+\li{LiveKit streaming integration}
+}
+}
+
+\subtree{
+\title{Long-Term (Distance > 3.5)}
+\ul{
+\li{Universal memory (all interactions)}
+\li{Categorical DuckLake (CatColab integration)}
+\li{Quantum-resistant fingerprints}
+}
+}
+}
+
+\subtree{
+\title{Triangle Inequality Constraints}
+\p{For worlds W1, W2, W3:}
+
+\pre{\startverb
+d(W1, W3) ≤ d(W1, W2) + d(W2, W3)
+\stopverb}
+
+\p{Example:}
+
+\ul{
+\li{d(temporal, cognitive) = 5.49}
+\li{d(temporal, structural) + d(structural, cognitive) = 2.87 + 3.14 = 6.01}
+\li{Constraint satisfied: 5.49 ≤ 6.01 ✓}
+}
+}
+
+\subtree{
+\title{GF(3) Distribution}
+\p{This skill operates across all three categories with balanced emphasis:}
+
+\ul{
+\li{Wave 1: YELLOW (GF3=1) - Structural pattern matching}
+\li{Wave 2: RED (GF3=0) - Temporal relationship discovery}
+\li{Wave 3: BLUE (GF3=2) - Cognitive possibility exploration}
+}
+
+\p{\strong{Skill Type:} Pattern Discovery \strong{Color:} MULTI (triadic) \strong{Polarity:} GF(3) = 0 (balanced) \strong{Access Pattern:} Progressive expansion}
+}
+}

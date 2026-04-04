@@ -1,0 +1,136 @@
+\title{Implementing Aes Encryption For Data At Rest}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{encryption}
+
+\tag{aes}
+
+\tag{data-at-rest}
+
+\tag{symmetric-encryption}
+
+\meta{version}{"1.0"}
+
+\meta{description}{AES (Advanced Encryption Standard) is a symmetric block cipher standardized by NIST (FIPS 197) used to protect classified and sensitive data. This skill covers implementing AES-256 encryption in GCM m}
+
+\subtree{
+\title{Implementing AES Encryption for Data at Rest}
+\subtree{
+\title{Overview}
+\p{AES (Advanced Encryption Standard) is a symmetric block cipher standardized by NIST (FIPS 197) used to protect classified and sensitive data. This skill covers implementing AES-256 encryption in GCM mode for encrypting files and data stores at rest, including proper key derivation, IV/nonce management, and authenticated encryption.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing aes encryption for data at rest capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Implement AES-256-GCM encryption and decryption for files}
+\li{Derive encryption keys from passwords using PBKDF2 and Argon2}
+\li{Manage initialization vectors (IVs) and nonces securely}
+\li{Encrypt and decrypt entire directory trees}
+\li{Implement authenticated encryption to detect tampering}
+\li{Handle large files with streaming encryption}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{AES Modes of Operation}
+\pre{\startverb
+| Mode | Authentication | Parallelizable | Use Case |
+|------|---------------|----------------|----------|
+| GCM  | Yes (AEAD)    | Yes            | Network data, file encryption |
+| CBC  | No            | Decrypt only   | Legacy systems, disk encryption |
+| CTR  | No            | Yes            | Streaming encryption |
+| CCM  | Yes (AEAD)    | No             | IoT, constrained environments |
+\stopverb}
+}
+
+\subtree{
+\title{Key Derivation}
+\p{Never use raw passwords as encryption keys. Always derive keys using:}
+
+\ul{
+\li{\strong{PBKDF2}: NIST-approved, widely supported (minimum 600,000 iterations as of 2024)}
+\li{\strong{Argon2id}: Winner of Password Hashing Competition, memory-hard}
+\li{\strong{scrypt}: Memory-hard, good alternative to Argon2}
+}
+}
+
+\subtree{
+\title{Nonce/IV Management}
+\ul{
+\li{GCM requires a 96-bit (12-byte) nonce that must NEVER be reused with the same key}
+\li{Generate nonces using \code{\startverb os.urandom()\stopverb} (CSPRNG)}
+\li{Store nonce alongside ciphertext (it is not secret)}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Install the \code{\startverb cryptography\stopverb} library: \code{\startverb pip install cryptography\stopverb}}
+\li{Generate or derive an encryption key}
+\li{Create a random nonce for each encryption operation}
+\li{Encrypt data using AES-256-GCM with the key and nonce}
+\li{Store nonce + ciphertext + authentication tag together}
+\li{For decryption, extract nonce, verify tag, and decrypt}
+}
+}
+
+\subtree{
+\title{Encrypted File Format}
+\pre{\startverb
+[salt: 16 bytes][nonce: 12 bytes][ciphertext: variable][tag: 16 bytes]
+\stopverb}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Always use authenticated encryption (GCM, CCM) to prevent tampering}
+\li{Never reuse a nonce with the same key (catastrophic in GCM)}
+\li{Use at least 256-bit keys for long-term data protection}
+\li{Securely wipe keys from memory after use when possible}
+\li{Rotate encryption keys periodically per organizational policy}
+\li{For disk-level encryption, consider XTS mode (AES-XTS)}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] AES-256-GCM encryption produces valid ciphertext}
+\li{[ ] Decryption recovers original plaintext exactly}
+\li{[ ] Authentication tag detects any ciphertext modification}
+\li{[ ] Key derivation uses sufficient iterations/parameters}
+\li{[ ] Nonces are never reused for the same key}
+\li{[ ] Large files (>1GB) can be processed via streaming}
+\li{[ ] Encrypted file format includes all necessary metadata}
+}
+}
+}

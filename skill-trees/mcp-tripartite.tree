@@ -1,0 +1,350 @@
+\title{Mcp Tripartite}
+
+\taxon{skill}
+
+\meta{description}{"MCP tripartite integration for orchestrating distributed tool protocols"}
+
+\subtree{
+\title{SKILL: MCP Tripartite Integration}
+\p{\strong{Version}: 1.0.0 \strong{Trit}: 0 (ERGODIC) \strong{Domain}: mcp, integration, orchestration}
+
+\subtree{
+\title{Overview}
+\p{Each MCP server is integrated with a \strong{3-partite structure} that ensures GF(3) conservation:}
+
+\pre{\startverb
+MCP_server ⊗ Skill_MINUS ⊗ Skill_PLUS = 0 (mod 3)
+\stopverb}
+
+\p{This creates balanced triads where each MCP has a validator (-1) and generator (+1) complement.}
+}
+
+\subtree{
+\title{MCP Tripartite Assignments}
+\subtree{
+\title{1. GAY.jl MCP (Trit: 0)}
+\pre{\startverb
+three-match (-1) ⊗ gay (0) ⊗ cider-clojure (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `three-match` | Validate GF(3) conservation |
+| ERGODIC | `gay-mcp` | Generate deterministic colors |
+| PLUS | `cider-clojure` | Interactive REPL exploration |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+# Generate color via gay-mcp
+color = mcp_call(:gay, :generate_color, seed: 0x42D)
+
+# Validate with three-match
+valid = mcp_call(:gay, :verify_gf3, colors: [c1, c2, c3])
+
+# Explore in cider-clojure
+(mcp/gay :generate-palette {:seed 1069 :count 12})
+\stopverb}
+}
+
+\subtree{
+\title{2. Firecrawl MCP (Trit: +1)}
+\pre{\startverb
+tree-sitter (-1) ⊗ babashka (0) ⊗ firecrawl (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `tree-sitter` | Parse/validate scraped content structure |
+| ERGODIC | `babashka` | Transform scraped data |
+| PLUS | `firecrawl` | Scrape web content |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+;; Scrape with firecrawl
+(def content (mcp/firecrawl :scrape {:url "https://example.com"}))
+
+;; Parse with tree-sitter
+(def ast (mcp/tree-sitter :get_ast {:content content :language "html"}))
+
+;; Transform with babashka
+(bb/transform ast {:extract [:title :links :code-blocks]})
+\stopverb}
+}
+
+\subtree{
+\title{3. Exa MCP (Trit: +1)}
+\pre{\startverb
+radare2 (-1) ⊗ huggingface (0) ⊗ exa (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `radare2` | Deep binary/code analysis |
+| ERGODIC | `huggingface` | Model/paper discovery |
+| PLUS | `exa` | AI-powered search |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+# Search with exa
+results = mcp_call("exa", "web_search_exa", query="LLVM optimization passes")
+
+# Find related papers on huggingface
+papers = mcp_call("huggingface", "paper_search", query="compiler optimization")
+
+# Analyze binaries with radare2 (for found libraries)
+analysis = mcp_call("radare2", "analyze", level=2)
+\stopverb}
+}
+
+\subtree{
+\title{4. HuggingFace MCP (Trit: 0)}
+\pre{\startverb
+proofgeneral-narya (-1) ⊗ huggingface (0) ⊗ rubato-composer (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `proofgeneral-narya` | Verify model properties formally |
+| ERGODIC | `huggingface` | Navigate model/dataset space |
+| PLUS | `rubato-composer` | Compose musical gestures from model outputs |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+# Search for audio models
+models = mcp_call(:huggingface, :model_search, task: "audio-generation")
+
+# Verify model claims with narya
+verify(:model_output_bounded, model: first(models))
+
+# Compose with rubato
+rubato_gesture(:from_model_output, model_result)
+\stopverb}
+}
+
+\subtree{
+\title{5. Tree-Sitter MCP (Trit: -1)}
+\pre{\startverb
+tree-sitter (-1) ⊗ unworld (0) ⊗ gay-mcp (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `tree-sitter` | Parse and validate AST |
+| ERGODIC | `unworld` | Derive seed chains from code |
+| PLUS | `gay-mcp` | Color code elements |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+# Parse code with tree-sitter
+ast = mcp_call(:tree_sitter, :get_ast, file: "lib/synergistic_triads.rb")
+
+# Derive seeds via unworld
+seeds = unworld_chain(ast.node_count, genesis: 0x42D)
+
+# Color AST nodes with gay-mcp
+colored_ast = seeds.zip(ast.nodes).map { |seed, node|
+  [node, mcp_call(:gay, :generate_color, seed: seed)]
+}
+\stopverb}
+}
+
+\subtree{
+\title{6. Radare2 MCP (Trit: -1)}
+\pre{\startverb
+radare2 (-1) ⊗ glass-bead-game (0) ⊗ marginalia (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `radare2` | Reverse engineer binaries |
+| ERGODIC | `glass-bead-game` | Navigate concept space |
+| PLUS | `marginalia` | Search indie documentation |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+# Disassemble function with radare2
+asm = mcp_call(:radare2, :disassemble_function, address: "main")
+
+# Find related concepts via glass-bead
+beads = glass_bead_connect(:assembly, :documentation)
+
+# Search indie web for obscure docs
+docs = mcp_call(:marginalia, :search, query: "x86 calling convention")
+\stopverb}
+}
+
+\subtree{
+\title{7. Babashka MCP (Trit: 0)}
+\pre{\startverb
+clj-kondo-3color (-1) ⊗ babashka (0) ⊗ geiser-chicken (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `clj-kondo-3color` | Lint Clojure code |
+| ERGODIC | `babashka` | Execute Clojure scripts |
+| PLUS | `geiser-chicken` | Interactive Scheme REPL |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+;; Lint with clj-kondo
+(def warnings (mcp/clj-kondo :lint {:file "script.bb"}))
+
+;; Execute with babashka
+(mcp/babashka :run_script {:script "script.bb"})
+
+;; Explore in geiser-chicken (Scheme bridge)
+(geiser-eval '(load "interop.scm"))
+\stopverb}
+}
+
+\subtree{
+\title{8. Marginalia MCP (Trit: +1)}
+\pre{\startverb
+hatchery-papers (-1) ⊗ epistemic-arbitrage (0) ⊗ marginalia (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `hatchery-papers` | Validate against academic papers |
+| ERGODIC | `epistemic-arbitrage` | Propagate knowledge across domains |
+| PLUS | `marginalia` | Search indie web |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+# Search indie web
+results = mcp_call(:marginalia, :search, query: "category theory software")
+
+# Cross-reference with academic papers
+papers = hatchery_match(results, topic: "applied category theory")
+
+# Propagate via epistemic arbitrage
+propagate_knowledge(from: papers, to: results, gain: :information)
+\stopverb}
+}
+
+\subtree{
+\title{9. Unison MCP (Trit: 0)}
+\pre{\startverb
+slime-lisp (-1) ⊗ unison (0) ⊗ xenodium-elisp (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Role | Component | Action |
+|------|-----------|--------|
+| MINUS | `slime-lisp` | Interactive Lisp debugging |
+| ERGODIC | `unison` | Content-addressed code transport |
+| PLUS | `xenodium-elisp` | Emacs integration |
+\stopverb}
+
+\p{\strong{Integration Pattern}:}
+
+\pre{\startverb
+;; Find code in unison
+(mcp-unison-find "List.map")
+
+;; Debug in slime
+(slime-eval-async '(describe 'map))
+
+;; Integrate via xenodium
+(dwim-shell-command "ucm transcript")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Complete Triad Matrix}
+\pre{\startverb
+| MCP | Trit | MINUS Partner | PLUS Partner | GF(3) |
+|-----|------|---------------|--------------|-------|
+| gay | 0 | three-match | cider-clojure | 0 ✓ |
+| firecrawl | +1 | tree-sitter | (self) | needs -1 ⊗ 0 |
+| exa | +1 | radare2 | (self) | needs -1 ⊗ 0 |
+| huggingface | 0 | proofgeneral-narya | rubato-composer | 0 ✓ |
+| tree-sitter | -1 | (self) | gay-mcp | needs 0 |
+| radare2 | -1 | (self) | marginalia | needs 0 |
+| babashka | 0 | clj-kondo-3color | geiser-chicken | 0 ✓ |
+| marginalia | +1 | hatchery-papers | (self) | needs -1 ⊗ 0 |
+| unison | 0 | slime-lisp | xenodium-elisp | 0 ✓ |
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# List all MCP triads
+just mcp-triads
+
+# Check GF(3) conservation across all MCPs
+just mcp-gf3-check
+
+# Run specific MCP triad
+just mcp-triad gay        # gay ⊗ three-match ⊗ cider-clojure
+just mcp-triad firecrawl  # firecrawl ⊗ tree-sitter ⊗ babashka
+just mcp-triad huggingface
+
+# Test MCP connectivity
+just mcp-ping gay
+just mcp-ping firecrawl
+just mcp-ping all
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Codex (~/.codex/config.toml)}
+\pre{\startverb
+[mcp_servers.gay]
+command = "julia"
+args = ["--project=@gay", "-e", "using Gay; Gay.serve_mcp()"]
+
+[mcp_servers.firecrawl]
+url = "https://mcp.firecrawl.dev/..."
+
+[mcp_servers.huggingface]
+command = "node"
+args = ["hf-mcp-server/dist/server/stdio.js"]
+\stopverb}
+}
+
+\subtree{
+\title{Crush (.crush.json)}
+\pre{\startverb
+{
+  "mcp": {
+    "gay": { "type": "stdio", "command": "julia", "args": [...] },
+    "exa": { "type": "http", "url": "https://mcp.exa.ai/..." },
+    "babashka": { "type": "stdio", "command": "npx", "args": [...] }
+  }
+}
+\stopverb}
+
+\p{\strong{Skill Name}: mcp-tripartite \strong{Type}: MCP Integration / Orchestration \strong{Trit}: 0 (ERGODIC) - coordinates across triads \strong{GF(3)}: Conserved by design}
+}
+}
+}

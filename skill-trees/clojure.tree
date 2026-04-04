@@ -1,0 +1,54 @@
+\title{Clojure}
+
+\taxon{skill}
+
+\meta{description}{Clojure ecosystem = babashka + clj + lein + shadow-cljs.}
+
+\subtree{
+\title{clojure}
+\p{Clojure ecosystem = babashka + clj + lein + shadow-cljs.}
+
+\subtree{
+\title{Atomic Skills}
+\pre{\startverb
+| Skill | Startup | Domain |
+|-------|---------|--------|
+| babashka | 10ms | Scripting |
+| clj | 2s | JVM REPL |
+| lein | 3s | Build tool |
+| shadow-cljs | 5s | ClojureScript |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# Scripting (fast)
+bb -e '(+ 1 2 3)'
+
+# JVM (full)
+clj -M -m myapp.core
+
+# Web (ClojureScript)
+npx shadow-cljs watch app
+\stopverb}
+}
+
+\subtree{
+\title{deps.edn}
+\pre{\startverb
+{:deps {org.clojure/clojure {:mvn/version "1.12.0"}}
+ :aliases {:dev {:extra-paths ["dev"]}
+           :test {:extra-deps {lambdaisland/kaocha {:mvn/version "1.0"}}}}}
+\stopverb}
+}
+
+\subtree{
+\title{bb.edn}
+\pre{\startverb
+{:tasks {:build (shell "clj -T:build uber")
+         :test (shell "clj -M:test")
+         :repl (clojure "-M:dev -m nrepl.cmdline")}}
+\stopverb}
+}
+}

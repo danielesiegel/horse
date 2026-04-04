@@ -1,0 +1,250 @@
+\title{Triaging Security Incident}
+
+\taxon{skill}
+
+\tag{incident-triage}
+
+\tag{NIST-800-61}
+
+\tag{SANS-PICERL}
+
+\tag{severity-classification}
+
+\tag{SOC-operations}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Performs initial triage of security incidents to determine severity, scope, and required response actions using the NIST SP 800-61r3 and SANS PICERL frameworks. Classifies incidents by type, assigns priority based on business impact, and routes to appropriate response teams. Activates for requests involving incident triage, security alert classification, severity assessment, incident prioritization, or initial incident analysis.}
+
+\subtree{
+\title{Triaging Security Incidents}
+\subtree{
+\title{When to Use}
+\ul{
+\li{A SIEM or EDR alert fires and requires human classification before escalation}
+\li{Multiple concurrent alerts arrive and the SOC must prioritize response order}
+\li{An end user reports suspicious activity and the incident needs initial categorization}
+\li{A threat intelligence feed matches an IOC observed in the environment}
+}
+
+\p{\strong{Do not use} for routine vulnerability scanning results or compliance audit findings that do not represent active security incidents.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Access to SIEM platform (Splunk, Elastic, Microsoft Sentinel) with current alert data}
+\li{Incident classification taxonomy aligned to NIST SP 800-61r3 categories}
+\li{Predefined severity matrix mapping asset criticality to threat type}
+\li{Contact roster for escalation paths (Tier 1 through Tier 3 and CIRT)}
+\li{Asset inventory with business criticality ratings}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Collect Initial Alert Data}
+\p{Gather all available context from the triggering alert before making classification decisions:}
+
+\ul{
+\li{\strong{Alert source}: Which detection system generated the alert (EDR, SIEM, IDS/IPS, firewall, user report)}
+\li{\strong{Timestamp}: When the event occurred and when it was detected (dwell time gap)}
+\li{\strong{Affected assets}: Hostnames, IP addresses, user accounts involved}
+\li{\strong{Alert fidelity}: Historical true-positive rate for this detection rule}
+\li{\strong{Raw evidence}: Log entries, packet captures, process execution chains}
+}
+
+\pre{\startverb
+Example SIEM alert context:
+Source:       CrowdStrike Falcon
+Detection:    Suspicious PowerShell Execution (T1059.001)
+Host:         WORKSTATION-FIN-042
+User:         jsmith@corp.example.com
+Timestamp:    2025-11-15T14:23:17Z
+Severity:     High (detection rule confidence: 92%)
+Process:      powershell.exe -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoA...
+Parent:       outlook.exe (PID 4812)
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Classify the Incident Type}
+\p{Map the alert to a standard incident category per NIST SP 800-61r3:}
+
+\pre{\startverb
+| Category | Examples |
+|----------|----------|
+| Unauthorized Access | Compromised credentials, privilege escalation, IDOR |
+| Denial of Service | Volumetric DDoS, application-layer flood, resource exhaustion |
+| Malicious Code | Malware execution, ransomware detonation, cryptominer |
+| Improper Usage | Policy violation, insider data exfiltration, shadow IT |
+| Reconnaissance | Port scanning, directory enumeration, credential spraying |
+| Web Application Attack | SQL injection, XSS, SSRF exploitation |
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Assign Severity Using Impact Matrix}
+\p{Calculate severity by combining asset criticality with threat severity:}
+
+\pre{\startverb
+Severity = f(Asset Criticality, Threat Type, Data Sensitivity, Lateral Movement Potential)
+
+Critical (P1): Crown jewel systems compromised, active data exfiltration, ransomware spreading
+High (P2):     Production system compromise, confirmed malware execution, privileged account takeover
+Medium (P3):   Non-production compromise, unsuccessful exploitation attempt, single endpoint malware
+Low (P4):      Reconnaissance activity, policy violation, benign true positive
+\stopverb}
+
+\p{Response SLA targets:}
+
+\ul{
+\li{P1: Acknowledge within 15 minutes, containment within 1 hour}
+\li{P2: Acknowledge within 30 minutes, containment within 4 hours}
+\li{P3: Acknowledge within 2 hours, investigation within 24 hours}
+\li{P4: Acknowledge within 8 hours, investigation within 72 hours}
+}
+}
+
+\subtree{
+\title{Step 4: Perform Initial Enrichment}
+\p{Before escalation, enrich the alert with contextual data:}
+
+\ul{
+\li{\strong{Threat intelligence}: Check IOCs (IP, hash, domain) against TI platforms (VirusTotal, OTX, MISP)}
+\li{\strong{Asset context}: Query CMDB for asset owner, business function, data classification}
+\li{\strong{User context}: Check identity provider for recent authentication anomalies, MFA status}
+\li{\strong{Historical correlation}: Search for related alerts on the same host/user in the past 30 days}
+\li{\strong{Network context}: Verify if source/destination IPs are internal, known partners, or external threat actors}
+}
+}
+
+\subtree{
+\title{Step 5: Document and Escalate}
+\p{Create a structured triage record and route to the appropriate response tier:}
+
+\pre{\startverb
+Incident Triage Record
+━━━━━━━━━━━━━━━━━━━━━
+Ticket ID:       INC-2025-1547
+Triage Analyst:  [analyst name]
+Triage Time:     2025-11-15T14:35:00Z (12 min from alert)
+Classification:  Malicious Code - Macro-based initial access
+Severity:        P2 - High
+Affected Assets: WORKSTATION-FIN-042 (Finance dept, handles PII)
+Affected Users:  jsmith@corp.example.com
+IOCs Identified: powershell.exe spawned by outlook.exe, encoded command
+TI Matches:      Base64 payload matches known Qakbot loader pattern
+Escalation:      Tier 2 - Malware IR team
+Recommended:     Isolate endpoint, preserve memory dump, block sender domain
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Initiate Containment Hold}
+\p{If severity is P1 or P2, initiate immediate containment actions while awaiting full investigation:}
+
+\ul{
+\li{Network-isolate the affected endpoint via EDR (CrowdStrike contain, Defender isolate)}
+\li{Disable compromised user accounts in Active Directory or identity provider}
+\li{Block identified malicious IPs/domains at firewall and DNS sinkhole}
+\li{Preserve volatile evidence (memory dump) before any remediation}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Triage** | Rapid assessment process to classify and prioritize security incidents based on severity and business impact |
+| **PICERL** | SANS incident response framework: Preparation, Identification, Containment, Eradication, Recovery, Lessons Learned |
+| **Dwell Time** | Duration between initial compromise and detection; average is 10 days per Mandiant M-Trends 2025 |
+| **True Positive Rate** | Percentage of alerts from a detection rule that represent genuine security incidents |
+| **Crown Jewel Assets** | Systems and data critical to business operations whose compromise would cause severe organizational impact |
+| **Alert Fatigue** | Degraded analyst performance caused by high volumes of low-fidelity or false-positive alerts |
+| **Mean Time to Acknowledge (MTTA)** | Average time from alert generation to analyst acknowledgment; key SOC performance metric |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Splunk Enterprise Security}: SIEM platform for alert aggregation, correlation, and triage workflow management}
+\li{\strong{CrowdStrike Falcon}: EDR platform providing endpoint telemetry, detection, and one-click host containment}
+\li{\strong{TheHive}: Open-source incident response platform for case management, task tracking, and team collaboration}
+\li{\strong{MISP}: Threat intelligence sharing platform for IOC enrichment during triage}
+\li{\strong{Cortex XSOAR}: SOAR platform for automating enrichment playbooks and triage decision trees}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Encoded PowerShell from Email Client}
+\p{\strong{Context}: SOC analyst receives a P2 alert showing \code{\startverb powershell.exe\stopverb} with a Base64-encoded command spawned as a child process of \code{\startverb outlook.exe\stopverb} on a finance department workstation.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Decode the Base64 payload to determine the command intent}
+\li{Check the parent process chain for anomalies (Outlook spawning PowerShell is abnormal)}
+\li{Query VirusTotal for the decoded payload hash}
+\li{Correlate with email gateway logs to identify the triggering email and sender}
+\li{Check if other recipients in the organization received the same email}
+\li{Isolate the endpoint and escalate to Tier 2 with full triage context}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Dismissing encoded PowerShell as a false positive without decoding the payload}
+\li{Failing to check for lateral spread to other recipients of the same phishing email}
+\li{Remediating the endpoint before capturing volatile memory evidence}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+INCIDENT TRIAGE REPORT
+======================
+Ticket:          INC-[YYYY]-[NNNN]
+Date/Time:       [ISO 8601 timestamp]
+Triage Analyst:  [Name]
+Time to Triage:  [minutes from alert to classification]
+
+CLASSIFICATION
+Type:            [NIST category]
+Severity:        [P1-P4] - [Critical/High/Medium/Low]
+Confidence:      [High/Medium/Low]
+MITRE ATT&CK:   [Technique ID and name]
+
+AFFECTED SCOPE
+Assets:          [hostname(s), IP(s)]
+Users:           [account(s)]
+Data at Risk:    [classification level]
+Business Unit:   [department]
+
+EVIDENCE SUMMARY
+[Bullet list of key observations]
+
+ENRICHMENT RESULTS
+TI Matches:      [Yes/No - details]
+Historical:      [Related prior incidents]
+Asset Criticality: [rating]
+
+RECOMMENDED ACTIONS
+1. [Immediate action]
+2. [Investigation step]
+3. [Escalation target]
+
+ESCALATION
+Routed To:       [Team/Individual]
+SLA Target:      [Containment deadline]
+\stopverb}
+}
+}

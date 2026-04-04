@@ -1,0 +1,73 @@
+\title{Guile Goblins Hoot}
+
+\taxon{skill}
+
+\meta{description}{"Spritely Goblins distributed actor system with Hoot WebAssembly compiler. Secure capability-based programming in Guile Scheme."}
+
+\subtree{
+\title{Guile Goblins Hoot Skill}
+\p{\strong{Trit}: +1 (PLUS - generative distributed computation) \strong{Foundation}: Goblins + Hoot WASM + ocaps}
+
+\subtree{
+\title{Core Concept}
+\p{Goblins provides:}
+
+\ul{
+\li{Capability-secure actors}
+\li{Distributed vat model}
+\li{Promise pipelining}
+\li{Hoot compiles Scheme to WASM}
+}
+}
+
+\subtree{
+\title{Goblins Basics}
+\pre{\startverb
+(use-modules (goblins) (goblins actor-lib))
+
+;; Define a counter actor
+(define (^counter bcom [count 0])
+  (define (inc)
+    (bcom (^counter bcom (+ count 1))))
+  (define (get) count)
+  
+  (methods
+   [inc inc]
+   [get get]))
+
+;; Spawn and use
+(define counter (spawn ^counter))
+(<- counter 'inc)
+(<- counter 'get)  ; => 1
+\stopverb}
+}
+
+\subtree{
+\title{Hoot WASM}
+\pre{\startverb
+;; Compile to WebAssembly
+(use-modules (hoot compile))
+
+(compile-file "program.scm" #:output "program.wasm")
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+(define (trit-from-capability cap)
+  (cond
+   [(verifier? cap) -1]   ; MINUS: verification cap
+   [(observer? cap) 0]    ; ERGODIC: observation cap
+   [(actor? cap) +1]))    ; PLUS: action cap
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Triads}
+\pre{\startverb
+geiser-chicken (-1) ⊗ sicp (0) ⊗ guile-goblins-hoot (+1) = 0 ✓
+interaction-nets (-1) ⊗ chemical-abstract-machine (0) ⊗ guile-goblins-hoot (+1) = 0 ✓
+\stopverb}
+}
+}

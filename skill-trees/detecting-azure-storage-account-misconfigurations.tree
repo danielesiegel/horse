@@ -1,0 +1,69 @@
+\title{Detecting Azure Storage Account Misconfigurations}
+
+\taxon{skill}
+
+\tag{Azure}
+
+\tag{storage-accounts}
+
+\tag{blob-storage}
+
+\tag{ADLS}
+
+\tag{SAS-tokens}
+
+\tag{encryption}
+
+\tag{public-access}
+
+\tag{cloud-misconfiguration}
+
+\tag{azure-mgmt-storage}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Audit Azure Blob and ADLS storage accounts for public access exposure, weak or long-lived SAS tokens, missing encryption at rest, disabled HTTPS-only traffic, and outdated TLS versions using the azure-mgmt-storage Python SDK.}
+
+\subtree{
+\title{Detecting Azure Storage Account Misconfigurations}
+\subtree{
+\title{Overview}
+\p{Azure Storage accounts are a frequent target for attackers due to misconfigured public access, long-lived SAS tokens, missing encryption, and outdated TLS versions. This skill uses the azure-mgmt-storage Python SDK with StorageManagementClient to enumerate all storage accounts in a subscription, inspect their security properties, list blob containers for public access settings, and generate a risk-scored audit report identifying critical misconfigurations.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting azure storage account misconfigurations}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb azure-mgmt-storage\stopverb}, \code{\startverb azure-identity\stopverb}}
+\li{Azure service principal with Reader role on target subscription}
+\li{Environment variables: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID}
+}
+}
+
+\subtree{
+\title{Key Detection Areas}
+\ol{
+\li{\strong{Public blob access} — \code{\startverb allow_blob_public_access\stopverb} enabled on storage account or individual containers set to Blob/Container access level}
+\li{\strong{HTTPS enforcement} — \code{\startverb enable_https_traffic_only\stopverb} disabled, allowing unencrypted HTTP traffic}
+\li{\strong{Minimum TLS version} — accounts accepting TLS 1.0 or TLS 1.1 instead of minimum TLS 1.2}
+\li{\strong{Encryption at rest} — storage service encryption not enabled or missing customer-managed keys}
+\li{\strong{Network rules} — default action set to Allow instead of Deny, exposing storage to all networks}
+\li{\strong{SAS token risks} — account-level SAS with overly broad permissions or excessive lifetime}
+}
+}
+
+\subtree{
+\title{Output}
+\p{JSON report with per-account findings, severity ratings (Critical/High/Medium/Low), and remediation recommendations aligned with CIS Azure Benchmark controls.}
+}
+}

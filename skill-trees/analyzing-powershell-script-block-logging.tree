@@ -1,0 +1,75 @@
+\title{Analyzing Powershell Script Block Logging}
+
+\taxon{skill}
+
+\tag{analyzing}
+
+\tag{powershell}
+
+\tag{script}
+
+\tag{block}
+
+\meta{version}{"1.0"}
+
+\meta{description}{>-}
+
+\subtree{
+\title{Analyzing PowerShell Script Block Logging}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing powershell script block logging}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with security operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\ol{
+\li{Install dependencies: \code{\startverb pip install python-evtx lxml\stopverb}}
+\li{Collect PowerShell Operational logs: \code{\startverb Microsoft-Windows-PowerShell\%4Operational.evtx\stopverb}}
+\li{Parse Event ID 4104 entries using python-evtx to extract ScriptBlockText, ScriptBlockId, and MessageNumber/MessageTotal for multi-part script reconstruction.}
+\li{Apply detection heuristics:}
+\li{Base64-encoded commands (\code{\startverb -EncodedCommand\stopverb}, \code{\startverb FromBase64String\stopverb})}
+\li{Download cradles (\code{\startverb DownloadString\stopverb}, \code{\startverb DownloadFile\stopverb}, \code{\startverb Invoke-WebRequest\stopverb}, \code{\startverb Net.WebClient\stopverb})}
+\li{AMSI bypass patterns (\code{\startverb AmsiUtils\stopverb}, \code{\startverb amsiInitFailed\stopverb})}
+\li{Obfuscation indicators (high entropy, tick-mark insertion, string concatenation)}
+\li{Generate a report with reconstructed scripts, risk scores, and MITRE ATT&CK mappings.}
+}
+
+\pre{\startverb
+python scripts/agent.py --evtx-file /path/to/PowerShell-Operational.evtx --output ps_analysis.json
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Detect Encoded Command Execution}
+\pre{\startverb
+import base64
+if "-encodedcommand" in script_text.lower():
+    encoded = script_text.split()[-1]
+    decoded = base64.b64decode(encoded).decode("utf-16-le")
+\stopverb}
+}
+
+\subtree{
+\title{Reconstruct Multi-Block Script}
+\p{Scripts split across multiple 4104 events share a \code{\startverb ScriptBlockId\stopverb}. Concatenate blocks ordered by \code{\startverb MessageNumber\stopverb} to recover the full script.}
+}
+}
+}

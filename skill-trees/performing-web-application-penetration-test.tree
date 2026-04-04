@@ -1,0 +1,237 @@
+\title{Performing Web Application Penetration Test}
+
+\taxon{skill}
+
+\tag{web-application-pentest}
+
+\tag{OWASP}
+
+\tag{Burp-Suite}
+
+\tag{WSTG}
+
+\tag{application-security}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Performs systematic security testing of web applications following the OWASP Web Security Testing Guide (WSTG) methodology to identify vulnerabilities in authentication, authorization, input validation, session management, and business logic. The tester uses Burp Suite as the primary interception proxy alongside manual testing techniques to find flaws that automated scanners miss. Activates for requests involving web app pentest, OWASP testing, application security assessment, or web vulnerability testing.}
+
+\subtree{
+\title{Performing Web Application Penetration Test}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Testing web applications before production deployment to identify exploitable vulnerabilities}
+\li{Conducting compliance-driven security assessments (PCI-DSS requirement 6.6, SOC 2 Type II)}
+\li{Validating remediation of previously identified web application vulnerabilities during retesting}
+\li{Assessing third-party web applications before integration into the organization's environment}
+\li{Evaluating custom-developed web applications where automated scanning alone is insufficient}
+}
+
+\p{\strong{Do not use} against web applications without written authorization, against production systems during peak traffic hours without explicit approval, or for denial-of-service testing of web infrastructure.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Signed statement of work (SoW) defining the target application URLs, environments (staging/production), and testing boundaries}
+\li{Burp Suite Professional license with up-to-date extensions (Active Scan++, Autorize, JSON Beautifier, Logger++)}
+\li{Valid test accounts at each privilege level (unauthenticated, standard user, administrator) for authorization testing}
+\li{Application documentation including API specifications (OpenAPI/Swagger), sitemap, and technology stack details}
+\li{Browser configured with Burp Suite proxy (FoxyProxy recommended) and Burp CA certificate installed}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Reconnaissance and Application Mapping}
+\p{Map the entire attack surface of the web application:}
+
+\ul{
+\li{Configure Burp Suite proxy and spider the application by browsing every page, form, and function manually while Burp captures the sitemap}
+\li{Use Burp's Discover Content feature to find hidden directories and files not linked from the visible application}
+\li{Identify the technology stack from response headers (\code{\startverb X-Powered-By\stopverb}, \code{\startverb Server\stopverb}), cookies (JSESSIONID = Java, PHPSESSID = PHP, ASP.NET_SessionId = .NET), and page extensions}
+\li{Enumerate endpoints using \code{\startverb ffuf -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u https://target.com/FUZZ -mc 200,301,302,403\stopverb}}
+\li{Review JavaScript files for hardcoded API endpoints, secrets, and client-side routing using Burp's JS Link Finder extension or \code{\startverb LinkFinder.py\stopverb}}
+\li{Document all entry points: URL parameters, POST bodies, HTTP headers, cookies, file uploads, and WebSocket connections}
+}
+}
+
+\subtree{
+\title{Step 2: Authentication Testing}
+\p{Test authentication mechanisms for weaknesses:}
+
+\ul{
+\li{\strong{Credential enumeration}: Submit valid and invalid usernames to identify differences in response (timing, message, HTTP status) that reveal valid accounts}
+\li{\strong{Brute force protection}: Attempt 10-20 rapid login attempts with invalid credentials to verify account lockout and rate limiting are enforced}
+\li{\strong{Password policy}: Test password creation with weak passwords (123456, password, single character) to verify policy enforcement}
+\li{\strong{Multi-factor authentication bypass}: Test for MFA bypass by directly accessing post-authentication pages, manipulating MFA tokens, or replaying successful MFA responses}
+\li{\strong{Session fixation}: Note the session token before and after authentication. If the token does not change after login, session fixation is possible}
+\li{\strong{Remember me functionality}: Inspect persistent authentication tokens for predictability, encryption, and proper expiration}
+\li{\strong{Password reset}: Test the password reset flow for token predictability, token expiration, account enumeration via the reset form, and host header injection}
+}
+}
+
+\subtree{
+\title{Step 3: Authorization Testing}
+\p{Verify that access controls are properly enforced:}
+
+\ul{
+\li{\strong{Horizontal privilege escalation (IDOR)}: Using Account A, capture requests that access Account A's resources. Replay those requests substituting Account B's identifiers (user IDs, order numbers, filenames). Use Burp's Autorize extension to automate this across all endpoints.}
+\li{\strong{Vertical privilege escalation}: Using a low-privilege account, attempt to access administrative functions by directly browsing to admin URLs, modifying role parameters in requests, or manipulating JWT claims}
+\li{\strong{Forced browsing}: Attempt to access resources that should require authentication by directly navigating to internal URLs collected during mapping}
+\li{\strong{HTTP method tampering}: If GET is blocked on an endpoint, try PUT, POST, DELETE, PATCH, or use method override headers (\code{\startverb X-HTTP-Method-Override: DELETE\stopverb})}
+\li{\strong{Path traversal in authorization}: Test URL path manipulation (\code{\startverb /api/users/123/../456/profile\stopverb}) to bypass path-based authorization checks}
+}
+}
+
+\subtree{
+\title{Step 4: Input Validation and Injection Testing}
+\p{Test all input points for injection vulnerabilities:}
+
+\ul{
+\li{\strong{SQL injection}: Insert payloads like \code{\startverb ' OR 1=1--\stopverb}, \code{\startverb ' UNION SELECT NULL,NULL--\stopverb}, and time-based blind payloads (\code{\startverb '; WAITFOR DELAY '0:0:5'--\stopverb}) into every parameter. Use sqlmap for automated detection and exploitation of confirmed injection points.}
+\li{\strong{Cross-Site Scripting (XSS)}: Test reflected, stored, and DOM-based XSS with payloads like \code{\startverb <script>alert(document.domain)</script>\stopverb}, \code{\startverb "><img src=x onerror=alert(1)>\stopverb}, and event handlers. Test in all contexts: HTML body, attributes, JavaScript, and URLs.}
+\li{\strong{Server-Side Request Forgery (SSRF)}: Supply internal URLs (\code{\startverb http://169.254.169.254/latest/meta-data/\stopverb}, \code{\startverb http://127.0.0.1:6379/\stopverb}) in parameters that fetch external resources (webhooks, image URLs, import functions)}
+\li{\strong{Command injection}: Insert OS command separators (\code{\startverb ;\stopverb}, \code{\startverb |\stopverb}, \code{\startverb &&\stopverb}, `\code{\startverb  \stopverb} `\code{\startverb ) followed by commands (\stopverb}id\code{\startverb , \stopverb}whoami\code{\startverb , \stopverb}ping -c 3 collaborator.net`) in parameters processed by the server}
+\li{\strong{XML External Entity (XXE)}: Submit XML payloads with external entity declarations (\code{\startverb <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>\stopverb}) in XML upload or API endpoints}
+\li{\strong{Server-Side Template Injection (SSTI)}: Test with \code{\startverb {{7*7}}\stopverb}, \code{\startverb ${7*7}\stopverb}, \code{\startverb <\%= 7*7 \%>\stopverb} in parameters rendered by template engines}
+}
+}
+
+\subtree{
+\title{Step 5: Session Management Testing}
+\p{Evaluate the security of session handling:}
+
+\ul{
+\li{\strong{Session token analysis}: Collect 100+ session tokens and analyze for randomness using Burp Sequencer. Check token length (minimum 128 bits of entropy), character set, and predictability.}
+\li{\strong{Session expiration}: Verify that sessions expire after a defined idle timeout and absolute timeout. Test by capturing a session token, waiting beyond the timeout, and replaying.}
+\li{\strong{Cookie security flags}: Verify \code{\startverb Secure\stopverb}, \code{\startverb HttpOnly\stopverb}, and \code{\startverb SameSite\stopverb} flags are set on session cookies. Missing \code{\startverb HttpOnly\stopverb} enables XSS-based session theft. Missing \code{\startverb SameSite\stopverb} enables CSRF.}
+\li{\strong{CSRF testing}: Identify state-changing operations (password change, email update, fund transfer) and test if they can be triggered from a cross-origin page without a valid CSRF token}
+\li{\strong{Concurrent session handling}: Test if the application limits the number of concurrent sessions and if logging in from a new location invalidates the previous session}
+}
+}
+
+\subtree{
+\title{Step 6: Business Logic Testing}
+\p{Test application-specific logic flaws that automated scanners cannot detect:}
+
+\ul{
+\li{\strong{Race conditions}: Send multiple simultaneous requests to exploit time-of-check-to-time-of-use (TOCTOU) vulnerabilities (double-spending, coupon reuse, voting multiple times) using Burp Turbo Intruder}
+\li{\strong{Workflow bypass}: Attempt to skip steps in multi-step processes (checkout, registration, approval) by directly requesting later-stage endpoints}
+\li{\strong{Numeric manipulation}: Modify prices, quantities, or amounts to negative values, zero, or extremely large numbers to test for integer overflow or logic errors}
+\li{\strong{File upload bypass}: Test file upload restrictions by modifying MIME types, double extensions (file.php.jpg), null bytes (file.php\%00.jpg), and content-type manipulation}
+}
+}
+
+\subtree{
+\title{Step 7: Report and Remediation Guidance}
+\p{Compile all findings into a structured report:}
+
+\ul{
+\li{Write an executive summary describing the overall application security posture in business terms}
+\li{Document each finding with title, severity (CVSS 3.1), affected URL/parameter, description, reproduction steps, screenshots, and HTTP request/response pairs from Burp}
+\li{Provide specific remediation guidance for each finding including code-level fixes where applicable}
+\li{Include a risk matrix showing the distribution of findings by severity}
+\li{Deliver the report securely (encrypted, not via email attachment) and schedule a findings walkthrough with the development team}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **OWASP WSTG** | The Web Security Testing Guide; a comprehensive open-source guide to testing web application security organized by test category (authentication, authorization, input validation, etc.) |
+| **IDOR** | Insecure Direct Object Reference; a vulnerability where the application exposes internal object identifiers and fails to verify the requesting user is authorized to access that object |
+| **CSRF** | Cross-Site Request Forgery; an attack that forces an authenticated user's browser to send a forged request to a vulnerable web application |
+| **Session Fixation** | An attack where the attacker sets a user's session ID to a known value before the user authenticates, then hijacks the session after login |
+| **Forced Browsing** | Attempting to access application resources by directly requesting URLs not linked from the visible application, bypassing intended access controls |
+| **SSTI** | Server-Side Template Injection; injecting template directives into server-side template engines to achieve remote code execution |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Burp Suite Professional}: Primary web application testing proxy providing interception, scanning, and manual testing tools including Repeater, Intruder, and Sequencer}
+\li{\strong{ffuf}: Fast web fuzzer for directory/file discovery, parameter fuzzing, and virtual host enumeration}
+\li{\strong{sqlmap}: Automated SQL injection detection and exploitation tool supporting all major database engines and injection techniques}
+\li{\strong{Nuclei}: Template-based vulnerability scanner with community-maintained templates for known CVEs and misconfigurations}
+\li{\strong{SecLists}: Curated collection of wordlists for fuzzing, credential testing, and payload delivery used throughout web application testing}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: E-Commerce Application Pre-Launch Security Assessment}
+\p{\strong{Context}: A retail company is launching a new e-commerce platform built on Node.js with a React frontend and PostgreSQL database. The application handles credit card payments through Stripe integration and stores customer PII. Testing scope includes the staging environment with full API access.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Map the application through manual browsing and API documentation review, identifying 47 unique endpoints}
+\li{Test authentication flows including social login (OAuth), standard login, and password reset}
+\li{Discover IDOR vulnerability in the order retrieval API (\code{\startverb /api/orders/{orderId}\stopverb}) where any authenticated user can view any order by iterating order IDs}
+\li{Identify stored XSS in the product review feature that executes when administrators view the admin dashboard}
+\li{Find SSRF in the product image import function that allows reading AWS EC2 instance metadata}
+\li{Test payment logic by manipulating price values in the client-side cart before checkout submission}
+\li{Report all findings with specific Node.js code-level remediation (parameterized queries, input sanitization with DOMPurify, authorization middleware)}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Testing only the frontend while ignoring the API layer that lacks independent authorization checks}
+\li{Missing business logic flaws by relying solely on automated scanning without manual testing}
+\li{Not testing the same functionality across different privilege levels to catch authorization issues}
+\li{Overlooking client-side JavaScript for hardcoded API keys, debug endpoints, and internal URLs}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Finding: Insecure Direct Object Reference in Order API
+
+**ID**: WEB-003
+**Severity**: High (CVSS 7.5)
+**Affected URL**: GET /api/v1/orders/{orderId}
+**Parameter**: orderId (path parameter)
+
+**Description**:
+The order retrieval endpoint does not verify that the authenticated user owns
+the requested order. Any authenticated user can access any order's details
+including customer name, shipping address, email, phone number, and order
+items by incrementing the orderId path parameter.
+
+**Reproduction Steps**:
+1. Authenticate as user A (testuser@example.com)
+2. Note user A's order ID: 10451
+3. Send GET /api/v1/orders/10452 with user A's session token
+4. Observe that user B's order details are returned with full PII
+
+**HTTP Request**:
+GET /api/v1/orders/10452 HTTP/1.1
+Host: staging.example.com
+Authorization: Bearer eyJhbGc....[User A's token]
+
+**HTTP Response** (truncated):
+HTTP/1.1 200 OK
+{"orderId":10452,"customerName":"Jane Smith","email":"jane@...","address":"123 Main St"}
+
+**Impact**:
+An attacker can enumerate all customer orders and extract PII (names, emails,
+addresses, phone numbers) for an estimated 25,000 customers.
+
+**Remediation**:
+Add authorization middleware that verifies the authenticated user's ID matches
+the order's userId field before returning order data. Implement UUIDs instead
+of sequential integers for order identifiers to prevent enumeration.
+\stopverb}
+}
+}

@@ -1,0 +1,267 @@
+\title{Deploying Active Directory Honeytokens}
+
+\taxon{skill}
+
+\tag{active-directory}
+
+\tag{honeytokens}
+
+\tag{kerberoasting}
+
+\tag{deception}
+
+\tag{detection}
+
+\tag{bloodhound}
+
+\tag{gpo}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploys deception-based honeytokens in Active Directory including fake privileged accounts with AdminCount=1, fake SPNs for Kerberoasting detection (honeyroasting), decoy GPOs with cpassword traps, and fake BloodHound paths. Monitors Windows Security Event IDs 4769, 4625, 4662, 5136 for honeytoken interaction. Use when implementing AD deception defenses for detecting lateral movement, credential theft, and reconnaissance.}
+
+\subtree{
+\title{Deploying Active Directory Honeytokens}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying deception-based detection in Active Directory environments}
+\li{When detecting Kerberoasting attacks via fake SPN honeytokens (honeyroasting)}
+\li{When creating tripwire accounts to detect credential theft and lateral movement}
+\li{When building decoy GPOs to detect Group Policy Preference password harvesting}
+\li{When creating deceptive BloodHound paths to misdirect and detect attackers}
+\li{When supplementing existing AD monitoring with high-fidelity detection signals}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Domain Admin or delegated AD administration privileges}
+\li{Active Directory domain (Windows Server 2016+ recommended)}
+\li{Windows Event Log forwarding to SIEM (Splunk, Sentinel, Elastic)}
+\li{PowerShell 5.1+ with ActiveDirectory module}
+\li{Group Policy Management Console (GPMC)}
+\li{Understanding of AD security, Kerberos, and BloodHound attack paths}
+}
+}
+
+\subtree{
+\title{Background}
+\subtree{
+\title{Why AD Honeytokens}
+\p{Traditional signature-based detection misses novel attack techniques. Honeytokens provide high-fidelity detection with near-zero false positives because any interaction with a decoy object is inherently suspicious. In Active Directory:}
+
+\ul{
+\li{\strong{Fake privileged accounts} detect credential dumping (DCSync, NTDS.dit extraction)}
+\li{\strong{Fake SPNs} detect Kerberoasting reconnaissance (TGS requests for nonexistent services)}
+\li{\strong{Decoy GPOs} detect Group Policy Preference password harvesting}
+\li{\strong{Fake BloodHound paths} mislead attackers using graph-based AD analysis}
+}
+}
+
+\subtree{
+\title{Key Detection Event IDs}
+\pre{\startverb
+| Event ID | Description | Honeytoken Use |
+|----------|-------------|----------------|
+| 4769 | Kerberos TGS ticket requested | Detect Kerberoast against honey SPN |
+| 4625 | Failed logon attempt | Detect use of fake credentials from decoy GPO |
+| 4662 | Directory service object accessed | Detect DACL read on honeytoken user |
+| 5136 | Directory service object modified | Detect modification of decoy GPO |
+| 5137 | Directory service object created | Detect GPO creation mimicking decoy |
+| 4768 | Kerberos TGT requested | Detect AS-REP roasting of honey account |
+\stopverb}
+}
+
+\subtree{
+\title{Making Honeytokens Realistic}
+\p{Per Trimarc Security research, effective honeytokens must appear legitimate:}
+
+\ul{
+\li{\strong{Age the account}: Repurpose old inactive accounts (10-15 year old accounts in}
+\li{\strong{Set AdminCount=1}: Flags the account as having elevated AD rights, making it}
+\li{\strong{Use realistic naming}: Match organizational naming conventions (svc_sqlbackup,}
+\li{\strong{Set old password date}: Password age of 10+ years with an SPN looks like a}
+\li{\strong{Add group memberships}: Place in visible groups like "Remote Desktop Users" or}
+\li{\strong{Avoid detection tells}: Attackers check creation date vs. last logon vs.}
+}
+}
+}
+
+\subtree{
+\title{Instructions}
+\subtree{
+\title{Step 1: Deploy Fake Privileged Admin Account}
+\p{Create a honeytoken account that mimics a legacy privileged service account.}
+
+\pre{\startverb
+# Import the deployment module
+Import-Module .\scripts\Deploy-ADHoneytokens.ps1
+
+# Create a honeytoken admin account
+$honeyAdmin = New-HoneytokenAdmin `
+    -SamAccountName "svc_sqlbackup_legacy" `
+    -DisplayName "SQL Backup Service (Legacy)" `
+    -Description "Legacy SQL Server backup service account - DO NOT DELETE" `
+    -OU "OU=Service Accounts,DC=corp,DC=example,DC=com" `
+    -PasswordLength 128 `
+    -SetAdminCount $true
+
+Write-Host "Honeytoken admin created: $($honeyAdmin.DistinguishedName)"
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Deploy Fake SPN for Kerberoasting Detection}
+\p{Assign a realistic but fake SPN to the honeytoken account. Any TGS request for this SPN is definitively malicious (honeyroasting).}
+
+\pre{\startverb
+# Add fake SPN to honeytoken account
+$honeySPN = Add-HoneytokenSPN `
+    -SamAccountName "svc_sqlbackup_legacy" `
+    -ServiceClass "MSSQLSvc" `
+    -Hostname "sql-legacy-bak01.corp.example.com" `
+    -Port 1433
+
+Write-Host "Honey SPN registered: $($honeySPN.SPN)"
+Write-Host "Monitor Event ID 4769 for TGS requests targeting this SPN"
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Deploy Decoy GPO with Credential Trap}
+\p{Create a fake GPO in SYSVOL with an embedded cpassword (Group Policy Preference password). Attackers using tools like Get-GPPPassword or gpp-decrypt will find and attempt to use these credentials, triggering detection.}
+
+\pre{\startverb
+# Create decoy GPO with cpassword trap
+$decoyGPO = New-DecoyGPO `
+    -GPOName "Server Maintenance Policy (Legacy)" `
+    -DecoyUsername "admin_maintenance" `
+    -DecoyDomain "CORP" `
+    -SYSVOLPath "\\corp.example.com\SYSVOL\corp.example.com\Policies" `
+    -EnableAuditSACL $true
+
+Write-Host "Decoy GPO created: $($decoyGPO.GPOGuid)"
+Write-Host "SACL audit enabled - any read attempt will generate Event ID 4663"
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Create Deceptive BloodHound Paths}
+\p{Set ACL permissions that create fake attack paths visible to BloodHound/SharpHound reconnaissance, leading attackers toward monitored honeytokens.}
+
+\pre{\startverb
+# Create fake BloodHound attack path
+$deceptivePath = New-DeceptiveBloodHoundPath `
+    -HoneytokenSamAccount "svc_sqlbackup_legacy" `
+    -TargetHighValueGroup "Domain Admins" `
+    -IntermediateOU "OU=Service Accounts,DC=corp,DC=example,DC=com"
+
+Write-Host "Deceptive path created: $($deceptivePath.PathDescription)"
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Configure Detection Rules}
+\p{Set up SIEM detection rules to alert on any honeytoken interaction.}
+
+\pre{\startverb
+# Using the Python detection agent
+from agent import ADHoneytokenMonitor
+
+monitor = ADHoneytokenMonitor(config_path="honeytoken_config.json")
+
+# Register all honeytokens for monitoring
+monitor.register_honeytoken("svc_sqlbackup_legacy", token_type="admin_account")
+monitor.register_honeytoken("MSSQLSvc/sql-legacy-bak01.corp.example.com:1433", token_type="spn")
+monitor.register_honeytoken("admin_maintenance", token_type="gpo_credential")
+
+# Generate SIEM detection rules
+splunk_rules = monitor.generate_detection_rules(siem="splunk")
+sentinel_rules = monitor.generate_detection_rules(siem="sentinel")
+sigma_rules = monitor.generate_detection_rules(siem="sigma")
+
+for rule in sigma_rules:
+    print(f"Rule: {rule['title']}")
+    print(f"  Detection: {rule['detection_logic']}")
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Validate Deployment}
+\p{Test the honeytokens to ensure detection fires correctly.}
+
+\pre{\startverb
+# Validate honeytoken deployment
+$validation = Test-HoneytokenDeployment `
+    -SamAccountName "svc_sqlbackup_legacy" `
+    -ValidateAdminCount `
+    -ValidateSPN `
+    -ValidateGPODecoy `
+    -ValidateAuditPolicy
+
+$validation | Format-Table Check, Status, Details -AutoSize
+\stopverb}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Full Deployment Pipeline}
+\pre{\startverb
+Import-Module .\scripts\Deploy-ADHoneytokens.ps1
+
+# Deploy complete honeytoken suite
+$deployment = Deploy-FullHoneytokenSuite `
+    -Environment "Production" `
+    -ServiceAccountOU "OU=Service Accounts,DC=corp,DC=example,DC=com" `
+    -SYSVOLPath "\\corp.example.com\SYSVOL\corp.example.com\Policies" `
+    -TokenCount 3 `
+    -IncludeSPN $true `
+    -IncludeGPODecoy $true `
+    -IncludeBloodHoundPath $true `
+    -SIEMType "Splunk"
+
+# Output deployment report
+$deployment.Tokens | Format-Table Name, Type, SPN, DetectionRule -AutoSize
+$deployment | Export-Csv "honeytoken_deployment_report.csv" -NoTypeInformation
+\stopverb}
+}
+
+\subtree{
+\title{Kerberoasting Detection Query (Splunk)}
+\pre{\startverb
+index=wineventlog EventCode=4769 ServiceName="svc_sqlbackup_legacy"
+| eval alert_severity="critical"
+| eval alert_type="honeytoken_kerberoast"
+| table _time, src_ip, Account_Name, ServiceName, Ticket_Encryption_Type
+| sort - _time
+\stopverb}
+}
+
+\subtree{
+\title{Microsoft Sentinel KQL Detection}
+\pre{\startverb
+SecurityEvent
+| where EventID == 4769
+| where ServiceName in ("svc_sqlbackup_legacy", "svc_exchange_legacy")
+| extend AlertType = "Honeytoken Kerberoast Detected"
+| project TimeGenerated, Computer, Account, ServiceName, IpAddress, TicketEncryptionType
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Trimarc Security - The Art of the Honeypot Account: https://www.hub.trimarcsecurity.com/post/the-art-of-the-honeypot-account-making-the-unusual-look-normal}
+\li{ADSecurity.org - Detecting Kerberoasting Activity Part 2 (Honeypot): https://adsecurity.org/?p=3513}
+\li{Microsoft Defender for Identity Honeytokens: https://techcommunity.microsoft.com/blog/microsoftthreatprotectionblog/deceptive-defense-best-practices-for-identity-based-honeytokens-in-microsoft-def/3851641}
+\li{SpecterOps - Kerberoasting and AES-256: https://specterops.io/blog/2025/10/21/is-kerberoasting-still-a-risk-when-aes-256-kerberos-encryption-is-enabled/}
+\li{APT29a Blog - Deploying Honeytokens in AD: https://apt29a.blogspot.com/2019/11/deploying-honeytokens-in-active.html}
+\li{ADSecurity.org - Detecting Kerberoasting Activity: https://adsecurity.org/?p=3458}
+}
+}
+}

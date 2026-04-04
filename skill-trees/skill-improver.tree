@@ -1,0 +1,185 @@
+\title{Skill Improver}
+
+\taxon{skill}
+
+\meta{description}{"Iteratively reviews and fixes Claude Code skill quality issues until they meet standards. Runs automated fix-review cycles using the skill-reviewer agent. Use to fix skill quality issues, improve skill descriptions, run automated skill review loops, or iteratively refine a skill. Triggers on 'fix my skill', 'improve skill quality', 'skill improvement loop'. NOT for one-time reviews—use /skill-reviewer directly."}
+
+\subtree{
+\title{Skill Improvement Methodology}
+\p{Iteratively improve a Claude Code skill using the skill-reviewer agent until it meets quality standards.}
+
+\subtree{
+\title{Prerequisites}
+\p{Requires the \code{\startverb plugin-dev\stopverb} plugin which provides the \code{\startverb skill-reviewer\stopverb} agent.}
+
+\p{Verify it's enabled: run \code{\startverb /plugins\stopverb} — \code{\startverb plugin-dev\stopverb} should appear in the list. If missing, install from the Trail of Bits plugin repository.}
+}
+
+\subtree{
+\title{Core Loop}
+\ol{
+\li{\strong{Review} - Call skill-reviewer on the target skill}
+\li{\strong{Categorize} - Parse issues by severity}
+\li{\strong{Fix} - Address critical and major issues}
+\li{\strong{Evaluate} - Check minor issues for validity before fixing}
+\li{\strong{Repeat} - Continue until quality bar is met}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Improving a skill with multiple quality issues}
+\li{Iterating on a new skill until it meets standards}
+\li{Automated fix-review cycles instead of manual editing}
+\li{Consistent quality enforcement across skills}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{\strong{One-time review}: Use \code{\startverb /skill-reviewer\stopverb} directly instead}
+\li{\strong{Quick single fixes}: Edit the file directly}
+\li{\strong{Non-skill files}: Only works on SKILL.md files}
+\li{\strong{Experimental skills}: Manual iteration gives more control during exploration}
+}
+}
+
+\subtree{
+\title{Issue Categorization}
+\subtree{
+\title{Critical Issues (MUST fix immediately)}
+\p{These block skill loading or cause runtime failures:}
+
+\ul{
+\li{Missing required frontmatter fields (name, description) — Claude cannot index or trigger the skill}
+\li{Invalid YAML frontmatter syntax — Parsing fails, skill won't load}
+\li{Referenced files that don't exist — Runtime errors when Claude follows links}
+\li{Broken file paths — Same as above, leads to tool failures}
+}
+}
+
+\subtree{
+\title{Major Issues (MUST fix)}
+\p{These significantly degrade skill effectiveness:}
+
+\ul{
+\li{Weak or vague trigger descriptions — Claude may not recognize when to use the skill}
+\li{Wrong writing voice (second person "you" instead of imperative) — Inconsistent with Claude's execution model}
+\li{SKILL.md exceeds 500 lines without using references/ — Overloads context, reduces comprehension}
+\li{Missing "When to Use" or "When NOT to Use" sections — Required by project quality standards}
+\li{Description doesn't specify when to trigger — Skill may never be selected}
+}
+}
+
+\subtree{
+\title{Minor Issues (Evaluate before fixing)}
+\p{These are polish items that may or may not improve the skill:}
+
+\ul{
+\li{Subjective style preferences — Reviewer may have different taste than author}
+\li{Optional enhancements — May add complexity without proportional value}
+\li{"Nice to have" improvements — Consider cost-benefit before implementing}
+\li{Formatting suggestions — Often valid but low impact}
+}
+}
+}
+
+\subtree{
+\title{Minor Issue Evaluation}
+\p{Before implementing any minor issue fix, evaluate:}
+
+\ol{
+\li{\strong{Is this a genuine improvement?} - Does it add real value or just satisfy a preference?}
+\li{\strong{Could this be a false positive?} - Is the reviewer misunderstanding context?}
+\li{\strong{Would this actually help Claude use the skill?} - Focus on functional improvements}
+}
+
+\p{Only implement minor fixes that are clearly beneficial. Skill-reviewer may produce false positives.}
+}
+
+\subtree{
+\title{Invoking skill-reviewer}
+\p{Use the skill-reviewer agent from the plugin-dev plugin. Request a review by asking Claude to:}
+
+\blockquote{Review the skill at [SKILL_PATH] using the plugin-dev:skill-reviewer agent. Provide a detailed quality assessment with issues categorized by severity.}
+
+\p{Replace \code{\startverb [SKILL_PATH]\stopverb} with the absolute path to the skill directory (e.g., \code{\startverb /path/to/plugins/my-plugin/skills/my-skill\stopverb}).}
+}
+
+\subtree{
+\title{Example Fix Cycle}
+\p{\strong{Iteration 1 — skill-reviewer output:}}
+
+\pre{\startverb
+Critical: SKILL.md:1 - Missing required 'name' field in frontmatter
+Major: SKILL.md:3 - Description uses second person ("you should use")
+Major: Missing "When NOT to Use" section
+Minor: Line 45 is verbose
+\stopverb}
+
+\p{\strong{Fixes applied:}}
+
+\ul{
+\li{Added name field to frontmatter}
+\li{Rewrote description in third person}
+\li{Added "When NOT to Use" section}
+}
+
+\p{\strong{Iteration 2 — run skill-reviewer again to verify fixes:}}
+
+\pre{\startverb
+Minor: Line 45 is verbose
+\stopverb}
+
+\p{\strong{Minor issue evaluation:} Line 45 communicates effectively as-is. The verbosity provides useful context. Skip.}
+
+\p{\strong{All critical/major issues resolved. Output the completion marker:}}
+
+\pre{\startverb
+<skill-improvement-complete>
+\stopverb}
+
+\p{Note: The marker MUST appear in the output. Statements like "quality bar met" or "looks good" will NOT stop the loop.}
+}
+
+\subtree{
+\title{Completion Criteria}
+\p{\strong{CRITICAL}: The stop hook ONLY checks for the explicit marker below. No other signal will terminate the loop.}
+
+\p{Output this marker when done:}
+
+\pre{\startverb
+<skill-improvement-complete>
+\stopverb}
+
+\p{\strong{When to output the marker:}}
+
+\ol{
+\li{\strong{skill-reviewer reports "Pass"} or \strong{no issues found} → output marker immediately}
+\li{\strong{All critical and major issues are fixed} AND you've verified the fixes → output marker}
+\li{\strong{Remaining issues are only minor} AND you've evaluated them as false positives or not worth fixing → output marker}
+}
+
+\p{\strong{When NOT to output the marker:}}
+
+\ul{
+\li{Any critical issue remains unfixed}
+\li{Any major issue remains unfixed}
+\li{You haven't run skill-reviewer to verify your fixes worked}
+}
+
+\p{The marker is the ONLY way to complete the loop. Natural language like "looks good" or "quality bar met" will NOT stop the loop.}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\ul{
+\li{"I'll just mark it complete and come back later" - Fix issues now}
+\li{"This minor issue seems wrong, I'll skip all of them" - Evaluate each one individually}
+\li{"The reviewer is being too strict" - The quality bar exists for a reason}
+\li{"It's good enough" - If there are major issues, it's not good enough}
+}
+}
+}

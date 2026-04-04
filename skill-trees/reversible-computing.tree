@@ -1,0 +1,270 @@
+\title{Reversible Computing}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{"Janus and reversible languages: run programs backwards, time-symmetric computation."}
+
+\subtree{
+\title{Reversible Computing Skill}
+\blockquote{*"Every computation can be undone. Time flows both ways."*}
+
+\subtree{
+\title{Core Concept}
+\p{Reversible computing ensures:}
+
+\ol{
+\li{\strong{Bijective} — every state has exactly one predecessor AND successor}
+\li{\strong{No information loss} — can always recover input from output}
+\li{\strong{Time-symmetric} — run program forwards or backwards}
+\li{\strong{Landauer limit} — theoretical minimum energy (no erasure = no heat)}
+}
+
+\pre{\startverb
+        forward
+Input ─────────────▶ Output
+      ◀─────────────
+        backward
+\stopverb}
+}
+
+\subtree{
+\title{Why It's Strange}
+\ol{
+\li{\strong{No destructive updates} — \code{\startverb x = 5\stopverb} is illegal (loses old value)}
+\li{\strong{No \code{\startverb if\stopverb} without \code{\startverb fi\stopverb}} — conditionals must be invertible}
+\li{\strong{No garbage} — all temporary values must be "uncomputed"}
+\li{\strong{Quantum-ready} — unitary operations are reversible}
+}
+}
+
+\subtree{
+\title{Janus Language}
+\pre{\startverb
+procedure swap(int x, int y)
+    x ^= y      // x' = x ⊕ y
+    y ^= x      // y' = y ⊕ (x ⊕ y) = x
+    x ^= y      // x'' = (x ⊕ y) ⊕ x = y
+
+// Running BACKWARDS automatically inverts!
+// uncall swap(a, b)  ← swaps back
+\stopverb}
+
+\subtree{
+\title{Reversible Conditionals}
+\pre{\startverb
+// Forward: if-then-else-fi
+if x = 0 then
+    x += 1
+else
+    x += 2
+fi x = 1    // <-- ASSERTION: must be true after forward
+
+// Backward: uses fi-assertion to know which branch was taken
+\stopverb}
+}
+
+\subtree{
+\title{Reversible Loops}
+\pre{\startverb
+// Forward: from-do-loop-until
+from x = 0 do
+    x += 1
+loop
+    y += x
+until x = 10
+
+// Backward: runs until x = 0, undoing each iteration
+\stopverb}
+}
+}
+
+\subtree{
+\title{Bennett's Trick}
+\p{How to make irreversible computation reversible:}
+
+\pre{\startverb
+1. Compute f(x) → y, keeping all intermediate garbage g
+2. Copy y to output
+3. UNCOMPUTE: run step 1 backwards to clean up g
+
+    ┌─────────────────────────────────────┐
+    │ x ──▶ COMPUTE ──▶ (y,g) ──▶ COPY    │
+    │                       │       │     │
+    │                       ▼       ▼     │
+    │                  UNCOMPUTE   y_out  │
+    │                       │             │
+    │                       ▼             │
+    │                      (x,0)          │
+    └─────────────────────────────────────┘
+\stopverb}
+
+\p{Space: O(T) → O(T log T) with checkpointing}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+class ReversibleMachine:
+    def __init__(self):
+        self.tape = {}  # variable → value
+        self.history = []  # for reversal
+    
+    def xor_assign(self, var, value):
+        """x ^= value (self-inverse!)"""
+        old = self.tape.get(var, 0)
+        self.tape[var] = old ^ value
+        self.history.append(('xor', var, value))
+    
+    def add_assign(self, var, value):
+        """x += value"""
+        old = self.tape.get(var, 0)
+        self.tape[var] = old + value
+        self.history.append(('add', var, value))
+    
+    def sub_assign(self, var, value):
+        """x -= value (inverse of add)"""
+        old = self.tape.get(var, 0)
+        self.tape[var] = old - value
+        self.history.append(('sub', var, value))
+    
+    def reverse_step(self):
+        """Undo last operation."""
+        if not self.history:
+            return False
+        
+        op, var, value = self.history.pop()
+        if op == 'xor':
+            self.tape[var] ^= value  # XOR is self-inverse
+        elif op == 'add':
+            self.tape[var] -= value
+        elif op == 'sub':
+            self.tape[var] += value
+        return True
+    
+    def reverse_all(self):
+        """Run entire program backwards."""
+        while self.reverse_step():
+            pass
+\stopverb}
+}
+
+\subtree{
+\title{Reversible Gates (Hardware)}
+\pre{\startverb
+Fredkin Gate (CSWAP):      Toffoli Gate (CCNOT):
+                           
+  a ─────●───── a            a ─────●───── a
+         │                          │
+  b ───┬─┼─┬─── b'           b ─────●───── b
+       │ │ │                        │
+  c ───┴─●─┴─── c'           c ─────⊕───── c ⊕ (a ∧ b)
+
+If a=1: swap b,c            If a=b=1: flip c
+If a=0: pass through        Otherwise: pass through
+\stopverb}
+
+\p{Both are \strong{universal} for reversible classical computation.}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+# Reversible operations on GF(3)
+# x ⊕₃ y = (x + y) mod 3 is reversible (inverse: x ⊖₃ y)
+
+function gf3_add!(state, var, value)
+    state[var] = (state[var] + value) % 3
+    # Inverse: gf3_sub!(state, var, value)
+end
+
+function gf3_sub!(state, var, value)
+    state[var] = (state[var] - value + 3) % 3
+end
+
+# Trit-preserving swap
+function trit_swap!(state, a, b)
+    # XOR doesn't work in GF(3), use:
+    state[a], state[b] = state[b], state[a]
+    # Self-inverse: swap is its own reverse
+end
+\stopverb}
+}
+
+\subtree{
+\title{Quantum Connection}
+\p{All quantum gates are unitary → reversible:}
+
+\pre{\startverb
+        ┌───┐
+|ψ⟩ ────┤ U ├──── U|ψ⟩
+        └───┘
+        
+        ┌────┐
+U|ψ⟩ ───┤ U† ├─── |ψ⟩   (U† = inverse)
+        └────┘
+\stopverb}
+
+\p{Irreversible measurement "collapses" superposition → information loss.}
+}
+
+\subtree{
+\title{Energy and Landauer's Principle}
+\pre{\startverb
+Irreversible:  Erase 1 bit → kT ln(2) energy released as heat
+                            ≈ 2.8 × 10⁻²¹ J at room temperature
+
+Reversible:    No erasure → no theoretical minimum energy
+               (practical limits remain)
+\stopverb}
+}
+
+\subtree{
+\title{Languages & Tools}
+\pre{\startverb
+| Language | Description |
+|----------|-------------|
+| **Janus** | First reversible imperative language |
+| **RFUN** | Reversible functional |
+| **SyReC** | Reversible circuit synthesis |
+| **Quipper** | Quantum (inherently reversible) |
+| **Theseus** | Type-safe reversible |
+\stopverb}
+}
+
+\subtree{
+\title{Example: Reversible Fibonacci}
+\pre{\startverb
+procedure fib(int n, int x1, int x2)
+    from x1 = 1 ∧ x2 = 0 do
+        x1 += x2
+        x1 <=> x2    // swap
+        n -= 1
+    until n = 0
+    
+// call fib(10, x1, x2)  → x1 = 55, x2 = 89
+// uncall fib(10, x1, x2) → x1 = 1, x2 = 0
+\stopverb}
+}
+
+\subtree{
+\title{Literature}
+\ol{
+\li{\strong{Landauer (1961)} - "Irreversibility and Heat Generation"}
+\li{\strong{Bennett (1973)} - "Logical Reversibility of Computation"}
+\li{\strong{Yokoyama & Glück (2007)} - "A Reversible Programming Language"}
+\li{\strong{Fredkin & Toffoli (1982)} - "Conservative Logic"}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb quantum-computing\stopverb} - Unitary = reversible}
+\li{\code{\startverb thermodynamics\stopverb} - Landauer limit}
+\li{\code{\startverb bidirectional-programming\stopverb} - Lenses}
+\li{\code{\startverb interaction-nets\stopverb} - Reduction is reversible}
+}
+}
+}

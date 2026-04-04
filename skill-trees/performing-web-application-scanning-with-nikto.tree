@@ -1,0 +1,289 @@
+\title{Performing Web Application Scanning With Nikto}
+
+\taxon{skill}
+
+\tag{vulnerability-management}
+
+\tag{cve}
+
+\tag{nikto}
+
+\tag{web-scanning}
+
+\tag{owasp}
+
+\tag{risk}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Nikto is an open-source web server and web application scanner that tests against over 7,000 potentially dangerous files/programs, checks for outdated versions of over 1,250 servers, and identifies ve}
+
+\subtree{
+\title{Performing Web Application Scanning with Nikto}
+\subtree{
+\title{Overview}
+\p{Nikto is an open-source web server and web application scanner that tests against over 7,000 potentially dangerous files/programs, checks for outdated versions of over 1,250 servers, and identifies version-specific problems on over 270 servers. It performs comprehensive tests including XSS, SQL injection, server misconfigurations, default credentials, and known vulnerable CGI scripts.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing web application scanning with nikto}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Nikto installed (Perl-based, included in Kali Linux)}
+\li{Written authorization to scan target web servers}
+\li{Network access to target web applications}
+\li{Understanding of HTTP/HTTPS protocols}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{What Nikto Detects}
+\ul{
+\li{Server misconfigurations and dangerous default files}
+\li{Outdated server software versions with known CVEs}
+\li{Common CGI vulnerabilities and dangerous scripts}
+\li{Default credentials and admin pages}
+\li{HTTP methods that should be disabled (PUT, DELETE, TRACE)}
+\li{SSL/TLS misconfigurations and weak ciphers}
+\li{Missing security headers (X-Frame-Options, CSP, HSTS)}
+\li{Information disclosure through headers and error pages}
+}
+}
+
+\subtree{
+\title{Nikto vs Other Web Scanners}
+\pre{\startverb
+| Feature | Nikto | OWASP ZAP | Burp Suite | Nuclei |
+|---------|-------|-----------|------------|--------|
+| License | Open Source | Open Source | Commercial | Open Source |
+| Focus | Server/Config | App Logic | Full Pentest | Template-Based |
+| Speed | Fast | Medium | Slow | Very Fast |
+| False Positives | Moderate | Low | Low | Low |
+| Authentication | Basic | Full | Full | Template |
+| Active Community | Yes | Yes | Yes | Yes |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Basic Scanning}
+\pre{\startverb
+# Basic scan against a target
+nikto -h https://target.example.com
+
+# Scan specific port
+nikto -h target.example.com -p 8443
+
+# Scan multiple ports
+nikto -h target.example.com -p 80,443,8080,8443
+
+# Scan with SSL enforcement
+nikto -h target.example.com -ssl
+
+# Scan from a host list file
+nikto -h targets.txt
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Advanced Scanning Options}
+\pre{\startverb
+# Comprehensive scan with all tuning options
+nikto -h https://target.example.com \
+  -Tuning 123456789abcde \
+  -timeout 10 \
+  -Pause 2 \
+  -Display V \
+  -output report.html \
+  -Format htm
+
+# Tuning options control test types:
+# 0 - File Upload
+# 1 - Interesting File / Seen in logs
+# 2 - Misconfiguration / Default File
+# 3 - Information Disclosure
+# 4 - Injection (XSS/Script/HTML)
+# 5 - Remote File Retrieval - Inside Web Root
+# 6 - Denial of Service
+# 7 - Remote File Retrieval - Server Wide
+# 8 - Command Execution / Remote Shell
+# 9 - SQL Injection
+# a - Authentication Bypass
+# b - Software Identification
+# c - Remote Source Inclusion
+# d - WebService
+# e - Administrative Console
+
+# Scan with specific tuning (XSS + SQL injection + auth bypass)
+nikto -h https://target.example.com -Tuning 49a
+
+# Scan with authentication
+nikto -h https://target.example.com -id admin:password
+
+# Scan through a proxy
+nikto -h https://target.example.com -useproxy http://proxy:8080
+
+# Scan with custom User-Agent
+nikto -h https://target.example.com -useragent "Mozilla/5.0 (Security Scan)"
+
+# Scan specific CGI directories
+nikto -h https://target.example.com -Cgidirs /cgi-bin/,/scripts/
+
+# Evasion techniques (IDS avoidance for authorized testing)
+# 1-Random URI encoding, 2-Directory self-reference
+# 3-Premature URL ending, 4-Prepend long random string
+nikto -h https://target.example.com -evasion 1234
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Output and Reporting}
+\pre{\startverb
+# Generate multiple output formats
+nikto -h https://target.example.com -output scan.csv -Format csv
+nikto -h https://target.example.com -output scan.xml -Format xml
+nikto -h https://target.example.com -output scan.html -Format htm
+nikto -h https://target.example.com -output scan.txt -Format txt
+
+# JSON output (newer versions)
+nikto -h https://target.example.com -output scan.json -Format json
+
+# Save to multiple formats simultaneously
+nikto -h https://target.example.com \
+  -output scan_report \
+  -Format htm
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Scan Multiple Targets}
+\pre{\startverb
+# Create targets file (one per line)
+cat > targets.txt << 'EOF'
+https://app1.example.com
+https://app2.example.com:8443
+http://internal-app.corp.local
+192.168.1.100:8080
+EOF
+
+# Scan all targets
+nikto -h targets.txt -output multi_scan.html -Format htm
+
+# Parallel scanning with GNU parallel
+cat targets.txt | parallel -j 5 "nikto -h {} -output {/}_report.html -Format htm"
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: SSL/TLS Assessment}
+\pre{\startverb
+# Comprehensive SSL scan
+nikto -h https://target.example.com -ssl \
+  -Tuning b \
+  -Display V
+
+# Check for specific SSL vulnerabilities
+# Nikto checks for:
+# - Expired certificates
+# - Self-signed certificates
+# - Weak cipher suites
+# - SSLv2/SSLv3 enabled
+# - BEAST, POODLE, Heartbleed indicators
+# - Missing HSTS header
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Integration with Other Tools}
+\pre{\startverb
+# Pipe Nmap results into Nikto
+nmap -p 80,443,8080 --open -oG - 192.168.1.0/24 | \
+  awk '/open/{print $2}' | \
+  while read host; do nikto -h "$host" -output "${host}_nikto.html" -Format htm; done
+
+# Export to Metasploit-compatible format
+nikto -h target.example.com -output msf_import.xml -Format xml
+
+# Parse Nikto XML output with Python for custom reporting
+python3 -c "
+import xml.etree.ElementTree as ET
+tree = ET.parse('scan.xml')
+for item in tree.findall('.//item'):
+    print(f\"[{item.get('id')}] {item.findtext('description', '')[:100]}\")
+"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Interpreting Results}
+\subtree{
+\title{Severity Classification}
+\ul{
+\li{\strong{OSVDB/CVE References}: Cross-reference with NVD for CVSS scores}
+\li{\strong{Server Information Disclosure}: Version banners, technology stack}
+\li{\strong{Dangerous HTTP Methods}: PUT, DELETE, TRACE enabled}
+\li{\strong{Default/Backup Files}: .bak, .old, .swp, web.config.bak}
+\li{\strong{Admin Interfaces}: /admin, /manager, /console exposed}
+\li{\strong{Missing Security Headers}: CSP, X-Frame-Options, HSTS}
+}
+}
+
+\subtree{
+\title{Common False Positives}
+\ul{
+\li{Generic checks triggered by custom 404 pages}
+\li{Anti-CSRF tokens flagged as form vulnerabilities}
+\li{CDN/WAF responses misidentified as vulnerable}
+\li{Load balancer health check pages}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{Always obtain written authorization before scanning}
+\li{Run Nikto in conjunction with application-level scanners (ZAP, Burp)}
+\li{Use -Pause flag to reduce load on production servers}
+\li{Validate findings manually before reporting}
+\li{Combine with SSL testing tools (testssl.sh, sslyze) for comprehensive coverage}
+\li{Schedule regular scans as part of continuous vulnerability management}
+\li{Keep Nikto database updated for latest vulnerability checks}
+\li{Use appropriate evasion settings only for authorized IDS testing}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Running Nikto without authorization (legal liability)}
+\li{Treating Nikto as a complete web application scanner (it focuses on server/config issues)}
+\li{Not validating results leading to false positive reports}
+\li{Scanning too aggressively against production systems}
+\li{Ignoring SSL/TLS findings as "informational"}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{scanning-infrastructure-with-nessus}
+\li{scanning-apis-for-security-vulnerabilities}
+\li{performing-network-vulnerability-assessment}
+}
+}
+}

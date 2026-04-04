@@ -1,0 +1,55 @@
+\title{Implementing Siem Use Case Tuning}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Tune SIEM detection rules to reduce false positives by analyzing alert volumes, creating whitelists, adjusting thresholds, and measuring detection efficacy metrics in Splunk and Elastic}
+
+\subtree{
+\title{Implementing SIEM Use Case Tuning}
+\subtree{
+\title{Overview}
+\p{SIEM use case tuning reduces alert fatigue by systematically analyzing detection rules for false positive rates, adjusting thresholds based on environmental baselines, creating context-aware whitelists, and measuring detection efficacy through precision/recall metrics. This skill covers tuning workflows for Splunk correlation searches and Elastic detection rules, including statistical baselining, exclusion list management, and alert-to-incident conversion tracking.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing siem use case tuning capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Splunk Enterprise/Cloud with ES or Elastic SIEM with detection rules enabled}
+\li{Historical alert data (minimum 30 days) for baseline analysis}
+\li{Python 3.8+ with \code{\startverb requests\stopverb} library}
+\li{SIEM admin credentials or API tokens}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Export current alert volumes per detection rule from SIEM}
+\li{Calculate false positive rate per rule using analyst disposition data}
+\li{Identify top noise-generating rules by volume and FP rate}
+\li{Build environmental baselines for thresholds (e.g., login counts, process spawns)}
+\li{Create whitelist entries for known-good entities (service accounts, scanners)}
+\li{Adjust rule thresholds using statistical analysis (mean + N standard deviations)}
+\li{Measure tuning impact via before/after precision and alert-to-incident ratio}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report with per-rule tuning recommendations including current FP rate, suggested threshold adjustments, whitelist entries, and projected alert reduction percentages.}
+}
+}

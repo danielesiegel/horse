@@ -1,0 +1,179 @@
+\title{Implementing Just In Time Access Provisioning}
+
+\taxon{skill}
+
+\tag{iam}
+
+\tag{identity}
+
+\tag{access-control}
+
+\tag{jit}
+
+\tag{provisioning}
+
+\tag{zero-trust}
+
+\tag{least-privilege}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement Just-In-Time (JIT) access provisioning to eliminate standing privileges by granting temporary, time-bound access only when needed. This skill covers JIT architecture design, approval workflo}
+
+\subtree{
+\title{Implementing Just-In-Time Access Provisioning}
+\subtree{
+\title{Overview}
+\p{Implement Just-In-Time (JIT) access provisioning to eliminate standing privileges by granting temporary, time-bound access only when needed. This skill covers JIT architecture design, approval workflows, automatic expiration, integration with PAM and IGA platforms, and alignment with zero trust principles.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing just in time access provisioning capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with identity access management concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Design JIT access request and approval workflows}
+\li{Implement time-bound access grants with automatic expiration}
+\li{Configure risk-based approval routing (auto-approve low-risk, multi-approval for high-risk)}
+\li{Integrate JIT with PAM for privileged access elevation}
+\li{Monitor and audit all JIT access grants and usage}
+\li{Reduce attack surface by eliminating standing privileges}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{JIT Access Models}
+\ol{
+\li{\strong{Broker and Remove}: Grant access through approval, auto-remove after time window}
+\li{\strong{Elevation on Demand}: User has base access, elevates to privileged upon request}
+\li{\strong{Account Creation/Deletion}: Temporary account created, destroyed after use}
+\li{\strong{Group Membership Toggle}: Add to privileged group temporarily, auto-remove}
+}
+}
+
+\subtree{
+\title{Zero Standing Privilege (ZSP) Principle}
+\ul{
+\li{No user has permanent privileged access}
+\li{All privileged access requires explicit request with business justification}
+\li{Access automatically expires after defined time window}
+\li{All access events logged and auditable}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Identify Eligible Access Types}
+\ul{
+\li{Privileged admin access (domain admin, root, DBA)}
+\li{Production environment access}
+\li{Sensitive data access (PII, financial, healthcare)}
+\li{Emergency/break-glass access}
+\li{Third-party vendor access}
+}
+}
+
+\subtree{
+\title{Step 2: Design Approval Workflows}
+\ul{
+\li{Self-service request portal with justification requirement}
+\li{Auto-approve for pre-authorized low-risk access (< 1 hour)}
+\li{Single approver for medium-risk (manager or resource owner)}
+\li{Dual approval for high-risk (manager + security team)}
+\li{Emergency bypass with post-facto review}
+}
+}
+
+\subtree{
+\title{Step 3: Implement Time-Bound Access}
+\ul{
+\li{Configure maximum access duration per resource type}
+\li{Implement countdown timer with extension request capability}
+\li{Auto-revoke at expiration regardless of session state}
+\li{Grace period notification (15 min before expiry)}
+\li{Automatic session termination on access expiry}
+}
+}
+
+\subtree{
+\title{Step 4: Integration Architecture}
+\ul{
+\li{Connect to IAM/IGA platform for provisioning/de-provisioning}
+\li{Integrate with PAM for privileged credential checkout}
+\li{Connect to ITSM for ticket correlation}
+\li{Forward events to SIEM for monitoring}
+\li{API integration for programmatic access requests}
+}
+}
+
+\subtree{
+\title{Step 5: Monitoring and Compliance}
+\ul{
+\li{Log all JIT requests, approvals, grants, and revocations}
+\li{Alert on access used beyond approved scope}
+\li{Track access not used (request but never connected)}
+\li{Measure mean time to access (request to grant)}
+\li{Report on access patterns for baseline optimization}
+}
+}
+}
+
+\subtree{
+\title{Security Controls}
+\pre{\startverb
+| Control | NIST 800-53 | Description |
+|---------|-------------|-------------|
+| Temporary Access | AC-2(2) | Automated temporary account management |
+| Least Privilege | AC-6 | Time-bound minimum access |
+| Access Enforcement | AC-3 | Automated access grant/revoke |
+| Audit | AU-3 | Complete JIT access audit trail |
+| Risk Assessment | RA-3 | Risk-based approval routing |
+\stopverb}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Setting time windows too long, negating JIT benefits}
+\li{Not implementing automatic revocation at expiration}
+\li{Complex approval workflows causing access delays for legitimate needs}
+\li{Not providing emergency bypass for critical incidents}
+\li{Failing to audit approved but unused JIT access}
+}
+}
+
+\subtree{
+\title{Verification}
+\ul{
+\li{[ ] JIT request workflow functional end-to-end}
+\li{[ ] Access automatically revoked at expiration}
+\li{[ ] Approval routing correct for all risk levels}
+\li{[ ] Emergency access bypass works with post-review}
+\li{[ ] All JIT events logged to SIEM}
+\li{[ ] Standing privileges reduced by measurable percentage}
+\li{[ ] Mean time to access meets business SLA}
+}
+}
+}

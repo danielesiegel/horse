@@ -1,0 +1,322 @@
+\title{Quantum Guitar}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{"Coecke's Quantum Guitar: quantising guitar strings via qubit association, ZX-calculus notation, Moth Actias synth integration"}
+
+\subtree{
+\title{Quantum Guitar}
+\p{\strong{Trit}: 0 (ERGODIC - coordinator between classical and quantum) \strong{Author}: Bob Coecke (Quantum Brain Art Ltd / Oxford / Perimeter) \strong{arXiv}: 2509.04526v1 [quant-ph] 3 Sep 2025}
+
+\subtree{
+\title{Core Principle}
+\blockquote{"A guitar string represents a wave, and by associating a qubit to each of its playable states we get a quantum wave."}
+
+\p{\strong{Quantisation}: Each playable state of a guitar string → qubit \strong{Control}: Four limbs like a drummer (hands: guitar, feet: qubit) \strong{Transition}: Smooth classical ↔ quantum sound continuum}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────┐
+│                        QUANTUM GUITAR                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  GUITAR (hands)          QUBIT CONTROL (feet)                        │
+│  ┌──────────────┐        ┌──────────────────────────────┐           │
+│  │ Fishman MIDI │───────▶│ Moth Actias Quantum Synth    │           │
+│  │ Pickup       │        │ ┌────────────────────────┐   │           │
+│  └──────────────┘        │ │    Bloch Sphere        │   │           │
+│                          │ │         |ψ⟩            │   │           │
+│  Fernandes               │ │       /    \           │   │           │
+│  Sustainer ──────────────│ │    |0⟩     |1⟩        │   │           │
+│  (continuous)            │ └────────────────────────┘   │           │
+│                          │                               │           │
+│                          │ FOOT CONTROLLERS:             │           │
+│                          │ • Boss EV-1-WL (X rotation)   │           │
+│                          │ • Boss EV-1-WL (Z rotation)   │           │
+│                          │ • Boss FS-6 (measurement)     │           │
+│                          └──────────────────────────────┘           │
+│                                                                      │
+│  VOLUME PEDALS                                                       │
+│  ┌────────────┐  ┌────────────┐                                     │
+│  │ Classical  │  │  Quantum   │                                     │
+│  │ FV500L/H   │  │  FV500L/H  │                                     │
+│  └────────────┘  └────────────┘                                     │
+│       ↓                ↓                                             │
+│       └────────┬───────┘                                             │
+│                ▼                                                     │
+│         FINAL MIX                                                    │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Qubit Operations}
+\subtree{
+\title{Rotations (Foot Controllers)}
+\pre{\startverb
+| Controller | Color | Rotation | Pauli Gate |
+|------------|-------|----------|------------|
+| Pedal 1 | Orange | X-axis | σₓ |
+| Pedal 2 | Blue | Z-axis | σᵤ |
+| (Internal) | Green | Y-axis | σᵧ |
+\stopverb}
+}
+
+\subtree{
+\title{Measurement (Foot Switch)}
+\ul{
+\li{\strong{Boss FS-6} in momentary mode}
+\li{Z-measurement (computational basis)}
+\li{Suggestion: Add X-measurement primitive}
+}
+}
+}
+
+\subtree{
+\title{ZX-Calculus Notation}
+\p{From "Bell" composition [Abdyssagin & Coecke]:}
+
+\pre{\startverb
+     ┌───┐
+ ────┤ Z ├────    Z-spider (phase)
+     └───┘
+     
+     ┌───┐
+ ────┤ X ├────    X-spider (phase)
+     └───┘
+     
+     ╲   ╱
+      ╲ ╱
+       ╳         Hadamard edge
+      ╱ ╲
+     ╱   ╲
+\stopverb}
+
+\p{\strong{Musical ZX notation}: Augmented score for quantum music}
+}
+
+\subtree{
+\title{GF(3) Mapping}
+\pre{\startverb
+| State | Trit | Sound Character |
+|-------|------|-----------------|
+| |0⟩ | -1 | Classical ground |
+| |+⟩ | 0 | Superposition (quantum) |
+| |1⟩ | +1 | Classical excited |
+\stopverb}
+
+\p{\strong{Conservation}: Classical-Quantum-Classical transitions preserve Σ = 0}
+}
+
+\subtree{
+\title{Implementation}
+\subtree{
+\title{DisCoPy Integration}
+\pre{\startverb
+from discopy import Ty, Box, Diagram
+from discopy.quantum import qubit, Ket, Bra, H, Rx, Rz, Measure
+
+# Guitar string as quantum type
+string = Ty('string')
+quantum_string = qubit
+
+# Quantisation functor
+def quantise_string(classical_note):
+    """Map classical guitar note to qubit state."""
+    # Frequency → phase
+    phase = frequency_to_phase(classical_note)
+    return Ket(0) >> Rx(phase)
+
+# Foot controller rotation
+def foot_rotation(axis, angle):
+    if axis == 'X':
+        return Rx(angle)
+    elif axis == 'Z':
+        return Rz(angle)
+    else:
+        return Ry(angle)
+
+# Measurement
+def measure_qubit():
+    return Measure()
+\stopverb}
+}
+
+\subtree{
+\title{Moth Actias Interface}
+\pre{\startverb
+import mido
+
+class ActiasController:
+    """Control Moth Actias quantum synth via MIDI."""
+    
+    def __init__(self, port_name='Actias'):
+        self.port = mido.open_output(port_name)
+        self.qubit_state = [1, 0]  # |0⟩
+    
+    def rotate_x(self, angle):
+        """X-rotation via expression pedal CC."""
+        cc_value = int((angle / (2 * np.pi)) * 127)
+        self.port.send(mido.Message('control_change', 
+                                     control=1, value=cc_value))
+    
+    def rotate_z(self, angle):
+        """Z-rotation via expression pedal CC."""
+        cc_value = int((angle / (2 * np.pi)) * 127)
+        self.port.send(mido.Message('control_change', 
+                                     control=2, value=cc_value))
+    
+    def measure(self):
+        """Trigger measurement via foot switch."""
+        self.port.send(mido.Message('control_change', 
+                                     control=64, value=127))
+\stopverb}
+}
+
+\subtree{
+\title{OSC Protocol (SuperCollider)}
+\pre{\startverb
+// Quantum Guitar SynthDef
+SynthDef(\quantumString, { |freq=440, theta=0, phi=0, amp=0.5|
+    var classical, quantum, mix;
+    var prob0, prob1;
+    
+    // Classical component
+    classical = Saw.ar(freq) * EnvGen.kr(Env.perc);
+    
+    // Qubit probabilities from Bloch sphere
+    prob0 = cos(theta/2).squared;
+    prob1 = sin(theta/2).squared;
+    
+    // Quantum superposition sound
+    quantum = (SinOsc.ar(freq) * prob0) + 
+              (SinOsc.ar(freq * 1.5) * prob1);
+    
+    // Phase modulation from phi
+    quantum = quantum * cos(phi);
+    
+    // Mix via volume pedals
+    mix = XFade2.ar(classical, quantum, \qMix.kr(0));
+    
+    Out.ar(0, mix * amp ! 2);
+}).add;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performances}
+\pre{\startverb
+| Date | Venue | Configuration |
+|------|-------|---------------|
+| 2024 | Edinburgh Science Festival | First Quantum Guitar |
+| 2024 | Wacken Open Air | With Black Tish |
+| 2024 | Lowlands Festival | Industrial Metal |
+| 2025 | Vienna World Quantum Day | "Bell" with Grand Piano |
+| 2025 | Berlin UdK Medienhaus | Quantum Guitar + Piano |
+| 2025 | Merton College Oxford | + Cathedral Organ |
+| 2026 | St Giles' Edinburgh | "Quantum Universe" Symphony |
+\stopverb}
+}
+
+\subtree{
+\title{Industrial Music Connection}
+\blockquote{"Industrial Music is the Musique Concrète 'of the people'."}
+
+\p{Pioneers using guitar:}
+
+\ul{
+\li{Throbbing Gristle}
+\li{Cabaret Voltaire  }
+\li{Einstürzende Neubauten}
+\li{Nine Inch Nails}
+}
+
+\p{\strong{Black Tish}: Recording full album with Quantum Guitar}
+}
+
+\subtree{
+\title{Tech Rider}
+\pre{\startverb
+quantum_guitar_rider:
+  audio:
+    - 2x XLR outputs (classical + quantum mix)
+    - Quality PA with stage monitor
+  visual:
+    - Large screen (HDMI) for Actias Bloch sphere
+  seating:
+    - Armless semi-high chair (adjustable)
+    - Foot access to pedal board
+  refreshments:
+    - "Good quality drinks"
+\stopverb}
+}
+
+\subtree{
+\title{Future Instruments}
+\p{The hands-free quantum enhancement pattern extends to:}
+
+\ul{
+\li{\strong{Quantum Violin}: Bow + feet}
+\li{\strong{Quantum Wind}: Breath + feet  }
+\li{\strong{Quantum Percussion}: Sticks + additional feet}
+}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| zx-calculus | -1 | Notation (classical diagrams) |
+| **quantum-guitar** | **0** | **Performance** (superposition) |
+| discopy | +1 | Computation (quantum circuits) |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Coecke, B. (2025). A Quantum Guitar. arXiv:2509.04526}
+\li{Miranda, E.R. (2022). Quantum Computer Music. Springer}
+\li{Coecke, B. (2023). Basic ZX-calculus. arXiv:2303.03163}
+\li{Abdyssagin & Coecke (2025). Quantum concept music score}
+}
+}
+
+\subtree{
+\title{Demo}
+\p{\strong{Video}: https://www.youtube.com/watch?v=Pr4Wr8fdsL0}
+
+\p{\strong{Skill Name}: quantum-guitar \strong{Type}: Quantum Music / Industrial / ZX-Calculus \strong{Trit}: 0 (ERGODIC) \strong{GF(3)}: Classical ↔ Quantum transitions conserve}
+}
+
+\subtree{
+\title{Non-Backtracking Geodesic Qualification}
+\p{\strong{Condition}: μ(n) ≠ 0 (Möbius squarefree)}
+
+\p{This skill is qualified for non-backtracking geodesic traversal:}
+
+\ol{
+\li{\strong{Prime Path}: No state revisited in skill invocation chain}
+\li{\strong{Möbius Filter}: Composite paths (backtracking) cancel via μ-inversion}
+\li{\strong{GF(3) Conservation}: Trit sum ≡ 0 (mod 3) across skill triplets}
+\li{\strong{Spectral Gap}: Ramanujan bound λ₂ ≤ 2√(k-1) for k-regular expansion}
+}
+
+\pre{\startverb
+Geodesic Invariant:
+  ∀ path P: backtrack(P) = ∅ ⟹ μ(|P|) ≠ 0
+  
+Möbius Inversion:
+  f(n) = Σ_{d|n} g(d) ⟹ g(n) = Σ_{d|n} μ(n/d) f(d)
+\stopverb}
+}
+}

@@ -1,0 +1,73 @@
+\title{Analyzing Api Gateway Access Logs}
+
+\taxon{skill}
+
+\tag{analyzing}
+
+\tag{api}
+
+\tag{gateway}
+
+\tag{access}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Parses API Gateway access logs (AWS API Gateway, Kong, Nginx) to detect BOLA/IDOR attacks, rate limit bypass, credential scanning, and injection attempts. Uses pandas for statistical analysis of request patterns and anomaly detection. Use when investigating API abuse or building API-specific threat detection rules.}
+
+\subtree{
+\title{Analyzing API Gateway Access Logs}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing api gateway access logs}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with security operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\p{Parse API gateway access logs to identify attack patterns including broken object level authorization (BOLA), excessive data exposure, and injection attempts.}
+
+\pre{\startverb
+import pandas as pd
+
+df = pd.read_json("api_gateway_logs.json", lines=True)
+# Detect BOLA: same user accessing many different resource IDs
+bola = df.groupby(["user_id", "endpoint"]).agg(
+    unique_ids=("resource_id", "nunique")).reset_index()
+suspicious = bola[bola["unique_ids"] > 50]
+\stopverb}
+
+\p{Key detection patterns:}
+
+\ol{
+\li{BOLA/IDOR: sequential resource ID enumeration}
+\li{Rate limit bypass via header manipulation}
+\li{Credential scanning (401 surges from single source)}
+\li{SQL/NoSQL injection in query parameters}
+\li{Unusual HTTP methods (DELETE, PATCH) on read-only endpoints}
+}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+# Detect 401 surges indicating credential scanning
+auth_failures = df[df["status_code"] == 401]
+scanner_ips = auth_failures.groupby("source_ip").size()
+scanners = scanner_ips[scanner_ips > 100]
+\stopverb}
+}
+}

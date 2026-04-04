@@ -1,0 +1,260 @@
+\title{Browser History Acset}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Browser History ACSet}
+
+\subtree{
+\title{Browser History ACSet}
+\p{\strong{Trit}: 0 (ERGODIC - information coordination) \strong{Foundation}: PyACSet ↔ ACSets.jl path equivalence verified}
+
+\subtree{
+\title{Overview}
+\p{Unified categorical structure for browser history across:}
+
+\ul{
+\li{ChatGPT Atlas (Chromium-based)}
+\li{Chrome, Arc, Brave, Firefox, Safari}
+}
+
+\p{Uses GF(3) trit classification for browsing behavior analysis.}
+}
+
+\subtree{
+\title{Schema}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────┐
+│                  BrowserHistoryACSet Schema                  │
+├─────────────────────────────────────────────────────────────┤
+│  Objects:    Browser, URL, Visit, Domain, SearchQuery       │
+│                                                             │
+│  Morphisms:                                                 │
+│    browser_of: URL → Browser                                │
+│    domain_of:  URL → Domain                                 │
+│    url_of:     Visit → URL                                  │
+│    from_visit: Visit → Visit (reflexive, navigation chain)  │
+│                                                             │
+│  Attributes:                                                │
+│    browser_name: Browser → String                           │
+│    url_text:     URL → String                               │
+│    visit_time:   Visit → Int                                │
+│    domain_name:  Domain → String                            │
+│    trit:         Domain → Int (-1, 0, +1)                   │
+└─────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Path Equivalence Tests}
+\p{Verified cross-language compatibility between Python and Julia:}
+
+\pre{\startverb
+| Operation | Python (PyACSet) | Julia (ACSets.jl) | Match |
+|-----------|------------------|-------------------|-------|
+| nparts(A) | 2 | 2 | ✓ |
+| subpart(1, :f) | 1 | 1 | ✓ |
+| incident(1, :f) | [1] | [1] | ✓ |
+| path 1→f→g | 1 | 1 | ✓ |
+\stopverb}
+
+\subtree{
+\title{Key Operations}
+\pre{\startverb
+# Python (PyACSet)
+url = acset.subpart(visit_id, "url_of")
+domain = acset.path(visit_id, "url_of", "domain_of")
+referrers = acset.incident(url_id, "url_of")
+\stopverb}
+
+\pre{\startverb
+# Julia (ACSets.jl)
+url = subpart(acs, visit_id, :url_of)
+domain = subpart(acs, subpart(acs, visit_id, :url_of), :domain_of)
+referrers = incident(acs, url_id, :url_of)
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Domain Classification}
+\pre{\startverb
+| Trit | Category | Examples | Behavior |
+|------|----------|----------|----------|
+| +1 | PLUS (Creation) | github.com, ampcode.com, arxiv.org | Building, learning |
+| 0 | ERGODIC (Info) | google.com, youtube.com, x.com | Coordination, info |
+| -1 | MINUS (Consumption) | amazon.com, netflix.com, reddit.com | Consuming, extracting |
+\stopverb}
+}
+
+\subtree{
+\title{Current Data (ChatGPT Atlas)}
+\pre{\startverb
+╔═══════════════════════════════════════════════════════════════╗
+║              Browser History ACSet                            ║
+╠═══════════════════════════════════════════════════════════════╣
+║  Browser         :      3 parts                               ║
+║  URL             :   4529 parts                               ║
+║  Visit           :   8569 parts                               ║
+║  Domain          :    511 parts                               ║
+║  SearchQuery     :     36 parts                               ║
+║  Download        :     41 parts                               ║
+╠═══════════════════════════════════════════════════════════════╣
+║  GF(3) Sum       :     13                                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Top Domains:
+  [+] github.com      : 1066 visits (creation)
+  [○] mermaid.live    :  655 visits (coordination)
+  [+] ampcode.com     :  453 visits (creation)
+  [+] elevenlabs.io   :  268 visits (creation)
+  [+] huggingface.co  :  188 visits (creation)
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Extract browser history as ACSet
+python3 browser_history_acset.py
+
+# Run path equivalence tests
+python3 path_equivalence_test.py
+
+# Julia verification
+julia path_equivalence_test.jl
+\stopverb}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Tenderloin WEV}: Geographic browsing patterns → impact zones}
+\li{\strong{OlmoEarth-MLX}: Location-aware embeddings for browsing}
+\li{\strong{GeoACSet}: Spatial categorization of online activity}
+\li{\strong{DuckDB}: Temporal queries on visit history}
+}
+}
+
+\subtree{
+\title{Specter-Style Navigation}
+\pre{\startverb
+# Select all visits to github.com
+github_visits = (
+    SELECT(ALL("Visit"))
+    >> FILTER(lambda v: acset.path(v, "url_of", "domain_of") 
+              and acset.subpart(acset.path(v, "url_of", "domain_of"), "domain_name") == "github.com")
+)
+
+# Transform: add trit to all URLs in domain
+TRANSFORM(
+    SELECT(ALL("URL")) >> FILTER(lambda u: acset.subpart(u, "domain_of") == d1),
+    lambda u: acset.set_subpart(u, "trit", 1)
+)
+\stopverb}
+}
+
+\subtree{
+\title{Canonical Triads}
+\pre{\startverb
+browser-history-acset (0) ⊗ olmoearth-mlx (+1) ⊗ tenderloin (-1) = 0 ✓
+py-acset (0) ⊗ ACSets.jl (+1) ⊗ DuckDB (-1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[ACSets.jl](https://github.com/AlgebraicJulia/ACSets.jl)}
+\li{[plurigrid-asi-skillz/skills/acsets](file:///Users/bob/ies/plurigrid-asi-skillz/skills/acsets/SKILL.md)}
+\li{[zip_acset_skill/extract_agent_o_rama.py](file:///Users/bob/ies/zip_acset_skill/extract_agent_o_rama.py)}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb coequalizers\stopverb} (0) - Path equivalence via coequalizer quotients}
+\li{\code{\startverb acsets\stopverb} (0) - ACSet foundations}
+\li{\code{\startverb temporal-coalgebra\stopverb} (-1) - Time-based path analysis}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Annotated Data}
+\ul{
+\li{\strong{anndata} [○] via bicomodule}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+browser-history-acset (○) + SDF.Ch10 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch3: Variations on an Arithmetic Theme}
+\li{Ch4: Pattern Matching}
+\li{Ch2: Domain-Specific Languages}
+\li{Ch1: Flexibility through Abstraction}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

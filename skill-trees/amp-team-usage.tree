@@ -1,0 +1,158 @@
+\title{Amp Team Usage}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Amp Team Usage}
+
+\subtree{
+\title{Amp Team Usage}
+\p{Check concurrent users and team members on an Amp account.}
+
+\subtree{
+\title{Problem}
+\p{Amp CLI has no direct command for viewing team/workspace members or concurrent sessions. The web dashboard requires manual login.}
+}
+
+\subtree{
+\title{Solution}
+\subtree{
+\title{1. Local Concurrent Sessions}
+\p{Count running Amp processes on the local machine:}
+
+\pre{\startverb
+ps aux | grep -E 'amp.*dist/main.js' | grep -v grep | wc -l
+\stopverb}
+
+\p{Detailed view:}
+
+\pre{\startverb
+ps aux | grep -E 'amp.*dist/main.js' | grep -v grep
+\stopverb}
+}
+
+\subtree{
+\title{2. Team Members via GitHub CLI}
+\p{If Amp workspace is linked to a GitHub org:}
+
+\pre{\startverb
+# List org members
+gh api orgs/YOUR_ORG/members | jq -r '.[].login'
+
+# Full details with GraphQL
+gh api graphql -f query='
+{
+  organization(login: "YOUR_ORG") {
+    membersWithRole(first: 50) {
+      totalCount
+      nodes {
+        login
+        name
+      }
+    }
+  }
+}' | jq
+\stopverb}
+}
+
+\subtree{
+\title{3. Recent Thread Activity}
+\p{Check thread activity across the account:}
+
+\pre{\startverb
+# Use find_thread tool with date filters
+find_thread query="after:1d" limit=50
+\stopverb}
+}
+}
+
+\subtree{
+\title{What Didn't Work}
+\ul{
+\li{\code{\startverb amp --help\stopverb} has no team/account commands}
+\li{\code{\startverb amp workspace list\stopverb}, \code{\startverb amp team list\stopverb}, \code{\startverb amp account\stopverb} don't exist}
+\li{Direct API calls to \code{\startverb ampcode.com/api/team\stopverb} require browser auth}
+\li{Playwright login requires interactive Google OAuth}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Method | Command |
+|--------|---------|
+| Local sessions | `ps aux \| grep 'amp.*main.js' \| grep -v grep \| wc -l` |
+| Org members | `gh api orgs/ORG/members \| jq '.[].login'` |
+| Member count | `gh api graphql -f query='{organization(login:"ORG"){membersWithRole{totalCount}}}'` |
+\stopverb}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 8. Degeneracy}
+\p{\strong{Concepts}: redundancy, fallback, multiple strategies, robustness}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+amp-team-usage (○) + SDF.Ch8 (−) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Degeneracy provides fallbacks. This skill offers redundant strategies.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

@@ -1,0 +1,271 @@
+\title{Implementing Application Whitelisting With Applocker}
+
+\taxon{skill}
+
+\tag{endpoint}
+
+\tag{AppLocker}
+
+\tag{application-whitelisting}
+
+\tag{windows-security}
+
+\tag{software-restriction}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Implements application whitelisting using Windows AppLocker to restrict unauthorized software execution on endpoints, reducing attack surface from malware, unauthorized tools, and shadow IT. Use when enforcing application control policies, meeting compliance requirements for software restriction, or preventing execution of unsigned or untrusted binaries. Activates for requests involving AppLocker, application whitelisting, software restriction, or executable control.}
+
+\subtree{
+\title{Implementing Application Whitelisting with AppLocker}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Implementing application control to prevent unauthorized software execution on Windows endpoints}
+\li{Meeting compliance requirements (PCI DSS 6.4.3, NIST 800-53 CM-7, ACSC Essential Eight)}
+\li{Blocking common attack vectors: living-off-the-land binaries (LOLBins), script-based attacks, unauthorized admin tools}
+\li{Restricting software installation in kiosk, POS, or high-security environments}
+}
+
+\p{\strong{Do not use} this skill for macOS/Linux application control (use OS-native tools like Gatekeeper or AppArmor) or for enterprise-grade WDAC (Windows Defender Application Control) deployments.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows 10/11 Enterprise or Education, or Windows Server 2016+}
+\li{Application Identity service (AppIDSvc) enabled on target endpoints}
+\li{Active Directory with Group Policy Management Console (GPMC)}
+\li{Complete application inventory of approved software}
+\li{Test OU with representative endpoints for policy validation}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Inventory Approved Applications}
+\p{Before creating AppLocker rules, catalog all legitimate software:}
+
+\pre{\startverb
+# Generate application inventory on reference endpoint
+Get-AppLockerFileInformation -Directory "C:\Program Files" -Recurse `
+  -FileType Exe | Export-Csv "C:\AppLocker\app_inventory_progfiles.csv" -NoTypeInformation
+
+Get-AppLockerFileInformation -Directory "C:\Program Files (x86)" -Recurse `
+  -FileType Exe | Export-Csv "C:\AppLocker\app_inventory_progfiles86.csv" -NoTypeInformation
+
+# Include Windows system executables
+Get-AppLockerFileInformation -Directory "C:\Windows" -Recurse `
+  -FileType Exe | Export-Csv "C:\AppLocker\app_inventory_windows.csv" -NoTypeInformation
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Create AppLocker Policy with Default Rules}
+\pre{\startverb
+# In Group Policy Editor (gpedit.msc) or GPMC:
+# Navigate to: Computer Configuration → Policies → Windows Settings
+#   → Security Settings → Application Control Policies → AppLocker
+
+# Enable default rules for each rule collection:
+# - Executable Rules: Allow Everyone to run files in Program Files and Windows
+# - Windows Installer Rules: Allow Everyone to run digitally signed MSIs
+# - Script Rules: Allow Everyone to run scripts in Program Files and Windows
+# - Packaged App Rules: Allow Everyone to run signed packaged apps
+
+# PowerShell: Generate default rules
+$defaultRules = Get-AppLockerPolicy -Local -Xml
+Set-AppLockerPolicy -XmlPolicy $defaultRules -Merge
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Create Publisher-Based Rules (Preferred)}
+\p{Publisher rules are the most maintainable since they survive application updates:}
+
+\pre{\startverb
+<!-- Example AppLocker policy XML for publisher rules -->
+<RuleCollection Type="Exe" EnforcementMode="AuditOnly">
+  <!-- Default: Allow Windows binaries -->
+  <FilePublisherRule Id="a9e18c21-ff54-4677-b3ac-4b9a03261f6c"
+    Name="Allow Microsoft signed" Description="Allow all Microsoft-signed executables"
+    UserOrGroupSid="S-1-1-0" Action="Allow">
+    <Conditions>
+      <FilePublisherCondition PublisherName="O=MICROSOFT CORPORATION*"
+        ProductName="*" BinaryName="*">
+        <BinaryVersionRange LowSection="*" HighSection="*"/>
+      </FilePublisherCondition>
+    </Conditions>
+  </FilePublisherRule>
+
+  <!-- Allow specific third-party vendor -->
+  <FilePublisherRule Id="b2e28c32-aa65-5788-c4bd-5c0b14372e7d"
+    Name="Allow Adobe Acrobat" Description="Allow Adobe-signed Acrobat executables"
+    UserOrGroupSid="S-1-1-0" Action="Allow">
+    <Conditions>
+      <FilePublisherCondition PublisherName="O=ADOBE INC.*"
+        ProductName="ADOBE ACROBAT*" BinaryName="*">
+        <BinaryVersionRange LowSection="*" HighSection="*"/>
+      </FilePublisherCondition>
+    </Conditions>
+  </FilePublisherRule>
+</RuleCollection>
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Block Known-Abused Binaries (LOLBins)}
+\pre{\startverb
+# Deny rules for commonly abused living-off-the-land binaries
+# These are legitimate Windows tools frequently used by attackers
+
+$denyPaths = @(
+    "%SYSTEM32%\mshta.exe",
+    "%SYSTEM32%\wscript.exe",
+    "%SYSTEM32%\cscript.exe",
+    "%SYSTEM32%\regsvr32.exe",
+    "%SYSTEM32%\certutil.exe",
+    "%SYSTEM32%\msbuild.exe",
+    "%SYSTEM32%\installutil.exe",
+    "%WINDIR%\Microsoft.NET\Framework\*\msbuild.exe",
+    "%WINDIR%\Microsoft.NET\Framework64\*\msbuild.exe"
+)
+
+# Create deny rules in AppLocker policy for standard users
+# Important: Deny rules take precedence over Allow rules
+# Apply only to standard users (not admins who may need these tools)
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Configure Script Rules}
+\pre{\startverb
+Script Rules (critical for preventing script-based attacks):
+
+Allow:
+  - Scripts in C:\Program Files\* (publisher or path-based)
+  - Scripts in C:\Windows\* (default Windows scripts)
+  - Approved admin scripts from \\fileserver\scripts\*
+
+Deny (for standard users):
+  - PowerShell scripts from user-writable directories
+  - VBScript from %TEMP%, %APPDATA%, %USERPROFILE%\Downloads
+  - JavaScript (.js) from any user-writable location
+
+DLL Rules (optional, high performance impact):
+  - Enable only in high-security environments
+  - Allow signed DLLs from Program Files and Windows directories
+  - Performance impact: 5-10% CPU increase during DLL loading
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Deploy in Audit Mode First}
+\pre{\startverb
+# CRITICAL: Always deploy AppLocker in Audit mode before Enforce mode
+# Audit mode logs what would be blocked without actually blocking
+
+# Set enforcement mode to Audit Only in GPO:
+# AppLocker → Executable Rules → Properties → Configured: Audit only
+# AppLocker → Script Rules → Properties → Configured: Audit only
+# AppLocker → Windows Installer Rules → Properties → Configured: Audit only
+
+# Ensure Application Identity service is running
+Set-Service -Name AppIDSvc -StartupType Automatic
+Start-Service AppIDSvc
+
+# Link GPO to test OU
+New-GPLink -Name "AppLocker-Audit-Policy" `
+  -Target "OU=AppLocker-Pilot,DC=corp,DC=example,DC=com"
+
+# Monitor audit logs for 2-4 weeks
+# Event Log: Applications and Services Logs → Microsoft → Windows → AppLocker
+# Event IDs:
+#   8003 = EXE/DLL would be blocked
+#   8006 = Script/MSI would be blocked
+#   8023 = Packaged app would be blocked
+\stopverb}
+}
+
+\subtree{
+\title{Step 7: Analyze Audit Logs and Refine Rules}
+\pre{\startverb
+# Export AppLocker audit events
+Get-WinEvent -LogName "Microsoft-Windows-AppLocker/EXE and DLL" `
+  -FilterXPath "*[System[EventID=8003]]" |
+  Select-Object TimeCreated,
+    @{N='User';E={$_.Properties[0].Value}},
+    @{N='FilePath';E={$_.Properties[1].Value}},
+    @{N='FileHash';E={$_.Properties[4].Value}} |
+  Export-Csv "C:\AppLocker\audit_blocked_exes.csv" -NoTypeInformation
+
+# Review blocked applications
+# For each blocked legitimate application:
+#   1. Create a publisher rule (if signed) or path rule (if unsigned)
+#   2. Add to AppLocker policy
+#   3. Re-audit for 1 additional week
+\stopverb}
+}
+
+\subtree{
+\title{Step 8: Switch to Enforce Mode}
+\pre{\startverb
+# After audit period with no legitimate applications blocked:
+# Change enforcement mode from Audit to Enforce
+
+# Update GPO:
+# AppLocker → Executable Rules → Properties → Configured: Enforce rules
+# AppLocker → Script Rules → Properties → Configured: Enforce rules
+
+# Phased enforcement:
+# Week 1: Enforce EXE rules only
+# Week 2: Enforce Script rules
+# Week 3: Enforce MSI rules
+# Week 4: (Optional) Enforce DLL rules
+
+# Maintain monitoring: Event IDs 8004 (blocked EXE), 8007 (blocked script)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **Application Whitelisting** | Security model that allows only pre-approved applications to execute, denying everything else by default |
+| **Publisher Rule** | AppLocker rule based on digital signature; most resilient to application updates |
+| **Path Rule** | AppLocker rule based on file system path; less secure as attackers can place files in allowed paths |
+| **Hash Rule** | AppLocker rule based on file hash; most restrictive but breaks on every application update |
+| **LOLBin** | Living Off the Land Binary; legitimate OS tool abused by attackers to avoid detection |
+| **Audit Mode** | AppLocker logs policy violations without blocking; essential for rule refinement |
+| **Enforcement Mode** | AppLocker actively blocks applications that violate policy rules |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{AppLocker (built-in)}: Windows application control feature in Enterprise/Education editions}
+\li{\strong{WDAC (Windows Defender Application Control)}: More advanced successor to AppLocker for modern Windows}
+\li{\strong{Microsoft LAPS}: Manages local admin passwords to prevent bypassing AppLocker via admin rights}
+\li{\strong{WDAC Wizard}: GUI tool for creating Windows Defender Application Control policies}
+\li{\strong{AaronLocker}: Open-source AppLocker rule generator by Microsoft employee (GitHub)}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{Skipping Audit mode}: Deploying AppLocker in Enforce mode without audit period will block critical applications and cause outages.}
+\li{\strong{Relying solely on path rules}: Users with write access to allowed paths (C:\startverb \Windows\stopverb\startverb \Temp\stopverb) can bypass path-based rules. Prefer publisher rules.}
+\li{\strong{Not blocking user-writable directories}: The most common gap is allowing execution from \%TEMP\%, Downloads, or \%APPDATA\%.}
+\li{\strong{Forgetting Application Identity service}: AppLocker requires the AppIDSvc service running. If it stops, all rules stop enforcing.}
+\li{\strong{Admin bypass}: Local administrators can bypass AppLocker by default. For full enforcement, combine with WDAC which enforces for all users including admins.}
+\li{\strong{DLL rule performance}: Enabling DLL rules creates significant performance overhead. Only enable in high-security environments where the tradeoff is justified.}
+}
+}
+}

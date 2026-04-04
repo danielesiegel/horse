@@ -1,0 +1,356 @@
+\title{Tuple Nav Composition}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Tuple and product structure navigation with composition}
+
+\subtree{
+\title{Tuple Nav Composition}
+\subtree{
+\title{Core Concept}
+\p{Navigation through \strong{product structures} (tuples, named tuples, records) where multiple fields must be accessed and composed in parallel.}
+
+\p{A TupleNav is a bundled Navigator that operates on all fields of a product simultaneously, maintaining \strong{structural integrity} through composition.}
+}
+
+\subtree{
+\title{Why Tuple Navigation?}
+\p{Standard Specter navigators work on \strong{sequences} (ALL, each element). But what about simultaneous access to multiple fields?}
+
+\pre{\startverb
+# Without TupleNav: Access fields separately, type mismatch risk
+person = (name="Alice", age=30, email="alice@example.com")
+
+name_nav = @late_nav([INDEX(1)])     # But tuples aren't indexed this way!
+age_nav = @late_nav([INDEX(2)])      # Fragile, error-prone
+
+# With TupleNav: Access structurally, type-safe composition
+record_nav = @tuple_nav([:name, :age])  # Access both fields as unit
+\stopverb}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{TupleNav Structure}
+\pre{\startverb
+struct TupleNav
+    fields::Vector{Symbol}           # Field names to navigate
+    navigators::Dict{Symbol, Navigator}  # Navigator for each field
+    composition_strategy::Symbol      # :parallel, :sequential, :reduce
+    output_type::Type                # (Field1Type, Field2Type, ...)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Product Types}
+\pre{\startverb
+| Type | Navigation |
+|------|-----------|
+| `(T1, T2, T3)` | Positional tuple |
+| `NamedTuple{(:a, :b, :c)}` | Named access |
+| `@NamedTuple{a::T1, b::T2}` | Struct-like |
+| `Dict{K, V}` | Key-based dictionary |
+| Record/DataClass | Field-based |
+\stopverb}
+}
+
+\subtree{
+\title{Composition Strategies}
+\p{\strong{\code{\startverb :parallel\stopverb}} - Access all fields simultaneously}
+
+\pre{\startverb
+nav = @tuple_nav([:x, :y, :z], strategy=:parallel)
+result = nav_select(nav, (x=1, y=2, z=3), id)
+# => ((x=1), (y=2), (z=3))  # All accessed at once
+\stopverb}
+
+\p{\strong{\code{\startverb :sequential\stopverb}} - Access fields in order, threading results}
+
+\pre{\startverb
+nav = @tuple_nav([:x, :y, :z], strategy=:sequential)
+# Field y receives result from x, z receives from y, etc.
+\stopverb}
+
+\p{\strong{\code{\startverb :reduce\stopverb}} - Fold/reduce across fields}
+
+\pre{\startverb
+nav = @tuple_nav([:x, :y, :z], strategy=:reduce)
+# Combine results across fields: x + y + z
+\stopverb}
+}
+}
+
+\subtree{
+\title{API}
+\subtree{
+\title{TupleNav Creation}
+\p{\strong{\code{\startverb @tuple_nav(fields, strategy=:parallel)\stopverb}} Creates a TupleNav for navigating product types.}
+
+\pre{\startverb
+# Access name and email from person record
+nav = @tuple_nav([:name, :email])
+
+person = (name="Alice", email="alice@example.com", age=30)
+result = nav_select(nav, person, identity)
+# => (name="Alice", email="alice@example.com")
+\stopverb}
+
+\p{\strong{\code{\startverb tuple_nav(fields::Vector{Symbol}, structure_type::Type)\stopverb}} Explicitly typed TupleNav.}
+
+\pre{\startverb
+PersonType = NamedTuple{(:name, :age, :email)}
+
+nav = tuple_nav([:name, :email], PersonType)
+# Type-checked at compile time
+\stopverb}
+}
+
+\subtree{
+\title{Composition}
+\p{\strong{\code{\startverb compose_tuple_navs(nav1::TupleNav, nav2::TupleNav) :: TupleNav\stopverb}} Combines two product navigators.}
+
+\pre{\startverb
+nav_identity = @tuple_nav([:id, :name])     # Extract identity
+nav_contact = @tuple_nav([:email, :phone])  # Extract contact
+
+nav_combined = compose_tuple_navs(nav_identity, nav_contact)
+# Result has all 4 fields: id, name, email, phone
+\stopverb}
+}
+
+\subtree{
+\title{Nested Products}
+\p{\strong{\code{\startverb nested_tuple_nav(path::Vector, fields::Vector{Symbol})\stopverb}} Navigate to a product, then select fields.}
+
+\pre{\startverb
+# Navigate to users list, then select name/email from each
+nav = nested_tuple_nav([keypath("users"), ALL], [:name, :email])
+
+data = Dict(
+  "users" => [
+    (name="Alice", age=30, email="alice@example.com"),
+    (name="Bob", age=25, email="bob@example.com")
+  ]
+)
+
+result = nav_select(nav, data, identity)
+# => [
+#      (name="Alice", email="alice@example.com"),
+#      (name="Bob", email="bob@example.com")
+#    ]
+\stopverb}
+}
+
+\subtree{
+\title{Field Projection}
+\p{\strong{\code{\startverb project_tuple_nav(nav::TupleNav, fields::Vector{Symbol})\stopverb}} Extract subset of fields from a TupleNav.}
+
+\pre{\startverb
+nav_full = @tuple_nav([:id, :name, :age, :email])
+nav_subset = project_tuple_nav(nav_full, [:name, :email])
+# New navigator accesses only name and email
+\stopverb}
+}
+}
+
+\subtree{
+\title{Structural Composition}
+\p{\strong{Key insight}: TupleNav maintains \strong{type safety across composition}.}
+
+\pre{\startverb
+# Type 1: Person
+Person = NamedTuple{(:name, :age)}
+
+# Type 2: Contact
+Contact = NamedTuple{(:email, :phone)}
+
+# Type 3: User (combines both)
+User = NamedTuple{(:name, :age, :email, :phone)}
+
+# Composition is type-safe
+nav_person = @tuple_nav([:name, :age], Person)
+nav_contact = @tuple_nav([:email, :phone], Contact)
+nav_user = compose_tuple_navs(nav_person, nav_contact)
+# => TupleNav for User type ✓
+\stopverb}
+}
+
+\subtree{
+\title{Parallel Semantics}
+\p{With \code{\startverb :parallel\stopverb} strategy, all fields are accessed \strong{in parallel} (logically):}
+
+\pre{\startverb
+nav = @tuple_nav([:x, :y, :z], strategy=:parallel)
+
+# Execution order doesn't matter—all fields see the same input
+result1 = nav_select(nav, structure, f)
+result2 = nav_select(nav, structure, f)
+# => Always identical (deterministic parallel access)
+\stopverb}
+
+\p{Under the hood, this uses \strong{color-aware SplitMix64 seeding} to ensure parallel reads remain deterministic (see \code{\startverb color-envelope-preserving\stopverb} skill).}
+}
+
+\subtree{
+\title{Dictionary Projection}
+\p{TupleNav also works on dictionaries with structured keys:}
+
+\pre{\startverb
+nav = @tuple_nav([:user_id, :user_name, :user_email])
+
+data = Dict(
+  :user_id => 42,
+  :user_name => "Alice",
+  :user_email => "alice@example.com",
+  :user_age => 30
+)
+
+result = nav_select(nav, data, identity)
+# => Dict(:user_id => 42, :user_name => "Alice", :user_email => "alice@example.com")
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Type Inference}
+\p{TupleNav output types are \strong{automatically inferred} by the type system:}
+
+\pre{\startverb
+nav = @tuple_nav([:x, :y, :z])
+# Type: (T1, T2, T3) → (T1', T2', T3')
+# where T_i' is the refined type of field i
+
+sig = navigator_signature(nav)
+# => TypeSignature(
+#     input: NamedTuple{(:x,:y,:z)},
+#     output: NamedTuple{(:x,:y,:z)},  # same structure
+#     preserves: field types
+#   )
+\stopverb}
+}
+
+\subtree{
+\title{Composition with Constraints}
+\p{TupleNav can apply navigators to each field:}
+
+\pre{\startverb
+# Each field goes through its own Navigator
+field_navs = Dict(
+  :x => @late_nav([pred(ispositive)]),
+  :y => @late_nav([pred(ispositive)]),
+  :z => @late_nav([pred(ispositive)])
+)
+
+nav = @tuple_nav([:x, :y, :z], field_navigators=field_navs)
+# Each field must pass its predicate
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\p{\strong{Missing field}:}
+
+\pre{\startverb
+nav = @tuple_nav([:name, :email, :phone])
+person = (name="Alice", email="alice@example.com")  # missing :phone
+
+nav_select(nav, person, id)
+# => FieldMissingError("Field :phone not found in tuple")
+\stopverb}
+
+\p{\strong{Type mismatch}:}
+
+\pre{\startverb
+nav = @tuple_nav([:age])  # Expects numeric field
+person = (name="Alice", age="thirty")  # age is string
+
+nav_select(nav, person, id)
+# => TypeError("Expected Int, got String for field :age")
+\stopverb}
+}
+
+\subtree{
+\title{Performance}
+\pre{\startverb
+| Operation | Complexity | Notes |
+|-----------|-----------|-------|
+| Create TupleNav | O(n) | n = number of fields |
+| Parallel access | O(n) | All fields accessed once |
+| Sequential access | O(n²) | Each step threads to next |
+| Reduce | O(n) | Single fold over fields |
+| **Caching** | O(1) | Cache key includes field list |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{type-inference-validation} - Validates field types at compile time}
+\li{\strong{constraint-generalization} - Combines field constraints across products}
+\li{\strong{specter-navigator-gadget} - Base Navigator system that TupleNav builds on}
+\li{\strong{möbius-path-filtering} - Ensures product navigation is topologically valid}
+}
+}
+
+\subtree{
+\title{Use Cases}
+\p{\strong{Example 1: Extract contact info from user records}}
+
+\pre{\startverb
+nav = @tuple_nav([:name, :email, :phone])
+users = [
+  (id=1, name="Alice", email="alice@ex.com", phone="555-1234"),
+  (id=2, name="Bob", email="bob@ex.com", phone="555-5678")
+]
+
+contacts = map(u -> nav_select(nav, u, identity), users)
+# All users' contact triples extracted
+\stopverb}
+
+\p{\strong{Example 2: Parallel aggregation}}
+
+\pre{\startverb
+nav = @tuple_nav([:revenue, :costs, :profit], strategy=:parallel)
+
+quarterly_data = (
+  revenue=100_000,
+  costs=60_000,
+  profit=40_000
+)
+
+result = nav_select(nav, quarterly_data, x -> x * 1.1)  # 10% increase
+# => (revenue=110_000, costs=66_000, profit=44_000)
+\stopverb}
+
+\p{\strong{Example 3: Nested product navigation}}
+
+\pre{\startverb
+nav = nested_tuple_nav(
+  [keypath("employees"), ALL],
+  [:name, :salary]
+)
+
+company = Dict(
+  "employees" => [
+    (name="Alice", salary=80_000, dept="Engineering"),
+    (name="Bob", salary=75_000, dept="Sales")
+  ]
+)
+
+result = nav_select(nav, company, identity)
+# => Extract name/salary for all employees
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Product types: "Types and Programming Languages" - Pierce}
+\li{Cartesian logic: "Basic Intuitionistic Linear Logic" - Girard}
+\li{Parallel semantics: "Parallel Haskell" - Peyton Jones et al.}
+}
+}
+}

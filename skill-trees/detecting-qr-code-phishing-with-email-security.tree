@@ -1,0 +1,164 @@
+\title{Detecting Qr Code Phishing With Email Security}
+
+\taxon{skill}
+
+\tag{quishing}
+
+\tag{qr-code}
+
+\tag{phishing}
+
+\tag{email-security}
+
+\tag{image-analysis}
+
+\tag{ocr}
+
+\tag{mobile-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect and prevent QR code phishing (quishing) attacks that bypass traditional email security by embedding malicious URLs in QR code images within emails.}
+
+\subtree{
+\title{Detecting QR Code Phishing with Email Security}
+\subtree{
+\title{Overview}
+\p{QR code phishing (quishing) is a rapidly growing attack vector where malicious URLs are embedded in QR code images within phishing emails. Quishing incidents grew fivefold from 46,000 to 250,000 between August and November 2025, with credential phishing comprising 89.3\% of detected incidents. Traditional email security filters struggle because QR codes cannot be read by humans or standard URL scanners, and when scanned, users typically use personal mobile devices that lack corporate security controls. Attackers have evolved to use split QR codes (two separate images), nested QR codes, and ASCII text-based QR codes to evade detection.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting qr code phishing with email security}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Email security gateway with image analysis capabilities}
+\li{Understanding of QR code structure and encoding}
+\li{Mobile device management (MDM) or mobile threat defense solution}
+\li{Security awareness training program}
+\li{SIEM platform for correlation and alerting}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Why Quishing Works}
+\ol{
+\li{\strong{Bypasses URL Scanners}: Traditional gateways scan text-based URLs but cannot decode image-embedded URLs}
+\li{\strong{Shifts to Unprotected Devices}: Corporate email arrives on secured systems but QR scan occurs on personal mobile devices}
+\li{\strong{User Trust}: QR codes are normalized in daily life (payments, menus, parking)}
+\li{\strong{Low Detection Rate}: Only 36\% of quishing incidents are accurately identified by recipients}
+}
+}
+
+\subtree{
+\title{Evasion Techniques (2025)}
+\ul{
+\li{\strong{Split QR Codes}: QR code divided into two separate images that look benign individually (Gabagool PhaaS kit)}
+\li{\strong{Nested QR Codes}: QR code within a QR code, with first scan leading to intermediate page}
+\li{\strong{ASCII QR Codes}: QR rendered as text characters instead of images, bypassing image analysis (12\% of attacks in Jan 2026)}
+\li{\strong{Styled/Artistic QR Codes}: Custom-designed QR codes with logos that evade pattern matching}
+\li{\strong{PDF Attachment QR}: QR code embedded in PDF attachment rather than email body}
+}
+}
+
+\subtree{
+\title{Detection Challenges}
+\ul{
+\li{Pattern-based detection faces trade-off: aggressive tuning causes false positives, cautious tuning causes misses}
+\li{Average similarity score of 0.209 between quishing and legitimate QR emails}
+\li{QR codes in image attachments require OCR and deep image processing}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Enable Image-Based Threat Detection}
+\ul{
+\li{Configure email gateway to scan embedded images for QR codes}
+\li{Enable OCR processing on image attachments (PNG, JPG, GIF, BMP)}
+\li{Deploy multimodal AI that combines image processing, OCR, and NLP analysis}
+\li{Configure PDF scanning to detect QR codes within attachments}
+\li{Set up detection for ASCII/text-based QR code rendering}
+}
+}
+
+\subtree{
+\title{Step 2: Configure QR Code URL Analysis}
+\ul{
+\li{Extract URLs from detected QR codes and submit to URL reputation services}
+\li{Apply same URL scanning policies to QR-extracted URLs as text-based URLs}
+\li{Enable real-time sandbox analysis for QR-decoded destination pages}
+\li{Configure time-of-click protection for QR-extracted URLs where possible}
+\li{Block known phishing domains extracted from QR codes}
+}
+}
+
+\subtree{
+\title{Step 3: Deploy Mobile-Side Protection}
+\ul{
+\li{Implement mobile threat defense (MTD) with QR code scanning capability}
+\li{Deploy Palo Alto ALFA or equivalent safe-by-design QR scanning}
+\li{Configure MDM policies to warn users before opening scanned URLs}
+\li{Enable corporate VPN/secure browser for QR-scanned destinations}
+\li{Block known credential harvesting domains at the mobile proxy level}
+}
+}
+
+\subtree{
+\title{Step 4: Build Detection Rules}
+\ul{
+\li{Alert on emails containing only an image and minimal text (common quishing pattern)}
+\li{Flag emails with QR code images from external first-time senders}
+\li{Detect urgency language combined with QR code presence}
+\li{Alert on emails impersonating IT/security team requesting QR scan for MFA setup}
+\li{Monitor for common quishing themes: MFA reset, document signing, voicemail notification}
+}
+}
+
+\subtree{
+\title{Step 5: Train Users on Quishing Recognition}
+\ul{
+\li{Update security awareness program to include QR code phishing scenarios}
+\li{Conduct quishing simulation campaigns using controlled QR codes}
+\li{Teach users to verify QR destination URLs before entering credentials}
+\li{Establish reporting process for suspicious QR code emails}
+\li{Distribute guidance on safe QR scanning practices}
+}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{Barracuda Multimodal AI}: OCR + deep image processing for QR detection}
+\li{\strong{Palo Alto ALFA}: Safe-by-design QR code scanning assessment}
+\li{\strong{Microsoft Defender for O365}: QR code detection in email images}
+\li{\strong{Proofpoint TAP}: Image-based threat analysis with QR decoding}
+\li{\strong{Lookout/Zimperium}: Mobile threat defense with QR scanning}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{QR code phishing emails detected in controlled testing}
+\li{Split QR code and ASCII QR code evasion techniques caught}
+\li{QR-extracted URLs submitted to sandbox analysis}
+\li{Mobile devices alert on malicious QR destinations}
+\li{User reporting rate for quishing simulations exceeds 50\%}
+\li{False positive rate for QR detection below 1\%}
+}
+}
+}

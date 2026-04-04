@@ -1,0 +1,165 @@
+\title{Performing Indicator Lifecycle Management}
+
+\taxon{skill}
+
+\tag{threat-intelligence}
+
+\tag{cti}
+
+\tag{ioc}
+
+\tag{mitre-attack}
+
+\tag{stix}
+
+\tag{indicator-lifecycle}
+
+\tag{ioc-management}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Indicator lifecycle management tracks IOCs from initial discovery through validation, enrichment, deployment, monitoring, and eventual retirement. This skill covers implementing systematic processes f}
+
+\subtree{
+\title{Performing Indicator Lifecycle Management}
+\subtree{
+\title{Overview}
+\p{Indicator lifecycle management tracks IOCs from initial discovery through validation, enrichment, deployment, monitoring, and eventual retirement. This skill covers implementing systematic processes for IOC quality assessment, aging policies, confidence scoring decay, false positive tracking, hit-rate monitoring, and automated expiration to maintain a high-quality, actionable indicator database that minimizes analyst fatigue and maximizes detection efficacy.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing indicator lifecycle management}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb pymisp\stopverb}, \code{\startverb requests\stopverb}, \code{\startverb stix2\stopverb} libraries}
+\li{MISP or OpenCTI instance for indicator storage}
+\li{SIEM with IOC watchlist capabilities (Splunk, Elastic)}
+\li{Understanding of IOC types, confidence scoring, and TLP classifications}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Indicator Lifecycle Phases}
+\ol{
+\li{\strong{Discovery}: IOC first identified from threat intelligence, malware analysis, or incident response}
+\li{\strong{Validation}: IOC verified against enrichment sources (VirusTotal, Shodan)}
+\li{\strong{Enrichment}: Additional context added (WHOIS, passive DNS, threat actor attribution)}
+\li{\strong{Deployment}: IOC pushed to detection systems (SIEM, IDS, firewall)}
+\li{\strong{Monitoring}: Track hit rates, false positive rates, detection efficacy}
+\li{\strong{Review}: Periodic assessment of IOC relevance and accuracy}
+\li{\strong{Retirement}: IOC expired or removed based on aging policy}
+}
+}
+
+\subtree{
+\title{Confidence Decay}
+\p{Indicator confidence decreases over time as adversaries rotate infrastructure. A time-based decay function reduces confidence scores automatically, ensuring old indicators do not generate excessive alerts. Typical half-life: IP addresses (30 days), domains (90 days), file hashes (365 days).}
+}
+
+\subtree{
+\title{Quality Metrics}
+\ul{
+\li{\strong{Hit Rate}: Percentage of deployed IOCs generating true positive alerts}
+\li{\strong{False Positive Rate}: Percentage of IOC alerts that are benign}
+\li{\strong{Coverage}: Percentage of known threat techniques with IOC coverage}
+\li{\strong{Freshness}: Average age of active indicators in the database}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Implement IOC Lifecycle State Machine}
+\pre{\startverb
+from datetime import datetime, timedelta
+from enum import Enum
+
+class IOCState(Enum):
+    DISCOVERED = "discovered"
+    VALIDATED = "validated"
+    ENRICHED = "enriched"
+    DEPLOYED = "deployed"
+    MONITORING = "monitoring"
+    UNDER_REVIEW = "under_review"
+    RETIRED = "retired"
+
+class IOCLifecycle:
+    def __init__(self, ioc_type, value, source, initial_confidence=50):
+        self.ioc_type = ioc_type
+        self.value = value
+        self.source = source
+        self.confidence = initial_confidence
+        self.state = IOCState.DISCOVERED
+        self.created = datetime.utcnow()
+        self.last_updated = datetime.utcnow()
+        self.last_seen = None
+        self.hit_count = 0
+        self.false_positive_count = 0
+        self.history = [{"state": "discovered", "timestamp": self.created.isoformat()}]
+
+    def transition(self, new_state: IOCState, reason=""):
+        self.state = new_state
+        self.last_updated = datetime.utcnow()
+        self.history.append({
+            "state": new_state.value,
+            "timestamp": self.last_updated.isoformat(),
+            "reason": reason,
+        })
+
+    def apply_decay(self):
+        """Apply confidence decay based on IOC type half-life."""
+        half_lives = {"ip": 30, "domain": 90, "hash": 365, "url": 60}
+        half_life = half_lives.get(self.ioc_type, 90)
+        age_days = (datetime.utcnow() - self.created).days
+        decay_factor = 0.5 ** (age_days / half_life)
+        self.confidence = max(0, int(self.confidence * decay_factor))
+
+    def record_hit(self, is_true_positive=True):
+        self.hit_count += 1
+        self.last_seen = datetime.utcnow()
+        if not is_true_positive:
+            self.false_positive_count += 1
+            if self.false_positive_count > 3:
+                self.transition(IOCState.UNDER_REVIEW, "Excessive false positives")
+
+    def should_retire(self):
+        max_ages = {"ip": 90, "domain": 180, "hash": 730, "url": 120}
+        max_age = max_ages.get(self.ioc_type, 180)
+        age_days = (datetime.utcnow() - self.created).days
+        return age_days > max_age and self.hit_count == 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{IOC lifecycle state machine transitions correctly between phases}
+\li{Confidence decay reduces scores based on IOC type half-life}
+\li{Hit rate and false positive tracking functional}
+\li{Aging policy automatically flags indicators for review/retirement}
+\li{Quality metrics dashboard shows IOC database health}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[MISP Indicator Lifecycle](https://www.misp-project.org/)}
+\li{[STIX Indicator Valid From/Until](https://docs.oasis-open.org/cti/stix/v2.1/stix-v2.1.html)}
+\li{[IOC Quality Framework](https://www.first.org/)}
+}
+}
+}

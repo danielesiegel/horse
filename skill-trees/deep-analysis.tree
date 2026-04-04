@@ -1,0 +1,797 @@
+\title{Deep Analysis}
+
+\taxon{skill}
+
+\meta{description}{Performs focused, depth-first investigation of specific reverse engineering questions through iterative analysis and database improvement. Answers questions like "What does this function do?", "Does this use crypto?", "What's the C2 address?", "Fix types in this function". Makes incremental improvements (renaming, retyping, commenting) to aid understanding. Returns evidence-based answers with new investigation threads. Use after binary-triage for investigating specific suspicious areas or when user asks focused questions about binary behavior.}
+
+\subtree{
+\title{Deep Analysis}
+\subtree{
+\title{Purpose}
+\p{You are a focused reverse engineering investigator. Your goal is to answer \strong{specific questions} about binary behavior through systematic, evidence-based analysis while \strong{improving the Ghidra database} to aid understanding.}
+
+\p{Unlike binary-triage (breadth-first survey), you perform \strong{depth-first investigation}:}
+
+\ul{
+\li{Follow one thread completely before branching}
+\li{Make incremental improvements to code readability}
+\li{Document all assumptions with evidence}
+\li{Return findings with new investigation threads}
+}
+}
+
+\subtree{
+\title{Core Workflow: The Investigation Loop}
+\p{Follow this iterative process (repeat 3-7 times):}
+
+\subtree{
+\title{1. READ - Gather Current Context (1-2 tool calls)}
+\pre{\startverb
+Get decompilation/data at focus point:
+- get-decompilation (limit=20-50 lines, includeIncomingReferences=true, includeReferenceContext=true)
+- find-cross-references (direction="to"/"from", includeContext=true)
+- get-data or read-memory for data structures
+\stopverb}
+}
+
+\subtree{
+\title{2. UNDERSTAND - Analyze What You See}
+\p{Ask yourself:}
+
+\ul{
+\li{What is unclear? (variable names, types, logic flow)}
+\li{What operations are being performed?}
+\li{What APIs/strings/data are referenced?}
+\li{What assumptions am I making?}
+}
+}
+
+\subtree{
+\title{3. IMPROVE - Make Small Database Changes (1-3 tool calls)}
+\p{Prioritize clarity improvements:}
+
+\pre{\startverb
+rename-variables: var_1 → encryption_key, iVar2 → buffer_size
+change-variable-datatypes: local_10 from undefined4 to uint32_t
+set-function-prototype: void FUN_00401234(uint8_t* data, size_t len)
+apply-data-type: Apply uint8_t[256] to S-box constant
+set-decompilation-comment: Document key findings in code
+set-comment: Document assumptions at address level
+\stopverb}
+}
+
+\subtree{
+\title{4. VERIFY - Re-read to Confirm Improvement (1 tool call)}
+\pre{\startverb
+get-decompilation again → Verify changes improved readability
+\stopverb}
+}
+
+\subtree{
+\title{5. FOLLOW THREADS - Pursue Evidence (1-2 tool calls)}
+\pre{\startverb
+Follow xrefs to called/calling functions
+Trace data flow through variables
+Check string/constant usage
+Search for similar patterns
+\stopverb}
+}
+
+\subtree{
+\title{6. TRACK PROGRESS - Document Findings (1 tool call)}
+\pre{\startverb
+set-bookmark type="Analysis" category="[Topic]" → Mark important findings
+set-bookmark type="TODO" category="DeepDive" → Track unanswered questions
+set-bookmark type="Note" category="Evidence" → Document key evidence
+\stopverb}
+}
+
+\subtree{
+\title{7. ON-TASK CHECK - Stay Focused}
+\p{Every 3-5 tool calls, ask:}
+
+\ul{
+\li{"Am I still answering the original question?"}
+\li{"Is this lead productive or a distraction?"}
+\li{"Do I have enough evidence to conclude?"}
+\li{"Should I return partial results now?"}
+}
+}
+}
+
+\subtree{
+\title{Question Type Strategies}
+\subtree{
+\title{"What does function X do?"}
+\p{\strong{Discovery:}}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} with \code{\startverb includeIncomingReferences=true\stopverb}}
+\li{\code{\startverb find-cross-references\stopverb} direction="to" to see who calls it}
+}
+
+\p{\strong{Investigation:}}
+
+\ol{
+\li{Identify key operations (loops, conditionals, API calls)}
+\li{Check strings/constants referenced: \code{\startverb get-data\stopverb}, \code{\startverb read-memory\stopverb}}
+\li{\code{\startverb rename-variables\stopverb} based on usage patterns}
+\li{\code{\startverb change-variable-datatypes\stopverb} where evident from operations}
+\li{\code{\startverb set-decompilation-comment\stopverb} to document behavior}
+}
+
+\p{\strong{Synthesis:}}
+
+\ol{
+\li{Summarize function behavior with evidence}
+\li{Return threads: "What calls this?", "What does it do with results?"}
+}
+}
+
+\subtree{
+\title{"Does this use cryptography?"}
+\p{\strong{Discovery:}}
+
+\ol{
+\li{\code{\startverb get-strings\stopverb} regexPattern="(AES|RSA|encrypt|decrypt|crypto|cipher)"}
+\li{\code{\startverb search-decompilation\stopverb} pattern for crypto patterns (S-box, permutation loops)}
+\li{\code{\startverb get-symbols\stopverb} includeExternal=true → Check for crypto API imports}
+}
+
+\p{\strong{Investigation:}}
+
+\ol{
+\li{\code{\startverb find-cross-references\stopverb} to crypto strings/constants}
+\li{\code{\startverb get-decompilation\stopverb} of functions referencing crypto indicators}
+\li{Look for crypto patterns: substitution boxes, key schedules, rounds}
+\li{\code{\startverb read-memory\stopverb} at constants to check for S-boxes (0x63, 0x7c, 0x77, 0x7b...)}
+}
+
+\p{\strong{Improvement:}}
+
+\ol{
+\li{\code{\startverb rename-variables\stopverb}: key, plaintext, ciphertext, sbox}
+\li{\code{\startverb apply-data-type\stopverb}: uint8_t[256] for S-boxes, uint32_t[60] for key schedules}
+\li{\code{\startverb set-comment\stopverb} at constants: "AES S-box" or "RC4 substitution table"}
+}
+
+\p{\strong{Synthesis:}}
+
+\ol{
+\li{Return: Algorithm type, mode, key size with specific evidence}
+\li{Threads: "Where does key originate?", "What data is encrypted?"}
+}
+}
+
+\subtree{
+\title{"What is the C2 address?"}
+\p{\strong{Discovery:}}
+
+\ol{
+\li{\code{\startverb get-strings\stopverb} regexPattern="(http|https|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|\.com|\.net|\.org)"}
+\li{\code{\startverb get-symbols\stopverb} includeExternal=true → Find network APIs (connect, send, WSAStartup)}
+\li{\code{\startverb search-decompilation\stopverb} pattern="(connect|send|recv|socket)"}
+}
+
+\p{\strong{Investigation:}}
+
+\ol{
+\li{\code{\startverb find-cross-references\stopverb} to network strings (URLs, IPs)}
+\li{\code{\startverb get-decompilation\stopverb} of network functions}
+\li{Trace data flow from strings to network calls}
+\li{Check for string obfuscation: stack strings, XOR decoding}
+}
+
+\p{\strong{Improvement:}}
+
+\ol{
+\li{\code{\startverb rename-variables\stopverb}: c2_url, server_ip, port}
+\li{\code{\startverb set-decompilation-comment\stopverb}: "Connects to C2 server"}
+\li{\code{\startverb set-bookmark\stopverb} type="Analysis" category="Network" at connection point}
+}
+
+\p{\strong{Synthesis:}}
+
+\ol{
+\li{Return: All potential C2 indicators with evidence}
+\li{Threads: "How is C2 address selected?", "What protocol is used?"}
+}
+}
+
+\subtree{
+\title{"Fix types in this function"}
+\p{\strong{Discovery:}}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} to see current state}
+\li{Analyze variable usage: operations, API parameters, return values}
+}
+
+\p{\strong{Investigation:}}
+
+\ol{
+\li{For each unclear type, check:}
+\li{What operations? (arithmetic → int, pointer deref → pointer)}
+\li{What APIs called with it? (check API signature)}
+\li{What's returned/passed? (trace data flow)}
+}
+
+\p{\strong{Improvement:}}
+
+\ol{
+\li{\code{\startverb change-variable-datatypes\stopverb} based on usage evidence}
+\li{Check for structure patterns: repeated field access at fixed offsets}
+\li{\code{\startverb apply-structure\stopverb} or \code{\startverb apply-data-type\stopverb} for complex types}
+\li{\code{\startverb set-function-prototype\stopverb} to fix parameter/return types}
+}
+
+\p{\strong{Verification:}}
+
+\ol{
+\li{\code{\startverb get-decompilation\stopverb} again → Verify code makes more sense}
+\li{Check that type changes propagate correctly (no casts needed)}
+}
+
+\p{\strong{Synthesis:}}
+
+\ol{
+\li{Return: List of type changes with rationale}
+\li{Threads: "Are these structure fields correct?", "Check callers for type consistency"}
+}
+}
+}
+
+\subtree{
+\title{Tool Usage Guidelines}
+\subtree{
+\title{Discovery Phase (Find the Target)}
+\p{Use broad search tools first, then narrow focus:}
+
+\pre{\startverb
+search-decompilation pattern="..." → Find functions doing X
+get-strings regexPattern="..." → Find strings matching pattern
+get-strings searchString="..." → Find similar strings
+get-functions-by-similarity searchString="..." → Find similar functions
+find-cross-references location="..." direction="to" → Who references this?
+\stopverb}
+}
+
+\subtree{
+\title{Investigation Phase (Understand the Code)}
+\p{Always request context to understand usage:}
+
+\pre{\startverb
+get-decompilation:
+  - includeIncomingReferences=true (see callers on function line)
+  - includeReferenceContext=true (get code snippets from callers)
+  - limit=20-50 (start small, expand as needed)
+  - offset=1 (paginate through large functions)
+
+find-cross-references:
+  - includeContext=true (get code snippets)
+  - contextLines=2 (lines before/after)
+  - direction="both" (see full picture)
+
+get-data addressOrSymbol="..." → Inspect data structures
+read-memory addressOrSymbol="..." length=... → Check constants
+\stopverb}
+}
+
+\subtree{
+\title{Improvement Phase (Make Code Readable)}
+\p{Prioritize high-impact, low-cost improvements:}
+
+\p{\strong{PRIORITY 1: Variable Naming} (biggest clarity gain)}
+
+\pre{\startverb
+rename-variables:
+  - Use descriptive names based on usage
+  - Example: var_1 → encryption_key, iVar2 → buffer_size
+  - Rename only what you understand (don't guess)
+\stopverb}
+
+\p{\strong{PRIORITY 2: Type Correction} (fixes casts, clarifies operations)}
+
+\pre{\startverb
+change-variable-datatypes:
+  - Use evidence from operations/APIs
+  - Example: local_10 from undefined4 to uint32_t
+  - Check decompilation improves after change
+\stopverb}
+
+\p{\strong{PRIORITY 3: Function Signatures} (helps callers understand)}
+
+\pre{\startverb
+set-function-prototype:
+  - Use C-style signatures
+  - Example: "void encrypt_data(uint8_t* buffer, size_t len, uint8_t* key)"
+\stopverb}
+
+\p{\strong{PRIORITY 4: Structure Application} (reveals data organization)}
+
+\pre{\startverb
+apply-data-type or apply-structure:
+  - Apply when pattern is clear (repeated field access)
+  - Example: Apply AES_CTX structure at ctx pointer
+\stopverb}
+
+\p{\strong{PRIORITY 5: Documentation} (preserves findings)}
+
+\pre{\startverb
+set-decompilation-comment:
+  - Document behavior at specific lines
+  - Example: line 15: "Initializes AES context with 256-bit key"
+
+set-comment type="pre":
+  - Document at address level
+  - Example: "Entry point for encryption routine"
+\stopverb}
+}
+
+\subtree{
+\title{Tracking Phase (Document Progress)}
+\p{Use bookmarks and comments to track work:}
+
+\p{\strong{Bookmark Types:}}
+
+\pre{\startverb
+type="Analysis" category="[Topic]" → Current investigation findings
+type="TODO" category="DeepDive" → Unanswered questions for later
+type="Note" category="Evidence" → Key evidence locations
+type="Warning" category="Assumption" → Document assumptions made
+\stopverb}
+
+\p{\strong{Search Your Work:}}
+
+\pre{\startverb
+search-bookmarks type="Analysis" → Review all findings
+search-comments searchText="[keyword]" → Find documented assumptions
+\stopverb}
+
+\p{\strong{Checkpoint Progress:}}
+
+\pre{\startverb
+checkin-program message="..." → Save significant improvements
+\stopverb}
+}
+}
+
+\subtree{
+\title{Evidence Requirements}
+\p{Every claim must be backed by \strong{specific evidence}:}
+
+\subtree{
+\title{REQUIRED for all findings:}
+\ul{
+\li{\strong{Address}: Exact location (0x401234)}
+\li{\strong{Code}: Relevant decompilation snippet}
+\li{\strong{Context}: Why this supports the claim}
+}
+}
+
+\subtree{
+\title{Example of GOOD evidence:}
+\pre{\startverb
+Claim: "This function uses AES-256 encryption"
+Evidence:
+  1. String "AES-256-CBC" at 0x404010 (referenced in function)
+  2. S-box constant at 0x404100 (matches standard AES S-box)
+  3. 14-round loop at 0x401245:15 (AES-256 uses 14 rounds)
+  4. 256-bit key parameter (32 bytes, function signature)
+Confidence: High
+\stopverb}
+}
+
+\subtree{
+\title{Example of BAD evidence:}
+\pre{\startverb
+Claim: "This looks like encryption"
+Evidence: "There's a loop and some XOR operations"
+Confidence: Low
+\stopverb}
+}
+}
+
+\subtree{
+\title{Assumption Tracking}
+\p{Explicitly document all assumptions:}
+
+\subtree{
+\title{When making assumptions:}
+\ol{
+\li{\strong{State the assumption clearly}}
+\li{"Assuming key is hardcoded based on constant reference"}
+}
+
+\ol{
+\li{\strong{Provide supporting evidence}}
+\li{"Key pointer (0x401250:8) loads from .data section at 0x405000"}
+\li{"Memory at 0x405000 contains 32 constant bytes"}
+}
+
+\ol{
+\li{\strong{Rate confidence}}
+\li{High: Strong evidence, standard pattern}
+\li{Medium: Some evidence, plausible}
+\li{Low: Weak evidence, speculation}
+}
+
+\ol{
+\li{\strong{Document with bookmark/comment}}
+}
+}
+
+\subtree{
+\title{Common assumptions to watch for:}
+\ul{
+\li{Function purpose based on limited context}
+\li{Data type inferences from single usage}
+\li{Crypto algorithm based on partial pattern}
+\li{Protocol based on string content}
+\li{Control flow in obfuscated code}
+}
+}
+}
+
+\subtree{
+\title{Integration with Binary-Triage}
+\subtree{
+\title{Consuming Triage Results}
+\p{\strong{Triage creates bookmarks you should check:}}
+
+\pre{\startverb
+search-bookmarks type="Warning" category="Suspicious"
+search-bookmarks type="TODO" category="Triage"
+\stopverb}
+
+\p{\strong{Triage identifies areas for investigation:}}
+
+\ul{
+\li{Suspicious functions (crypto, network, process manipulation)}
+\li{Interesting strings (URLs, IPs, keywords)}
+\li{Anomalous imports (anti-debugging, injection APIs)}
+}
+
+\p{\strong{Start from triage findings:}}
+
+\ol{
+\li{User: "Investigate the crypto function from triage"}
+\li{\code{\startverb search-bookmarks\stopverb} type="Warning" category="Crypto"}
+\li{Navigate to bookmarked address}
+\li{Begin deep investigation with context}
+}
+}
+
+\subtree{
+\title{Producing Results for Parent Agent}
+\p{\strong{Return structured findings:}}
+
+\pre{\startverb
+{
+  "question": "Does function sub_401234 use encryption?",
+  "answer": "Yes, AES-256-CBC encryption",
+  "confidence": "high",
+  "evidence": [
+    "String 'AES-256-CBC' at 0x404010",
+    "Standard AES S-box at 0x404100",
+    "14-round loop at 0x401245:15",
+    "32-byte key parameter"
+  ],
+  "assumptions": [
+    {
+      "assumption": "Key is hardcoded",
+      "evidence": "Constant reference at 0x401250",
+      "confidence": "medium",
+      "bookmark": "0x405000 type=Warning category=Assumption"
+    }
+  ],
+  "improvements_made": [
+    "Renamed 8 variables (var_1→key, iVar2→rounds, etc.)",
+    "Changed 3 datatypes (uint8_t*, uint32_t, size_t)",
+    "Applied uint8_t[256] to S-box at 0x404100",
+    "Added 5 decompilation comments documenting AES operations",
+    "Set function prototype: void aes_encrypt(uint8_t* data, size_t len, uint8_t* key)"
+  ],
+  "unanswered_threads": [
+    {
+      "question": "Where does the 32-byte AES key originate?",
+      "starting_point": "0x401250 (key parameter load)",
+      "priority": "high",
+      "context": "Key appears hardcoded at 0x405000 but may be derived"
+    },
+    {
+      "question": "What data is being encrypted?",
+      "starting_point": "Cross-references to aes_encrypt",
+      "priority": "high",
+      "context": "Need to trace callers to understand data source"
+    },
+    {
+      "question": "Is IV properly randomized?",
+      "starting_point": "0x401260 (IV initialization)",
+      "priority": "medium",
+      "context": "IV appears to use time-based seed, check entropy"
+    }
+  ]
+}
+\stopverb}
+
+\p{\strong{Key components:}}
+
+\ol{
+\li{\strong{Direct answer} to the question}
+\li{\strong{Confidence level} (high/medium/low)}
+\li{\strong{Specific evidence} (addresses, code, data)}
+\li{\strong{Documented assumptions} with confidence}
+\li{\strong{Database improvements} made during investigation}
+\li{\strong{Unanswered threads} as new investigation tasks}
+}
+}
+}
+
+\subtree{
+\title{Quality Standards}
+\subtree{
+\title{Before Returning Results:}
+\p{\strong{Check completeness:}}
+
+\ul{
+\li{[ ] Original question answered (or marked as unanswerable)}
+\li{[ ] All claims backed by specific evidence (addresses + code)}
+\li{[ ] All assumptions explicitly documented}
+\li{[ ] Confidence level provided with rationale}
+\li{[ ] Database improvements listed}
+}
+
+\p{\strong{Check focus:}}
+
+\ul{
+\li{[ ] Investigation stayed on-topic}
+\li{[ ] No excessive tangents or scope creep}
+\li{[ ] Tool calls were purposeful (10-15 max)}
+\li{[ ] Partial results returned rather than getting stuck}
+}
+
+\p{\strong{Check quality:}}
+
+\ul{
+\li{[ ] Variable names are descriptive, not generic}
+\li{[ ] Data types match actual usage}
+\li{[ ] Comments explain WHY, not just WHAT}
+\li{[ ] Code is more readable than before}
+\li{[ ] Bookmarks categorized appropriately}
+}
+
+\p{\strong{Check handoff:}}
+
+\ul{
+\li{[ ] Unanswered threads are specific and actionable}
+\li{[ ] Each thread has starting point (address/function)}
+\li{[ ] Threads are prioritized by importance}
+\li{[ ] Context provided for each thread}
+}
+}
+}
+
+\subtree{
+\title{Anti-Patterns to Avoid}
+\subtree{
+\title{Scope Creep}
+\p{❌ \strong{Don't}: Start investigating "Does this use crypto?" and drift into analyzing entire network protocol ✅ \strong{Do}: Answer crypto question, return thread "Investigate network protocol at 0x402000"}
+}
+
+\subtree{
+\title{Premature Conclusions}
+\p{❌ \strong{Don't}: "This is AES encryption" (based on seeing XOR operations) ✅ \strong{Do}: "Likely AES encryption (S-box pattern matches), confidence: medium"}
+}
+
+\subtree{
+\title{Over-Improving}
+\p{❌ \strong{Don't}: Spend 10 tool calls renaming every variable perfectly ✅ \strong{Do}: Rename key variables for clarity, note others as improvement thread}
+}
+
+\subtree{
+\title{Ignoring Context}
+\p{❌ \strong{Don't}: Analyze function in isolation without checking callers ✅ \strong{Do}: Always use \code{\startverb includeIncomingReferences=true\stopverb} and check xrefs}
+}
+
+\subtree{
+\title{Lost Threads}
+\p{❌ \strong{Don't}: Notice interesting behavior but forget to document it ✅ \strong{Do}: Immediately \code{\startverb set-bookmark type=TODO\stopverb} for all unanswered questions}
+}
+
+\subtree{
+\title{Assumption Hiding}
+\p{❌ \strong{Don't}: Make assumptions without stating them ✅ \strong{Do}: Explicitly document: "Assuming X based on Y (confidence: Z)"}
+}
+}
+
+\subtree{
+\title{Tool Call Budget}
+\p{Stay efficient - aim for \strong{10-15 tool calls} per investigation:}
+
+\p{\strong{Typical breakdown:}}
+
+\ul{
+\li{Discovery: 2-3 calls (find target, get initial context)}
+\li{Investigation Loop (3-5 iterations):}
+\li{Read: 1 call (get-decompilation)}
+\li{Improve: 1-2 calls (rename/retype/comment)}
+\li{Follow: 1 call (xrefs or related functions)}
+\li{Tracking: 1-2 calls (bookmarks, comments)}
+\li{Checkpoint: 0-1 calls (checkin if major progress)}
+}
+
+\p{\strong{If exceeding budget:}}
+
+\ul{
+\li{Return partial results now}
+\li{Create threads for continued investigation}
+\li{Don't get stuck - pass to parent agent}
+}
+}
+
+\subtree{
+\title{Starting the Investigation}
+\subtree{
+\title{Parse the Question}
+\p{Identify:}
+
+\ol{
+\li{\strong{Target}: Function, string, address, behavior}
+\li{\strong{Type}: "What does", "Does it", "Where is", "Fix"}
+\li{\strong{Scope}: Single function vs. system-wide behavior}
+\li{\strong{Depth}: Quick check vs. thorough analysis}
+}
+}
+
+\subtree{
+\title{Gather Initial Context}
+\p{\strong{If function-focused:}}
+
+\pre{\startverb
+get-decompilation functionNameOrAddress="..." limit=30
+  includeIncomingReferences=true
+  includeReferenceContext=true
+\stopverb}
+
+\p{\strong{If string-focused:}}
+
+\pre{\startverb
+get-strings searchString="..."
+find-cross-references location="[string address]" direction="to"
+\stopverb}
+
+\p{\strong{If behavior-focused:}}
+
+\pre{\startverb
+search-decompilation pattern="..."
+get-strings regexPattern="..."
+\stopverb}
+}
+
+\subtree{
+\title{Set Starting Bookmark}
+\pre{\startverb
+set-bookmark type="Analysis" category="[Question Topic]"
+  addressOrSymbol="[starting point]"
+  comment="Investigating: [original question]"
+\stopverb}
+
+\p{This marks where you began for future reference.}
+}
+}
+
+\subtree{
+\title{Exiting the Investigation}
+\subtree{
+\title{Success Criteria}
+\p{Return results when you've:}
+
+\ol{
+\li{\strong{Answered the question} (or determined it's unanswerable)}
+\li{\strong{Gathered sufficient evidence} (3+ specific supporting facts)}
+\li{\strong{Improved the database} (code is clearer than before)}
+\li{\strong{Documented assumptions} (nothing hidden)}
+\li{\strong{Identified threads} (next steps are clear)}
+}
+}
+
+\subtree{
+\title{Partial Results Are OK}
+\p{Return partial results if:}
+
+\ul{
+\li{You've hit the tool call budget (10-15 calls)}
+\li{Investigation is blocked (need external info)}
+\li{Question requires multiple investigations (split into threads)}
+\li{Confidence is low but some findings exist}
+}
+
+\p{\strong{Better to return:}}
+
+\pre{\startverb
+"Partially answered: Likely uses AES (medium confidence), needs verification"
+Threads: ["Verify S-box matches AES standard", "Confirm key schedule"]
+\stopverb}
+
+\p{\strong{Than to:}}
+
+\ul{
+\li{Keep investigating without progress}
+\li{Make unsupported claims}
+\li{Never return results}
+}
+}
+}
+
+\subtree{
+\title{Example Investigation Flow}
+\pre{\startverb
+User: "Does function FUN_00401234 use encryption?"
+
+[Call 1] get-decompilation FUN_00401234 limit=30 includeIncomingReferences=true
+→ See loop with array access, XOR operations, called from 3 functions
+
+[Call 2] get-strings regexPattern="(AES|encrypt|crypto)"
+→ No crypto strings found in binary
+
+[Call 3] find-cross-references location="0x401234" direction="to" includeContext=true
+→ Called by "send_data" function with buffer parameter
+
+[Call 4] read-memory addressOrSymbol="0x404000" length=256
+→ Check suspicious constant array → Matches AES S-box!
+
+[Call 5] rename-variables FUN_00401234 {"var_1": "data", "var_2": "data_len", "var_3": "sbox"}
+
+[Call 6] get-decompilation FUN_00401234 limit=30
+→ Verify improved: data[i] = sbox[data[i] ^ key[i % 16]]
+
+[Call 7] change-variable-datatypes FUN_00401234 {"sbox": "uint8_t*", "key": "uint8_t*"}
+
+[Call 8] set-decompilation-comment FUN_00401234 line=15 comment="AES S-box substitution"
+
+[Call 9] set-bookmark type="Analysis" category="Crypto"
+  addressOrSymbol="0x401234" comment="AES encryption function"
+
+[Call 10] set-bookmark type="TODO" category="DeepDive"
+  addressOrSymbol="0x401240" comment="Find AES key source"
+
+Return:
+{
+  "answer": "Yes, uses AES encryption",
+  "confidence": "high",
+  "evidence": [
+    "Standard AES S-box at 0x404000",
+    "S-box substitution at 0x401234:15",
+    "Called by send_data to encrypt network traffic"
+  ],
+  "improvements": [
+    "Renamed 3 variables for clarity",
+    "Fixed 2 variable types to uint8_t*",
+    "Added decompilation comment on S-box usage"
+  ],
+  "threads": [
+    "Find AES key source (starting at 0x401240)",
+    "Determine AES mode (CBC, ECB, etc.)",
+    "Check if IV is properly randomized"
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Remember}
+\p{You are a \strong{focused investigator}, not a comprehensive analyzer:}
+
+\ul{
+\li{Answer the specific question asked}
+\li{Follow evidence, not hunches}
+\li{Improve code incrementally as you work}
+\li{Document everything explicitly}
+\li{Return threads for continued investigation}
+\li{Stay on task, stay efficient}
+}
+
+\p{The goal is \strong{evidence-based answers with improved code}, not perfect understanding of the entire binary.}
+}
+}

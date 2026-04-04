@@ -1,0 +1,59 @@
+\title{Jupyter}
+
+\taxon{skill}
+
+\meta{description}{Read, modify, execute, and convert Jupyter notebooks programmatically. Use when working with .ipynb files for data science workflows, including editing cells, clearing outputs, or converting to other formats.}
+
+\subtree{
+\title{Jupyter Notebook Guide}
+\p{Notebooks are JSON files. Cells are in \code{\startverb nb['cells']\stopverb}, each has \code{\startverb source\stopverb} (list of strings) and \code{\startverb cell_type\stopverb} ('code', 'markdown', or 'raw').}
+
+\subtree{
+\title{Modifying Notebooks}
+\pre{\startverb
+import json
+with open('notebook.ipynb') as f:
+    nb = json.load(f)
+# Modify nb['cells'][i]['source'], then:
+with open('notebook.ipynb', 'w') as f:
+    json.dump(nb, f, indent=1)
+\stopverb}
+}
+
+\subtree{
+\title{Executing & Converting}
+\pre{\startverb
+jupyter nbconvert --to notebook --execute --inplace notebook.ipynb  # Execute in place
+jupyter nbconvert --to html notebook.ipynb      # Convert to HTML
+jupyter nbconvert --to script notebook.ipynb    # Convert to Python
+jupyter nbconvert --to markdown notebook.ipynb  # Convert to Markdown
+\stopverb}
+}
+
+\subtree{
+\title{Finding Code}
+\pre{\startverb
+grep -n "search_term" notebook.ipynb
+\stopverb}
+}
+
+\subtree{
+\title{Cell Structure}
+\pre{\startverb
+# Code cell
+{"cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [], "source": ["code\n"]}
+# Markdown cell
+{"cell_type": "markdown", "metadata": {}, "source": ["# Title\n"]}
+\stopverb}
+}
+
+\subtree{
+\title{Clear Outputs}
+\pre{\startverb
+for cell in nb['cells']:
+    if cell['cell_type'] == 'code':
+        cell['outputs'] = []
+        cell['execution_count'] = None
+\stopverb}
+}
+}

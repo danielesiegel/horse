@@ -1,0 +1,280 @@
+\title{Arboreto}
+
+\taxon{skill}
+
+\meta{description}{Infer gene regulatory networks (GRNs) from gene expression data using scalable algorithms (GRNBoost2, GENIE3). Use when analyzing transcriptomics data (bulk RNA-seq, single-cell RNA-seq) to identify transcription factor-target gene relationships and regulatory interactions. Supports distributed computation for large-scale datasets.}
+
+\subtree{
+\title{Arboreto}
+\subtree{
+\title{Overview}
+\p{Arboreto is a computational library for inferring gene regulatory networks (GRNs) from gene expression data using parallelized algorithms that scale from single machines to multi-node clusters.}
+
+\p{\strong{Core capability}: Identify which transcription factors (TFs) regulate which target genes based on expression patterns across observations (cells, samples, conditions).}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Install arboreto:}
+
+\pre{\startverb
+uv pip install arboreto
+\stopverb}
+
+\p{Basic GRN inference:}
+
+\pre{\startverb
+import pandas as pd
+from arboreto.algo import grnboost2
+
+if __name__ == '__main__':
+    # Load expression data (genes as columns)
+    expression_matrix = pd.read_csv('expression_data.tsv', sep='\t')
+
+    # Infer regulatory network
+    network = grnboost2(expression_data=expression_matrix)
+
+    # Save results (TF, target, importance)
+    network.to_csv('network.tsv', sep='\t', index=False, header=False)
+\stopverb}
+
+\p{\strong{Critical}: Always use \code{\startverb if \strong{name} == '\strong{main}':\stopverb} guard because Dask spawns new processes.}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Basic GRN Inference}
+\p{For standard GRN inference workflows including:}
+
+\ul{
+\li{Input data preparation (Pandas DataFrame or NumPy array)}
+\li{Running inference with GRNBoost2 or GENIE3}
+\li{Filtering by transcription factors}
+\li{Output format and interpretation}
+}
+
+\p{\strong{See}: \code{\startverb references/basic_inference.md\stopverb}}
+
+\p{\strong{Use the ready-to-run script}: \code{\startverb scripts/basic_grn_inference.py\stopverb} for standard inference tasks:}
+
+\pre{\startverb
+python scripts/basic_grn_inference.py expression_data.tsv output_network.tsv --tf-file tfs.txt --seed 777
+\stopverb}
+}
+
+\subtree{
+\title{2. Algorithm Selection}
+\p{Arboreto provides two algorithms:}
+
+\p{\strong{GRNBoost2 (Recommended)}:}
+
+\ul{
+\li{Fast gradient boosting-based inference}
+\li{Optimized for large datasets (10k+ observations)}
+\li{Default choice for most analyses}
+}
+
+\p{\strong{GENIE3}:}
+
+\ul{
+\li{Random Forest-based inference}
+\li{Original multiple regression approach}
+\li{Use for comparison or validation}
+}
+
+\p{Quick comparison:}
+
+\pre{\startverb
+from arboreto.algo import grnboost2, genie3
+
+# Fast, recommended
+network_grnboost = grnboost2(expression_data=matrix)
+
+# Classic algorithm
+network_genie3 = genie3(expression_data=matrix)
+\stopverb}
+
+\p{\strong{For detailed algorithm comparison, parameters, and selection guidance}: \code{\startverb references/algorithms.md\stopverb}}
+}
+
+\subtree{
+\title{3. Distributed Computing}
+\p{Scale inference from local multi-core to cluster environments:}
+
+\p{\strong{Local (default)} - Uses all available cores automatically:}
+
+\pre{\startverb
+network = grnboost2(expression_data=matrix)
+\stopverb}
+
+\p{\strong{Custom local client} - Control resources:}
+
+\pre{\startverb
+from distributed import LocalCluster, Client
+
+local_cluster = LocalCluster(n_workers=10, memory_limit='8GB')
+client = Client(local_cluster)
+
+network = grnboost2(expression_data=matrix, client_or_address=client)
+
+client.close()
+local_cluster.close()
+\stopverb}
+
+\p{\strong{Cluster computing} - Connect to remote Dask scheduler:}
+
+\pre{\startverb
+from distributed import Client
+
+client = Client('tcp://scheduler:8786')
+network = grnboost2(expression_data=matrix, client_or_address=client)
+\stopverb}
+
+\p{\strong{For cluster setup, performance optimization, and large-scale workflows}: \code{\startverb references/distributed_computing.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install arboreto
+\stopverb}
+
+\p{\strong{Dependencies}: scipy, scikit-learn, numpy, pandas, dask, distributed}
+}
+
+\subtree{
+\title{Common Use Cases}
+\subtree{
+\title{Single-Cell RNA-seq Analysis}
+\pre{\startverb
+import pandas as pd
+from arboreto.algo import grnboost2
+
+if __name__ == '__main__':
+    # Load single-cell expression matrix (cells x genes)
+    sc_data = pd.read_csv('scrna_counts.tsv', sep='\t')
+
+    # Infer cell-type-specific regulatory network
+    network = grnboost2(expression_data=sc_data, seed=42)
+
+    # Filter high-confidence links
+    high_confidence = network[network['importance'] > 0.5]
+    high_confidence.to_csv('grn_high_confidence.tsv', sep='\t', index=False)
+\stopverb}
+}
+
+\subtree{
+\title{Bulk RNA-seq with TF Filtering}
+\pre{\startverb
+from arboreto.utils import load_tf_names
+from arboreto.algo import grnboost2
+
+if __name__ == '__main__':
+    # Load data
+    expression_data = pd.read_csv('rnaseq_tpm.tsv', sep='\t')
+    tf_names = load_tf_names('human_tfs.txt')
+
+    # Infer with TF restriction
+    network = grnboost2(
+        expression_data=expression_data,
+        tf_names=tf_names,
+        seed=123
+    )
+
+    network.to_csv('tf_target_network.tsv', sep='\t', index=False)
+\stopverb}
+}
+
+\subtree{
+\title{Comparative Analysis (Multiple Conditions)}
+\pre{\startverb
+from arboreto.algo import grnboost2
+
+if __name__ == '__main__':
+    # Infer networks for different conditions
+    conditions = ['control', 'treatment_24h', 'treatment_48h']
+
+    for condition in conditions:
+        data = pd.read_csv(f'{condition}_expression.tsv', sep='\t')
+        network = grnboost2(expression_data=data, seed=42)
+        network.to_csv(f'{condition}_network.tsv', sep='\t', index=False)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Output Interpretation}
+\p{Arboreto returns a DataFrame with regulatory links:}
+
+\pre{\startverb
+| Column | Description |
+|--------|-------------|
+| `TF` | Transcription factor (regulator) |
+| `target` | Target gene |
+| `importance` | Regulatory importance score (higher = stronger) |
+\stopverb}
+
+\p{\strong{Filtering strategy}:}
+
+\ul{
+\li{Top N links per target gene}
+\li{Importance threshold (e.g., > 0.5)}
+\li{Statistical significance testing (permutation tests)}
+}
+}
+
+\subtree{
+\title{Integration with pySCENIC}
+\p{Arboreto is a core component of the SCENIC pipeline for single-cell regulatory network analysis:}
+
+\pre{\startverb
+# Step 1: Use arboreto for GRN inference
+from arboreto.algo import grnboost2
+network = grnboost2(expression_data=sc_data, tf_names=tf_list)
+
+# Step 2: Use pySCENIC for regulon identification and activity scoring
+# (See pySCENIC documentation for downstream analysis)
+\stopverb}
+}
+
+\subtree{
+\title{Reproducibility}
+\p{Always set a seed for reproducible results:}
+
+\pre{\startverb
+network = grnboost2(expression_data=matrix, seed=777)
+\stopverb}
+
+\p{Run multiple seeds for robustness analysis:}
+
+\pre{\startverb
+from distributed import LocalCluster, Client
+
+if __name__ == '__main__':
+    client = Client(LocalCluster())
+
+    seeds = [42, 123, 777]
+    networks = []
+
+    for seed in seeds:
+        net = grnboost2(expression_data=matrix, client_or_address=client, seed=seed)
+        networks.append(net)
+
+    # Combine networks and filter consensus links
+    consensus = analyze_consensus(networks)
+\stopverb}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Memory errors}: Reduce dataset size by filtering low-variance genes or use distributed computing}
+
+\p{\strong{Slow performance}: Use GRNBoost2 instead of GENIE3, enable distributed client, filter TF list}
+
+\p{\strong{Dask errors}: Ensure \code{\startverb if \strong{name} == '\strong{main}':\stopverb} guard is present in scripts}
+
+\p{\strong{Empty results}: Check data format (genes as columns), verify TF names match gene names}
+}
+}

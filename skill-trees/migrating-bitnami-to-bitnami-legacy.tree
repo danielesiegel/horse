@@ -1,0 +1,197 @@
+\title{Migrating Bitnami To Bitnami Legacy}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{This rule book helps you migrate Bitnami Helm charts and container images from the bitnami repository to the bitnamilegacy repository.
+ This migration is necessary due to Bitnami's transition, effective August 28th, 2025, where existing images will be moved to the legacy repo}
+
+\subtree{
+\title{Bitnami to Bitnami Legacy Migration Rule Book}
+\subtree{
+\title{1. Overview}
+\p{This rule book provides a systematic approach for migrating \strong{Bitnami Helm charts} and \strong{container images} from the \code{\startverb bitnami\stopverb} repository to the \code{\startverb bitnamilegacy\stopverb} repository.\ This migration is necessary due to Bitnami's transition effective \strong{August 28th, 2025}, where existing images will be moved to the legacy repository.}
+}
+
+\subtree{
+\title{2. Background}
+\ul{
+\li{\strong{Effective Date:} August 28th, 2025}
+\li{\strong{Impact:} All existing Bitnami container images will be moved from \code{\startverb docker.io/bitnami\stopverb} to \code{\startverb docker.io/bitnamilegacy\stopverb}.}
+\li{\strong{Helm Charts:} Will continue to work but require image repository updates.}
+\li{\strong{Legacy Repository:} Receives no further updates and should only be used as a \strong{temporary migration step}.}
+}
+}
+
+\subtree{
+\title{3. Migration Prerequisites}
+\ul{
+\li{Access to Kubernetes clusters (staging, sandbox, production).}
+\li{Terraform access with appropriate permissions.}
+\li{Helm CLI installed and configured.}
+\li{kubectl access to target clusters.}
+\li{Communication with stakeholders regarding downtime or risks.}
+}
+}
+
+\subtree{
+\title{4. Migration Process}
+\subtree{
+\title{Phase 1: Discovery and Assessment}
+\ol{
+\li{\strong{Identify Bitnami Charts}}
+\li{\strong{Inventory Current Deployments}}
+\li{Chart names and versions}
+\li{Namespaces}
+\li{Current status}
+\li{Dependencies}
+\li{\strong{Check Terraform Configuration}}
+}
+}
+
+\subtree{
+\title{Phase 2: Planning}
+\ol{
+\li{\strong{Create Migration Plan}\}
+\li{Current chart version}
+\li{Target migration approach (image override vs. chart upgrade)}
+\li{Dependencies and order of operations}
+\li{Rollback procedures}
+}
+
+\ol{
+\li{\strong{Chart Verification}\}
+}
+}
+
+\subtree{
+\title{Phase 3: Implementation}
+\ol{
+\li{\strong{Terraform Configuration Updates}}
+\li{Update image references from \code{\startverb bitnami\stopverb} → \code{\startverb bitnamilegacy\stopverb}.}
+\li{If required, allow insecure images:}
+}
+
+\ol{
+\li{\strong{Handle StatefulSet Restrictions}\}
+}
+
+\ol{
+\li{\strong{Terraform Execution Steps}}
+}
+}
+
+\subtree{
+\title{Phase 4: Validation}
+\ol{
+\li{\strong{Verify Helm Deployments}}
+\li{\strong{Functional Testing}}
+\li{Verify application integrations}
+\li{Monitor logs for errors}
+\li{\strong{Image Verification}}
+}
+}
+
+\subtree{
+\title{Phase 5: Documentation and Cleanup}
+\ol{
+\li{\strong{Update Documentation}}
+\li{Record migration completion dates}
+\li{Update deployment documentation}
+\li{Note configuration changes}
+\li{\strong{Monitor Post-Migration}}
+\li{Monitor for 24–48 hours}
+\li{Check for performance issues}
+\li{Validate image pulls}
+}
+}
+}
+
+\subtree{
+\title{5. Common Issues and Solutions}
+\ul{
+\li{\strong{Issue 1: StatefulSet Update Restrictions}\}
+}
+
+\ul{
+\li{\strong{Issue 2: Image Pull Errors}\}
+}
+
+\ul{
+\li{\strong{Issue 3: Configuration Drift}\}
+}
+}
+
+\subtree{
+\title{6. Security Considerations}
+\ul{
+\li{\code{\startverb allowInsecureImages\stopverb} is required for Bitnami Legacy but should be monitored.}
+\li{Implement image vulnerability scanning.}
+\li{Plan for migration away from Legacy images long-term.}
+}
+}
+
+\subtree{
+\title{7. Rollback Procedures}
+\ul{
+\li{\strong{Immediate Rollback:} Revert Terraform configuration to the previous version.}
+\li{\strong{Helm Rollback:}}
+\li{\strong{Emergency:} Switch back to \code{\startverb bitnami\stopverb} repository (if still available).}
+}
+}
+
+\subtree{
+\title{8. Timeline Recommendations}
+\ul{
+\li{\strong{Pre-August 28th, 2025:} Complete staging and sandbox migrations.}
+\li{\strong{August 28th, 2025:} Execute production migration.}
+\li{\strong{Post-Migration:} Monitor for one week, then plan a long-term strategy.}
+}
+}
+
+\subtree{
+\title{9. Long-term Strategy}
+\p{Since the \strong{Bitnami Legacy repository is temporary}, consider:}
+
+\ul{
+\li{Bitnami Secure Images for supported production workloads.}
+\li{Alternative chart providers.}
+\li{Building and maintaining your own container images.}
+}
+}
+
+\subtree{
+\title{10. Migration Checklist}
+\subtree{
+\title{Pre-Migration}
+\ul{
+\li{[ ] Inventory all Bitnami deployments}
+\li{[ ] Document current versions and configurations}
+\li{[ ] Test migration process in staging}
+\li{[ ] Prepare rollback procedures}
+}
+}
+
+\subtree{
+\title{Migration Execution}
+\ul{
+\li{[ ] Update Terraform configurations}
+\li{[ ] Apply changes to staging environment}
+\li{[ ] Validate staging deployment}
+\li{[ ] Apply to sandbox, validate deployment}
+\li{[ ] Apply to production, validate deployment}
+}
+}
+
+\subtree{
+\title{Post-Migration}
+\ul{
+\li{[ ] Verify all services are functional}
+\li{[ ] Monitor for 24–48 hours}
+\li{[ ] Update documentation}
+\li{[ ] Define long-term strategy}
+}
+}
+}
+}

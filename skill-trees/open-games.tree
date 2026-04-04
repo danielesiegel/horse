@@ -1,0 +1,189 @@
+\title{Open Games}
+
+\taxon{skill}
+
+\meta{description}{Open Games Skill (ERGODIC 0)}
+
+\subtree{
+\title{Open Games Skill (ERGODIC 0)}
+\blockquote{Compositional game theory via Para/Optic structure}
+
+\p{\strong{Trit}: 0 (ERGODIC) \strong{Color}: #26D826 (Green) \strong{Role}: Coordinator/Transporter}
+
+\subtree{
+\title{Core Concept}
+\p{Open games are morphisms in a symmetric monoidal category:}
+
+\pre{\startverb
+        ┌───────────┐
+   X ──→│           │──→ Y
+        │  Game G   │
+   R ←──│           │←── S
+        └───────────┘
+\stopverb}
+
+\p{Where:}
+
+\ul{
+\li{\strong{X → Y}: Forward play (strategies)}
+\li{\strong{S → R}: Backward coplay (utilities)}
+}
+}
+
+\subtree{
+\title{The Para/Optic Structure}
+\subtree{
+\title{Para Morphism}
+\pre{\startverb
+Para p a b = ∃m. (m, p m a → b)
+-- Existential parameter with action
+\stopverb}
+}
+
+\subtree{
+\title{Optic (Lens Generalization)}
+\pre{\startverb
+Optic p s t a b = ∀f. p a (f a b) → p s (f s t)
+-- Profunctor optic for bidirectional data
+\stopverb}
+}
+
+\subtree{
+\title{Open Game as Optic}
+\pre{\startverb
+OpenGame s t a b = 
+  { play    : s → a
+  , coplay  : s → b → t
+  , equilibrium : s → Prop
+  }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Composition}
+\subtree{
+\title{Sequential (;)}
+\pre{\startverb
+G ; H = Game where
+  play = H.play ∘ G.play
+  coplay = G.coplay ∘ (id × H.coplay)
+\stopverb}
+}
+
+\subtree{
+\title{Parallel (⊗)}
+\pre{\startverb
+G ⊗ H = Game where
+  play = G.play × H.play
+  coplay = G.coplay × H.coplay
+\stopverb}
+}
+}
+
+\subtree{
+\title{Nash Equilibrium via Fixed Points}
+\pre{\startverb
+isEquilibrium :: OpenGame s t a b → s → Bool
+isEquilibrium g s = 
+  let a = play g s
+      bestResponse = argmax (\a' → utility (coplay g s (respond a')))
+  in a == bestResponse
+\stopverb}
+
+\subtree{
+\title{Compositional Equilibrium}
+\pre{\startverb
+eq(G ; H) = eq(G) ∧ eq(H)  -- under compatibility
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Unworld}
+\pre{\startverb
+(defn opengame-derive 
+  "Transport game through derivation chain"
+  [game derivation]
+  (let [; Forward: strategies through derivation
+        forward (compose (:play game) (:forward derivation))
+        ; Backward: utilities through co-derivation  
+        backward (compose (:coplay game) (:backward derivation))]
+    {:play forward
+     :coplay backward
+     :equilibrium (transported-equilibrium game derivation)}))
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+temporal-coalgebra (-1) ⊗ open-games (0) ⊗ free-monad-gen (+1) = 0 ✓
+three-match (-1) ⊗ open-games (0) ⊗ operad-compose (+1) = 0 ✓
+sheaf-cohomology (-1) ⊗ open-games (0) ⊗ topos-generate (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Compose games sequentially
+just opengame-seq G H
+
+# Compose games in parallel
+just opengame-par G H
+
+# Check Nash equilibrium
+just opengame-nash game strategy
+
+# Transport through derivation
+just opengame-derive game deriv
+\stopverb}
+}
+
+\subtree{
+\title{Economic Examples}
+\subtree{
+\title{Prisoner's Dilemma}
+\pre{\startverb
+prisonersDilemma :: OpenGame () () (Bool, Bool) (Int, Int)
+prisonersDilemma = Game {
+  play = \() → (Defect, Defect),  -- Nash
+  coplay = \() (p1, p2) → payoffMatrix p1 p2
+}
+\stopverb}
+}
+
+\subtree{
+\title{Market Game}
+\pre{\startverb
+market :: OpenGame Price Price Quantity Quantity
+market = supplyGame ⊗ demandGame
+  where equilibrium = supplyGame.eq ∧ demandGame.eq
+\stopverb}
+}
+}
+
+\subtree{
+\title{Categorical Semantics}
+\pre{\startverb
+OpenGame ≃ Para(Lens) ≃ Optic(→, ×)
+
+Composition: 
+  (A ⊸ B) ⊗ (B ⊸ C) → (A ⊸ C)  -- via cut
+  
+Tensor:
+  (A ⊸ B) ⊗ (C ⊸ D) → (A ⊗ C ⊸ B ⊗ D)
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Ghani, Hedges, et al. "Compositional Game Theory"}
+\li{Capucci & Gavranović, "Actegories for Open Games"}
+\li{Riley, "Categories of Optics"}
+\li{CyberCat Institute tutorials}
+}
+}
+}

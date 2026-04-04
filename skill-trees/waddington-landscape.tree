@@ -1,0 +1,518 @@
+\title{Waddington Landscape}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{1}
+
+\meta{description}{"Waddington's epigenetic landscape: cell fate as gradient flow on potential surfaces, connecting developmental biology to dynamical systems, Schrödinger bridges, and fractional diffusion"}
+
+\subtree{
+\title{Waddington Landscape Skill}
+\blockquote{*"The cell is like a ball rolling down a landscape of valleys. Once it enters a valley, it is canalized toward a particular fate."* — Conrad Hal Waddington (1957)}
+
+\subtree{
+\title{Overview}
+\p{\strong{Waddington's epigenetic landscape} is the foundational metaphor for developmental biology:}
+
+\pre{\startverb
+| Concept | Landscape Metaphor | Mathematical Structure |
+|---------|-------------------|----------------------|
+| Cell | Ball/marble | State point θ(t) |
+| Differentiation | Rolling downhill | Gradient descent |
+| Cell fate | Valley bottom | Attractor basin |
+| Fate decision | Ridge/bifurcation | Critical point |
+| Landscape shape | Epigenetic regulation | Potential V(θ) |
+\stopverb}
+}
+
+\subtree{
+\title{The Mathematics}
+\subtree{
+\title{Gradient Flow on Potential Landscape}
+\pre{\startverb
+dθ/dt = -∇V(θ) + √(2T) dW(t)
+
+Where:
+  θ = cell state (gene expression profile)
+  V(θ) = epigenetic potential (landscape height)
+  T = temperature (stochastic fluctuations)
+  dW = Brownian motion (noise)
+\stopverb}
+
+\p{This is \strong{Langevin dynamics} on the Waddington landscape!}
+}
+
+\subtree{
+\title{Connection to FDBM (NeurIPS 2025)}
+\p{The \strong{Fractional Diffusion Bridge Models} paper (Nobis et al., 2025) provides the modern framework:}
+
+\pre{\startverb
+Standard Brownian (H=0.5):
+  Memoryless diffusion
+  No long-range correlations
+
+Fractional Brownian (H≠0.5):
+  H > 0.5: Superdiffusive, smooth paths, PERSISTENT
+  H < 0.5: Subdiffusive, rough paths, ANTI-PERSISTENT
+
+For cell differentiation: H > 0.5 (cells remember their history)
+\stopverb}
+
+\p{The Hurst index H encodes the \strong{epigenetic memory} of the cell!}
+}
+
+\subtree{
+\title{Schrödinger Bridge Formulation}
+\pre{\startverb
+Transport cells from distribution Π₀ (pluripotent) to Π₁ (differentiated):
+
+P^SB = argmin { D_KL(P || Q) ; P₀ = Π₀, P₁ = Π₁ }
+       P∈Paths
+
+Where Q is the reference process (fBM with Hurst index H).
+
+This is OPTIMAL TRANSPORT on the Waddington landscape!
+\stopverb}
+}
+}
+
+\subtree{
+\title{Modelica Implementation}
+\subtree{
+\title{Basic Landscape with Pitchfork Bifurcation}
+\pre{\startverb
+(* Waddington landscape: pluripotent → differentiated *)
+CreateSystemModel["Waddington.PitchforkFate", {
+  (* Pitchfork bifurcation: V(x,r) = rx²/2 + x⁴/4 *)
+  (* r > 0: single valley (pluripotent) *)
+  (* r < 0: two valleys (differentiated fates) *)
+
+  x'[t] == -(r[t] * x[t] + x[t]^3) - gamma * x'[t],
+  r'[t] == -beta,  (* Development drives bifurcation *)
+
+  V[t] == r[t] * x[t]^2 / 2 + x[t]^4 / 4
+}, t, <|
+  "ParameterValues" -> {beta -> 0.1, gamma -> 0.2},
+  "InitialValues" -> {x -> 0.001, r -> 1.0}
+|>]
+
+(* Simulate cell fate determination *)
+sim = SystemModelSimulate["Waddington.PitchforkFate", 30];
+SystemModelPlot[sim, {"x", "r", "V"}]
+\stopverb}
+}
+
+\subtree{
+\title{Three-Fate Landscape (Stem Cell → Neuron/Muscle/Blood)}
+\pre{\startverb
+CreateSystemModel["Waddington.ThreeFate", {
+  (* Potential with 3 minima at 120° angles *)
+  (* V = -a(x³ - 3xy²) + b(x² + y²)² + c(x² + y²) *)
+
+  x'[t] == -(3 a[t] * (x[t]^2 - y[t]^2) +
+            4 b * x[t] * (x[t]^2 + y[t]^2) + 2 c[t] * x[t]),
+  y'[t] == -(-6 a[t] * x[t] * y[t] +
+            4 b * y[t] * (x[t]^2 + y[t]^2) + 2 c[t] * y[t]),
+
+  (* Development changes landscape *)
+  a'[t] == rateA,  (* Increasing asymmetry *)
+  c'[t] == -rateC, (* Decreasing central stability *)
+
+  diff[t] == Sqrt[x[t]^2 + y[t]^2]  (* Differentiation progress *)
+}, t, <|
+  "ParameterValues" -> {b -> 1.0, rateA -> 0.05, rateC -> 0.1},
+  "InitialValues" -> {x -> 0.1, y -> 0.05, a -> 0.0, c -> 1.0}
+|>]
+\stopverb}
+}
+
+\subtree{
+\title{Fractional Dynamics (MA-fBM)}
+\pre{\startverb
+(* Markov Approximation of Fractional Brownian Motion *)
+(* Following Daems et al. (2026) / Harms & Stefanovits *)
+
+CreateSystemModel["Waddington.FractionalFate", {
+  (* Augmented state: Z = (X, Y₁, ..., Yₖ) *)
+  (* X = cell state, Yₖ = OU processes for memory *)
+
+  (* Main dynamics *)
+  x'[t] == Sum[omega[k] * y[k][t], {k, 1, K}] - gamma * x[t],
+
+  (* K Ornstein-Uhlenbeck processes (memory) *)
+  y[1]'[t] == -gamma1 * y[1][t],  (* + dB *)
+  y[2]'[t] == -gamma2 * y[2][t],
+  y[3]'[t] == -gamma3 * y[3][t],
+  y[4]'[t] == -gamma4 * y[4][t],
+  y[5]'[t] == -gamma5 * y[5][t],
+
+  (* Hurst index H encoded in omega weights *)
+  (* H > 0.5: superdiffusive (cell memory) *)
+  (* H < 0.5: subdiffusive (exploratory) *)
+}, t, <|
+  "ParameterValues" -> {
+    K -> 5,
+    gamma -> 0.1,
+    (* Geometric spacing: γₖ = r^(k-n) *)
+    gamma1 -> 0.25, gamma2 -> 0.5, gamma3 -> 1.0,
+    gamma4 -> 2.0, gamma5 -> 4.0,
+    (* L² optimal weights for H = 0.7 (superdiffusive) *)
+    omega1 -> 0.15, omega2 -> 0.25, omega3 -> 0.30,
+    omega4 -> 0.20, omega5 -> 0.10
+  }
+|>]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Python Implementation}
+\subtree{
+\title{Waddington Landscape Class}
+\pre{\startverb
+import numpy as np
+from dataclasses import dataclass
+from typing import Callable, Tuple
+
+@dataclass
+class WaddingtonLandscape:
+    """
+    Waddington's epigenetic landscape as potential function.
+
+    Connects to:
+    - Langevin dynamics (gradient descent + noise)
+    - FDBM (fractional diffusion bridges)
+    - Schrödinger bridges (optimal transport)
+    """
+
+    n_fates: int = 2
+    bifurcation_param: float = 1.0
+    temperature: float = 0.01
+    hurst_index: float = 0.5  # H > 0.5 for cell memory
+
+    def potential(self, x: np.ndarray, t: float) -> float:
+        """
+        Time-dependent potential V(x, t).
+
+        As t increases (development), bifurcations emerge.
+        """
+        r = self.bifurcation_param * (1 - 2*t)  # r: + → -
+
+        if self.n_fates == 2:
+            # Pitchfork: V = rx²/2 + x⁴/4
+            return r * x[0]**2 / 2 + x[0]**4 / 4
+        else:
+            # Three-fate: V = -a(x³-3xy²) + b(x²+y²)² + c(x²+y²)
+            x0, x1 = x[0], x[1]
+            a = t * 0.5  # Increasing asymmetry
+            b = 1.0
+            c = 1.0 - t  # Decreasing central stability
+            return (-a * (x0**3 - 3*x0*x1**2) +
+                    b * (x0**2 + x1**2)**2 +
+                    c * (x0**2 + x1**2))
+
+    def gradient(self, x: np.ndarray, t: float) -> np.ndarray:
+        """∇V(x, t) - drives cell toward fate."""
+        eps = 1e-6
+        grad = np.zeros_like(x)
+        for i in range(len(x)):
+            x_plus = x.copy(); x_plus[i] += eps
+            x_minus = x.copy(); x_minus[i] -= eps
+            grad[i] = (self.potential(x_plus, t) -
+                       self.potential(x_minus, t)) / (2 * eps)
+        return grad
+
+    def simulate_langevin(
+        self,
+        x0: np.ndarray,
+        n_steps: int = 1000,
+        dt: float = 0.01
+    ) -> np.ndarray:
+        """
+        Simulate cell trajectory via Langevin dynamics.
+
+        dx = -∇V dt + √(2T) dW
+        """
+        trajectory = [x0.copy()]
+        x = x0.copy()
+
+        for step in range(n_steps):
+            t = step * dt
+            grad = self.gradient(x, t)
+            noise = np.random.randn(*x.shape)
+            x = x - grad * dt + np.sqrt(2 * self.temperature * dt) * noise
+            trajectory.append(x.copy())
+
+        return np.array(trajectory)
+
+
+def find_cell_fates(landscape: WaddingtonLandscape, t: float = 1.0):
+    """Find attractor basins (cell fates) at time t."""
+    from scipy.optimize import minimize
+
+    fates = []
+    # Start from multiple initial conditions
+    for x0 in [[-1, 0], [1, 0], [0, 1], [0, -1], [0, 0]]:
+        result = minimize(
+            lambda x: landscape.potential(np.array(x), t),
+            x0, method='L-BFGS-B'
+        )
+        if result.success:
+            fates.append(result.x)
+
+    # Remove duplicates
+    unique_fates = []
+    for fate in fates:
+        is_new = all(np.linalg.norm(fate - f) > 0.1 for f in unique_fates)
+        if is_new:
+            unique_fates.append(fate)
+
+    return unique_fates
+\stopverb}
+}
+
+\subtree{
+\title{FDBM Integration}
+\pre{\startverb
+class FractionalWaddington(WaddingtonLandscape):
+    """
+    Waddington landscape with Fractional Brownian Motion.
+
+    Based on: Nobis et al. "Fractional Diffusion Bridge Models" (NeurIPS 2025)
+    """
+
+    def __init__(self, hurst_index: float = 0.7, n_ou: int = 5, **kwargs):
+        super().__init__(**kwargs)
+        self.hurst_index = hurst_index
+        self.n_ou = n_ou  # Number of OU processes for MA-fBM
+
+        # Geometric spacing of mean-reversion rates
+        r = 2.0  # Spacing ratio
+        n = (n_ou + 1) / 2
+        self.gammas = [r**(k - n) for k in range(1, n_ou + 1)]
+
+        # L² optimal weights (approximate for given H)
+        self.omegas = self._compute_optimal_weights()
+
+    def _compute_optimal_weights(self) -> np.ndarray:
+        """
+        Compute L² optimal approximation coefficients.
+        See Daems et al. Proposition 3.
+        """
+        H = self.hurst_index
+        K = self.n_ou
+
+        # Simplified: weights favor different scales based on H
+        # H > 0.5: emphasize slow processes (long memory)
+        # H < 0.5: emphasize fast processes (rough paths)
+        weights = np.zeros(K)
+        for k in range(K):
+            # Higher H → more weight on slower (smaller γ) processes
+            weights[k] = self.gammas[k] ** (H - 0.5)
+
+        return weights / np.sum(weights)
+
+    def simulate_fdbm(
+        self,
+        x0: np.ndarray,
+        x1: np.ndarray,  # Target fate
+        n_steps: int = 1000,
+        dt: float = 0.01
+    ) -> np.ndarray:
+        """
+        Simulate fractional diffusion bridge from x0 to x1.
+
+        This is the Schrödinger bridge on Waddington landscape!
+        """
+        d = len(x0)
+        K = self.n_ou
+
+        # Augmented state: Z = (X, Y₁, ..., Yₖ)
+        Z = np.zeros(d * (K + 1))
+        Z[:d] = x0  # X = cell state
+        # Y_k initialized to 0
+
+        trajectory = [x0.copy()]
+
+        for step in range(n_steps):
+            t = step * dt
+            s = 1.0 - t  # Time to terminal
+
+            X = Z[:d]
+            Y = Z[d:].reshape(K, d)
+
+            # Drift toward x1 (bridge condition)
+            mu_1_t = X + sum(self.omegas[k] * Y[k] *
+                            (np.exp(self.gammas[k] * s) - 1) / self.gammas[k]
+                            for k in range(K))
+            sigma_sq = s  # Approximate
+
+            # Update drift
+            bridge_drift = (x1 - mu_1_t) / (sigma_sq + 1e-6)
+
+            # Landscape gradient
+            grad = self.gradient(X, t)
+
+            # Combined dynamics
+            dB = np.random.randn(d) * np.sqrt(dt)
+
+            # Update X
+            dX = -grad * dt + bridge_drift * dt + np.sqrt(2 * self.temperature) * dB
+
+            # Update Y (OU processes driven by same dB)
+            dY = np.zeros((K, d))
+            for k in range(K):
+                dY[k] = -self.gammas[k] * Y[k] * dt + dB
+
+            Z[:d] += dX
+            Z[d:] += dY.flatten()
+
+            trajectory.append(Z[:d].copy())
+
+        return np.array(trajectory)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Connection to Other Skills}
+\subtree{
+\title{The KOH-Opalescence-Waddington Chain}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────┐
+│              CRITICAL PHENOMENA ACROSS SCALES                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  KOLMOGOROV-ONSAGER-HURST   CRITICAL OPALESCENCE   WADDINGTON      │
+│  (Turbulence/Scaling)        (Phase Transitions)   (Development)   │
+│  ─────────────────────       ──────────────────    ────────────    │
+│  H = 1/3                     ξ → ∞ at T_c          Cell fate       │
+│  E(k) ~ k^(-5/3)             Scale-free fluct.    Bifurcations    │
+│  Anomalous dissipation       Light scattering     Canalization    │
+│                                                                     │
+│  ────────────────── UNIFYING PRINCIPLE ──────────────────────────  │
+│                                                                     │
+│  CRITICAL SLOWING DOWN: Near bifurcation/transition,               │
+│  correlation length diverges, fluctuations at all scales,          │
+│  small perturbations determine fate (sensitivity to initial cond)  │
+│                                                                     │
+│  HURST INDEX H: Memory parameter controlling path roughness        │
+│  and long-range dependence in ALL these systems                    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+Trit: +1 (PLUS/Generator)
+
+Waddington landscape GENERATES cell fates through gradient flow.
+It creates new states from potential function dynamics.
+
+GF(3) Triads:
+  kolmogorov-onsager-hurst (-1) ⊗ critical-opalescence (0) ⊗ waddington-landscape (+1) = 0 ✓
+  langevin-dynamics (-1) ⊗ fokker-planck-analyzer (0) ⊗ waddington-landscape (+1) = 0 ✓
+  lyapunov-function (-1) ⊗ bifurcation (0) ⊗ waddington-landscape (+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Biological Connections}
+\subtree{
+\title{Chreods (Waddington's Term)}
+\pre{\startverb
+Chreod = "necessary path" (Greek χρή + ὁδός)
+
+A chreod is a canalized developmental pathway:
+- Genetic perturbations don't derail development
+- The valley walls RESIST deviation
+- Robustness emerges from landscape topology
+\stopverb}
+}
+
+\subtree{
+\title{Reprogramming (iPSC)}
+\pre{\startverb
+Yamanaka factors (Oct4, Sox2, Klf4, c-Myc):
+  - Reverse the landscape!
+  - Push cells UPHILL from differentiated → pluripotent
+  - Requires energy input (against gradient)
+
+In landscape terms:
+  Normal: dx/dt = -∇V (downhill to fate)
+  Reprogram: dx/dt = +∇V + driving (uphill forcing)
+\stopverb}
+}
+
+\subtree{
+\title{Critical Transitions in Development}
+\p{At bifurcation points:}
+
+\ul{
+\li{Correlation length ξ → ∞ (critical opalescence!)}
+\li{Variance increases (early warning signal)}
+\li{Recovery time slows (critical slowing down)}
+\li{Small noise → fate determination}
+}
+}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Waddington, C.H. (1957). \em{The Strategy of the Genes}.}
+\li{Nobis, G. et al. (2025). "Fractional Diffusion Bridge Models." NeurIPS.}
+\li{Huang, S. et al. (2005). "Cell fates as high-dimensional attractor states."}
+\li{Ferrell, J.E. (2012). "Bistability, bifurcations, and Waddington's landscape."}
+\li{Mojtahedi, M. et al. (2016). "Cell fate decision as high-dimensional critical state transition."}
+}
+}
+
+\subtree{
+\title{Invocation}
+\pre{\startverb
+/waddington-landscape
+\stopverb}
+
+\p{Model developmental processes as gradient flows on epigenetic potential landscapes, with connections to Schrödinger bridges and fractional diffusion.}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 8. Degeneracy}
+\p{\strong{Concepts}: redundancy, fallback, multiple strategies, robustness}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+waddington-landscape (+) + SDF.Ch8 (−) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch7: Propagators}
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch6: Layering}
+\li{Ch4: Pattern Matching}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Degeneracy provides fallbacks. This skill offers redundant strategies.}
+}
+}
+}

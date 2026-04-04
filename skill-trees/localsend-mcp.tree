@@ -1,0 +1,172 @@
+\title{Localsend Mcp}
+
+\taxon{skill}
+
+\meta{description}{LocalSend-based P2P transfer with MCP server design for NATS/Tailscale}
+
+\subtree{
+\title{LocalSend MCP Skill}
+\subtree{
+\title{Use This Skill When}
+\ul{
+\li{The user mentions LocalSend, AirDrop-like transfer, or peer-to-peer file sharing.}
+\li{The task asks for an MCP server or tool set around LocalSend.}
+\li{Discovery/advertising needs to use NATS or Tailscale before transferring data.}
+}
+}
+
+\subtree{
+\title{Reality Check (LocalSend in This Repo)}
+\ul{
+\li{\code{\startverb localsend\stopverb} (Flox package) launches a GUI and does not exit for \code{\startverb --help\stopverb}.}
+\li{Discovery uses UDP multicast \code{\startverb 224.0.0.167:53317\stopverb} (LAN only).}
+\li{Transfer runs HTTPS on port \code{\startverb 53317\stopverb}; direct IPs are required across subnets.}
+\li{For headless automation, prefer a CLI client (e.g., \code{\startverb jocalsend\stopverb}) or a small protocol wrapper.}
+}
+}
+
+\subtree{
+\title{Architecture: Advertise -> Negotiate -> Transfer -> Tune}
+\ol{
+\li{\strong{Advertise} capabilities over NATS (or Tailscale if LAN multicast is blocked).}
+\li{\strong{Negotiate} transport and parameters (LAN multicast vs direct IP).}
+\li{\strong{Transfer} via LocalSend protocol/CLI.}
+\li{\strong{Tune} throughput until spectral gap <= 0.25 (>= 75\% of target throughput).}
+}
+}
+
+\subtree{
+\title{MCP Tool Set (Draft)}
+\p{\strong{Discovery / Advertising}}
+
+\ul{
+\li{\code{\startverb localsend_advertise\stopverb}:}
+\li{Inputs: \code{\startverb agent_id\stopverb}, \code{\startverb device_name\stopverb}, \code{\startverb localsend_port\stopverb}, \code{\startverb tailscale_ip?\stopverb}, \code{\startverb capabilities\stopverb}, \code{\startverb spectral_gap_target\stopverb}}
+\li{\code{\startverb localsend_list_peers\stopverb}:}
+\li{Inputs: \code{\startverb source\stopverb} = \code{\startverb localsend_multicast\stopverb} | \code{\startverb nats\stopverb} | \code{\startverb tailscale\stopverb}}
+}
+
+\p{\strong{Session Negotiation}}
+
+\ul{
+\li{\code{\startverb localsend_negotiate\stopverb}:}
+\li{Inputs: \code{\startverb peer_id\stopverb}, \code{\startverb preferred_transport\stopverb}, \code{\startverb max_chunk_bytes\stopverb}, \code{\startverb max_parallel\stopverb}}
+\li{Output: \code{\startverb session_id\stopverb}, \code{\startverb transport\stopverb}, \code{\startverb target_ip\stopverb}, \code{\startverb port\stopverb}}
+}
+
+\p{\strong{Transfer}}
+
+\ul{
+\li{\code{\startverb localsend_send\stopverb}:}
+\li{Inputs: \code{\startverb session_id\stopverb}, \code{\startverb file_path\stopverb}, \code{\startverb chunk_bytes\stopverb}, \code{\startverb parallelism\stopverb}}
+\li{\code{\startverb localsend_receive\stopverb}:}
+\li{Inputs: \code{\startverb session_id\stopverb}, \code{\startverb dest_dir\stopverb}, \code{\startverb accept\stopverb}}
+}
+
+\p{\strong{Throughput Tuning}}
+
+\ul{
+\li{\code{\startverb localsend_probe\stopverb}:}
+\li{Inputs: \code{\startverb session_id\stopverb}, \code{\startverb probe_bytes\stopverb}, \code{\startverb probe_parallelism\stopverb}}
+\li{Output: \code{\startverb throughput_bps\stopverb}, \code{\startverb rtt_ms\stopverb}, \code{\startverb loss_rate\stopverb}}
+\li{\code{\startverb localsend_session_status\stopverb}:}
+\li{Inputs: \code{\startverb session_id\stopverb}}
+\li{Output: \code{\startverb bytes_sent\stopverb}, \code{\startverb bytes_received\stopverb}, \code{\startverb throughput_bps\stopverb}, \code{\startverb spectral_gap\stopverb}}
+}
+}
+
+\subtree{
+\title{Spectral Gap Heuristic (Practical)}
+\p{Define:}
+
+\pre{\startverb
+spectral_gap = 1.0 - (observed_throughput / target_throughput)
+\stopverb}
+
+\p{Stop tuning when \code{\startverb spectral_gap <= 0.25\stopverb}.}
+
+\p{\strong{Tuning Loop}:}
+
+\ol{
+\li{Start \code{\startverb chunk_bytes = 256KB\stopverb}, \code{\startverb parallelism = 1\stopverb}}
+\li{Increase parallelism to 2, 4, 8 while loss < 1\%}
+\li{Increase chunk size up to 1MB while RTT stable}
+\li{Recompute spectral gap each step}
+}
+}
+
+\subtree{
+\title{Integration Points in This Repo}
+\ul{
+\li{NATS broadcast helpers: \code{\startverb lib/synadia_broadcast.rb\stopverb}}
+\li{Tailscale patterns: \code{\startverb lib/tailscale_file_transfer_skill.rb\stopverb}}
+\li{MCP server reference: \code{\startverb mcp_unified_server.py\stopverb}}
+}
+}
+
+\subtree{
+\title{GitHub GraphQL (GH CLI) Reference}
+\p{Use \code{\startverb gh api graphql\stopverb} for contributor snapshots (limit: \code{\startverb history(first: 100)\stopverb}):}
+
+\pre{\startverb
+gh api graphql \
+  -F owner=localsend \
+  -F name=localsend \
+  -F history=100 \
+  -f query='query($owner:String!,$name:String!,$history:Int!){
+    repository(owner:$owner,name:$name){
+      defaultBranchRef{name target{
+        ... on Commit{
+          history(first:$history){
+            nodes{author{user{login} name}}
+          }
+        }
+      }}
+    }
+  }'
+\stopverb}
+
+\p{Aggregate top contributors:}
+
+\pre{\startverb
+gh api graphql -F owner=localsend -F name=localsend -F history=100 -f query='query($owner:String!,$name:String!,$history:Int!){repository(owner:$owner,name:$name){defaultBranchRef{name target{... on Commit{history(first:$history){nodes{author{user{login} name}}}}}}}}' \
+  | jq -r '.data.repository.defaultBranchRef.target.history.nodes[].author | if .user then .user.login else .name end' \
+  | sort | uniq -c | sort -nr | head -20
+\stopverb}
+}
+
+\subtree{
+\title{Duck Lake Snapshots (Feedback + Bidirectional Flow)}
+\p{Persist LocalSend sessions and GitHub snapshots into DuckDB for time travel:}
+
+\pre{\startverb
+CREATE TABLE IF NOT EXISTS localsend_sessions (
+  session_id TEXT,
+  peer_id TEXT,
+  direction TEXT, -- send|receive
+  bytes BIGINT,
+  throughput_bps DOUBLE,
+  spectral_gap DOUBLE,
+  created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS localsend_contributors_snapshot (
+  snapshot_at TIMESTAMP,
+  repo TEXT,
+  contributor TEXT,
+  commit_count INT
+);
+\stopverb}
+
+\p{Store snapshots per run and query later with existing DuckDB time-travel commands.}
+}
+
+\subtree{
+\title{Implementation Notes}
+\ul{
+\li{Avoid assuming LocalSend has a stable CLI; verify with \code{\startverb jocalsend --help\stopverb} if installed.}
+\li{If multicast discovery fails (Tailscale), use NATS to exchange \code{\startverb target_ip\stopverb} + \code{\startverb port\stopverb}.}
+\li{Keep tool outputs structured; avoid dumping large blobs through MCP.}
+}
+}
+}

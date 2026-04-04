@@ -1,0 +1,174 @@
+\title{Crdt Vterm}
+
+\taxon{skill}
+
+\meta{description}{Collaborative terminal session sharing using CRDT-style s-expressions}
+
+\subtree{
+\title{CRDT-VTerm - Collaborative Terminal Sharing}
+\p{Collaborative terminal session sharing using CRDT-style s-expressions with GF(3) trifurcated conflict resolution.}
+
+\subtree{
+\title{Components}
+\subtree{
+\title{Emacs Bridge}
+\ul{
+\li{\strong{File}: \code{\startverb crdt-vterm-bridge.el\stopverb}}
+\li{\strong{Purpose}: Connect vterm.el to crdt.el via shadow buffers}
+}
+}
+
+\subtree{
+\title{Babashka Recorder}
+\ul{
+\li{\strong{File}: \code{\startverb vterm_crdt_recorder.bb\stopverb}}
+\li{\strong{Purpose}: Record/replay terminal sessions as CRDT sexps}
+}
+}
+
+\subtree{
+\title{P2P Sharing}
+\ul{
+\li{\strong{File}: \code{\startverb vterm_localsend_share.bb\stopverb}  }
+\li{\strong{Purpose}: Live terminal sharing via localsend multicast}
+}
+}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌──────────────────────────────────────────────────────────────────┐
+│                    CRDT-VTerm System                             │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────┐     remote-insert     ┌───────────────┐             │
+│  │ vterm   │ ───────────────────▶  │ shadow buffer │             │
+│  │  PTY    │      (GF3 trit)       │  (crdt.el)    │             │
+│  └────┬────┘                       └───────┬───────┘             │
+│       │                                    │                     │
+│       │ script(1)                          │ sexp file           │
+│       ▼                                    ▼                     │
+│  ┌─────────┐                       ┌───────────────┐             │
+│  │ raw log │                       │ .sexp log     │             │
+│  └────┬────┘                       └───────┬───────┘             │
+│       │                                    │                     │
+│       │ vterm_crdt_recorder.bb             │ localsend UDP       │
+│       ▼                                    ▼                     │
+│  ┌─────────────────────────────────────────────────┐             │
+│  │              P2P Peer Network                   │             │
+│  │  ┌───────┐   ┌───────┐   ┌───────┐              │             │
+│  │  │ MINUS │   │ERGODIC│   │ PLUS  │  ← GF(3)     │             │
+│  │  └───────┘   └───────┘   └───────┘    routing   │             │
+│  └─────────────────────────────────────────────────┘             │
+└──────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{CRDT Sexp Format}
+\pre{\startverb
+;; Session header
+(crdt-terminal-session
+  (version "0.1.0")
+  (session-id "T-abc123")
+  (site-id 42)
+  (gf3-assignment :ERGODIC))
+
+;; Terminal output
+(remote-insert "0a1b2c3d" 42 "$ ls -la\n"
+  (props :type :terminal-output
+         :trit :MINUS
+         :timestamp 1234567890))
+
+;; User input
+(remote-input "0a1b2c3e" 42 "ls -la"
+  (props :trit :PLUS
+         :timestamp 1234567891))
+
+;; Conflict resolution
+(conflict-resolution
+  :type :concurrent-input
+  :strategy :gf3-ordering)
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Record Session}
+\pre{\startverb
+bb vterm_crdt_recorder.bb record session.sexp
+\stopverb}
+}
+
+\subtree{
+\title{Replay Session}
+\pre{\startverb
+bb vterm_crdt_recorder.bb replay session.sexp 2.0
+\stopverb}
+}
+
+\subtree{
+\title{Live P2P Share}
+\pre{\startverb
+bb vterm_localsend_share.bb share output.sexp 192.168.1.5
+\stopverb}
+}
+
+\subtree{
+\title{Emacs Replay}
+\pre{\startverb
+M-x crdt-vterm-replay RET session.sexp RET 1.0 RET
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Trifurcated Input}
+\p{Multi-user input is routed through three queues:}
+
+\pre{\startverb
+| Queue | Trit | Processing Order |
+|-------|------|------------------|
+| MINUS | -1 | First |
+| ERGODIC | 0 | Second |
+| PLUS | +1 | Third |
+\stopverb}
+
+\p{This prevents conflicts in "no-longer-optimistic waiting" scenarios by deterministically ordering concurrent inputs.}
+
+\pre{\startverb
+;; Cycle through queues
+(crdt-vterm-trifurcate-cycle)
+\stopverb}
+}
+
+\subtree{
+\title{Integration}
+\subtree{
+\title{With gay-mcp}
+\p{Each terminal session gets a deterministic color based on session ID.}
+}
+
+\subtree{
+\title{With localsend-mcp}
+\p{P2P discovery and file transfer for session sharing.}
+}
+
+\subtree{
+\title{With duckdb-ies}
+\p{Terminal sessions can be indexed in DuckDB for time-travel queries.}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb gay-mcp\stopverb} - Deterministic colors}
+\li{\code{\startverb spi-parallel-verify\stopverb} - GF(3) conservation}
+\li{\code{\startverb triad-interleave\stopverb} - Three-stream scheduling}
+\li{\code{\startverb bisimulation-game\stopverb} - Session equivalence}
+}
+}
+}

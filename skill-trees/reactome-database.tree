@@ -1,0 +1,331 @@
+\title{Reactome Database}
+
+\taxon{skill}
+
+\meta{description}{"Query Reactome REST API for pathway analysis, enrichment, gene-pathway mapping, disease pathways, molecular interactions, expression analysis, for systems biology studies."}
+
+\subtree{
+\title{Reactome Database}
+\subtree{
+\title{Overview}
+\p{Reactome is a free, open-source, curated pathway database with 2,825+ human pathways. Query biological pathways, perform overrepresentation and expression analysis, map genes to pathways, explore molecular interactions via REST API and Python client for systems biology research.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Performing pathway enrichment analysis on gene or protein lists}
+\li{Analyzing gene expression data to identify relevant biological pathways}
+\li{Querying specific pathway information, reactions, or molecular interactions}
+\li{Mapping genes or proteins to biological pathways and processes}
+\li{Exploring disease-related pathways and mechanisms}
+\li{Visualizing analysis results in the Reactome Pathway Browser}
+\li{Conducting comparative pathway analysis across species}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{Reactome provides two main API services and a Python client library:}
+
+\subtree{
+\title{1. Content Service - Data Retrieval}
+\p{Query and retrieve biological pathway data, molecular interactions, and entity information.}
+
+\p{\strong{Common operations:}}
+
+\ul{
+\li{Retrieve pathway information and hierarchies}
+\li{Query specific entities (proteins, reactions, complexes)}
+\li{Get participating molecules in pathways}
+\li{Access database version and metadata}
+\li{Explore pathway compartments and locations}
+}
+
+\p{\strong{API Base URL:} \code{\startverb https://reactome.org/ContentService\stopverb}}
+}
+
+\subtree{
+\title{2. Analysis Service - Pathway Analysis}
+\p{Perform computational analysis on gene lists and expression data.}
+
+\p{\strong{Analysis types:}}
+
+\ul{
+\li{\strong{Overrepresentation Analysis}: Identify statistically significant pathways from gene/protein lists}
+\li{\strong{Expression Data Analysis}: Analyze gene expression datasets to find relevant pathways}
+\li{\strong{Species Comparison}: Compare pathway data across different organisms}
+}
+
+\p{\strong{API Base URL:} \code{\startverb https://reactome.org/AnalysisService\stopverb}}
+}
+
+\subtree{
+\title{3. reactome2py Python Package}
+\p{Python client library that wraps Reactome API calls for easier programmatic access.}
+
+\p{\strong{Installation:}}
+
+\pre{\startverb
+uv pip install reactome2py
+\stopverb}
+
+\p{\strong{Note:} The reactome2py package (version 3.0.0, released January 2021) is functional but not actively maintained. For the most up-to-date functionality, consider using direct REST API calls.}
+}
+}
+
+\subtree{
+\title{Querying Pathway Data}
+\subtree{
+\title{Using Content Service REST API}
+\p{The Content Service uses REST protocol and returns data in JSON or plain text formats.}
+
+\p{\strong{Get database version:}}
+
+\pre{\startverb
+import requests
+
+response = requests.get("https://reactome.org/ContentService/data/database/version")
+version = response.text
+print(f"Reactome version: {version}")
+\stopverb}
+
+\p{\strong{Query a specific entity:}}
+
+\pre{\startverb
+import requests
+
+entity_id = "R-HSA-69278"  # Example pathway ID
+response = requests.get(f"https://reactome.org/ContentService/data/query/{entity_id}")
+data = response.json()
+\stopverb}
+
+\p{\strong{Get participating molecules in a pathway:}}
+
+\pre{\startverb
+import requests
+
+event_id = "R-HSA-69278"
+response = requests.get(
+    f"https://reactome.org/ContentService/data/event/{event_id}/participatingPhysicalEntities"
+)
+molecules = response.json()
+\stopverb}
+}
+
+\subtree{
+\title{Using reactome2py Package}
+\pre{\startverb
+import reactome2py
+from reactome2py import content
+
+# Query pathway information
+pathway_info = content.query_by_id("R-HSA-69278")
+
+# Get database version
+version = content.get_database_version()
+\stopverb}
+
+\p{\strong{For detailed API endpoints and parameters}, refer to \code{\startverb references/api_reference.md\stopverb} in this skill.}
+}
+}
+
+\subtree{
+\title{Performing Pathway Analysis}
+\subtree{
+\title{Overrepresentation Analysis}
+\p{Submit a list of gene/protein identifiers to find enriched pathways.}
+
+\p{\strong{Using REST API:}}
+
+\pre{\startverb
+import requests
+
+# Prepare identifier list
+identifiers = ["TP53", "BRCA1", "EGFR", "MYC"]
+data = "\n".join(identifiers)
+
+# Submit analysis
+response = requests.post(
+    "https://reactome.org/AnalysisService/identifiers/",
+    headers={"Content-Type": "text/plain"},
+    data=data
+)
+
+result = response.json()
+token = result["summary"]["token"]  # Save token to retrieve results later
+
+# Access pathways
+for pathway in result["pathways"]:
+    print(f"{pathway['stId']}: {pathway['name']} (p-value: {pathway['entities']['pValue']})")
+\stopverb}
+
+\p{\strong{Retrieve analysis by token:}}
+
+\pre{\startverb
+# Token is valid for 7 days
+response = requests.get(f"https://reactome.org/AnalysisService/token/{token}")
+results = response.json()
+\stopverb}
+}
+
+\subtree{
+\title{Expression Data Analysis}
+\p{Analyze gene expression datasets with quantitative values.}
+
+\p{\strong{Input format (TSV with header starting with #):}}
+
+\pre{\startverb
+#Gene	Sample1	Sample2	Sample3
+TP53	2.5	3.1	2.8
+BRCA1	1.2	1.5	1.3
+EGFR	4.5	4.2	4.8
+\stopverb}
+
+\p{\strong{Submit expression data:}}
+
+\pre{\startverb
+import requests
+
+# Read TSV file
+with open("expression_data.tsv", "r") as f:
+    data = f.read()
+
+response = requests.post(
+    "https://reactome.org/AnalysisService/identifiers/",
+    headers={"Content-Type": "text/plain"},
+    data=data
+)
+
+result = response.json()
+\stopverb}
+}
+
+\subtree{
+\title{Species Projection}
+\p{Map identifiers to human pathways exclusively using the \code{\startverb /projection/\stopverb} endpoint:}
+
+\pre{\startverb
+response = requests.post(
+    "https://reactome.org/AnalysisService/identifiers/projection/",
+    headers={"Content-Type": "text/plain"},
+    data=data
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Visualizing Results}
+\p{Analysis results can be visualized in the Reactome Pathway Browser by constructing URLs with the analysis token:}
+
+\pre{\startverb
+token = result["summary"]["token"]
+pathway_id = "R-HSA-69278"
+url = f"https://reactome.org/PathwayBrowser/#{pathway_id}&DTAB=AN&ANALYSIS={token}"
+print(f"View results: {url}")
+\stopverb}
+}
+
+\subtree{
+\title{Working with Analysis Tokens}
+\ul{
+\li{Analysis tokens are valid for \strong{7 days}}
+\li{Tokens allow retrieval of previously computed results without re-submission}
+\li{Store tokens to access results across sessions}
+\li{Use \code{\startverb GET /token/{TOKEN}\stopverb} endpoint to retrieve results}
+}
+}
+
+\subtree{
+\title{Data Formats and Identifiers}
+\subtree{
+\title{Supported Identifier Types}
+\p{Reactome accepts various identifier formats:}
+
+\ul{
+\li{UniProt accessions (e.g., P04637)}
+\li{Gene symbols (e.g., TP53)}
+\li{Ensembl IDs (e.g., ENSG00000141510)}
+\li{EntrezGene IDs (e.g., 7157)}
+\li{ChEBI IDs for small molecules}
+}
+
+\p{The system automatically detects identifier types.}
+}
+
+\subtree{
+\title{Input Format Requirements}
+\p{\strong{For overrepresentation analysis:}}
+
+\ul{
+\li{Plain text list of identifiers (one per line)}
+\li{OR single column in TSV format}
+}
+
+\p{\strong{For expression analysis:}}
+
+\ul{
+\li{TSV format with mandatory header row starting with "#"}
+\li{Column 1: identifiers}
+\li{Columns 2+: numeric expression values}
+\li{Use period (.) as decimal separator}
+}
+}
+
+\subtree{
+\title{Output Format}
+\p{All API responses return JSON containing:}
+
+\ul{
+\li{\code{\startverb pathways\stopverb}: Array of enriched pathways with statistical metrics}
+\li{\code{\startverb summary\stopverb}: Analysis metadata and token}
+\li{\code{\startverb entities\stopverb}: Matched and unmapped identifiers}
+\li{Statistical values: pValue, FDR (false discovery rate)}
+}
+}
+}
+
+\subtree{
+\title{Helper Scripts}
+\p{This skill includes \code{\startverb scripts/reactome_query.py\stopverb}, a helper script for common Reactome operations:}
+
+\pre{\startverb
+# Query pathway information
+python scripts/reactome_query.py query R-HSA-69278
+
+# Perform overrepresentation analysis
+python scripts/reactome_query.py analyze gene_list.txt
+
+# Get database version
+python scripts/reactome_query.py version
+\stopverb}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{API Documentation}: https://reactome.org/dev}
+\li{\strong{User Guide}: https://reactome.org/userguide}
+\li{\strong{Documentation Portal}: https://reactome.org/documentation}
+\li{\strong{Data Downloads}: https://reactome.org/download-data}
+\li{\strong{reactome2py Docs}: https://reactome.github.io/reactome2py/}
+}
+
+\p{For comprehensive API endpoint documentation, see \code{\startverb references/api_reference.md\stopverb} in this skill.}
+}
+
+\subtree{
+\title{Current Database Statistics (Version 94, September 2025)}
+\ul{
+\li{2,825 human pathways}
+\li{16,002 reactions}
+\li{11,630 proteins}
+\li{2,176 small molecules}
+\li{1,070 drugs}
+\li{41,373 literature references}
+}
+}
+}

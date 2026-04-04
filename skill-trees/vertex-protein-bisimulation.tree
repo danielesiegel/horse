@@ -1,0 +1,100 @@
+\title{Vertex Protein Bisimulation}
+
+\taxon{skill}
+
+\meta{description}{Protein folding as compositional game on Vertex AI. GameOpt combinatorial Bayesian optimization over residue positions, bisimulation on conformational trajectories, monad-bayes posterior over folding pathways.}
+
+\subtree{
+\title{vertex-protein-bisimulation Skill}
+\blockquote{*Folding funnel = payoff landscape. Minimal frustration = Nash equilibrium.*}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+Basin-Hedges (ParaLens 6-wire)
+  |
+  +-- GameOpt layer (Bal, Sessa, Mutny, Krause 2024)
+  |     Residue positions = players
+  |     Amino acid identities = strategies
+  |     Upper confidence bound equilibria guide search
+  |     Counterfactual gating prunes combinatorial space
+  |
+  +-- Vertex AI Pipeline (compute backend)
+  |     AlphaFold v2 batch: KFP pipeline, 3 phases
+  |       CPU (MSA) -> GPU (predict) -> GPU (relax)
+  |     ESMFold: single-seq, no MSA, 10-30x faster
+  |       HuggingFace: facebook/esmfold_v1
+  |     Batch prediction: 50% cost discount, 24hr
+  |
+  +-- Bisimulation on Folding
+        Two trajectories bisimilar iff same native state
+        Despite different intermediate conformations
+        Stochastic process algebra on Markov state models
+        CellValue lattice: Nothing=unfolded, Value=native,
+          Contradiction=misfolded aggregate
+\stopverb}
+}
+
+\subtree{
+\title{monad-bayes Integration}
+\pre{\startverb
+-- Posterior over folding pathways
+foldingPathway :: MonadMeasure m => Sequence -> m Structure
+foldingPathway seq = do
+  -- Prior: Ramachandran angles per residue
+  angles <- replicateM (length seq) $ do
+    phi <- uniform (-pi) pi
+    psi <- uniform (-pi) pi
+    return (phi, psi)
+  -- Energy function as likelihood
+  let energy = forceField seq angles
+  factor (Exp (negate energy / kT))
+  -- Return structure
+  return (buildStructure seq angles)
+
+-- GameOpt: combinatorial optimization as open game
+proteinGame :: OpenGame Stochastic [AminoAcid] Energy
+proteinGame = sequentialCompose residueGames
+  where residueGames = map residueChoice [1..nPositions]
+        residueChoice i = decision "residue_i" aminoAcids ucbPayoff
+\stopverb}
+}
+
+\subtree{
+\title{Key Papers}
+\ul{
+\li{GameOpt (2024): arxiv.org/abs/2409.18582}
+\li{Bayesian Open Games (Bolt, Hedges, Zahn 2019): arxiv.org/abs/1910.03656}
+\li{MELD Bayesian protein (PNAS): doi.org/10.1073/pnas.1506788112}
+\li{AMix-1 Bayesian Flow Networks (2025): protein foundation model}
+}
+}
+
+\subtree{
+\title{GF(3) Trit Classification}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| ESMFold/AlphaFold prediction | +1 | Generation |
+| GameOpt equilibrium search | 0 | Coordination |
+| Bisimulation equivalence check | -1 | Validation |
+\stopverb}
+
+\p{Conservation: +1 + 0 + (-1) = 0}
+}
+
+\subtree{
+\title{Edges in Interactome TUI}
+\ul{
+\li{-> monad-bayes (w=0.65, Bayesian structure posterior)}
+\li{-> geomstats (w=0.60, protein manifold geometry)}
+\li{-> bisimulation-game (w=0.90, conformational bisimulation)}
+\li{-> zubyul/Nikolova_lab (w=0.70, transcription factor bridge)}
+}
+}
+
+\subtree{
+\title{Trit: 0 (ERGODIC)}
+
+}
+}

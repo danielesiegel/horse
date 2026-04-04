@@ -1,0 +1,435 @@
+\title{Aeon}
+
+\taxon{skill}
+
+\meta{description}{This skill should be used for time series machine learning tasks including classification, regression, clustering, forecasting, anomaly detection, segmentation, and similarity search. Use when working with temporal data, sequential patterns, or time-indexed observations requiring specialized algorithms beyond standard ML approaches. Particularly suited for univariate and multivariate time series analysis with scikit-learn compatible APIs.}
+
+\subtree{
+\title{Aeon Time Series Machine Learning}
+\subtree{
+\title{Overview}
+\p{Aeon is a scikit-learn compatible Python toolkit for time series machine learning. It provides state-of-the-art algorithms for classification, regression, clustering, forecasting, anomaly detection, segmentation, and similarity search.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Apply this skill when:}
+
+\ul{
+\li{Classifying or predicting from time series data}
+\li{Detecting anomalies or change points in temporal sequences}
+\li{Clustering similar time series patterns}
+\li{Forecasting future values}
+\li{Finding repeated patterns (motifs) or unusual subsequences (discords)}
+\li{Comparing time series with specialized distance metrics}
+\li{Extracting features from temporal data}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install aeon
+\stopverb}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Time Series Classification}
+\p{Categorize time series into predefined classes. See \code{\startverb references/classification.md\stopverb} for complete algorithm catalog.}
+
+\p{\strong{Quick Start:}}
+
+\pre{\startverb
+from aeon.classification.convolution_based import RocketClassifier
+from aeon.datasets import load_classification
+
+# Load data
+X_train, y_train = load_classification("GunPoint", split="train")
+X_test, y_test = load_classification("GunPoint", split="test")
+
+# Train classifier
+clf = RocketClassifier(n_kernels=10000)
+clf.fit(X_train, y_train)
+accuracy = clf.score(X_test, y_test)
+\stopverb}
+
+\p{\strong{Algorithm Selection:}}
+
+\ul{
+\li{\strong{Speed + Performance}: \code{\startverb MiniRocketClassifier\stopverb}, \code{\startverb Arsenal\stopverb}}
+\li{\strong{Maximum Accuracy}: \code{\startverb HIVECOTEV2\stopverb}, \code{\startverb InceptionTimeClassifier\stopverb}}
+\li{\strong{Interpretability}: \code{\startverb ShapeletTransformClassifier\stopverb}, \code{\startverb Catch22Classifier\stopverb}}
+\li{\strong{Small Datasets}: \code{\startverb KNeighborsTimeSeriesClassifier\stopverb} with DTW distance}
+}
+}
+
+\subtree{
+\title{2. Time Series Regression}
+\p{Predict continuous values from time series. See \code{\startverb references/regression.md\stopverb} for algorithms.}
+
+\p{\strong{Quick Start:}}
+
+\pre{\startverb
+from aeon.regression.convolution_based import RocketRegressor
+from aeon.datasets import load_regression
+
+X_train, y_train = load_regression("Covid3Month", split="train")
+X_test, y_test = load_regression("Covid3Month", split="test")
+
+reg = RocketRegressor()
+reg.fit(X_train, y_train)
+predictions = reg.predict(X_test)
+\stopverb}
+}
+
+\subtree{
+\title{3. Time Series Clustering}
+\p{Group similar time series without labels. See \code{\startverb references/clustering.md\stopverb} for methods.}
+
+\p{\strong{Quick Start:}}
+
+\pre{\startverb
+from aeon.clustering import TimeSeriesKMeans
+
+clusterer = TimeSeriesKMeans(
+    n_clusters=3,
+    distance="dtw",
+    averaging_method="ba"
+)
+labels = clusterer.fit_predict(X_train)
+centers = clusterer.cluster_centers_
+\stopverb}
+}
+
+\subtree{
+\title{4. Forecasting}
+\p{Predict future time series values. See \code{\startverb references/forecasting.md\stopverb} for forecasters.}
+
+\p{\strong{Quick Start:}}
+
+\pre{\startverb
+from aeon.forecasting.arima import ARIMA
+
+forecaster = ARIMA(order=(1, 1, 1))
+forecaster.fit(y_train)
+y_pred = forecaster.predict(fh=[1, 2, 3, 4, 5])
+\stopverb}
+}
+
+\subtree{
+\title{5. Anomaly Detection}
+\p{Identify unusual patterns or outliers. See \code{\startverb references/anomaly_detection.md\stopverb} for detectors.}
+
+\p{\strong{Quick Start:}}
+
+\pre{\startverb
+from aeon.anomaly_detection import STOMP
+
+detector = STOMP(window_size=50)
+anomaly_scores = detector.fit_predict(y)
+
+# Higher scores indicate anomalies
+threshold = np.percentile(anomaly_scores, 95)
+anomalies = anomaly_scores > threshold
+\stopverb}
+}
+
+\subtree{
+\title{6. Segmentation}
+\p{Partition time series into regions with change points. See \code{\startverb references/segmentation.md\stopverb}.}
+
+\p{\strong{Quick Start:}}
+
+\pre{\startverb
+from aeon.segmentation import ClaSPSegmenter
+
+segmenter = ClaSPSegmenter()
+change_points = segmenter.fit_predict(y)
+\stopverb}
+}
+
+\subtree{
+\title{7. Similarity Search}
+\p{Find similar patterns within or across time series. See \code{\startverb references/similarity_search.md\stopverb}.}
+
+\p{\strong{Quick Start:}}
+
+\pre{\startverb
+from aeon.similarity_search import StompMotif
+
+# Find recurring patterns
+motif_finder = StompMotif(window_size=50, k=3)
+motifs = motif_finder.fit_predict(y)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Feature Extraction and Transformations}
+\p{Transform time series for feature engineering. See \code{\startverb references/transformations.md\stopverb}.}
+
+\p{\strong{ROCKET Features:}}
+
+\pre{\startverb
+from aeon.transformations.collection.convolution_based import RocketTransformer
+
+rocket = RocketTransformer()
+X_features = rocket.fit_transform(X_train)
+
+# Use features with any sklearn classifier
+from sklearn.ensemble import RandomForestClassifier
+clf = RandomForestClassifier()
+clf.fit(X_features, y_train)
+\stopverb}
+
+\p{\strong{Statistical Features:}}
+
+\pre{\startverb
+from aeon.transformations.collection.feature_based import Catch22
+
+catch22 = Catch22()
+X_features = catch22.fit_transform(X_train)
+\stopverb}
+
+\p{\strong{Preprocessing:}}
+
+\pre{\startverb
+from aeon.transformations.collection import MinMaxScaler, Normalizer
+
+scaler = Normalizer()  # Z-normalization
+X_normalized = scaler.fit_transform(X_train)
+\stopverb}
+}
+
+\subtree{
+\title{Distance Metrics}
+\p{Specialized temporal distance measures. See \code{\startverb references/distances.md\stopverb} for complete catalog.}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+from aeon.distances import dtw_distance, dtw_pairwise_distance
+
+# Single distance
+distance = dtw_distance(x, y, window=0.1)
+
+# Pairwise distances
+distance_matrix = dtw_pairwise_distance(X_train)
+
+# Use with classifiers
+from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+clf = KNeighborsTimeSeriesClassifier(
+    n_neighbors=5,
+    distance="dtw",
+    distance_params={"window": 0.2}
+)
+\stopverb}
+
+\p{\strong{Available Distances:}}
+
+\ul{
+\li{\strong{Elastic}: DTW, DDTW, WDTW, ERP, EDR, LCSS, TWE, MSM}
+\li{\strong{Lock-step}: Euclidean, Manhattan, Minkowski}
+\li{\strong{Shape-based}: Shape DTW, SBD}
+}
+}
+
+\subtree{
+\title{Deep Learning Networks}
+\p{Neural architectures for time series. See \code{\startverb references/networks.md\stopverb}.}
+
+\p{\strong{Architectures:}}
+
+\ul{
+\li{Convolutional: \code{\startverb FCNClassifier\stopverb}, \code{\startverb ResNetClassifier\stopverb}, \code{\startverb InceptionTimeClassifier\stopverb}}
+\li{Recurrent: \code{\startverb RecurrentNetwork\stopverb}, \code{\startverb TCNNetwork\stopverb}}
+\li{Autoencoders: \code{\startverb AEFCNClusterer\stopverb}, \code{\startverb AEResNetClusterer\stopverb}}
+}
+
+\p{\strong{Usage:}}
+
+\pre{\startverb
+from aeon.classification.deep_learning import InceptionTimeClassifier
+
+clf = InceptionTimeClassifier(n_epochs=100, batch_size=32)
+clf.fit(X_train, y_train)
+predictions = clf.predict(X_test)
+\stopverb}
+}
+
+\subtree{
+\title{Datasets and Benchmarking}
+\p{Load standard benchmarks and evaluate performance. See \code{\startverb references/datasets_benchmarking.md\stopverb}.}
+
+\p{\strong{Load Datasets:}}
+
+\pre{\startverb
+from aeon.datasets import load_classification, load_regression
+
+# Classification
+X_train, y_train = load_classification("ArrowHead", split="train")
+
+# Regression
+X_train, y_train = load_regression("Covid3Month", split="train")
+\stopverb}
+
+\p{\strong{Benchmarking:}}
+
+\pre{\startverb
+from aeon.benchmarking import get_estimator_results
+
+# Compare with published results
+published = get_estimator_results("ROCKET", "GunPoint")
+\stopverb}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Classification Pipeline}
+\pre{\startverb
+from aeon.transformations.collection import Normalizer
+from aeon.classification.convolution_based import RocketClassifier
+from sklearn.pipeline import Pipeline
+
+pipeline = Pipeline([
+    ('normalize', Normalizer()),
+    ('classify', RocketClassifier())
+])
+
+pipeline.fit(X_train, y_train)
+accuracy = pipeline.score(X_test, y_test)
+\stopverb}
+}
+
+\subtree{
+\title{Feature Extraction + Traditional ML}
+\pre{\startverb
+from aeon.transformations.collection import RocketTransformer
+from sklearn.ensemble import GradientBoostingClassifier
+
+# Extract features
+rocket = RocketTransformer()
+X_train_features = rocket.fit_transform(X_train)
+X_test_features = rocket.transform(X_test)
+
+# Train traditional ML
+clf = GradientBoostingClassifier()
+clf.fit(X_train_features, y_train)
+predictions = clf.predict(X_test_features)
+\stopverb}
+}
+
+\subtree{
+\title{Anomaly Detection with Visualization}
+\pre{\startverb
+from aeon.anomaly_detection import STOMP
+import matplotlib.pyplot as plt
+
+detector = STOMP(window_size=50)
+scores = detector.fit_predict(y)
+
+plt.figure(figsize=(15, 5))
+plt.subplot(2, 1, 1)
+plt.plot(y, label='Time Series')
+plt.subplot(2, 1, 2)
+plt.plot(scores, label='Anomaly Scores', color='red')
+plt.axhline(np.percentile(scores, 95), color='k', linestyle='--')
+plt.show()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Data Preparation}
+\ol{
+\li{\strong{Normalize}: Most algorithms benefit from z-normalization}
+}
+
+\ol{
+\li{\strong{Handle Missing Values}: Impute before analysis}
+}
+
+\ol{
+\li{\strong{Check Data Format}: Aeon expects shape \code{\startverb (n_samples, n_channels, n_timepoints)\stopverb}}
+}
+}
+
+\subtree{
+\title{Model Selection}
+\ol{
+\li{\strong{Start Simple}: Begin with ROCKET variants before deep learning}
+\li{\strong{Use Validation}: Split training data for hyperparameter tuning}
+\li{\strong{Compare Baselines}: Test against simple methods (1-NN Euclidean, Naive)}
+\li{\strong{Consider Resources}: ROCKET for speed, deep learning if GPU available}
+}
+}
+
+\subtree{
+\title{Algorithm Selection Guide}
+\p{\strong{For Fast Prototyping:}}
+
+\ul{
+\li{Classification: \code{\startverb MiniRocketClassifier\stopverb}}
+\li{Regression: \code{\startverb MiniRocketRegressor\stopverb}}
+\li{Clustering: \code{\startverb TimeSeriesKMeans\stopverb} with Euclidean}
+}
+
+\p{\strong{For Maximum Accuracy:}}
+
+\ul{
+\li{Classification: \code{\startverb HIVECOTEV2\stopverb}, \code{\startverb InceptionTimeClassifier\stopverb}}
+\li{Regression: \code{\startverb InceptionTimeRegressor\stopverb}}
+\li{Forecasting: \code{\startverb ARIMA\stopverb}, \code{\startverb TCNForecaster\stopverb}}
+}
+
+\p{\strong{For Interpretability:}}
+
+\ul{
+\li{Classification: \code{\startverb ShapeletTransformClassifier\stopverb}, \code{\startverb Catch22Classifier\stopverb}}
+\li{Features: \code{\startverb Catch22\stopverb}, \code{\startverb TSFresh\stopverb}}
+}
+
+\p{\strong{For Small Datasets:}}
+
+\ul{
+\li{Distance-based: \code{\startverb KNeighborsTimeSeriesClassifier\stopverb} with DTW}
+\li{Avoid: Deep learning (requires large data)}
+}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{Detailed information available in \code{\startverb references/\stopverb}:}
+
+\ul{
+\li{\code{\startverb classification.md\stopverb} - All classification algorithms}
+\li{\code{\startverb regression.md\stopverb} - Regression methods}
+\li{\code{\startverb clustering.md\stopverb} - Clustering algorithms}
+\li{\code{\startverb forecasting.md\stopverb} - Forecasting approaches}
+\li{\code{\startverb anomaly_detection.md\stopverb} - Anomaly detection methods}
+\li{\code{\startverb segmentation.md\stopverb} - Segmentation algorithms}
+\li{\code{\startverb similarity_search.md\stopverb} - Pattern matching and motif discovery}
+\li{\code{\startverb transformations.md\stopverb} - Feature extraction and preprocessing}
+\li{\code{\startverb distances.md\stopverb} - Time series distance metrics}
+\li{\code{\startverb networks.md\stopverb} - Deep learning architectures}
+\li{\code{\startverb datasets_benchmarking.md\stopverb} - Data loading and evaluation tools}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{Documentation: https://www.aeon-toolkit.org/}
+\li{GitHub: https://github.com/aeon-toolkit/aeon}
+\li{Examples: https://www.aeon-toolkit.org/en/stable/examples.html}
+\li{API Reference: https://www.aeon-toolkit.org/en/stable/api_reference.html}
+}
+}
+}

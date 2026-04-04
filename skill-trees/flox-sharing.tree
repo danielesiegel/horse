@@ -1,0 +1,470 @@
+\title{Flox Sharing}
+
+\taxon{skill}
+
+\meta{description}{Sharing and composing Flox environments. Use for environment composition, remote environments, FloxHub, and team collaboration patterns.}
+
+\subtree{
+\title{Flox Environment Sharing & Composition Guide}
+\subtree{
+\title{Core Concepts}
+\p{\strong{Composition}: Build-time merging of environments (deterministic) \strong{Remote Environments}: Shared environments via FloxHub \strong{Team Collaboration}: Reusable, shareable environment stacks}
+}
+
+\subtree{
+\title{Understanding Environment Sharing}
+\p{\strong{The \code{\startverb .flox/\stopverb} directory contains the environment definition}:}
+
+\ul{
+\li{Package specifications and versions}
+\li{Environment variables}
+\li{Build definitions}
+\li{Hooks and services configuration}
+}
+
+\p{\strong{The environment definition does NOT include}:}
+
+\ul{
+\li{Built binaries/artifacts (those are created by builds and can be published as packages)}
+\li{Local data or cache}
+}
+
+\p{\strong{Two sharing mechanisms}:}
+
+\ol{
+\li{\strong{Git}: Commit \code{\startverb .flox/\stopverb} directory to git. When used with development environments, this is typically alongside your source code in the same repository. Other developers clone the repo and get both the environment definition and source code.}
+\li{\strong{FloxHub}: Push environment definition only using \code{\startverb flox push\stopverb}. This shares ONLY the \code{\startverb .flox/\stopverb} directory, not any source code or other files. Useful for runtime environments or shared base environments used across multiple projects.}
+}
+
+\p{\strong{This is different from publishing packages} (see \strong{flox-publish} skill), where you build and distribute the actual binaries/artifacts.}
+}
+
+\subtree{
+\title{Core Commands}
+\pre{\startverb
+# Activate remote environment
+flox activate -r owner/environment-name
+
+# Pull remote environment locally
+flox pull owner/environment-name
+
+# Push local environment to FloxHub
+flox push
+
+# Compose environments in manifest
+# (see [include] section below)
+\stopverb}
+}
+
+\subtree{
+\title{Environment Composition}
+\subtree{
+\title{Basic Composition}
+\p{Merge environments at build time using \code{\startverb [include]\stopverb}:}
+
+\pre{\startverb
+[include]
+environments = [
+    { remote = "team/postgres" },
+    { remote = "team/redis" },
+    { remote = "team/python-base" }
+]
+\stopverb}
+}
+
+\subtree{
+\title{Creating Composition-Optimized Environments}
+\p{\strong{Design for clean merging at build time:}}
+
+\pre{\startverb
+[install]
+# Use pkg-groups to prevent conflicts
+gcc.pkg-path = "gcc"
+gcc.pkg-group = "compiler"
+
+[vars]
+# Never duplicate var names across composed envs
+POSTGRES_PORT = "5432"  # Not "PORT"
+
+[hook]
+# Check if setup already done (idempotent)
+setup_postgres() {
+  [ -d "$FLOX_ENV_CACHE/postgres" ] || init_db
+}
+\stopverb}
+
+\p{\strong{Best practices:}}
+
+\ul{
+\li{No overlapping vars, services, or function names}
+\li{Use explicit, namespaced naming (e.g., \code{\startverb postgres_init\stopverb} not \code{\startverb init\stopverb})}
+\li{Minimal hook logic (composed envs run ALL hooks)}
+\li{Avoid auto-run logic in \code{\startverb [profile]\stopverb} (runs once per layer/composition; help displays will repeat)}
+\li{Test composability: \code{\startverb flox activate\stopverb} each env standalone first}
+}
+}
+
+\subtree{
+\title{Composition Example: Full Stack}
+\pre{\startverb
+# .flox/env/manifest.toml
+[include]
+environments = [
+    { remote = "team/postgres" },
+    { remote = "team/redis" },
+    { remote = "team/nodejs" },
+    { remote = "team/monitoring" }
+]
+
+[vars]
+# Override composed environment variables
+POSTGRES_HOST = "localhost"
+POSTGRES_PORT = "5433"  # Non-standard port
+\stopverb}
+}
+
+\subtree{
+\title{Use Cases for Composition}
+\p{\strong{Reproducible stacks:}}
+
+\pre{\startverb
+[include]
+environments = [
+    { remote = "team/cuda-base" },
+    { remote = "team/cuda-math" },
+    { remote = "team/python-ml" }
+]
+\stopverb}
+
+\p{\strong{Shared base configuration:}}
+
+\pre{\startverb
+[include]
+environments = [
+    { remote = "org/standards" },  # Company-wide settings
+    { remote = "team/backend" }    # Team-specific tools
+]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Creating Dual-Purpose Environments}
+\p{\strong{Design for both layering and composition:}}
+
+\pre{\startverb
+[install]
+# Clear package groups
+python.pkg-path = "python311"
+python.pkg-group = "runtime"
+
+[vars]
+# Namespace everything
+MYPROJECT_VERSION = "1.0"
+MYPROJECT_CONFIG = "$FLOX_ENV_CACHE/config"
+
+[profile.common]
+# Defensive function definitions
+if ! type myproject_init >/dev/null 2>&1; then
+  myproject_init() { ... }
+fi
+\stopverb}
+}
+
+\subtree{
+\title{Remote Environments}
+\subtree{
+\title{Activating Remote Environments}
+\pre{\startverb
+# Activate remote environment directly
+flox activate -r owner/environment-name
+
+# Activate and run a command
+flox activate -r owner/environment-name -- npm test
+\stopverb}
+}
+
+\subtree{
+\title{Pulling Remote Environments}
+\pre{\startverb
+# Pull to work on locally
+flox pull owner/environment-name
+
+# Now it's in your local .flox/
+flox activate
+\stopverb}
+}
+
+\subtree{
+\title{Pushing Environments to FloxHub}
+\pre{\startverb
+# Initialize Git repo if needed
+git init
+git add .flox/
+git commit -m "Initial environment"
+
+# Push to FloxHub
+flox push
+
+# Others can now activate with:
+# flox activate -r yourusername/your-repo
+\stopverb}
+}
+
+\subtree{
+\title{Choosing Between Git and FloxHub}
+\p{\strong{Commit \code{\startverb .flox/\stopverb} to Git when:}}
+
+\ul{
+\li{Environment is for development (includes build tools)}
+\li{Environment lives alongside source code}
+\li{You want version control history for environment changes}
+\li{Team already uses git for collaboration}
+}
+
+\p{\strong{Push to FloxHub when:}}
+
+\ul{
+\li{Environment is for runtime/production (no source code needed)}
+\li{Creating shared base environments used across multiple projects}
+\li{Environment needs to be independently versioned from source code}
+\li{You want to share environment without exposing source code}
+}
+
+\p{\strong{Recommended pattern}: Commit development environments to git with source code; push runtime environments to FloxHub.}
+}
+}
+
+\subtree{
+\title{Team Collaboration Patterns}
+\subtree{
+\title{Base + Specialization}
+\p{\strong{Create base environment:}}
+
+\pre{\startverb
+# team/base
+[install]
+git.pkg-path = "git"
+gh.pkg-path = "gh"
+jq.pkg-path = "jq"
+
+[vars]
+ORG_REGISTRY = "registry.company.com"
+\stopverb}
+
+\p{\strong{Specialize for teams:}}
+
+\pre{\startverb
+# team/frontend
+[include]
+environments = [{ remote = "team/base" }]
+
+[install]
+nodejs.pkg-path = "nodejs"
+pnpm.pkg-path = "pnpm"
+\stopverb}
+
+\pre{\startverb
+# team/backend
+[include]
+environments = [{ remote = "team/base" }]
+
+[install]
+python.pkg-path = "python311Full"
+uv.pkg-path = "uv"
+\stopverb}
+}
+
+\subtree{
+\title{Service Libraries}
+\p{\strong{Create reusable service environments:}}
+
+\pre{\startverb
+# team/postgres-service
+[install]
+postgresql.pkg-path = "postgresql"
+
+[services.postgres]
+command = '''
+  mkdir -p "$FLOX_ENV_CACHE/postgres"
+  if [ ! -d "$FLOX_ENV_CACHE/postgres/data" ]; then
+    initdb -D "$FLOX_ENV_CACHE/postgres/data"
+  fi
+  exec postgres -D "$FLOX_ENV_CACHE/postgres/data" \
+    -h "$POSTGRES_HOST" -p "$POSTGRES_PORT"
+'''
+is-daemon = true
+
+[vars]
+POSTGRES_HOST = "localhost"
+POSTGRES_PORT = "5432"
+\stopverb}
+
+\p{\strong{Compose into projects:}}
+
+\pre{\startverb
+# my-project
+[include]
+environments = [
+    { remote = "team/postgres-service" },
+    { remote = "team/redis-service" }
+]
+\stopverb}
+}
+
+\subtree{
+\title{Development vs Runtime Environments}
+\p{\strong{Development environment (for building):}}
+
+\pre{\startverb
+# project-dev (committed to git with source code)
+[install]
+gcc.pkg-path = "gcc13"
+make.pkg-path = "make"
+debugpy.pkg-path = "python311Packages.debugpy"
+pytest.pkg-path = "python311Packages.pytest"
+
+[build.myapp]
+command = '''
+  make release
+  mkdir -p $out/bin
+  cp build/myapp $out/bin/
+'''
+version = "1.0.0"
+
+[vars]
+DEBUG = "true"
+LOG_LEVEL = "debug"
+\stopverb}
+
+\p{Developers commit this \code{\startverb .flox/\stopverb} directory to git with the source code. Other developers \code{\startverb git clone\stopverb} and \code{\startverb flox activate\stopverb} to get the same development environment.}
+
+\p{\strong{Runtime environment (for consuming):}}
+
+\pre{\startverb
+# project-runtime (pushed to FloxHub, no source code)
+[install]
+myapp.pkg-path = "myorg/myapp"  # Published package, not source
+
+[vars]
+DEBUG = "false"
+LOG_LEVEL = "info"
+MYAPP_CONFIG = "$FLOX_ENV_CACHE/config"
+\stopverb}
+
+\p{After publishing \code{\startverb myapp\stopverb}, consumers create this runtime environment and install the published package. The runtime environment can be pushed to FloxHub and shared without exposing source code.}
+
+\p{\strong{Key distinction}: Development environments contain build tools and source code; runtime environments contain published packages (binaries/artifacts).}
+
+\p{(See \strong{flox-environments} skill for layering environments at runtime)}
+}
+}
+
+\subtree{
+\title{Composition with Local Packages}
+\p{Combine composed environments with local packages:}
+
+\pre{\startverb
+# Compose base services
+[include]
+environments = [
+    { remote = "team/database-services" },
+    { remote = "team/cache-services" }
+]
+
+# Add project-specific packages
+[install]
+myapp.pkg-path = "company/myapp"
+\stopverb}
+
+\p{See \strong{flox-environments} skill for layering environments at runtime.}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{For Shareable Environments}
+\ol{
+\li{\strong{Use descriptive names}: \code{\startverb team/postgres-service\stopverb} not \code{\startverb db\stopverb}}
+\li{\strong{Document expectations}: What vars/ports/services are provided}
+\li{\strong{Namespace everything}: Prefix vars, functions, services}
+\li{\strong{Keep focused}: One responsibility per environment}
+\li{\strong{Test standalone}: \code{\startverb flox activate\stopverb} should work without composition}
+}
+}
+
+\subtree{
+\title{For Composed Environments}
+\ol{
+\li{\strong{No name collisions}: Check for overlapping vars/services}
+\li{\strong{Idempotent hooks}: Can run multiple times safely}
+\li{\strong{Minimal auto-run}: Avoid output in \code{\startverb [profile]\stopverb}}
+\li{\strong{Clear dependencies}: Document what environments are needed}
+}
+
+\p{(For layering best practices, see \strong{flox-environments} skill)}
+}
+}
+
+\subtree{
+\title{Version Management}
+\subtree{
+\title{Pin Specific Versions}
+\pre{\startverb
+[include]
+environments = [
+    { remote = "team/base", version = "v1.2.3" }
+]
+\stopverb}
+}
+
+\subtree{
+\title{Use Latest}
+\pre{\startverb
+[include]
+environments = [
+    { remote = "team/base" }  # Uses latest
+]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Conflicts in Composition}
+\p{If composed environments conflict:}
+
+\ol{
+\li{Use different \code{\startverb pkg-group\stopverb} values}
+\li{Adjust \code{\startverb priority\stopverb} for file conflicts}
+\li{Namespace variables to avoid collisions}
+\li{Test each environment standalone first}
+}
+
+\p{(For layering troubleshooting, see \strong{flox-environments} skill)}
+}
+
+\subtree{
+\title{Remote Environment Not Found}
+\pre{\startverb
+# Check available remote environments
+flox search --remote owner/
+
+# Pull and inspect locally
+flox pull owner/environment-name
+flox list -c
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{flox-environments} - Creating base environments}
+\li{\strong{flox-services} - Sharing service configurations}
+\li{\strong{flox-containers} - Deploying shared environments}
+\li{\strong{flox-publish} - Publishing built packages (binaries/artifacts) vs sharing environments (definitions only)}
+}
+}
+}

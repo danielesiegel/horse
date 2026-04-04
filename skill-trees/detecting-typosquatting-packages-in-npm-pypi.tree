@@ -1,0 +1,200 @@
+\title{Detecting Typosquatting Packages In Npm Pypi}
+
+\taxon{skill}
+
+\tag{typosquatting}
+
+\tag{npm}
+
+\tag{pypi}
+
+\tag{supply-chain}
+
+\tag{package-security}
+
+\tag{Levenshtein}
+
+\tag{dependency-confusion}
+
+\tag{malicious-packages}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Detects typosquatting attacks in npm and PyPI package registries by analyzing package name similarity using Levenshtein distance and other string metrics, examining publish date heuristics to identify recently created packages mimicking established ones, and flagging download count anomalies where suspicious packages have disproportionately low usage compared to their legitimate targets. The analyst queries the PyPI JSON API and npm registry API to gather package metadata for automated comparison. Activates for requests involving package typosquatting detection, dependency confusion analysis, malicious package identification, or software supply chain threat hunting in package registries.}
+
+\subtree{
+\title{Detecting Typosquatting Packages in npm and PyPI}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Auditing project dependencies to identify packages whose names are suspiciously similar to popular libraries}
+\li{Proactively scanning package registries for newly published packages that may be typosquats of your organization's packages}
+\li{Investigating a suspected supply chain compromise where a developer installed a misspelled package name}
+\li{Building automated monitoring that alerts when new packages appear with names close to critical dependencies}
+\li{Assessing the risk profile of unfamiliar packages before adding them to a project's dependency tree}
+}
+
+\p{\strong{Do not use} as the sole determination of malicious intent; name similarity alone does not prove a package is malicious. Do not use for bulk automated takedown requests without manual review of flagged packages. Do not use against private registries without authorization.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb requests\stopverb} and \code{\startverb python-Levenshtein\stopverb} (or \code{\startverb rapidfuzz\stopverb}) packages installed}
+\li{Network access to \code{\startverb https://pypi.org/pypi/<package>/json\stopverb} (PyPI JSON API) and \code{\startverb https://registry.npmjs.org/<package>\stopverb} (npm registry API)}
+\li{A list of popular or critical packages to monitor (e.g., top 1000 PyPI packages, organization's dependency list)}
+\li{Understanding of common typosquatting patterns: character omission, transposition, insertion, substitution, and hyphen/underscore manipulation}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Build the Target Package Watchlist}
+\p{Establish the set of legitimate packages to monitor for typosquats:}
+
+\ul{
+\li{\strong{Extract project dependencies}: Parse \code{\startverb requirements.txt\stopverb}, \code{\startverb Pipfile.lock\stopverb}, \code{\startverb package.json\stopverb}, or \code{\startverb package-lock.json\stopverb} to extract all direct and transitive dependency names}
+\li{\strong{Include popular packages}: Supplement with high-value targets from the top 1000 PyPI downloads (available from \code{\startverb https://hugovk.github.io/top-pypi-packages/\stopverb}) or top npm packages by download count}
+\li{\strong{Add organization packages}: Include any packages published by your organization that attackers might target with typosquats to intercept internal installations}
+\li{\strong{Normalize names}: PyPI treats hyphens, underscores, and periods as equivalent (PEP 503 normalization: \code{\startverb re.sub(r"[-_.]+", "-", name).lower()\stopverb}). npm package names are case-sensitive but scoped packages use \code{\startverb @scope/name\stopverb} format. Normalize before comparison.}
+}
+}
+
+\subtree{
+\title{Step 2: Generate Candidate Typosquat Names}
+\p{Produce potential typosquat variants for each target package:}
+
+\ul{
+\li{\strong{Character omission}: Remove each character one at a time (\code{\startverb requests\stopverb} -> \code{\startverb rquests\stopverb}, \code{\startverb requets\stopverb}, \code{\startverb reqests\stopverb})}
+\li{\strong{Character transposition}: Swap adjacent characters (\code{\startverb requests\stopverb} -> \code{\startverb erquests\stopverb}, \code{\startverb rqeuests\stopverb}, \code{\startverb reques ts\stopverb})}
+\li{\strong{Character substitution}: Replace characters with keyboard-adjacent keys using a QWERTY distance map (\code{\startverb requests\stopverb} -> \code{\startverb rrquests\stopverb}, \code{\startverb requesta\stopverb})}
+\li{\strong{Character insertion}: Insert common characters at each position (\code{\startverb requests\stopverb} -> \code{\startverb rrequests\stopverb}, \code{\startverb reqquests\stopverb})}
+\li{\strong{Separator manipulation}: For hyphenated names, try removing, doubling, or replacing separators (\code{\startverb my-package\stopverb} -> \code{\startverb mypackage\stopverb}, \code{\startverb my--package\stopverb}, \code{\startverb my_package\stopverb})}
+\li{\strong{Common prefix/suffix attacks}: Prepend or append common strings (\code{\startverb python-requests\stopverb}, \code{\startverb requests-python\stopverb}, \code{\startverb requests2\stopverb}, \code{\startverb requests-lib\stopverb})}
+}
+}
+
+\subtree{
+\title{Step 3: Query Registry APIs for Candidate Packages}
+\p{Check whether generated candidate names actually exist in the registry:}
+
+\ul{
+\li{\strong{PyPI JSON API}: Send \code{\startverb GET https://pypi.org/pypi/<candidate>/json\stopverb} for each candidate. A \code{\startverb 200\stopverb} response means the package exists; \code{\startverb 404\stopverb} means it does not. Extract from the response: \code{\startverb info.name\stopverb}, \code{\startverb info.version\stopverb}, \code{\startverb info.author\stopverb}, \code{\startverb info.summary\stopverb}, \code{\startverb info.home_page\stopverb}, \code{\startverb info.project_urls\stopverb}, and \code{\startverb releases\stopverb} (keyed by version with \code{\startverb upload_time_iso_8601\stopverb} timestamps).}
+\li{\strong{npm registry API}: Send \code{\startverb GET https://registry.npmjs.org/<candidate>\stopverb} with \code{\startverb Accept: application/json\stopverb}. Extract: \code{\startverb name\stopverb}, \code{\startverb description\stopverb}, \code{\startverb dist-tags.latest\stopverb}, \code{\startverb time.created\stopverb}, \code{\startverb time.modified\stopverb}, \code{\startverb maintainers\stopverb}, and \code{\startverb versions\stopverb}.}
+\li{\strong{Rate limiting}: PyPI has no published rate limits but respect reasonable request rates (1-2 requests/second). npm registry returns \code{\startverb 429\stopverb} when rate limited; implement exponential backoff.}
+\li{\strong{Batch optimization}: For large candidate lists, parallelize requests with connection pooling (\code{\startverb requests.Session\stopverb}) and limit concurrency to avoid triggering abuse protections.}
+}
+}
+
+\subtree{
+\title{Step 4: Analyze Package Metadata for Suspicion Signals}
+\p{Score each existing candidate package against multiple heuristic signals:}
+
+\ul{
+\li{\strong{Levenshtein distance}: Calculate the edit distance between the candidate name and the target. Packages with distance 1-2 from a popular package are high-priority suspects. Historical analysis shows 18 of 40 known typosquats had Levenshtein distance of 2 or less from their targets.}
+\li{\strong{Publish date recency}: Compare the candidate's first publish date against the target's. A package created years after its near-namesake is more suspicious. Flag packages created within the last 90 days that are similar to packages published years ago.}
+\li{\strong{Download count disparity}: Compare weekly downloads. Legitimate similarly-named packages typically have comparable or explainable download counts. A package with 50 downloads versus its near-namesake with 5 million downloads is suspicious. PyPI download stats are available via BigQuery (\code{\startverb pypistats.org/api/\stopverb}); npm provides download counts at \code{\startverb https://api.npmjs.org/downloads/point/last-week/<package>\stopverb}.}
+\li{\strong{Author and maintainer analysis}: Check if the candidate package author matches the legitimate package author. Different authors for near-identical names increase suspicion.}
+\li{\strong{Description similarity}: Compare package descriptions. Typosquats frequently copy or closely paraphrase the target package description to appear legitimate.}
+\li{\strong{Version count}: Legitimate packages typically have many versions over time. A package with only 1-2 versions and a name similar to a popular package is suspicious.}
+\li{\strong{Repository URL analysis}: Check if the candidate links to the same repository as the target (likely legitimate fork/mirror) or has no repository URL (suspicious).}
+}
+}
+
+\subtree{
+\title{Step 5: Score, Rank, and Report Findings}
+\p{Combine signals into a composite risk score and generate an actionable report:}
+
+\ul{
+\li{\strong{Weighted scoring}: Assign weights to each signal. Example: Levenshtein distance 1 = 40 points, Levenshtein distance 2 = 25 points, created < 90 days ago = 15 points, download ratio < 0.001 = 15 points, different author = 10 points, single version = 5 points. Total score out of 100.}
+\li{\strong{Threshold classification}: Score >= 70: HIGH risk (likely typosquat), 40-69: MEDIUM risk (requires manual review), < 40: LOW risk (likely legitimate)}
+\li{\strong{Generate report}: For each flagged package, include the target it mimics, all signal values, the composite score, direct links to both packages on the registry, and a recommendation (block, investigate, or allow)}
+\li{\strong{Actionable output}: Produce a blocklist of flagged package names that can be imported into package manager deny-lists, CI/CD policy engines, or artifact repository proxy rules}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Typosquatting** | Registering a package name that closely resembles a popular package, exploiting common typos to trick developers into installing malicious code |
+| **Levenshtein Distance** | The minimum number of single-character edits (insertions, deletions, substitutions) required to transform one string into another; the primary metric for measuring name similarity |
+| **Dependency Confusion** | A broader supply chain attack where attackers publish malicious packages to public registries with names matching private internal packages, exploiting package manager resolution order |
+| **PEP 503 Normalization** | The Python packaging specification that treats hyphens, underscores, and periods as equivalent in package names, meaning `my-package`, `my_package`, and `my.package` resolve to the same package |
+| **QWERTY Distance** | A keyboard-layout-aware distance metric measuring how far apart two keys are on a standard keyboard, used to detect substitutions from adjacent key mistyping |
+| **Combosquatting** | A variant of typosquatting where attackers prepend or append common words to a package name (e.g., `requests-security`, `python-requests`) |
+| **StarJacking** | An attack where a typosquat package links its repository URL to the legitimate package's GitHub repository to inflate apparent credibility |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{PyPI JSON API}: REST API at \code{\startverb https://pypi.org/pypi/<package>/json\stopverb} returning package metadata including name, author, versions, upload timestamps, and project URLs}
+\li{\strong{npm Registry API}: REST API at \code{\startverb https://registry.npmjs.org/<package>\stopverb} returning package metadata including maintainers, version history, creation timestamps, and distribution info}
+\li{\strong{python-Levenshtein / rapidfuzz}: Python libraries for fast string distance computation, supporting Levenshtein, Damerau-Levenshtein, Jaro-Winkler, and other similarity metrics}
+\li{\strong{pypistats.org API}: Provides download statistics for PyPI packages, enabling download count comparison between suspected typosquats and their targets}
+\li{\strong{npm download counts API}: Endpoint at \code{\startverb https://api.npmjs.org/downloads/point/<period>/<package>\stopverb} providing download statistics for npm packages}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Auditing a Python Project for Typosquatted Dependencies}
+\p{\strong{Context}: A security team discovers that a developer's workstation was compromised after installing a Python package. The incident response team needs to audit all project dependencies for potential typosquats and establish ongoing monitoring.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Parse \code{\startverb requirements.txt\stopverb} and \code{\startverb Pipfile.lock\stopverb} to extract all 87 direct and transitive dependencies}
+\li{Generate typosquat candidates for each dependency using character omission, transposition, substitution, and separator manipulation, producing approximately 2,400 candidate names}
+\li{Query the PyPI JSON API for each candidate, finding 34 that actually exist as published packages}
+\li{Score each existing candidate: 3 packages score above 70 (HIGH risk) with Levenshtein distance 1, created within the last 60 days, single version, and fewer than 100 downloads}
+\li{Manual review confirms 2 of the 3 are malicious typosquats containing obfuscated code that exfiltrates environment variables during installation}
+\li{Block the malicious packages in the organization's artifact proxy, report to PyPI for takedown via \code{\startverb security@pypi.org\stopverb}, and add all 87 dependencies to the ongoing monitoring watchlist}
+\li{Implement the detection agent as a scheduled CI job that runs weekly and alerts on new HIGH-risk findings}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Not normalizing PyPI package names per PEP 503 before comparison, causing missed matches between hyphenated and underscored variants}
+\li{Setting the Levenshtein distance threshold too low (only 1) and missing typosquats at distance 2 that use double substitutions}
+\li{Relying solely on name similarity without checking metadata signals, leading to high false positive rates on legitimately similar package names}
+\li{Not accounting for npm scoped packages (\code{\startverb @scope/name\stopverb}) which have different naming rules than unscoped packages}
+\li{Querying the registries too aggressively and getting rate-limited or IP-blocked}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Typosquatting Detection Report
+
+**Scan Date**: 2026-03-19
+**Registry**: PyPI
+**Packages Monitored**: 87
+**Candidates Generated**: 2,412
+**Candidates Found in Registry**: 34
+**Flagged as Suspicious**: 5
+
+### HIGH Risk (Score >= 70)
+
+| Suspect Package | Target Package | Levenshtein | Created | Downloads | Score |
+|----------------|---------------|-------------|---------|-----------|-------|
+| reqeusts       | requests      | 1           | 2026-02-28 | 43     | 92    |
+| requsets       | requests      | 1           | 2026-03-01 | 12     | 88    |
+| numpyy         | numpy         | 1           | 2026-01-15 | 67     | 78    |
+
+### Recommendation
+- BLOCK: reqeusts, requsets, numpyy (add to artifact proxy deny-list)
+- REPORT: Submit malware reports to security@pypi.org with package names and evidence
+- MONITOR: Continue weekly scans for the full dependency watchlist
+\stopverb}
+}
+}

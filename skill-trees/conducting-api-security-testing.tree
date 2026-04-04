@@ -1,0 +1,210 @@
+\title{Conducting Api Security Testing}
+
+\taxon{skill}
+
+\tag{API-security}
+
+\tag{OWASP-API-Top10}
+
+\tag{REST}
+
+\tag{GraphQL}
+
+\tag{authorization-testing}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Conducts security testing of REST, GraphQL, and gRPC APIs to identify vulnerabilities in authentication, authorization, rate limiting, input validation, and business logic. The tester uses the OWASP API Security Top 10 as the testing framework, combining Burp Suite interception with Postman collections and custom scripts to test endpoint security at every privilege level. Activates for requests involving API security testing, REST API pentest, GraphQL security assessment, or API vulnerability testing.}
+
+\subtree{
+\title{Conducting API Security Testing}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Testing API endpoints for authorization flaws, injection vulnerabilities, and business logic bypasses}
+\li{Assessing the security of microservices architecture where APIs are the primary communication method}
+\li{Validating that API gateway protections (rate limiting, authentication, input validation) are properly enforced}
+\li{Testing third-party API integrations for data exposure and insecure configurations}
+\li{Evaluating GraphQL APIs for introspection disclosure, query complexity attacks, and authorization bypasses}
+}
+
+\p{\strong{Do not use} against APIs without written authorization, for load testing or denial-of-service testing unless explicitly scoped, or for testing production APIs that process real financial transactions without safeguards.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{API documentation (OpenAPI/Swagger, GraphQL schema, Postman collection) or application access to reverse-engineer the API}
+\li{Burp Suite Professional configured to intercept API traffic with JSON/XML content type handling}
+\li{Postman or Insomnia for organizing and replaying API requests across different authentication contexts}
+\li{Valid API tokens or credentials at multiple privilege levels (unauthenticated, standard user, admin)}
+\li{Target API base URL and version information}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: API Discovery and Documentation}
+\p{Map the complete API attack surface:}
+
+\ul{
+\li{\strong{Import API documentation}: Load OpenAPI/Swagger specs into Postman or Burp Suite to catalog all endpoints, methods, parameters, and authentication requirements}
+\li{\strong{Reverse-engineer undocumented APIs}: Proxy the mobile app or web frontend through Burp Suite and exercise all features to capture API calls. Export the Burp sitemap as the baseline endpoint inventory.}
+\li{\strong{GraphQL introspection}: Send an introspection query to discover the full schema:}
+\li{\strong{Endpoint enumeration}: Fuzz for hidden API versions (\code{\startverb /api/v1/\stopverb}, \code{\startverb /api/v2/\stopverb}, \code{\startverb /api/internal/\stopverb}), debug endpoints (\code{\startverb /api/debug\stopverb}, \code{\startverb /api/health\stopverb}, \code{\startverb /api/metrics\stopverb}), and administrative endpoints}
+\li{\strong{Document authentication mechanisms}: Identify if the API uses API keys, OAuth 2.0 Bearer tokens, JWT, session cookies, or mutual TLS}
+}
+}
+
+\subtree{
+\title{Step 2: Authentication and Token Testing}
+\p{Test authentication mechanisms for weaknesses:}
+
+\ul{
+\li{\strong{JWT analysis}: Decode the JWT and inspect claims (sub, exp, iss, aud, role). Test:}
+\li{Algorithm confusion: Change \code{\startverb alg\stopverb} to \code{\startverb none\stopverb} and remove the signature}
+\li{Key confusion: Change \code{\startverb alg\stopverb} from RS256 to HS256 and sign with the public key}
+\li{Weak secret: Brute-force the HMAC secret with \code{\startverb hashcat -m 16500 jwt.txt wordlist.txt\stopverb}}
+\li{Token expiration: Verify tokens expire and cannot be used after expiration}
+\li{Claim tampering: Modify role, userId, or permission claims and re-sign}
+\li{\strong{OAuth 2.0 testing}: Check for redirect_uri manipulation, authorization code reuse, token leakage in Referer headers, and missing state parameter (CSRF)}
+\li{\strong{API key security}: Test if API keys are validated per-endpoint, if revoked keys are immediately rejected, and if keys in query strings appear in access logs or analytics}
+}
+}
+
+\subtree{
+\title{Step 3: Authorization Testing (BOLA/BFLA)}
+\p{Test for Broken Object Level Authorization (BOLA) and Broken Function Level Authorization (BFLA):}
+
+\ul{
+\li{\strong{BOLA (IDOR) testing}: For every endpoint that returns user-specific data, replace the object identifier with another user's identifier:}
+\li{\code{\startverb GET /api/users/123/orders\stopverb} -> \code{\startverb GET /api/users/456/orders\stopverb}}
+\li{Test with numeric IDs, UUIDs, usernames, and email addresses}
+\li{Automate with Burp Autorize extension: configure it with two sessions (attacker and victim) and replay all requests}
+\li{\strong{BFLA testing}: Using a low-privilege token, attempt to access administrative endpoints:}
+\li{\code{\startverb DELETE /api/users/456\stopverb} (admin-only delete)}
+\li{\code{\startverb PUT /api/users/456/role\stopverb} (role modification)}
+\li{\code{\startverb GET /api/admin/dashboard\stopverb} (admin panel data)}
+\li{\strong{Mass assignment}: Send additional JSON properties not shown in the documentation:}
+\li{\strong{HTTP method testing}: If GET works on an endpoint, try PUT, PATCH, DELETE, and OPTIONS to discover unprotected methods}
+}
+}
+
+\subtree{
+\title{Step 4: Input Validation and Injection Testing}
+\p{Test API inputs for injection and validation flaws:}
+
+\ul{
+\li{\strong{SQL injection in API parameters}: Test all parameters (path, query, body, headers) with SQL injection payloads. JSON APIs are often overlooked: \code{\startverb {"username": "admin' OR 1=1--", "password": "test"}\stopverb}}
+\li{\strong{NoSQL injection}: For MongoDB backends, test with operator injection: \code{\startverb {"username": {"$gt": ""}, "password": {"$gt": ""}}\stopverb}}
+\li{\strong{SSRF via API}: Test any parameter that accepts URLs (webhook URLs, avatar URLs, import endpoints) with internal addresses and cloud metadata endpoints}
+\li{\strong{GraphQL-specific injection}: Test for query depth attacks, alias-based batching for brute force, and field suggestion enumeration}
+\li{\strong{XXE in XML APIs}: Submit XML content with external entity declarations to API endpoints that accept XML}
+\li{\strong{Rate limiting validation}: Send 100+ rapid requests to authentication endpoints, password reset, and OTP verification to test for brute force protection}
+}
+}
+
+\subtree{
+\title{Step 5: Data Exposure and Response Analysis}
+\p{Check for excessive data exposure in API responses:}
+
+\ul{
+\li{\strong{Verbose responses}: Compare the data returned in API responses with what the UI displays. APIs often return more fields than needed (internal IDs, creation timestamps, email addresses of other users, role information).}
+\li{\strong{Error message analysis}: Trigger errors by sending malformed input, invalid tokens, and non-existent resources. Check if error messages reveal stack traces, database queries, internal paths, or technology details.}
+\li{\strong{Pagination and enumeration}: Test if enumeration is possible by iterating through paginated responses (\code{\startverb /api/users?page=1\stopverb}, \code{\startverb page=2\stopverb}, etc.) to extract all records}
+\li{\strong{GraphQL data exposure}: Query for fields not intended for the current user's role. Test nested queries that traverse relationships to access unauthorized data.}
+\li{\strong{Debug endpoints}: Check \code{\startverb /api/debug\stopverb}, \code{\startverb /api/status\stopverb}, \code{\startverb /metrics\stopverb}, \code{\startverb /health\stopverb}, \code{\startverb /.env\stopverb}, \code{\startverb /api/swagger.json\stopverb} for exposed internal information}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **BOLA** | Broken Object Level Authorization (OWASP API #1); failure to verify that the requesting user is authorized to access a specific object, enabling IDOR attacks |
+| **BFLA** | Broken Function Level Authorization (OWASP API #5); failure to restrict administrative or privileged API functions from being accessed by lower-privilege users |
+| **Mass Assignment** | A vulnerability where the API binds client-provided data to internal object properties without filtering, allowing attackers to modify fields they should not have access to |
+| **GraphQL Introspection** | A built-in GraphQL feature that exposes the complete API schema including all types, fields, and relationships; should be disabled in production |
+| **JWT** | JSON Web Token; a self-contained token format used for API authentication containing claims signed with a secret or key pair |
+| **Rate Limiting** | Controls that restrict the number of API requests a client can make within a time window, preventing brute force, enumeration, and abuse |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Burp Suite Professional}: HTTP proxy for intercepting, modifying, and replaying API requests with extensions like Autorize for automated authorization testing}
+\li{\strong{Postman}: API development platform used for organizing endpoint collections, scripting tests, and comparing responses across authentication contexts}
+\li{\strong{GraphQL Voyager}: Visual tool for exploring GraphQL schemas obtained through introspection queries}
+\li{\strong{jwt.io / jwt_tool}: Tools for decoding, analyzing, and tampering with JWT tokens to test authentication bypasses}
+\li{\strong{Nuclei}: Template-based scanner with API-specific templates for detecting common misconfigurations and known vulnerabilities}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: API Security Assessment for a Fintech Mobile Application}
+\p{\strong{Context}: A fintech startup has a mobile banking application with a REST API backend. The API handles account management, fund transfers, bill payments, and transaction history. The tester has Swagger documentation and accounts at user and admin levels.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Import Swagger spec into Postman, generating 87 endpoint collections across 12 controllers}
+\li{Discover BOLA on \code{\startverb /api/v1/accounts/{accountId}/transactions\stopverb} allowing any authenticated user to view any account's transaction history}
+\li{Find mass assignment on the user update endpoint where adding \code{\startverb "dailyTransferLimit": 999999\stopverb} bypasses the configured transfer limit}
+\li{Identify that the fund transfer endpoint lacks rate limiting, allowing unlimited transfer attempts without throttling}
+\li{Discover that JWT tokens have a 30-day expiration with no refresh token rotation, enabling long-lived session hijacking}
+\li{Find that the admin endpoint \code{\startverb /api/v1/admin/users\stopverb} is accessible with a standard user token (BFLA)}
+\li{Report all findings with CVSS scores and specific API code-level remediation guidance}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Testing only the endpoints documented in Swagger and missing undocumented or deprecated API versions}
+\li{Not testing the same endpoint with tokens from every privilege level to detect authorization bypasses}
+\li{Ignoring response body analysis for excessive data exposure when the UI only shows a subset of returned fields}
+\li{Failing to test for mass assignment by only sending fields shown in the documentation}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Finding: Broken Object Level Authorization in Transaction History API
+
+**ID**: API-001
+**Severity**: Critical (CVSS 9.1)
+**Affected Endpoint**: GET /api/v1/accounts/{accountId}/transactions
+**OWASP API Category**: API1:2023 - Broken Object Level Authorization
+
+**Description**:
+The transaction history endpoint returns all transactions for the specified
+account without verifying that the authenticated user owns the account. Any
+authenticated user can view the complete transaction history of any account
+by substituting the accountId path parameter.
+
+**Proof of Concept**:
+1. Authenticate as User A (account ID: ACC-10045)
+2. Request: GET /api/v1/accounts/ACC-10046/transactions
+   Authorization: Bearer <User_A_token>
+3. Response: 200 OK with User B's full transaction history
+
+**Impact**:
+Any authenticated user can view the complete financial transaction history of
+all 45,000 customer accounts, including amounts, dates, recipients, and
+transaction descriptions.
+
+**Remediation**:
+Implement server-side authorization check that verifies the authenticated user
+owns the requested account before returning data:
+  const account = await Account.findById(accountId);
+  if (account.userId !== req.user.id) return res.status(403).json({error: "Forbidden"});
+\stopverb}
+}
+}

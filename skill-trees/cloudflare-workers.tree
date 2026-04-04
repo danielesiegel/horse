@@ -1,0 +1,387 @@
+\title{Cloudflare Workers}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{Deploy serverless applications on Cloudflare Workers. Covers project setup, JavaScript handler patterns, routing, deployment with Wrangler, and API token configuration. Suitable for APIs, proxies, edge computing, and request transformation.}
+
+\subtree{
+\title{Deploying Cloudflare Workers}
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Create and Deploy}
+\pre{\startverb
+# Create project
+npm create cloudflare@latest my-worker -- --type=hello-world --ts=false --git=false --deploy=false
+cd my-worker
+
+# Deploy
+export CLOUDFLARE_API_TOKEN="your-token-here"
+export CLOUDFLARE_ACCOUNT_ID="your-account-id"
+npx wrangler deploy
+\stopverb}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Node.js 16.17.0 or later installed}
+\li{Cloudflare account (free tier works)}
+\li{Cloudflare API token with Workers permissions}
+}
+}
+
+\subtree{
+\title{Setup}
+\subtree{
+\title{1. Create API Token}
+\p{Before deployment, create a Cloudflare API token with proper permissions:}
+
+\ol{
+\li{Go to https://dash.cloudflare.com/profile/api-tokens}
+\li{Click \strong{"Create Token"}}
+\li{Select \strong{"Edit Cloudflare Workers"} template}
+\li{Click \strong{"Continue to summary"} → \strong{"Create Token"}}
+\li{Save the token securely}
+}
+
+\p{\strong{Required permissions:}}
+
+\ul{
+\li{Account: Workers Scripts (Edit)}
+\li{Account: Account Settings (Read)}
+\li{User: User Details (Read)}
+}
+}
+
+\subtree{
+\title{2. Register workers.dev Subdomain}
+\p{If this is your first Worker deployment:}
+
+\ol{
+\li{Go to Cloudflare Dashboard → Workers & Pages}
+\li{Look for "Your subdomain" section}
+\li{Click "Change" or "Set up"}
+\li{Enter a unique subdomain name (e.g., \code{\startverb mycompany\stopverb})}
+\li{Save}
+}
+
+\p{Your workers will be available at: \code{\startverb <worker-name>.<subdomain>.workers.dev\stopverb}}
+}
+
+\subtree{
+\title{3. Create Worker Project}
+\p{Use C3 (create-cloudflare-cli) to scaffold the project:}
+
+\pre{\startverb
+npm create cloudflare@latest my-worker -- --type=hello-world --ts=false --git=false --deploy=false
+cd my-worker
+\stopverb}
+
+\p{\strong{Generated structure:}}
+
+\pre{\startverb
+my-worker/
+├── src/
+│   └── index.js      # Worker entry point
+├── wrangler.jsonc    # Wrangler configuration
+├── package.json
+└── node_modules/
+\stopverb}
+}
+
+\subtree{
+\title{4. Configure Wrangler}
+\p{Update \code{\startverb wrangler.jsonc\stopverb} with your worker settings:}
+
+\pre{\startverb
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "my-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2024-12-01",
+  "observability": {
+    "enabled": true
+  }
+}
+\stopverb}
+
+\p{\strong{Key settings:}}
+
+\ul{
+\li{\code{\startverb name\stopverb}: Worker name (becomes part of URL)}
+\li{\code{\startverb main\stopverb}: Entry point file}
+\li{\code{\startverb compatibility_date\stopverb}: Runtime compatibility version}
+\li{\code{\startverb observability\stopverb}: Enable logging and metrics}
+}
+}
+
+\subtree{
+\title{5. Implement the Worker Handler}
+\p{Workers use a fetch handler pattern. Create your worker logic in \code{\startverb src/index.js\stopverb}:}
+
+\pre{\startverb
+/**
+ * Worker Handler Template
+ * Handles routing, JSON responses, and CORS
+ */
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // CORS headers for all responses
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
+    // Handle OPTIONS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // Route handling
+    switch (path) {
+      case '/health':
+        return jsonResponse({
+          status: 'healthy',
+          service: 'my-worker',
+          timestamp: new Date().toISOString()
+        }, 200, corsHeaders);
+      
+      case '/api/endpoint':
+        return handleApiEndpoint(request, url, corsHeaders);
+      
+      default:
+        return jsonResponse({
+          error: 'Not found',
+          available_endpoints: ['GET /health', 'GET /api/endpoint']
+        }, 404, corsHeaders);
+    }
+  },
+};
+
+function handleApiEndpoint(request, url, corsHeaders) {
+  // Parse query parameters
+  const params = url.searchParams;
+  const param1 = params.get('param1');
+  
+  // Validate
+  if (!param1) {
+    return jsonResponse({
+      error: 'Missing required parameter: param1'
+    }, 400, corsHeaders);
+  }
+  
+  // Process and return
+  return jsonResponse({
+    result: `Processed: ${param1}`
+  }, 200, corsHeaders);
+}
+
+function jsonResponse(data, status = 200, additionalHeaders = {}) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status: status,
+    headers: {
+      'Content-Type': 'application/json',
+      ...additionalHeaders
+    }
+  });
+}
+\stopverb}
+
+\p{\strong{Handler parameters:}}
+
+\ul{
+\li{\code{\startverb request\stopverb}: Incoming HTTP Request object}
+\li{\code{\startverb env\stopverb}: Environment bindings (KV, D1, secrets, etc.)}
+\li{\code{\startverb ctx\stopverb}: Execution context (waitUntil, passThroughOnException)}
+}
+}
+
+\subtree{
+\title{6. Test Locally}
+\p{Run the development server:}
+
+\pre{\startverb
+npx wrangler dev
+\stopverb}
+
+\p{Test the worker at \code{\startverb http://localhost:8787\stopverb}:}
+
+\pre{\startverb
+curl http://localhost:8787/health
+curl "http://localhost:8787/api/endpoint?param1=test"
+\stopverb}
+}
+
+\subtree{
+\title{7. Deploy to Production}
+\p{Deploy using environment variables for authentication:}
+
+\pre{\startverb
+export CLOUDFLARE_API_TOKEN="your-token-here"
+export CLOUDFLARE_ACCOUNT_ID="your-account-id"
+npx wrangler deploy
+\stopverb}
+
+\p{\strong{Finding your Account ID:}}
+
+\ul{
+\li{Dashboard → Workers & Pages → Account ID in sidebar}
+\li{Or from the URL: \code{\startverb dash.cloudflare.com/<account-id>/workers\stopverb}}
+}
+}
+
+\subtree{
+\title{8. Verify Deployment}
+\p{Test the live worker:}
+
+\pre{\startverb
+# Health check
+curl https://my-worker.mysubdomain.workers.dev/health
+
+# API endpoint
+curl "https://my-worker.mysubdomain.workers.dev/api/endpoint?param1=test"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Request Method Handling}
+\pre{\startverb
+switch (request.method) {
+  case 'GET':
+    return handleGet(url);
+  case 'POST':
+    const body = await request.json();
+    return handlePost(body);
+  case 'PUT':
+    return handlePut(request);
+  case 'DELETE':
+    return handleDelete(url);
+  default:
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Path Parameter Extraction}
+\pre{\startverb
+// For paths like /users/123
+const match = path.match(/^\/users\/(\d+)$/);
+if (match) {
+  const userId = match[1];
+  return handleUser(userId);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Environment Variables and Secrets}
+\p{Add to \code{\startverb wrangler.jsonc\stopverb}:}
+
+\pre{\startverb
+{
+  "vars": {
+    "API_VERSION": "v1"
+  }
+}
+\stopverb}
+
+\p{Add secrets via CLI:}
+
+\pre{\startverb
+npx wrangler secret put API_KEY
+\stopverb}
+
+\p{Access in handler:}
+
+\pre{\startverb
+async fetch(request, env, ctx) {
+  const version = env.API_VERSION;
+  const apiKey = env.API_KEY;
+}
+\stopverb}
+}
+
+\subtree{
+\title{KV Storage Binding}
+\p{Add to \code{\startverb wrangler.jsonc\stopverb}:}
+
+\pre{\startverb
+{
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "your-kv-namespace-id" }
+  ]
+}
+\stopverb}
+
+\p{Use in handler:}
+
+\pre{\startverb
+// Read
+const value = await env.CACHE.get('key');
+
+// Write
+await env.CACHE.put('key', 'value', { expirationTtl: 3600 });
+\stopverb}
+}
+}
+
+\subtree{
+\title{Deployment Options}
+\pre{\startverb
+| Method | Use Case |
+|--------|----------|
+| `workers.dev` subdomain | Quick testing, hobby projects |
+| Custom Domain | Production deployments |
+| Routes | Add Workers to existing domains |
+\stopverb}
+
+\subtree{
+\title{Custom Domain Setup}
+\p{Add to \code{\startverb wrangler.jsonc\stopverb}:}
+
+\pre{\startverb
+{
+  "routes": [
+    { "pattern": "api.example.com/*", "custom_domain": true }
+  ]
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\pre{\startverb
+| Issue | Solution |
+|-------|----------|
+| Authentication error | Verify API token has correct permissions, check CLOUDFLARE_ACCOUNT_ID is set correctly, ensure token hasn't expired |
+| workers.dev subdomain not registered | Go to Dashboard → Workers & Pages → Set up subdomain (must be done before first deployment) |
+| SSL handshake failures | New deployments may take 1-2 minutes for SSL provisioning, try accessing via browser first, check with `curl --insecure` to bypass local SSL issues |
+| Worker not updating | Clear browser cache, check deployment version ID in output, use `wrangler tail` to see live logs |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)}
+\li{[Wrangler Configuration](https://developers.cloudflare.com/workers/wrangler/configuration/)}
+\li{[Workers Runtime APIs](https://developers.cloudflare.com/workers/runtime-apis/)}
+\li{[Fetch Handler Reference](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/)}
+\li{[API Token Creation](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)}
+}
+}
+}

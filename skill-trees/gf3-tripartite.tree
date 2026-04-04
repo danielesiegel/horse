@@ -1,0 +1,245 @@
+\title{Gf3 Tripartite}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{GF(3) Tripartite Orchestration}
+
+\subtree{
+\title{GF(3) Tripartite Orchestration}
+\p{A skill for coordinating multi-agent systems using GF(3) (Galois Field of 3 elements) conservation. Implements the core pattern: \strong{local choice χ ∈ {-1, 0, +1} determines all state transitions}.}
+
+\subtree{
+\title{Description}
+\p{This skill enables agents to:}
+
+\ul{
+\li{Assign trit values (-1, 0, +1) to operations and entities}
+\li{Verify GF(3) conservation: Σχ ≡ 0 (mod 3)}
+\li{Coordinate triadic agent compositions}
+\li{Map operations to deterministic colors via Gay.jl}
+}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Trit Assignment}
+\p{When orchestrating multiple agents or operations, assign trits:}
+
+\pre{\startverb
+| Trit | Role | Semantics |
+|------|------|-----------|
+| **+1** (PLUS) | Generator | Create, advance, produce |
+| **0** (ERGODIC) | Transformer | Process, maintain, equilibrate |
+| **-1** (MINUS) | Absorber | Consume, validate, verify |
+\stopverb}
+}
+
+\subtree{
+\title{Conservation Check}
+\p{For any triplet of operations to compose correctly:}
+
+\pre{\startverb
+trit(A) + trit(B) + trit(C) ≡ 0 (mod 3)
+\stopverb}
+
+\p{Valid triplets:}
+
+\ul{
+\li{(+1, +1, +1) → 3 ≡ 0 ✓}
+\li{(+1, 0, -1) → 0 ≡ 0 ✓}
+\li{(+1, -1, 0) → 0 ≡ 0 ✓}
+\li{(0, 0, 0) → 0 ≡ 0 ✓}
+\li{(-1, -1, +1) → -1 ≡ 0? → -1 + 3 = 2 ✗ (invalid!)}
+}
+}
+
+\subtree{
+\title{Example: ALIFE Structural Diffing}
+\p{Three orthogonal vectors for change:}
+
+\pre{\startverb
+| Vector | Type | Trit | Description |
+|--------|------|------|-------------|
+| α | Behavioral/State | 0 (ERGODIC) | Time evolution within fixed ontology |
+| β | Structural/Type | +1 (PLUS) | Mutation of code, morphology, parameters |
+| γ | Bridge/Coherence | -1 (MINUS) | Meta-layer mapping structure to function |
+\stopverb}
+
+\p{Sum: α(0) + β(+1) + γ(-1) = 0 ✓}
+}
+}
+
+\subtree{
+\title{Applications}
+\subtree{
+\title{Multi-Agent Coordination}
+\pre{\startverb
+Agent A (Explorer, +1)    - generates new possibilities
+Agent B (Processor, 0)    - transforms and routes
+Agent C (Validator, -1)   - verifies and absorbs
+
+Σ = +1 + 0 + (-1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{World-Hopping (Counterfactual Navigation)}
+\pre{\startverb
+World-Hopping (+1)        - explore parallel worlds
+Triad-Interleave (0)      - weave between possibilities
+Epistemic-Arbitrage (-1)  - exploit knowledge differentials
+
+Σ = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Categorical Rewriting}
+\pre{\startverb
+DisCoPy-Monoidal (+1)     - compose diagrams
+Categorical-Rewriting (0) - apply DPO/SPO rules
+Graph-Grafting (-1)       - attach/detach subgraphs
+
+Σ = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Color Mapping}
+\p{Each trit maps to a deterministic color via Gay.jl:}
+
+\pre{\startverb
+| Trit | Index | Hex (seed=69) |
+|------|-------|---------------|
+| +1 | 1 | #301ADC |
+| 0 | 2 | #7330AD |
+| -1 | 3 | #D192DD |
+\stopverb}
+
+\p{For GF(3)² (9 colors), use indices 0-8:}
+
+\pre{\startverb
+(0,0)=#301ADC  (0,+)=#7330AD  (0,-)=#D192DD
+(+,0)=#D9DE86  (+,+)=#DD77D4  (+,-)=#E1798E
+(-,0)=#A80EA2  (-,+)=#EB39A7  (-,-)=#A724AB
+\stopverb}
+}
+
+\subtree{
+\title{Scripts}
+\subtree{
+\title{Julia Validation}
+\pre{\startverb
+julia scripts/validate.jl
+\stopverb}
+}
+
+\subtree{
+\title{miniKanren Relations}
+\pre{\startverb
+guile -l scripts/gf3-kanren.scm
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{GF(3) Conservation: \code{\startverb GADGET-SYNTHESIS.md\stopverb}}
+\li{ALIFE Structural Diffing: \code{\startverb ALIFE-STRUCTURAL-DIFFING.md\stopverb}}
+\li{Gay.jl Deterministic Coloring: https://github.com/plurigrid/Gay.jl}
+\li{Powers (1973) - Behavior: The Control of Perception}
+}
+}
+
+\subtree{
+\title{Author}
+\p{Generated via GF(3) Tripartite Orchestration skill.}
+}
+
+\subtree{
+\title{Tags}
+\p{\code{\startverb gf3\stopverb} \code{\startverb tripartite\stopverb} \code{\startverb multi-agent\stopverb} \code{\startverb coordination\stopverb} \code{\startverb conservation\stopverb} \code{\startverb coloring\stopverb}}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+gf3-tripartite (○) + SDF.Ch10 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch4: Pattern Matching}
+\li{Ch6: Layering}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

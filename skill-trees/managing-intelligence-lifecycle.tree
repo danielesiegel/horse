@@ -1,0 +1,160 @@
+\title{Managing Intelligence Lifecycle}
+
+\taxon{skill}
+
+\tag{CTI}
+
+\tag{intelligence-lifecycle}
+
+\tag{PIR}
+
+\tag{NIST-SP-800-150}
+
+\tag{threat-intelligence-program}
+
+\tag{NIST-CSF}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Manages the end-to-end cyber threat intelligence lifecycle from planning and direction through collection, processing, analysis, dissemination, and feedback to ensure intelligence products meet stakeholder requirements and continuously improve. Use when establishing or maturing a CTI program, defining intelligence requirements with business stakeholders, or building feedback loops between intelligence consumers and producers. Activates for requests involving CTI program maturity, intelligence requirements, PIRs, or intelligence lifecycle management.}
+
+\subtree{
+\title{Managing Intelligence Lifecycle}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Establishing a formal CTI program and defining its operational model}
+\li{Conducting quarterly intelligence requirements reviews with business stakeholders}
+\li{Evaluating CTI program maturity against established frameworks (FIRST CTI-SIG maturity model)}
+}
+
+\p{\strong{Do not use} this skill for day-to-day IOC triage or incident-specific intelligence tasks — those use operational intelligence workflows, not lifecycle management.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Executive sponsorship and defined CTI team structure (1+ dedicated analysts)}
+\li{Stakeholder map identifying intelligence consumers (SOC, IR, executive team, vulnerability management)}
+\li{Existing feed subscriptions or ISAC memberships for collection baseline}
+\li{CTI platform (MISP, ThreatConnect, OpenCTI) for lifecycle management}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Planning and Direction}
+\p{Define Priority Intelligence Requirements (PIRs) with stakeholders:}
+
+\ul{
+\li{Interview SOC leads, IR team, CISO, risk management, and product security}
+\li{Document PIRs in structured format: "What is the current capability and intent of [threat actor] to attack [critical asset] using [technique]?"}
+\li{Prioritize 5–10 PIRs for the quarter, reviewed monthly}
+}
+
+\p{Example PIR: "Is ransomware group Cl0p currently targeting organizations in our sector using MoveIT or GoAnywhere vulnerabilities?"}
+}
+
+\subtree{
+\title{Step 2: Collection Planning}
+\p{Map PIRs to required collection sources:}
+
+\ul{
+\li{Technical sources: commercial feeds, TAXII, ISAC data, honeypot telemetry, darkweb monitoring}
+\li{Human sources: vendor threat briefings, industry working groups, law enforcement partnerships}
+\li{Internal sources: SIEM logs, EDR telemetry, phishing submission mailbox}
+}
+
+\p{Document collection gaps and associated costs to fill them.}
+}
+
+\subtree{
+\title{Step 3: Processing and Normalization}
+\p{Implement automated processing pipeline:}
+
+\ul{
+\li{Ingest → normalize to STIX 2.1 → deduplicate → enrich → score confidence}
+\li{Reject unverifiable or duplicate indicators before analysis}
+\li{Tag all processed data with source, collection date, and expiration}
+}
+}
+
+\subtree{
+\title{Step 4: Analysis and Production}
+\p{Produce intelligence at three levels:}
+
+\ul{
+\li{\strong{Strategic}: Quarterly threat landscape report for executives; sector trends, geopolitical context}
+\li{\strong{Operational}: Weekly campaign reports for security leadership; active campaigns, adversary activity}
+\li{\strong{Tactical}: Daily IOC bulletins for SOC; actionable indicators with block/monitor recommendations}
+}
+
+\p{Apply structured analytic techniques: Analysis of Competing Hypotheses (ACH), Key Assumptions Check, Devil's Advocacy.}
+}
+
+\subtree{
+\title{Step 5: Dissemination}
+\p{Match product format to audience:}
+
+\ul{
+\li{Executives: 1-page PDF with risk ratings, business impact, recommended decisions}
+\li{SOC analysts: SIEM-ready IOC list, Sigma rules, MISP events}
+\li{Vulnerability management: CVE lists with EPSS scores and exploitation likelihood}
+\li{IT/Security leadership: Full intelligence report with technical appendix}
+}
+
+\p{Apply TLP classifications and distribution lists per product type.}
+}
+
+\subtree{
+\title{Step 6: Feedback and Evaluation}
+\p{Collect feedback within 5 business days of dissemination:}
+
+\ul{
+\li{Did the product address the PIR?}
+\li{Was actionability sufficient?}
+\li{What data was missing?}
+}
+
+\p{Track metrics quarterly: PIR coverage rate, IOC true positive rate, time-to-disseminate, stakeholder satisfaction score (NPS or structured survey).}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **PIR** | Priority Intelligence Requirement — specific, actionable question driving intelligence collection and analysis |
+| **Intelligence Lifecycle** | Six-phase iterative process: Planning → Collection → Processing → Analysis → Dissemination → Feedback |
+| **Strategic Intelligence** | Long-term threat trend analysis for executive decision-making; time horizon 6–24 months |
+| **Operational Intelligence** | Campaign-level analysis for security program decisions; time horizon 1–6 months |
+| **Tactical Intelligence** | Specific IOCs and TTPs for immediate detection and blocking; time horizon hours to days |
+| **FIRST CTI-SIG** | Forum of Incident Response and Security Teams — CTI Special Interest Group maturity model |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{ThreatConnect}: TIP with built-in intelligence lifecycle workflows, PIR tracking, and stakeholder reporting dashboards}
+\li{\strong{MISP}: Open-source TIP supporting intelligence lifecycle from collection through sharing}
+\li{\strong{OpenCTI}: Graph-based CTI platform with workflow management for intelligence products}
+\li{\strong{Recorded Future}: Commercial platform with structured intelligence reports aligned to the intelligence lifecycle}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{Collection without direction}: Ingesting every available feed without PIRs produces data overload and no actionable intelligence.}
+\li{\strong{Missing feedback loops}: Without structured feedback, CTI teams produce reports that don't meet stakeholder needs and lose organizational relevance.}
+\li{\strong{Tactical-only focus}: Overemphasis on IOC sharing neglects strategic intelligence that informs security investment and risk decisions.}
+\li{\strong{No metrics program}: Cannot demonstrate CTI program value without tracking detection contributions, true positive rates, and stakeholder satisfaction.}
+\li{\strong{Underfunded collection}: PIRs cannot be answered without appropriate collection sources; document and escalate gaps rather than producing low-confidence estimates.}
+}
+}
+}

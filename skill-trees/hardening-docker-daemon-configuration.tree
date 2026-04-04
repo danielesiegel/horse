@@ -1,0 +1,349 @@
+\title{Hardening Docker Daemon Configuration}
+
+\taxon{skill}
+
+\tag{docker}
+
+\tag{daemon-hardening}
+
+\tag{container-security}
+
+\tag{cis-benchmark}
+
+\tag{rootless}
+
+\tag{userns-remap}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Harden the Docker daemon by configuring daemon.json with user namespace remapping, TLS authentication, rootless mode, and CIS benchmark controls.}
+
+\subtree{
+\title{Hardening Docker Daemon Configuration}
+\subtree{
+\title{Overview}
+\p{The Docker daemon (\code{\startverb dockerd\stopverb}) runs with root privileges and controls all container operations. Hardening its configuration through \code{\startverb /etc/docker/daemon.json\stopverb}, TLS certificates, user namespace remapping, and network restrictions is essential to prevent privilege escalation, lateral movement, and container breakout attacks.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring hardening docker daemon configuration capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Docker Engine 24.0+ installed}
+\li{Root or sudo access to the Docker host}
+\li{OpenSSL for TLS certificate generation}
+\li{Understanding of Linux namespaces and cgroups}
+}
+}
+
+\subtree{
+\title{Core Hardened daemon.json}
+\pre{\startverb
+{
+  "icc": false,
+  "userns-remap": "default",
+  "no-new-privileges": true,
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "5"
+  },
+  "storage-driver": "overlay2",
+  "live-restore": true,
+  "userland-proxy": false,
+  "default-ulimits": {
+    "nofile": {
+      "Name": "nofile",
+      "Hard": 65536,
+      "Soft": 32768
+    },
+    "nproc": {
+      "Name": "nproc",
+      "Hard": 4096,
+      "Soft": 2048
+    }
+  },
+  "seccomp-profile": "/etc/docker/seccomp/default.json",
+  "default-address-pools": [
+    {
+      "base": "172.17.0.0/16",
+      "size": 24
+    }
+  ],
+  "iptables": true,
+  "ip-forward": true,
+  "ip-masq": true,
+  "experimental": false,
+  "metrics-addr": "127.0.0.1:9323",
+  "max-concurrent-downloads": 3,
+  "max-concurrent-uploads": 5,
+  "default-runtime": "runc",
+  "runtimes": {
+    "runsc": {
+      "path": "/usr/local/bin/runsc",
+      "runtimeArgs": ["--platform=ptrace"]
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Setting-by-Setting Explanation}
+\subtree{
+\title{Disable Inter-Container Communication (ICC)}
+\pre{\startverb
+{
+  "icc": false
+}
+\stopverb}
+
+\p{Prevents containers on the default bridge network from communicating. Each container must use explicit \code{\startverb --link\stopverb} or user-defined networks with published ports.}
+}
+
+\subtree{
+\title{Enable User Namespace Remapping}
+\pre{\startverb
+{
+  "userns-remap": "default"
+}
+\stopverb}
+
+\p{Maps container root (UID 0) to a high unprivileged UID on the host. This prevents a container breakout from gaining root on the host.}
+
+\pre{\startverb
+# Verify userns-remap is active
+cat /etc/subuid
+# Output: dockremap:100000:65536
+
+cat /etc/subgid
+# Output: dockremap:100000:65536
+
+# Verify container UID mapping
+docker run --rm alpine id
+# uid=0(root) gid=0(root) -- but host UID is 100000+
+\stopverb}
+}
+
+\subtree{
+\title{Disable New Privilege Escalation}
+\pre{\startverb
+{
+  "no-new-privileges": true
+}
+\stopverb}
+
+\p{Prevents container processes from gaining additional privileges via setuid/setgid binaries or capability escalation.}
+}
+
+\subtree{
+\title{Enable Live Restore}
+\pre{\startverb
+{
+  "live-restore": true
+}
+\stopverb}
+
+\p{Keeps containers running during daemon downtime, enabling daemon upgrades without container restart.}
+}
+
+\subtree{
+\title{Disable Userland Proxy}
+\pre{\startverb
+{
+  "userland-proxy": false
+}
+\stopverb}
+
+\p{Uses iptables rules instead of docker-proxy for port forwarding, reducing attack surface and improving performance.}
+}
+}
+
+\subtree{
+\title{TLS Configuration for Remote Docker API}
+\subtree{
+\title{Generate CA and Server Certificates}
+\pre{\startverb
+# Create CA
+openssl genrsa -aes256 -out ca-key.pem 4096
+openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem \
+  -subj "/CN=Docker CA"
+
+# Create server key and CSR
+openssl genrsa -out server-key.pem 4096
+openssl req -subj "/CN=docker-host" -sha256 -new -key server-key.pem -out server.csr
+
+# Create extfile with SANs
+echo "subjectAltName = DNS:docker-host,IP:10.0.0.5,IP:127.0.0.1" > extfile.cnf
+echo "extendedKeyUsage = serverAuth" >> extfile.cnf
+
+# Sign server certificate
+openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem \
+  -CAcreateserial -out server-cert.pem -extfile extfile.cnf
+
+# Create client key and certificate
+openssl genrsa -out key.pem 4096
+openssl req -subj "/CN=client" -new -key key.pem -out client.csr
+echo "extendedKeyUsage = clientAuth" > extfile-client.cnf
+openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem \
+  -CAcreateserial -out cert.pem -extfile extfile-client.cnf
+
+# Set permissions
+chmod 0400 ca-key.pem key.pem server-key.pem
+chmod 0444 ca.pem server-cert.pem cert.pem
+
+# Move to Docker TLS directory
+sudo mkdir -p /etc/docker/tls
+sudo cp ca.pem server-cert.pem server-key.pem /etc/docker/tls/
+\stopverb}
+}
+
+\subtree{
+\title{Configure daemon.json for TLS}
+\pre{\startverb
+{
+  "tls": true,
+  "tlsverify": true,
+  "tlscacert": "/etc/docker/tls/ca.pem",
+  "tlscert": "/etc/docker/tls/server-cert.pem",
+  "tlskey": "/etc/docker/tls/server-key.pem",
+  "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Client Connection}
+\pre{\startverb
+docker --tlsverify \
+  --tlscacert=ca.pem \
+  --tlscert=cert.pem \
+  --tlskey=key.pem \
+  -H=tcp://docker-host:2376 version
+\stopverb}
+}
+}
+
+\subtree{
+\title{Docker Socket Protection}
+\pre{\startverb
+# Restrict socket ownership
+sudo chown root:docker /var/run/docker.sock
+sudo chmod 660 /var/run/docker.sock
+
+# Audit Docker socket access
+sudo auditctl -w /var/run/docker.sock -k docker-socket
+
+# Never mount Docker socket into containers
+# BAD: docker run -v /var/run/docker.sock:/var/run/docker.sock ...
+\stopverb}
+}
+
+\subtree{
+\title{Rootless Docker}
+\pre{\startverb
+# Install rootless Docker
+curl -fsSL https://get.docker.com/rootless | sh
+
+# Configure environment
+export PATH=$HOME/bin:$PATH
+export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock
+
+# Start rootless daemon
+systemctl --user start docker
+systemctl --user enable docker
+
+# Verify rootless mode
+docker info | grep -i rootless
+# Rootless: true
+\stopverb}
+}
+
+\subtree{
+\title{Content Trust (Image Signing)}
+\pre{\startverb
+# Enable Docker Content Trust
+export DOCKER_CONTENT_TRUST=1
+
+# Pull only signed images
+docker pull library/alpine:3.18
+# Will fail if image is not signed
+
+# Sign and push image
+docker trust sign myregistry/myapp:1.0
+\stopverb}
+}
+
+\subtree{
+\title{Seccomp Profile}
+\pre{\startverb
+# View default seccomp profile
+docker info --format '{{.SecurityOptions}}'
+
+# Use custom seccomp profile
+docker run --security-opt seccomp=/etc/docker/seccomp/custom.json alpine
+
+# Verify seccomp is enabled
+docker inspect --format='{{.HostConfig.SecurityOpt}}' container_name
+\stopverb}
+}
+
+\subtree{
+\title{AppArmor Profile}
+\pre{\startverb
+# Check AppArmor status
+sudo aa-status
+
+# Use custom AppArmor profile
+docker run --security-opt apparmor=docker-custom alpine
+
+# Load custom profile
+sudo apparmor_parser -r /etc/apparmor.d/docker-custom
+\stopverb}
+}
+
+\subtree{
+\title{Verification Commands}
+\pre{\startverb
+# Check daemon configuration
+docker info
+
+# Verify userns-remap
+docker info --format '{{.SecurityOptions}}'
+
+# Check ICC setting
+docker network inspect bridge --format '{{.Options}}'
+
+# Audit with Docker Bench
+docker run --rm --net host --pid host \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /etc:/etc:ro \
+  docker/docker-bench-security
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Never expose Docker daemon without TLS} - Always use \code{\startverb --tlsverify\stopverb} for remote access}
+\li{\strong{Enable user namespace remapping} - Map container root to unprivileged host UID}
+\li{\strong{Disable ICC} - Prevent default bridge network container-to-container communication}
+\li{\strong{Use rootless mode} - Run Docker daemon as non-root where possible}
+\li{\strong{Enable content trust} - Only pull signed images}
+\li{\strong{Configure log rotation} - Prevent log files from filling disk}
+\li{\strong{Use seccomp profiles} - Restrict syscalls available to containers}
+\li{\strong{Audit Docker socket} - Monitor access to /var/run/docker.sock}
+\li{\strong{Run Docker Bench regularly} - Automate CIS benchmark checks}
+\li{\strong{Keep Docker updated} - Apply security patches promptly}
+}
+}
+}

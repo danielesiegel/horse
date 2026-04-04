@@ -1,0 +1,508 @@
+\title{Protocolsio Integration}
+
+\taxon{skill}
+
+\meta{description}{Integration with protocols.io API for managing scientific protocols. This skill should be used when working with protocols.io to search, create, update, or publish protocols; manage protocol steps and materials; handle discussions and comments; organize workspaces; upload and manage files; or integrate protocols.io functionality into workflows. Applicable for protocol discovery, collaborative protocol development, experiment tracking, lab protocol management, and scientific documentation.}
+
+\subtree{
+\title{Protocols.io Integration}
+\subtree{
+\title{Overview}
+\p{Protocols.io is a comprehensive platform for developing, sharing, and managing scientific protocols. This skill provides complete integration with the protocols.io API v3, enabling programmatic access to protocols, workspaces, discussions, file management, and collaboration features.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when working with protocols.io in any of the following scenarios:}
+
+\ul{
+\li{\strong{Protocol Discovery}: Searching for existing protocols by keywords, DOI, or category}
+\li{\strong{Protocol Management}: Creating, updating, or publishing scientific protocols}
+\li{\strong{Step Management}: Adding, editing, or organizing protocol steps and procedures}
+\li{\strong{Collaborative Development}: Working with team members on shared protocols}
+\li{\strong{Workspace Organization}: Managing lab or institutional protocol repositories}
+\li{\strong{Discussion & Feedback}: Adding or responding to protocol comments}
+\li{\strong{File Management}: Uploading data files, images, or documents to protocols}
+\li{\strong{Experiment Tracking}: Documenting protocol executions and results}
+\li{\strong{Data Export}: Backing up or migrating protocol collections}
+\li{\strong{Integration Projects}: Building tools that interact with protocols.io}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{This skill provides comprehensive guidance across five major capability areas:}
+
+\subtree{
+\title{1. Authentication & Access}
+\p{Manage API authentication using access tokens and OAuth flows. Includes both client access tokens (for personal content) and OAuth tokens (for multi-user applications).}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{Generate authorization links for OAuth flow}
+\li{Exchange authorization codes for access tokens}
+\li{Refresh expired tokens}
+\li{Manage rate limits and permissions}
+}
+
+\p{\strong{Reference:} Read \code{\startverb references/authentication.md\stopverb} for detailed authentication procedures, OAuth implementation, and security best practices.}
+}
+
+\subtree{
+\title{2. Protocol Operations}
+\p{Complete protocol lifecycle management from creation to publication.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{Search and discover protocols by keywords, filters, or DOI}
+\li{Retrieve detailed protocol information with all steps}
+\li{Create new protocols with metadata and tags}
+\li{Update protocol information and settings}
+\li{Manage protocol steps (create, update, delete, reorder)}
+\li{Handle protocol materials and reagents}
+\li{Publish protocols with DOI issuance}
+\li{Bookmark protocols for quick access}
+\li{Generate protocol PDFs}
+}
+
+\p{\strong{Reference:} Read \code{\startverb references/protocols_api.md\stopverb} for comprehensive protocol management guidance, including API endpoints, parameters, common workflows, and examples.}
+}
+
+\subtree{
+\title{3. Discussions & Collaboration}
+\p{Enable community engagement through comments and discussions.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{View protocol-level and step-level comments}
+\li{Create new comments and threaded replies}
+\li{Edit or delete your own comments}
+\li{Analyze discussion patterns and feedback}
+\li{Respond to user questions and issues}
+}
+
+\p{\strong{Reference:} Read \code{\startverb references/discussions.md\stopverb} for discussion management, comment threading, and collaboration workflows.}
+}
+
+\subtree{
+\title{4. Workspace Management}
+\p{Organize protocols within team workspaces with role-based permissions.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{List and access user workspaces}
+\li{Retrieve workspace details and member lists}
+\li{Request access or join workspaces}
+\li{List workspace-specific protocols}
+\li{Create protocols within workspaces}
+\li{Manage workspace permissions and collaboration}
+}
+
+\p{\strong{Reference:} Read \code{\startverb references/workspaces.md\stopverb} for workspace organization, permission management, and team collaboration patterns.}
+}
+
+\subtree{
+\title{5. File Operations}
+\p{Upload, organize, and manage files associated with protocols.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{Search workspace files and folders}
+\li{Upload files with metadata and tags}
+\li{Download files and verify uploads}
+\li{Organize files into folder hierarchies}
+\li{Update file metadata}
+\li{Delete and restore files}
+\li{Manage storage and organization}
+}
+
+\p{\strong{Reference:} Read \code{\startverb references/file_manager.md\stopverb} for file upload procedures, organization strategies, and storage management.}
+}
+
+\subtree{
+\title{6. Additional Features}
+\p{Supplementary functionality including profiles, notifications, and exports.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{Manage user profiles and settings}
+\li{Query recently published protocols}
+\li{Create and track experiment records}
+\li{Receive and manage notifications}
+\li{Export organization data for archival}
+}
+
+\p{\strong{Reference:} Read \code{\startverb references/additional_features.md\stopverb} for profile management, publication discovery, experiment tracking, and data export.}
+}
+}
+
+\subtree{
+\title{Getting Started}
+\subtree{
+\title{Step 1: Authentication Setup}
+\p{Before using any protocols.io API functionality:}
+
+\ol{
+\li{Obtain an access token (CLIENT_ACCESS_TOKEN or OAUTH_ACCESS_TOKEN)}
+\li{Read \code{\startverb references/authentication.md\stopverb} for detailed authentication procedures}
+\li{Store the token securely}
+\li{Include in all requests as: \code{\startverb Authorization: Bearer YOUR_TOKEN\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 2: Identify Your Use Case}
+\p{Determine which capability area addresses your needs:}
+
+\ul{
+\li{\strong{Working with protocols?} → Read \code{\startverb references/protocols_api.md\stopverb}}
+\li{\strong{Managing team protocols?} → Read \code{\startverb references/workspaces.md\stopverb}}
+\li{\strong{Handling comments/feedback?} → Read \code{\startverb references/discussions.md\stopverb}}
+\li{\strong{Uploading files/data?} → Read \code{\startverb references/file_manager.md\stopverb}}
+\li{\strong{Tracking experiments or profiles?} → Read \code{\startverb references/additional_features.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 3: Implement Integration}
+\p{Follow the guidance in the relevant reference files:}
+
+\ul{
+\li{Each reference includes detailed endpoint documentation}
+\li{API parameters and request/response formats are specified}
+\li{Common use cases and workflows are provided with examples}
+\li{Best practices and error handling guidance included}
+}
+}
+}
+
+\subtree{
+\title{Base URL and Request Format}
+\p{All API requests use the base URL:}
+
+\pre{\startverb
+https://protocols.io/api/v3
+\stopverb}
+
+\p{All requests require the Authorization header:}
+
+\pre{\startverb
+Authorization: Bearer YOUR_ACCESS_TOKEN
+\stopverb}
+
+\p{Most endpoints support JSON request/response format with \code{\startverb Content-Type: application/json\stopverb}.}
+}
+
+\subtree{
+\title{Content Format Options}
+\p{Many endpoints support a \code{\startverb content_format\stopverb} parameter to control how protocol content is returned:}
+
+\ul{
+\li{\code{\startverb json\stopverb}: Draft.js JSON format (default)}
+\li{\code{\startverb html\stopverb}: HTML format}
+\li{\code{\startverb markdown\stopverb}: Markdown format}
+}
+
+\p{Include as query parameter: \code{\startverb ?content_format=html\stopverb}}
+}
+
+\subtree{
+\title{Rate Limiting}
+\p{Be aware of API rate limits:}
+
+\ul{
+\li{\strong{Standard endpoints}: 100 requests per minute per user}
+\li{\strong{PDF endpoint}: 5 requests/minute (signed-in), 3 requests/minute (unsigned)}
+}
+
+\p{Implement exponential backoff for rate limit errors (HTTP 429).}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Import and Analyze Protocol}
+\p{To analyze an existing protocol from protocols.io:}
+
+\ol{
+\li{\strong{Search}: Use \code{\startverb GET /protocols\stopverb} with keywords to find relevant protocols}
+\li{\strong{Retrieve}: Get full details with \code{\startverb GET /protocols/{protocol_id}\stopverb}}
+\li{\strong{Extract}: Parse steps, materials, and metadata for analysis}
+\li{\strong{Review discussions}: Check \code{\startverb GET /protocols/{id}/comments\stopverb} for user feedback}
+\li{\strong{Export}: Generate PDF if needed for offline reference}
+}
+
+\p{\strong{Reference files}: \code{\startverb protocols_api.md\stopverb}, \code{\startverb discussions.md\stopverb}}
+}
+
+\subtree{
+\title{Workflow 2: Create and Publish Protocol}
+\p{To create a new protocol and publish with DOI:}
+
+\ol{
+\li{\strong{Authenticate}: Ensure you have valid access token (see \code{\startverb authentication.md\stopverb})}
+\li{\strong{Create}: Use \code{\startverb POST /protocols\stopverb} with title and description}
+\li{\strong{Add steps}: For each step, use \code{\startverb POST /protocols/{id}/steps\stopverb}}
+\li{\strong{Add materials}: Document reagents in step components}
+\li{\strong{Review}: Verify all content is complete and accurate}
+\li{\strong{Publish}: Issue DOI with \code{\startverb POST /protocols/{id}/publish\stopverb}}
+}
+
+\p{\strong{Reference files}: \code{\startverb protocols_api.md\stopverb}, \code{\startverb authentication.md\stopverb}}
+}
+
+\subtree{
+\title{Workflow 3: Collaborative Lab Workspace}
+\p{To set up team protocol management:}
+
+\ol{
+\li{\strong{Create/join workspace}: Access or request workspace membership (see \code{\startverb workspaces.md\stopverb})}
+\li{\strong{Organize structure}: Create folder hierarchy for lab protocols (see \code{\startverb file_manager.md\stopverb})}
+\li{\strong{Create protocols}: Use \code{\startverb POST /workspaces/{id}/protocols\stopverb} for team protocols}
+\li{\strong{Upload files}: Add experimental data and images}
+\li{\strong{Enable discussions}: Team members can comment and provide feedback}
+\li{\strong{Track experiments}: Document protocol executions with experiment records}
+}
+
+\p{\strong{Reference files}: \code{\startverb workspaces.md\stopverb}, \code{\startverb file_manager.md\stopverb}, \code{\startverb protocols_api.md\stopverb}, \code{\startverb discussions.md\stopverb}, \code{\startverb additional_features.md\stopverb}}
+}
+
+\subtree{
+\title{Workflow 4: Experiment Documentation}
+\p{To track protocol executions and results:}
+
+\ol{
+\li{\strong{Execute protocol}: Perform protocol in laboratory}
+\li{\strong{Upload data}: Use File Manager API to upload results (see \code{\startverb file_manager.md\stopverb})}
+\li{\strong{Create record}: Document execution with \code{\startverb POST /protocols/{id}/runs\stopverb}}
+\li{\strong{Link files}: Reference uploaded data files in experiment record}
+\li{\strong{Note modifications}: Document any protocol deviations or optimizations}
+\li{\strong{Analyze}: Review multiple runs for reproducibility assessment}
+}
+
+\p{\strong{Reference files}: \code{\startverb additional_features.md\stopverb}, \code{\startverb file_manager.md\stopverb}, \code{\startverb protocols_api.md\stopverb}}
+}
+
+\subtree{
+\title{Workflow 5: Protocol Discovery and Citation}
+\p{To find and cite protocols in research:}
+
+\ol{
+\li{\strong{Search}: Query published protocols with \code{\startverb GET /publications\stopverb}}
+\li{\strong{Filter}: Use category and keyword filters for relevant protocols}
+\li{\strong{Review}: Read protocol details and community comments}
+\li{\strong{Bookmark}: Save useful protocols with \code{\startverb POST /protocols/{id}/bookmarks\stopverb}}
+\li{\strong{Cite}: Use protocol DOI in publications (proper attribution)}
+\li{\strong{Export PDF}: Generate formatted PDF for offline reference}
+}
+
+\p{\strong{Reference files}: \code{\startverb protocols_api.md\stopverb}, \code{\startverb additional_features.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Python Request Examples}
+\subtree{
+\title{Basic Protocol Search}
+\pre{\startverb
+import requests
+
+token = "YOUR_ACCESS_TOKEN"
+headers = {"Authorization": f"Bearer {token}"}
+
+# Search for CRISPR protocols
+response = requests.get(
+    "https://protocols.io/api/v3/protocols",
+    headers=headers,
+    params={
+        "filter": "public",
+        "key": "CRISPR",
+        "page_size": 10,
+        "content_format": "html"
+    }
+)
+
+protocols = response.json()
+for protocol in protocols["items"]:
+    print(f"{protocol['title']} - {protocol['doi']}")
+\stopverb}
+}
+
+\subtree{
+\title{Create New Protocol}
+\pre{\startverb
+import requests
+
+token = "YOUR_ACCESS_TOKEN"
+headers = {
+    "Authorization": f"Bearer {token}",
+    "Content-Type": "application/json"
+}
+
+# Create protocol
+data = {
+    "title": "CRISPR-Cas9 Gene Editing Protocol",
+    "description": "Comprehensive protocol for CRISPR gene editing",
+    "tags": ["CRISPR", "gene editing", "molecular biology"]
+}
+
+response = requests.post(
+    "https://protocols.io/api/v3/protocols",
+    headers=headers,
+    json=data
+)
+
+protocol_id = response.json()["item"]["id"]
+print(f"Created protocol: {protocol_id}")
+\stopverb}
+}
+
+\subtree{
+\title{Upload File to Workspace}
+\pre{\startverb
+import requests
+
+token = "YOUR_ACCESS_TOKEN"
+headers = {"Authorization": f"Bearer {token}"}
+
+# Upload file
+with open("data.csv", "rb") as f:
+    files = {"file": f}
+    data = {
+        "folder_id": "root",
+        "description": "Experimental results",
+        "tags": "experiment,data,2025"
+    }
+
+    response = requests.post(
+        "https://protocols.io/api/v3/workspaces/12345/files/upload",
+        headers=headers,
+        files=files,
+        data=data
+    )
+
+file_id = response.json()["item"]["id"]
+print(f"Uploaded file: {file_id}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\p{Implement robust error handling for API requests:}
+
+\pre{\startverb
+import requests
+import time
+
+def make_request_with_retry(url, headers, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, headers=headers)
+
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 429:  # Rate limit
+                retry_after = int(response.headers.get('Retry-After', 60))
+                time.sleep(retry_after)
+                continue
+            elif response.status_code >= 500:  # Server error
+                time.sleep(2 ** attempt)  # Exponential backoff
+                continue
+            else:
+                response.raise_for_status()
+
+        except requests.exceptions.RequestException as e:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(2 ** attempt)
+
+    raise Exception("Max retries exceeded")
+\stopverb}
+}
+
+\subtree{
+\title{Reference Files}
+\p{Load the appropriate reference file based on your task:}
+
+\ul{
+\li{\strong{\code{\startverb authentication.md\stopverb}}: OAuth flows, token management, rate limiting}
+\li{\strong{\code{\startverb protocols_api.md\stopverb}}: Protocol CRUD, steps, materials, publishing, PDFs}
+\li{\strong{\code{\startverb discussions.md\stopverb}}: Comments, replies, collaboration}
+\li{\strong{\code{\startverb workspaces.md\stopverb}}: Team workspaces, permissions, organization}
+\li{\strong{\code{\startverb file_manager.md\stopverb}}: File upload, folders, storage management}
+\li{\strong{\code{\startverb additional_features.md\stopverb}}: Profiles, publications, experiments, notifications}
+}
+
+\p{To load a reference file, read the file from the \code{\startverb references/\stopverb} directory when needed for specific functionality.}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Authentication}: Store tokens securely, never in code or version control}
+\li{\strong{Rate Limiting}: Implement exponential backoff and respect rate limits}
+\li{\strong{Error Handling}: Handle all HTTP error codes appropriately}
+\li{\strong{Data Validation}: Validate input before API calls}
+\li{\strong{Documentation}: Document protocol steps thoroughly}
+\li{\strong{Collaboration}: Use comments and discussions for team communication}
+\li{\strong{Organization}: Maintain consistent naming and tagging conventions}
+\li{\strong{Versioning}: Track protocol versions when making updates}
+\li{\strong{Attribution}: Properly cite protocols using DOIs}
+\li{\strong{Backup}: Regularly export important protocols and workspace data}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official API Documentation}: https://apidoc.protocols.io/}
+\li{\strong{Protocols.io Platform}: https://www.protocols.io/}
+\li{\strong{Support}: Contact protocols.io support for API access and technical issues}
+\li{\strong{Community}: Engage with protocols.io community for best practices}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Authentication Issues:}}
+
+\ul{
+\li{Verify token is valid and not expired}
+\li{Check Authorization header format: \code{\startverb Bearer YOUR_TOKEN\stopverb}}
+\li{Ensure appropriate token type (CLIENT vs OAUTH)}
+}
+
+\p{\strong{Rate Limiting:}}
+
+\ul{
+\li{Implement exponential backoff for 429 errors}
+\li{Monitor request frequency}
+\li{Consider caching frequent requests}
+}
+
+\p{\strong{Permission Errors:}}
+
+\ul{
+\li{Verify workspace/protocol access permissions}
+\li{Check user role in workspace}
+\li{Ensure protocol is not private if accessing without permission}
+}
+
+\p{\strong{File Upload Failures:}}
+
+\ul{
+\li{Check file size against workspace limits}
+\li{Verify file type is supported}
+\li{Ensure multipart/form-data encoding is correct}
+}
+
+\p{For detailed troubleshooting guidance, refer to the specific reference files covering each capability area.}
+}
+}

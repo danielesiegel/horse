@@ -1,0 +1,610 @@
+\title{Fda Database}
+
+\taxon{skill}
+
+\meta{description}{"Query openFDA API for drugs, devices, adverse events, recalls, regulatory submissions (510k, PMA), substance identification (UNII), for FDA regulatory data analysis and safety research."}
+
+\subtree{
+\title{FDA Database Access}
+\subtree{
+\title{Overview}
+\p{Access comprehensive FDA regulatory data through openFDA, the FDA's initiative to provide open APIs for public datasets. Query information about drugs, medical devices, foods, animal/veterinary products, and substances using Python with standardized interfaces.}
+
+\p{\strong{Key capabilities:}}
+
+\ul{
+\li{Query adverse events for drugs, devices, foods, and veterinary products}
+\li{Access product labeling, approvals, and regulatory submissions}
+\li{Monitor recalls and enforcement actions}
+\li{Look up National Drug Codes (NDC) and substance identifiers (UNII)}
+\li{Analyze device classifications and clearances (510k, PMA)}
+\li{Track drug shortages and supply issues}
+\li{Research chemical structures and substance relationships}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when working with:}
+
+\ul{
+\li{\strong{Drug research}: Safety profiles, adverse events, labeling, approvals, shortages}
+\li{\strong{Medical device surveillance}: Adverse events, recalls, 510(k) clearances, PMA approvals}
+\li{\strong{Food safety}: Recalls, allergen tracking, adverse events, dietary supplements}
+\li{\strong{Veterinary medicine}: Animal drug adverse events by species and breed}
+\li{\strong{Chemical/substance data}: UNII lookup, CAS number mapping, molecular structures}
+\li{\strong{Regulatory analysis}: Approval pathways, enforcement actions, compliance tracking}
+\li{\strong{Pharmacovigilance}: Post-market surveillance, safety signal detection}
+\li{\strong{Scientific research}: Drug interactions, comparative safety, epidemiological studies}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{1. Basic Setup}
+\pre{\startverb
+from scripts.fda_query import FDAQuery
+
+# Initialize (API key optional but recommended)
+fda = FDAQuery(api_key="YOUR_API_KEY")
+
+# Query drug adverse events
+events = fda.query_drug_events("aspirin", limit=100)
+
+# Get drug labeling
+label = fda.query_drug_label("Lipitor", brand=True)
+
+# Search device recalls
+recalls = fda.query("device", "enforcement",
+                   search="classification:Class+I",
+                   limit=50)
+\stopverb}
+}
+
+\subtree{
+\title{2. API Key Setup}
+\p{While the API works without a key, registering provides higher rate limits:}
+
+\ul{
+\li{\strong{Without key}: 240 requests/min, 1,000/day}
+\li{\strong{With key}: 240 requests/min, 120,000/day}
+}
+
+\p{Register at: https://open.fda.gov/apis/authentication/}
+
+\p{Set as environment variable:}
+
+\pre{\startverb
+export FDA_API_KEY="your_key_here"
+\stopverb}
+}
+
+\subtree{
+\title{3. Running Examples}
+\pre{\startverb
+# Run comprehensive examples
+python scripts/fda_examples.py
+
+# This demonstrates:
+# - Drug safety profiles
+# - Device surveillance
+# - Food recall monitoring
+# - Substance lookup
+# - Comparative drug analysis
+# - Veterinary drug analysis
+\stopverb}
+}
+}
+
+\subtree{
+\title{FDA Database Categories}
+\subtree{
+\title{Drugs}
+\p{Access 6 drug-related endpoints covering the full drug lifecycle from approval to post-market surveillance.}
+
+\p{\strong{Endpoints:}}
+
+\ol{
+\li{\strong{Adverse Events} - Reports of side effects, errors, and therapeutic failures}
+\li{\strong{Product Labeling} - Prescribing information, warnings, indications}
+\li{\strong{NDC Directory} - National Drug Code product information}
+\li{\strong{Enforcement Reports} - Drug recalls and safety actions}
+\li{\strong{Drugs@FDA} - Historical approval data since 1939}
+\li{\strong{Drug Shortages} - Current and resolved supply issues}
+}
+
+\p{\strong{Common use cases:}}
+
+\pre{\startverb
+# Safety signal detection
+fda.count_by_field("drug", "event",
+                  search="patient.drug.medicinalproduct:metformin",
+                  field="patient.reaction.reactionmeddrapt")
+
+# Get prescribing information
+label = fda.query_drug_label("Keytruda", brand=True)
+
+# Check for recalls
+recalls = fda.query_drug_recalls(drug_name="metformin")
+
+# Monitor shortages
+shortages = fda.query("drug", "drugshortages",
+                     search="status:Currently+in+Shortage")
+\stopverb}
+
+\p{\strong{Reference:} See \code{\startverb references/drugs.md\stopverb} for detailed documentation}
+}
+
+\subtree{
+\title{Devices}
+\p{Access 9 device-related endpoints covering medical device safety, approvals, and registrations.}
+
+\p{\strong{Endpoints:}}
+
+\ol{
+\li{\strong{Adverse Events} - Device malfunctions, injuries, deaths}
+\li{\strong{510(k) Clearances} - Premarket notifications}
+\li{\strong{Classification} - Device categories and risk classes}
+\li{\strong{Enforcement Reports} - Device recalls}
+\li{\strong{Recalls} - Detailed recall information}
+\li{\strong{PMA} - Premarket approval data for Class III devices}
+\li{\strong{Registrations & Listings} - Manufacturing facility data}
+\li{\strong{UDI} - Unique Device Identification database}
+\li{\strong{COVID-19 Serology} - Antibody test performance data}
+}
+
+\p{\strong{Common use cases:}}
+
+\pre{\startverb
+# Monitor device safety
+events = fda.query_device_events("pacemaker", limit=100)
+
+# Look up device classification
+classification = fda.query_device_classification("DQY")
+
+# Find 510(k) clearances
+clearances = fda.query_device_510k(applicant="Medtronic")
+
+# Search by UDI
+device_info = fda.query("device", "udi",
+                       search="identifiers.id:00884838003019")
+\stopverb}
+
+\p{\strong{Reference:} See \code{\startverb references/devices.md\stopverb} for detailed documentation}
+}
+
+\subtree{
+\title{Foods}
+\p{Access 2 food-related endpoints for safety monitoring and recalls.}
+
+\p{\strong{Endpoints:}}
+
+\ol{
+\li{\strong{Adverse Events} - Food, dietary supplement, and cosmetic events}
+\li{\strong{Enforcement Reports} - Food product recalls}
+}
+
+\p{\strong{Common use cases:}}
+
+\pre{\startverb
+# Monitor allergen recalls
+recalls = fda.query_food_recalls(reason="undeclared peanut")
+
+# Track dietary supplement events
+events = fda.query_food_events(
+    industry="Dietary Supplements")
+
+# Find contamination recalls
+listeria = fda.query_food_recalls(
+    reason="listeria",
+    classification="I")
+\stopverb}
+
+\p{\strong{Reference:} See \code{\startverb references/foods.md\stopverb} for detailed documentation}
+}
+
+\subtree{
+\title{Animal & Veterinary}
+\p{Access veterinary drug adverse event data with species-specific information.}
+
+\p{\strong{Endpoint:}}
+
+\ol{
+\li{\strong{Adverse Events} - Animal drug side effects by species, breed, and product}
+}
+
+\p{\strong{Common use cases:}}
+
+\pre{\startverb
+# Species-specific events
+dog_events = fda.query_animal_events(
+    species="Dog",
+    drug_name="flea collar")
+
+# Breed predisposition analysis
+breed_query = fda.query("animalandveterinary", "event",
+    search="reaction.veddra_term_name:*seizure*+AND+"
+           "animal.breed.breed_component:*Labrador*")
+\stopverb}
+
+\p{\strong{Reference:} See \code{\startverb references/animal_veterinary.md\stopverb} for detailed documentation}
+}
+
+\subtree{
+\title{Substances & Other}
+\p{Access molecular-level substance data with UNII codes, chemical structures, and relationships.}
+
+\p{\strong{Endpoints:}}
+
+\ol{
+\li{\strong{Substance Data} - UNII, CAS, chemical structures, relationships}
+\li{\strong{NSDE} - Historical substance data (legacy)}
+}
+
+\p{\strong{Common use cases:}}
+
+\pre{\startverb
+# UNII to CAS mapping
+substance = fda.query_substance_by_unii("R16CO5Y76E")
+
+# Search by name
+results = fda.query_substance_by_name("acetaminophen")
+
+# Get chemical structure
+structure = fda.query("other", "substance",
+    search="names.name:ibuprofen+AND+substanceClass:chemical")
+\stopverb}
+
+\p{\strong{Reference:} See \code{\startverb references/other.md\stopverb} for detailed documentation}
+}
+}
+
+\subtree{
+\title{Common Query Patterns}
+\subtree{
+\title{Pattern 1: Safety Profile Analysis}
+\p{Create comprehensive safety profiles combining multiple data sources:}
+
+\pre{\startverb
+def drug_safety_profile(fda, drug_name):
+    """Generate complete safety profile."""
+
+    # 1. Total adverse events
+    events = fda.query_drug_events(drug_name, limit=1)
+    total = events["meta"]["results"]["total"]
+
+    # 2. Most common reactions
+    reactions = fda.count_by_field(
+        "drug", "event",
+        search=f"patient.drug.medicinalproduct:*{drug_name}*",
+        field="patient.reaction.reactionmeddrapt",
+        exact=True
+    )
+
+    # 3. Serious events
+    serious = fda.query("drug", "event",
+        search=f"patient.drug.medicinalproduct:*{drug_name}*+AND+serious:1",
+        limit=1)
+
+    # 4. Recent recalls
+    recalls = fda.query_drug_recalls(drug_name=drug_name)
+
+    return {
+        "total_events": total,
+        "top_reactions": reactions["results"][:10],
+        "serious_events": serious["meta"]["results"]["total"],
+        "recalls": recalls["results"]
+    }
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Temporal Trend Analysis}
+\p{Analyze trends over time using date ranges:}
+
+\pre{\startverb
+from datetime import datetime, timedelta
+
+def get_monthly_trends(fda, drug_name, months=12):
+    """Get monthly adverse event trends."""
+    trends = []
+
+    for i in range(months):
+        end = datetime.now() - timedelta(days=30*i)
+        start = end - timedelta(days=30)
+
+        date_range = f"[{start.strftime('%Y%m%d')}+TO+{end.strftime('%Y%m%d')}]"
+        search = f"patient.drug.medicinalproduct:*{drug_name}*+AND+receivedate:{date_range}"
+
+        result = fda.query("drug", "event", search=search, limit=1)
+        count = result["meta"]["results"]["total"] if "meta" in result else 0
+
+        trends.append({
+            "month": start.strftime("%Y-%m"),
+            "events": count
+        })
+
+    return trends
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Comparative Analysis}
+\p{Compare multiple products side-by-side:}
+
+\pre{\startverb
+def compare_drugs(fda, drug_list):
+    """Compare safety profiles of multiple drugs."""
+    comparison = {}
+
+    for drug in drug_list:
+        # Total events
+        events = fda.query_drug_events(drug, limit=1)
+        total = events["meta"]["results"]["total"] if "meta" in events else 0
+
+        # Serious events
+        serious = fda.query("drug", "event",
+            search=f"patient.drug.medicinalproduct:*{drug}*+AND+serious:1",
+            limit=1)
+        serious_count = serious["meta"]["results"]["total"] if "meta" in serious else 0
+
+        comparison[drug] = {
+            "total_events": total,
+            "serious_events": serious_count,
+            "serious_rate": (serious_count/total*100) if total > 0 else 0
+        }
+
+    return comparison
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 4: Cross-Database Lookup}
+\p{Link data across multiple endpoints:}
+
+\pre{\startverb
+def comprehensive_device_lookup(fda, device_name):
+    """Look up device across all relevant databases."""
+
+    return {
+        "adverse_events": fda.query_device_events(device_name, limit=10),
+        "510k_clearances": fda.query_device_510k(device_name=device_name),
+        "recalls": fda.query("device", "enforcement",
+                           search=f"product_description:*{device_name}*"),
+        "udi_info": fda.query("device", "udi",
+                            search=f"brand_name:*{device_name}*")
+    }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Working with Results}
+\subtree{
+\title{Response Structure}
+\p{All API responses follow this structure:}
+
+\pre{\startverb
+{
+    "meta": {
+        "disclaimer": "...",
+        "results": {
+            "skip": 0,
+            "limit": 100,
+            "total": 15234
+        }
+    },
+    "results": [
+        # Array of result objects
+    ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\p{Always handle potential errors:}
+
+\pre{\startverb
+result = fda.query_drug_events("aspirin", limit=10)
+
+if "error" in result:
+    print(f"Error: {result['error']}")
+elif "results" not in result or len(result["results"]) == 0:
+    print("No results found")
+else:
+    # Process results
+    for event in result["results"]:
+        # Handle event data
+        pass
+\stopverb}
+}
+
+\subtree{
+\title{Pagination}
+\p{For large result sets, use pagination:}
+
+\pre{\startverb
+# Automatic pagination
+all_results = fda.query_all(
+    "drug", "event",
+    search="patient.drug.medicinalproduct:aspirin",
+    max_results=5000
+)
+
+# Manual pagination
+for skip in range(0, 1000, 100):
+    batch = fda.query("drug", "event",
+                     search="...",
+                     limit=100,
+                     skip=skip)
+    # Process batch
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{1. Use Specific Searches}
+\p{\strong{DO:}}
+
+\pre{\startverb
+# Specific field search
+search="patient.drug.medicinalproduct:aspirin"
+\stopverb}
+
+\p{\strong{DON'T:}}
+
+\pre{\startverb
+# Overly broad wildcard
+search="*aspirin*"
+\stopverb}
+}
+
+\subtree{
+\title{2. Implement Rate Limiting}
+\p{The \code{\startverb FDAQuery\stopverb} class handles rate limiting automatically, but be aware of limits:}
+
+\ul{
+\li{240 requests per minute}
+\li{120,000 requests per day (with API key)}
+}
+}
+
+\subtree{
+\title{3. Cache Frequently Accessed Data}
+\p{The \code{\startverb FDAQuery\stopverb} class includes built-in caching (enabled by default):}
+
+\pre{\startverb
+# Caching is automatic
+fda = FDAQuery(api_key=api_key, use_cache=True, cache_ttl=3600)
+\stopverb}
+}
+
+\subtree{
+\title{4. Use Exact Matching for Counting}
+\p{When counting/aggregating, use \code{\startverb .exact\stopverb} suffix:}
+
+\pre{\startverb
+# Count exact phrases
+fda.count_by_field("drug", "event",
+                  search="...",
+                  field="patient.reaction.reactionmeddrapt",
+                  exact=True)  # Adds .exact automatically
+\stopverb}
+}
+
+\subtree{
+\title{5. Validate Input Data}
+\p{Clean and validate search terms:}
+
+\pre{\startverb
+def clean_drug_name(name):
+    """Clean drug name for query."""
+    return name.strip().replace('"', '\\"')
+
+drug_name = clean_drug_name(user_input)
+\stopverb}
+}
+}
+
+\subtree{
+\title{API Reference}
+\p{For detailed information about:}
+
+\ul{
+\li{\strong{Authentication and rate limits} → See \code{\startverb references/api_basics.md\stopverb}}
+\li{\strong{Drug databases} → See \code{\startverb references/drugs.md\stopverb}}
+\li{\strong{Device databases} → See \code{\startverb references/devices.md\stopverb}}
+\li{\strong{Food databases} → See \code{\startverb references/foods.md\stopverb}}
+\li{\strong{Animal/veterinary databases} → See \code{\startverb references/animal_veterinary.md\stopverb}}
+\li{\strong{Substance databases} → See \code{\startverb references/other.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Scripts}
+\subtree{
+\title{\code{\startverb scripts/fda_query.py\stopverb}}
+\p{Main query module with \code{\startverb FDAQuery\stopverb} class providing:}
+
+\ul{
+\li{Unified interface to all FDA endpoints}
+\li{Automatic rate limiting and caching}
+\li{Error handling and retry logic}
+\li{Common query patterns}
+}
+}
+
+\subtree{
+\title{\code{\startverb scripts/fda_examples.py\stopverb}}
+\p{Comprehensive examples demonstrating:}
+
+\ul{
+\li{Drug safety profile analysis}
+\li{Device surveillance monitoring}
+\li{Food recall tracking}
+\li{Substance lookup}
+\li{Comparative drug analysis}
+\li{Veterinary drug analysis}
+}
+
+\p{Run examples:}
+
+\pre{\startverb
+python scripts/fda_examples.py
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{openFDA Homepage}: https://open.fda.gov/}
+\li{\strong{API Documentation}: https://open.fda.gov/apis/}
+\li{\strong{Interactive API Explorer}: https://open.fda.gov/apis/try-the-api/}
+\li{\strong{GitHub Repository}: https://github.com/FDA/openfda}
+\li{\strong{Terms of Service}: https://open.fda.gov/terms/}
+}
+}
+
+\subtree{
+\title{Support and Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{Issue}: Rate limit exceeded}
+
+\ul{
+\li{\strong{Solution}: Use API key, implement delays, or reduce request frequency}
+}
+
+\p{\strong{Issue}: No results found}
+
+\ul{
+\li{\strong{Solution}: Try broader search terms, check spelling, use wildcards}
+}
+
+\p{\strong{Issue}: Invalid query syntax}
+
+\ul{
+\li{\strong{Solution}: Review query syntax in \code{\startverb references/api_basics.md\stopverb}}
+}
+
+\p{\strong{Issue}: Missing fields in results}
+
+\ul{
+\li{\strong{Solution}: Not all records contain all fields; always check field existence}
+}
+}
+
+\subtree{
+\title{Getting Help}
+\ul{
+\li{\strong{GitHub Issues}: https://github.com/FDA/openfda/issues}
+\li{\strong{Email}: open-fda@fda.hhs.gov}
+}
+}
+}
+}

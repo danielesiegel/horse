@@ -1,0 +1,510 @@
+\title{Flox Builds}
+
+\taxon{skill}
+
+\meta{description}{Building and packaging applications with Flox. Use for manifest builds, Nix expression builds, sandbox modes, multi-stage builds, and packaging assets.}
+
+\subtree{
+\title{Flox Build System Guide}
+\subtree{
+\title{Build System Overview}
+\p{Flox supports two build modes, each with its own strengths:}
+
+\p{\strong{Manifest builds} enable you to define your build steps in your manifest and reuse your existing build scripts and toolchains. Flox manifests are declarative artifacts, expressed in TOML.}
+
+\p{Manifest builds:}
+
+\ul{
+\li{Make it easy to get started, requiring few if any changes to your existing workflows}
+\li{Can run inside a sandbox (using \code{\startverb sandbox = "pure"\stopverb}) for reproducible builds}
+\li{Are best for getting going fast with existing projects}
+}
+
+\p{\strong{Nix expression builds} guarantee build-time reproducibility because they're both isolated and purely functional. Their learning curve is steeper because they require proficiency with the Nix language.}
+
+\p{Nix expression builds:}
+
+\ul{
+\li{Are isolated by default. The Nix sandbox seals the build off from the host system, so no state leak ins}
+\li{Are functional. A Nix build is defined as a pure function of its declared inputs}
+}
+
+\p{You can mix both approaches in the same project, but package names must be unique.}
+}
+
+\subtree{
+\title{Core Commands}
+\pre{\startverb
+flox build                      # Build all targets
+flox build app docs             # Build specific targets
+flox build -d /path/to/project  # Build in another directory
+flox build -v                   # Verbose output
+flox build .#hello              # Build specific Nix expression
+\stopverb}
+}
+
+\subtree{
+\title{Development vs Runtime: The Two-Environment Pattern}
+\p{A common workflow involves \strong{two separate environments}:}
+
+\subtree{
+\title{Development Environment (Build-Time)}
+\p{Contains source code, build tools, and build definitions:}
+
+\pre{\startverb
+# project-dev/.flox/env/manifest.toml (in git with source code)
+[install]
+gcc.pkg-path = "gcc13"
+make.pkg-path = "make"
+python.pkg-path = "python311Full"
+uv.pkg-path = "uv"
+
+[build.myapp]
+command = '''
+  make build
+  mkdir -p $out/bin
+  cp build/myapp $out/bin/
+'''
+version = "1.0.0"
+\stopverb}
+
+\p{\strong{Workflow:}}
+
+\pre{\startverb
+cd project-dev
+flox activate
+flox build myapp
+flox publish -o myorg myapp
+\stopverb}
+}
+
+\subtree{
+\title{Runtime Environment (Consume-Time)}
+\p{Contains only the published package and runtime dependencies:}
+
+\pre{\startverb
+# project-runtime/.flox/env/manifest.toml (can push to FloxHub)
+[install]
+myapp.pkg-path = "myorg/myapp"  # The published package
+\stopverb}
+
+\p{\strong{Workflow:}}
+
+\pre{\startverb
+cd project-runtime
+flox init
+flox install myorg/myapp
+flox push  # Share runtime environment without source code
+\stopverb}
+
+\p{\strong{Why separate environments?}}
+
+\ul{
+\li{Development environment: Heavy (build tools, source code, dev dependencies)}
+\li{Runtime environment: Lightweight (only published package and runtime needs)}
+\li{Security: Runtime environments don't expose source code}
+\li{Clarity: Clear separation between building and consuming}
+\li{Rollback: Can rollback the live generation of a runtime environment without affecting the development environment}
+}
+
+\p{\strong{Note}: You can also install published packages into existing environments (other projects, production environments, etc.), not just dedicated runtime environments.}
+}
+}
+
+\subtree{
+\title{Manifest Builds}
+\p{Flox treats a \strong{manifest build} as a short, deterministic Bash script that runs inside an activated environment and copies its deliverables into \code{\startverb $out\stopverb}. Anything copied there becomes a first-class, versioned package that can later be published and installed like any other catalog artifact.}
+
+\subtree{
+\title{Critical insights from real-world packaging:}
+\ul{
+\li{\strong{Build hooks don't run}: \code{\startverb [hook]\stopverb} scripts DO NOT execute during \code{\startverb flox build\stopverb} - only during interactive \code{\startverb flox activate\stopverb}}
+\li{\strong{Guard env vars}: Always use \code{\startverb ${FLOX_ENV_CACHE:-}\stopverb} with default fallback in hooks to avoid build failures}
+\li{\strong{Wrapper scripts pattern}: Create launcher scripts in \code{\startverb $out/bin/\stopverb} that set up runtime environment:}
+\li{\strong{User config pattern}: Default to \code{\startverb ~/.myapp/\stopverb} for user configs, not \code{\startverb $FLOX_ENV_CACHE\stopverb} (packages are immutable)}
+\li{\strong{Model/data directories}: Create user directories at runtime, not build time:}
+\li{\strong{Python package strategy}: Don't bundle Python deps - include \code{\startverb requirements.txt\stopverb} and setup script:}
+\li{\strong{Dual-environment workflow}: Use one environment for building (\code{\startverb project-dev/\stopverb}), another for consuming (\code{\startverb project-runtime/\stopverb}). See "Development vs Runtime: The Two-Environment Pattern" section above for details.}
+}
+}
+
+\subtree{
+\title{Build Definition Syntax}
+\pre{\startverb
+[build.<name>]
+command      = '''  # required – Bash, multiline string
+  <your build steps>                 # e.g. cargo build, npm run build
+  mkdir -p $out/bin
+  cp path/to/artifact $out/bin/<name>
+'''
+version      = "1.2.3"               # optional
+description  = "one-line summary"    # optional
+sandbox      = "pure" | "off"        # default: off
+runtime-packages = [ "id1", "id2" ]  # optional
+\stopverb}
+
+\p{\strong{One table per package.} Multiple \code{\startverb [build.*]\stopverb} tables let you publish, for example, a stripped release binary and a debug build from the same sources.}
+
+\p{\strong{Bash only.} The script executes under \code{\startverb set -euo pipefail\stopverb}. If you need zsh or fish features, invoke them explicitly inside the script.}
+
+\p{\strong{Environment parity.} Before your script runs, Flox performs the equivalent of \code{\startverb flox activate\stopverb} — so every tool listed in \code{\startverb [install]\stopverb} is on PATH.}
+
+\p{\strong{Package groups and builds.} Only packages in the \code{\startverb toplevel\stopverb} group (default) are available during builds. Packages with explicit \code{\startverb pkg-group\stopverb} settings won't be accessible in build commands unless also installed to \code{\startverb toplevel\stopverb}.}
+
+\p{\strong{Referencing other builds.} \code{\startverb ${other}\stopverb} expands to the \code{\startverb $out\stopverb} of \code{\startverb [build.other]\stopverb} and forces that build to run first, enabling multi-stage flows (e.g. vendoring → compilation).}
+}
+}
+
+\subtree{
+\title{Purity and Sandbox Control}
+\pre{\startverb
+| sandbox value | Filesystem scope | Network | Typical use-case |
+|---------------|------------------|---------|------------------|
+| `"off"` (default) | Project working tree; complete host FS | allowed | Fast, iterative dev builds |
+| `"pure"` | Git-tracked files only, copied to tmp | Linux: blocked<br>macOS: allowed | Reproducible, host-agnostic packages |
+\stopverb}
+
+\p{Pure mode highlights undeclared inputs early and is mandatory for builds intended for CI/CD publication. When a pure build needs pre-fetched artifacts (e.g. language modules) use a two-stage pattern:}
+
+\pre{\startverb
+[build.deps]
+command  = '''go mod vendor -o $out/etc/vendor'''
+sandbox  = "off"
+
+[build.app]
+command  = '''
+  cp -r ${deps}/etc/vendor ./vendor
+  go build ./...
+  mkdir -p $out/bin
+  cp app $out/bin/
+'''
+sandbox  = "pure"
+\stopverb}
+}
+
+\subtree{
+\title{$out Layout and Filesystem Hierarchy}
+\p{Only files placed under \code{\startverb $out\stopverb} survive. Follow FHS conventions:}
+
+\pre{\startverb
+| Path | Purpose |
+|------|---------|
+| `$out/bin` / `$out/sbin` | CLI and daemon binaries (must be `chmod +x`) |
+| `$out/lib`, `$out/libexec` | Shared libraries, helper programs |
+| `$out/share/man` | Man pages (gzip them) |
+| `$out/etc` | Configuration shipped with the package |
+\stopverb}
+
+\p{Scripts or binaries stored elsewhere will not end up on callers' paths.}
+}
+
+\subtree{
+\title{Running Manifest Builds}
+\pre{\startverb
+# Build every target in the manifest
+flox build
+
+# Build a subset
+flox build app docs
+
+# Build a manifest in another directory
+flox build -d /path/to/project
+\stopverb}
+
+\p{Results appear as immutable symlinks: \code{\startverb ./result-<name>\stopverb} → \code{\startverb /nix/store/...-<name>-<version>\stopverb}.}
+
+\p{To execute a freshly built binary: \code{\startverb ./result-app/bin/app\stopverb}.}
+}
+
+\subtree{
+\title{Multi-Stage Examples}
+\subtree{
+\title{Rust release binary plus source tar}
+\pre{\startverb
+[build.bin]
+command = '''
+  cargo build --release
+  mkdir -p $out/bin
+  cp target/release/myproject $out/bin/
+'''
+version = "0.9.0"
+
+[build.src]
+command = '''
+  git archive --format=tar HEAD | gzip > $out/myproject-${bin.version}.tar.gz
+'''
+sandbox = "pure"
+\stopverb}
+
+\p{\code{\startverb ${bin.version}\stopverb} resolves because both builds share the same manifest.}
+}
+
+\subtree{
+\title{Go with vendored dependencies}
+\pre{\startverb
+[build.vendor]
+command = '''
+  go mod vendor
+  mkdir -p $out/vendor
+  cp -r vendor/* $out/vendor/
+'''
+sandbox = "off"
+
+[build.app]
+command = '''
+  cp -r ${vendor}/vendor ./
+  go build -mod=vendor -o $out/bin/myapp
+'''
+sandbox = "pure"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Trimming Runtime Dependencies}
+\p{By default, every package in the \code{\startverb toplevel\stopverb} install-group becomes a runtime dependency of your build's closure—even if it was only needed at compile time.}
+
+\p{Declare a minimal list instead:}
+
+\pre{\startverb
+[install]
+clang.pkg-path = "clang"
+pytest.pkg-path = "pytest"
+
+[build.cli]
+command = '''
+  make
+  mv build/cli $out/bin/
+'''
+runtime-packages = [ "clang" ]  # exclude pytest from runtime closure
+\stopverb}
+
+\p{Smaller closures copy faster and occupy less disk when installed on users' systems.}
+}
+
+\subtree{
+\title{Version and Description Metadata}
+\p{Flox surfaces these fields in \code{\startverb flox search\stopverb}, \code{\startverb flox show\stopverb}, and during publication.}
+
+\pre{\startverb
+[build.mytool]
+version.command = "git describe --tags"
+description = "High-performance log shipper"
+\stopverb}
+
+\p{Alternative forms:}
+
+\pre{\startverb
+version = "1.4.2"            # static string
+version.file = "VERSION.txt" # read at build time
+\stopverb}
+}
+
+\subtree{
+\title{Cross-Platform Considerations for Manifest Builds}
+\p{\code{\startverb flox build\stopverb} targets the host's systems triple. To ship binaries for additional platforms you must trigger the build on machines (or CI runners) of those architectures:}
+
+\pre{\startverb
+linux-x86_64 → build → publish
+darwin-aarch64 → build → publish
+\stopverb}
+
+\p{The manifest can remain identical across hosts.}
+}
+
+\subtree{
+\title{Beyond Code — Packaging Assets}
+\p{Any artifact that can be copied into \code{\startverb $out\stopverb} can be versioned and installed:}
+
+\subtree{
+\title{Nginx baseline config}
+\pre{\startverb
+[build.nginx_cfg]
+command = '''mkdir -p $out/etc && cp nginx.conf $out/etc/'''
+\stopverb}
+}
+
+\subtree{
+\title{Organization-wide .proto schema bundle}
+\pre{\startverb
+[build.proto]
+command = '''
+  mkdir -p $out/share/proto
+  cp proto/**/*.proto $out/share/proto/
+'''
+\stopverb}
+
+\p{Teams install these packages and reference them via \code{\startverb $FLOX_ENV/etc/nginx.conf\stopverb} or \code{\startverb $FLOX_ENV/share/proto\stopverb}.}
+}
+}
+
+\subtree{
+\title{Nix Expression Builds}
+\p{You can write a Nix expression instead of (or in addition to) defining a manifest build.}
+
+\p{Put \code{\startverb *.nix\stopverb} build files in \code{\startverb .flox/pkgs/\stopverb} for Nix expression builds. Git add all files before building.}
+
+\subtree{
+\title{File Naming}
+\ul{
+\li{\code{\startverb hello.nix\stopverb} → package named \code{\startverb hello\stopverb}}
+\li{\code{\startverb hello/default.nix\stopverb} → package named \code{\startverb hello\stopverb}}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\p{\strong{Shell Script}}
+
+\pre{\startverb
+{writeShellApplication, curl}:
+writeShellApplication {
+  name = "my-ip";
+  runtimeInputs = [ curl ];
+  text = ''curl icanhazip.com'';
+}
+\stopverb}
+
+\p{\strong{Your Project}}
+
+\pre{\startverb
+{ rustPlatform, lib }:
+rustPlatform.buildRustPackage {
+  pname = "my-app";
+  version = "0.1.0";
+  src = ../../.;
+  cargoLock.lockFile = "${src}/Cargo.lock";
+}
+\stopverb}
+
+\p{\strong{Update Version}}
+
+\pre{\startverb
+{ hello, fetchurl }:
+hello.overrideAttrs (finalAttrs: _: {
+  version = "2.12.2";
+  src = fetchurl {
+    url = "mirror://gnu/hello/hello-${finalAttrs.version}.tar.gz";
+    hash = "sha256-WpqZbcKSzCTc9BHO6H6S9qrluNE72caBm0x6nc4IGKs=";
+  };
+})
+\stopverb}
+
+\p{\strong{Apply Patches}}
+
+\pre{\startverb
+{ hello }:
+hello.overrideAttrs (oldAttrs: {
+  patches = (oldAttrs.patches or []) ++ [ ./my.patch ];
+})
+\stopverb}
+}
+
+\subtree{
+\title{Hash Generation}
+\ol{
+\li{Use \code{\startverb hash = "";\stopverb}}
+\li{Run \code{\startverb flox build\stopverb}}
+\li{Copy hash from error message}
+}
+}
+
+\subtree{
+\title{Commands}
+\ul{
+\li{\code{\startverb flox build\stopverb} - build all}
+\li{\code{\startverb flox build .#hello\stopverb} - build specific}
+\li{\code{\startverb git add .flox/pkgs/*\stopverb} - track files}
+}
+}
+}
+
+\subtree{
+\title{Language-Specific Build Examples}
+\subtree{
+\title{Python Application}
+\pre{\startverb
+[build.myapp]
+command = '''
+  mkdir -p $out/bin $out/share/myapp
+
+  # Copy application code
+  cp -r src/* $out/share/myapp/
+  cp requirements.txt $out/share/myapp/
+
+  # Create wrapper script
+  cat > $out/bin/myapp << 'EOF'
+#!/usr/bin/env bash
+APP_ROOT="$(dirname "$(dirname "$(readlink -f "$0")")")"
+export PYTHONPATH="$APP_ROOT/share/myapp:$PYTHONPATH"
+exec python3 "$APP_ROOT/share/myapp/main.py" "$@"
+EOF
+  chmod +x $out/bin/myapp
+'''
+version = "1.0.0"
+\stopverb}
+}
+
+\subtree{
+\title{Node.js Application}
+\pre{\startverb
+[build.webapp]
+command = '''
+  npm ci
+  npm run build
+
+  mkdir -p $out/share/webapp
+  cp -r dist/* $out/share/webapp/
+  cp package.json package-lock.json $out/share/webapp/
+
+  cd $out/share/webapp && npm ci --production
+'''
+version = "1.0.0"
+\stopverb}
+}
+
+\subtree{
+\title{Rust Binary}
+\pre{\startverb
+[build.cli]
+command = '''
+  cargo build --release
+  mkdir -p $out/bin
+  cp target/release/mycli $out/bin/
+'''
+version.command = "cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version'"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Debugging Build Issues}
+\subtree{
+\title{Common Problems}
+\p{\strong{Build hooks don't run}: \code{\startverb [hook]\stopverb} scripts DO NOT execute during \code{\startverb flox build\stopverb}}
+
+\p{\strong{Package groups}: Only \code{\startverb toplevel\stopverb} group packages available during builds}
+
+\p{\strong{Network access}: Pure builds can't access network on Linux}
+}
+
+\subtree{
+\title{Debugging Steps}
+\ol{
+\li{Check build output: \code{\startverb flox build -v\stopverb}}
+\li{Inspect result: \code{\startverb ls -la result-<name>/\stopverb}}
+\li{Test binary: \code{\startverb ./result-<name>/bin/<name>\stopverb}}
+\li{Check dependencies: \code{\startverb nix-store -q --references result-<name>\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{flox-environments} - Setting up development and runtime environments}
+\li{\strong{flox-publish} - Publishing built packages to catalogs, understanding the dev→publish→runtime workflow}
+\li{\strong{flox-containers} - Building container images}
+}
+}
+}

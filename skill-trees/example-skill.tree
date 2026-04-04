@@ -1,0 +1,109 @@
+\title{Example Skill}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{This skill should be used when the user asks to "demonstrate skills", "show skill format", "create a skill template", or discusses skill development patterns. Provides a reference template for creating Claude Code plugin skills.}
+
+\subtree{
+\title{Example Skill}
+\p{This skill demonstrates the structure and format for Claude Code plugin skills.}
+
+\subtree{
+\title{Overview}
+\p{Skills are model-invoked capabilities that Claude autonomously uses based on task context. Unlike commands (user-invoked) or agents (spawned by Claude), skills provide contextual guidance that Claude incorporates into its responses.}
+}
+
+\subtree{
+\title{When This Skill Applies}
+\p{This skill activates when the user's request involves:}
+
+\ul{
+\li{Creating or understanding plugin skills}
+\li{Skill template or reference needs}
+\li{Skill development patterns}
+}
+}
+
+\subtree{
+\title{Skill Structure}
+\subtree{
+\title{Required Files}
+\pre{\startverb
+skills/
+└── skill-name/
+    └── SKILL.md          # Main skill definition (required)
+\stopverb}
+}
+
+\subtree{
+\title{Optional Supporting Files}
+\pre{\startverb
+skills/
+└── skill-name/
+    ├── SKILL.md          # Main skill definition
+    ├── README.md         # Additional documentation
+    ├── references/       # Reference materials
+    │   └── patterns.md
+    ├── examples/         # Example files
+    │   └── sample.md
+    └── scripts/          # Helper scripts
+        └── helper.sh
+\stopverb}
+}
+}
+
+\subtree{
+\title{Frontmatter Options}
+\p{Skills support these frontmatter fields:}
+
+\ul{
+\li{\strong{name} (required): Skill identifier}
+\li{\strong{description} (required): Trigger conditions - describe when Claude should use this skill}
+\li{\strong{version} (optional): Semantic version number}
+\li{\strong{license} (optional): License information or reference}
+}
+}
+
+\subtree{
+\title{Writing Effective Descriptions}
+\p{The description field is crucial - it tells Claude when to invoke the skill.}
+
+\p{\strong{Good description patterns:}}
+
+\pre{\startverb
+description: This skill should be used when the user asks to "specific phrase", "another phrase", mentions "keyword", or discusses topic-area.
+\stopverb}
+
+\p{\strong{Include:}}
+
+\ul{
+\li{Specific trigger phrases users might say}
+\li{Keywords that indicate relevance}
+\li{Topic areas the skill covers}
+}
+}
+
+\subtree{
+\title{Skill Content Guidelines}
+\ol{
+\li{\strong{Clear purpose}: State what the skill helps with}
+\li{\strong{When to use}: Define activation conditions}
+\li{\strong{Structured guidance}: Organize information logically}
+\li{\strong{Actionable instructions}: Provide concrete steps}
+\li{\strong{Examples}: Include practical examples when helpful}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ul{
+\li{Keep skills focused on a single domain}
+\li{Write descriptions that clearly indicate when to activate}
+\li{Include reference materials in subdirectories for complex skills}
+\li{Test that the skill activates for expected queries}
+\li{Avoid overlap with other skills' trigger conditions}
+}
+}
+}

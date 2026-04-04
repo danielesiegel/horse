@@ -1,0 +1,120 @@
+\title{Cantordust Viz}
+
+\taxon{skill}
+
+\meta{description}{Binary visualization for human pattern recognition - Ghidra plugin by Chris Domas (xoreaxeaxeax)}
+
+\subtree{
+\title{Cantordust Binary Visualization}
+\blockquote{\strong{Use when embeddings fail: humans see patterns algorithms miss.}}
+
+\p{Visual binary analysis tool for Ghidra. Converts binary data to bitmaps/visualizations where structural patterns become visible to human pattern recognition.}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+cantordust-viz (-1) ⊗ skill-embedding-vss (0) ⊗ radare2-hatchery (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Lineage: 2020 Binary Analysis}
+\pre{\startverb
+| Tool | Approach | Strength |
+|------|----------|----------|
+| **Cantordust** | Visual/human | Sees patterns ML misses |
+| **Zignatures** | Soft signatures | Fuzzy matching + keyspace reduction |
+| **skill-embedding-vss** | MLX embeddings | O(1) similarity at scale |
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+git clone https://github.com/Battelle/cantordust.git
+# Add to Ghidra Script Manager
+\stopverb}
+}
+
+\subtree{
+\title{Key Insight}
+\p{From xoreaxeaxeax's work:}
+
+\ul{
+\li{\strong{movfuscator}: All x86 can be MOV (Turing-complete)}
+\li{\strong{sandsifter}: Fuzzing reveals undocumented CPU instructions}
+\li{\strong{Cantordust}: Binary structure visible in 2D projections}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ol{
+\li{\strong{Embedding similarity unclear} → visualize both binaries}
+\li{\strong{Obfuscation suspected} → visual patterns survive obfuscation}
+\li{\strong{Cross-architecture comparison} → structural similarity visible}
+\li{\strong{Malware family classification} → visual fingerprinting}
+}
+}
+
+\subtree{
+\title{xoreaxeaxeax Ecosystem (19K+ stars)}
+\pre{\startverb
+| Repo | Stars | Category |
+|------|-------|----------|
+| movfuscator | 10,075 | obfuscation |
+| sandsifter | 4,998 | hardware security |
+| rosenbridge | 2,380 | hardware backdoors |
+| REpsych | 1,031 | anti-RE |
+\stopverb}
+}
+
+\subtree{
+\title{Integration with skill-embedding-vss}
+\pre{\startverb
+# When embeddings show high similarity but you want visual confirmation
+from cantordust import visualize_binary
+from skill_embedding_vss import SkillEmbeddingVSS
+
+vss = SkillEmbeddingVSS('/path/to/skills')
+similar = vss.find_nearest('target', k=5)
+
+# Visual confirm top matches
+for name, dist in similar[:3]:
+    visualize_binary(f'/path/to/{name}')  # Human reviews
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Cantordust GitHub](https://github.com/Battelle/cantordust)}
+\li{[Battelle Blog Post](https://inside.battelle.org/blog-details/battelle-publishes-open-source-binary-visualization-tool)}
+\li{[DEF CON talks by xoreaxeaxeax](https://www.youtube.com/results?search_query=xoreaxeaxeax+defcon)}
+}
+}
+
+\subtree{
+\title{Cantordust ↔ Gay.jl Bridge}
+\pre{\startverb
+# cantordust_gay_bridge.jl connects:
+# 1. Cantordust 2-tuple byte pair visualization
+# 2. CJ Carr spectral features (diffusion transformers)  
+# 3. Gay.jl deterministic coloring (SPI)
+
+result = analyze_binary_with_gay("target.bin")
+# Returns: matrix, diagonal_score, ascii_score, trit_sum, sample_colors
+\stopverb}
+}
+
+\subtree{
+\title{Pattern Theory}
+\pre{\startverb
+| Domain | Representation | Gay.jl Mapping |
+|--------|----------------|----------------|
+| Binary (Cantordust) | 2-tuple → 256×256 | entropy → trit → color |
+| Audio (CJ Carr) | Mel spectrogram | centroid/flatness → HSL |
+| Color (Gay.jl) | SplitMix64 + golden angle | SPI deterministic |
+\stopverb}
+}
+}

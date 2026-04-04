@@ -1,0 +1,153 @@
+\title{Detecting T1548 Abuse Elevation Control Mechanism}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{uac-bypass}
+
+\tag{privilege-escalation}
+
+\tag{mitre-t1548}
+
+\tag{elevation-control}
+
+\tag{windows-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect abuse of elevation control mechanisms including UAC bypass, sudo exploitation, and setuid/setgid manipulation by monitoring registry modifications, process elevation flags, and unusual parent-child process relationships.}
+
+\subtree{
+\title{Detecting T1548 Abuse Elevation Control Mechanism}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When hunting for privilege escalation via UAC bypass in Windows environments}
+\li{After threat intelligence indicates use of UAC bypass exploits by active threat groups}
+\li{When investigating how attackers achieved administrative access without triggering UAC prompts}
+\li{During security assessments to validate UAC bypass detection coverage}
+\li{When monitoring for setuid/setgid abuse on Linux systems}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Sysmon Event ID 1 with command-line and parent process logging}
+\li{Windows Security Event ID 4688 with process tracking}
+\li{Registry auditing for UAC-related keys (HKCU\startverb \Software\stopverb\startverb \Classes\stopverb)}
+\li{Sysmon Event ID 12/13 (Registry key/value modification)}
+\li{EDR with elevation monitoring capabilities}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Monitor UAC Registry Modifications}: Many UAC bypasses modify registry keys under \code{\startverb HKCU\startverb \Software\stopverb\startverb \Classes\stopverb\startverb \ms\stopverb-settings\startverb \shell\stopverb\startverb \open\stopverb\startverb \command\stopverb\stopverb} or \code{\startverb HKCU\startverb \Software\stopverb\startverb \Classes\stopverb\startverb \mscfile\stopverb\startverb \shell\stopverb\startverb \open\stopverb\startverb \command\stopverb\stopverb}. Track Sysmon Events 12/13 for these changes.}
+\li{\strong{Detect Auto-Elevating Process Abuse}: Certain Windows binaries auto-elevate without UAC prompts (fodhelper.exe, computerdefaults.exe, eventvwr.exe). Hunt for these being launched by non-standard parent processes.}
+\li{\strong{Track Process Integrity Level Changes}: Monitor for processes escalating from medium to high integrity level without corresponding UAC consent events.}
+\li{\strong{Hunt for Elevated Process Spawning}: Detect when auto-elevating processes spawn unexpected children (cmd.exe, powershell.exe) -- indicating UAC bypass exploitation.}
+\li{\strong{Monitor Linux Elevation Abuse}: Track sudo misconfiguration exploitation, setuid binary abuse, and capability manipulation.}
+\li{\strong{Correlate with Privilege Escalation Chain}: Map elevation abuse to the broader attack chain, identifying what was done with escalated privileges.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| T1548.002 | Bypass User Account Control |
+| T1548.001 | Setuid and Setgid (Linux) |
+| T1548.003 | Sudo and Sudo Caching |
+| T1548.004 | Elevated Execution with Prompt (macOS) |
+| UAC Auto-Elevation | Windows binaries that elevate without prompt |
+| fodhelper.exe | Common UAC bypass vector via registry hijack |
+| eventvwr.exe | MSC file handler UAC bypass |
+| Integrity Level | Windows process trust level (Low/Medium/High/System) |
+\stopverb}
+}
+
+\subtree{
+\title{Detection Queries}
+\subtree{
+\title{Splunk -- UAC Bypass via Registry Modification}
+\pre{\startverb
+index=sysmon (EventCode=12 OR EventCode=13)
+| where match(TargetObject, "(?i)HKCU\\\\Software\\\\Classes\\\\(ms-settings|mscfile|exefile|Folder)\\\\shell\\\\open\\\\command")
+| table _time Computer User EventCode TargetObject Details Image
+\stopverb}
+}
+
+\subtree{
+\title{Splunk -- Auto-Elevating Process Abuse}
+\pre{\startverb
+index=sysmon EventCode=1
+| where match(Image, "(?i)(fodhelper|computerdefaults|eventvwr|sdclt|slui|cmstp)\.exe$")
+| where NOT match(ParentImage, "(?i)(explorer|svchost|services)\.exe$")
+| table _time Computer User Image CommandLine ParentImage ParentCommandLine
+\stopverb}
+}
+
+\subtree{
+\title{KQL -- UAC Bypass Detection}
+\pre{\startverb
+DeviceRegistryEvents
+| where Timestamp > ago(7d)
+| where RegistryKey has_any ("ms-settings\\shell\\open\\command", "mscfile\\shell\\open\\command")
+| where ActionType == "RegistryValueSet"
+| project Timestamp, DeviceName, RegistryKey, RegistryValueData, InitiatingProcessFileName
+\stopverb}
+}
+
+\subtree{
+\title{Sigma Rule}
+\pre{\startverb
+title: UAC Bypass via Registry Modification
+status: stable
+logsource:
+    product: windows
+    category: registry_set
+detection:
+    selection:
+        TargetObject|contains:
+            - '\ms-settings\shell\open\command'
+            - '\mscfile\shell\open\command'
+            - '\exefile\shell\open\command'
+    condition: selection
+level: high
+tags:
+    - attack.privilege_escalation
+    - attack.t1548.002
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{fodhelper.exe Registry Hijack}: Attacker sets \code{\startverb HKCU\startverb \Software\stopverb\startverb \Classes\stopverb\startverb \ms\stopverb-settings\startverb \shell\stopverb\startverb \open\stopverb\startverb \command\stopverb\stopverb} to a malicious executable, then launches fodhelper.exe which auto-elevates and executes the hijacked command.}
+\li{\strong{eventvwr.exe MSC Bypass}: Modifying \code{\startverb HKCU\startverb \Software\stopverb\startverb \Classes\stopverb\startverb \mscfile\stopverb\startverb \shell\stopverb\startverb \open\stopverb\startverb \command\stopverb\stopverb} to intercept Event Viewer's auto-elevation behavior.}
+\li{\strong{sdclt.exe Bypass}: Leveraging the Windows Backup utility's auto-elevation to execute arbitrary commands.}
+\li{\strong{CMSTP.exe INF Bypass}: Using Connection Manager Profile Installer with a malicious INF file to bypass UAC via \code{\startverb /s /ni\stopverb} flags.}
+\li{\strong{DLL Hijacking in Auto-Elevate}: Placing malicious DLLs in search paths of auto-elevating executables.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-UAC-[DATE]-[SEQ]
+Host: [Hostname]
+Bypass Method: [Registry hijack/DLL hijack/Token manipulation]
+Auto-Elevate Binary: [fodhelper.exe/eventvwr.exe/etc.]
+Registry Key Modified: [Full registry path]
+Payload Executed: [Command or binary path]
+User Context: [Account]
+Risk Level: [Critical/High/Medium]
+ATT&CK Technique: [T1548.00x]
+\stopverb}
+}
+}

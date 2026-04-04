@@ -1,0 +1,199 @@
+\title{Configuring Oauth2 Authorization Flow}
+
+\taxon{skill}
+
+\tag{iam}
+
+\tag{identity}
+
+\tag{access-control}
+
+\tag{authentication}
+
+\tag{authorization}
+
+\tag{oauth2}
+
+\tag{oidc}
+
+\tag{pkce}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Configure secure OAuth 2.0 authorization flows including Authorization Code with PKCE, Client Credentials, and Device Authorization Grant. This skill covers flow selection, PKCE implementation, token}
+
+\subtree{
+\title{Configuring OAuth 2.0 Authorization Flow}
+\subtree{
+\title{Overview}
+\p{Configure secure OAuth 2.0 authorization flows including Authorization Code with PKCE, Client Credentials, and Device Authorization Grant. This skill covers flow selection, PKCE implementation, token lifecycle management, scope design, and alignment with OAuth 2.1 security requirements.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring configuring oauth2 authorization flow capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with identity access management concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Implement Authorization Code flow with PKCE for public and confidential clients}
+\li{Configure Client Credentials flow for machine-to-machine communication}
+\li{Design least-privilege scope hierarchies}
+\li{Implement secure token storage, refresh, and revocation}
+\li{Apply OAuth 2.1 best practices and RFC 9700 security recommendations}
+\li{Validate token integrity and prevent common OAuth attacks}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{OAuth 2.0 Grant Types}
+\ol{
+\li{\strong{Authorization Code + PKCE}: Recommended for all client types (web, mobile, SPA). PKCE is mandatory in OAuth 2.1.}
+\li{\strong{Client Credentials}: Machine-to-machine authentication without user context.}
+\li{\strong{Device Authorization Grant (RFC 8628)}: For input-constrained devices (smart TVs, CLI tools).}
+\li{\strong{Refresh Token}: Long-lived token to obtain new access tokens without re-authentication.}
+}
+}
+
+\subtree{
+\title{PKCE (Proof Key for Code Exchange)}
+\p{PKCE (RFC 7636) prevents authorization code interception attacks:}
+
+\ol{
+\li{Client generates random \code{\startverb code_verifier\stopverb} (43-128 characters, unreserved URI chars)}
+\li{Client computes \code{\startverb code_challenge = BASE64URL(SHA256(code_verifier))\stopverb}}
+\li{Authorization request includes \code{\startverb code_challenge\stopverb} and \code{\startverb code_challenge_method=S256\stopverb}}
+\li{Token request includes original \code{\startverb code_verifier\stopverb}}
+\li{Server validates \code{\startverb SHA256(code_verifier)\stopverb} matches stored \code{\startverb code_challenge\stopverb}}
+}
+}
+
+\subtree{
+\title{Token Types}
+\ul{
+\li{\strong{Access Token}: Short-lived (5-60 min), bearer or DPoP-bound}
+\li{\strong{Refresh Token}: Long-lived, single-use with rotation}
+\li{\strong{ID Token (OIDC)}: JWT containing user identity claims}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Authorization Code Flow with PKCE}
+\ol{
+\li{Generate cryptographically random code_verifier (min 43 chars)}
+\li{Compute code_challenge using S256 method}
+\li{Redirect user to authorization endpoint with parameters:}
+\li{response_type=code}
+\li{client_id, redirect_uri, scope, state}
+\li{code_challenge, code_challenge_method=S256}
+\li{User authenticates and consents}
+\li{Authorization server redirects with authorization code}
+\li{Exchange code + code_verifier for tokens at token endpoint}
+\li{Validate state parameter matches original value}
+}
+}
+
+\subtree{
+\title{Step 2: Scope Design}
+\ul{
+\li{Define granular scopes: \code{\startverb read:users\stopverb}, \code{\startverb write:orders\stopverb}, \code{\startverb admin:settings\stopverb}}
+\li{Follow least-privilege: request minimum scopes needed}
+\li{Implement scope validation on resource server}
+\li{Document scope hierarchy and consent requirements}
+}
+}
+
+\subtree{
+\title{Step 3: Token Security}
+\ul{
+\li{Store tokens securely (httpOnly cookies for web, keychain for mobile)}
+\li{Implement token refresh with rotation (one-time-use refresh tokens)}
+\li{Set appropriate expiration: access tokens 5-15 min, refresh tokens 8-24 hrs}
+\li{Enable DPoP (Demonstration of Proof-of-Possession) for sender-constrained tokens}
+\li{Implement token revocation endpoint}
+}
+}
+
+\subtree{
+\title{Step 4: Client Credentials Flow}
+\ol{
+\li{Register service client with client_id and client_secret}
+\li{Request token: POST /oauth/token with grant_type=client_credentials}
+\li{Include scope for required permissions}
+\li{Store client_secret securely (vault, env vars, not code)}
+\li{Implement certificate-based client authentication for higher assurance}
+}
+}
+
+\subtree{
+\title{Step 5: Security Hardening}
+\ul{
+\li{Enforce PKCE for all authorization code flows}
+\li{Use exact redirect URI matching (no wildcards)}
+\li{Implement CSRF protection with state parameter}
+\li{Enable refresh token rotation and revocation on reuse detection}
+\li{Apply RFC 9700 security best practices}
+\li{Block implicit grant and ROPC (removed in OAuth 2.1)}
+}
+}
+}
+
+\subtree{
+\title{Security Controls}
+\pre{\startverb
+| Control | NIST 800-53 | Description |
+|---------|-------------|-------------|
+| Access Control | AC-3 | Token-based access enforcement |
+| Authentication | IA-5 | Client credential management |
+| Session Management | SC-23 | Token lifecycle management |
+| Audit | AU-3 | Log all token issuance and revocation |
+| Cryptographic Protection | SC-13 | PKCE and token signing |
+\stopverb}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Using implicit grant (removed in OAuth 2.1) instead of authorization code + PKCE}
+\li{Storing tokens in localStorage (XSS vulnerable) instead of httpOnly cookies}
+\li{Not validating state parameter enabling CSRF attacks}
+\li{Using wildcard redirect URIs allowing open redirect exploitation}
+\li{Not implementing refresh token rotation allowing token theft persistence}
+}
+}
+
+\subtree{
+\title{Verification}
+\ul{
+\li{[ ] Authorization Code + PKCE flow completes successfully}
+\li{[ ] PKCE code_challenge validated at token endpoint}
+\li{[ ] State parameter prevents CSRF}
+\li{[ ] Access tokens expire within configured lifetime}
+\li{[ ] Refresh token rotation issues new refresh token each use}
+\li{[ ] Token revocation invalidates both access and refresh tokens}
+\li{[ ] Client Credentials flow works for service-to-service calls}
+\li{[ ] Scopes correctly enforced at resource server}
+}
+}
+}

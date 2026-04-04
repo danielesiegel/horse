@@ -1,0 +1,322 @@
+\title{Labarchive Integration}
+
+\taxon{skill}
+
+\meta{description}{"Electronic lab notebook API integration. Access notebooks, manage entries/attachments, backup notebooks, integrate with Protocols.io/Jupyter/REDCap, for programmatic ELN workflows."}
+
+\subtree{
+\title{LabArchives Integration}
+\subtree{
+\title{Overview}
+\p{LabArchives is an electronic lab notebook platform for research documentation and data management. Access notebooks, manage entries and attachments, generate reports, and integrate with third-party tools programmatically via REST API.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Working with LabArchives REST API for notebook automation}
+\li{Backing up notebooks programmatically}
+\li{Creating or managing notebook entries and attachments}
+\li{Generating site reports and analytics}
+\li{Integrating LabArchives with third-party tools (Protocols.io, Jupyter, REDCap)}
+\li{Automating data upload to electronic lab notebooks}
+\li{Managing user access and permissions programmatically}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Authentication and Configuration}
+\p{Set up API access credentials and regional endpoints for LabArchives API integration.}
+
+\p{\strong{Prerequisites:}}
+
+\ul{
+\li{Enterprise LabArchives license with API access enabled}
+\li{API access key ID and password from LabArchives administrator}
+\li{User authentication credentials (email and external applications password)}
+}
+
+\p{\strong{Configuration setup:}}
+
+\p{Use the \code{\startverb scripts/setup_config.py\stopverb} script to create a configuration file:}
+
+\pre{\startverb
+python3 scripts/setup_config.py
+\stopverb}
+
+\p{This creates a \code{\startverb config.yaml\stopverb} file with the following structure:}
+
+\pre{\startverb
+api_url: https://api.labarchives.com/api  # or regional endpoint
+access_key_id: YOUR_ACCESS_KEY_ID
+access_password: YOUR_ACCESS_PASSWORD
+\stopverb}
+
+\p{\strong{Regional API endpoints:}}
+
+\ul{
+\li{US/International: \code{\startverb https://api.labarchives.com/api\stopverb}}
+\li{Australia: \code{\startverb https://auapi.labarchives.com/api\stopverb}}
+\li{UK: \code{\startverb https://ukapi.labarchives.com/api\stopverb}}
+}
+
+\p{For detailed authentication instructions and troubleshooting, refer to \code{\startverb references/authentication_guide.md\stopverb}.}
+}
+
+\subtree{
+\title{2. User Information Retrieval}
+\p{Obtain user ID (UID) and access information required for subsequent API operations.}
+
+\p{\strong{Workflow:}}
+
+\ol{
+\li{Call the \code{\startverb users/user_access_info\stopverb} API method with login credentials}
+\li{Parse the XML/JSON response to extract the user ID (UID)}
+\li{Use the UID to retrieve detailed user information via \code{\startverb users/user_info_via_id\stopverb}}
+}
+
+\p{\strong{Example using Python wrapper:}}
+
+\pre{\startverb
+from labarchivespy.client import Client
+
+# Initialize client
+client = Client(api_url, access_key_id, access_password)
+
+# Get user access info
+login_params = {'login_or_email': user_email, 'password': auth_token}
+response = client.make_call('users', 'user_access_info', params=login_params)
+
+# Extract UID from response
+import xml.etree.ElementTree as ET
+uid = ET.fromstring(response.content)[0].text
+
+# Get detailed user info
+params = {'uid': uid}
+user_info = client.make_call('users', 'user_info_via_id', params=params)
+\stopverb}
+}
+
+\subtree{
+\title{3. Notebook Operations}
+\p{Manage notebook access, backup, and metadata retrieval.}
+
+\p{\strong{Key operations:}}
+
+\ul{
+\li{\strong{List notebooks:} Retrieve all notebooks accessible to a user}
+\li{\strong{Backup notebooks:} Download complete notebook data with optional attachment inclusion}
+\li{\strong{Get notebook IDs:} Retrieve institution-defined notebook identifiers for integration with grants/project management systems}
+\li{\strong{Get notebook members:} List all users with access to a specific notebook}
+\li{\strong{Get notebook settings:} Retrieve configuration and permissions for notebooks}
+}
+
+\p{\strong{Notebook backup example:}}
+
+\p{Use the \code{\startverb scripts/notebook_operations.py\stopverb} script:}
+
+\pre{\startverb
+# Backup with attachments (default, creates 7z archive)
+python3 scripts/notebook_operations.py backup --uid USER_ID --nbid NOTEBOOK_ID
+
+# Backup without attachments, JSON format
+python3 scripts/notebook_operations.py backup --uid USER_ID --nbid NOTEBOOK_ID --json --no-attachments
+\stopverb}
+
+\p{\strong{API endpoint format:}}
+
+\pre{\startverb
+https://<api_url>/notebooks/notebook_backup?uid=<UID>&nbid=<NOTEBOOK_ID>&json=true&no_attachments=false
+\stopverb}
+
+\p{For comprehensive API method documentation, refer to \code{\startverb references/api_reference.md\stopverb}.}
+}
+
+\subtree{
+\title{4. Entry and Attachment Management}
+\p{Create, modify, and manage notebook entries and file attachments.}
+
+\p{\strong{Entry operations:}}
+
+\ul{
+\li{Create new entries in notebooks}
+\li{Add comments to existing entries}
+\li{Create entry parts/components}
+\li{Upload file attachments to entries}
+}
+
+\p{\strong{Attachment workflow:}}
+
+\p{Use the \code{\startverb scripts/entry_operations.py\stopverb} script:}
+
+\pre{\startverb
+# Upload attachment to an entry
+python3 scripts/entry_operations.py upload --uid USER_ID --nbid NOTEBOOK_ID --entry-id ENTRY_ID --file /path/to/file.pdf
+
+# Create a new entry with text content
+python3 scripts/entry_operations.py create --uid USER_ID --nbid NOTEBOOK_ID --title "Experiment Results" --content "Results from today's experiment..."
+\stopverb}
+
+\p{\strong{Supported file types:}}
+
+\ul{
+\li{Documents (PDF, DOCX, TXT)}
+\li{Images (PNG, JPG, TIFF)}
+\li{Data files (CSV, XLSX, HDF5)}
+\li{Scientific formats (CIF, MOL, PDB)}
+\li{Archives (ZIP, 7Z)}
+}
+}
+
+\subtree{
+\title{5. Site Reports and Analytics}
+\p{Generate institutional reports on notebook usage, activity, and compliance (Enterprise feature).}
+
+\p{\strong{Available reports:}}
+
+\ul{
+\li{Detailed Usage Report: User activity metrics and engagement statistics}
+\li{Detailed Notebook Report: Notebook metadata, member lists, and settings}
+\li{PDF/Offline Notebook Generation Report: Export tracking for compliance}
+\li{Notebook Members Report: Access control and collaboration analytics}
+\li{Notebook Settings Report: Configuration and permission auditing}
+}
+
+\p{\strong{Report generation:}}
+
+\pre{\startverb
+# Generate detailed usage report
+response = client.make_call('site_reports', 'detailed_usage_report',
+                           params={'start_date': '2025-01-01', 'end_date': '2025-10-20'})
+\stopverb}
+}
+
+\subtree{
+\title{6. Third-Party Integrations}
+\p{LabArchives integrates with numerous scientific software platforms. This skill provides guidance on leveraging these integrations programmatically.}
+
+\p{\strong{Supported integrations:}}
+
+\ul{
+\li{\strong{Protocols.io:} Export protocols directly to LabArchives notebooks}
+\li{\strong{GraphPad Prism:} Export analyses and figures (Version 8+)}
+\li{\strong{SnapGene:} Direct molecular biology workflow integration}
+\li{\strong{Geneious:} Bioinformatics analysis export}
+\li{\strong{Jupyter:} Embed Jupyter notebooks as entries}
+\li{\strong{REDCap:} Clinical data capture integration}
+\li{\strong{Qeios:} Research publishing platform}
+\li{\strong{SciSpace:} Literature management}
+}
+
+\p{\strong{OAuth authentication:} LabArchives now uses OAuth for all new integrations. Legacy integrations may use API key authentication.}
+
+\p{For detailed integration setup instructions and use cases, refer to \code{\startverb references/integrations.md\stopverb}.}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Complete notebook backup workflow}
+\ol{
+\li{Authenticate and obtain user ID}
+\li{List all accessible notebooks}
+\li{Iterate through notebooks and backup each one}
+\li{Store backups with timestamp metadata}
+}
+
+\pre{\startverb
+# Complete backup script
+python3 scripts/notebook_operations.py backup-all --email user@example.edu --password AUTH_TOKEN
+\stopverb}
+}
+
+\subtree{
+\title{Automated data upload workflow}
+\ol{
+\li{Authenticate with LabArchives API}
+\li{Identify target notebook and entry}
+\li{Upload experimental data files}
+\li{Add metadata comments to entries}
+\li{Generate activity report}
+}
+}
+
+\subtree{
+\title{Integration workflow example (Jupyter → LabArchives)}
+\ol{
+\li{Export Jupyter notebook to HTML or PDF}
+\li{Use entry_operations.py to upload to LabArchives}
+\li{Add comment with execution timestamp and environment info}
+\li{Tag entry for easy retrieval}
+}
+}
+}
+
+\subtree{
+\title{Python Package Installation}
+\p{Install the \code{\startverb labarchives-py\stopverb} wrapper for simplified API access:}
+
+\pre{\startverb
+git clone https://github.com/mcmero/labarchives-py
+cd labarchives-py
+uv pip install .
+\stopverb}
+
+\p{Alternatively, use direct HTTP requests via Python's \code{\startverb requests\stopverb} library for custom implementations.}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Rate limiting:} Implement appropriate delays between API calls to avoid throttling}
+\li{\strong{Error handling:} Always wrap API calls in try-except blocks with appropriate logging}
+\li{\strong{Authentication security:} Store credentials in environment variables or secure config files (never in code)}
+\li{\strong{Backup verification:} After notebook backup, verify file integrity and completeness}
+\li{\strong{Incremental operations:} For large notebooks, use pagination and batch processing}
+\li{\strong{Regional endpoints:} Use the correct regional API endpoint for optimal performance}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Common issues:}}
+
+\ul{
+\li{\strong{401 Unauthorized:} Verify access key ID and password are correct; check API access is enabled for your account}
+\li{\strong{404 Not Found:} Confirm notebook ID (nbid) exists and user has access permissions}
+\li{\strong{403 Forbidden:} Check user permissions for the requested operation}
+\li{\strong{Empty response:} Ensure required parameters (uid, nbid) are provided correctly}
+\li{\strong{Attachment upload failures:} Verify file size limits and format compatibility}
+}
+
+\p{For additional support, contact LabArchives at support@labarchives.com.}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes bundled resources to support LabArchives API integration:}
+
+\subtree{
+\title{scripts/}
+\ul{
+\li{\code{\startverb setup_config.py\stopverb}: Interactive configuration file generator for API credentials}
+\li{\code{\startverb notebook_operations.py\stopverb}: Utilities for listing, backing up, and managing notebooks}
+\li{\code{\startverb entry_operations.py\stopverb}: Tools for creating entries and uploading attachments}
+}
+}
+
+\subtree{
+\title{references/}
+\ul{
+\li{\code{\startverb api_reference.md\stopverb}: Comprehensive API endpoint documentation with parameters and examples}
+\li{\code{\startverb authentication_guide.md\stopverb}: Detailed authentication setup and configuration instructions}
+\li{\code{\startverb integrations.md\stopverb}: Third-party integration setup guides and use cases}
+}
+}
+}
+}

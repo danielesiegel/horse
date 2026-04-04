@@ -1,0 +1,729 @@
+\title{Uspto Database}
+
+\taxon{skill}
+
+\meta{description}{"Access USPTO APIs for patent/trademark searches, examination history (PEDS), assignments, citations, office actions, TSDR, for IP analysis and prior art searches."}
+
+\subtree{
+\title{USPTO Database}
+\subtree{
+\title{Overview}
+\p{USPTO provides specialized APIs for patent and trademark data. Search patents by keywords/inventors/assignees, retrieve examination history via PEDS, track assignments, analyze citations and office actions, access TSDR for trademarks, for IP analysis and prior art searches.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{\strong{Patent Search}: Finding patents by keywords, inventors, assignees, classifications, or dates}
+\li{\strong{Patent Details}: Retrieving full patent data including claims, abstracts, citations}
+\li{\strong{Trademark Search}: Looking up trademarks by serial or registration number}
+\li{\strong{Trademark Status}: Checking trademark status, ownership, and prosecution history}
+\li{\strong{Examination History}: Accessing patent prosecution data from PEDS (Patent Examination Data System)}
+\li{\strong{Office Actions}: Retrieving office action text, citations, and rejections}
+\li{\strong{Assignments}: Tracking patent/trademark ownership transfers}
+\li{\strong{Citations}: Analyzing patent citations (forward and backward)}
+\li{\strong{Litigation}: Accessing patent litigation records}
+\li{\strong{Portfolio Analysis}: Analyzing patent/trademark portfolios for companies or inventors}
+}
+}
+
+\subtree{
+\title{USPTO API Ecosystem}
+\p{The USPTO provides multiple specialized APIs for different data needs:}
+
+\subtree{
+\title{Core APIs}
+\ol{
+\li{\strong{PatentSearch API} - Modern ElasticSearch-based patent search (replaced legacy PatentsView in May 2025)}
+\li{Search patents by keywords, inventors, assignees, classifications, dates}
+\li{Access to patent data through June 30, 2025}
+\li{45 requests/minute rate limit}
+\li{\strong{Base URL}: \code{\startverb https://search.patentsview.org/api/v1/\stopverb}}
+}
+
+\ol{
+\li{\strong{PEDS (Patent Examination Data System)} - Patent examination history}
+\li{Application status and transaction history from 1981-present}
+\li{Office action dates and examination events}
+\li{Use \code{\startverb uspto-opendata-python\stopverb} Python library}
+\li{\strong{Replaced}: PAIR Bulk Data (PBD) - decommissioned}
+}
+
+\ol{
+\li{\strong{TSDR (Trademark Status & Document Retrieval)} - Trademark data}
+\li{Trademark status, ownership, prosecution history}
+\li{Search by serial or registration number}
+\li{\strong{Base URL}: \code{\startverb https://tsdrapi.uspto.gov/ts/cd/\stopverb}}
+}
+}
+
+\subtree{
+\title{Additional APIs}
+\ol{
+\li{\strong{Patent Assignment Search} - Ownership records and transfers}
+\li{\strong{Trademark Assignment Search} - Trademark ownership changes}
+\li{\strong{Enriched Citation API} - Patent citation analysis}
+\li{\strong{Office Action Text Retrieval} - Full text of office actions}
+\li{\strong{Office Action Citations} - Citations from office actions}
+\li{\strong{Office Action Rejection} - Rejection reasons and types}
+\li{\strong{PTAB API} - Patent Trial and Appeal Board proceedings}
+\li{\strong{Patent Litigation Cases} - Federal district court litigation data}
+\li{\strong{Cancer Moonshot Data Set} - Cancer-related patents}
+}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{API Key Registration}
+\p{All USPTO APIs require an API key. Register at: \strong{https://account.uspto.gov/api-manager/}}
+
+\p{Set the API key as an environment variable:}
+
+\pre{\startverb
+export USPTO_API_KEY="your_api_key_here"
+\stopverb}
+}
+
+\subtree{
+\title{Helper Scripts}
+\p{This skill includes Python scripts for common operations:}
+
+\ul{
+\li{\strong{\code{\startverb scripts/patent_search.py\stopverb}} - PatentSearch API client for searching patents}
+\li{\strong{\code{\startverb scripts/peds_client.py\stopverb}} - PEDS client for examination history}
+\li{\strong{\code{\startverb scripts/trademark_client.py\stopverb}} - TSDR client for trademark data}
+}
+}
+}
+
+\subtree{
+\title{Task 1: Searching Patents}
+\subtree{
+\title{Using the PatentSearch API}
+\p{The PatentSearch API uses a JSON query language with various operators for flexible searching.}
+
+\subtree{
+\title{Basic Patent Search Examples}
+\p{\strong{Search by keywords in abstract:}}
+
+\pre{\startverb
+from scripts.patent_search import PatentSearchClient
+
+client = PatentSearchClient()
+
+# Search for machine learning patents
+results = client.search_patents({
+    "patent_abstract": {"_text_all": ["machine", "learning"]}
+})
+
+for patent in results['patents']:
+    print(f"{patent['patent_number']}: {patent['patent_title']}")
+\stopverb}
+
+\p{\strong{Search by inventor:}}
+
+\pre{\startverb
+results = client.search_by_inventor("John Smith")
+\stopverb}
+
+\p{\strong{Search by assignee/company:}}
+
+\pre{\startverb
+results = client.search_by_assignee("Google")
+\stopverb}
+
+\p{\strong{Search by date range:}}
+
+\pre{\startverb
+results = client.search_by_date_range("2024-01-01", "2024-12-31")
+\stopverb}
+
+\p{\strong{Search by CPC classification:}}
+
+\pre{\startverb
+results = client.search_by_classification("H04N")  # Video/image tech
+\stopverb}
+}
+
+\subtree{
+\title{Advanced Patent Search}
+\p{Combine multiple criteria with logical operators:}
+
+\pre{\startverb
+results = client.advanced_search(
+    keywords=["artificial", "intelligence"],
+    assignee="Microsoft",
+    start_date="2023-01-01",
+    end_date="2024-12-31",
+    cpc_codes=["G06N", "G06F"]  # AI and computing classifications
+)
+\stopverb}
+}
+
+\subtree{
+\title{Direct API Usage}
+\p{For complex queries, use the API directly:}
+
+\pre{\startverb
+import requests
+
+url = "https://search.patentsview.org/api/v1/patent"
+headers = {
+    "X-Api-Key": "YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+
+query = {
+    "q": {
+        "_and": [
+            {"patent_date": {"_gte": "2024-01-01"}},
+            {"assignee_organization": {"_text_any": ["Google", "Alphabet"]}},
+            {"cpc_subclass_id": ["G06N", "H04N"]}
+        ]
+    },
+    "f": ["patent_number", "patent_title", "patent_date", "inventor_name"],
+    "s": [{"patent_date": "desc"}],
+    "o": {"per_page": 100, "page": 1}
+}
+
+response = requests.post(url, headers=headers, json=query)
+results = response.json()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Query Operators}
+\ul{
+\li{\strong{Equality}: \code{\startverb {"field": "value"}\stopverb} or \code{\startverb {"field": {"_eq": "value"}}\stopverb}}
+\li{\strong{Comparison}: \code{\startverb _gt\stopverb}, \code{\startverb _gte\stopverb}, \code{\startverb _lt\stopverb}, \code{\startverb _lte\stopverb}, \code{\startverb _neq\stopverb}}
+\li{\strong{Text search}: \code{\startverb _text_all\stopverb}, \code{\startverb _text_any\stopverb}, \code{\startverb _text_phrase\stopverb}}
+\li{\strong{String matching}: \code{\startverb _begins\stopverb}, \code{\startverb _contains\stopverb}}
+\li{\strong{Logical}: \code{\startverb _and\stopverb}, \code{\startverb _or\stopverb}, \code{\startverb _not\stopverb}}
+}
+
+\p{\strong{Best Practice}: Use \code{\startverb _text_*\stopverb} operators for text fields (more performant than \code{\startverb _contains\stopverb} or \code{\startverb _begins\stopverb})}
+}
+
+\subtree{
+\title{Available Patent Endpoints}
+\ul{
+\li{\code{\startverb /patent\stopverb} - Granted patents}
+\li{\code{\startverb /publication\stopverb} - Pregrant publications}
+\li{\code{\startverb /inventor\stopverb} - Inventor information}
+\li{\code{\startverb /assignee\stopverb} - Assignee information}
+\li{\code{\startverb /cpc_subclass\stopverb}, \code{\startverb /cpc_at_issue\stopverb} - CPC classifications}
+\li{\code{\startverb /uspc\stopverb} - US Patent Classification}
+\li{\code{\startverb /ipc\stopverb} - International Patent Classification}
+\li{\code{\startverb /claims\stopverb}, \code{\startverb /brief_summary_text\stopverb}, \code{\startverb /detail_description_text\stopverb} - Text data (beta)}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{See \code{\startverb references/patentsearch_api.md\stopverb} for complete PatentSearch API documentation including:}
+
+\ul{
+\li{All available endpoints}
+\li{Complete field reference}
+\li{Query syntax and examples}
+\li{Response formats}
+\li{Rate limits and best practices}
+}
+}
+}
+
+\subtree{
+\title{Task 2: Retrieving Patent Examination Data}
+\subtree{
+\title{Using PEDS (Patent Examination Data System)}
+\p{PEDS provides comprehensive prosecution history including transaction events, status changes, and examination timeline.}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install uspto-opendata-python
+\stopverb}
+}
+
+\subtree{
+\title{Basic PEDS Usage}
+\p{\strong{Get application data:}}
+
+\pre{\startverb
+from scripts.peds_client import PEDSHelper
+
+helper = PEDSHelper()
+
+# By application number
+app_data = helper.get_application("16123456")
+print(f"Title: {app_data['title']}")
+print(f"Status: {app_data['app_status']}")
+
+# By patent number
+patent_data = helper.get_patent("11234567")
+\stopverb}
+
+\p{\strong{Get transaction history:}}
+
+\pre{\startverb
+transactions = helper.get_transaction_history("16123456")
+
+for trans in transactions:
+    print(f"{trans['date']}: {trans['code']} - {trans['description']}")
+\stopverb}
+
+\p{\strong{Get office actions:}}
+
+\pre{\startverb
+office_actions = helper.get_office_actions("16123456")
+
+for oa in office_actions:
+    if oa['code'] == 'CTNF':
+        print(f"Non-final rejection: {oa['date']}")
+    elif oa['code'] == 'CTFR':
+        print(f"Final rejection: {oa['date']}")
+    elif oa['code'] == 'NOA':
+        print(f"Notice of allowance: {oa['date']}")
+\stopverb}
+
+\p{\strong{Get status summary:}}
+
+\pre{\startverb
+summary = helper.get_status_summary("16123456")
+
+print(f"Current status: {summary['current_status']}")
+print(f"Filing date: {summary['filing_date']}")
+print(f"Pendency: {summary['pendency_days']} days")
+
+if summary['is_patented']:
+    print(f"Patent number: {summary['patent_number']}")
+    print(f"Issue date: {summary['issue_date']}")
+\stopverb}
+}
+
+\subtree{
+\title{Prosecution Analysis}
+\p{Analyze prosecution patterns:}
+
+\pre{\startverb
+analysis = helper.analyze_prosecution("16123456")
+
+print(f"Total office actions: {analysis['total_office_actions']}")
+print(f"Non-final rejections: {analysis['non_final_rejections']}")
+print(f"Final rejections: {analysis['final_rejections']}")
+print(f"Allowed: {analysis['allowance']}")
+print(f"Responses filed: {analysis['responses']}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Transaction Codes}
+\ul{
+\li{\strong{CTNF} - Non-final rejection mailed}
+\li{\strong{CTFR} - Final rejection mailed}
+\li{\strong{NOA} - Notice of allowance mailed}
+\li{\strong{WRIT} - Response filed}
+\li{\strong{ISS.FEE} - Issue fee payment}
+\li{\strong{ABND} - Application abandoned}
+\li{\strong{AOPF} - Office action mailed}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{See \code{\startverb references/peds_api.md\stopverb} for complete PEDS documentation including:}
+
+\ul{
+\li{All available data fields}
+\li{Transaction code reference}
+\li{Python library usage}
+\li{Portfolio analysis examples}
+}
+}
+}
+
+\subtree{
+\title{Task 3: Searching and Monitoring Trademarks}
+\subtree{
+\title{Using TSDR (Trademark Status & Document Retrieval)}
+\p{Access trademark status, ownership, and prosecution history.}
+
+\subtree{
+\title{Basic Trademark Usage}
+\p{\strong{Get trademark by serial number:}}
+
+\pre{\startverb
+from scripts.trademark_client import TrademarkClient
+
+client = TrademarkClient()
+
+# By serial number
+tm_data = client.get_trademark_by_serial("87654321")
+
+# By registration number
+tm_data = client.get_trademark_by_registration("5678901")
+\stopverb}
+
+\p{\strong{Get trademark status:}}
+
+\pre{\startverb
+status = client.get_trademark_status("87654321")
+
+print(f"Mark: {status['mark_text']}")
+print(f"Status: {status['status']}")
+print(f"Filing date: {status['filing_date']}")
+
+if status['is_registered']:
+    print(f"Registration #: {status['registration_number']}")
+    print(f"Registration date: {status['registration_date']}")
+\stopverb}
+
+\p{\strong{Check trademark health:}}
+
+\pre{\startverb
+health = client.check_trademark_health("87654321")
+
+print(f"Mark: {health['mark']}")
+print(f"Status: {health['status']}")
+
+for alert in health['alerts']:
+    print(alert)
+
+if health['needs_attention']:
+    print("⚠️  This mark needs attention!")
+\stopverb}
+}
+
+\subtree{
+\title{Trademark Portfolio Monitoring}
+\p{Monitor multiple trademarks:}
+
+\pre{\startverb
+def monitor_portfolio(serial_numbers, api_key):
+    """Monitor trademark portfolio health."""
+    client = TrademarkClient(api_key)
+
+    results = {
+        'active': [],
+        'pending': [],
+        'problems': []
+    }
+
+    for sn in serial_numbers:
+        health = client.check_trademark_health(sn)
+
+        if 'REGISTERED' in health['status']:
+            results['active'].append(health)
+        elif 'PENDING' in health['status'] or 'PUBLISHED' in health['status']:
+            results['pending'].append(health)
+        elif health['needs_attention']:
+            results['problems'].append(health)
+
+    return results
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Trademark Statuses}
+\ul{
+\li{\strong{REGISTERED} - Active registered mark}
+\li{\strong{PENDING} - Under examination}
+\li{\strong{PUBLISHED FOR OPPOSITION} - In opposition period}
+\li{\strong{ABANDONED} - Application abandoned}
+\li{\strong{CANCELLED} - Registration cancelled}
+\li{\strong{SUSPENDED} - Examination suspended}
+\li{\strong{REGISTERED AND RENEWED} - Registration renewed}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{See \code{\startverb references/trademark_api.md\stopverb} for complete trademark API documentation including:}
+
+\ul{
+\li{TSDR API reference}
+\li{Trademark Assignment Search API}
+\li{All status codes}
+\li{Prosecution history access}
+\li{Ownership tracking}
+}
+}
+}
+
+\subtree{
+\title{Task 4: Tracking Assignments and Ownership}
+\subtree{
+\title{Patent and Trademark Assignments}
+\p{Both patents and trademarks have Assignment Search APIs for tracking ownership changes.}
+
+\subtree{
+\title{Patent Assignment API}
+\p{\strong{Base URL}: \code{\startverb https://assignment-api.uspto.gov/patent/v1.4/\stopverb}}
+
+\p{\strong{Search by patent number:}}
+
+\pre{\startverb
+import requests
+import xml.etree.ElementTree as ET
+
+def get_patent_assignments(patent_number, api_key):
+    url = f"https://assignment-api.uspto.gov/patent/v1.4/assignment/patent/{patent_number}"
+    headers = {"X-Api-Key": api_key}
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.text  # Returns XML
+
+assignments_xml = get_patent_assignments("11234567", api_key)
+root = ET.fromstring(assignments_xml)
+
+for assignment in root.findall('.//assignment'):
+    recorded_date = assignment.find('recordedDate').text
+    assignor = assignment.find('.//assignor/name').text
+    assignee = assignment.find('.//assignee/name').text
+    conveyance = assignment.find('conveyanceText').text
+
+    print(f"{recorded_date}: {assignor} → {assignee}")
+    print(f"  Type: {conveyance}\n")
+\stopverb}
+
+\p{\strong{Search by company name:}}
+
+\pre{\startverb
+def find_company_patents(company_name, api_key):
+    url = "https://assignment-api.uspto.gov/patent/v1.4/assignment/search"
+    headers = {"X-Api-Key": api_key}
+    data = {"criteria": {"assigneeName": company_name}}
+
+    response = requests.post(url, headers=headers, json=data)
+    return response.text
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Assignment Types}
+\ul{
+\li{\strong{ASSIGNMENT OF ASSIGNORS INTEREST} - Ownership transfer}
+\li{\strong{SECURITY AGREEMENT} - Collateral/security interest}
+\li{\strong{MERGER} - Corporate merger}
+\li{\strong{CHANGE OF NAME} - Name change}
+\li{\strong{ASSIGNMENT OF PARTIAL INTEREST} - Partial ownership}
+}
+}
+}
+
+\subtree{
+\title{Task 5: Accessing Additional USPTO Data}
+\subtree{
+\title{Office Actions, Citations, and Litigation}
+\p{Multiple specialized APIs provide additional patent data.}
+
+\subtree{
+\title{Office Action Text Retrieval}
+\p{Retrieve full text of office actions using application number. Integrate with PEDS to identify which office actions exist, then retrieve full text.}
+}
+
+\subtree{
+\title{Enriched Citation API}
+\p{Analyze patent citations:}
+
+\ul{
+\li{Forward citations (patents citing this patent)}
+\li{Backward citations (prior art cited)}
+\li{Examiner vs. applicant citations}
+\li{Citation context}
+}
+}
+
+\subtree{
+\title{Patent Litigation Cases API}
+\p{Access federal district court patent litigation records:}
+
+\ul{
+\li{74,623+ litigation records}
+\li{Patents asserted}
+\li{Parties and venues}
+\li{Case outcomes}
+}
+}
+
+\subtree{
+\title{PTAB API}
+\p{Patent Trial and Appeal Board proceedings:}
+
+\ul{
+\li{Inter partes review (IPR)}
+\li{Post-grant review (PGR)}
+\li{Appeal decisions}
+}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{See \code{\startverb references/additional_apis.md\stopverb} for comprehensive documentation on:}
+
+\ul{
+\li{Enriched Citation API}
+\li{Office Action APIs (Text, Citations, Rejections)}
+\li{Patent Litigation Cases API}
+\li{PTAB API}
+\li{Cancer Moonshot Data Set}
+\li{OCE Status/Event Codes}
+}
+}
+}
+
+\subtree{
+\title{Complete Analysis Example}
+\subtree{
+\title{Comprehensive Patent Analysis}
+\p{Combine multiple APIs for complete patent intelligence:}
+
+\pre{\startverb
+def comprehensive_patent_analysis(patent_number, api_key):
+    """
+    Full patent analysis using multiple USPTO APIs.
+    """
+    from scripts.patent_search import PatentSearchClient
+    from scripts.peds_client import PEDSHelper
+
+    results = {}
+
+    # 1. Get patent details
+    patent_client = PatentSearchClient(api_key)
+    patent_data = patent_client.get_patent(patent_number)
+    results['patent'] = patent_data
+
+    # 2. Get examination history
+    peds = PEDSHelper()
+    results['prosecution'] = peds.analyze_prosecution(patent_number)
+    results['status'] = peds.get_status_summary(patent_number)
+
+    # 3. Get assignment history
+    import requests
+    assign_url = f"https://assignment-api.uspto.gov/patent/v1.4/assignment/patent/{patent_number}"
+    assign_resp = requests.get(assign_url, headers={"X-Api-Key": api_key})
+    results['assignments'] = assign_resp.text if assign_resp.status_code == 200 else None
+
+    # 4. Analyze results
+    print(f"\n=== Patent {patent_number} Analysis ===\n")
+    print(f"Title: {patent_data['patent_title']}")
+    print(f"Assignee: {', '.join(patent_data.get('assignee_organization', []))}")
+    print(f"Issue Date: {patent_data['patent_date']}")
+
+    print(f"\nProsecution:")
+    print(f"  Office Actions: {results['prosecution']['total_office_actions']}")
+    print(f"  Rejections: {results['prosecution']['non_final_rejections']} non-final, {results['prosecution']['final_rejections']} final")
+    print(f"  Pendency: {results['prosecution']['pendency_days']} days")
+
+    # Analyze citations
+    if 'cited_patent_number' in patent_data:
+        print(f"\nCitations:")
+        print(f"  Cites: {len(patent_data['cited_patent_number'])} patents")
+    if 'citedby_patent_number' in patent_data:
+        print(f"  Cited by: {len(patent_data['citedby_patent_number'])} patents")
+
+    return results
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{API Key Management}}
+\li{Store API key in environment variables}
+\li{Never commit keys to version control}
+\li{Use same key across all USPTO APIs}
+}
+
+\ol{
+\li{\strong{Rate Limiting}}
+\li{PatentSearch: 45 requests/minute}
+\li{Implement exponential backoff for rate limit errors}
+\li{Cache responses when possible}
+}
+
+\ol{
+\li{\strong{Query Optimization}}
+\li{Use \code{\startverb _text_*\stopverb} operators for text fields (more performant)}
+\li{Request only needed fields to reduce response size}
+\li{Use date ranges to narrow searches}
+}
+
+\ol{
+\li{\strong{Data Handling}}
+\li{Not all fields populated for all patents/trademarks}
+\li{Handle missing data gracefully}
+\li{Parse dates consistently}
+}
+
+\ol{
+\li{\strong{Combining APIs}}
+\li{Use PatentSearch for discovery}
+\li{Use PEDS for prosecution details}
+\li{Use Assignment APIs for ownership tracking}
+\li{Combine data for comprehensive analysis}
+}
+}
+
+\subtree{
+\title{Important Notes}
+\ul{
+\li{\strong{Legacy API Sunset}: PatentsView legacy API discontinued May 1, 2025 - use PatentSearch API}
+\li{\strong{PAIR Bulk Data Decommissioned}: Use PEDS instead}
+\li{\strong{Data Coverage}: PatentSearch has data through June 30, 2025; PEDS from 1981-present}
+\li{\strong{Text Endpoints}: Claims and description endpoints are in beta with ongoing backfilling}
+\li{\strong{Rate Limits}: Respect rate limits to avoid service disruptions}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{API Documentation}
+\ul{
+\li{\strong{PatentSearch API}: https://search.patentsview.org/docs/}
+\li{\strong{USPTO Developer Portal}: https://developer.uspto.gov/}
+\li{\strong{USPTO Open Data Portal}: https://data.uspto.gov/}
+\li{\strong{API Key Registration}: https://account.uspto.gov/api-manager/}
+}
+}
+
+\subtree{
+\title{Python Libraries}
+\ul{
+\li{\strong{uspto-opendata-python}: https://pypi.org/project/uspto-opendata-python/}
+\li{\strong{USPTO Docs}: https://docs.ip-tools.org/uspto-opendata-python/}
+}
+}
+
+\subtree{
+\title{Reference Files}
+\ul{
+\li{\code{\startverb references/patentsearch_api.md\stopverb} - Complete PatentSearch API reference}
+\li{\code{\startverb references/peds_api.md\stopverb} - PEDS API and library documentation}
+\li{\code{\startverb references/trademark_api.md\stopverb} - Trademark APIs (TSDR and Assignment)}
+\li{\code{\startverb references/additional_apis.md\stopverb} - Citations, Office Actions, Litigation, PTAB}
+}
+}
+
+\subtree{
+\title{Scripts}
+\ul{
+\li{\code{\startverb scripts/patent_search.py\stopverb} - PatentSearch API client}
+\li{\code{\startverb scripts/peds_client.py\stopverb} - PEDS examination data client}
+\li{\code{\startverb scripts/trademark_client.py\stopverb} - Trademark search client}
+}
+}
+}
+}

@@ -1,0 +1,154 @@
+\title{Planar Isotopy Screen}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Planar Isotopy Screen Mapping}
+
+\subtree{
+\title{Planar Isotopy Screen Mapping}
+\p{Maps thread states and observations to screen positions using planar isotopy principles.}
+
+\subtree{
+\title{Trit Value}
+\p{\strong{0 (ERGODIC)} - Coordinate between spatial regions}
+}
+
+\subtree{
+\title{Purpose}
+\p{Transform abstract thread relationships into concrete screen positions while preserving topological invariants:}
+
+\ul{
+\li{\strong{Adjacency}: Neighboring trits occupy adjacent screen regions}
+\li{\strong{Handedness}: MINUS→left, ERGODIC→center, PLUS→right}
+\li{\strong{Conservation}: Screen area sum is invariant under isotopy}
+}
+}
+
+\subtree{
+\title{Screen Region Mapping}
+\pre{\startverb
+┌─────────────────┬─────────────────┬─────────────────┐
+│                 │                 │                 │
+│     MINUS       │    ERGODIC      │     PLUS        │
+│    (left)       │    (center)     │    (right)      │
+│                 │                 │                 │
+│  Cold hues      │  Neutral hues   │  Warm hues      │
+│  180-300°       │  60-180°        │  0-60°,300-360° │
+│                 │                 │                 │
+│  Validator      │  Coordinator    │  Generator      │
+│                 │                 │                 │
+└─────────────────┴─────────────────┴─────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Position Computation}
+\pre{\startverb
+(defn seed->screen-position [seed trit screen-width screen-height]
+  "Map seed deterministically to (x, y) within trit's region.
+
+   Uses SplitMix64 decomposition:
+   - High bits → x offset
+   - Low bits → y offset"
+  (let [region (trit->region trit screen-width)
+        [rand1 seed'] (splitmix64 seed)
+        [rand2 _] (splitmix64 seed')
+        x (+ (:x region) (* (:width region) (/ rand1 MASK64)))
+        y (* screen-height (/ rand2 MASK64))]
+    {:x x :y y :region trit}))
+\stopverb}
+}
+
+\subtree{
+\title{Observation Lines}
+\p{When thread A observes thread B, draw a line between their screen positions:}
+
+\pre{\startverb
+(defn observation-line [observer observed]
+  {:from (seed->screen-position (:seed observer) (:trit observer))
+   :to (seed->screen-position (:seed observed) (:trit observed))
+   :gf3-sum (mod (+ (:trit observer) (:trit observed)) 3)})
+\stopverb}
+}
+
+\subtree{
+\title{Planar Isotopy Invariants}
+\ol{
+\li{\strong{No crossings for conserved observations}: Lines between threads with GF(3) sum = 0 should not cross}
+\li{\strong{Triadic bundling}: Triad members form non-crossing triangles}
+\li{\strong{Seed progression}: Moving a thread moves its position deterministically}
+}
+}
+
+\subtree{
+\title{Integration with Mutual Thread Observation}
+\pre{\startverb
+from mutual_thread_observation import MutualThreadObservationSystem
+
+system = MutualThreadObservationSystem()
+# ... register threads ...
+
+# Get screen positions
+for tid, state in system.thread_states.items():
+    pos = seed_to_screen_position(state.seed, state.trit)
+    print(f"{tid}: ({pos['x']:.0f}, {pos['y']:.0f}) in {pos['region_label']}")
+\stopverb}
+}
+
+\subtree{
+\title{macOS Integration}
+\p{Use with macos-use MCP for actual screen interaction:}
+
+\pre{\startverb
+# Get element at thread's screen position
+bb -e '(require \'[mutual-thread-demo :as mtd])
+       (let [pos (mtd/seed->screen-position seed trit)]
+         (println (:x pos) (:y pos)))'
+\stopverb}
+
+\p{Then use \code{\startverb mcp\strong{macos-use}macos-use_click_and_traverse\stopverb} at those coordinates.}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb mutual-thread-observation\stopverb} - Core observation system}
+\li{\code{\startverb gay-mcp\stopverb} - Deterministic color from seed}
+\li{\code{\startverb acsets-algebraic-databases\stopverb} - Schema modeling}
+\li{\code{\startverb bisimulation-game\stopverb} - Observational equivalence}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 3. Variations on an Arithmetic Theme}
+\p{\strong{Concepts}: generic arithmetic, coercion, symbolic, numeric}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+planar-isotopy-screen (○) + SDF.Ch3 (○) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Generic arithmetic crosses type boundaries. This skill handles heterogeneous data.}
+}
+}
+}

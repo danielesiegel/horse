@@ -1,0 +1,201 @@
+\title{Performing Access Review And Certification}
+
+\taxon{skill}
+
+\tag{iam}
+
+\tag{identity}
+
+\tag{access-control}
+
+\tag{access-review}
+
+\tag{certification}
+
+\tag{compliance}
+
+\tag{governance}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Conduct systematic access reviews and certifications to ensure users have appropriate access rights aligned with their roles. This skill covers review campaign design, reviewer selection, risk-based p}
+
+\subtree{
+\title{Performing Access Review and Certification}
+\subtree{
+\title{Overview}
+\p{Conduct systematic access reviews and certifications to ensure users have appropriate access rights aligned with their roles. This skill covers review campaign design, reviewer selection, risk-based prioritization, micro-certification strategies, and remediation tracking for compliance with SOX, HIPAA, and PCI DSS requirements.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing access review and certification}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with identity access management concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Design and execute access review campaigns across enterprise applications}
+\li{Implement risk-based prioritization for review scope}
+\li{Configure reviewer selection (manager, application owner, hybrid)}
+\li{Automate entitlement data collection and presentation}
+\li{Track remediation of inappropriate access findings}
+\li{Generate compliance evidence for auditors}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Access Review Types}
+\ol{
+\li{\strong{User Access Review}: Manager certifies all entitlements for their direct reports}
+\li{\strong{Entitlement Review}: Application owner certifies all users with specific entitlement}
+\li{\strong{Role Review}: Role owner certifies role membership and permissions}
+\li{\strong{Privileged Access Review}: Security team reviews high-risk/privileged access}
+\li{\strong{SOD Review}: Verify no users have conflicting separation-of-duty violations}
+}
+}
+
+\subtree{
+\title{Risk-Based Prioritization}
+\ul{
+\li{\strong{High Risk}: Privileged access, financial systems, PII/PHI systems, external-facing apps}
+\li{\strong{Medium Risk}: Internal business applications, shared drives, collaboration tools}
+\li{\strong{Low Risk}: Standard employee tools, read-only access, public information systems}
+}
+}
+
+\subtree{
+\title{Review Campaign Lifecycle}
+\ol{
+\li{\strong{Planning}: Define scope, reviewers, timeline, escalation}
+\li{\strong{Data Collection}: Aggregate entitlements from all identity sources}
+\li{\strong{Distribution}: Assign review items to appropriate certifiers}
+\li{\strong{Certification}: Reviewers approve or revoke each entitlement}
+\li{\strong{Remediation}: Revoke inappropriate access, enforce timeline}
+\li{\strong{Reporting}: Generate compliance evidence and metrics}
+\li{\strong{Closure}: Archive campaign, feed findings into next cycle}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Define Review Scope and Schedule}
+\ul{
+\li{Identify in-scope applications and systems}
+\li{Determine review frequency: quarterly (SOX), semi-annual, annual}
+\li{Define campaign timeline: review period, escalation dates, hard close}
+\li{Establish escalation chain for non-responsive reviewers}
+}
+}
+
+\subtree{
+\title{Step 2: Data Collection and Aggregation}
+\ul{
+\li{Extract user-entitlement mappings from each application}
+\li{Correlate with HR data (active employees, role, department, manager)}
+\li{Identify terminated/transferred users still holding access}
+\li{Flag high-risk entitlements (admin, DBA, system, privileged)}
+\li{Calculate risk scores based on entitlement sensitivity and user role}
+}
+}
+
+\subtree{
+\title{Step 3: Reviewer Assignment}
+\ul{
+\li{\strong{Manager Reviews}: Direct manager certifies subordinate access}
+\li{\strong{Application Owner Reviews}: App owner certifies all users of their application}
+\li{\strong{Hybrid Model}: Manager reviews standard access, app owner reviews privileged}
+\li{\strong{Delegate Management}: Allow reviewers to delegate with audit trail}
+}
+}
+
+\subtree{
+\title{Step 4: Execute Certification Campaign}
+\ul{
+\li{Send notifications to reviewers with clear instructions}
+\li{Present entitlements with context (last used date, risk level, role justification)}
+\li{Require reviewers to explicitly approve or revoke each item}
+\li{Track completion percentage and send reminders}
+\li{Escalate to management after deadline}
+}
+}
+
+\subtree{
+\title{Step 5: Remediation and Tracking}
+\ul{
+\li{Automatically ticket revocations to IT operations}
+\li{Set SLA for revocation execution (24-48 hours for high-risk)}
+\li{Verify revocation completed (re-check entitlement)}
+\li{Exception management for business-justified deviations}
+\li{Document all exceptions with expiration dates}
+}
+}
+
+\subtree{
+\title{Step 6: Reporting and Evidence}
+\ul{
+\li{Generate campaign completion metrics}
+\li{Produce per-application compliance reports}
+\li{Create audit-ready evidence packages}
+\li{Track trends across review cycles}
+\li{Feed findings into risk assessment process}
+}
+}
+}
+
+\subtree{
+\title{Security Controls}
+\pre{\startverb
+| Control | NIST 800-53 | Description |
+|---------|-------------|-------------|
+| Access Review | AC-2(3) | Periodic review of account privileges |
+| Account Management | AC-2 | Account lifecycle management |
+| Least Privilege | AC-6 | Minimum necessary access enforcement |
+| Separation of Duties | AC-5 | SOD conflict identification |
+| Audit Logging | AU-6 | Review of access audit records |
+\stopverb}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Rubber-stamping: reviewers approving all access without examination}
+\li{Incomplete scope: missing critical applications from review campaigns}
+\li{No remediation tracking: revoking access on paper but not in systems}
+\li{Inconsistent reviewer assignment causing gaps in coverage}
+\li{Not including service accounts and non-human identities}
+}
+}
+
+\subtree{
+\title{Verification}
+\ul{
+\li{[ ] All in-scope applications included in campaign}
+\li{[ ] Reviewers assigned for 100\% of entitlements}
+\li{[ ] Campaign completion rate exceeds 95\%}
+\li{[ ] Revocations executed within SLA}
+\li{[ ] Audit evidence package complete and archived}
+\li{[ ] SOD violations identified and documented}
+\li{[ ] Exceptions documented with business justification and expiry}
+}
+}
+}

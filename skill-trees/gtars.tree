@@ -1,0 +1,342 @@
+\title{Gtars}
+
+\taxon{skill}
+
+\meta{description}{High-performance toolkit for genomic interval analysis in Rust with Python bindings. Use when working with genomic regions, BED files, coverage tracks, overlap detection, tokenization for ML models, or fragment analysis in computational genomics and machine learning applications.}
+
+\subtree{
+\title{Gtars: Genomic Tools and Algorithms in Rust}
+\subtree{
+\title{Overview}
+\p{Gtars is a high-performance Rust toolkit for manipulating, analyzing, and processing genomic interval data. It provides specialized tools for overlap detection, coverage analysis, tokenization for machine learning, and reference sequence management.}
+
+\p{Use this skill when working with:}
+
+\ul{
+\li{Genomic interval files (BED format)}
+\li{Overlap detection between genomic regions}
+\li{Coverage track generation (WIG, BigWig)}
+\li{Genomic ML preprocessing and tokenization}
+\li{Fragment analysis in single-cell genomics}
+\li{Reference sequence retrieval and validation}
+}
+}
+
+\subtree{
+\title{Installation}
+\subtree{
+\title{Python Installation}
+\p{Install gtars Python bindings:}
+
+\pre{\startverb
+uv uv pip install gtars
+\stopverb}
+}
+
+\subtree{
+\title{CLI Installation}
+\p{Install command-line tools (requires Rust/Cargo):}
+
+\pre{\startverb
+# Install with all features
+cargo install gtars-cli --features "uniwig overlaprs igd bbcache scoring fragsplit"
+
+# Or install specific features only
+cargo install gtars-cli --features "uniwig overlaprs"
+\stopverb}
+}
+
+\subtree{
+\title{Rust Library}
+\p{Add to Cargo.toml for Rust projects:}
+
+\pre{\startverb
+[dependencies]
+gtars = { version = "0.1", features = ["tokenizers", "overlaprs"] }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{Gtars is organized into specialized modules, each focused on specific genomic analysis tasks:}
+
+\subtree{
+\title{1. Overlap Detection and IGD Indexing}
+\p{Efficiently detect overlaps between genomic intervals using the Integrated Genome Database (IGD) data structure.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Finding overlapping regulatory elements}
+\li{Variant annotation}
+\li{Comparing ChIP-seq peaks}
+\li{Identifying shared genomic features}
+}
+
+\p{\strong{Quick example:}}
+
+\pre{\startverb
+import gtars
+
+# Build IGD index and query overlaps
+igd = gtars.igd.build_index("regions.bed")
+overlaps = igd.query("chr1", 1000, 2000)
+\stopverb}
+
+\p{See \code{\startverb references/overlap.md\stopverb} for comprehensive overlap detection documentation.}
+}
+
+\subtree{
+\title{2. Coverage Track Generation}
+\p{Generate coverage tracks from sequencing data with the uniwig module.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{ATAC-seq accessibility profiles}
+\li{ChIP-seq coverage visualization}
+\li{RNA-seq read coverage}
+\li{Differential coverage analysis}
+}
+
+\p{\strong{Quick example:}}
+
+\pre{\startverb
+# Generate BigWig coverage track
+gtars uniwig generate --input fragments.bed --output coverage.bw --format bigwig
+\stopverb}
+
+\p{See \code{\startverb references/coverage.md\stopverb} for detailed coverage analysis workflows.}
+}
+
+\subtree{
+\title{3. Genomic Tokenization}
+\p{Convert genomic regions into discrete tokens for machine learning applications, particularly for deep learning models on genomic data.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Preprocessing for genomic ML models}
+\li{Integration with geniml library}
+\li{Creating position encodings}
+\li{Training transformer models on genomic sequences}
+}
+
+\p{\strong{Quick example:}}
+
+\pre{\startverb
+from gtars.tokenizers import TreeTokenizer
+
+tokenizer = TreeTokenizer.from_bed_file("training_regions.bed")
+token = tokenizer.tokenize("chr1", 1000, 2000)
+\stopverb}
+
+\p{See \code{\startverb references/tokenizers.md\stopverb} for tokenization documentation.}
+}
+
+\subtree{
+\title{4. Reference Sequence Management}
+\p{Handle reference genome sequences and compute digests following the GA4GH refget protocol.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Validating reference genome integrity}
+\li{Extracting specific genomic sequences}
+\li{Computing sequence digests}
+\li{Cross-reference comparisons}
+}
+
+\p{\strong{Quick example:}}
+
+\pre{\startverb
+# Load reference and extract sequences
+store = gtars.RefgetStore.from_fasta("hg38.fa")
+sequence = store.get_subsequence("chr1", 1000, 2000)
+\stopverb}
+
+\p{See \code{\startverb references/refget.md\stopverb} for reference sequence operations.}
+}
+
+\subtree{
+\title{5. Fragment Processing}
+\p{Split and analyze fragment files, particularly useful for single-cell genomics data.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Processing single-cell ATAC-seq data}
+\li{Splitting fragments by cell barcodes}
+\li{Cluster-based fragment analysis}
+\li{Fragment quality control}
+}
+
+\p{\strong{Quick example:}}
+
+\pre{\startverb
+# Split fragments by clusters
+gtars fragsplit cluster-split --input fragments.tsv --clusters clusters.txt --output-dir ./by_cluster/
+\stopverb}
+
+\p{See \code{\startverb references/cli.md\stopverb} for fragment processing commands.}
+}
+
+\subtree{
+\title{6. Fragment Scoring}
+\p{Score fragment overlaps against reference datasets.}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Evaluating fragment enrichment}
+\li{Comparing experimental data to references}
+\li{Quality metrics computation}
+\li{Batch scoring across samples}
+}
+
+\p{\strong{Quick example:}}
+
+\pre{\startverb
+# Score fragments against reference
+gtars scoring score --fragments fragments.bed --reference reference.bed --output scores.txt
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Peak Overlap Analysis}
+\p{Identify overlapping genomic features:}
+
+\pre{\startverb
+import gtars
+
+# Load two region sets
+peaks = gtars.RegionSet.from_bed("chip_peaks.bed")
+promoters = gtars.RegionSet.from_bed("promoters.bed")
+
+# Find overlaps
+overlapping_peaks = peaks.filter_overlapping(promoters)
+
+# Export results
+overlapping_peaks.to_bed("peaks_in_promoters.bed")
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Coverage Track Pipeline}
+\p{Generate coverage tracks for visualization:}
+
+\pre{\startverb
+# Step 1: Generate coverage
+gtars uniwig generate --input atac_fragments.bed --output coverage.wig --resolution 10
+
+# Step 2: Convert to BigWig for genome browsers
+gtars uniwig generate --input atac_fragments.bed --output coverage.bw --format bigwig
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 3: ML Preprocessing}
+\p{Prepare genomic data for machine learning:}
+
+\pre{\startverb
+from gtars.tokenizers import TreeTokenizer
+import gtars
+
+# Step 1: Load training regions
+regions = gtars.RegionSet.from_bed("training_peaks.bed")
+
+# Step 2: Create tokenizer
+tokenizer = TreeTokenizer.from_bed_file("training_peaks.bed")
+
+# Step 3: Tokenize regions
+tokens = [tokenizer.tokenize(r.chromosome, r.start, r.end) for r in regions]
+
+# Step 4: Use tokens in ML pipeline
+# (integrate with geniml or custom models)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Python vs CLI Usage}
+\p{\strong{Use Python API when:}}
+
+\ul{
+\li{Integrating with analysis pipelines}
+\li{Need programmatic control}
+\li{Working with NumPy/Pandas}
+\li{Building custom workflows}
+}
+
+\p{\strong{Use CLI when:}}
+
+\ul{
+\li{Quick one-off analyses}
+\li{Shell scripting}
+\li{Batch processing files}
+\li{Prototyping workflows}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{Comprehensive module documentation:}
+
+\ul{
+\li{\strong{\code{\startverb references/python-api.md\stopverb}} - Complete Python API reference with RegionSet operations, NumPy integration, and data export}
+\li{\strong{\code{\startverb references/overlap.md\stopverb}} - IGD indexing, overlap detection, and set operations}
+\li{\strong{\code{\startverb references/coverage.md\stopverb}} - Coverage track generation with uniwig}
+\li{\strong{\code{\startverb references/tokenizers.md\stopverb}} - Genomic tokenization for ML applications}
+\li{\strong{\code{\startverb references/refget.md\stopverb}} - Reference sequence management and digests}
+\li{\strong{\code{\startverb references/cli.md\stopverb}} - Command-line interface complete reference}
+}
+}
+
+\subtree{
+\title{Integration with geniml}
+\p{Gtars serves as the foundation for the geniml Python package, providing core genomic interval operations for machine learning workflows. When working on geniml-related tasks, use gtars for data preprocessing and tokenization.}
+}
+
+\subtree{
+\title{Performance Characteristics}
+\ul{
+\li{\strong{Native Rust performance}: Fast execution with low memory overhead}
+\li{\strong{Parallel processing}: Multi-threaded operations for large datasets}
+\li{\strong{Memory efficiency}: Streaming and memory-mapped file support}
+\li{\strong{Zero-copy operations}: NumPy integration with minimal data copying}
+}
+}
+
+\subtree{
+\title{Data Formats}
+\p{Gtars works with standard genomic formats:}
+
+\ul{
+\li{\strong{BED}: Genomic intervals (3-column or extended)}
+\li{\strong{WIG/BigWig}: Coverage tracks}
+\li{\strong{FASTA}: Reference sequences}
+\li{\strong{Fragment TSV}: Single-cell fragment files with barcodes}
+}
+}
+
+\subtree{
+\title{Error Handling and Debugging}
+\p{Enable verbose logging for troubleshooting:}
+
+\pre{\startverb
+import gtars
+
+# Enable debug logging
+gtars.set_log_level("DEBUG")
+\stopverb}
+
+\pre{\startverb
+# CLI verbose mode
+gtars --verbose <command>
+\stopverb}
+}
+}

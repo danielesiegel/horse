@@ -1,0 +1,506 @@
+\title{Agent development}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user asks to "create an agent", "add an agent", "write a subagent", "agent frontmatter", "when to use description", "agent examples", "agent tools", "agent colors", "autonomous agent", or needs guidance on agent structure, system prompts, triggering conditions, or agent development best practices for Claude Code plugins.}
+
+\subtree{
+\title{Agent Development for Claude Code Plugins}
+\subtree{
+\title{Overview}
+\p{Agents are autonomous subprocesses that handle complex, multi-step tasks independently. Understanding agent structure, triggering conditions, and system prompt design enables creating powerful autonomous capabilities.}
+
+\p{\strong{Key concepts:}}
+
+\ul{
+\li{Agents are FOR autonomous work, commands are FOR user-initiated actions}
+\li{Markdown file format with YAML frontmatter}
+\li{Triggering via description field with examples}
+\li{System prompt defines agent behavior}
+\li{Model and color customization}
+}
+}
+
+\subtree{
+\title{Agent File Structure}
+\subtree{
+\title{Complete Format}
+\pre{\startverb
+---
+name: agent-identifier
+description: Use this agent when [triggering conditions]. Examples:
+
+<example>
+Context: [Situation description]
+user: "[User request]"
+assistant: "[How assistant should respond and use this agent]"
+<commentary>
+[Why this agent should be triggered]
+</commentary>
+</example>
+
+<example>
+[Additional example...]
+</example>
+
+model: inherit
+color: blue
+tools: ["Read", "Write", "Grep"]
+---
+
+You are [agent role description]...
+
+**Your Core Responsibilities:**
+1. [Responsibility 1]
+2. [Responsibility 2]
+
+**Analysis Process:**
+[Step-by-step workflow]
+
+**Output Format:**
+[What to return]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Frontmatter Fields}
+\subtree{
+\title{name (required)}
+\p{Agent identifier used for namespacing and invocation.}
+
+\p{\strong{Format:} lowercase, numbers, hyphens only \strong{Length:} 3-50 characters \strong{Pattern:} Must start and end with alphanumeric}
+
+\p{\strong{Good examples:}}
+
+\ul{
+\li{\code{\startverb code-reviewer\stopverb}}
+\li{\code{\startverb test-generator\stopverb}}
+\li{\code{\startverb api-docs-writer\stopverb}}
+\li{\code{\startverb security-analyzer\stopverb}}
+}
+
+\p{\strong{Bad examples:}}
+
+\ul{
+\li{\code{\startverb helper\stopverb} (too generic)}
+\li{\code{\startverb -agent-\stopverb} (starts/ends with hyphen)}
+\li{\code{\startverb my_agent\stopverb} (underscores not allowed)}
+\li{\code{\startverb ag\stopverb} (too short, < 3 chars)}
+}
+}
+
+\subtree{
+\title{description (required)}
+\p{Defines when Claude should trigger this agent. \strong{This is the most critical field.}}
+
+\p{\strong{Must include:}}
+
+\ol{
+\li{Triggering conditions ("Use this agent when...")}
+\li{Multiple \code{\startverb <example>\stopverb} blocks showing usage}
+\li{Context, user request, and assistant response in each example}
+\li{\code{\startverb <commentary>\stopverb} explaining why agent triggers}
+}
+
+\p{\strong{Format:}}
+
+\pre{\startverb
+Use this agent when [conditions]. Examples:
+
+<example>
+Context: [Scenario description]
+user: "[What user says]"
+assistant: "[How Claude should respond]"
+<commentary>
+[Why this agent is appropriate]
+</commentary>
+</example>
+
+[More examples...]
+\stopverb}
+
+\p{\strong{Best practices:}}
+
+\ul{
+\li{Include 2-4 concrete examples}
+\li{Show proactive and reactive triggering}
+\li{Cover different phrasings of same intent}
+\li{Explain reasoning in commentary}
+\li{Be specific about when NOT to use the agent}
+}
+}
+
+\subtree{
+\title{model (required)}
+\p{Which model the agent should use.}
+
+\p{\strong{Options:}}
+
+\ul{
+\li{\code{\startverb inherit\stopverb} - Use same model as parent (recommended)}
+\li{\code{\startverb sonnet\stopverb} - Claude Sonnet (balanced)}
+\li{\code{\startverb opus\stopverb} - Claude Opus (most capable, expensive)}
+\li{\code{\startverb haiku\stopverb} - Claude Haiku (fast, cheap)}
+}
+
+\p{\strong{Recommendation:} Use \code{\startverb inherit\stopverb} unless agent needs specific model capabilities.}
+}
+
+\subtree{
+\title{color (required)}
+\p{Visual identifier for agent in UI.}
+
+\p{\strong{Options:} \code{\startverb blue\stopverb}, \code{\startverb cyan\stopverb}, \code{\startverb green\stopverb}, \code{\startverb yellow\stopverb}, \code{\startverb magenta\stopverb}, \code{\startverb red\stopverb}}
+
+\p{\strong{Guidelines:}}
+
+\ul{
+\li{Choose distinct colors for different agents in same plugin}
+\li{Use consistent colors for similar agent types}
+\li{Blue/cyan: Analysis, review}
+\li{Green: Success-oriented tasks}
+\li{Yellow: Caution, validation}
+\li{Red: Critical, security}
+\li{Magenta: Creative, generation}
+}
+}
+
+\subtree{
+\title{tools (optional)}
+\p{Restrict agent to specific tools.}
+
+\p{\strong{Format:} Array of tool names}
+
+\pre{\startverb
+tools: ["Read", "Write", "Grep", "Bash"]
+\stopverb}
+
+\p{\strong{Default:} If omitted, agent has access to all tools}
+
+\p{\strong{Best practice:} Limit tools to minimum needed (principle of least privilege)}
+
+\p{\strong{Common tool sets:}}
+
+\ul{
+\li{Read-only analysis: \code{\startverb ["Read", "Grep", "Glob"]\stopverb}}
+\li{Code generation: \code{\startverb ["Read", "Write", "Grep"]\stopverb}}
+\li{Testing: \code{\startverb ["Read", "Bash", "Grep"]\stopverb}}
+\li{Full access: Omit field or use \code{\startverb ["*"]\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{System Prompt Design}
+\p{The markdown body becomes the agent's system prompt. Write in second person, addressing the agent directly.}
+
+\subtree{
+\title{Structure}
+\p{\strong{Standard template:}}
+
+\pre{\startverb
+You are [role] specializing in [domain].
+
+**Your Core Responsibilities:**
+1. [Primary responsibility]
+2. [Secondary responsibility]
+3. [Additional responsibilities...]
+
+**Analysis Process:**
+1. [Step one]
+2. [Step two]
+3. [Step three]
+[...]
+
+**Quality Standards:**
+- [Standard 1]
+- [Standard 2]
+
+**Output Format:**
+Provide results in this format:
+- [What to include]
+- [How to structure]
+
+**Edge Cases:**
+Handle these situations:
+- [Edge case 1]: [How to handle]
+- [Edge case 2]: [How to handle]
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\p{✅ \strong{DO:}}
+
+\ul{
+\li{Write in second person ("You are...", "You will...")}
+\li{Be specific about responsibilities}
+\li{Provide step-by-step process}
+\li{Define output format}
+\li{Include quality standards}
+\li{Address edge cases}
+\li{Keep under 10,000 characters}
+}
+
+\p{❌ \strong{DON'T:}}
+
+\ul{
+\li{Write in first person ("I am...", "I will...")}
+\li{Be vague or generic}
+\li{Omit process steps}
+\li{Leave output format undefined}
+\li{Skip quality guidance}
+\li{Ignore error cases}
+}
+}
+}
+
+\subtree{
+\title{Creating Agents}
+\subtree{
+\title{Method 1: AI-Assisted Generation}
+\p{Use this prompt pattern (extracted from Claude Code):}
+
+\pre{\startverb
+Create an agent configuration based on this request: "[YOUR DESCRIPTION]"
+
+Requirements:
+1. Extract core intent and responsibilities
+2. Design expert persona for the domain
+3. Create comprehensive system prompt with:
+   - Clear behavioral boundaries
+   - Specific methodologies
+   - Edge case handling
+   - Output format
+4. Create identifier (lowercase, hyphens, 3-50 chars)
+5. Write description with triggering conditions
+6. Include 2-3 <example> blocks showing when to use
+
+Return JSON with:
+{
+  "identifier": "agent-name",
+  "whenToUse": "Use this agent when... Examples: <example>...</example>",
+  "systemPrompt": "You are..."
+}
+\stopverb}
+
+\p{Then convert to agent file format with frontmatter.}
+
+\p{See \code{\startverb examples/agent-creation-prompt.md\stopverb} for complete template.}
+}
+
+\subtree{
+\title{Method 2: Manual Creation}
+\ol{
+\li{Choose agent identifier (3-50 chars, lowercase, hyphens)}
+\li{Write description with examples}
+\li{Select model (usually \code{\startverb inherit\stopverb})}
+\li{Choose color for visual identification}
+\li{Define tools (if restricting access)}
+\li{Write system prompt with structure above}
+\li{Save as \code{\startverb agents/agent-name.md\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Validation Rules}
+\subtree{
+\title{Identifier Validation}
+\pre{\startverb
+✅ Valid: code-reviewer, test-gen, api-analyzer-v2
+❌ Invalid: ag (too short), -start (starts with hyphen), my_agent (underscore)
+\stopverb}
+
+\p{\strong{Rules:}}
+
+\ul{
+\li{3-50 characters}
+\li{Lowercase letters, numbers, hyphens only}
+\li{Must start and end with alphanumeric}
+\li{No underscores, spaces, or special characters}
+}
+}
+
+\subtree{
+\title{Description Validation}
+\p{\strong{Length:} 10-5,000 characters \strong{Must include:} Triggering conditions and examples \strong{Best:} 200-1,000 characters with 2-4 examples}
+}
+
+\subtree{
+\title{System Prompt Validation}
+\p{\strong{Length:} 20-10,000 characters \strong{Best:} 500-3,000 characters \strong{Structure:} Clear responsibilities, process, output format}
+}
+}
+
+\subtree{
+\title{Agent Organization}
+\subtree{
+\title{Plugin Agents Directory}
+\pre{\startverb
+plugin-name/
+└── agents/
+    ├── analyzer.md
+    ├── reviewer.md
+    └── generator.md
+\stopverb}
+
+\p{All \code{\startverb .md\stopverb} files in \code{\startverb agents/\stopverb} are auto-discovered.}
+}
+
+\subtree{
+\title{Namespacing}
+\p{Agents are namespaced automatically:}
+
+\ul{
+\li{Single plugin: \code{\startverb agent-name\stopverb}}
+\li{With subdirectories: \code{\startverb plugin:subdir:agent-name\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Testing Agents}
+\subtree{
+\title{Test Triggering}
+\p{Create test scenarios to verify agent triggers correctly:}
+
+\ol{
+\li{Write agent with specific triggering examples}
+\li{Use similar phrasing to examples in test}
+\li{Check Claude loads the agent}
+\li{Verify agent provides expected functionality}
+}
+}
+
+\subtree{
+\title{Test System Prompt}
+\p{Ensure system prompt is complete:}
+
+\ol{
+\li{Give agent typical task}
+\li{Check it follows process steps}
+\li{Verify output format is correct}
+\li{Test edge cases mentioned in prompt}
+\li{Confirm quality standards are met}
+}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{Minimal Agent}
+\pre{\startverb
+---
+name: simple-agent
+description: Use this agent when... Examples: <example>...</example>
+model: inherit
+color: blue
+---
+
+You are an agent that [does X].
+
+Process:
+1. [Step 1]
+2. [Step 2]
+
+Output: [What to provide]
+\stopverb}
+}
+
+\subtree{
+\title{Frontmatter Fields Summary}
+\pre{\startverb
+| Field | Required | Format | Example |
+|-------|----------|--------|---------|
+| name | Yes | lowercase-hyphens | code-reviewer |
+| description | Yes | Text + examples | Use when... <example>... |
+| model | Yes | inherit/sonnet/opus/haiku | inherit |
+| color | Yes | Color name | blue |
+| tools | No | Array of tool names | ["Read", "Grep"] |
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\p{\strong{DO:}}
+
+\ul{
+\li{✅ Include 2-4 concrete examples in description}
+\li{✅ Write specific triggering conditions}
+\li{✅ Use \code{\startverb inherit\stopverb} for model unless specific need}
+\li{✅ Choose appropriate tools (least privilege)}
+\li{✅ Write clear, structured system prompts}
+\li{✅ Test agent triggering thoroughly}
+}
+
+\p{\strong{DON'T:}}
+
+\ul{
+\li{❌ Use generic descriptions without examples}
+\li{❌ Omit triggering conditions}
+\li{❌ Give all agents same color}
+\li{❌ Grant unnecessary tool access}
+\li{❌ Write vague system prompts}
+\li{❌ Skip testing}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\subtree{
+\title{Reference Files}
+\p{For detailed guidance, consult:}
+
+\ul{
+\li{\strong{\code{\startverb references/system-prompt-design.md\stopverb}} - Complete system prompt patterns}
+\li{\strong{\code{\startverb references/triggering-examples.md\stopverb}} - Example formats and best practices}
+\li{\strong{\code{\startverb references/agent-creation-system-prompt.md\stopverb}} - The exact prompt from Claude Code}
+}
+}
+
+\subtree{
+\title{Example Files}
+\p{Working examples in \code{\startverb examples/\stopverb}:}
+
+\ul{
+\li{\strong{\code{\startverb agent-creation-prompt.md\stopverb}} - AI-assisted agent generation template}
+\li{\strong{\code{\startverb complete-agent-examples.md\stopverb}} - Full agent examples for different use cases}
+}
+}
+
+\subtree{
+\title{Utility Scripts}
+\p{Development tools in \code{\startverb scripts/\stopverb}:}
+
+\ul{
+\li{\strong{\code{\startverb validate-agent.sh\stopverb}} - Validate agent file structure}
+\li{\strong{\code{\startverb test-agent-trigger.sh\stopverb}} - Test if agent triggers correctly}
+}
+}
+}
+
+\subtree{
+\title{Implementation Workflow}
+\p{To create an agent for a plugin:}
+
+\ol{
+\li{Define agent purpose and triggering conditions}
+\li{Choose creation method (AI-assisted or manual)}
+\li{Create \code{\startverb agents/agent-name.md\stopverb} file}
+\li{Write frontmatter with all required fields}
+\li{Write system prompt following best practices}
+\li{Include 2-4 triggering examples in description}
+\li{Validate with \code{\startverb scripts/validate-agent.sh\stopverb}}
+\li{Test triggering with real scenarios}
+\li{Document agent in plugin README}
+}
+
+\p{Focus on clear triggering conditions and comprehensive system prompts for autonomous operation.}
+}
+}

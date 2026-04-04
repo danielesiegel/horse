@@ -1,0 +1,311 @@
+\title{Coolify Deployment}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{Deploy Coolify self-hosted PaaS for application hosting. Covers VM provisioning, installation, GitHub integration, and application deployment with auto-SSL.}
+
+\subtree{
+\title{Coolify Self-Hosted PaaS Deployment}
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Install Coolify on VM}
+\pre{\startverb
+ssh -i <key-file> <user>@<instance-ip>
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
+# Access: http://<instance-ip>:8000
+\stopverb}
+}
+
+\subtree{
+\title{Deploy Application}
+\ol{
+\li{Access Coolify UI at \code{\startverb http://<instance-ip>:8000\stopverb}}
+\li{Create admin account (first visitor gets admin)}
+\li{Add GitHub source → Create project → Deploy from repo}
+\li{Access app at \code{\startverb http://<container-id>.<instance-ip>.sslip.io\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Server Requirements}
+\pre{\startverb
+| Resource | Minimum | Recommended |
+|----------|---------|-------------|
+| CPU | 2 vCPU | 4 vCPU |
+| RAM | 2GB | 4GB |
+| Storage | 30GB | 50GB |
+| OS | Ubuntu 20.04/22.04/24.04 LTS | Ubuntu 24.04 LTS |
+\stopverb}
+
+\p{\strong{Required Ports:}}
+
+\ul{
+\li{TCP 22 (SSH)}
+\li{TCP 80 (HTTP/Let's Encrypt)}
+\li{TCP 443 (HTTPS)}
+\li{TCP 8000 (Coolify UI)}
+}
+}
+
+\subtree{
+\title{Cloud VM Deployment}
+\subtree{
+\title{1. Provision Infrastructure}
+\pre{\startverb
+# Create security group with required ports
+# - TCP 22 (SSH)
+# - TCP 80 (HTTP)
+# - TCP 443 (HTTPS)
+# - TCP 8000 (Coolify UI)
+
+# Launch instance with:
+# - 2+ vCPU, 2GB+ RAM
+# - 30GB+ root volume
+# - Ubuntu LTS
+# - Public IP
+# - SSH key pair
+\stopverb}
+}
+
+\subtree{
+\title{2. Install Coolify}
+\pre{\startverb
+# Set key permissions
+chmod 400 /path/to/key.pem
+
+# Connect and install
+ssh -o StrictHostKeyChecking=no -i /path/to/key.pem <user>@<instance-ip>
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
+\stopverb}
+}
+
+\subtree{
+\title{3. Initial Setup}
+\ol{
+\li{Open browser: \code{\startverb http://<instance-ip>:8000\stopverb}}
+\li{\strong{IMPORTANT}: Create admin account immediately}
+\li{Complete setup wizard}
+}
+}
+
+\subtree{
+\title{4. Verify Installation}
+\pre{\startverb
+ssh -i /path/to/key.pem <user>@<instance-ip> \
+  "sudo docker ps --format 'table {{.Names}}\t{{.Status}}' | grep coolify"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Application Deployment}
+\subtree{
+\title{Supported Build Methods}
+\pre{\startverb
+| Method | Use Case |
+|--------|----------|
+| Dockerfile | Custom container builds |
+| Nixpacks | Auto-detected language builds |
+| Docker Compose | Multi-container apps |
+| Static | HTML/JS/CSS sites |
+\stopverb}
+}
+
+\subtree{
+\title{Deploy from GitHub}
+\ol{
+\li{\strong{Add Source}: Sources → Add New → GitHub App}
+\li{\strong{Create Project}: Projects → Add New Project}
+\li{\strong{Add Resource}: Add New Resource → Public/Private Repository}
+\li{\strong{Configure}:}
+\li{Repository URL}
+\li{Branch}
+\li{Build pack (Dockerfile/Nixpacks)}
+\li{Port to expose}
+\li{\strong{Deploy}: Click Deploy button}
+}
+}
+
+\subtree{
+\title{Sample Dockerfile Application}
+\pre{\startverb
+app/
+├── main.py          # Application code
+├── requirements.txt # Dependencies
+└── Dockerfile       # Container definition
+\stopverb}
+
+\p{\strong{Dockerfile:}}
+
+\pre{\startverb
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8080
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+\stopverb}
+}
+
+\subtree{
+\title{Domain Configuration}
+\p{\strong{Auto-generated (sslip.io):}}
+
+\ul{
+\li{Format: \code{\startverb <container-id>.<public-ip>.sslip.io\stopverb}}
+\li{Works immediately, no DNS required}
+}
+
+\p{\strong{Custom Domain:}}
+
+\ol{
+\li{Add DNS A record → EC2 public IP}
+\li{Update domain in Coolify resource settings}
+\li{Enable SSL (Let's Encrypt auto-configured)}
+}
+}
+}
+
+\subtree{
+\title{Verification}
+\subtree{
+\title{Check Container Status}
+\pre{\startverb
+ssh -i /path/to/key.pem <user>@<instance-ip> \
+  "sudo docker ps --format 'table {{.Names}}\t{{.Ports}}\t{{.Status}}'"
+\stopverb}
+}
+
+\subtree{
+\title{Test Application}
+\pre{\startverb
+# Get app URL from Coolify UI
+APP_URL="http://<container-id>.<public-ip>.sslip.io"
+
+curl -s $APP_URL/
+curl -s $APP_URL/health
+\stopverb}
+}
+
+\subtree{
+\title{Check Logs}
+\pre{\startverb
+# Application logs
+ssh -i /path/to/key.pem <user>@<instance-ip> \
+  "sudo docker logs <container-name> --tail 50"
+
+# Coolify logs
+ssh -i /path/to/key.pem <user>@<instance-ip> \
+  "sudo docker logs coolify --tail 50"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration Reference}
+\subtree{
+\title{Coolify Containers}
+\pre{\startverb
+| Container | Purpose | Port |
+|-----------|---------|------|
+| coolify | Main application | 8000 |
+| coolify-proxy | Traefik reverse proxy | 80, 443 |
+| coolify-db | PostgreSQL database | 5432 |
+| coolify-redis | Redis cache | 6379 |
+| coolify-realtime | WebSocket server | 6001-6002 |
+\stopverb}
+}
+
+\subtree{
+\title{Important Paths}
+\pre{\startverb
+| Path | Purpose |
+|------|---------|
+| `/data/coolify/source/.env` | Coolify configuration |
+| `/data/coolify/proxy/dynamic/` | Traefik dynamic config |
+| `/data/coolify/applications/` | Application data |
+| `/data/coolify/databases/` | Database volumes |
+\stopverb}
+}
+
+\subtree{
+\title{Environment Variables (Installation)}
+\pre{\startverb
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `ROOT_USERNAME` | Admin username | `admin` |
+| `ROOT_USER_EMAIL` | Admin email | `admin@example.com` |
+| `ROOT_USER_PASSWORD` | Admin password | `SecurePass123` |
+| `AUTOUPDATE` | Auto-update toggle | `true`/`false` |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Production Checklist}
+\ul{
+\li{[ ] Create admin account immediately after install}
+\li{[ ] Backup \code{\startverb /data/coolify/source/.env\stopverb} to secure location}
+\li{[ ] Configure firewall/security group rules}
+\li{[ ] Set up custom domain with SSL}
+\li{[ ] Restrict SSH access to specific IPs}
+\li{[ ] Configure monitoring/alerts}
+\li{[ ] Test deployment rollback procedure}
+\li{[ ] Document access credentials securely}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\pre{\startverb
+| Issue | Solution |
+|-------|----------|
+| 404 on public IP | Access via sslip.io domain, not raw IP |
+| Cannot access Coolify UI | Check security group allows port 8000 |
+| Deployment fails | Check Coolify logs and Dockerfile syntax |
+| SSL certificate fails | Ensure port 80 open, DNS configured |
+| Container not starting | Check container logs for errors |
+| Out of disk space | Prune Docker: `docker system prune -a` |
+| Coolify unresponsive | Restart: `docker restart coolify` |
+\stopverb}
+}
+
+\subtree{
+\title{Update Coolify}
+\pre{\startverb
+ssh -i /path/to/key.pem <user>@<instance-ip> \
+  "cd /data/coolify/source && sudo bash upgrade.sh"
+\stopverb}
+}
+
+\subtree{
+\title{Cleanup}
+\pre{\startverb
+# Stop all containers
+ssh -i /path/to/key.pem <user>@<instance-ip> \
+  "cd /data/coolify/source && sudo docker compose down"
+
+# Remove Coolify data (destructive)
+ssh -i /path/to/key.pem <user>@<instance-ip> \
+  "sudo rm -rf /data/coolify"
+
+# Terminate cloud instance
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Coolify Documentation](https://coolify.io/docs)}
+\li{[Coolify Installation Guide](https://coolify.io/docs/get-started/installation)}
+\li{[Coolify GitHub](https://github.com/coollabsio/coolify)}
+\li{[Traefik Documentation](https://doc.traefik.io/traefik/)}
+\li{[sslip.io](https://sslip.io/)}
+}
+}
+}

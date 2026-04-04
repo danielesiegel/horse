@@ -1,0 +1,109 @@
+\title{"chemical Organization Theory"}
+
+\taxon{skill}
+
+\meta{description}{"**Category:** Phase 3 Core - Autopoietic Systems"}
+
+\subtree{
+\title{Chemical Organization Theory}
+\p{\strong{Category:} Phase 3 Core - Autopoietic Systems \strong{Status:} Skeleton Implementation \strong{Dependencies:} \code{\startverb categorical-composition\stopverb} (reaction networks as categories)}
+
+\subtree{
+\title{Overview}
+\p{Implements Chemical Organization Theory (COT) for modeling self-maintaining autopoietic systems through reaction-diffusion dynamics, organizational closure detection, and self-maintenance verification.}
+}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{\strong{Reaction Networks}: Define chemical reaction systems}
+\li{\strong{Organizational Closure}: Detect self-maintaining organizations}
+\li{\strong{Reaction-Diffusion}: Spatial dynamics simulation}
+\li{\strong{Autopoiesis}: Verify self-production and boundary maintenance}
+}
+}
+
+\subtree{
+\title{Core Components}
+\ol{
+\li{\strong{Reaction Network Builder} (\code{\startverb reaction_network.jl\stopverb})}
+\li{Define species and reactions}
+\li{Stoichiometric matrices}
+\li{Mass-action kinetics}
+}
+
+\ol{
+\li{\strong{Organization Detection} (\code{\startverb organization_detection.jl\stopverb})}
+\li{Closure detection (no external inputs required)}
+\li{Self-maintenance verification}
+\li{Organizational hierarchy}
+}
+
+\ol{
+\li{\strong{Reaction-Diffusion Simulator} (\code{\startverb reaction_diffusion.jl\stopverb})}
+\li{Spatial PDE integration}
+\li{Pattern formation}
+\li{Turing instabilities}
+}
+
+\ol{
+\li{\strong{Autopoietic Analysis} (\code{\startverb autopoiesis.jl\stopverb})}
+\li{Boundary formation detection}
+\li{Self-production metrics}
+\li{Organizational resilience}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Input from}: \code{\startverb categorical-composition\stopverb} (reaction networks as categories)}
+\li{\strong{Output to}: \code{\startverb emergent-role-assignment\stopverb} (role stability as organizations)}
+\li{\strong{Coordinates with}: \code{\startverb formal-verification-ai\stopverb} (verify closure properties)}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using ChemicalOrganizationTheory
+
+# Define reaction network
+network = ReactionNetwork()
+add_species!(network, [:A, :B, :C])
+add_reaction!(network, [:A, :B] => [:C], rate=0.1)
+add_reaction!(network, [:C] => [:A, :B], rate=0.05)
+
+# Detect organizations
+orgs = find_organizations(network)
+
+# Simulate reaction-diffusion
+grid = Grid2D(100, 100)
+state = initialize_state(grid, network)
+trajectory = simulate_rd(network, state, time=100.0)
+
+# Check autopoiesis
+is_autopoietic = check_autopoiesis(network, orgs[1])
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Dittrich & Speroni di Fenizio "Chemical Organization Theory" (2007)}
+\li{Fontana & Buss "The Barrier of Objects" (1996)}
+\li{Varela et al. "Autopoiesis: The Organization of Living Systems" (1974)}
+}
+}
+
+\subtree{
+\title{Implementation Status}
+\ul{
+\li{[x] Basic reaction network structures}
+\li{[x] Stoichiometric analysis}
+\li{[ ] Full organization detection algorithm}
+\li{[ ] Reaction-diffusion solver}
+\li{[ ] Autopoiesis verification metrics}
+}
+}
+}

@@ -1,0 +1,68 @@
+\title{Signal Messaging}
+
+\taxon{skill}
+
+\meta{description}{Send and receive Signal messages via MCP. Use this skill when you need to interact with Signal messenger - sending messages, reading conversations, or automating Signal-based workflows.}
+
+\subtree{
+\title{Signal Messaging via MCP}
+\p{Interact with Signal messenger through the local MCP server.}
+
+\subtree{
+\title{Setup}
+\p{The Signal MCP server is configured in \code{\startverb ~/.mcp.json\stopverb}:}
+
+\pre{\startverb
+{
+  "signal": {
+    "command": "cargo",
+    "args": ["run", "--release", "--example", "signal-server-stdio"],
+    "cwd": "/Users/alice/signal-mcp",
+    "env": {
+      "RUST_LOG": "signal_mcp=info"
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Prerequisites}
+\ol{
+\li{Clone and build the signal-mcp server:}
+}
+
+\ol{
+\li{Register/link your Signal account with the server}
+}
+}
+
+\subtree{
+\title{Usage}
+\p{Use \code{\startverb read_mcp_resource\stopverb} to interact with Signal:}
+
+\pre{\startverb
+{"server": "signal", "uri": "signal://..."}
+\stopverb}
+}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{Send messages to contacts or groups}
+\li{Read incoming messages}
+\li{List conversations}
+\li{Handle attachments}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\ul{
+\li{Ensure the server starts: \code{\startverb cargo run --release --example signal-server-stdio\stopverb}}
+\li{Check logs: \code{\startverb RUST_LOG=signal_mcp=debug\stopverb}}
+\li{Verify Signal account is registered/linked}
+\li{Restart Amp after config changes}
+}
+}
+}

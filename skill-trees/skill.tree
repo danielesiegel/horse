@@ -1,0 +1,591 @@
+\title{Skill}
+
+\taxon{skill}
+
+\meta{description}{Comprehensive guide to understanding, writing, validating, and using skills in agent systems. Covers the agentskills.io specification, progressive disclosure patterns, frontmatter validation, directory structure, and tooling. When you need to teach agents how to read skills, validate skill metadata, work with SKILL.md files, or understand skill architecture.}
+
+\subtree{
+\title{Skills: Formal Specification and Implementation Guide}
+\subtree{
+\title{What is a Skill?}
+\p{A \strong{skill} is a self-contained, discoverable unit of agent capability encoded as a directory containing:}
+
+\ul{
+\li{\strong{\code{\startverb SKILL.md\stopverb}} (required): YAML frontmatter + Markdown instructions}
+\li{\strong{\code{\startverb scripts/\stopverb}} (optional): Executable code}
+\li{\strong{\code{\startverb references/\stopverb}} (optional): Supplementary documentation}
+\li{\strong{\code{\startverb assets/\stopverb}} (optional): Templates, data files, images}
+}
+
+\p{Each skill is \strong{identified by its name} (kebab-case) and must be \strong{located in a directory matching that name}.}
+
+\subtree{
+\title{Design Philosophy}
+\p{Skills implement \strong{progressive disclosure}: agents load skill metadata on startup (~100 tokens), full instructions when activated (~5000 tokens), and on-demand resources during execution. This minimizes context bloat while maximizing capability.}
+}
+}
+
+\subtree{
+\title{Part 1: Frontmatter Specification}
+\p{The SKILL.md file opens with YAML frontmatter delimited by \code{\startverb ---\stopverb}:}
+
+\pre{\startverb
+---
+name: pdf-processing
+description: Extract text and tables from PDF files. Use when processing documents.
+license: MIT
+compatibility: Requires Python 3.9, pypdf, pdfplumber
+metadata:
+  version: 1.0.0
+  author: Your Name
+allowed-tools: "Bash(python:*) Read"
+---
+\stopverb}
+
+\subtree{
+\title{Required Fields}
+\pre{\startverb
+| Field | Type | Constraints |
+|-------|------|-------------|
+| **name** | string | 1–64 characters. Lowercase alphanumeric + hyphens. No leading/trailing hyphens, no consecutive hyphens (`--`). Must match parent directory name and be NFKC-normalized. |
+| **description** | string | 1–1024 characters. Should explain both what the skill does AND when to use it. Include specific keywords for agent matching. |
+\stopverb}
+}
+
+\subtree{
+\title{Optional Fields}
+\pre{\startverb
+| Field | Type | Constraints |
+|-------|------|-------------|
+| **license** | string | License name (e.g., `"MIT"`, `"Apache-2.0"`) or reference to a file (e.g., `"Proprietary. LICENSE.txt has full terms"`). |
+| **compatibility** | string | 1–500 characters. Environment, system, or product requirements. Examples: `"Requires Node.js 18+, Docker, internet access"` or `"Designed for Claude Code"`. |
+| **metadata** | mapping | Arbitrary key-value string pairs. Use unique key names to avoid conflicts. Nested values are converted to strings. Common: `version`, `author`, `updated`. |
+| **allowed-tools** | string | Space-delimited tool patterns (experimental). Format: `"ToolName(pattern:*) ..."`. Example: `"Bash(git:*) Read Write"` means only git-related bash commands are pre-approved. |
+\stopverb}
+}
+
+\subtree{
+\title{Frontmatter Rules}
+\ol{
+\li{\strong{Field whitelist}: Only \code{\startverb name\stopverb}, \code{\startverb description\stopverb}, \code{\startverb license\stopverb}, \code{\startverb compatibility\stopverb}, \code{\startverb metadata\stopverb}, \code{\startverb allowed-tools\stopverb} are recognized. Unknown fields cause validation errors.}
+\li{\strong{No duplicate keys} in metadata.}
+\li{\strong{Type checking}: name and description must be strings (not lists or objects).}
+\li{\strong{Case sensitivity}: All field names are lowercase.}
+}
+}
+}
+
+\subtree{
+\title{Part 2: Name Validation Rules}
+\p{The \strong{name} field must satisfy these constraints:}
+
+\subtree{
+\title{Regex (simplified)}
+\pre{\startverb
+^[a-z0-9]+(-[a-z0-9]+)*$
+\stopverb}
+}
+
+\subtree{
+\title{Detailed Rules}
+\ol{
+\li{\strong{Length}: 1–64 characters}
+\li{\strong{Characters}: Lowercase ASCII letters (\code{\startverb a-z\stopverb}), digits (\code{\startverb 0-9\stopverb}), hyphens (\code{\startverb -\stopverb})}
+\li{\strong{No leading hyphen}: \code{\startverb pdf\stopverb} is valid; \code{\startverb -pdf\stopverb} is invalid}
+\li{\strong{No trailing hyphen}: \code{\startverb pdf-processing\stopverb} is valid; \code{\startverb pdf-\stopverb} is invalid}
+\li{\strong{No consecutive hyphens}: \code{\startverb pdf-processing\stopverb} is valid; \code{\startverb pdf--processing\stopverb} is invalid}
+\li{\strong{Must match parent directory}: If SKILL.md is in \code{\startverb pdf-processing/\stopverb}, the name must be \code{\startverb pdf-processing\stopverb}}
+\li{\strong{Unicode normalization}: Name is NFKC-normalized (handles accents, ligatures, etc.)}
+}
+}
+
+\subtree{
+\title{Valid Examples}
+\ul{
+\li{\code{\startverb pdf\stopverb}}
+\li{\code{\startverb pdf-processing\stopverb}}
+\li{\code{\startverb data-analysis\stopverb}}
+\li{\code{\startverb code-review\stopverb}}
+\li{\code{\startverb xlsx\stopverb}}
+\li{\code{\startverb skill-creator\stopverb}}
+}
+}
+
+\subtree{
+\title{Invalid Examples}
+\ul{
+\li{\code{\startverb PDF-Processing\stopverb} (uppercase)}
+\li{\code{\startverb -pdf\stopverb} (leading hyphen)}
+\li{\code{\startverb pdf-\stopverb} (trailing hyphen)}
+\li{\code{\startverb pdf--processing\stopverb} (consecutive hyphens)}
+\li{\code{\startverb pdf_processing\stopverb} (underscore not allowed)}
+\li{`` (empty)}
+\li{\code{\startverb pdf-processing-and-analysis-suite\stopverb} (65 characters, exceeds max)}
+}
+}
+}
+
+\subtree{
+\title{Part 3: Body Content (Markdown Instructions)}
+\p{After the closing \code{\startverb ---\stopverb}, everything is Markdown. This is \strong{Level 2: Instructions} in progressive disclosure.}
+
+\subtree{
+\title{Guidelines}
+\ul{
+\li{\strong{Stay under 500 lines} (hard limit in agentskills spec)}
+\li{\strong{Estimate under 5000 tokens} (~20,000 characters) (advisory)}
+\li{\strong{Include clear structure}: headings, lists, code blocks}
+\li{\strong{Document when to use}: What problems does this skill solve? When should agents reach for it?}
+\li{\strong{Provide examples}: Show input/output, common patterns, edge cases}
+\li{\strong{Link to resources}: Use \code{\startverb [reference guide](references/REFERENCE.md)\stopverb} or \code{\startverb scripts/extract.py\stopverb}}
+\li{\strong{Avoid boilerplate}: Don't include README.md, CHANGELOG.md, or license text (those live in the root)}
+}
+}
+
+\subtree{
+\title{Example Structure}
+\pre{\startverb
+# PDF Processing
+
+## Overview
+This skill provides tools for extracting text and tables from PDF files...
+
+## Quick Start
+1. Load a PDF: `python scripts/extract.py input.pdf`
+2. Parse tables: `python scripts/tables.py input.pdf`
+
+## When to Use
+- User provides a PDF and wants specific data extracted
+- Need OCR for scanned PDFs
+- Converting PDF forms to structured data
+
+## When NOT to Use
+- User has a simple PDF they can convert to text with `pdftotext`
+- Task requires heavy image processing (use image-processing skill)
+
+## Common Tasks
+
+### Extracting Text
+See `references/EXTRACTION_GUIDE.md` for detailed steps.
+
+### Parsing Tables
+Tables.py handles:
+- Bordered tables (Tabula style)
+- Grid-based layouts
+- Multi-row headers
+
+### Watermarks & Encryption
+Scripts provided for removal (see `references/SECURITY.md`).
+
+## References
+- [PyPDF docs](https://pypdf.readthedocs.io/)
+- [PDFPlumber guide](references/PDFPLUMBER.md)
+
+## Troubleshooting
+Common errors and solutions in `references/TROUBLESHOOTING.md`.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Part 4: Progressive Disclosure Levels}
+\p{Skills are loaded in three tiers to manage agent context efficiently.}
+
+\subtree{
+\title{Level 1: Metadata (~100 tokens)}
+\p{Loaded at agent startup. Contains:}
+
+\ul{
+\li{\strong{name}: Skill identifier (kebab-case)}
+\li{\strong{description}: What the skill does + when to use}
+\li{\strong{role} (boxxy extension): GF(3) trit-based role (Generator, Coordinator, Verifier)}
+\li{\strong{color} (boxxy extension): Primary color for UI rendering}
+}
+
+\p{\strong{Example XML} (from \code{\startverb skills-ref to-prompt\stopverb}):}
+
+\pre{\startverb
+<skill name="pdf" description="Extract text and tables from PDF files."
+        location="/path/to/pdf/SKILL.md" trit="0" role="Coordinator"
+        color="#F59E0B" />
+\stopverb}
+
+\p{Agents use this to:}
+
+\ol{
+\li{Recognize available skills}
+\li{Match skills to user requests (semantic matching on name + description)}
+\li{Decide whether to activate this skill (avoiding context bloat)}
+}
+}
+
+\subtree{
+\title{Level 2: Instructions (~5000 tokens recommended, <500 lines hard limit)}
+\p{Loaded when skill is activated. Contains:}
+
+\ul{
+\li{Full Markdown body after frontmatter}
+\li{Step-by-step procedures}
+\li{Examples and edge cases}
+\li{Links to references and scripts}
+}
+
+\p{\strong{Example XML}:}
+
+\pre{\startverb
+<skill name="pdf" ...>
+[full Markdown body here]
+</skill>
+\stopverb}
+}
+
+\subtree{
+\title{Level 3: Resources (on-demand)}
+\p{Loaded during execution as needed. Contains:}
+
+\ul{
+\li{\strong{\code{\startverb scripts/\stopverb}}: Executable code (Python, Bash, Go, etc.)}
+\li{Should be self-contained or clearly document dependencies}
+\li{Include helpful error messages}
+\li{Useful for deterministic, fragile operations}
+}
+
+\ul{
+\li{\strong{\code{\startverb references/\stopverb}}: Supplementary docs (1 level deep from SKILL.md)}
+\li{Individual files per topic (e.g., \code{\startverb REFERENCE.md\stopverb}, \code{\startverb FORMS.md\stopverb})}
+\li{Keep focused and modular}
+\li{Examples: API docs, detailed tutorials, templates}
+}
+
+\ul{
+\li{\strong{\code{\startverb assets/\stopverb}}: Static resources}
+\li{Templates, images, data files, boilerplate}
+\li{Used for output artifacts (forms, generated code, etc.)}
+}
+
+\p{\strong{File referencing} from the body:}
+
+\pre{\startverb
+For details, see [FHIR reference guide](references/FHIR_GUIDE.md).
+Run [extraction script](scripts/extract.py) with your PDF.
+Use [form template](assets/form-template.txt) as a starting point.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Part 5: Directory Structure}
+\pre{\startverb
+skill-name/
+├── SKILL.md                    # Required: frontmatter + body
+├── scripts/                    # Optional: executable code
+│   ├── extract.py            # Python script
+│   ├── process.sh            # Bash script
+│   └── query.go              # Go program
+├── references/               # Optional: supplementary docs (1 level deep)
+│   ├── EXTRACTION_GUIDE.md
+│   ├── FORMS.md
+│   ├── API_DOCS.md
+│   └── TROUBLESHOOTING.md
+└── assets/                    # Optional: static resources
+    ├── form-template.txt
+    ├── schema.json
+    └── icon.png
+\stopverb}
+
+\subtree{
+\title{Conventions}
+\ul{
+\li{\strong{SKILL.md} (uppercase preferred, though \code{\startverb skill.md\stopverb} is accepted)}
+\li{\strong{No extraneous files}: Don't include README.md, CHANGELOG.md, or other cruft}
+\li{\strong{Scripts self-contained}: Either a single tool with no deps, or clearly documented}
+\li{\strong{One level deep references}: Avoid nesting \code{\startverb references/subdir/file.md\stopverb}}
+\li{\strong{Relative paths}: Use \code{\startverb references/GUIDE.md\stopverb}, not absolute paths or \code{\startverb ../\stopverb}}
+}
+}
+
+\subtree{
+\title{What Goes Where?}
+\pre{\startverb
+| Item | Location | Notes |
+|------|----------|-------|
+| Step-by-step procedures | SKILL.md body | Core instructions |
+| API endpoint docs | `references/API.md` | Supplementary detail |
+| Code to extract data | `scripts/extract.py` | Executable, deterministic |
+| Form template | `assets/form.txt` | Output artifact |
+| Troubleshooting tips | `references/TROUBLESHOOTING.md` | Reference material |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Part 6: Validation}
+\p{Use the \strong{skills-ref} CLI to validate SKILL.md files:}
+
+\pre{\startverb
+# Validate a single skill
+skills-ref validate ./pdf
+
+# Validate all skills in a directory
+skills-ref validate ./skills
+
+# Get structured output
+skills-ref read-properties ./pdf
+\stopverb}
+
+\subtree{
+\title{Validation Checklist}
+\ol{
+\li{✓ SKILL.md exists (case-insensitive)}
+\li{✓ Frontmatter is valid YAML}
+\li{✓ \strong{name} field is present and valid (kebab-case, matches directory)}
+\li{✓ \strong{description} field is present (1–1024 chars)}
+\li{✓ \strong{compatibility} field is ≤500 chars (if present)}
+\li{✓ No unknown fields (only whitelisted: name, description, license, compatibility, metadata, allowed-tools)}
+\li{✓ \strong{Body} is ≤500 lines (hard limit)}
+\li{✓ \strong{Body} is ~<5000 tokens (advisory, for context efficiency)}
+\li{✓ No directory traversal in resource references (e.g., no \code{\startverb ../../etc/passwd\stopverb})}
+\li{✓ Metadata has no duplicate keys}
+}
+}
+
+\subtree{
+\title{Validation Errors}
+\p{\strong{Hard errors} (prevent use):}
+
+\ul{
+\li{Missing SKILL.md}
+\li{Invalid YAML frontmatter}
+\li{Missing required fields (name, description)}
+\li{Invalid name (wrong characters, too long, doesn't match directory)}
+\li{Unknown frontmatter fields}
+\li{Body exceeds 500 lines}
+}
+
+\p{\strong{Warnings} (advisory):}
+
+\ul{
+\li{Body approaches 5000 tokens}
+\li{Compatibility exceeds 500 chars}
+\li{Name doesn't match directory (legacy skills)}
+}
+}
+}
+
+\subtree{
+\title{Part 7: Integration with Agent Systems}
+\subtree{
+\title{For Agent Builders}
+\p{To integrate skills into your agent:}
+
+\ol{
+\li{\strong{Discover} skills in designated directories:}
+}
+
+\ol{
+\li{\strong{Extract metadata} at startup:}
+}
+
+\ol{
+\li{\strong{Match requests} to skills semantically:}
+\li{Use name + description to find relevant skills}
+\li{Filter by allowed-tools if provided}
+}
+
+\ol{
+\li{\strong{Load instructions} when activated:}
+}
+
+\ol{
+\li{\strong{Execute resources} on demand:}
+\li{Run scripts in isolated environments}
+\li{Load references as context}
+\li{Retrieve assets for output generation}
+}
+
+\ol{
+\li{\strong{Log and audit}:}
+\li{Track which skills were loaded and when}
+\li{Validate tool usage against allowed-tools whitelist}
+\li{Maintain execution logs for compliance}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{\strong{Execute in isolation}: Run skill scripts in sandboxed environments}
+\li{\strong{Trust boundaries}: Only execute scripts from trusted skill sources}
+\li{\strong{User approval}: Obtain consent before dangerous operations (file deletion, network access)}
+\li{\strong{Path traversal}: Validate that resource references don't escape the skill directory}
+\li{\strong{Tool whitelisting}: Respect the \code{\startverb allowed-tools\stopverb} field; don't grant skills access beyond their scope}
+}
+}
+}
+
+\subtree{
+\title{Part 8: Examples}
+\subtree{
+\title{Minimal Skill}
+\pre{\startverb
+---
+name: hello
+description: A simple greeting skill for testing agent integration.
+---
+
+# Hello Skill
+
+Say hello to the world.
+
+## Usage
+
+Just ask the agent to greet you!
+\stopverb}
+}
+
+\subtree{
+\title{Full-Featured Skill}
+\p{See the \code{\startverb references/FULL_EXAMPLE.md\stopverb} for a comprehensive example with all optional fields, metadata, and script references.}
+}
+}
+
+\subtree{
+\title{Part 9: Best Practices}
+\subtree{
+\title{For Skill Authors}
+\ol{
+\li{\strong{Keep metadata tight}: Name and description should be ~100 tokens total}
+\li{\strong{Use progressive disclosure}: Don't cram everything into SKILL.md; link to references}
+\li{\strong{Document decision boundaries}: Explain when to use and when NOT to use this skill}
+\li{\strong{Version your skills}: Add \code{\startverb version\stopverb} to metadata; bump on breaking changes}
+\li{\strong{Test validation}: Run \code{\startverb skills-ref validate\stopverb} before publishing}
+\li{\strong{Name clearly}: Use kebab-case names that hint at function (e.g., \code{\startverb pdf-extraction\stopverb} not \code{\startverb doc-proc\stopverb})}
+\li{\strong{Include examples}: Show input/output; help agents understand scope}
+\li{\strong{Provide troubleshooting}: Common errors and solutions in a reference}
+}
+}
+
+\subtree{
+\title{For Agent Builders}
+\ol{
+\li{\strong{Load metadata at startup}: ~100 tokens per skill is acceptable}
+\li{\strong{Match before loading full instructions}: Use semantic search on name + description}
+\li{\strong{Cache instructions}: Load full SKILL.md body only once per session}
+\li{\strong{Respect allowed-tools}: Don't bypass tool restrictions}
+\li{\strong{Log all skill activations}: For debugging and compliance}
+\li{\strong{Graceful degradation}: If a script fails, provide helpful fallbacks}
+\li{\strong{Document constraints}: Tell users which skills you support}
+}
+}
+}
+
+\subtree{
+\title{Part 10: Relationship to agentskills.io}
+\p{This skill \strong{IS} the agentskills.io specification, formatted as a self-referential skill. It teaches agents how to:}
+
+\ul{
+\li{Read and understand SKILL.md files}
+\li{Validate skill metadata against the spec}
+\li{Integrate skills into agent systems}
+\li{Author new skills}
+\li{Reason about progressive disclosure and context efficiency}
+}
+
+\p{The specification itself is maintained at:}
+
+\ul{
+\li{\strong{Spec site}: https://agentskills.io/specification}
+\li{\strong{CLI tool}: https://github.com/agentskills/agentskills (skills-ref)}
+\li{\strong{Example skills}: https://github.com/anthropics/skills}
+}
+}
+
+\subtree{
+\title{Part 11: Tooling}
+\subtree{
+\title{skills-ref (Python CLI)}
+\pre{\startverb
+# Installation
+pip install skills-ref
+# or
+uv pip install skills-ref
+
+# Subcommands
+skills-ref validate <path>              # Check if valid
+skills-ref read-properties <path>       # Output JSON metadata
+skills-ref to-prompt <path> [<path>...] # Generate XML for agents
+\stopverb}
+}
+
+\subtree{
+\title{boxxy (Go skill system)}
+\p{The Boxxy skill system adds:}
+
+\ul{
+\li{\strong{GF(3) trit-based classification}: Each skill gets a color-coded role (Generator, Coordinator, Verifier)}
+\li{\strong{Glamour rendering}: Rich terminal output with trit-colored themes}
+\li{\strong{Batch operations}: Validate and render multiple skills with \code{\startverb ValidateDir\stopverb} and \code{\startverb RenderTriadSummary\stopverb}}
+\li{\strong{Conservation laws}: Balanced skill sets satisfy \code{\startverb ∑ trits ≡ 0 (mod 3)\stopverb} for triadic harmony}
+}
+
+\p{See \code{\startverb /Users/bob/i/boxxy/internal/skill/\stopverb} for implementation.}
+}
+}
+
+\subtree{
+\title{Part 12: Formal Specification (Dafny)}
+\p{A complete formal specification of the agentskills spec is maintained in \strong{AgentSkills.dfy} with predicates for:}
+
+\ul{
+\li{Name validation (\code{\startverb IsValidSkillName\stopverb})}
+\li{Description constraints (\code{\startverb IsValidDescription\stopverb})}
+\li{Frontmatter structure (\code{\startverb IsValidFrontmatter\stopverb})}
+\li{Directory layout (\code{\startverb IsValidSkillDirectory\stopverb})}
+\li{Progressive disclosure (\code{\startverb IsValidLevel1\stopverb}, \code{\startverb IsValidLevel2\stopverb}, \code{\startverb IsValidLevel3\stopverb})}
+\li{Complete skill validity (\code{\startverb IsValidCompleteSkill\stopverb})}
+}
+
+\p{Every predicate translates 1:1 to Go validation logic in \code{\startverb boxxy/internal/skill/skill.go\stopverb}, verified by exhaustive unit tests.}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{\strong{Official Spec}: https://agentskills.io/specification}
+\li{\strong{Skills CLI}: https://github.com/agentskills/agentskills}
+\li{\strong{Example Skills}: https://github.com/anthropics/skills}
+\li{\strong{Boxxy Implementation}: https://github.com/bmorphism/boxxy}
+\li{\strong{Dafny Spec}: \code{\startverb verified/AgentSkills.dfy\stopverb} (this repo)}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{My skill fails validation}
+\ol{
+\li{Check SKILL.md formatting: ensure it starts with \code{\startverb ---\stopverb} on its own line}
+\li{Validate name: lowercase, no leading/trailing/consecutive hyphens, matches directory}
+\li{Check YAML: use \code{\startverb python3 -c "import yaml; yaml.safe_load(open('SKILL.md'))"\stopverb} to debug}
+\li{Frontmatter fields: only use \code{\startverb name\stopverb}, \code{\startverb description\stopverb}, \code{\startverb license\stopverb}, \code{\startverb compatibility\stopverb}, \code{\startverb metadata\stopverb}, \code{\startverb allowed-tools\stopverb}}
+}
+}
+
+\subtree{
+\title{Body exceeds 500 lines}
+\p{Split content: move detailed guides to \code{\startverb references/GUIDE.md\stopverb}, scripts to \code{\startverb scripts/\stopverb}, and keep SKILL.md focused on quick start and key concepts.}
+}
+
+\subtree{
+\title{Agents don't find my skill}
+\p{Ensure the skill directory name matches the \strong{name} field exactly (both kebab-case). Run \code{\startverb skills-ref validate ./your-skill\stopverb} to confirm.}
+}
+
+\subtree{
+\title{Unicode/encoding issues}
+\p{Ensure SKILL.md is UTF-8 encoded. Use NFKC normalization for the name field.}
+
+\p{\strong{This skill is self-validating}: it teaches agents to read skills, and it is itself a valid skill according to this specification. ✓}
+}
+}
+}

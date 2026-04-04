@@ -1,0 +1,315 @@
+\title{Building Incident Timeline With Timesketch}
+
+\taxon{skill}
+
+\tag{timesketch}
+
+\tag{timeline-analysis}
+
+\tag{forensic-timeline}
+
+\tag{plaso}
+
+\tag{dfir}
+
+\tag{incident-investigation}
+
+\tag{collaborative-forensics}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Build collaborative forensic incident timelines using Timesketch to ingest, normalize, and analyze multi-source event data for attack chain reconstruction and investigation documentation.}
+
+\subtree{
+\title{Building Incident Timeline with Timesketch}
+\subtree{
+\title{Overview}
+\p{Timesketch is an open-source collaborative forensic timeline analysis tool developed by Google that enables security teams to visualize and analyze chronological data from multiple sources during incident investigations. It ingests logs and artifacts from endpoints, servers, and cloud services, normalizes them into a unified searchable timeline, and provides powerful analysis capabilities including built-in analyzers, tagging, sketch annotations, and story building. Timesketch integrates with Plaso (log2timeline) for artifact parsing and supports direct CSV/JSONL ingestion for rapid timeline construction during active incidents.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring building incident timeline with timesketch capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with incident response concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Architecture and Components}
+\subtree{
+\title{Core Components}
+\ul{
+\li{\strong{Timesketch Server}: Web application with REST API for timeline management}
+\li{\strong{OpenSearch/Elasticsearch}: Backend storage and search engine for timeline events}
+\li{\strong{PostgreSQL}: Metadata storage for sketches, stories, and user data}
+\li{\strong{Redis}: Task queue management for background processing}
+\li{\strong{Celery Workers}: Asynchronous processing of timeline uploads and analyzers}
+}
+}
+
+\subtree{
+\title{Data Flow}
+\pre{\startverb
+Evidence Sources --> Plaso/log2timeline --> Plaso storage file (.plaso)
+     |                                           |
+     v                                           v
+  CSV/JSONL --> Timesketch Importer --> OpenSearch Index
+                                           |
+                                           v
+                                    Timesketch Web UI
+                                    (Search, Analyze, Story)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Deployment}
+\subtree{
+\title{Docker Deployment (Recommended)}
+\pre{\startverb
+# Clone Timesketch repository
+git clone https://github.com/google/timesketch.git
+cd timesketch
+
+# Run deployment helper script
+cd docker
+sudo docker compose up -d
+
+# Default access: https://localhost:443
+# Admin credentials generated during first run
+\stopverb}
+}
+
+\subtree{
+\title{System Requirements}
+\ul{
+\li{Minimum 8 GB RAM (16+ GB recommended for large investigations)}
+\li{4 CPU cores minimum}
+\li{SSD storage for OpenSearch indices}
+\li{Docker and Docker Compose installed}
+}
+}
+}
+
+\subtree{
+\title{Data Ingestion Methods}
+\subtree{
+\title{Method 1: Plaso Integration (Comprehensive)}
+\pre{\startverb
+# Process disk image with log2timeline
+log2timeline.py --storage-file evidence.plaso /path/to/disk/image
+
+# Process Windows event logs
+log2timeline.py --parsers winevtx --storage-file windows_events.plaso /path/to/evtx/
+
+# Process multiple evidence sources
+log2timeline.py --parsers "winevtx,prefetch,amcache,shimcache,userassist" \
+  --storage-file full_analysis.plaso /path/to/mounted/image/
+
+# Import Plaso file into Timesketch
+timesketch_importer -s "Case-2025-001" -t "Endpoint-WKS01" evidence.plaso
+\stopverb}
+}
+
+\subtree{
+\title{Method 2: CSV Import (Quick Ingestion)}
+\pre{\startverb
+message,datetime,timestamp_desc,source,hostname
+"User login detected","2025-01-15T08:30:00Z","Event Recorded","Security Log","DC01"
+"PowerShell execution","2025-01-15T08:31:15Z","Event Recorded","PowerShell","WKS042"
+\stopverb}
+
+\pre{\startverb
+# Import CSV directly
+timesketch_importer -s "Case-2025-001" -t "Quick-Triage" events.csv
+\stopverb}
+}
+
+\subtree{
+\title{Method 3: JSONL Import (Structured Data)}
+\pre{\startverb
+{"message": "Suspicious logon from 10.1.2.3", "datetime": "2025-01-15T08:30:00Z", "timestamp_desc": "Event Recorded", "source_short": "Security", "hostname": "DC01"}
+\stopverb}
+}
+
+\subtree{
+\title{Method 4: Sigma Rule Integration}
+\pre{\startverb
+# Upload Sigma rules for automated detection
+timesketch_importer --sigma-rules /path/to/sigma/rules/
+\stopverb}
+}
+}
+
+\subtree{
+\title{Analysis Workflow}
+\subtree{
+\title{Step 1: Create Investigation Sketch}
+\pre{\startverb
+1. Log into Timesketch web interface
+2. Create new sketch (investigation case)
+3. Add relevant timelines to the sketch
+4. Set sketch description and tags
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Run Built-in Analyzers}
+\p{Timesketch includes analyzers that automatically identify:}
+
+\ul{
+\li{\strong{Browser Search Analyzer}: Extracts search queries from browser history}
+\li{\strong{Chain of Events Analyzer}: Links related events (download -> execute)}
+\li{\strong{Domain Analyzer}: Extracts and categorizes domain names}
+\li{\strong{Feature Extraction Analyzer}: Identifies IPs, URLs, hashes}
+\li{\strong{Geo Location Analyzer}: Maps events to geographic locations}
+\li{\strong{Similarity Scorer}: Finds similar events across timelines}
+\li{\strong{Sigma Analyzer}: Matches events against Sigma detection rules}
+\li{\strong{Account Finder}: Identifies user account activity patterns}
+\li{\strong{Tagger}: Applies labels based on predefined rules}
+}
+}
+
+\subtree{
+\title{Step 3: Search and Filter}
+\pre{\startverb
+# Search examples in Timesketch query language
+
+# Find all events related to specific user
+source_short:Security AND message:"john.admin"
+
+# Find PowerShell execution events
+data_type:"windows:evtx:record" AND event_identifier:4104
+
+# Find lateral movement indicators
+source_short:Security AND event_identifier:4624 AND xml_string:"LogonType\">3"
+
+# Find events within specific time range
+datetime:[2025-01-15T00:00:00 TO 2025-01-15T23:59:59]
+
+# Find file creation events
+data_type:"fs:stat" AND timestamp_desc:"Creation Time"
+
+# Search with tags
+tag:"suspicious" OR tag:"lateral_movement"
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Build Investigation Story}
+\pre{\startverb
+1. Create new story within the sketch
+2. Add search views that support each finding
+3. Annotate key events with investigator notes
+4. Link events to MITRE ATT&CK techniques
+5. Document the attack narrative chronologically
+6. Export story for inclusion in incident report
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{Collaborative Investigation}
+\ul{
+\li{Multiple analysts work on the same sketch simultaneously}
+\li{Comments and annotations persist on events}
+\li{Saved searches shared across the team}
+\li{Investigation stories document findings in context}
+}
+}
+
+\subtree{
+\title{API Automation}
+\pre{\startverb
+from timesketch_api_client import config
+from timesketch_api_client import client as ts_client
+
+# Connect to Timesketch
+ts = ts_client.TimesketchApi(
+    host_uri="https://timesketch.local",
+    username="analyst",
+    password="password"
+)
+
+# Get sketch
+sketch = ts.get_sketch(1)
+
+# Search events
+search = sketch.explore(
+    query_string='event_identifier:4624 AND LogonType:3',
+    return_fields='datetime,message,hostname,source_short'
+)
+
+# Add tags to events
+for event in search.get('objects', []):
+    sketch.tag_event(event['_id'], ['lateral_movement'])
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Dissect}
+\pre{\startverb
+# Use Dissect for faster artifact parsing (alternative to Plaso)
+target-query -f timesketch://timesketch.local/case-001 \
+  targets/hostname/ -q "windows.evtx" --limit 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Data Sources for Timeline Building}
+\pre{\startverb
+| Source | Parser | Evidence Value |
+|--------|--------|---------------|
+| Windows Event Logs (.evtx) | winevtx | Authentication, process execution, services |
+| Prefetch Files | prefetch | Program execution history |
+| MFT ($MFT) | mft | File system activity |
+| Registry Hives | winreg | System configuration, persistence |
+| Browser History | chrome/firefox | Web activity, downloads |
+| Syslog | syslog | Linux/network device events |
+| CloudTrail Logs | jsonl | AWS API activity |
+| Azure Activity Logs | jsonl | Azure resource operations |
+| Firewall Logs | csv/jsonl | Network connections |
+| Proxy Logs | csv/jsonl | HTTP/HTTPS traffic |
+\stopverb}
+}
+
+\subtree{
+\title{MITRE ATT&CK Mapping}
+\pre{\startverb
+| Technique | Timeline Indicators |
+|-----------|-------------------|
+| Initial Access (TA0001) | First malicious event, phishing email receipt |
+| Execution (T1059) | PowerShell/CMD events, process creation |
+| Persistence (TA0003) | Registry modifications, scheduled tasks, services |
+| Lateral Movement (TA0008) | Remote logons, SMB connections, RDP sessions |
+| Exfiltration (TA0010) | Large data transfers, cloud storage uploads |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Timesketch Official Documentation](https://timesketch.org/)}
+\li{[Timesketch GitHub Repository](https://github.com/google/timesketch)}
+\li{[CISA Timesketch Resource](https://www.cisa.gov/resources-tools/services/timesketch)}
+\li{[Hunt and Hackett: Scalable Forensics with Dissect and Timesketch](https://www.huntandhackett.com/blog/scalable-forensics-timeline-analysis-using-dissect-and-timesketch)}
+\li{[Plaso (log2timeline) Documentation](https://plaso.readthedocs.io/)}
+}
+}
+}

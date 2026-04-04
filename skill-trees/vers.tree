@@ -1,0 +1,144 @@
+\title{Vers}
+
+\taxon{skill}
+
+\meta{description}{Manage VERS VMs - list, create, branch, pause, resume, delete VMs and clusters. Use when working with vers commands, VM management, or when disk space issues occur.}
+
+\subtree{
+\title{VERS VM Management}
+\subtree{
+\title{Overview}
+\p{VERS is a VM platform that supports branching, snapshots, and clusters. VMs can be managed via the \code{\startverb vers\stopverb} CLI or the REST API at \code{\startverb http://13.219.19.157/api/\stopverb}.}
+}
+
+\subtree{
+\title{CLI Commands}
+\pre{\startverb
+# List/view VMs
+vers tree <cluster-alias>       # Show VM tree for a cluster
+
+# VM lifecycle
+vers run <rootfs> -n <cluster> -N <vm-alias>  # Create new cluster with VM
+vers branch <vm-id>             # Branch a VM (creates child)
+vers pause <vm-id>              # Pause a running VM
+vers resume <vm-id>             # Resume a paused VM
+vers kill <vm-id>               # Delete a VM
+vers kill <cluster-id>          # Delete entire cluster
+
+# Interaction
+vers connect <vm-id>            # SSH into VM
+vers execute <vm-id> "command"  # Run command on VM
+vers copy <vm-id> <local> <remote>  # Copy files to VM
+vers copy -r <vm-id> <local-dir> <remote-dir>  # Copy directory recursively
+
+# State management
+vers commit <vm-id>             # Commit VM state
+vers checkout <vm-id>           # Switch to a different VM
+\stopverb}
+}
+
+\subtree{
+\title{REST API}
+\p{Base URL: \code{\startverb http://13.219.19.157/api/\stopverb}}
+
+\p{Authorization header: \code{\startverb Authorization: Bearer <API_KEY>\stopverb}}
+
+\subtree{
+\title{Endpoints}
+\pre{\startverb
+# List all VMs
+curl -s -H "Authorization: Bearer $API_KEY" "http://13.219.19.157/api/vm"
+
+# Get specific VM
+curl -s -H "Authorization: Bearer $API_KEY" "http://13.219.19.157/api/vm/<vm-id>"
+
+# Update VM state (pause/resume)
+curl -X PATCH -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"state": "Running"}' \
+  "http://13.219.19.157/api/vm/<vm-id>"
+
+# Branch a VM
+curl -X POST -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  "http://13.219.19.157/api/vm/<vm-id>/branch"
+
+# Delete a VM
+curl -X DELETE -H "Authorization: Bearer $API_KEY" \
+  "http://13.219.19.157/api/vm/<vm-id>"
+
+# List clusters
+curl -s -H "Authorization: Bearer $API_KEY" "http://13.219.19.157/api/cluster"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Issues}
+\subtree{
+\title{Thin Pool Out of Space}
+\p{Error: \code{\startverb Thin pool ... is out of data space\stopverb}}
+
+\p{This means the VERS storage is full. To free space:}
+
+\ol{
+\li{List all VMs and identify unnecessary ones:}
+}
+
+\pre{\startverb
+curl -s -H "Authorization: Bearer $API_KEY" "http://13.219.19.157/api/vm" | jq '.data[] | {id, alias, state, children}'
+\stopverb}
+
+\ol{
+\li{Delete unused VMs (children first, then parents):}
+}
+
+\pre{\startverb
+vers kill <vm-id>
+# Or via API:
+curl -X DELETE -H "Authorization: Bearer $API_KEY" "http://13.219.19.157/api/vm/<vm-id>"
+\stopverb}
+
+\ol{
+\li{Delete entire clusters if not needed:}
+}
+
+\pre{\startverb
+vers kill <cluster-id>
+\stopverb}
+}
+
+\subtree{
+\title{VM States}
+\ul{
+\li{\code{\startverb Running\stopverb} - VM is active}
+\li{\code{\startverb Paused\stopverb} - VM is suspended (can be resumed)}
+\li{VMs get paused during branch operations}
+}
+}
+
+\subtree{
+\title{SSH Keys}
+\p{SSH keys are stored in \code{\startverb .vers/keys/<vm-id>.key\stopverb} after first connection.}
+}
+}
+
+\subtree{
+\title{Environment Variables}
+\ul{
+\li{\code{\startverb VERS_API_KEY\stopverb} - API key for authentication (required for API calls from within VMs)}
+}
+}
+
+\subtree{
+\title{Project-Specific Notes}
+\p{This project (rhizome) develops the vers-client and vers-dsl Haskell libraries:}
+
+\ul{
+\li{\code{\startverb vers-client/\stopverb} - Servant API types and client}
+\li{\code{\startverb vers-dsl/\stopverb} - Polysemy effect for VERS operations}
+\li{Test VM: \code{\startverb 15ad103d-7ed6-4dfd-80ff-87c5588a5001\stopverb}}
+}
+}
+}

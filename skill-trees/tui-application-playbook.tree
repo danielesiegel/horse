@@ -1,0 +1,142 @@
+\title{Tui Application Playbook}
+
+\taxon{skill}
+
+\meta{description}{Playbook for terminal user interface (TUI) application missions. Provides guidance on vertical slice milestones, walking skeleton, TUI/backend workers, tuistory-based manual verification, and quality enforcement. Use for interactive CLI tools, terminal dashboards, text editors, and similar TUI projects.}
+
+\subtree{
+\title{TUI Application Playbook}
+\p{This playbook guides you through executing a terminal user interface (TUI) application mission. Use this for CLI tools with interactive interfaces, terminal dashboards, text-based editors, and similar projects rendered in the terminal.}
+
+\subtree{
+\title{Dependency: tuistory skill}
+\p{This playbook requires the \code{\startverb tuistory\stopverb} skill for TUI verification and testing. If the \code{\startverb tuistory\stopverb} skill is not already available in your \code{\startverb <available_skills>\stopverb}, install it from the \code{\startverb droid-evolved\stopverb} plugin:}
+
+\pre{\startverb
+droid plugin marketplace add https://github.com/Factory-AI/factory-plugins
+droid plugin install droid-evolved@factory-plugins
+\stopverb}
+
+\p{After installation, the \code{\startverb tuistory\stopverb} skill will appear in your available skills.}
+}
+
+\subtree{
+\title{Milestone Strategy: Vertical Slices}
+\p{Structure your milestones as \strong{vertical slices} of functionality, not horizontal layers.}
+
+\p{\strong{Good milestones:}}
+
+\ul{
+\li{"navigation" (menu system, views, keybindings - full stack)}
+\li{"data-display" (list views, detail views, formatting - full stack)}
+\li{"editing" (input handling, validation, persistence - full stack)}
+}
+
+\p{\strong{Bad milestones:}}
+
+\ul{
+\li{"all-keybindings" (horizontal - can't test in isolation)}
+\li{"rendering-layer" (horizontal - can't test without data/state)}
+}
+
+\p{Each milestone should leave the app in a coherent, testable state where a user can complete a meaningful flow.}
+}
+
+\subtree{
+\title{Walking Skeleton First}
+\p{Before any real feature implementation, establish a \strong{walking skeleton} that spans the full user-facing surface with the thinnest possible implementation.}
+
+\p{\strong{Why:} This lets work-scrutiny-validator determine testing needs and user-testing-validator exercise the complete surface from the start. Prevents building features in isolation only to discover integration issues later.}
+
+\p{\strong{What to include:}}
+
+\ul{
+\li{All planned views/screens (can be stubs/placeholders)}
+\li{All planned commands and keybindings (can be no-ops)}
+\li{Basic navigation between views}
+\li{Minimal rendering pipeline}
+}
+
+\p{\strong{Skeleton milestone should be first.} Once the skeleton exists, subsequent milestones fill in real functionality.}
+}
+
+\subtree{
+\title{Worker Types for TUI}
+\subtree{
+\title{tui-worker}
+\ul{
+\li{Implements TUI features (views, components, input handling, state)}
+\li{\strong{TDD: Write tests FIRST (before any implementation)}}
+\li{\strong{MUST do manual TUI verification with tuistory:}}
+\li{Launch the app, navigate to the relevant view, and verify rendering and interactions}
+\li{Use \code{\startverb tuistory snapshot --trim\stopverb} to capture terminal output and verify visual correctness}
+\li{Test keyboard interactions (\code{\startverb tuistory press <key>\stopverb}), input handling (\code{\startverb tuistory type "<text>"\stopverb})}
+\li{Check for rendering artifacts, alignment issues, overflow, and missing states}
+\li{\strong{Fix issues found:}}
+\li{Issues with own work (including from manual testing) → must fix}
+\li{Manageable existing issues under their skill → fix them}
+\li{Large scope or outside their skill → report to orchestrator}
+\li{Include any fixes in whatWasImplemented}
+}
+}
+
+\subtree{
+\title{backend-worker}
+\ul{
+\li{Implements data layer, services, and business logic that the TUI consumes}
+\li{\strong{TDD: Write tests FIRST (before any implementation)}}
+\li{Verifies actual behavior (not just tests passing)}
+\li{\strong{Fix issues found:}}
+\li{Issues with own work (including from manual testing) → must fix}
+\li{Manageable existing issues under their skill → fix them}
+\li{Large scope or outside their skill → report to orchestrator}
+\li{Include any fixes in whatWasImplemented}
+}
+}
+}
+
+\subtree{
+\title{Quality Enforcement Flow}
+\pre{\startverb
+1. Orchestrator creates implementation features grouped by milestone
+2. Implementation workers build features (TDD + manual verification via tuistory)
+3. When milestone X completes → system injects work-scrutiny-validator
+4. Work-scrutiny validates handoffs match diffs, re-runs tests
+5. Work-scrutiny determines what user testing is needed and creates testing features
+6. User-testing validates TUI flows via tuistory
+7. Failed validation surfaces bugs → orchestrator creates fix features
+8. Repeat until milestone passes, then move to next milestone
+\stopverb}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ol{
+\li{\strong{Building state management without UI} - Leads to data structures that don't match rendering needs. Build vertical slices instead.}
+}
+
+\ol{
+\li{\strong{Skipping the skeleton} - Causes integration issues late in the mission. Always start with skeleton.}
+}
+
+\ol{
+\li{\strong{Features too large} - "Build the settings view" is too big. Break into: "settings navigation", "settings editing", "settings persistence", etc.}
+}
+
+\ol{
+\li{\strong{Forgetting edge states} - Workers often implement happy path only. expectedBehavior should include empty states, error states, overflow/truncation, and resize handling.}
+}
+
+\ol{
+\li{\strong{Not testing keyboard interactions} - TUI apps are keyboard-driven. Every view needs its keybindings tested, including edge cases (rapid input, conflicting shortcuts).}
+}
+
+\ol{
+\li{\strong{Not verifying visually with tuistory} - Unit tests can't catch rendering issues. Workers must use tuistory to verify layout, alignment, and visual state.}
+}
+
+\ol{
+\li{\strong{No lasting test infrastructure} - Per-worker TDD produces unit/integration tests, but consider whether the mission also needs dedicated features for shared test fixtures or e2e test suites using tuistory.}
+}
+}
+}

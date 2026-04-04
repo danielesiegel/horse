@@ -1,0 +1,121 @@
+\title{Detecting Lateral Movement With Splunk}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{mitre-attack}
+
+\tag{lateral-movement}
+
+\tag{splunk}
+
+\tag{siem}
+
+\tag{proactive-detection}
+
+\tag{ta0008}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect adversary lateral movement across networks using Splunk SPL queries against Windows authentication logs, SMB traffic, and remote service abuse.}
+
+\subtree{
+\title{Detecting Lateral Movement with Splunk}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When hunting for adversary movement between compromised systems}
+\li{After detecting credential theft to trace subsequent lateral activity}
+\li{When investigating unusual authentication patterns across the network}
+\li{During incident response to scope the breadth of compromise}
+\li{When proactively hunting for TA0008 (Lateral Movement) techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Splunk Enterprise or Splunk Cloud with Windows event data ingested}
+\li{Windows Security Event Logs forwarded (4624, 4625, 4648, 4672, 4768, 4769)}
+\li{Sysmon deployed for process creation and network connection data}
+\li{Network flow data or firewall logs for SMB/RDP/WinRM correlation}
+\li{Active Directory user and group membership reference data}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Define Lateral Movement Scope}: Identify which lateral movement techniques to hunt (RDP, SMB/Admin Shares, WinRM, PsExec, WMI, DCOM, SSH).}
+\li{\strong{Query Authentication Events}: Use SPL to search for Type 3 (Network) and Type 10 (RemoteInteractive) logons across the environment.}
+\li{\strong{Build Authentication Graphs}: Map source-to-destination authentication relationships to identify unusual connection patterns.}
+\li{\strong{Detect First-Time Relationships}: Identify new source-destination pairs that have not been seen in the historical baseline.}
+\li{\strong{Correlate with Process Activity}: Link authentication events to subsequent process creation on destination hosts.}
+\li{\strong{Identify Anomalous Patterns}: Flag lateral movement to sensitive servers, unusual hours, service account misuse, or rapid multi-host access.}
+\li{\strong{Report and Contain}: Document lateral movement path, affected systems, and coordinate containment response.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| T1021 | Remote Services (parent technique) |
+| T1021.001 | Remote Desktop Protocol (RDP) |
+| T1021.002 | SMB/Windows Admin Shares |
+| T1021.003 | Distributed COM (DCOM) |
+| T1021.004 | SSH |
+| T1021.006 | Windows Remote Management (WinRM) |
+| T1570 | Lateral Tool Transfer |
+| T1047 | Windows Management Instrumentation |
+| T1569.002 | Service Execution (PsExec) |
+| Logon Type 3 | Network logon (SMB, WinRM, mapped drives) |
+| Logon Type 10 | Remote Interactive (RDP) |
+| Event ID 4624 | Successful logon |
+| Event ID 4648 | Explicit credential logon (runas, PsExec) |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Splunk Enterprise | SIEM for log aggregation and SPL queries |
+| Splunk Enterprise Security | Threat detection and notable events |
+| Windows Event Forwarding | Centralize Windows logs |
+| Sysmon | Detailed process and network telemetry |
+| BloodHound | AD attack path analysis |
+| PingCastle | AD security assessment |
+\stopverb}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{PsExec Lateral Movement}: Adversary uses PsExec to execute commands on remote systems via SMB, generating Type 3 logon with ADMIN$ share access.}
+\li{\strong{RDP Pivoting}: Attacker RDPs to internal systems using stolen credentials, creating Type 10 logon events.}
+\li{\strong{WMI Remote Execution}: Adversary uses WMIC process call create to spawn processes on remote hosts.}
+\li{\strong{WinRM PowerShell Remoting}: Attacker uses Enter-PSSession or Invoke-Command to execute code on remote systems.}
+\li{\strong{Pass-the-Hash via SMB}: Compromised NTLM hashes used to authenticate to remote systems without knowing the plaintext password.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-LATMOV-[DATE]-[SEQ]
+Movement Type: [RDP/SMB/WinRM/WMI/DCOM/PsExec]
+Source Host: [Hostname/IP]
+Destination Host: [Hostname/IP]
+Account Used: [Username]
+Logon Type: [3/10/other]
+First Seen: [Timestamp]
+Event Count: [Number of events]
+Risk Level: [Critical/High/Medium/Low]
+Lateral Movement Path: [A -> B -> C -> D]
+\stopverb}
+}
+}

@@ -1,0 +1,451 @@
+\title{Clinvar Database}
+
+\taxon{skill}
+
+\meta{description}{"Query NCBI ClinVar for variant clinical significance. Search by gene/position, interpret pathogenicity classifications, access via E-utilities API or FTP, annotate VCFs, for genomic medicine."}
+
+\subtree{
+\title{ClinVar Database}
+\subtree{
+\title{Overview}
+\p{ClinVar is NCBI's freely accessible archive of reports on relationships between human genetic variants and phenotypes, with supporting evidence. The database aggregates information about genomic variation and its relationship to human health, providing standardized variant classifications used in clinical genetics and research.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Searching for variants by gene, condition, or clinical significance}
+\li{Interpreting clinical significance classifications (pathogenic, benign, VUS)}
+\li{Accessing ClinVar data programmatically via E-utilities API}
+\li{Downloading and processing bulk data from FTP}
+\li{Understanding review status and star ratings}
+\li{Resolving conflicting variant interpretations}
+\li{Annotating variant call sets with clinical significance}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Search and Query ClinVar}
+\subtree{
+\title{Web Interface Queries}
+\p{Search ClinVar using the web interface at https://www.ncbi.nlm.nih.gov/clinvar/}
+
+\p{\strong{Common search patterns:}}
+
+\ul{
+\li{By gene: \code{\startverb BRCA1[gene]\stopverb}}
+\li{By clinical significance: \code{\startverb pathogenic[CLNSIG]\stopverb}}
+\li{By condition: \code{\startverb breast cancer[disorder]\stopverb}}
+\li{By variant: \code{\startverb NM_000059.3:c.1310_1313del[variant name]\stopverb}}
+\li{By chromosome: \code{\startverb 13[chr]\stopverb}}
+\li{Combined: \code{\startverb BRCA1[gene] AND pathogenic[CLNSIG]\stopverb}}
+}
+}
+
+\subtree{
+\title{Programmatic Access via E-utilities}
+\p{Access ClinVar programmatically using NCBI's E-utilities API. Refer to \code{\startverb references/api_reference.md\stopverb} for comprehensive API documentation including:}
+
+\ul{
+\li{\strong{esearch} - Search for variants matching criteria}
+\li{\strong{esummary} - Retrieve variant summaries}
+\li{\strong{efetch} - Download full XML records}
+\li{\strong{elink} - Find related records in other NCBI databases}
+}
+
+\p{\strong{Quick example using curl:}}
+
+\pre{\startverb
+# Search for pathogenic BRCA1 variants
+curl "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=clinvar&term=BRCA1[gene]+AND+pathogenic[CLNSIG]&retmode=json"
+\stopverb}
+
+\p{\strong{Best practices:}}
+
+\ul{
+\li{Test queries on the web interface before automating}
+\li{Use API keys to increase rate limits from 3 to 10 requests/second}
+\li{Implement exponential backoff for rate limit errors}
+\li{Set \code{\startverb Entrez.email\stopverb} when using Biopython}
+}
+}
+}
+
+\subtree{
+\title{2. Interpret Clinical Significance}
+\subtree{
+\title{Understanding Classifications}
+\p{ClinVar uses standardized terminology for variant classifications. Refer to \code{\startverb references/clinical_significance.md\stopverb} for detailed interpretation guidelines.}
+
+\p{\strong{Key germline classification terms (ACMG/AMP):}}
+
+\ul{
+\li{\strong{Pathogenic (P)} - Variant causes disease (~99\% probability)}
+\li{\strong{Likely Pathogenic (LP)} - Variant likely causes disease (~90\% probability)}
+\li{\strong{Uncertain Significance (VUS)} - Insufficient evidence to classify}
+\li{\strong{Likely Benign (LB)} - Variant likely does not cause disease}
+\li{\strong{Benign (B)} - Variant does not cause disease}
+}
+
+\p{\strong{Review status (star ratings):}}
+
+\ul{
+\li{★★★★ Practice guideline - Highest confidence}
+\li{★★★ Expert panel review (e.g., ClinGen) - High confidence}
+\li{★★ Multiple submitters, no conflicts - Moderate confidence}
+\li{★ Single submitter with criteria - Standard weight}
+\li{☆ No assertion criteria - Low confidence}
+}
+
+\p{\strong{Critical considerations:}}
+
+\ul{
+\li{Always check review status - prefer ★★★ or ★★★★ ratings}
+\li{Conflicting interpretations require manual evaluation}
+\li{Classifications may change as new evidence emerges}
+\li{VUS (uncertain significance) variants lack sufficient evidence for clinical use}
+}
+}
+}
+
+\subtree{
+\title{3. Download Bulk Data from FTP}
+\subtree{
+\title{Access ClinVar FTP Site}
+\p{Download complete datasets from \code{\startverb ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/\stopverb}}
+
+\p{Refer to \code{\startverb references/data_formats.md\stopverb} for comprehensive documentation on file formats and processing.}
+
+\p{\strong{Update schedule:}}
+
+\ul{
+\li{Monthly releases: First Thursday of each month (complete dataset, archived)}
+\li{Weekly updates: Every Monday (incremental updates)}
+}
+}
+
+\subtree{
+\title{Available Formats}
+\p{\strong{XML files} (most comprehensive):}
+
+\ul{
+\li{VCV (Variation) files: \code{\startverb xml/clinvar_variation/\stopverb} - Variant-centric aggregation}
+\li{RCV (Record) files: \code{\startverb xml/RCV/\stopverb} - Variant-condition pairs}
+\li{Include full submission details, evidence, and metadata}
+}
+
+\p{\strong{VCF files} (for genomic pipelines):}
+
+\ul{
+\li{GRCh37: \code{\startverb vcf_GRCh37/clinvar.vcf.gz\stopverb}}
+\li{GRCh38: \code{\startverb vcf_GRCh38/clinvar.vcf.gz\stopverb}}
+\li{Limitations: Excludes variants >10kb and complex structural variants}
+}
+
+\p{\strong{Tab-delimited files} (for quick analysis):}
+
+\ul{
+\li{\code{\startverb tab_delimited/variant_summary.txt.gz\stopverb} - Summary of all variants}
+\li{\code{\startverb tab_delimited/var_citations.txt.gz\stopverb} - PubMed citations}
+\li{\code{\startverb tab_delimited/cross_references.txt.gz\stopverb} - Database cross-references}
+}
+
+\p{\strong{Example download:}}
+
+\pre{\startverb
+# Download latest monthly XML release
+wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/clinvar_variation/ClinVarVariationRelease_00-latest.xml.gz
+
+# Download VCF for GRCh38
+wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
+\stopverb}
+}
+}
+
+\subtree{
+\title{4. Process and Analyze ClinVar Data}
+\subtree{
+\title{Working with XML Files}
+\p{Process XML files to extract variant details, classifications, and evidence.}
+
+\p{\strong{Python example with xml.etree:}}
+
+\pre{\startverb
+import gzip
+import xml.etree.ElementTree as ET
+
+with gzip.open('ClinVarVariationRelease.xml.gz', 'rt') as f:
+    for event, elem in ET.iterparse(f, events=('end',)):
+        if elem.tag == 'VariationArchive':
+            variation_id = elem.attrib.get('VariationID')
+            # Extract clinical significance, review status, etc.
+            elem.clear()  # Free memory
+\stopverb}
+}
+
+\subtree{
+\title{Working with VCF Files}
+\p{Annotate variant calls or filter by clinical significance using bcftools or Python.}
+
+\p{\strong{Using bcftools:}}
+
+\pre{\startverb
+# Filter pathogenic variants
+bcftools view -i 'INFO/CLNSIG~"Pathogenic"' clinvar.vcf.gz
+
+# Extract specific genes
+bcftools view -i 'INFO/GENEINFO~"BRCA"' clinvar.vcf.gz
+
+# Annotate your VCF with ClinVar
+bcftools annotate -a clinvar.vcf.gz -c INFO your_variants.vcf
+\stopverb}
+
+\p{\strong{Using PyVCF in Python:}}
+
+\pre{\startverb
+import vcf
+
+vcf_reader = vcf.Reader(filename='clinvar.vcf.gz')
+for record in vcf_reader:
+    clnsig = record.INFO.get('CLNSIG', [])
+    if 'Pathogenic' in clnsig:
+        gene = record.INFO.get('GENEINFO', [''])[0]
+        print(f"{record.CHROM}:{record.POS} {gene} - {clnsig}")
+\stopverb}
+}
+
+\subtree{
+\title{Working with Tab-Delimited Files}
+\p{Use pandas or command-line tools for rapid filtering and analysis.}
+
+\p{\strong{Using pandas:}}
+
+\pre{\startverb
+import pandas as pd
+
+# Load variant summary
+df = pd.read_csv('variant_summary.txt.gz', sep='\t', compression='gzip')
+
+# Filter pathogenic variants in specific gene
+pathogenic_brca = df[
+    (df['GeneSymbol'] == 'BRCA1') &
+    (df['ClinicalSignificance'].str.contains('Pathogenic', na=False))
+]
+
+# Count variants by clinical significance
+sig_counts = df['ClinicalSignificance'].value_counts()
+\stopverb}
+
+\p{\strong{Using command-line tools:}}
+
+\pre{\startverb
+# Extract pathogenic variants for specific gene
+zcat variant_summary.txt.gz | \
+  awk -F'\t' '$7=="TP53" && $13~"Pathogenic"' | \
+  cut -f1,5,7,13,14
+\stopverb}
+}
+}
+
+\subtree{
+\title{5. Handle Conflicting Interpretations}
+\p{When multiple submitters provide different classifications for the same variant, ClinVar reports "Conflicting interpretations of pathogenicity."}
+
+\p{\strong{Resolution strategy:}}
+
+\ol{
+\li{Check review status (star rating) - higher ratings carry more weight}
+\li{Examine evidence and assertion criteria from each submitter}
+\li{Consider submission dates - newer submissions may reflect updated evidence}
+\li{Review population frequency data (e.g., gnomAD) for context}
+\li{Consult expert panel classifications (★★★) when available}
+\li{For clinical use, always defer to a genetics professional}
+}
+
+\p{\strong{Search query to exclude conflicts:}}
+
+\pre{\startverb
+TP53[gene] AND pathogenic[CLNSIG] NOT conflicting[RVSTAT]
+\stopverb}
+}
+
+\subtree{
+\title{6. Track Classification Updates}
+\p{Variant classifications may change over time as new evidence emerges.}
+
+\p{\strong{Why classifications change:}}
+
+\ul{
+\li{New functional studies or clinical data}
+\li{Updated population frequency information}
+\li{Revised ACMG/AMP guidelines}
+\li{Segregation data from additional families}
+}
+
+\p{\strong{Best practices:}}
+
+\ul{
+\li{Document ClinVar version and access date for reproducibility}
+\li{Re-check classifications periodically for critical variants}
+\li{Subscribe to ClinVar mailing list for major updates}
+\li{Use monthly archived releases for stable datasets}
+}
+}
+
+\subtree{
+\title{7. Submit Data to ClinVar}
+\p{Organizations can submit variant interpretations to ClinVar.}
+
+\p{\strong{Submission methods:}}
+
+\ul{
+\li{Web submission portal: https://submit.ncbi.nlm.nih.gov/subs/clinvar/}
+\li{API submission (requires service account): See \code{\startverb references/api_reference.md\stopverb}}
+\li{Batch submission via Excel templates}
+}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{Organizational account with NCBI}
+\li{Assertion criteria (preferably ACMG/AMP guidelines)}
+\li{Supporting evidence for classification}
+}
+
+\p{Contact: clinvar@ncbi.nlm.nih.gov for submission account setup.}
+}
+}
+
+\subtree{
+\title{Workflow Examples}
+\subtree{
+\title{Example 1: Identify High-Confidence Pathogenic Variants in a Gene}
+\p{\strong{Objective:} Find pathogenic variants in CFTR gene with expert panel review.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Search using web interface or E-utilities:}
+\li{Review results, noting review status (should be ★★★ or ★★★★)}
+\li{Export variant list or retrieve full records via efetch}
+\li{Cross-reference with clinical presentation if applicable}
+}
+}
+
+\subtree{
+\title{Example 2: Annotate VCF with ClinVar Classifications}
+\p{\strong{Objective:} Add clinical significance annotations to variant calls.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Download appropriate ClinVar VCF (match genome build: GRCh37 or GRCh38):}
+\li{Annotate using bcftools:}
+\li{Filter annotated VCF for pathogenic variants:}
+}
+}
+
+\subtree{
+\title{Example 3: Analyze Variants for a Specific Disease}
+\p{\strong{Objective:} Study all variants associated with hereditary breast cancer.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Search by condition:}
+\li{Download results as CSV or retrieve via E-utilities}
+\li{Filter by review status to prioritize high-confidence variants}
+\li{Analyze distribution across genes (BRCA1, BRCA2, PALB2, etc.)}
+\li{Examine variants with conflicting interpretations separately}
+}
+}
+
+\subtree{
+\title{Example 4: Bulk Download and Database Construction}
+\p{\strong{Objective:} Build a local ClinVar database for analysis pipeline.}
+
+\p{\strong{Steps:}}
+
+\ol{
+\li{Download monthly release for reproducibility:}
+\li{Parse XML and load into database (PostgreSQL, MySQL, MongoDB)}
+\li{Index by gene, position, clinical significance, review status}
+\li{Implement version tracking for updates}
+\li{Schedule monthly updates from FTP site}
+}
+}
+}
+
+\subtree{
+\title{Important Limitations and Considerations}
+\subtree{
+\title{Data Quality}
+\ul{
+\li{\strong{Not all submissions have equal weight} - Check review status (star ratings)}
+\li{\strong{Conflicting interpretations exist} - Require manual evaluation}
+\li{\strong{Historical submissions may be outdated} - Newer data may be more accurate}
+\li{\strong{VUS classification is not a clinical diagnosis} - Means insufficient evidence}
+}
+}
+
+\subtree{
+\title{Scope Limitations}
+\ul{
+\li{\strong{Not for direct clinical diagnosis} - Always involve genetics professional}
+\li{\strong{Population-specific} - Variant frequencies vary by ancestry}
+\li{\strong{Incomplete coverage} - Not all genes or variants are well-studied}
+\li{\strong{Version dependencies} - Coordinate genome build (GRCh37/GRCh38) across analyses}
+}
+}
+
+\subtree{
+\title{Technical Limitations}
+\ul{
+\li{\strong{VCF files exclude large variants} - Variants >10kb not in VCF format}
+\li{\strong{Rate limits on API} - 3 req/sec without key, 10 req/sec with API key}
+\li{\strong{File sizes} - Full XML releases are multi-GB compressed files}
+\li{\strong{No real-time updates} - Website updated weekly, FTP monthly/weekly}
+}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{Reference Documentation}
+\p{This skill includes comprehensive reference documentation:}
+
+\ul{
+\li{\strong{\code{\startverb references/api_reference.md\stopverb}} - Complete E-utilities API documentation with examples for esearch, esummary, efetch, and elink; includes rate limits, authentication, and Python/Biopython code samples}
+}
+
+\ul{
+\li{\strong{\code{\startverb references/clinical_significance.md\stopverb}} - Detailed guide to interpreting clinical significance classifications, review status star ratings, conflict resolution, and best practices for variant interpretation}
+}
+
+\ul{
+\li{\strong{\code{\startverb references/data_formats.md\stopverb}} - Documentation for XML, VCF, and tab-delimited file formats; FTP directory structure, processing examples, and format selection guidance}
+}
+}
+
+\subtree{
+\title{External Resources}
+\ul{
+\li{ClinVar home: https://www.ncbi.nlm.nih.gov/clinvar/}
+\li{ClinVar documentation: https://www.ncbi.nlm.nih.gov/clinvar/docs/}
+\li{E-utilities documentation: https://www.ncbi.nlm.nih.gov/books/NBK25501/}
+\li{ACMG variant interpretation guidelines: Richards et al., 2015 (PMID: 25741868)}
+\li{ClinGen expert panels: https://clinicalgenome.org/}
+}
+}
+
+\subtree{
+\title{Contact}
+\p{For questions about ClinVar or data submission: clinvar@ncbi.nlm.nih.gov}
+}
+}
+}

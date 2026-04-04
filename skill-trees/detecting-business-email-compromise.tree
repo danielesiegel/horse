@@ -1,0 +1,139 @@
+\title{Detecting Business Email Compromise}
+
+\taxon{skill}
+
+\tag{phishing}
+
+\tag{email-security}
+
+\tag{social-engineering}
+
+\tag{dmarc}
+
+\tag{awareness}
+
+\tag{bec}
+
+\tag{fraud}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Business Email Compromise (BEC) is a sophisticated fraud scheme where attackers impersonate executives, vendors, or trusted partners to trick employees into transferring funds, sharing sensitive data,}
+
+\subtree{
+\title{Detecting Business Email Compromise}
+\subtree{
+\title{Overview}
+\p{Business Email Compromise (BEC) is a sophisticated fraud scheme where attackers impersonate executives, vendors, or trusted partners to trick employees into transferring funds, sharing sensitive data, or changing payment details. Unlike traditional phishing, BEC often contains no malicious links or attachments, relying purely on social engineering. This skill covers detection techniques using email gateway rules, behavioral analytics, and financial process controls.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting business email compromise}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Email security gateway with BEC detection capabilities}
+\li{Understanding of organizational financial processes and approval chains}
+\li{Access to email logs and SIEM platform}
+\li{Knowledge of social engineering tactics}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{BEC Attack Types (FBI IC3 Classification)}
+\ol{
+\li{\strong{CEO Fraud}: Attacker impersonates CEO, requests urgent wire transfer}
+\li{\strong{Account Compromise}: Employee email compromised, used to request payments from vendors}
+\li{\strong{False Invoice Scheme}: Fake invoices from "vendor" with changed bank details}
+\li{\strong{Attorney Impersonation}: Impersonates legal counsel for urgent confidential transfers}
+\li{\strong{Data Theft}: Requests W-2, tax forms, or PII from HR}
+}
+}
+
+\subtree{
+\title{Detection Indicators}
+\ul{
+\li{Urgency and secrecy language ("confidential", "do not discuss with others")}
+\li{New or changed payment instructions}
+\li{Executive communication outside normal patterns}
+\li{Display name matches executive but email domain differs}
+\li{Reply-to address differs from From address}
+\li{First-time communication pattern between sender and recipient}
+\li{Request for gift cards or cryptocurrency}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Configure BEC-Specific Email Rules}
+\ul{
+\li{Flag emails with VIP display names from external domains}
+\li{Detect financial keywords combined with urgency language}
+\li{Alert on first-time sender to finance/accounting staff}
+\li{Check for Reply-To domain mismatch}
+}
+}
+
+\subtree{
+\title{Step 2: Deploy Behavioral Analytics}
+\ul{
+\li{Baseline normal communication patterns per user}
+\li{Detect anomalous requests (unusual recipient, unusual time, unusual request type)}
+\li{Monitor for email forwarding rule changes (T1114.003)}
+}
+}
+
+\subtree{
+\title{Step 3: Implement Financial Controls}
+\ul{
+\li{Dual-authorization for wire transfers above threshold}
+\li{Out-of-band verification for payment detail changes (phone callback)}
+\li{Vendor payment change verification process}
+\li{Finance team training on BEC red flags}
+}
+}
+
+\subtree{
+\title{Step 4: Monitor for Account Compromise}
+\ul{
+\li{Detect impossible travel in email login locations}
+\li{Alert on email forwarding rule creation}
+\li{Monitor for mailbox delegation changes}
+\li{Check for inbox rules hiding BEC-related emails}
+}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{Microsoft Defender for O365 Anti-BEC}: Built-in BEC detection}
+\li{\strong{Proofpoint Email Fraud Defense}: BEC-specific solution}
+\li{\strong{Abnormal Security}: AI-driven BEC detection}
+\li{\strong{FBI IC3 BEC Advisory}: https://www.ic3.gov/}
+\li{\strong{FinCEN BEC Advisory}: Financial institution guidance}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{BEC detection rules trigger on test scenarios}
+\li{Financial controls prevent unauthorized transfers in drills}
+\li{Account compromise detection catches simulated attacks}
+\li{Reduced BEC susceptibility in awareness assessments}
+}
+}
+}

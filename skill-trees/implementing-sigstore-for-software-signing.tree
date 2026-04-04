@@ -1,0 +1,192 @@
+\title{Implementing Sigstore For Software Signing}
+
+\taxon{skill}
+
+\tag{sigstore}
+
+\tag{cosign}
+
+\tag{rekor}
+
+\tag{fulcio}
+
+\tag{software-signing}
+
+\tag{supply-chain}
+
+\tag{keyless-signing}
+
+\tag{OIDC}
+
+\tag{transparency-log}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Implements Sigstore-based software signing and verification using Cosign keyless signing, Rekor transparency log verification, and Fulcio certificate authority integration to establish cryptographic provenance for container images, binaries, and software artifacts. The practitioner configures OIDC-based identity binding, verifies signing events against the Rekor transparency log, and integrates signing workflows into CI/CD pipelines. Activates for requests involving software supply chain signing, keyless container signing, Sigstore deployment, or artifact provenance verification.}
+
+\subtree{
+\title{Implementing Sigstore for Software Signing}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Signing container images and software artifacts without managing long-lived cryptographic keys}
+\li{Establishing verifiable provenance for build outputs in CI/CD pipelines using OIDC identity binding}
+\li{Querying the Rekor transparency log to audit when and by whom an artifact was signed}
+\li{Verifying that container images pulled from registries were signed by authorized identities and issuers}
+\li{Integrating Sigstore verification into Kubernetes admission controllers to enforce signed-image policies}
+}
+
+\p{\strong{Do not use} for signing artifacts that require air-gapped or offline signing workflows where OIDC authentication is unavailable, for environments that cannot reach the public Sigstore infrastructure (Fulcio, Rekor) and have no private instance deployed, or as a replacement for traditional PGP/GPG signing where regulatory compliance mandates specific key management procedures.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Cosign CLI v2.4+ installed (\code{\startverb go install github.com/sigstore/cosign/v2/cmd/cosign@latest\stopverb} or binary release)}
+\li{Access to an OIDC identity provider supported by Fulcio (Google, GitHub, Microsoft, or a custom OIDC issuer)}
+\li{Container registry credentials (for signing container images) with push access to store signature objects}
+\li{Python 3.9+ with \code{\startverb sigstore\stopverb}, \code{\startverb requests\stopverb}, and \code{\startverb cryptography\stopverb} packages for the automation agent}
+\li{Network access to \code{\startverb fulcio.sigstore.dev\stopverb}, \code{\startverb rekor.sigstore.dev\stopverb}, and \code{\startverb tuf-repo-cdn.sigstore.dev\stopverb} (or private Sigstore instance URLs)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Install and Configure Cosign}
+\p{Install Cosign and verify it can reach the Sigstore infrastructure:}
+
+\ul{
+\li{\strong{Install from binary release}: Download the appropriate binary from the Cosign GitHub releases page and verify its checksum. On Linux: \code{\startverb curl -LO https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 && chmod +x cosign-linux-amd64 && sudo mv cosign-linux-amd64 /usr/local/bin/cosign\stopverb}}
+\li{\strong{Verify installation}: Run \code{\startverb cosign version\stopverb} to confirm the version and check connectivity to Sigstore services with \code{\startverb cosign initialize\stopverb} which fetches the TUF root of trust}
+\li{\strong{Configure custom infrastructure} (optional): If running a private Sigstore stack, set \code{\startverb --fulcio-url\stopverb}, \code{\startverb --rekor-url\stopverb}, and \code{\startverb --oidc-issuer\stopverb} flags or use environment variables \code{\startverb COSIGN_REKOR_URL\stopverb} and \code{\startverb COSIGN_FULCIO_URL\stopverb}}
+}
+}
+
+\subtree{
+\title{Step 2: Keyless Signing with Cosign and Fulcio}
+\p{Perform identity-based signing where Fulcio issues a short-lived certificate bound to your OIDC identity:}
+
+\ul{
+\li{\strong{Sign a container image}: Run \code{\startverb cosign sign <IMAGE_DIGEST>\stopverb} which triggers an OIDC authentication flow. Cosign generates an ephemeral key pair, obtains a short-lived certificate from Fulcio binding the public key to the OIDC identity, signs the image digest, and records the signing event in Rekor. The private key is destroyed immediately after signing.}
+\li{\strong{Sign a blob (file)}: Run \code{\startverb cosign sign-blob <file> --bundle artifact.sigstore.json\stopverb} to sign arbitrary files. The bundle contains the signature, certificate, timestamp, and Rekor inclusion proof.}
+\li{\strong{Non-interactive signing in CI}: Set \code{\startverb SIGSTORE_ID_TOKEN\stopverb} environment variable with a valid OIDC token (e.g., from GitHub Actions OIDC or GCP workload identity) to skip the browser-based authentication flow:}
+\li{\strong{Supported OIDC providers}: Google (\code{\startverb https://accounts.google.com\stopverb}), GitHub (\code{\startverb https://github.com/login/oauth\stopverb}), Microsoft (\code{\startverb https://login.microsoftonline.com\stopverb}), GitLab (\code{\startverb https://gitlab.com\stopverb}), and custom providers registered with a private Fulcio instance}
+}
+}
+
+\subtree{
+\title{Step 3: Verify Signed Artifacts}
+\p{Verify that artifacts were signed by expected identities from expected OIDC issuers:}
+
+\ul{
+\li{\strong{Verify a container image}: Run \code{\startverb cosign verify <IMAGE_URI> --certificate-identity=name@example.com --certificate-oidc-issuer=https://accounts.google.com\stopverb} to confirm the image was signed by the specified identity. Cosign validates the certificate chain, checks the Rekor inclusion proof, and verifies the signature matches the current image digest.}
+\li{\strong{Verify a signed blob}: Run \code{\startverb cosign verify-blob <file> --bundle artifact.sigstore.json --certificate-identity=name@example.com --certificate-oidc-issuer=https://accounts.google.com\stopverb}}
+\li{\strong{Regex matching for CI identities}: Use \code{\startverb --certificate-identity-regexp\stopverb} to match CI workflow identities:}
+\li{\strong{Verification failure modes}: Cosign returns a non-zero exit code on failure. Common failures include certificate identity mismatch, expired certificates without a valid Rekor timestamp, missing Rekor entry, and image digest mismatch (image was modified after signing).}
+}
+}
+
+\subtree{
+\title{Step 4: Query the Rekor Transparency Log}
+\p{Search and verify entries in the Rekor transparency log to audit signing events:}
+
+\ul{
+\li{\strong{Search by email identity}: Use \code{\startverb rekor-cli search --email user@example.com\stopverb} to find all signing events for an identity}
+\li{\strong{Search by artifact hash}: Use \code{\startverb rekor-cli search --sha sha256:<hash>\stopverb} to find signing events for a specific artifact}
+\li{\strong{Retrieve and verify an entry}: Use \code{\startverb rekor-cli get --uuid <entry_uuid>\stopverb} to retrieve full entry details including the certificate, signature, and artifact hash}
+\li{\strong{Verify log inclusion}: Use \code{\startverb rekor-cli verify --entry-uuid <uuid>\stopverb} to verify the entry's inclusion proof against the signed tree head, confirming the entry exists in the append-only log and has not been tampered with}
+\li{\strong{REST API queries}: Query \code{\startverb https://rekor.sigstore.dev/api/v1/index/retrieve\stopverb} with POST body \code{\startverb {"hash": "sha256:<hash>"}\stopverb} to retrieve entry UUIDs, then fetch full entries from \code{\startverb /api/v1/log/entries/<uuid>\stopverb}}
+\li{\strong{Monitor for consistency}: Use the rekor-monitor tool or Omniwitness to continuously verify the log remains append-only and entries are never mutated or removed}
+}
+}
+
+\subtree{
+\title{Step 5: Integrate into CI/CD Pipelines}
+\p{Embed signing and verification into build and deployment pipelines:}
+
+\ul{
+\li{\strong{GitHub Actions}: Use \code{\startverb sigstore/cosign-installer\stopverb} action to install Cosign, then sign images using the GitHub OIDC token as the identity. The signing identity will be the workflow URL (e.g., \code{\startverb https://github.com/org/repo/.github/workflows/build.yml@refs/heads/main\stopverb}).}
+\li{\strong{Kubernetes admission enforcement}: Deploy Sigstore Policy Controller or Kyverno with Cosign verification policies to reject unsigned or incorrectly signed images at admission time}
+\li{\strong{Supply chain metadata}: Use \code{\startverb cosign attest\stopverb} to attach in-toto attestations (SLSA provenance, SBOM, vulnerability scan results) to images, signed with the same keyless flow, enabling consumers to verify both the artifact and its build metadata}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Keyless Signing** | Identity-based signing that uses short-lived certificates from Fulcio bound to OIDC identities instead of long-lived cryptographic keys, eliminating key management overhead |
+| **Fulcio** | Sigstore's certificate authority that issues short-lived X.509 certificates after verifying OIDC tokens, binding an ephemeral public key to a verified identity |
+| **Rekor** | Sigstore's immutable, append-only transparency log that records signing events with timestamps, enabling auditors to verify when and by whom an artifact was signed |
+| **Cosign** | The primary CLI tool for signing and verifying container images and blobs using the Sigstore infrastructure (Fulcio + Rekor) |
+| **TUF Root of Trust** | The Update Framework distribution mechanism for Sigstore's root CA certificate and Rekor public key, ensuring clients trust the correct Sigstore infrastructure |
+| **OIDC Identity Binding** | The process where Fulcio verifies a user's identity through an OpenID Connect token and binds it to a short-lived signing certificate |
+| **Inclusion Proof** | A cryptographic proof from Rekor demonstrating that a signing event entry exists within the transparency log's Merkle tree |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Cosign}: CLI tool for signing containers and blobs, verifying signatures, and attaching attestations using Sigstore keyless signing or traditional key-based signing}
+\li{\strong{Fulcio}: Free root certificate authority for code signing certificates issued based on OIDC identity verification with a validity period of approximately 10 minutes}
+\li{\strong{Rekor}: Transparency log server providing tamper-evident storage of signing metadata, searchable by identity, artifact hash, or public key}
+\li{\strong{Sigstore Policy Controller}: Kubernetes admission webhook that enforces image signing policies by verifying Cosign signatures and attestations before allowing pod creation}
+\li{\strong{rekor-cli}: Command-line client for querying, uploading, and verifying entries in the Rekor transparency log}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Securing a Container Image Build Pipeline with Keyless Signing}
+\p{\strong{Context}: A DevOps team builds container images in GitHub Actions and deploys to a Kubernetes cluster. They need to ensure only images built by their CI pipeline can be deployed, preventing supply chain attacks from compromised registries or unauthorized pushes.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Add \code{\startverb sigstore/cosign-installer@v3\stopverb} to the GitHub Actions workflow and enable OIDC token permissions with \code{\startverb id-token: write\stopverb}}
+\li{After building and pushing the image, sign it with \code{\startverb cosign sign $IMAGE_DIGEST\stopverb} using the GitHub Actions OIDC identity automatically}
+\li{Deploy Sigstore Policy Controller to the Kubernetes cluster with a ClusterImagePolicy requiring signatures from \code{\startverb --certificate-identity-regexp=https://github.com/myorg/myrepo/.*\stopverb} and \code{\startverb --certificate-oidc-issuer=https://token.actions.githubusercontent.com\stopverb}}
+\li{Verify the signing entry appears in Rekor by querying with the image digest hash to confirm the transparency log recorded the event}
+\li{Test the admission controller by attempting to deploy an unsigned image and confirming it is rejected with a policy violation error}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Signing the image tag instead of the digest (\code{\startverb cosign sign myimage:latest\stopverb} vs \code{\startverb cosign sign myimage@sha256:abc...\stopverb}) means verification breaks when the tag is updated to point to a different digest}
+\li{Not pinning the \code{\startverb --certificate-oidc-issuer\stopverb} during verification allows signatures from any OIDC provider to pass, defeating the purpose of identity binding}
+\li{Forgetting to set \code{\startverb id-token: write\stopverb} permission in GitHub Actions results in OIDC token retrieval failure and signing errors}
+\li{Using \code{\startverb --certificate-identity-regexp=.*\stopverb} in production verification policies effectively disables identity verification}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Sigstore Signing Verification Report
+
+**Artifact**: ghcr.io/myorg/myapp@sha256:a1b2c3d4...
+**Verification Status**: PASSED
+
+**Certificate Details**:
+  Subject: https://github.com/myorg/myapp/.github/workflows/build.yml@refs/heads/main
+  Issuer: https://token.actions.githubusercontent.com
+  Valid From: 2026-03-19T10:00:00Z
+  Valid To: 2026-03-19T10:10:00Z
+
+**Rekor Entry**:
+  UUID: 24296fb24b8ad77a8d52...
+  Log Index: 89234567
+  Integrated Time: 2026-03-19T10:00:05Z
+  Inclusion Proof: VERIFIED (tree size: 92000000, root hash: e4f5a6...)
+
+**Policy Check**: Image signed by authorized CI workflow identity
+\stopverb}
+}
+}

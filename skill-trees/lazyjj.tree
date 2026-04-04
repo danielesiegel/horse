@@ -1,0 +1,187 @@
+\title{Lazyjj}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{lazyjj — Ratatui TUI for Jujutsu (jj) with interactive log, files, bookmarks, and diff panels}
+
+\subtree{
+\title{lazyjj}
+\p{Interactive TUI for Jujutsu/jj. Built in Rust with Ratatui. Wraps \code{\startverb jj\stopverb} CLI.}
+
+\p{\strong{Trit}: 0 (ERGODIC) — Coordinator role: visual interface mediating between jj operations and user intent}
+
+\subtree{
+\title{Overview}
+\p{lazyjj presents jj repository state as interactive panels — log, files, bookmarks — with keyboard-driven commands for all common operations. Think lazygit but for jj.}
+
+\ul{
+\li{\strong{Log tab} — scroll commit graph, view diffs in side panel}
+\li{\strong{Files tab} — current change's files with inline diff}
+\li{\strong{Bookmarks tab} — manage bookmarks with track/untrack/rename}
+\li{\strong{Conflicts} — view and navigate conflict markers}
+\li{\strong{Mouse support} — clickable panels}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# macOS (Homebrew)
+brew install lazyjj
+
+# Cargo
+cargo install lazyjj
+
+# From source
+git clone https://github.com/Cretezy/lazyjj
+cd lazyjj && cargo install --path .
+\stopverb}
+
+\p{Requires \code{\startverb jj\stopverb} CLI installed and on PATH.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Launch in current repo
+lazyjj
+
+# Specify repo path
+lazyjj -p /path/to/repo
+\stopverb}
+}
+
+\subtree{
+\title{Keybindings}
+\subtree{
+\title{Global}
+\pre{\startverb
+| Key | Action |
+|-----|--------|
+| `1` / `2` / `3` | Switch to Log / Files / Bookmarks tab |
+| `q` / `Esc` | Back / Quit |
+| `?` | Help |
+| `j` / `k` or `↓` / `↑` | Navigate |
+| `Enter` | Select / Expand |
+\stopverb}
+}
+
+\subtree{
+\title{Log Tab}
+\pre{\startverb
+| Key | Action |
+|-----|--------|
+| `n` | New change from selected |
+| `e` / `E` | Edit selected change |
+| `d` | Describe (set commit message) |
+| `a` | Abandon change |
+| `s` / `S` | Squash into selected |
+| `b` | Set bookmark on selected |
+| `r` | Change revset filter |
+| `f` | Git fetch |
+| `p` | Git push |
+| `w` | Toggle color-word / git diff |
+| `Enter` | View files of selected change |
+\stopverb}
+}
+
+\subtree{
+\title{Files Tab}
+\pre{\startverb
+| Key | Action |
+|-----|--------|
+| `w` | Toggle color-word / git diff |
+| `Enter` | View file diff |
+\stopverb}
+}
+
+\subtree{
+\title{Bookmarks Tab}
+\pre{\startverb
+| Key | Action |
+|-----|--------|
+| `c` | Create bookmark |
+| `r` | Rename bookmark |
+| `d` | Delete bookmark |
+| `t` | Track remote bookmark |
+| `u` | Untrack bookmark |
+| `f` | Forget bookmark |
+| `n` | New change from bookmarked change |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow Examples}
+\subtree{
+\title{Quick Review & Squash}
+\pre{\startverb
+lazyjj
+  → Log tab: scroll to fixup commit
+  → s to squash into parent
+  → d to update description
+  → p to push
+\stopverb}
+}
+
+\subtree{
+\title{Interactive Rebase-like Flow}
+\pre{\startverb
+lazyjj
+  → Log tab: navigate to change
+  → e to edit (jj edit)
+  → make changes in editor
+  → return to lazyjj
+  → changes auto-snapshotted
+\stopverb}
+}
+
+\subtree{
+\title{Bookmark Management}
+\pre{\startverb
+lazyjj
+  → 3 for Bookmarks tab
+  → c to create, type name
+  → f to fetch latest
+  → t to track remote bookmark
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration}
+\p{lazyjj reads jj's config. Custom diff tool:}
+
+\pre{\startverb
+# ~/.config/jj/config.toml
+[ui]
+diff.tool = ["delta", "--side-by-side"]
+\stopverb}
+}
+
+\subtree{
+\title{Triadic Composition}
+\pre{\startverb
+lazyjj (0)  +  jj (+1)  +  pijul (-1)  = 0 ✓
+Coordinator    Generator    Validator
+\stopverb}
+
+\p{lazyjj coordinates user interaction, jj generates changes, pijul validates patch-theoretic soundness.}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[lazyjj on GitHub](https://github.com/Cretezy/lazyjj) (970+ ★)}
+\li{[lazyjj on Homebrew](https://formulae.brew.sh/formula/lazyjj)}
+\li{[lazyjj on crates.io](https://lib.rs/crates/lazyjj)}
+\li{[Ratatui](https://ratatui.rs/) — TUI framework}
+\li{[jj skill](../jj/SKILL.md)}
+\li{[pijul skill](../pijul/SKILL.md)}
+}
+}
+}

@@ -1,0 +1,59 @@
+\title{Ocaml}
+
+\taxon{skill}
+
+\meta{description}{OCaml ecosystem = opam + dune + merlin + ocamlformat.}
+
+\subtree{
+\title{ocaml}
+\p{OCaml ecosystem = opam + dune + merlin + ocamlformat.}
+
+\subtree{
+\title{Atomic Skills}
+\pre{\startverb
+| Skill | Commands | Domain |
+|-------|----------|--------|
+| opam | 45 | Package manager |
+| dune | 20 | Build system |
+| merlin | 1 | Editor support |
+| ocamlformat | 1 | Formatter |
+\stopverb}
+}
+
+\subtree{
+\title{Workflow}
+\pre{\startverb
+opam switch create 5.1.0
+eval $(opam env)
+opam install dune merlin
+dune init project myapp
+cd myapp
+dune build
+dune test
+\stopverb}
+}
+
+\subtree{
+\title{dune-project}
+\pre{\startverb
+(lang dune 3.0)
+(name myapp)
+
+(library
+ (name mylib)
+ (libraries str unix))
+
+(executable
+ (name main)
+ (libraries mylib))
+\stopverb}
+}
+
+\subtree{
+\title{REPL}
+\pre{\startverb
+utop
+dune utop
+\stopverb}
+}
+}

@@ -1,0 +1,118 @@
+\title{Nhero}
+
+\taxon{skill}
+
+\tag{nhero}
+
+\tag{aftermarket}
+
+\tag{cybernetic}
+
+\tag{dispenser}
+
+\tag{pyhole}
+
+\tag{killdispenser}
+
+\tag{aptos}
+
+\tag{hamming}
+
+\meta{version}{0.1.0}
+
+\meta{trit}{-1}
+
+\meta{description}{Aftermarket cybernetic network device framework. nhero is the umbrella for all pill-dispenser-as-network-device modifications — from Hero Health hardware RE to PyHole DNS-style medication routing to killdispenser supply chain primitives. One lowercase word. Append-only reference architecture.}
+
+\subtree{
+\title{nhero}
+\p{Aftermarket cybernetic network device. One lowercase word.}
+
+\p{nhero treats every pill dispenser as a network device. The same way Pi-hole intercepts DNS queries and decides what passes through, nhero intercepts medication scheduling commands and routes them through a scrambled, GF(3)-conserved, confidential-asset-backed supply chain.}
+
+\subtree{
+\title{Hierarchy}
+\pre{\startverb
+nhero/                          ← umbrella (this skill)
+├── killdispenser/              ← fundamental primitive: the piehole in every device
+├── hero-dispenser-mod/         ← Hero Health Model 100 specific implementation
+├── nhero-pyhole/               ← DNS-style medication routing layer
+├── nhero-scramble/             ← derangement-based name scrambling
+├── nhero-confidential/         ← Twisted ElGamal supply tracking on Aptos
+└── nhero-nurse/                ← nurse approval email automation
+\stopverb}
+}
+
+\subtree{
+\title{Concepts}
+\subtree{
+\title{killdispenser}
+\p{The fundamental piehole in every device. Like \code{\startverb kill(1)\stopverb} sends signals to processes, killdispenser sends signals to dispensing slots. Like Pi-hole blocks DNS, killdispenser blocks unauthorized dispense events. Every nhero device has a killdispenser — it's the control plane.}
+}
+
+\subtree{
+\title{PyHole Model}
+\p{Pi-hole blocks ads at DNS level. nhero blocks/routes medications at schedule level:}
+
+\ul{
+\li{\strong{Blocklist} = controlled substances requiring nurse approval}
+\li{\strong{Allowlist} = OTC supplements (Magnesium, Zinc, Ginkgo, Caffeine)}
+\li{\strong{Upstream} = Hero cloud API (intercepted via mitmproxy)}
+\li{\strong{Local DNS} = scramble index (letter → medication lookup)}
+}
+}
+
+\subtree{
+\title{Scramble Index (Derangement)}
+\p{No medication maps to its own initial letter. Full derangement:}
+
+\pre{\startverb
+| Slot | Medication | GF(3) |
+|------|-----------|-------|
+| q | Vyvanse | -1 |
+| x | Magnesium | 0 |
+| y | Zinc | +1 |
+| k | Ginkgo | -1 |
+| u | Caffeine | 0 |
+\stopverb}
+
+\p{Conservation: Q(-1) + X(0) + Y(+1) + K(-1) + U(0) = \strong{-1} = H world trit}
+}
+
+\subtree{
+\title{Confidential Assets (Huber-Duncan)}
+\p{\code{\startverb 0x7::confidential_asset\stopverb} on Aptos testnet:}
+
+\ul{
+\li{Twisted ElGamal encrypts supply counts}
+\li{ZK range proofs verify \code{\startverb remaining > threshold\stopverb} without revealing count}
+\li{Nurse holds auditor key, never sees medication names or exact counts}
+\li{Each dispense = confidential withdraw of 1}
+}
+}
+}
+
+\subtree{
+\title{Topos-MCP Server}
+\p{9 tools as morphisms in the category of dispenser states. Registered as \code{\startverb hero-topos\stopverb} MCP server (stdio JSON-RPC).}
+}
+
+\subtree{
+\title{Hardware Target}
+\ul{
+\li{\strong{Hero Model 100} (FCC ID: 2AN4DM115, OEM: Xiamen Zayata Technology)}
+\li{PCB revisions: ZA-D102LCD_V2.1 (UI), 1027306-V46 (logic), ZA-1200DCM/2.0 (USB)}
+\li{OMRON G5V-1 relay, WiFi 2.4GHz, PCB trace antenna at ANT1}
+\li{Test points TP1-TP4 on USB daughter board (likely UART)}
+}
+}
+
+\subtree{
+\title{World}
+\ul{
+\li{Letter: H (index 7, GF(3) -1, Chain 1 Witness-Bridge)}
+\li{Email: \code{\startverb mantissa+hero-h@plurigrid.com\stopverb}}
+\li{Nurse: \code{\startverb mantissa@gmail.com\stopverb} / \code{\startverb ies@plurigrid.com\stopverb}}
+}
+}
+}

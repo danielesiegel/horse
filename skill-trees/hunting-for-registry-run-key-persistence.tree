@@ -1,0 +1,71 @@
+\title{Hunting For Registry Run Key Persistence}
+
+\taxon{skill}
+
+\tag{persistence}
+
+\tag{registry-run-keys}
+
+\tag{t1547-001}
+
+\tag{sysmon}
+
+\tag{threat-hunting}
+
+\tag{windows-forensics}
+
+\tag{mitre-attack}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect MITRE ATT&CK T1547.001 registry Run key persistence by analyzing Sysmon Event ID 13 logs and registry queries to identify malicious auto-start entries.}
+
+\subtree{
+\title{Hunting for Registry Run Key Persistence}
+\subtree{
+\title{Overview}
+\p{Registry Run keys (T1547.001) are one of the most commonly used persistence mechanisms by adversaries. When a program is added to a Run key in the Windows registry, it executes automatically when a user logs in. Attackers abuse keys under \code{\startverb HKLM\startverb \Software\stopverb\startverb \Microsoft\stopverb\startverb \Windows\stopverb\startverb \CurrentVersion\stopverb\startverb \Run\stopverb\stopverb}, \code{\startverb HKCU\startverb \Software\stopverb\startverb \Microsoft\stopverb\startverb \Windows\stopverb\startverb \CurrentVersion\stopverb\startverb \Run\stopverb\stopverb}, and their RunOnce counterparts to maintain persistence. Sysmon Event ID 13 (RegistryEvent - Value Set) captures registry value modifications including the target object path, the process that made the change, and the new value. Detection involves monitoring these events for suspicious executables in temp directories, encoded PowerShell commands, LOLBin paths, and processes that do not normally create Run key entries. Chaining Event 13 with Event 1 (Process Creation) and Event 11 (FileCreate) strengthens detection by confirming payload creation and execution.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for registry run key persistence}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows systems with Sysmon installed and configured to log Event ID 13}
+\li{Sysmon config with RegistryEvent rules for Run/RunOnce keys}
+\li{Python 3.9+ with \code{\startverb json\stopverb}, \code{\startverb xml.etree.ElementTree\stopverb}, \code{\startverb re\stopverb} modules}
+\li{SIEM or log aggregator collecting Sysmon logs (Splunk, Elastic, Sentinel)}
+\li{Knowledge of legitimate auto-start programs for baseline comparison}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Collect Sysmon Event ID 13 logs filtered for Run/RunOnce key paths}
+\li{Parse event XML/JSON for TargetObject, Details (value written), Image (modifying process)}
+\li{Flag entries where the value points to temp directories, AppData, or ProgramData}
+\li{Detect encoded PowerShell commands or script interpreters in registry values}
+\li{Identify LOLBin abuse (mshta.exe, rundll32.exe, regsvr32.exe, wscript.exe)}
+\li{Compare against known-good baseline of legitimate auto-start entries}
+\li{Check if the modifying process (Image) is unusual (cmd.exe, powershell.exe, python.exe)}
+\li{Chain with Event ID 1 to verify if the registered binary was recently created}
+\li{Generate detection report with MITRE ATT&CK mapping and severity scores}
+\li{Produce Sigma/Splunk detection rules from findings}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{A JSON report listing suspicious Run key entries with the registry path, value written, modifying process, timestamp, MITRE technique mapping, severity rating, and recommended Sigma detection rules.}
+}
+}

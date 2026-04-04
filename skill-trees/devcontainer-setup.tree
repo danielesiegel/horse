@@ -1,0 +1,343 @@
+\title{Devcontainer Setup}
+
+\taxon{skill}
+
+\meta{description}{Creates devcontainers with Claude Code, language-specific tooling (Python/Node/Rust/Go), and persistent volumes. Use when adding devcontainer support to a project, setting up isolated development environments, or configuring sandboxed Claude Code workspaces.}
+
+\subtree{
+\title{Devcontainer Setup Skill}
+\p{Creates a pre-configured devcontainer with Claude Code and language-specific tooling.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{User asks to "set up a devcontainer" or "add devcontainer support"}
+\li{User wants a sandboxed Claude Code development environment}
+\li{User needs isolated development environments with persistent configuration}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{User already has a devcontainer configuration and just needs modifications}
+\li{User is asking about general Docker or container questions}
+\li{User wants to deploy production containers (this is for development only)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\pre{\startverb
+flowchart TB
+    start([User requests devcontainer])
+    recon[1. Project Reconnaissance]
+    detect[2. Detect Languages]
+    generate[3. Generate Configuration]
+    write[4. Write files to .devcontainer/]
+    done([Done])
+
+    start --> recon
+    recon --> detect
+    detect --> generate
+    generate --> write
+    write --> done
+\stopverb}
+}
+
+\subtree{
+\title{Phase 1: Project Reconnaissance}
+\subtree{
+\title{Infer Project Name}
+\p{Check in order (use first match):}
+
+\ol{
+\li{\code{\startverb package.json\stopverb} → \code{\startverb name\stopverb} field}
+\li{\code{\startverb pyproject.toml\stopverb} → \code{\startverb project.name\stopverb}}
+\li{\code{\startverb Cargo.toml\stopverb} → \code{\startverb package.name\stopverb}}
+\li{\code{\startverb go.mod\stopverb} → module path (last segment after \code{\startverb /\stopverb})}
+\li{Directory name as fallback}
+}
+
+\p{Convert to slug: lowercase, replace spaces/underscores with hyphens.}
+}
+
+\subtree{
+\title{Detect Language Stack}
+\pre{\startverb
+| Language | Detection Files |
+|----------|-----------------|
+| Python | `pyproject.toml`, `*.py` |
+| Node/TypeScript | `package.json`, `tsconfig.json` |
+| Rust | `Cargo.toml` |
+| Go | `go.mod`, `go.sum` |
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Language Projects}
+\p{If multiple languages are detected, configure all of them in the following priority order:}
+
+\ol{
+\li{\strong{Python} - Primary language, uses Dockerfile for uv + Python installation}
+\li{\strong{Node/TypeScript} - Uses devcontainer feature}
+\li{\strong{Rust} - Uses devcontainer feature}
+\li{\strong{Go} - Uses devcontainer feature}
+}
+
+\p{For multi-language \code{\startverb postCreateCommand\stopverb}, chain all setup commands:}
+
+\pre{\startverb
+uv run /opt/post_install.py && uv sync && npm ci
+\stopverb}
+
+\p{Extensions and settings from all detected languages should be merged into the configuration.}
+}
+}
+
+\subtree{
+\title{Phase 2: Generate Configuration}
+\p{Start with base templates from \code{\startverb resources/\stopverb} directory. Substitute:}
+
+\ul{
+\li{\code{\startverb {{PROJECT_NAME}}\stopverb} → Human-readable name (e.g., "My Project")}
+\li{\code{\startverb {{PROJECT_SLUG}}\stopverb} → Slug for volumes (e.g., "my-project")}
+}
+
+\p{Then apply language-specific modifications below.}
+}
+
+\subtree{
+\title{Base Template Features}
+\p{The base template includes:}
+
+\ul{
+\li{\strong{Claude Code} with marketplace plugins (anthropics/skills, trailofbits/skills, trailofbits/skills-curated)}
+\li{\strong{Python 3.13} via uv (fast binary download)}
+\li{\strong{Node 22} via fnm (Fast Node Manager)}
+\li{\strong{ast-grep} for AST-based code search}
+\li{\strong{Network isolation tools} (iptables, ipset) with NET_ADMIN capability}
+\li{\strong{Modern CLI tools}: ripgrep, fd, fzf, tmux, git-delta}
+}
+}
+
+\subtree{
+\title{Language-Specific Sections}
+\subtree{
+\title{Python Projects}
+\p{\strong{Detection:} \code{\startverb pyproject.toml\stopverb}, \code{\startverb requirements.txt\stopverb}, \code{\startverb setup.py\stopverb}, or \code{\startverb *.py\stopverb} files}
+
+\p{\strong{Dockerfile additions:}}
+
+\p{The base Dockerfile already includes Python 3.13 via uv. If a different version is required (detected from \code{\startverb pyproject.toml\stopverb}), modify the Python installation:}
+
+\pre{\startverb
+# Install Python via uv (fast binary download, not source compilation)
+RUN uv python install <version> --default
+\stopverb}
+
+\p{\strong{devcontainer.json extensions:}}
+
+\p{Add to \code{\startverb customizations.vscode.extensions\stopverb}:}
+
+\pre{\startverb
+"ms-python.python",
+"ms-python.vscode-pylance",
+"charliermarsh.ruff"
+\stopverb}
+
+\p{Add to \code{\startverb customizations.vscode.settings\stopverb}:}
+
+\pre{\startverb
+"python.defaultInterpreterPath": ".venv/bin/python",
+"[python]": {
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  }
+}
+\stopverb}
+
+\p{\strong{postCreateCommand:} If \code{\startverb pyproject.toml\stopverb} exists, chain commands:}
+
+\pre{\startverb
+rm -rf .venv && uv sync && uv run /opt/post_install.py
+\stopverb}
+}
+
+\subtree{
+\title{Node/TypeScript Projects}
+\p{\strong{Detection:} \code{\startverb package.json\stopverb} or \code{\startverb tsconfig.json\stopverb}}
+
+\p{\strong{No Dockerfile additions needed:} The base template includes Node 22 via fnm (Fast Node Manager).}
+
+\p{\strong{devcontainer.json extensions:}}
+
+\p{Add to \code{\startverb customizations.vscode.extensions\stopverb}:}
+
+\pre{\startverb
+"dbaeumer.vscode-eslint",
+"esbenp.prettier-vscode"
+\stopverb}
+
+\p{Add to \code{\startverb customizations.vscode.settings\stopverb}:}
+
+\pre{\startverb
+"editor.defaultFormatter": "esbenp.prettier-vscode",
+"editor.codeActionsOnSave": {
+  "source.fixAll.eslint": "explicit"
+}
+\stopverb}
+
+\p{\strong{postCreateCommand:} Detect package manager from lockfile and chain with base command:}
+
+\ul{
+\li{\code{\startverb pnpm-lock.yaml\stopverb} → \code{\startverb uv run /opt/post_install.py && pnpm install --frozen-lockfile\stopverb}}
+\li{\code{\startverb yarn.lock\stopverb} → \code{\startverb uv run /opt/post_install.py && yarn install --frozen-lockfile\stopverb}}
+\li{\code{\startverb package-lock.json\stopverb} → \code{\startverb uv run /opt/post_install.py && npm ci\stopverb}}
+\li{No lockfile → \code{\startverb uv run /opt/post_install.py && npm install\stopverb}}
+}
+}
+
+\subtree{
+\title{Rust Projects}
+\p{\strong{Detection:} \code{\startverb Cargo.toml\stopverb}}
+
+\p{\strong{Features to add:}}
+
+\pre{\startverb
+"ghcr.io/devcontainers/features/rust:1": {}
+\stopverb}
+
+\p{\strong{devcontainer.json extensions:}}
+
+\p{Add to \code{\startverb customizations.vscode.extensions\stopverb}:}
+
+\pre{\startverb
+"rust-lang.rust-analyzer",
+"tamasfe.even-better-toml"
+\stopverb}
+
+\p{Add to \code{\startverb customizations.vscode.settings\stopverb}:}
+
+\pre{\startverb
+"[rust]": {
+  "editor.defaultFormatter": "rust-lang.rust-analyzer"
+}
+\stopverb}
+
+\p{\strong{postCreateCommand:} If \code{\startverb Cargo.lock\stopverb} exists, use locked builds:}
+
+\pre{\startverb
+uv run /opt/post_install.py && cargo build --locked
+\stopverb}
+
+\p{If no lockfile, use standard build:}
+
+\pre{\startverb
+uv run /opt/post_install.py && cargo build
+\stopverb}
+}
+
+\subtree{
+\title{Go Projects}
+\p{\strong{Detection:} \code{\startverb go.mod\stopverb}}
+
+\p{\strong{Features to add:}}
+
+\pre{\startverb
+"ghcr.io/devcontainers/features/go:1": {
+  "version": "latest"
+}
+\stopverb}
+
+\p{\strong{devcontainer.json extensions:}}
+
+\p{Add to \code{\startverb customizations.vscode.extensions\stopverb}:}
+
+\pre{\startverb
+"golang.go"
+\stopverb}
+
+\p{Add to \code{\startverb customizations.vscode.settings\stopverb}:}
+
+\pre{\startverb
+"[go]": {
+  "editor.defaultFormatter": "golang.go"
+},
+"go.useLanguageServer": true
+\stopverb}
+
+\p{\strong{postCreateCommand:}}
+
+\pre{\startverb
+uv run /opt/post_install.py && go mod download
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reference Material}
+\p{For additional guidance, see:}
+
+\ul{
+\li{\code{\startverb references/dockerfile-best-practices.md\stopverb} - Layer optimization, multi-stage builds, architecture support}
+\li{\code{\startverb references/features-vs-dockerfile.md\stopverb} - When to use devcontainer features vs custom Dockerfile}
+}
+}
+
+\subtree{
+\title{Adding Persistent Volumes}
+\p{Pattern for new mounts in \code{\startverb devcontainer.json\stopverb}:}
+
+\pre{\startverb
+"mounts": [
+  "source={{PROJECT_SLUG}}-<purpose>-${devcontainerId},target=<container-path>,type=volume"
+]
+\stopverb}
+
+\p{Common additions:}
+
+\ul{
+\li{\code{\startverb source={{PROJECT_SLUG}}-cargo-${devcontainerId},target=/home/vscode/.cargo,type=volume\stopverb} (Rust)}
+\li{\code{\startverb source={{PROJECT_SLUG}}-go-${devcontainerId},target=/home/vscode/go,type=volume\stopverb} (Go)}
+}
+}
+
+\subtree{
+\title{Output Files}
+\p{Generate these files in the project's \code{\startverb .devcontainer/\stopverb} directory:}
+
+\ol{
+\li{\code{\startverb Dockerfile\stopverb} - Container build instructions}
+\li{\code{\startverb devcontainer.json\stopverb} - VS Code/devcontainer configuration}
+\li{\code{\startverb post_install.py\stopverb} - Post-creation setup script}
+\li{\code{\startverb .zshrc\stopverb} - Shell configuration}
+\li{\code{\startverb install.sh\stopverb} - CLI helper for managing the devcontainer (\code{\startverb devc\stopverb} command)}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\p{Before presenting files to the user, verify:}
+
+\ol{
+\li{All \code{\startverb {{PROJECT_NAME}}\stopverb} placeholders are replaced with the human-readable name}
+\li{All \code{\startverb {{PROJECT_SLUG}}\stopverb} placeholders are replaced with the slugified name}
+\li{JSON syntax is valid in \code{\startverb devcontainer.json\stopverb} (no trailing commas, proper nesting)}
+\li{Language-specific extensions are added for all detected languages}
+\li{\code{\startverb postCreateCommand\stopverb} includes all required setup commands (chained with \code{\startverb &&\stopverb})}
+}
+}
+
+\subtree{
+\title{User Instructions}
+\p{After generating, inform the user:}
+
+\ol{
+\li{How to start: "Open in VS Code and select 'Reopen in Container'"}
+\li{Alternative: \code{\startverb devcontainer up --workspace-folder .\stopverb}}
+\li{CLI helper: Run \code{\startverb .devcontainer/install.sh self-install\stopverb} to add the \code{\startverb devc\stopverb} command to PATH}
+}
+}
+}

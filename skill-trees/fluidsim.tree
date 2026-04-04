@@ -1,0 +1,389 @@
+\title{Fluidsim}
+
+\taxon{skill}
+
+\meta{description}{Framework for computational fluid dynamics simulations using Python. Use when running fluid dynamics simulations including Navier-Stokes equations (2D/3D), shallow water equations, stratified flows, or when analyzing turbulence, vortex dynamics, or geophysical flows. Provides pseudospectral methods with FFT, HPC support, and comprehensive output analysis.}
+
+\subtree{
+\title{FluidSim}
+\subtree{
+\title{Overview}
+\p{FluidSim is an object-oriented Python framework for high-performance computational fluid dynamics (CFD) simulations. It provides solvers for periodic-domain equations using pseudospectral methods with FFT, delivering performance comparable to Fortran/C++ while maintaining Python's ease of use.}
+
+\p{\strong{Key strengths}:}
+
+\ul{
+\li{Multiple solvers: 2D/3D Navier-Stokes, shallow water, stratified flows}
+\li{High performance: Pythran/Transonic compilation, MPI parallelization}
+\li{Complete workflow: Parameter configuration, simulation execution, output analysis}
+\li{Interactive analysis: Python-based post-processing and visualization}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Installation and Setup}
+\p{Install fluidsim using uv with appropriate feature flags:}
+
+\pre{\startverb
+# Basic installation
+uv uv pip install fluidsim
+
+# With FFT support (required for most solvers)
+uv uv pip install "fluidsim[fft]"
+
+# With MPI for parallel computing
+uv uv pip install "fluidsim[fft,mpi]"
+\stopverb}
+
+\p{Set environment variables for output directories (optional):}
+
+\pre{\startverb
+export FLUIDSIM_PATH=/path/to/simulation/outputs
+export FLUIDDYN_PATH_SCRATCH=/path/to/working/directory
+\stopverb}
+
+\p{No API keys or authentication required.}
+
+\p{See \code{\startverb references/installation.md\stopverb} for complete installation instructions and environment configuration.}
+}
+
+\subtree{
+\title{2. Running Simulations}
+\p{Standard workflow consists of five steps:}
+
+\p{\strong{Step 1}: Import solver}
+
+\pre{\startverb
+from fluidsim.solvers.ns2d.solver import Simul
+\stopverb}
+
+\p{\strong{Step 2}: Create and configure parameters}
+
+\pre{\startverb
+params = Simul.create_default_params()
+params.oper.nx = params.oper.ny = 256
+params.oper.Lx = params.oper.Ly = 2 * 3.14159
+params.nu_2 = 1e-3
+params.time_stepping.t_end = 10.0
+params.init_fields.type = "noise"
+\stopverb}
+
+\p{\strong{Step 3}: Instantiate simulation}
+
+\pre{\startverb
+sim = Simul(params)
+\stopverb}
+
+\p{\strong{Step 4}: Execute}
+
+\pre{\startverb
+sim.time_stepping.start()
+\stopverb}
+
+\p{\strong{Step 5}: Analyze results}
+
+\pre{\startverb
+sim.output.phys_fields.plot("vorticity")
+sim.output.spatial_means.plot()
+\stopverb}
+
+\p{See \code{\startverb references/simulation_workflow.md\stopverb} for complete examples, restarting simulations, and cluster deployment.}
+}
+
+\subtree{
+\title{3. Available Solvers}
+\p{Choose solver based on physical problem:}
+
+\p{\strong{2D Navier-Stokes} (\code{\startverb ns2d\stopverb}): 2D turbulence, vortex dynamics}
+
+\pre{\startverb
+from fluidsim.solvers.ns2d.solver import Simul
+\stopverb}
+
+\p{\strong{3D Navier-Stokes} (\code{\startverb ns3d\stopverb}): 3D turbulence, realistic flows}
+
+\pre{\startverb
+from fluidsim.solvers.ns3d.solver import Simul
+\stopverb}
+
+\p{\strong{Stratified flows} (\code{\startverb ns2d.strat\stopverb}, \code{\startverb ns3d.strat\stopverb}): Oceanic/atmospheric flows}
+
+\pre{\startverb
+from fluidsim.solvers.ns2d.strat.solver import Simul
+params.N = 1.0  # Brunt-Väisälä frequency
+\stopverb}
+
+\p{\strong{Shallow water} (\code{\startverb sw1l\stopverb}): Geophysical flows, rotating systems}
+
+\pre{\startverb
+from fluidsim.solvers.sw1l.solver import Simul
+params.f = 1.0  # Coriolis parameter
+\stopverb}
+
+\p{See \code{\startverb references/solvers.md\stopverb} for complete solver list and selection guidance.}
+}
+
+\subtree{
+\title{4. Parameter Configuration}
+\p{Parameters are organized hierarchically and accessed via dot notation:}
+
+\p{\strong{Domain and resolution}:}
+
+\pre{\startverb
+params.oper.nx = 256  # grid points
+params.oper.Lx = 2 * pi  # domain size
+\stopverb}
+
+\p{\strong{Physical parameters}:}
+
+\pre{\startverb
+params.nu_2 = 1e-3  # viscosity
+params.nu_4 = 0     # hyperviscosity (optional)
+\stopverb}
+
+\p{\strong{Time stepping}:}
+
+\pre{\startverb
+params.time_stepping.t_end = 10.0
+params.time_stepping.USE_CFL = True  # adaptive time step
+params.time_stepping.CFL = 0.5
+\stopverb}
+
+\p{\strong{Initial conditions}:}
+
+\pre{\startverb
+params.init_fields.type = "noise"  # or "dipole", "vortex", "from_file", "in_script"
+\stopverb}
+
+\p{\strong{Output settings}:}
+
+\pre{\startverb
+params.output.periods_save.phys_fields = 1.0  # save every 1.0 time units
+params.output.periods_save.spectra = 0.5
+params.output.periods_save.spatial_means = 0.1
+\stopverb}
+
+\p{The Parameters object raises \code{\startverb AttributeError\stopverb} for typos, preventing silent configuration errors.}
+
+\p{See \code{\startverb references/parameters.md\stopverb} for comprehensive parameter documentation.}
+}
+
+\subtree{
+\title{5. Output and Analysis}
+\p{FluidSim produces multiple output types automatically saved during simulation:}
+
+\p{\strong{Physical fields}: Velocity, vorticity in HDF5 format}
+
+\pre{\startverb
+sim.output.phys_fields.plot("vorticity")
+sim.output.phys_fields.plot("vx")
+\stopverb}
+
+\p{\strong{Spatial means}: Time series of volume-averaged quantities}
+
+\pre{\startverb
+sim.output.spatial_means.plot()
+\stopverb}
+
+\p{\strong{Spectra}: Energy and enstrophy spectra}
+
+\pre{\startverb
+sim.output.spectra.plot1d()
+sim.output.spectra.plot2d()
+\stopverb}
+
+\p{\strong{Load previous simulations}:}
+
+\pre{\startverb
+from fluidsim import load_sim_for_plot
+sim = load_sim_for_plot("simulation_dir")
+sim.output.phys_fields.plot()
+\stopverb}
+
+\p{\strong{Advanced visualization}: Open \code{\startverb .h5\stopverb} files in ParaView or VisIt for 3D visualization.}
+
+\p{See \code{\startverb references/output_analysis.md\stopverb} for detailed analysis workflows, parametric study analysis, and data export.}
+}
+
+\subtree{
+\title{6. Advanced Features}
+\p{\strong{Custom forcing}: Maintain turbulence or drive specific dynamics}
+
+\pre{\startverb
+params.forcing.enable = True
+params.forcing.type = "tcrandom"  # time-correlated random forcing
+params.forcing.forcing_rate = 1.0
+\stopverb}
+
+\p{\strong{Custom initial conditions}: Define fields in script}
+
+\pre{\startverb
+params.init_fields.type = "in_script"
+sim = Simul(params)
+X, Y = sim.oper.get_XY_loc()
+vx = sim.state.state_phys.get_var("vx")
+vx[:] = sin(X) * cos(Y)
+sim.time_stepping.start()
+\stopverb}
+
+\p{\strong{MPI parallelization}: Run on multiple processors}
+
+\pre{\startverb
+mpirun -np 8 python simulation_script.py
+\stopverb}
+
+\p{\strong{Parametric studies}: Run multiple simulations with different parameters}
+
+\pre{\startverb
+for nu in [1e-3, 5e-4, 1e-4]:
+    params = Simul.create_default_params()
+    params.nu_2 = nu
+    params.output.sub_directory = f"nu{nu}"
+    sim = Simul(params)
+    sim.time_stepping.start()
+\stopverb}
+
+\p{See \code{\startverb references/advanced_features.md\stopverb} for forcing types, custom solvers, cluster submission, and performance optimization.}
+}
+}
+
+\subtree{
+\title{Common Use Cases}
+\subtree{
+\title{2D Turbulence Study}
+\pre{\startverb
+from fluidsim.solvers.ns2d.solver import Simul
+from math import pi
+
+params = Simul.create_default_params()
+params.oper.nx = params.oper.ny = 512
+params.oper.Lx = params.oper.Ly = 2 * pi
+params.nu_2 = 1e-4
+params.time_stepping.t_end = 50.0
+params.time_stepping.USE_CFL = True
+params.init_fields.type = "noise"
+params.output.periods_save.phys_fields = 5.0
+params.output.periods_save.spectra = 1.0
+
+sim = Simul(params)
+sim.time_stepping.start()
+
+# Analyze energy cascade
+sim.output.spectra.plot1d(tmin=30.0, tmax=50.0)
+\stopverb}
+}
+
+\subtree{
+\title{Stratified Flow Simulation}
+\pre{\startverb
+from fluidsim.solvers.ns2d.strat.solver import Simul
+
+params = Simul.create_default_params()
+params.oper.nx = params.oper.ny = 256
+params.N = 2.0  # stratification strength
+params.nu_2 = 5e-4
+params.time_stepping.t_end = 20.0
+
+# Initialize with dense layer
+params.init_fields.type = "in_script"
+sim = Simul(params)
+X, Y = sim.oper.get_XY_loc()
+b = sim.state.state_phys.get_var("b")
+b[:] = exp(-((X - 3.14)**2 + (Y - 3.14)**2) / 0.5)
+sim.state.statephys_from_statespect()
+
+sim.time_stepping.start()
+sim.output.phys_fields.plot("b")
+\stopverb}
+}
+
+\subtree{
+\title{High-Resolution 3D Simulation with MPI}
+\pre{\startverb
+from fluidsim.solvers.ns3d.solver import Simul
+
+params = Simul.create_default_params()
+params.oper.nx = params.oper.ny = params.oper.nz = 512
+params.nu_2 = 1e-5
+params.time_stepping.t_end = 10.0
+params.init_fields.type = "noise"
+
+sim = Simul(params)
+sim.time_stepping.start()
+\stopverb}
+
+\p{Run with:}
+
+\pre{\startverb
+mpirun -np 64 python script.py
+\stopverb}
+}
+
+\subtree{
+\title{Taylor-Green Vortex Validation}
+\pre{\startverb
+from fluidsim.solvers.ns2d.solver import Simul
+import numpy as np
+from math import pi
+
+params = Simul.create_default_params()
+params.oper.nx = params.oper.ny = 128
+params.oper.Lx = params.oper.Ly = 2 * pi
+params.nu_2 = 1e-3
+params.time_stepping.t_end = 10.0
+params.init_fields.type = "in_script"
+
+sim = Simul(params)
+X, Y = sim.oper.get_XY_loc()
+vx = sim.state.state_phys.get_var("vx")
+vy = sim.state.state_phys.get_var("vy")
+vx[:] = np.sin(X) * np.cos(Y)
+vy[:] = -np.cos(X) * np.sin(Y)
+sim.state.statephys_from_statespect()
+
+sim.time_stepping.start()
+
+# Validate energy decay
+df = sim.output.spatial_means.load()
+# Compare with analytical solution
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\p{\strong{Import solver}: \code{\startverb from fluidsim.solvers.ns2d.solver import Simul\stopverb}}
+
+\p{\strong{Create parameters}: \code{\startverb params = Simul.create_default_params()\stopverb}}
+
+\p{\strong{Set resolution}: \code{\startverb params.oper.nx = params.oper.ny = 256\stopverb}}
+
+\p{\strong{Set viscosity}: \code{\startverb params.nu_2 = 1e-3\stopverb}}
+
+\p{\strong{Set end time}: \code{\startverb params.time_stepping.t_end = 10.0\stopverb}}
+
+\p{\strong{Run simulation}: \code{\startverb sim = Simul(params); sim.time_stepping.start()\stopverb}}
+
+\p{\strong{Plot results}: \code{\startverb sim.output.phys_fields.plot("vorticity")\stopverb}}
+
+\p{\strong{Load simulation}: \code{\startverb sim = load_sim_for_plot("path/to/sim")\stopverb}}
+}
+
+\subtree{
+\title{Resources}
+\p{\strong{Documentation}: https://fluidsim.readthedocs.io/}
+
+\p{\strong{Reference files}:}
+
+\ul{
+\li{\code{\startverb references/installation.md\stopverb}: Complete installation instructions}
+\li{\code{\startverb references/solvers.md\stopverb}: Available solvers and selection guide}
+\li{\code{\startverb references/simulation_workflow.md\stopverb}: Detailed workflow examples}
+\li{\code{\startverb references/parameters.md\stopverb}: Comprehensive parameter documentation}
+\li{\code{\startverb references/output_analysis.md\stopverb}: Output types and analysis methods}
+\li{\code{\startverb references/advanced_features.md\stopverb}: Forcing, MPI, parametric studies, custom solvers}
+}
+}
+}

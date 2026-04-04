@@ -1,0 +1,684 @@
+\title{Duckdb Temporal Versioning}
+
+\taxon{skill}
+
+\meta{description}{Temporal versioning and interaction history with time-travel queries,}
+
+\p{<!-- Propagated to amp | Trit: +1 | Source: .ruler/skills/duckdb-temporal-versioning -->}
+
+\subtree{
+\title{DuckDB Temporal Versioning Skill}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: +1 (PLUS - generative/creating databases) \strong{Principle}: Same data → Same structure (SPI guarantee) \strong{Implementation}: DuckDB (embedded SQL) + Temporal semantics \strong{GF(3) Balanced Triad}:}
+
+\ul{
+\li{duckdb-temporal-versioning (+1) [Generator: Create/write]}
+\li{clj-kondo-3color (-1) [Validator: Verify schemas]}
+\li{acsets (0) [Coordinator: Navigate relationships]}
+}
+
+\subtree{
+\title{Overview}
+\p{\strong{DuckDB Temporal Versioning} provides in-process SQL database with time-travel semantics for storing and analyzing interaction history. Every database with the same schema and initial data produces identical query results, enabling:}
+
+\ol{
+\li{\strong{Time Travel}: Query data as of any past transaction}
+\li{\strong{Deterministic Replay}: Freeze snapshots for reproducible execution}
+\li{\strong{Causality Tracking}: Track dependencies via vector clocks}
+\li{\strong{Immutable Audit Logs}: Record all mutations permanently}
+\li{\strong{Multi-Layer Integration}: Combine history + world databases + derived views}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{Time-Travel Semantics}
+\pre{\startverb
+-- Query data as of transaction T₁
+SELECT * FROM interactions
+VERSION AT SYSTEM_TIME AS OF T₁;
+
+-- Get all versions of a row
+SELECT *, transaction_id
+FROM interactions
+FOR SYSTEM_TIME ALL
+WHERE id = 42;
+\stopverb}
+}
+
+\subtree{
+\title{Causality Tracking with Vector Clocks}
+\pre{\startverb
+-- Track causal relationships
+CREATE TABLE causality_log (
+  event_id INTEGER,
+  vector_clock VARCHAR,    -- e.g., "[1, 2, 3, 0]"
+  event_data STRUCT,
+  timestamp TIMESTAMP,
+  UNIQUE(vector_clock)
+);
+
+-- Query causality constraints
+SELECT * FROM causality_log
+WHERE vector_clock <= '[2, 3, 1, 1]'
+ORDER BY vector_clock;
+\stopverb}
+}
+
+\subtree{
+\title{Frozen Snapshots for Determinism}
+\pre{\startverb
+-- Create checkpoint
+PRAGMA freeze_table('interactions');
+
+-- Later: All queries return identical results
+SELECT COUNT(*) FROM interactions;  -- Always same value
+
+-- Unfreeze to add new data
+PRAGMA unfreeze_table('interactions');
+\stopverb}
+}
+
+\subtree{
+\title{Immutable Audit Logs (3-Trigger Pattern)}
+\pre{\startverb
+-- Trigger on INSERT
+CREATE TRIGGER audit_insert_interactions
+AFTER INSERT ON interactions
+FOR EACH ROW
+BEGIN
+  INSERT INTO audit_log (
+    table_name, operation, record_id, new_value, timestamp
+  ) VALUES (
+    'interactions', 'INSERT', NEW.id, NEW, NOW()
+  );
+END;
+
+-- Trigger on UPDATE
+CREATE TRIGGER audit_update_interactions
+AFTER UPDATE ON interactions
+FOR EACH ROW
+BEGIN
+  INSERT INTO audit_log (
+    table_name, operation, record_id, old_value, new_value, timestamp
+  ) VALUES (
+    'interactions', 'UPDATE', NEW.id, OLD, NEW, NOW()
+  );
+END;
+
+-- Trigger on DELETE
+CREATE TRIGGER audit_delete_interactions
+AFTER DELETE ON interactions
+FOR EACH ROW
+BEGIN
+  INSERT INTO audit_log (
+    table_name, operation, record_id, old_value, timestamp
+  ) VALUES (
+    'interactions', 'DELETE', OLD.id, OLD, NOW()
+  );
+END;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\subtree{
+\title{Buffer & Memory Management}
+\pre{\startverb
+-- Set buffer pool
+PRAGMA threads = 4;
+PRAGMA memory_limit = '8GB';
+
+-- Check current memory
+PRAGMA database_size;
+\stopverb}
+}
+
+\subtree{
+\title{Compression Strategy}
+\pre{\startverb
+-- Use SNAPPY compression (good for typical workloads)
+CREATE TABLE interactions (
+  id INTEGER,
+  user_id VARCHAR,
+  content VARCHAR,
+  created_at TIMESTAMP,
+  vector_clock VARCHAR
+) WITH (compression='snappy');
+\stopverb}
+}
+
+\subtree{
+\title{Materialized Views for Expensive Queries}
+\pre{\startverb
+-- Cache aggregations
+CREATE MATERIALIZED VIEW interaction_stats AS
+SELECT
+  DATE(created_at) as date,
+  COUNT(*) as count,
+  COUNT(DISTINCT user_id) as unique_users,
+  AVG(LENGTH(content)) as avg_content_length
+FROM interactions
+GROUP BY DATE(created_at);
+
+-- Query cache instead of raw table
+SELECT * FROM interaction_stats WHERE date >= '2025-12-20';
+\stopverb}
+}
+
+\subtree{
+\title{Connection Pooling (Python)}
+\pre{\startverb
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
+
+# Use connection pool for concurrent access
+engine = create_engine(
+    'duckdb:////Users/bob/ies/music-topos/db.duckdb',
+    poolclass=QueuePool,
+    pool_size=5,
+    max_overflow=10,
+    pool_recycle=3600
+)
+
+# Connections reused efficiently
+with engine.connect() as conn:
+    result = conn.execute("SELECT COUNT(*) FROM interactions")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Multi-Layer Query Strategy}
+\subtree{
+\title{Layer 1: History Queries (Fast)}
+\pre{\startverb
+-- Indexed queries on interaction history
+SELECT * FROM interactions
+WHERE user_id IN ('alice', 'bob')
+  AND created_at > '2025-12-20'
+LIMIT 100;
+\stopverb}
+}
+
+\subtree{
+\title{Layer 2: World Transformations}
+\pre{\startverb
+-- Feature extraction from raw interactions
+SELECT
+  id,
+  user_id,
+  EXTRACT(HOUR FROM created_at) as hour_of_day,
+  LENGTH(content) as content_length,
+  (SELECT COUNT(*) FROM interactions i2
+   WHERE i2.user_id = i1.user_id) as user_interaction_count
+FROM interactions i1;
+\stopverb}
+}
+
+\subtree{
+\title{Layer 3: Unified Integration View}
+\pre{\startverb
+-- Join history + world databases
+SELECT
+  h.id,
+  h.user_id,
+  h.content,
+  h.created_at,
+  w.hour_of_day,
+  w.content_length,
+  w.user_interaction_count
+FROM interactions h
+JOIN interaction_features w ON h.id = w.id
+WHERE h.created_at >= '2025-12-20'
+ORDER BY h.created_at DESC;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Refinement Query Pattern}
+\pre{\startverb
+-- Stage 1: BROAD query (understand scale)
+SELECT COUNT(*) as total_interactions
+FROM interactions;
+-- Result: 10,000
+
+-- Stage 2: TRIFURCATED (split into 3)
+SELECT
+  'technical-innovation' as pattern,
+  COUNT(*) as count,
+  AVG(content_length) as avg_length
+FROM interactions
+WHERE content LIKE '%algorithm%' OR content LIKE '%optimization%'
+UNION ALL
+SELECT
+  'collaborative-work' as pattern,
+  COUNT(*) as count,
+  AVG(content_length) as avg_length
+FROM interactions
+WHERE content LIKE '%team%' OR content LIKE '%coordination%'
+UNION ALL
+SELECT
+  'other' as pattern,
+  COUNT(*) as count,
+  AVG(content_length) as avg_length
+FROM interactions
+WHERE content NOT LIKE '%algorithm%'
+  AND content NOT LIKE '%team%';
+
+-- Stage 3: REFINED (focus on interesting subset)
+SELECT *
+FROM interactions
+WHERE content LIKE '%algorithm%'
+  AND content_length > 100
+  AND user_id NOT IN (SELECT id FROM bots)
+ORDER BY created_at DESC
+LIMIT 50;
+\stopverb}
+}
+
+\subtree{
+\title{Backup & Recovery}
+\subtree{
+\title{Full Backup}
+\pre{\startverb
+# Create backup
+duckdb /Users/bob/ies/music-topos/db.duckdb \
+  ".backup /Users/bob/ies/music-topos/db.duckdb.backup"
+
+# Verify backup size
+ls -lh /Users/bob/ies/music-topos/db.duckdb*
+\stopverb}
+}
+
+\subtree{
+\title{Incremental Backup (Copy Strategy)}
+\pre{\startverb
+# Copy database file with timestamp
+cp /Users/bob/ies/music-topos/db.duckdb \
+   /Users/bob/ies/music-topos/db.duckdb.backup.$(date +%Y%m%d_%H%M%S)
+
+# Keep last 7 backups
+ls -t /Users/bob/ies/music-topos/db.duckdb.backup.* | \
+  tail -n +8 | \
+  xargs rm -f
+\stopverb}
+}
+
+\subtree{
+\title{Integrity Check}
+\pre{\startverb
+# Verify database integrity
+duckdb /Users/bob/ies/music-topos/db.duckdb \
+  "PRAGMA integrity_check;"
+\stopverb}
+}
+
+\subtree{
+\title{Restore from Backup}
+\pre{\startverb
+# Restore from backup
+duckdb /Users/bob/ies/music-topos/db.duckdb \
+  ".restore /Users/bob/ies/music-topos/db.duckdb.backup"
+
+# Verify restoration
+duckdb /Users/bob/ies/music-topos/db.duckdb.backup \
+  "SELECT COUNT(*) FROM interactions;"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Data Export for Analysis}
+\subtree{
+\title{Export to CSV}
+\pre{\startverb
+-- Export all interactions
+COPY interactions TO '/tmp/interactions.csv' WITH (FORMAT CSV);
+
+-- Export with header
+COPY interactions TO '/tmp/interactions.csv'
+WITH (FORMAT CSV, HEADER TRUE);
+
+-- Export filtered subset
+COPY (
+  SELECT id, user_id, content_length, created_at
+  FROM interactions
+  WHERE created_at >= '2025-12-20'
+) TO '/tmp/recent_interactions.csv'
+WITH (FORMAT CSV, HEADER TRUE);
+\stopverb}
+}
+
+\subtree{
+\title{Export to JSON}
+\pre{\startverb
+-- Export to JSON
+COPY interactions TO '/tmp/interactions.json' WITH (FORMAT JSON);
+
+-- Export nested structure
+COPY (
+  SELECT
+    id,
+    user_id,
+    content,
+    created_at,
+    struct_pack(
+      vector_clock := vector_clock,
+      transaction_id := transaction_id
+    ) as metadata
+  FROM interactions
+) TO '/tmp/interactions_with_metadata.json'
+WITH (FORMAT JSON);
+\stopverb}
+}
+
+\subtree{
+\title{Export to Parquet}
+\pre{\startverb
+-- Export to Parquet (columnar, efficient)
+COPY interactions TO '/tmp/interactions.parquet'
+WITH (FORMAT PARQUET);
+\stopverb}
+}
+}
+
+\subtree{
+\title{API: SQL Interface}
+\subtree{
+\title{Python}
+\pre{\startverb
+import duckdb
+
+# Connect to database
+conn = duckdb.connect('/Users/bob/ies/music-topos/db.duckdb')
+
+# Execute query
+result = conn.execute(
+  "SELECT COUNT(*) FROM interactions"
+).fetchall()
+
+# Parameterized query (safe)
+rows = conn.execute(
+  "SELECT * FROM interactions WHERE user_id = ? LIMIT 10",
+  ['alice']
+).fetchdf()  # Returns pandas DataFrame
+
+# Insert data
+conn.execute(
+  "INSERT INTO interactions (user_id, content, created_at) VALUES (?, ?, ?)",
+  ['bob', 'Hello world', '2025-12-21 10:00:00']
+)
+
+conn.close()
+\stopverb}
+}
+
+\subtree{
+\title{Clojure}
+\pre{\startverb
+(require '[duckdb.core :as db])
+
+;; Connect
+(def conn (db/connect "db.duckdb"))
+
+;; Query
+(db/query conn "SELECT COUNT(*) FROM interactions")
+
+;; Insert
+(db/execute! conn
+  "INSERT INTO interactions (user_id, content) VALUES (?, ?)"
+  ["alice" "Hello"])
+
+;; Time-travel query
+(db/query conn
+  "SELECT * FROM interactions VERSION AT SYSTEM_TIME AS OF ?1"
+  [transaction-id])
+
+;; Close
+(db/close conn)
+\stopverb}
+}
+
+\subtree{
+\title{Ruby}
+\pre{\startverb
+require 'duckdb'
+
+# Connect
+db = DuckDB::Database.new('db.duckdb')
+
+# Query
+result = db.execute(
+  "SELECT COUNT(*) FROM interactions"
+)
+
+# Insert
+db.execute(
+  "INSERT INTO interactions (user_id, content) VALUES (?, ?)",
+  ['bob', 'Hello world']
+)
+
+# Parameterized
+rows = db.execute(
+  "SELECT * FROM interactions WHERE user_id = ?",
+  ['alice']
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Balanced Integration}
+\subtree{
+\title{Triadic Skill Loading}
+\pre{\startverb
+duckdb-temporal-versioning (+1)
+  Generator: Create/write databases
+  - initialize_database: Set up schema
+  - insert_events: Add interactions
+  - snapshot_checkpoint: Freeze state
+
+clj-kondo-3color (-1)
+  Validator: Verify schemas
+  - validate_schema: Check table definitions
+  - integrity_check: PRAGMA integrity_check
+  - audit_log_verify: Verify mutation log
+
+acsets (0)
+  Coordinator: Navigate relationships
+  - query_relationships: Find foreign keys
+  - walk_dependency_graph: Traverse schema
+  - export_schema: Generate documentation
+\stopverb}
+}
+
+\subtree{
+\title{Example: GF(3) Conservation}
+\pre{\startverb
+;; Load balanced triad
+(load-skills
+  [:duckdb-temporal-versioning    ;; +1 (create)
+   :clj-kondo-3color              ;; -1 (validate)
+   :acsets])                       ;; 0 (coordinate)
+
+;; GF(3) sum: (+1) + (-1) + (0) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Monitoring & Maintenance}
+\subtree{
+\title{Statistics View}
+\pre{\startverb
+-- Create monitoring view
+CREATE VIEW database_stats AS
+SELECT
+  COUNT(*) as total_records,
+  COUNT(DISTINCT user_id) as unique_users,
+  MIN(created_at) as oldest_record,
+  MAX(created_at) as newest_record,
+  DATEDIFF(DAY, MIN(created_at), MAX(created_at)) as days_spanned,
+  AVG(LENGTH(content)) as avg_content_length
+FROM interactions;
+
+-- Query stats
+SELECT * FROM database_stats;
+\stopverb}
+}
+
+\subtree{
+\title{Audit Log Analysis}
+\pre{\startverb
+-- Track mutations
+SELECT
+  table_name,
+  operation,
+  COUNT(*) as operation_count,
+  MIN(timestamp) as first_op,
+  MAX(timestamp) as last_op,
+  MAX(timestamp) - MIN(timestamp) as duration
+FROM audit_log
+GROUP BY table_name, operation;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands & Integration}
+\subtree{
+\title{Justfile Integration}
+\pre{\startverb
+# Backup database
+just backup-db
+
+# Restore from backup
+just restore-db backup_file=db.duckdb.backup.20251221
+
+# Export for analysis
+just export-db format=csv
+
+# Check integrity
+just db-integrity-check
+
+# Run time-travel query
+just db-time-travel transaction_id=T₁
+\stopverb}
+}
+
+\subtree{
+\title{CLI Usage}
+\pre{\startverb
+# Open DuckDB shell
+duckdb /Users/bob/ies/music-topos/db.duckdb
+
+# Run query from command line
+duckdb /Users/bob/ies/music-topos/db.duckdb \
+  "SELECT COUNT(*) FROM interactions"
+
+# Load SQL file
+duckdb /Users/bob/ies/music-topos/db.duckdb < schema.sql
+\stopverb}
+}
+}
+
+\subtree{
+\title{Use Cases in Music-Topos}
+\subtree{
+\title{Phase 1: Data Acquisition}
+\ul{
+\li{Store raw interactions from Bluesky, GitHub, Zulip}
+\li{Track provenance with audit logs}
+\li{Enable time-travel to any point in history}
+}
+}
+
+\subtree{
+\title{Phase 2: Colorable Music Topos}
+\ul{
+\li{Store entropy measurements per interaction}
+\li{Record leitmotif assignments with confidence scores}
+\li{Track color mappings to HSV space}
+}
+}
+
+\subtree{
+\title{Phase 3: 5D Pattern Extraction}
+\ul{
+\li{Persist feature vectors (39-49 dimensions)}
+\li{Store temporal, topic, interaction, learning, network patterns}
+\li{Enable multi-layer queries (history → features → unified view)}
+}
+}
+
+\subtree{
+\title{Phase 4: Agent-o-rama Training}
+\ul{
+\li{\strong{Trace Storage}: Each training epoch → database record}
+\li{\strong{Time-Travel Checkpoints}: Restore to best epoch}
+\li{\strong{Audit Log}: Record all LLM calls, skill loads, color assignments}
+\li{\strong{Causality}: Vector clocks track dependencies between decisions}
+\li{\strong{Provenance}: Full lineage from raw data to trained surrogate}
+}
+}
+}
+
+\subtree{
+\title{Best Practices Summary}
+\ol{
+\li{\strong{Performance}: Set memory_limit=8GB, use SNAPPY compression, index frequently-queried columns}
+\li{\strong{Temporal}: Track vector clocks, use frozen snapshots, maintain immutable audit logs}
+\li{\strong{Integration}: Use multi-layer queries (history → world → unified), apply refinement pattern}
+\li{\strong{Reliability}: Regular backups, integrity checks, automated archival}
+\li{\strong{Analysis}: Export CSV/JSON/Parquet, maintain statistics views, track mutations}
+}
+}
+
+\subtree{
+\title{Example: Complete Workflow}
+\pre{\startverb
+import duckdb
+from datetime import datetime
+
+# Initialize
+db = duckdb.connect('music_topos.duckdb')
+
+# Create schema with audit triggers
+db.execute("""
+  CREATE TABLE IF NOT EXISTS interactions (
+    id INTEGER PRIMARY KEY,
+    user_id VARCHAR,
+    content VARCHAR,
+    created_at TIMESTAMP,
+    vector_clock VARCHAR,
+    transaction_id INTEGER
+  ) WITH (compression='snappy')
+""")
+
+# Insert interaction
+db.execute(
+  "INSERT INTO interactions (user_id, content, created_at, vector_clock) "
+  "VALUES (?, ?, ?, ?)",
+  ['alice', 'Technical innovation in algorithms', datetime.now(), '[1, 0, 0]']
+)
+
+# Query time-travel
+historical = db.execute(
+  "SELECT * FROM interactions VERSION AT SYSTEM_TIME AS OF ?",
+  [1]
+).fetchdf()
+
+# Export for analysis
+db.execute(
+  "COPY interactions TO 'interactions.csv' WITH (FORMAT CSV, HEADER TRUE)"
+)
+
+db.close()
+\stopverb}
+
+\p{\strong{Skill Name}: duckdb-temporal-versioning \strong{Type}: Temporal Database with Time-Travel Queries \strong{Trit}: +1 (PLUS - generative) \strong{GF(3)}: Balanced with clj-kondo-3color (-1) + acsets (0) \strong{SPI}: Guaranteed (same schema + data → same results) \strong{Applications}: Data acquisition, feature storage, training trace logging, audit trails}
+}
+}

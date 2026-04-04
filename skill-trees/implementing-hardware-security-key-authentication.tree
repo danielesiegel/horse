@@ -1,0 +1,254 @@
+\title{Implementing Hardware Security Key Authentication}
+
+\taxon{skill}
+
+\tag{FIDO2}
+
+\tag{WebAuthn}
+
+\tag{hardware-security-key}
+
+\tag{YubiKey}
+
+\tag{passkeys}
+
+\tag{passwordless-authentication}
+
+\tag{CTAP2}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Implements FIDO2/WebAuthn hardware security key authentication including registration ceremonies, authentication flows, YubiKey enrollment, and passkey migration strategies. Builds a complete relying party server using the python-fido2 library that supports cross-platform authenticators, resident key (discoverable credential) workflows, and user verification policies. Activates for requests involving FIDO2 implementation, WebAuthn registration, hardware security key enrollment, YubiKey integration, or passkey migration from password-based authentication.}
+
+\subtree{
+\title{Implementing Hardware Security Key Authentication}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Deploying phishing-resistant multi-factor authentication (MFA) using FIDO2 hardware security keys for high-value accounts (administrators, developers, privileged users)}
+\li{Building a WebAuthn relying party server that supports both roaming authenticators (USB/NFC security keys) and platform authenticators (Windows Hello, Touch ID, Android biometrics)}
+\li{Migrating an existing password-based authentication system to support passkeys (discoverable credentials) as a primary or secondary authentication factor}
+\li{Enrolling YubiKey devices for an organization's workforce, including PIN setup, credential registration, and backup key provisioning}
+\li{Implementing passwordless authentication flows that comply with NIST SP 800-63B AAL3 (authenticator assurance level 3) requirements}
+}
+
+\p{\strong{Do not use} without HTTPS in production (WebAuthn requires a secure origin), for systems where users cannot physically access a USB/NFC port, or as the sole authentication factor without a recovery mechanism for lost keys.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.10+ with \code{\startverb fido2\stopverb} (python-fido2 >= 2.0.0), \code{\startverb flask\stopverb}, and \code{\startverb cryptography\stopverb} libraries installed}
+\li{HTTPS-enabled web server (WebAuthn API requires secure context; localhost is exempt for development)}
+\li{FIDO2-compatible hardware security key (YubiKey 5 Series, SoloKeys, Titan Security Key) or platform authenticator}
+\li{Modern web browser supporting the WebAuthn API (Chrome 67+, Firefox 60+, Safari 14+, Edge 79+)}
+\li{Understanding of public key cryptography, challenge-response protocols, and HTTP session management}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Relying Party Server Configuration}
+\p{Configure the WebAuthn relying party (RP) identity and server:}
+
+\ul{
+\li{\strong{Define RP identity}: Create a \code{\startverb PublicKeyCredentialRpEntity\stopverb} with the relying party name (display name shown to users) and RP ID (the effective domain of the application). The RP ID must be a registrable domain suffix of the origin -- for example, \code{\startverb example.com\stopverb} is valid for \code{\startverb https://auth.example.com\stopverb} but \code{\startverb other.com\stopverb} is not.}
+\li{\strong{Initialize Fido2Server}: Instantiate the \code{\startverb Fido2Server\stopverb} class from the python-fido2 library with the RP entity. The server handles challenge generation, attestation verification, and assertion validation.}
+\li{\strong{Configure attestation preference}: Set the attestation conveyance preference to control whether the server requests proof of the authenticator's identity:}
+\li{\code{\startverb none\stopverb}: No attestation requested (simplest, recommended for most deployments)}
+\li{\code{\startverb indirect\stopverb}: Attestation may be provided but CA may anonymize it}
+\li{\code{\startverb direct\stopverb}: Full attestation chain from the authenticator's manufacturer}
+\li{\code{\startverb enterprise\stopverb}: Device-identifying attestation for managed environments}
+\li{\strong{Session management}: Configure server-side sessions to store WebAuthn state between the begin and complete phases of registration/authentication ceremonies. Use secure, httponly cookies with SameSite=Strict.}
+\li{\strong{Credential storage}: Design the database schema to store credential records: \code{\startverb credential_id\stopverb} (binary), \code{\startverb public_key\stopverb} (COSE key), \code{\startverb sign_count\stopverb} (uint32 for clone detection), \code{\startverb user_id\stopverb}, \code{\startverb created_at\stopverb}, \code{\startverb last_used\stopverb}, \code{\startverb display_name\stopverb}, and \code{\startverb transports\stopverb} (USB, NFC, BLE, internal).}
+}
+}
+
+\subtree{
+\title{Step 2: Registration Ceremony (Credential Creation)}
+\p{Implement the WebAuthn registration flow to create new credentials:}
+
+\ul{
+\li{\strong{Begin registration}: Call \code{\startverb server.register_begin()\stopverb} with the user entity (\code{\startverb PublicKeyCredentialUserEntity\stopverb} containing user ID, username, and display name), the list of existing credentials for the user (to prevent duplicate registration), and options for \code{\startverb user_verification\stopverb} and \code{\startverb authenticator_attachment\stopverb}.}
+\li{\strong{Authenticator selection criteria}:}
+\li{\code{\startverb authenticator_attachment: cross-platform\stopverb} restricts to roaming authenticators (USB/NFC keys)}
+\li{\code{\startverb authenticator_attachment: platform\stopverb} restricts to built-in authenticators (Touch ID, Windows Hello)}
+\li{Omitting this field allows both types}
+\li{\code{\startverb resident_key: required\stopverb} forces creation of a discoverable credential (passkey) stored on the authenticator}
+\li{\code{\startverb user_verification: required\stopverb} enforces PIN or biometric verification on the authenticator}
+\li{\strong{Client-side ceremony}: The browser calls \code{\startverb navigator.credentials.create()\stopverb} with the options from the server. The authenticator generates a new key pair, stores the private key in its secure element, and returns the public key, credential ID, attestation object, and client data JSON.}
+\li{\strong{Complete registration}: Call \code{\startverb server.register_complete()\stopverb} with the saved state and the client response. The server verifies the attestation signature, extracts the credential public key and ID, and returns \code{\startverb AuthenticatorData\stopverb} containing the credential data to store.}
+\li{\strong{Store credential}: Persist the \code{\startverb credential_data\stopverb} (contains \code{\startverb credential_id\stopverb}, \code{\startverb public_key\stopverb} as COSE key, and \code{\startverb sign_count\stopverb}) to the database associated with the user account.}
+}
+}
+
+\subtree{
+\title{Step 3: Authentication Ceremony (Assertion)}
+\p{Implement the WebAuthn authentication flow to verify credentials:}
+
+\ul{
+\li{\strong{Begin authentication}: Call \code{\startverb server.authenticate_begin()\stopverb} with the list of registered credentials for the user (or omit for discoverable credential flows where the authenticator identifies the user). Set \code{\startverb user_verification\stopverb} based on the assurance level required.}
+\li{\strong{Client-side assertion}: The browser calls \code{\startverb navigator.credentials.get()\stopverb} with the server options. The authenticator locates the matching credential, performs user verification if required, increments the signature counter, and signs the challenge with the private key.}
+\li{\strong{Complete authentication}: Call \code{\startverb server.authenticate_complete()\stopverb} with the saved state, registered credentials, and the client response. The server verifies the assertion signature against the stored public key and validates the signature counter has incremented (clone detection).}
+\li{\strong{Update sign count}: After successful authentication, update the stored \code{\startverb sign_count\stopverb} for the credential. If the new sign count is not greater than the stored value, the key may have been cloned -- flag this as a security event.}
+\li{\strong{Discoverable credential flow}: For passwordless authentication, the user does not need to enter a username first. The authenticator presents all discoverable credentials for the RP ID, and the selected credential's \code{\startverb userHandle\stopverb} identifies the user.}
+}
+}
+
+\subtree{
+\title{Step 4: YubiKey Enrollment and Management}
+\p{Implement organizational YubiKey provisioning workflows:}
+
+\ul{
+\li{\strong{PIN initialization}: Before first use, a YubiKey requires a FIDO2 PIN (minimum 4 characters, 8 retries before lockout). Guide users through PIN setup using the Yubico Authenticator application or programmatically via the CTAP2 \code{\startverb clientPin\stopverb} command.}
+\li{\strong{Primary key enrollment}: Register the user's primary YubiKey with their account. Store the credential with a user-friendly label (e.g., "USB-A YubiKey - Office") and the authenticator's AAGUID for device identification.}
+\li{\strong{Backup key enrollment}: Require users to register at least two security keys. The backup key should be stored separately (home, safety deposit box). Both keys must be registered to the same account so either can authenticate.}
+\li{\strong{Key attestation verification}: For enterprise deployments, verify the attestation certificate chain to confirm the key is a genuine YubiKey from Yubico. Compare the AAGUID against Yubico's published values to identify the exact model.}
+\li{\strong{Key lifecycle management}: Implement administrative functions to list a user's registered keys, revoke compromised keys, force re-enrollment, and audit key usage patterns (last authentication time, total authentications).}
+}
+}
+
+\subtree{
+\title{Step 5: Passkey Migration Strategy}
+\p{Plan and execute migration from passwords to passkeys:}
+
+\ul{
+\li{\strong{Phased rollout}: Begin with voluntary passkey enrollment alongside existing password authentication. Track adoption metrics (percentage of users with passkeys, percentage of logins using passkeys vs. passwords).}
+\li{\strong{Credential upgrade flow}: When a user authenticates with a password, prompt them to register a passkey. Present the WebAuthn registration dialog immediately after successful password login to minimize friction.}
+\li{\strong{Cross-device passkeys}: Support synced passkeys (passkeys stored in platform credential managers like iCloud Keychain, Google Password Manager, or 1Password) for users who do not have hardware security keys. These provide phishing resistance without requiring dedicated hardware.}
+\li{\strong{Account recovery}: Design recovery flows for users who lose all their security keys:}
+\li{Recovery codes generated at enrollment time (printed, stored in password manager)}
+\li{Supervised re-enrollment by an administrator after identity verification}
+\li{Temporary time-limited password login with mandatory key re-enrollment}
+\li{Never allow recovery via email or SMS alone, as these defeat the phishing resistance}
+\li{\strong{Password deprecation timeline}: After passkey adoption exceeds the target threshold, enforce passkey-only authentication for high-privilege accounts first, then expand to all accounts. Maintain password as a fallback during the transition window.}
+\li{\strong{Monitoring and metrics}: Track registration success rates, authentication failure rates (wrong key, timeout, cancelled), mean time to authenticate, and the ratio of passkey to password logins.}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **FIDO2** | An umbrella term for the combination of the W3C WebAuthn API and the FIDO Alliance CTAP2 protocol, enabling passwordless and phishing-resistant authentication using public key cryptography |
+| **WebAuthn** | The W3C Web Authentication API that allows web applications to create and use public key credentials via `navigator.credentials.create()` (registration) and `navigator.credentials.get()` (authentication) |
+| **CTAP2** | Client to Authenticator Protocol version 2; the protocol used by the browser (client) to communicate with external authenticators over USB, NFC, or BLE |
+| **Relying Party (RP)** | The web application or service that requests authentication; identified by its RP ID (a domain) and RP name (display string) |
+| **Discoverable Credential (Passkey)** | A credential stored on the authenticator that can be enumerated without the RP providing a credential ID, enabling username-less authentication flows |
+| **Attestation** | Cryptographic proof from the authenticator about its identity and properties; used by the RP to verify the authenticator model and manufacturer |
+| **AAGUID** | Authenticator Attestation Globally Unique Identifier; a 128-bit value identifying the authenticator model (e.g., all YubiKey 5 NFC devices share the same AAGUID) |
+| **Sign Count** | A monotonically increasing counter maintained by the authenticator and included in each assertion; used by the RP to detect cloned authenticators |
+| **User Verification (UV)** | Local authentication on the authenticator itself (PIN, fingerprint, face recognition) that proves the person holding the authenticator is the legitimate owner |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{python-fido2}: Yubico's official Python library (v2.0+) providing \code{\startverb Fido2Server\stopverb} for relying party implementation and \code{\startverb CtapHidDevice\stopverb}/\code{\startverb Fido2Client\stopverb} for direct authenticator communication over USB}
+\li{\strong{YubiKey 5 Series}: Yubico hardware security keys supporting FIDO2/CTAP2, U2F, PIV, OpenPGP, and OTP; available in USB-A, USB-C, NFC, and Nano form factors}
+\li{\strong{py_webauthn}: Duo Labs' Python WebAuthn library providing \code{\startverb generate_registration_options()\stopverb}, \code{\startverb verify_registration_response()\stopverb}, \code{\startverb generate_authentication_options()\stopverb}, and \code{\startverb verify_authentication_response()\stopverb} functions}
+\li{\strong{Yubico Authenticator}: Desktop and mobile application for managing YubiKey FIDO2 credentials, setting PINs, and viewing registered accounts}
+\li{\strong{WebAuthn.io / demo.yubico.com}: Online testing tools for verifying WebAuthn registration and authentication flows against real authenticators}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Deploying FIDO2 MFA for a Development Team}
+\p{\strong{Context}: A software company wants to replace TOTP-based MFA with hardware security keys for its 50-person development team. Developers have root access to production infrastructure and are high-value targets for phishing attacks. The company has standardized on YubiKey 5 NFC.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Provision YubiKey 5 NFC keys (2 per developer: primary + backup) and distribute in tamper-evident packaging with initial PIN setup instructions}
+\li{Deploy the WebAuthn relying party server integrated with the company's SSO (OAuth 2.0 / OpenID Connect) provider, configured with \code{\startverb authenticator_attachment: cross-platform\stopverb} and \code{\startverb user_verification: required\stopverb}}
+\li{Run enrollment sessions where each developer registers both keys to their account, with attestation verification confirming genuine YubiKey 5 NFC AAGUIDs}
+\li{Configure the SSO provider to require FIDO2 as the second factor for all developer accounts, with a 30-day grace period where TOTP remains available}
+\li{Implement a self-service portal for key management: view registered keys, register replacement keys, and report lost/stolen keys (which triggers immediate credential revocation and re-enrollment)}
+\li{After the grace period, disable TOTP for developer accounts. Monitor authentication logs for any fallback attempts and provide 1:1 support for remaining holdouts}
+\li{Achieve 100\% FIDO2 adoption for the development team, reducing phishing risk to near-zero for production infrastructure access}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Not requiring backup key enrollment, leading to account lockouts when a single key is lost}
+\li{Setting \code{\startverb user_verification: discouraged\stopverb} which allows anyone who physically possesses the key to authenticate without a PIN}
+\li{Forgetting to validate the sign counter, missing cloned key attacks}
+\li{Not supporting NFC for developers who primarily work from tablets or phones}
+\li{Allowing TOTP as a permanent fallback, which undermines the phishing resistance of the FIDO2 deployment}
+}
+}
+
+\subtree{
+\title{Scenario: Implementing Passwordless Login for a Customer-Facing Application}
+\p{\strong{Context}: An e-commerce platform wants to offer passkey-based passwordless login to its 2 million users as an alternative to passwords, reducing account takeover from credential stuffing and phishing.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Implement WebAuthn with \code{\startverb resident_key: required\stopverb} to create discoverable credentials that enable username-less login}
+\li{Support both platform authenticators (Touch ID, Windows Hello, Android biometrics) and roaming authenticators (security keys) by omitting \code{\startverb authenticator_attachment\stopverb}}
+\li{Add a "Sign in with a passkey" button to the login page that triggers \code{\startverb navigator.credentials.get()\stopverb} with an empty \code{\startverb allowCredentials\stopverb} list, prompting the authenticator to present available passkeys}
+\li{After successful passkey creation, prompt users to create a passkey on a second device for redundancy}
+\li{Maintain password login as a fallback during the rollout period, with a persistent prompt encouraging passkey setup after each password login}
+\li{Track metrics: passkey registration rate (target 30\% in first quarter), passkey vs. password login ratio, authentication failure rates, and account takeover incidents}
+\li{After 6 months, offer incentives (extended session duration, reduced CAPTCHA) for users who switch to passkey-only authentication}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Not handling the case where a user's platform authenticator (e.g., laptop Touch ID) is unavailable and they need cross-device authentication via QR code}
+\li{Assuming all users have biometric-capable devices; some will need to fall back to PIN-based verification}
+\li{Not implementing proper account recovery for users who lose access to all registered passkeys}
+\li{Ignoring browser compatibility gaps, particularly in older Safari versions on iOS}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## FIDO2 Deployment Report
+
+**Application**: auth.example.com
+**RP ID**: example.com
+**Date**: 2026-03-19
+
+### Enrollment Summary
+- **Total Users**: 50
+- **Users with Primary Key**: 50 (100%)
+- **Users with Backup Key**: 47 (94%)
+- **Authenticator Models**: YubiKey 5 NFC (48), YubiKey 5C NFC (2)
+
+### Authentication Metrics (Last 30 Days)
+- **Total Authentications**: 12,847
+- **FIDO2 Authentications**: 12,203 (95.0%)
+- **TOTP Fallback**: 644 (5.0%) -- grace period active
+- **Mean Authentication Time**: 2.3 seconds
+- **Authentication Failures**: 127 (0.99%)
+  - User cancelled: 89
+  - Timeout: 23
+  - Invalid signature: 12
+  - Sign count regression (possible clone): 3
+
+### Security Events
+- **Lost Key Reports**: 2
+  - User A: primary key lost 2026-03-12, revoked, backup promoted, new backup enrolled
+  - User B: backup key damaged 2026-03-15, revoked, replacement enrolled
+
+### Credential Details
+| User | Key Label | AAGUID | Registered | Last Used | Sign Count |
+|------|-----------|--------|------------|-----------|------------|
+| alice | YubiKey Primary | 2fc0579f... | 2026-02-15 | 2026-03-19 | 847 |
+| alice | YubiKey Backup | 2fc0579f... | 2026-02-15 | 2026-03-01 | 12 |
+| bob | YubiKey Primary | 2fc0579f... | 2026-02-16 | 2026-03-19 | 631 |
+\stopverb}
+}
+}

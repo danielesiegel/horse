@@ -1,0 +1,303 @@
+\title{Catlab Asi Interleave}
+
+\taxon{skill}
+
+\tag{catlab}
+
+\tag{algebraicjulia}
+
+\tag{acsets}
+
+\tag{wiring-diagrams}
+
+\tag{decorated-cospans}
+
+\tag{dpo-rewriting}
+
+\tag{julia}
+
+\tag{gf3}
+
+\tag{interleave}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Bridge layer connecting AlgebraicJulia/Catlab.jl to plurigrid/asi. Wires ACSets (attributed C-sets), wiring diagrams, decorated cospans, and the AlgebraicJulia ecosystem (AlgebraicDynamics, AlgebraicPetri, AlgebraicRewriting, Decapodes) into the ASI skill graph. ACSets generalize relational databases with categorical semantics; every diagram, network, and model in the ecosystem is an ACSet.}
+
+\subtree{
+\title{Catlab.jl x ASI Interleave}
+\p{Bridge connecting AlgebraicJulia/Catlab.jl (categorical algebra in Julia) to the ASI skill graph (GF(3)-colored capability system).}
+
+\subtree{
+\title{Catlab Core Concepts (from DeepWiki deep-mine)}
+\subtree{
+\title{ACSets (Attributed C-Sets)}
+\p{The universal data structure. A schema defines objects, homomorphisms (morphisms between objects), and attribute types. An ACSet instance is a functor from that schema category to Set.}
+
+\pre{\startverb
+# SchGraph: objects V, E; morphisms src: E->V, tgt: E->V
+@present SchGraph(FreeSchema) begin
+  V::Ob; E::Ob
+  src::Hom(E,V); tgt::Hom(E,V)
+end
+
+# Attributed: add attribute types
+@present SchWeightedGraph <: SchGraph begin
+  T::AttrType
+  weight::Attr(E,T)
+end
+
+const WeightedGraph = ACSetType(SchWeightedGraph, index=[:src,:tgt])
+\stopverb}
+
+\p{Every diagram, network, and model in the ecosystem is an ACSet.}
+}
+
+\subtree{
+\title{Wiring Diagrams as ACSets}
+\p{SchAttributedWiringDiagram with Box/InPort/OutPort/Wire. Boxes = operations/processes, wires = data flow. Used to compose dynamical systems, Petri nets, and more.}
+}
+
+\subtree{
+\title{Decorated Cospans}
+\p{Functor L: A -> X gives "open" ACSets. OpenGraph with hypergraph category structure. Operations: \code{\startverb compose\stopverb}, \code{\startverb otimes\stopverb} (monoidal product), \code{\startverb mcopy\stopverb}, \code{\startverb mmerge\stopverb}, \code{\startverb delete\stopverb}, \code{\startverb create\stopverb}. Enable compositional modeling of open systems.}
+}
+
+\subtree{
+\title{Downstream Ecosystem}
+\pre{\startverb
+AlgebraicJulia/Catlab.jl (foundation)
+  |- AlgebraicDynamics.jl     <- dynamical systems via decorated cospans
+  |- AlgebraicPetri.jl        <- Petri nets with reaction network semantics
+  |- AlgebraicRewriting.jl    <- DPO/SPO graph rewriting on ACSets
+  |- CategoricalTensorNetworks.jl <- tensor contractions as string diagrams
+  |- CombinatorialSpaces.jl   <- simplicial sets, discrete exterior calculus
+  |- DataMigrations.jl        <- functorial data migration between schemas
+  |- DiagrammaticEquations.jl <- physics equations as decorated cospans
+  |- Decapodes.jl             <- multiphysics simulation via DEC
+\stopverb}
+
+\p{\strong{No probabilistic/inference capabilities} -- must come from downstream packages or bridges. This is where \code{\startverb monad-bayes-asi-interleave\stopverb} fills the gap.}
+}
+}
+
+\subtree{
+\title{GF(3) Tripartite Tag}
+\p{\code{\startverb algebraic-dynamics(-1) otimes catlab-asi-interleave(0) otimes algebraic-rewriting(+1) = 0\stopverb}}
+
+\p{Dynamics (-1) x Foundation (0) x Rewriting (+1) = balanced categorical stack.}
+}
+
+\subtree{
+\title{ASI Integration Points}
+\subtree{
+\title{1. acsets / acsets-algebraic-databases / acsets-relational-thinking <-> ACSets Core}
+\p{Model the ASI skill graph as an ACSet for relational querying:}
+
+\pre{\startverb
+@present SchASISkills(FreeSchema) begin
+  Skill::Ob; Edge::Ob; Hub::Ob
+  src::Hom(Edge,Skill); tgt::Hom(Edge,Skill)
+  hub_ref::Hom(Hub,Skill)
+  SkillName::AttrType; TritVal::AttrType; Category::AttrType
+  name::Attr(Skill,SkillName)
+  trit::Attr(Skill,TritVal)        # -1, 0, +1
+  category::Attr(Skill,Category)   # development | meta | ai-agents | ...
+end
+
+const ASISkills = ACSetType(SchASISkills, index=[:src,:tgt,:hub_ref])
+skills = ASISkills()
+
+# Conjunctive query: all GF(3)-balanced triads
+gf3_triads(s) = filter(parts(s,:Edge)) do e
+  t_src = s[s[e,:src], :trit]
+  t_tgt = s[s[e,:tgt], :trit]
+  (t_src + t_tgt) % 3 == 0
+end
+\stopverb}
+}
+
+\subtree{
+\title{2. algebraic-rewriting / topos-adhesive-rewriting <-> DPO/SPO Rewriting}
+\p{Double-pushout rewriting for safe skill graph mutation (MONOTONIC_SKILL_INVARIANT):}
+
+\pre{\startverb
+using AlgebraicRewriting
+
+# DPO rule: add bridge skill to hub (never delete)
+# L -> K <- R where |R| >= |L| always
+add_bridge_rule = Rule(
+  ACSetTransformation(L, K),   # L: match hub pattern
+  ACSetTransformation(R, K),   # R: hub + new bridge skill
+)
+new_skills = rewrite(add_bridge_rule, current_skills)
+@assert nparts(new_skills, :Skill) >= nparts(current_skills, :Skill)
+\stopverb}
+
+\p{SPO rewriting available for partial matches (non-adhesive contexts).}
+}
+
+\subtree{
+\title{3. discopy / discopy-operads <-> Wiring Diagram Composition}
+\p{Catlab's wiring diagrams and DisCoPy's string diagrams are the same mathematical object:}
+
+\pre{\startverb
+# ASI skill composition as wiring diagram
+wd = @program SchSkillOp (validator::Val, coordinator::Coord, generator::Gen) begin
+  validated = validator(input)
+  coordinated = coordinator(validated)
+  result = generator(coordinated)
+  return result
+end
+# This WiringDiagram ACSet can be exported to DisCoPy format
+\stopverb}
+
+\p{Bridge: Julia WiringDiagram ACSet <-> Python DisCoPy Diagram via JSON serialization.}
+}
+
+\subtree{
+\title{4. topos-catcolab / catcolab-* <-> CatColab Collaborative Modeling}
+\p{CatColab is the web frontend to Catlab. Skills: \code{\startverb catcolab-ologs\stopverb}, \code{\startverb catcolab-petri-nets\stopverb}, \code{\startverb catcolab-stock-flow\stopverb}, \code{\startverb catcolab-causal-loop\stopverb}, \code{\startverb catcolab-decapodes\stopverb}. All CatColab models are ACSets underneath.}
+}
+
+\subtree{
+\title{5. interaction-nets <-> Decorated Cospans / Hypergraph Categories}
+\p{Decorated cospans give OpenGraph a hypergraph category structure. Operations: \code{\startverb compose\stopverb} (sequential), \code{\startverb otimes\stopverb} (parallel), \code{\startverb mcopy\stopverb} (fan-out), \code{\startverb mmerge\stopverb} (fan-in), \code{\startverb delete\stopverb}, \code{\startverb create\stopverb}. Interaction nets are the computational model; decorated cospans are the categorical semantics.}
+}
+
+\subtree{
+\title{6. crn-topology <-> AlgebraicPetri Reaction Networks}
+\pre{\startverb
+using AlgebraicPetri
+
+# Chemical reaction network as Petri net ACSet
+sir_model = LabelledPetriNet([:S,:I,:R],
+  :infection => ((:S,:I) => (:I,:I)),
+  :recovery  => (:I => :R)
+)
+# Compose via decorated cospans
+open_sir = Open(sir_model, [:S], [:R])
+\stopverb}
+
+\p{Connects to \code{\startverb crn-topology\stopverb} for topological analysis of reaction networks.}
+}
+
+\subtree{
+\title{7. dynamical-system-functor / coupled-system <-> AlgebraicDynamics}
+\pre{\startverb
+using AlgebraicDynamics, Catlab
+
+# Open continuous dynamical system
+rb_system = ContinuousResourceSharer{Float64}(
+  [:temperature, :velocity, :pressure],
+  (u, p, t) -> rb_dynamics(u, p, t)
+)
+# Compose via wiring diagram
+full_system = oapply(boundary_diagram, [rb_system, thermal_bc])
+solution = solve(ODEProblem(full_system, u0, tspan), Tsit5())
+\stopverb}
+}
+
+\subtree{
+\title{8. julia-scientific <-> Julia Runtime for Catlab}
+\p{Catlab requires Julia >= 1.10. Entry points: \code{\startverb julia-scientific\stopverb}, \code{\startverb julia-gay\stopverb}. Enzyme.jl autodiff works with AlgebraicDynamics ODE solvers.}
+}
+
+\subtree{
+\title{9. topos-unified / topos-generate <-> Topos-Theoretic Foundations}
+\p{Catlab implements presentable categories, limits/colimits, Kan extensions. The topos-theoretic skills (\code{\startverb topos-unified\stopverb}, \code{\startverb topos-generate\stopverb}, \code{\startverb effective-topos\stopverb}) provide the foundation that Catlab operationalizes in code.}
+}
+
+\subtree{
+\title{10. monad-bayes-asi-interleave <-> Fills Probabilistic Gap}
+\p{Catlab has \strong{no built-in probabilistic inference}. \code{\startverb monad-bayes-asi-interleave\stopverb} provides SMC/MCMC/PMMH/RMSMC stacks. The bridge: Catlab composes the model structure, monad-bayes performs inference on it.}
+}
+
+\subtree{
+\title{11. vertex-ai-protein-interleave <-> Protein Reaction Networks}
+\p{AlgebraicPetri reaction networks model biochemical pathways. Protein folding/docking pipelines from \code{\startverb vertex-ai-protein-interleave\stopverb} can use Catlab ACSets to represent reaction networks, pathway composition, and multi-target drug interaction graphs.}
+}
+}
+
+\subtree{
+\title{ASI Skill Graph as an ACSet (Self-Modeling)}
+\p{The ASI skill graph itself is naturally an ACSet:}
+
+\pre{\startverb
+# Skills = objects, edges = morphisms, GF(3) trits = attributes
+@present SchASIGraph(FreeSchema) begin
+  Skill::Ob
+  Edge::Ob
+  src::Hom(Edge,Skill)
+  tgt::Hom(Edge,Skill)
+  # Attribute types
+  Name::AttrType; Trit::AttrType; Role::AttrType; Version::AttrType
+  # Attributes
+  name::Attr(Skill,Name)
+  trit::Attr(Skill,Trit)          # GF(3): -1, 0, +1
+  role::Attr(Skill,Role)          # BRIDGE | HUB | LEAF | ERGODIC
+  version::Attr(Skill,Version)
+  edge_type::Attr(Edge,Name)      # :citation | :behavioral | :trit_equiv
+end
+
+# Invariants as ACSet constraints:
+# 1. MONOTONIC: nparts(g, :Skill) >= 1360 (never decreases)
+# 2. GF3_CONSERVATION: for any triad (s1,s2,s3), sum of trits = 0 mod 3
+# 3. HUB_REACHABILITY: 17 hub skills; every leaf reachable from >= 1 hub
+\stopverb}
+
+\p{This enables: conjunctive queries over the skill graph, functorial data migration between schema versions, DPO rewriting for safe skill addition, and wiring diagram visualization of skill pipelines.}
+}
+
+\subtree{
+\title{Connection to ASI Topos Stories}
+\pre{\startverb
+| Story (task) | Catlab Connection |
+|-------------|-------------------|
+| Task 21: Categorical worlding kit | Catlab.jl engine + CatColab UI + UnwiringDiagrams.jl |
+| Task 22: Compositional game theory | Wiring diagrams encode open game composition |
+| Task 23: Nonlinear dynamics observatory | AlgebraicDynamics for attractor ODE composition |
+| Task 24: ASI skill federation | ACSet as skill registry; DPO rewriting for safe addition |
+| Task 20: Self-walking proof pipeline | AlgebraicRewriting as proof rewrite system |
+\stopverb}
+}
+
+\subtree{
+\title{Gap Registry}
+\pre{\startverb
+| Capability | Status | Filled By |
+|-----------|--------|-----------|
+| Probabilistic inference on ACSets | MISSING in Catlab | `monad-bayes-asi-interleave` |
+| GPU-accelerated ACSet operations | MISSING | Future: CUDA.jl + ACSet kernels |
+| ACSet <-> DuckDB serialization | PARTIAL | `duckdb-ies` (Parquet round-trip) |
+| ACSet <-> JSON-RPC for MCP | MISSING | Need: syrup/JSON bridge for ACSets |
+| Real-time collaborative ACSets | PARTIAL | CatColab (web only, no MCP) |
+| ACSet diff/merge (CRDT semantics) | MISSING | `crdt` skill + DPO rewriting |
+| Tensor network contraction at scale | MISSING | CategoricalTensorNetworks exists but no GPU |
+| Discrete exterior calculus on DGX | MISSING | Decapodes + CUDA offload needed |
+\stopverb}
+}
+
+\subtree{
+\title{Related ASI Skills}
+\ul{
+\li{\code{\startverb acsets\stopverb} / \code{\startverb acsets-relational-thinking\stopverb} / \code{\startverb acsets-algebraic-databases\stopverb} -- core ACSet skills}
+\li{\code{\startverb algebraic-rewriting\stopverb} / \code{\startverb topos-adhesive-rewriting\stopverb} -- DPO/SPO rewriting on ACSets}
+\li{\code{\startverb discopy\stopverb} / \code{\startverb discopy-operads\stopverb} -- Python string diagram companion to Catlab}
+\li{\code{\startverb catcolab-ologs\stopverb} / \code{\startverb catcolab-petri-nets\stopverb} / \code{\startverb catcolab-stock-flow\stopverb} / \code{\startverb catcolab-decapodes\stopverb} -- CatColab frontends}
+\li{\code{\startverb interaction-nets\stopverb} -- computational model for decorated cospan composition}
+\li{\code{\startverb crn-topology\stopverb} -- topological analysis of AlgebraicPetri reaction networks}
+\li{\code{\startverb dynamical-system-functor\stopverb} / \code{\startverb coupled-system\stopverb} -- AlgebraicDynamics integration}
+\li{\code{\startverb julia-scientific\stopverb} / \code{\startverb julia-gay\stopverb} -- Julia ecosystem entry points}
+\li{\code{\startverb topos-unified\stopverb} / \code{\startverb topos-generate\stopverb} / \code{\startverb effective-topos\stopverb} -- topos-theoretic foundations}
+\li{\code{\startverb monad-bayes-asi-interleave\stopverb} -- fills probabilistic inference gap}
+\li{\code{\startverb vertex-ai-protein-interleave\stopverb} -- protein reaction networks via AlgebraicPetri}
+\li{\code{\startverb structured-decomp\stopverb} -- structured decompositions = open graphs (Catlab cospans)}
+\li{\code{\startverb enzyme-autodiff\stopverb} -- Enzyme.jl autodiff for AlgebraicDynamics simulation}
+\li{\code{\startverb wolframite-compass\stopverb} -- Wolfram -> Catlab via Julia bridge}
+\li{\code{\startverb string-diagram-rewriting-protocol\stopverb} -- rewriting protocol for wiring diagrams}
+}
+}
+}

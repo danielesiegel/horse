@@ -1,0 +1,108 @@
+\title{Implementing Soar Playbook For Phishing}
+
+\taxon{skill}
+
+\tag{soar}
+
+\tag{splunk-phantom}
+
+\tag{phishing}
+
+\tag{incident-response}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Automate phishing incident response using Splunk SOAR REST API to create containers, add artifacts, and trigger playbooks}
+
+\subtree{
+\title{Implementing SOAR Playbook for Phishing}
+\subtree{
+\title{Overview}
+\p{This skill implements a phishing incident response workflow using the Splunk SOAR (formerly Phantom) REST API. When a suspected phishing email is reported, the agent parses email headers and body, creates a SOAR container representing the incident, attaches artifacts containing indicators of compromise (sender address, URLs, IP addresses, file hashes), triggers an automated investigation playbook, and polls for action results.}
+
+\p{Splunk SOAR orchestrates and automates security operations through playbooks that chain together investigative and response actions. The REST API at \code{\startverb /rest/container\stopverb}, \code{\startverb /rest/artifact\stopverb}, and \code{\startverb /rest/playbook_run\stopverb} enables programmatic incident creation and automation triggering from external tools, email gateways, and SIEM alerts.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing soar playbook for phishing capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9 or later with \code{\startverb requests\stopverb} and \code{\startverb email\stopverb} modules}
+\li{Splunk SOAR instance (Cloud or On-Premises) with REST API access}
+\li{SOAR API token with permissions to create containers and trigger playbooks}
+\li{Network connectivity to SOAR instance on port 443}
+\li{A configured phishing investigation playbook in SOAR}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{\strong{Parse the phishing email}: Read the email file (.eml format) and extract headers including From, To, Subject, Reply-To, Return-Path, Received, Message-ID, X-Mailer, and authentication results (SPF, DKIM, DMARC). Extract URLs and IP addresses from the email body.}
+}
+
+\ol{
+\li{\strong{Authenticate to SOAR REST API}: Use the API token in the \code{\startverb ph-auth-token\stopverb} header to authenticate all REST API requests to the SOAR instance.}
+}
+
+\ol{
+\li{\strong{Create a container}: POST to \code{\startverb /rest/container\stopverb} with the incident label, name, description, severity, and status. The container represents the phishing incident and receives a container ID in the response.}
+}
+
+\ol{
+\li{\strong{Add email header artifacts}: POST to \code{\startverb /rest/artifact\stopverb} with \code{\startverb container_id\stopverb} and CEF (Common Event Format) fields containing sender address (\code{\startverb fromAddress\stopverb}), recipient (\code{\startverb toAddress\stopverb}), subject, originating IP (\code{\startverb sourceAddress\stopverb}), and Message-ID. Set \code{\startverb run_automation\stopverb} to False for all but the last artifact.}
+}
+
+\ol{
+\li{\strong{Add URL artifacts}: For each URL extracted from the email body, create an artifact with CEF field \code{\startverb requestURL\stopverb} and type \code{\startverb url\stopverb}. These artifacts feed into URL reputation checks in the playbook.}
+}
+
+\ol{
+\li{\strong{Trigger the playbook}: POST to \code{\startverb /rest/playbook_run\stopverb} with the playbook ID or name and the container ID. This initiates the automated investigation workflow.}
+}
+
+\ol{
+\li{\strong{Poll action results}: GET \code{\startverb /rest/action_run\stopverb} filtered by container ID to monitor playbook progress. Poll until all actions reach a terminal state (success, failed, or cancelled).}
+}
+
+\ol{
+\li{\strong{Compile response report}: Aggregate playbook action results into a summary report with verdicts from URL reputation, domain reputation, IP geolocation, and email header analysis.}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\pre{\startverb
+{
+  "incident": {
+    "container_id": 1542,
+    "status": "new",
+    "severity": "high",
+    "artifacts_created": 5
+  },
+  "playbook": {
+    "name": "phishing_investigate",
+    "run_id": 892,
+    "status": "success",
+    "actions_completed": 8
+  },
+  "verdict": "malicious",
+  "indicators": {
+    "sender_domain_reputation": "malicious",
+    "urls_flagged": 2,
+    "spf_result": "fail",
+    "dkim_result": "fail"
+  }
+}
+\stopverb}
+}
+}

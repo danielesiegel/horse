@@ -1,0 +1,343 @@
+\title{Hof}
+
+\taxon{skill}
+
+\meta{trit}{-1}
+
+\meta{description}{'Hofstadter-io hof: CUE-powered code generation with flow engine and}
+
+\subtree{
+\title{Hof (-1)}
+\blockquote{CUE-based code generation. Now building VS Code coding agent.}
+
+\p{\strong{Trit}: -1 (MINUS - reductive/extractive code generation) \strong{Language}: Go (core), CUE (schemas), TypeScript (VS Code) \strong{Branch}: \code{\startverb _next\stopverb} (active development)}
+
+\subtree{
+\title{DeepWiki vs Repo Divergence Analysis}
+\pre{\startverb
+| DeepWiki Claims | Actual Repo State | Divergence |
+|-----------------|-------------------|------------|
+| "Code Generation System" | ✓ lib/gen, schemas/ | LOW |
+| "Module System" | ✓ lib/mod | LOW |
+| "Task Engine / Flow" | ✓ flow/, flow.cue | LOW |
+| "TUI Eval Module" | Deprecated, now VS Code | HIGH |
+| "Formatters" | ✓ formatters/ | LOW |
+\stopverb}
+
+\p{\strong{Key Finding}: Major pivot to VS Code agent (lib/agent, extensions/vscode/).}
+}
+
+\subtree{
+\title{Current Focus (from AGENTS.md)}
+\pre{\startverb
+We are currently developing a vscode extension for a custom coding agent setup, 
+a copilot alternative and then some.
+
+- lib/agent        - backend server (Go + ADK)
+- extensions/vscode/extension  - extension core
+- extensions/vscode/webviews/chat  - chat interface
+\stopverb}
+}
+
+\subtree{
+\title{Tech Stack}
+\pre{\startverb
+| Layer | Technology |
+|-------|------------|
+| Core | Go, CUE |
+| Agent | ADK-Go (Agent Development Kit) |
+| VS Code | TypeScript, pnpm, vite, react |
+| UI | tanstack, shadcn, tailwind |
+| CI | Dagger, Docker |
+\stopverb}
+}
+
+\subtree{
+\title{CUE Code Generation}
+\pre{\startverb
+// schemas/gen.cue - Generator schema
+#Generator: {
+    // Input data
+    In: {...}
+    
+    // Output files
+    Out: [...#File]
+    
+    // Templates
+    Templates: [...#Template]
+    
+    // Partials (reusable snippets)
+    Partials: [...#Template]
+}
+
+#File: {
+    Filepath: string
+    Contents: string | bytes
+}
+
+#Template: {
+    Name: string
+    Source: string
+}
+\stopverb}
+}
+
+\subtree{
+\title{Flow Engine}
+\pre{\startverb
+// flow.cue - Task orchestration
+package flow
+
+import "hof.io/flow"
+
+// Define tasks
+@flow(build)
+build: {
+    gen: flow.#Gen & {
+        Generator: "..."
+    }
+    
+    fmt: flow.#Exec & {
+        cmd: "gofmt -w ."
+        dep: [gen]
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Veggie: The _next Branch Coding Agent}
+\p{\strong{Name}: Veggie (veg) \strong{Status}: Active development (commits daily Dec 2025) \strong{Architecture}: Dagger-powered virtualized workspaces + ADK-Go + MCP}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+VS Code Extension ──WebSocket──► Agent Runtime ──► Dagger Environs
+     │                               │
+     │                               ├──► Tools (fs, exec, cache)
+     │                               ├──► MCP (GitHub, Tavily)
+     └── React Webviews              └──► LLM Models (Gemini, etc)
+\stopverb}
+}
+
+\subtree{
+\title{Tools Available}
+\pre{\startverb
+| Tool | Description |
+|------|-------------|
+| `fs_read/write/edit` | File ops via Dagger |
+| `fs_list/glob/grep` | File discovery |
+| `exec` | Shell execution |
+| `cache_*` | Persistent state |
+\stopverb}
+}
+
+\subtree{
+\title{MCP Integrations}
+\pre{\startverb
+| Toolset | Endpoint |
+|---------|----------|
+| GitHub | `api.githubcopilot.com` |
+| Tavily | `mcp.tavily.com` |
+| Local | In-memory demo |
+\stopverb}
+}
+
+\subtree{
+\title{Agent Config (CUE)}
+\pre{\startverb
+type Agent struct {
+    Name, Model, Instruction string
+    Tools, Toolsets, Mcp     []string
+    SubAgents                []string
+    Environ                  string // Dagger container
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Project Structure}
+\pre{\startverb
+hofstadter-io/hof/
+├── AGENTS.md           # AI agent instructions
+├── lib/
+│   ├── agent/          # Veggie backend (ADK-Go)
+│   │   ├── agents/     # CUE config loading
+│   │   ├── runtime/    # WebSocket server, session mgmt
+│   │   ├── tools/      # filesys, exec, cache, mcp
+│   │   └── models/     # LLM clients (gemini.go)
+│   ├── gen/            # Code generator (legacy)
+│   └── chat/           # LLM chat (openai, google, cosign)
+├── extensions/vscode/
+│   ├── extension/      # VS Code extension (TypeScript)
+│   └── webviews/       # React chat UI (shadcn, tailwind)
+├── flow/               # CUE workflow engine
+└── schemas/            # CUE schemas
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Install hof
+go install github.com/hofstadter-io/hof/cmd/hof@latest
+
+# Initialize project
+hof mod init my-project
+
+# Generate code from CUE
+hof gen ./design/... -T ./templates
+
+# Run flow
+hof flow build
+
+# Development (VS Code extension)
+cd extensions/vscode
+pnpm install
+pnpm dev
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad with Config Languages}
+\pre{\startverb
+CUE (+1)    + Nickel (0)  + Hof (-1)    = 0 ✓
+ │              │             │
+ │              │             └── Consumes schemas, emits code
+ │              └── Mediates types/contracts
+ └── Generates schemas via unification
+\stopverb}
+}
+
+\subtree{
+\title{Sexp Neighborhood}
+\pre{\startverb
+| Skill | Trit | Bridge to Hof |
+|-------|------|---------------|
+| **cue-lang** | +1 | Hof consumes CUE schemas |
+| **nickel** | 0 | Alternative config, gradual typing |
+| **lispsyntax-acset** | 0 | Config → sexp → ACSet |
+| **borkdude** | +1 | Babashka for scripting |
+| **geb** | +1 | Categorical config semantics |
+\stopverb}
+}
+
+\subtree{
+\title{VS Code Agent Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│                   HOF VS CODE AGENT                      │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│   VS Code Extension                                      │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │ extensions/vscode/extension/                     │   │
+│   │ - Commands, activation                           │   │
+│   │ - Webview hosting                                │   │
+│   └─────────────────────────────────────────────────┘   │
+│                          │                               │
+│                          ▼                               │
+│   React Webviews                                         │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │ extensions/vscode/webviews/chat/                 │   │
+│   │ - tanstack, shadcn, tailwind                     │   │
+│   │ - Chat interface                                 │   │
+│   └─────────────────────────────────────────────────┘   │
+│                          │                               │
+│                          ▼                               │
+│   Agent Backend (ADK-Go)                                 │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │ lib/agent/                                       │   │
+│   │ - Tool execution                                 │   │
+│   │ - LLM integration                                │   │
+│   │ - Flow orchestration                             │   │
+│   └─────────────────────────────────────────────────┘   │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Key Dependencies}
+\pre{\startverb
+| Dependency | Purpose |
+|------------|---------|
+| `google.golang.org/adk` | Agent Development Kit |
+| `dagger.io/dagger` | Container virtualization |
+| `gorm.io/gorm` | Session persistence |
+| `github.com/gorilla/websocket` | Client communication |
+| `cuelang.org/go/cue` | Agent configuration |
+\stopverb}
+}
+
+\subtree{
+\title{Commit Pattern}
+\pre{\startverb
+(veg) implement clone & splice handlers  ← AI-generated
+(human) swap button order in session-menu ← Manual
+\stopverb}
+
+\p{\strong{Trit}: -1 (MINUS - code generation is reductive extraction) \strong{Key Property}: CUE → code generation, now VS Code agent pivot \strong{Active Branch}: \code{\startverb _next\stopverb} \strong{Full Architecture}: See ~/ies/VEGGIE_ARCHITECTURE_COMPLETE.md}
+}
+
+\subtree{
+\title{End-of-Skill Interface}
+
+}
+
+\subtree{
+\title{Integration with Sexp Skills}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────┐
+│                    CONFIG LANG TRIAD                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   CUE (+1)              Nickel (0)              Hof (-1)        │
+│   ┌──────────────┐     ┌──────────────┐       ┌──────────────┐  │
+│   │ Lattice-based│     │ Gradual      │       │ Code gen     │  │
+│   │ unification  │     │ typing +     │       │ from CUE     │  │
+│   │              │     │ contracts    │       │ schemas      │  │
+│   └──────────────┘     └──────────────┘       └──────────────┘  │
+│          │                    │                      │           │
+│          └────────────────────┼──────────────────────┘           │
+│                               │                                  │
+│                               ▼                                  │
+│                    ┌──────────────────────┐                     │
+│                    │ lispsyntax-acset (0) │                     │
+│                    │ All configs → sexp   │                     │
+│                    └──────────────────────┘                     │
+│                                                                  │
+│   Σ(trits) = +1 + 0 + (-1) = 0 ✓  GF(3) CONSERVED              │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\pre{\startverb
+| Skill | Trit | Relationship |
+|-------|------|--------------|
+| cue-lang | +1 | Schema source |
+| nickel | 0 | Alternative config |
+| gay-mcp | +1 | Colors generated code |
+| codex-self-rewriting | 0 | Self-modifying patterns |
+\stopverb}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

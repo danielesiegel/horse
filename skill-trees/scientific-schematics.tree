@@ -1,0 +1,789 @@
+\title{Scientific Schematics}
+
+\taxon{skill}
+
+\meta{description}{"Create publication-quality scientific diagrams using Nano Banana Pro AI with smart iterative refinement. Uses Gemini 3 Pro for quality review. Only regenerates if quality is below threshold for your document type. Specialized in neural network architectures, system diagrams, flowcharts, biological pathways, and complex scientific visualizations."}
+
+\subtree{
+\title{Scientific Schematics and Diagrams}
+\subtree{
+\title{Overview}
+\p{Scientific schematics and diagrams transform complex concepts into clear visual representations for publication. \strong{This skill uses Nano Banana Pro AI for diagram generation with Gemini 3 Pro quality review.}}
+
+\p{\strong{How it works:}}
+
+\ul{
+\li{Describe your diagram in natural language}
+\li{Nano Banana Pro generates publication-quality images automatically}
+\li{\strong{Gemini 3 Pro reviews quality} against document-type thresholds}
+\li{\strong{Smart iteration}: Only regenerates if quality is below threshold}
+\li{Publication-ready output in minutes}
+\li{No coding, templates, or manual drawing required}
+}
+
+\p{\strong{Quality Thresholds by Document Type:}}
+
+\pre{\startverb
+| Document Type | Threshold | Description |
+|---------------|-----------|-------------|
+| journal | 8.5/10 | Nature, Science, peer-reviewed journals |
+| conference | 8.0/10 | Conference papers |
+| thesis | 8.0/10 | Dissertations, theses |
+| grant | 8.0/10 | Grant proposals |
+| preprint | 7.5/10 | arXiv, bioRxiv, etc. |
+| report | 7.5/10 | Technical reports |
+| poster | 7.0/10 | Academic posters |
+| presentation | 6.5/10 | Slides, talks |
+| default | 7.5/10 | General purpose |
+\stopverb}
+
+\p{\strong{Simply describe what you want, and Nano Banana Pro creates it.} All diagrams are stored in the figures/ subfolder and referenced in papers/posters.}
+}
+
+\subtree{
+\title{Quick Start: Generate Any Diagram}
+\p{Create any scientific diagram by simply describing it. Nano Banana Pro handles everything automatically with \strong{smart iteration}:}
+
+\pre{\startverb
+# Generate for journal paper (highest quality threshold: 8.5/10)
+python scripts/generate_schematic.py "CONSORT participant flow diagram with 500 screened, 150 excluded, 350 randomized" -o figures/consort.png --doc-type journal
+
+# Generate for presentation (lower threshold: 6.5/10 - faster)
+python scripts/generate_schematic.py "Transformer encoder-decoder architecture showing multi-head attention" -o figures/transformer.png --doc-type presentation
+
+# Generate for poster (moderate threshold: 7.0/10)
+python scripts/generate_schematic.py "MAPK signaling pathway from EGFR to gene transcription" -o figures/mapk_pathway.png --doc-type poster
+
+# Custom max iterations (max 2)
+python scripts/generate_schematic.py "Complex circuit diagram with op-amp, resistors, and capacitors" -o figures/circuit.png --iterations 2 --doc-type journal
+\stopverb}
+
+\p{\strong{What happens behind the scenes:}}
+
+\ol{
+\li{\strong{Generation 1}: Nano Banana Pro creates initial image following scientific diagram best practices}
+\li{\strong{Review 1}: \strong{Gemini 3 Pro} evaluates quality against document-type threshold}
+\li{\strong{Decision}: If quality >= threshold → \strong{DONE} (no more iterations needed!)}
+\li{\strong{If below threshold}: Improved prompt based on critique, regenerate}
+\li{\strong{Repeat}: Until quality meets threshold OR max iterations reached}
+}
+
+\p{\strong{Smart Iteration Benefits:}}
+
+\ul{
+\li{✅ Saves API calls if first generation is good enough}
+\li{✅ Higher quality standards for journal papers}
+\li{✅ Faster turnaround for presentations/posters}
+\li{✅ Appropriate quality for each use case}
+}
+
+\p{\strong{Output}: Versioned images plus a detailed review log with quality scores, critiques, and early-stop information.}
+
+\subtree{
+\title{Configuration}
+\p{Set your OpenRouter API key:}
+
+\pre{\startverb
+export OPENROUTER_API_KEY='your_api_key_here'
+\stopverb}
+
+\p{Get an API key at: https://openrouter.ai/keys}
+}
+
+\subtree{
+\title{AI Generation Best Practices}
+\p{\strong{Effective Prompts for Scientific Diagrams:}}
+
+\p{✓ \strong{Good prompts} (specific, detailed):}
+
+\ul{
+\li{"CONSORT flowchart showing participant flow from screening (n=500) through randomization to final analysis"}
+\li{"Transformer neural network architecture with encoder stack on left, decoder stack on right, showing multi-head attention and cross-attention connections"}
+\li{"Biological signaling cascade: EGFR receptor → RAS → RAF → MEK → ERK → nucleus, with phosphorylation steps labeled"}
+\li{"Block diagram of IoT system: sensors → microcontroller → WiFi module → cloud server → mobile app"}
+}
+
+\p{✗ \strong{Avoid vague prompts}:}
+
+\ul{
+\li{"Make a flowchart" (too generic)}
+\li{"Neural network" (which type? what components?)}
+\li{"Pathway diagram" (which pathway? what molecules?)}
+}
+
+\p{\strong{Key elements to include:}}
+
+\ul{
+\li{\strong{Type}: Flowchart, architecture diagram, pathway, circuit, etc.}
+\li{\strong{Components}: Specific elements to include}
+\li{\strong{Flow/Direction}: How elements connect (left-to-right, top-to-bottom)}
+\li{\strong{Labels}: Key annotations or text to include}
+\li{\strong{Style}: Any specific visual requirements}
+}
+
+\p{\strong{Scientific Quality Guidelines} (automatically applied):}
+
+\ul{
+\li{Clean white/light background}
+\li{High contrast for readability}
+\li{Clear, readable labels (minimum 10pt)}
+\li{Professional typography (sans-serif fonts)}
+\li{Colorblind-friendly colors (Okabe-Ito palette)}
+\li{Proper spacing to prevent crowding}
+\li{Scale bars, legends, axes where appropriate}
+}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Creating neural network architecture diagrams (Transformers, CNNs, RNNs, etc.)}
+\li{Illustrating system architectures and data flow diagrams}
+\li{Drawing methodology flowcharts for study design (CONSORT, PRISMA)}
+\li{Visualizing algorithm workflows and processing pipelines}
+\li{Creating circuit diagrams and electrical schematics}
+\li{Depicting biological pathways and molecular interactions}
+\li{Generating network topologies and hierarchical structures}
+\li{Illustrating conceptual frameworks and theoretical models}
+\li{Designing block diagrams for technical papers}
+}
+}
+
+\subtree{
+\title{How to Use This Skill}
+\p{\strong{Simply describe your diagram in natural language.} Nano Banana Pro generates it automatically:}
+
+\pre{\startverb
+python scripts/generate_schematic.py "your diagram description" -o output.png
+\stopverb}
+
+\p{\strong{That's it!} The AI handles:}
+
+\ul{
+\li{✓ Layout and composition}
+\li{✓ Labels and annotations}
+\li{✓ Colors and styling}
+\li{✓ Quality review and refinement}
+\li{✓ Publication-ready output}
+}
+
+\p{\strong{Works for all diagram types:}}
+
+\ul{
+\li{Flowcharts (CONSORT, PRISMA, etc.)}
+\li{Neural network architectures}
+\li{Biological pathways}
+\li{Circuit diagrams}
+\li{System architectures}
+\li{Block diagrams}
+\li{Any scientific visualization}
+}
+
+\p{\strong{No coding, no templates, no manual drawing required.}}
+}
+}
+
+\subtree{
+\title{AI Generation Mode (Nano Banana Pro + Gemini 3 Pro Review)}
+\subtree{
+\title{Smart Iterative Refinement Workflow}
+\p{The AI generation system uses \strong{smart iteration} - it only regenerates if quality is below the threshold for your document type:}
+
+\subtree{
+\title{How Smart Iteration Works}
+\pre{\startverb
+┌─────────────────────────────────────────────────────┐
+│  1. Generate image with Nano Banana Pro             │
+│                    ↓                                │
+│  2. Review quality with Gemini 3 Pro                │
+│                    ↓                                │
+│  3. Score >= threshold?                             │
+│       YES → DONE! (early stop)                      │
+│       NO  → Improve prompt, go to step 1            │
+│                    ↓                                │
+│  4. Repeat until quality met OR max iterations      │
+└─────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Iteration 1: Initial Generation}
+\p{\strong{Prompt Construction:}}
+
+\pre{\startverb
+Scientific diagram guidelines + User request
+\stopverb}
+
+\p{\strong{Output:} \code{\startverb diagram_v1.png\stopverb}}
+}
+
+\subtree{
+\title{Quality Review by Gemini 3 Pro}
+\p{Gemini 3 Pro evaluates the diagram on:}
+
+\ol{
+\li{\strong{Scientific Accuracy} (0-2 points) - Correct concepts, notation, relationships}
+\li{\strong{Clarity and Readability} (0-2 points) - Easy to understand, clear hierarchy}
+\li{\strong{Label Quality} (0-2 points) - Complete, readable, consistent labels}
+\li{\strong{Layout and Composition} (0-2 points) - Logical flow, balanced, no overlaps}
+\li{\strong{Professional Appearance} (0-2 points) - Publication-ready quality}
+}
+
+\p{\strong{Example Review Output:}}
+
+\pre{\startverb
+SCORE: 8.0
+
+STRENGTHS:
+- Clear flow from top to bottom
+- All phases properly labeled
+- Professional typography
+
+ISSUES:
+- Participant counts slightly small
+- Minor overlap on exclusion box
+
+VERDICT: ACCEPTABLE (for poster, threshold 7.0)
+\stopverb}
+}
+
+\subtree{
+\title{Decision Point: Continue or Stop?}
+\pre{\startverb
+| If Score... | Action |
+|-------------|--------|
+| >= threshold | **STOP** - Quality is good enough for this document type |
+| < threshold | Continue to next iteration with improved prompt |
+\stopverb}
+
+\p{\strong{Example:}}
+
+\ul{
+\li{For a \strong{poster} (threshold 7.0): Score of 7.5 → \strong{DONE after 1 iteration!}}
+\li{For a \strong{journal} (threshold 8.5): Score of 7.5 → Continue improving}
+}
+}
+
+\subtree{
+\title{Subsequent Iterations (Only If Needed)}
+\p{If quality is below threshold, the system:}
+
+\ol{
+\li{Extracts specific issues from Gemini 3 Pro's review}
+\li{Enhances the prompt with improvement instructions}
+\li{Regenerates with Nano Banana Pro}
+\li{Reviews again with Gemini 3 Pro}
+\li{Repeats until threshold met or max iterations reached}
+}
+}
+
+\subtree{
+\title{Review Log}
+\p{All iterations are saved with a JSON review log that includes early-stop information:}
+
+\pre{\startverb
+{
+  "user_prompt": "CONSORT participant flow diagram...",
+  "doc_type": "poster",
+  "quality_threshold": 7.0,
+  "iterations": [
+    {
+      "iteration": 1,
+      "image_path": "figures/consort_v1.png",
+      "score": 7.5,
+      "needs_improvement": false,
+      "critique": "SCORE: 7.5\nSTRENGTHS:..."
+    }
+  ],
+  "final_score": 7.5,
+  "early_stop": true,
+  "early_stop_reason": "Quality score 7.5 meets threshold 7.0 for poster"
+}
+\stopverb}
+
+\p{\strong{Note:} With smart iteration, you may see only 1 iteration instead of the full 2 if quality is achieved early!}
+}
+}
+
+\subtree{
+\title{Advanced AI Generation Usage}
+\subtree{
+\title{Python API}
+\pre{\startverb
+from scripts.generate_schematic_ai import ScientificSchematicGenerator
+
+# Initialize generator
+generator = ScientificSchematicGenerator(
+    api_key="your_openrouter_key",
+    verbose=True
+)
+
+# Generate with iterative refinement (max 2 iterations)
+results = generator.generate_iterative(
+    user_prompt="Transformer architecture diagram",
+    output_path="figures/transformer.png",
+    iterations=2
+)
+
+# Access results
+print(f"Final score: {results['final_score']}/10")
+print(f"Final image: {results['final_image']}")
+
+# Review individual iterations
+for iteration in results['iterations']:
+    print(f"Iteration {iteration['iteration']}: {iteration['score']}/10")
+    print(f"Critique: {iteration['critique']}")
+\stopverb}
+}
+
+\subtree{
+\title{Command-Line Options}
+\pre{\startverb
+# Basic usage (default threshold 7.5/10)
+python scripts/generate_schematic.py "diagram description" -o output.png
+
+# Specify document type for appropriate quality threshold
+python scripts/generate_schematic.py "diagram" -o out.png --doc-type journal      # 8.5/10
+python scripts/generate_schematic.py "diagram" -o out.png --doc-type conference   # 8.0/10
+python scripts/generate_schematic.py "diagram" -o out.png --doc-type poster       # 7.0/10
+python scripts/generate_schematic.py "diagram" -o out.png --doc-type presentation # 6.5/10
+
+# Custom max iterations (1-2)
+python scripts/generate_schematic.py "complex diagram" -o diagram.png --iterations 2
+
+# Verbose output (see all API calls and reviews)
+python scripts/generate_schematic.py "flowchart" -o flow.png -v
+
+# Provide API key via flag
+python scripts/generate_schematic.py "diagram" -o out.png --api-key "sk-or-v1-..."
+
+# Combine options
+python scripts/generate_schematic.py "neural network" -o nn.png --doc-type journal --iterations 2 -v
+\stopverb}
+}
+
+\subtree{
+\title{Prompt Engineering Tips}
+\p{\strong{1. Be Specific About Layout:}}
+
+\pre{\startverb
+✓ "Flowchart with vertical flow, top to bottom"
+✓ "Architecture diagram with encoder on left, decoder on right"
+✓ "Circular pathway diagram with clockwise flow"
+\stopverb}
+
+\p{\strong{2. Include Quantitative Details:}}
+
+\pre{\startverb
+✓ "Neural network with input layer (784 nodes), hidden layer (128 nodes), output (10 nodes)"
+✓ "Flowchart showing n=500 screened, n=150 excluded, n=350 randomized"
+✓ "Circuit with 1kΩ resistor, 10µF capacitor, 5V source"
+\stopverb}
+
+\p{\strong{3. Specify Visual Style:}}
+
+\pre{\startverb
+✓ "Minimalist block diagram with clean lines"
+✓ "Detailed biological pathway with protein structures"
+✓ "Technical schematic with engineering notation"
+\stopverb}
+
+\p{\strong{4. Request Specific Labels:}}
+
+\pre{\startverb
+✓ "Label all arrows with activation/inhibition"
+✓ "Include layer dimensions in each box"
+✓ "Show time progression with timestamps"
+\stopverb}
+
+\p{\strong{5. Mention Color Requirements:}}
+
+\pre{\startverb
+✓ "Use colorblind-friendly colors"
+✓ "Grayscale-compatible design"
+✓ "Color-code by function: blue for input, green for processing, red for output"
+\stopverb}
+}
+}
+
+\subtree{
+\title{AI Generation Examples}
+\subtree{
+\title{Example 1: CONSORT Flowchart}
+\pre{\startverb
+python scripts/generate_schematic.py \
+  "CONSORT participant flow diagram for randomized controlled trial. \
+   Start with 'Assessed for eligibility (n=500)' at top. \
+   Show 'Excluded (n=150)' with reasons: age<18 (n=80), declined (n=50), other (n=20). \
+   Then 'Randomized (n=350)' splits into two arms: \
+   'Treatment group (n=175)' and 'Control group (n=175)'. \
+   Each arm shows 'Lost to follow-up' (n=15 and n=10). \
+   End with 'Analyzed' (n=160 and n=165). \
+   Use blue boxes for process steps, orange for exclusion, green for final analysis." \
+  -o figures/consort.png
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Neural Network Architecture}
+\pre{\startverb
+python scripts/generate_schematic.py \
+  "Transformer encoder-decoder architecture diagram. \
+   Left side: Encoder stack with input embedding, positional encoding, \
+   multi-head self-attention, add & norm, feed-forward, add & norm. \
+   Right side: Decoder stack with output embedding, positional encoding, \
+   masked self-attention, add & norm, cross-attention (receiving from encoder), \
+   add & norm, feed-forward, add & norm, linear & softmax. \
+   Show cross-attention connection from encoder to decoder with dashed line. \
+   Use light blue for encoder, light red for decoder. \
+   Label all components clearly." \
+  -o figures/transformer.png --iterations 2
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Biological Pathway}
+\pre{\startverb
+python scripts/generate_schematic.py \
+  "MAPK signaling pathway diagram. \
+   Start with EGFR receptor at cell membrane (top). \
+   Arrow down to RAS (with GTP label). \
+   Arrow to RAF kinase. \
+   Arrow to MEK kinase. \
+   Arrow to ERK kinase. \
+   Final arrow to nucleus showing gene transcription. \
+   Label each arrow with 'phosphorylation' or 'activation'. \
+   Use rounded rectangles for proteins, different colors for each. \
+   Include membrane boundary line at top." \
+  -o figures/mapk_pathway.png
+\stopverb}
+}
+
+\subtree{
+\title{Example 4: System Architecture}
+\pre{\startverb
+python scripts/generate_schematic.py \
+  "IoT system architecture block diagram. \
+   Bottom layer: Sensors (temperature, humidity, motion) in green boxes. \
+   Middle layer: Microcontroller (ESP32) in blue box. \
+   Connections to WiFi module (orange box) and Display (purple box). \
+   Top layer: Cloud server (gray box) connected to mobile app (light blue box). \
+   Show data flow arrows between all components. \
+   Label connections with protocols: I2C, UART, WiFi, HTTPS." \
+  -o figures/iot_architecture.png
+\stopverb}
+}
+}
+
+\subtree{
+\title{Command-Line Usage}
+\p{The main entry point for generating scientific schematics:}
+
+\pre{\startverb
+# Basic usage
+python scripts/generate_schematic.py "diagram description" -o output.png
+
+# Custom iterations (max 2)
+python scripts/generate_schematic.py "complex diagram" -o diagram.png --iterations 2
+
+# Verbose mode
+python scripts/generate_schematic.py "diagram" -o out.png -v
+\stopverb}
+
+\p{\strong{Note:} The Nano Banana Pro AI generation system includes automatic quality review in its iterative refinement process. Each iteration is evaluated for scientific accuracy, clarity, and accessibility.}
+}
+
+\subtree{
+\title{Best Practices Summary}
+\subtree{
+\title{Design Principles}
+\ol{
+\li{\strong{Clarity over complexity} - Simplify, remove unnecessary elements}
+\li{\strong{Consistent styling} - Use templates and style files}
+\li{\strong{Colorblind accessibility} - Use Okabe-Ito palette, redundant encoding}
+\li{\strong{Appropriate typography} - Sans-serif fonts, minimum 7-8 pt}
+\li{\strong{Vector format} - Always use PDF/SVG for publication}
+}
+}
+
+\subtree{
+\title{Technical Requirements}
+\ol{
+\li{\strong{Resolution} - Vector preferred, or 300+ DPI for raster}
+\li{\strong{File format} - PDF for LaTeX, SVG for web, PNG as fallback}
+\li{\strong{Color space} - RGB for digital, CMYK for print (convert if needed)}
+\li{\strong{Line weights} - Minimum 0.5 pt, typical 1-2 pt}
+\li{\strong{Text size} - 7-8 pt minimum at final size}
+}
+}
+
+\subtree{
+\title{Integration Guidelines}
+\ol{
+\li{\strong{Include in LaTeX} - Use \code{\startverb \startverb \includegraphics\stopverb{}\stopverb} for generated images}
+\li{\strong{Caption thoroughly} - Describe all elements and abbreviations}
+\li{\strong{Reference in text} - Explain diagram in narrative flow}
+\li{\strong{Maintain consistency} - Same style across all figures in paper}
+\li{\strong{Version control} - Keep prompts and generated images in repository}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting Common Issues}
+\subtree{
+\title{AI Generation Issues}
+\p{\strong{Problem}: Overlapping text or elements}
+
+\ul{
+\li{\strong{Solution}: AI generation automatically handles spacing}
+\li{\strong{Solution}: Increase iterations: \code{\startverb --iterations 2\stopverb} for better refinement}
+}
+
+\p{\strong{Problem}: Elements not connecting properly}
+
+\ul{
+\li{\strong{Solution}: Make your prompt more specific about connections and layout}
+\li{\strong{Solution}: Increase iterations for better refinement}
+}
+}
+
+\subtree{
+\title{Image Quality Issues}
+\p{\strong{Problem}: Export quality poor}
+
+\ul{
+\li{\strong{Solution}: AI generation produces high-quality images automatically}
+\li{\strong{Solution}: Increase iterations for better results: \code{\startverb --iterations 2\stopverb}}
+}
+
+\p{\strong{Problem}: Elements overlap after generation}
+
+\ul{
+\li{\strong{Solution}: AI generation automatically handles spacing}
+\li{\strong{Solution}: Increase iterations: \code{\startverb --iterations 2\stopverb} for better refinement}
+\li{\strong{Solution}: Make your prompt more specific about layout and spacing requirements}
+}
+}
+
+\subtree{
+\title{Quality Check Issues}
+\p{\strong{Problem}: False positive overlap detection}
+
+\ul{
+\li{\strong{Solution}: Adjust threshold: \code{\startverb detect_overlaps(image_path, threshold=0.98)\stopverb}}
+\li{\strong{Solution}: Manually review flagged regions in visual report}
+}
+
+\p{\strong{Problem}: Generated image quality is low}
+
+\ul{
+\li{\strong{Solution}: AI generation produces high-quality images by default}
+\li{\strong{Solution}: Increase iterations for better results: \code{\startverb --iterations 2\stopverb}}
+}
+
+\p{\strong{Problem}: Colorblind simulation shows poor contrast}
+
+\ul{
+\li{\strong{Solution}: Switch to Okabe-Ito palette explicitly in code}
+\li{\strong{Solution}: Add redundant encoding (shapes, patterns, line styles)}
+\li{\strong{Solution}: Increase color saturation and lightness differences}
+}
+
+\p{\strong{Problem}: High-severity overlaps detected}
+
+\ul{
+\li{\strong{Solution}: Review overlap_report.json for exact positions}
+\li{\strong{Solution}: Increase spacing in those specific regions}
+\li{\strong{Solution}: Re-run with adjusted parameters and verify again}
+}
+
+\p{\strong{Problem}: Visual report generation fails}
+
+\ul{
+\li{\strong{Solution}: Check Pillow and matplotlib installations}
+\li{\strong{Solution}: Ensure image file is readable: \code{\startverb Image.open(path).verify()\stopverb}}
+\li{\strong{Solution}: Check sufficient disk space for report generation}
+}
+}
+
+\subtree{
+\title{Accessibility Problems}
+\p{\strong{Problem}: Colors indistinguishable in grayscale}
+
+\ul{
+\li{\strong{Solution}: Run accessibility checker: \code{\startverb verify_accessibility(image_path)\stopverb}}
+\li{\strong{Solution}: Add patterns, shapes, or line styles for redundancy}
+\li{\strong{Solution}: Increase contrast between adjacent elements}
+}
+
+\p{\strong{Problem}: Text too small when printed}
+
+\ul{
+\li{\strong{Solution}: Run resolution validator: \code{\startverb validate_resolution(image_path)\stopverb}}
+\li{\strong{Solution}: Design at final size, use minimum 7-8 pt fonts}
+\li{\strong{Solution}: Check physical dimensions in resolution report}
+}
+
+\p{\strong{Problem}: Accessibility checks consistently fail}
+
+\ul{
+\li{\strong{Solution}: Review accessibility_report.json for specific failures}
+\li{\strong{Solution}: Increase color contrast by at least 20\%}
+\li{\strong{Solution}: Test with actual grayscale conversion before finalizing}
+}
+}
+}
+
+\subtree{
+\title{Resources and References}
+\subtree{
+\title{Detailed References}
+\p{Load these files for comprehensive information on specific topics:}
+
+\ul{
+\li{\strong{\code{\startverb references/diagram_types.md\stopverb}} - Catalog of scientific diagram types with examples}
+\li{\strong{\code{\startverb references/best_practices.md\stopverb}} - Publication standards and accessibility guidelines}
+}
+}
+
+\subtree{
+\title{External Resources}
+\p{\strong{Python Libraries}}
+
+\ul{
+\li{Schemdraw Documentation: https://schemdraw.readthedocs.io/}
+\li{NetworkX Documentation: https://networkx.org/documentation/}
+\li{Matplotlib Documentation: https://matplotlib.org/}
+}
+
+\p{\strong{Publication Standards}}
+
+\ul{
+\li{Nature Figure Guidelines: https://www.nature.com/nature/for-authors/final-submission}
+\li{Science Figure Guidelines: https://www.science.org/content/page/instructions-preparing-initial-manuscript}
+\li{CONSORT Diagram: http://www.consort-statement.org/consort-statement/flow-diagram}
+}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\p{This skill works synergistically with:}
+
+\ul{
+\li{\strong{Scientific Writing} - Diagrams follow figure best practices}
+\li{\strong{Scientific Visualization} - Shares color palettes and styling}
+\li{\strong{LaTeX Posters} - Generate diagrams for poster presentations}
+\li{\strong{Research Grants} - Methodology diagrams for proposals}
+\li{\strong{Peer Review} - Evaluate diagram clarity and accessibility}
+}
+}
+
+\subtree{
+\title{Quick Reference Checklist}
+\p{Before submitting diagrams, verify:}
+
+\subtree{
+\title{Visual Quality}
+\ul{
+\li{[ ] High-quality image format (PNG from AI generation)}
+\li{[ ] No overlapping elements (AI handles automatically)}
+\li{[ ] Adequate spacing between all components (AI optimizes)}
+\li{[ ] Clean, professional alignment}
+\li{[ ] All arrows connect properly to intended targets}
+}
+}
+
+\subtree{
+\title{Accessibility}
+\ul{
+\li{[ ] Colorblind-safe palette (Okabe-Ito) used}
+\li{[ ] Works in grayscale (tested with accessibility checker)}
+\li{[ ] Sufficient contrast between elements (verified)}
+\li{[ ] Redundant encoding where appropriate (shapes + colors)}
+\li{[ ] Colorblind simulation passes all checks}
+}
+}
+
+\subtree{
+\title{Typography and Readability}
+\ul{
+\li{[ ] Text minimum 7-8 pt at final size}
+\li{[ ] All elements labeled clearly and completely}
+\li{[ ] Consistent font family and sizing}
+\li{[ ] No text overlaps or cutoffs}
+\li{[ ] Units included where applicable}
+}
+}
+
+\subtree{
+\title{Publication Standards}
+\ul{
+\li{[ ] Consistent styling with other figures in manuscript}
+\li{[ ] Comprehensive caption written with all abbreviations defined}
+\li{[ ] Referenced appropriately in manuscript text}
+\li{[ ] Meets journal-specific dimension requirements}
+\li{[ ] Exported in required format for journal (PDF/EPS/TIFF)}
+}
+}
+
+\subtree{
+\title{Quality Verification (Required)}
+\ul{
+\li{[ ] Ran \code{\startverb run_quality_checks()\stopverb} and achieved PASS status}
+\li{[ ] Reviewed overlap detection report (zero high-severity overlaps)}
+\li{[ ] Passed accessibility verification (grayscale and colorblind)}
+\li{[ ] Resolution validated at target DPI (300+ for print)}
+\li{[ ] Visual quality report generated and reviewed}
+\li{[ ] All quality reports saved with figure files}
+}
+}
+
+\subtree{
+\title{Documentation and Version Control}
+\ul{
+\li{[ ] Source files (.tex, .py) saved for future revision}
+\li{[ ] Quality reports archived in \code{\startverb quality_reports/\stopverb} directory}
+\li{[ ] Configuration parameters documented (colors, spacing, sizes)}
+\li{[ ] Git commit includes source, output, and quality reports}
+\li{[ ] README or comments explain how to regenerate figure}
+}
+}
+
+\subtree{
+\title{Final Integration Check}
+\ul{
+\li{[ ] Figure displays correctly in compiled manuscript}
+\li{[ ] Cross-references work (\code{\startverb \startverb \ref\stopverb{}\stopverb} points to correct figure)}
+\li{[ ] Figure number matches text citations}
+\li{[ ] Caption appears on correct page relative to figure}
+\li{[ ] No compilation warnings or errors related to figure}
+}
+}
+}
+
+\subtree{
+\title{Environment Setup}
+\pre{\startverb
+# Required
+export OPENROUTER_API_KEY='your_api_key_here'
+
+# Get key at: https://openrouter.ai/keys
+\stopverb}
+}
+
+\subtree{
+\title{Getting Started}
+\p{\strong{Simplest possible usage:}}
+
+\pre{\startverb
+python scripts/generate_schematic.py "your diagram description" -o output.png
+\stopverb}
+
+\p{Use this skill to create clear, accessible, publication-quality diagrams that effectively communicate complex scientific concepts. The AI-powered workflow with iterative refinement ensures diagrams meet professional standards.}
+}
+}

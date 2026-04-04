@@ -1,0 +1,75 @@
+\title{Hunting For Lateral Movement Via Wmi}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{lateral-movement}
+
+\tag{wmi}
+
+\tag{sysmon}
+
+\tag{mitre-attack}
+
+\tag{process-creation}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect WMI-based lateral movement by analyzing Windows Event ID 4688 process creation and Sysmon Event ID 1 for WmiPrvSE.exe child process patterns, remote process execution, and WMI event subscription persistence.}
+
+\subtree{
+\title{Hunting for Lateral Movement via WMI}
+\subtree{
+\title{Overview}
+\p{Windows Management Instrumentation (WMI) is commonly abused for lateral movement via \code{\startverb wmic process call create\stopverb} or Win32_Process.Create() to execute commands on remote hosts. Detection focuses on identifying WmiPrvSE.exe spawning child processes (cmd.exe, powershell.exe) in Windows Security Event ID 4688 and Sysmon Event ID 1 logs, along with WMI-Activity/Operational events (5857, 5860, 5861) for event subscription persistence.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for lateral movement via wmi}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows Security Event Logs with Process Creation auditing enabled (Event 4688 with command line)}
+\li{Sysmon installed with Event ID 1 (Process Creation) configured}
+\li{Python 3.9+ with \code{\startverb python-evtx\stopverb}, \code{\startverb lxml\stopverb} libraries}
+\li{Understanding of WMI architecture and WmiPrvSE.exe behavior}
+}
+}
+
+\subtree{
+\title{Steps}
+\subtree{
+\title{Step 1: Parse Process Creation Events}
+\p{Extract Event ID 4688 and Sysmon Event 1 entries from EVTX files.}
+}
+
+\subtree{
+\title{Step 2: Detect WmiPrvSE Child Processes}
+\p{Flag processes where ParentImage/ParentProcessName is WmiPrvSE.exe, indicating remote WMI execution.}
+}
+
+\subtree{
+\title{Step 3: Analyze Command Line Patterns}
+\p{Identify suspicious command lines matching WMI lateral movement patterns (cmd.exe /q /c, output redirection to admin$ share).}
+}
+
+\subtree{
+\title{Step 4: Check WMI Event Subscriptions}
+\p{Parse WMI-Activity/Operational log for event consumer creation indicating persistence.}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report with WMI-spawned processes, suspicious command lines, WMI event subscription alerts, and timeline of lateral movement activity.}
+}
+}

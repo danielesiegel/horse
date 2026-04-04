@@ -1,0 +1,756 @@
+\title{Literature Review}
+
+\taxon{skill}
+
+\meta{description}{Conduct comprehensive, systematic literature reviews using multiple academic databases (PubMed, arXiv, bioRxiv, Semantic Scholar, etc.). This skill should be used when conducting systematic literature reviews, meta-analyses, research synthesis, or comprehensive literature searches across biomedical, scientific, and technical domains. Creates professionally formatted markdown documents and PDFs with verified citations in multiple citation styles (APA, Nature, Vancouver, etc.).}
+
+\subtree{
+\title{Literature Review}
+\subtree{
+\title{Overview}
+\p{Conduct systematic, comprehensive literature reviews following rigorous academic methodology. Search multiple literature databases, synthesize findings thematically, verify all citations for accuracy, and generate professional output documents in markdown and PDF formats.}
+
+\p{This skill integrates with multiple scientific skills for database access (gget, bioservices, datacommons-client) and provides specialized tools for citation verification, result aggregation, and document generation.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when:}
+
+\ul{
+\li{Conducting a systematic literature review for research or publication}
+\li{Synthesizing current knowledge on a specific topic across multiple sources}
+\li{Performing meta-analysis or scoping reviews}
+\li{Writing the literature review section of a research paper or thesis}
+\li{Investigating the state of the art in a research domain}
+\li{Identifying research gaps and future directions}
+\li{Requiring verified citations and professional formatting}
+}
+}
+
+\subtree{
+\title{Visual Enhancement with Scientific Schematics}
+\p{\strong{⚠️ MANDATORY: Every literature review MUST include at least 1-2 AI-generated figures using the scientific-schematics skill.}}
+
+\p{This is not optional. Literature reviews without visual elements are incomplete. Before finalizing any document:}
+
+\ol{
+\li{Generate at minimum ONE schematic or diagram (e.g., PRISMA flow diagram for systematic reviews)}
+\li{Prefer 2-3 figures for comprehensive reviews (search strategy flowchart, thematic synthesis diagram, conceptual framework)}
+}
+
+\p{\strong{How to generate figures:}}
+
+\ul{
+\li{Use the \strong{scientific-schematics} skill to generate AI-powered publication-quality diagrams}
+\li{Simply describe your desired diagram in natural language}
+\li{Nano Banana Pro will automatically generate, review, and refine the schematic}
+}
+
+\p{\strong{How to generate schematics:}}
+
+\pre{\startverb
+python scripts/generate_schematic.py "your diagram description" -o figures/output.png
+\stopverb}
+
+\p{The AI will automatically:}
+
+\ul{
+\li{Create publication-quality images with proper formatting}
+\li{Review and refine through multiple iterations}
+\li{Ensure accessibility (colorblind-friendly, high contrast)}
+\li{Save outputs in the figures/ directory}
+}
+
+\p{\strong{When to add schematics:}}
+
+\ul{
+\li{PRISMA flow diagrams for systematic reviews}
+\li{Literature search strategy flowcharts}
+\li{Thematic synthesis diagrams}
+\li{Research gap visualization maps}
+\li{Citation network diagrams}
+\li{Conceptual framework illustrations}
+\li{Any complex concept that benefits from visualization}
+}
+
+\p{For detailed guidance on creating schematics, refer to the scientific-schematics skill documentation.}
+}
+
+\subtree{
+\title{Core Workflow}
+\p{Literature reviews follow a structured, multi-phase workflow:}
+
+\subtree{
+\title{Phase 1: Planning and Scoping}
+\ol{
+\li{\strong{Define Research Question}: Use PICO framework (Population, Intervention, Comparison, Outcome) for clinical/biomedical reviews}
+\li{Example: "What is the efficacy of CRISPR-Cas9 (I) for treating sickle cell disease (P) compared to standard care (C)?"}
+}
+
+\ol{
+\li{\strong{Establish Scope and Objectives}:}
+\li{Define clear, specific research questions}
+\li{Determine review type (narrative, systematic, scoping, meta-analysis)}
+\li{Set boundaries (time period, geographic scope, study types)}
+}
+
+\ol{
+\li{\strong{Develop Search Strategy}:}
+\li{Identify 2-4 main concepts from research question}
+\li{List synonyms, abbreviations, and related terms for each concept}
+\li{Plan Boolean operators (AND, OR, NOT) to combine terms}
+\li{Select minimum 3 complementary databases}
+}
+
+\ol{
+\li{\strong{Set Inclusion/Exclusion Criteria}:}
+\li{Date range (e.g., last 10 years: 2015-2024)}
+\li{Language (typically English, or specify multilingual)}
+\li{Publication types (peer-reviewed, preprints, reviews)}
+\li{Study designs (RCTs, observational, in vitro, etc.)}
+\li{Document all criteria clearly}
+}
+}
+
+\subtree{
+\title{Phase 2: Systematic Literature Search}
+\ol{
+\li{\strong{Multi-Database Search}:}
+}
+
+\p{Select databases appropriate for the domain:}
+
+\p{\strong{Biomedical & Life Sciences:}}
+
+\ul{
+\li{Use \code{\startverb gget\stopverb} skill: \code{\startverb gget search pubmed "search terms"\stopverb} for PubMed/PMC}
+\li{Use \code{\startverb gget\stopverb} skill: \code{\startverb gget search biorxiv "search terms"\stopverb} for preprints}
+\li{Use \code{\startverb bioservices\stopverb} skill for ChEMBL, KEGG, UniProt, etc.}
+}
+
+\p{\strong{General Scientific Literature:}}
+
+\ul{
+\li{Search arXiv via direct API (preprints in physics, math, CS, q-bio)}
+\li{Search Semantic Scholar via API (200M+ papers, cross-disciplinary)}
+\li{Use Google Scholar for comprehensive coverage (manual or careful scraping)}
+}
+
+\p{\strong{Specialized Databases:}}
+
+\ul{
+\li{Use \code{\startverb gget alphafold\stopverb} for protein structures}
+\li{Use \code{\startverb gget cosmic\stopverb} for cancer genomics}
+\li{Use \code{\startverb datacommons-client\stopverb} for demographic/statistical data}
+\li{Use specialized databases as appropriate for the domain}
+}
+
+\ol{
+\li{\strong{Document Search Parameters}:}
+}
+
+\subtree{
+\title{Database: PubMed}
+\ul{
+\li{\strong{Date searched}: 2024-10-25}
+\li{\strong{Date range}: 2015-01-01 to 2024-10-25}
+\li{\strong{Search string}:}
+\li{\strong{Results}: 247 articles}
+}
+
+\p{Repeat for each database searched.}
+
+\ol{
+\li{\strong{Export and Aggregate Results}:}
+\li{Export results in JSON format from each database}
+\li{Combine all results into a single file}
+\li{Use \code{\startverb scripts/search_databases.py\stopverb} for post-processing:}
+}
+}
+}
+
+\subtree{
+\title{Phase 3: Screening and Selection}
+\ol{
+\li{\strong{Deduplication}:}
+\li{Removes duplicates by DOI (primary) or title (fallback)}
+\li{Document number of duplicates removed}
+}
+
+\ol{
+\li{\strong{Title Screening}:}
+\li{Review all titles against inclusion/exclusion criteria}
+\li{Exclude obviously irrelevant studies}
+\li{Document number excluded at this stage}
+}
+
+\ol{
+\li{\strong{Abstract Screening}:}
+\li{Read abstracts of remaining studies}
+\li{Apply inclusion/exclusion criteria rigorously}
+\li{Document reasons for exclusion}
+}
+
+\ol{
+\li{\strong{Full-Text Screening}:}
+\li{Obtain full texts of remaining studies}
+\li{Conduct detailed review against all criteria}
+\li{Document specific reasons for exclusion}
+\li{Record final number of included studies}
+}
+
+\ol{
+\li{\strong{Create PRISMA Flow Diagram}:}
+}
+}
+
+\subtree{
+\title{Phase 4: Data Extraction and Quality Assessment}
+\ol{
+\li{\strong{Extract Key Data} from each included study:}
+\li{Study metadata (authors, year, journal, DOI)}
+\li{Study design and methods}
+\li{Sample size and population characteristics}
+\li{Key findings and results}
+\li{Limitations noted by authors}
+\li{Funding sources and conflicts of interest}
+}
+
+\ol{
+\li{\strong{Assess Study Quality}:}
+\li{\strong{For RCTs}: Use Cochrane Risk of Bias tool}
+\li{\strong{For observational studies}: Use Newcastle-Ottawa Scale}
+\li{\strong{For systematic reviews}: Use AMSTAR 2}
+\li{Rate each study: High, Moderate, Low, or Very Low quality}
+\li{Consider excluding very low-quality studies}
+}
+
+\ol{
+\li{\strong{Organize by Themes}:}
+\li{Identify 3-5 major themes across studies}
+\li{Group studies by theme (studies may appear in multiple themes)}
+\li{Note patterns, consensus, and controversies}
+}
+}
+
+\subtree{
+\title{Phase 5: Synthesis and Analysis}
+\ol{
+\li{\strong{Create Review Document} from template:}
+}
+
+\ol{
+\li{\strong{Write Thematic Synthesis} (NOT study-by-study summaries):}
+\li{Organize Results section by themes or research questions}
+\li{Synthesize findings across multiple studies within each theme}
+\li{Compare and contrast different approaches and results}
+\li{Identify consensus areas and points of controversy}
+\li{Highlight the strongest evidence}
+}
+
+\p{Example structure:}
+
+\pre{\startverb
+   #### 3.3.1 Theme: CRISPR Delivery Methods
+
+   Multiple delivery approaches have been investigated for therapeutic
+   gene editing. Viral vectors (AAV) were used in 15 studies^1-15^ and
+   showed high transduction efficiency (65-85%) but raised immunogenicity
+   concerns^3,7,12^. In contrast, lipid nanoparticles demonstrated lower
+   efficiency (40-60%) but improved safety profiles^16-23^.
+\stopverb}
+
+\ol{
+\li{\strong{Critical Analysis}:}
+\li{Evaluate methodological strengths and limitations across studies}
+\li{Assess quality and consistency of evidence}
+\li{Identify knowledge gaps and methodological gaps}
+\li{Note areas requiring future research}
+}
+
+\ol{
+\li{\strong{Write Discussion}:}
+\li{Interpret findings in broader context}
+\li{Discuss clinical, practical, or research implications}
+\li{Acknowledge limitations of the review itself}
+\li{Compare with previous reviews if applicable}
+\li{Propose specific future research directions}
+}
+}
+
+\subtree{
+\title{Phase 6: Citation Verification}
+\p{\strong{CRITICAL}: All citations must be verified for accuracy before final submission.}
+
+\ol{
+\li{\strong{Verify All DOIs}:}
+}
+
+\p{This script:}
+
+\ul{
+\li{Extracts all DOIs from the document}
+\li{Verifies each DOI resolves correctly}
+\li{Retrieves metadata from CrossRef}
+\li{Generates verification report}
+\li{Outputs properly formatted citations}
+}
+
+\ol{
+\li{\strong{Review Verification Report}:}
+\li{Check for any failed DOIs}
+\li{Verify author names, titles, and publication details match}
+\li{Correct any errors in the original document}
+\li{Re-run verification until all citations pass}
+}
+
+\ol{
+\li{\strong{Format Citations Consistently}:}
+\li{Choose one citation style and use throughout (see \code{\startverb references/citation_styles.md\stopverb})}
+\li{Common styles: APA, Nature, Vancouver, Chicago, IEEE}
+\li{Use verification script output to format citations correctly}
+\li{Ensure in-text citations match reference list format}
+}
+}
+
+\subtree{
+\title{Phase 7: Document Generation}
+\ol{
+\li{\strong{Generate PDF}:}
+}
+
+\p{Options:}
+
+\ul{
+\li{\code{\startverb --citation-style\stopverb}: apa, nature, chicago, vancouver, ieee}
+\li{\code{\startverb --no-toc\stopverb}: Disable table of contents}
+\li{\code{\startverb --no-numbers\stopverb}: Disable section numbering}
+\li{\code{\startverb --check-deps\stopverb}: Check if pandoc/xelatex are installed}
+}
+
+\ol{
+\li{\strong{Review Final Output}:}
+\li{Check PDF formatting and layout}
+\li{Verify all sections are present}
+\li{Ensure citations render correctly}
+\li{Check that figures/tables appear properly}
+\li{Verify table of contents is accurate}
+}
+
+\ol{
+\li{\strong{Quality Checklist}:}
+\li{[ ] All DOIs verified with verify_citations.py}
+\li{[ ] Citations formatted consistently}
+\li{[ ] PRISMA flow diagram included (for systematic reviews)}
+\li{[ ] Search methodology fully documented}
+\li{[ ] Inclusion/exclusion criteria clearly stated}
+\li{[ ] Results organized thematically (not study-by-study)}
+\li{[ ] Quality assessment completed}
+\li{[ ] Limitations acknowledged}
+\li{[ ] References complete and accurate}
+\li{[ ] PDF generates without errors}
+}
+}
+}
+
+\subtree{
+\title{Database-Specific Search Guidance}
+\subtree{
+\title{PubMed / PubMed Central}
+\p{Access via \code{\startverb gget\stopverb} skill:}
+
+\pre{\startverb
+# Search PubMed
+gget search pubmed "CRISPR gene editing" -l 100
+
+# Search with filters
+# Use PubMed Advanced Search Builder to construct complex queries
+# Then execute via gget or direct Entrez API
+\stopverb}
+
+\p{\strong{Search tips}:}
+
+\ul{
+\li{Use MeSH terms: \code{\startverb "sickle cell disease"[MeSH]\stopverb}}
+\li{Field tags: \code{\startverb [Title]\stopverb}, \code{\startverb [Title/Abstract]\stopverb}, \code{\startverb [Author]\stopverb}}
+\li{Date filters: \code{\startverb 2020:2024[Publication Date]\stopverb}}
+\li{Boolean operators: AND, OR, NOT}
+\li{See MeSH browser: https://meshb.nlm.nih.gov/search}
+}
+}
+
+\subtree{
+\title{bioRxiv / medRxiv}
+\p{Access via \code{\startverb gget\stopverb} skill:}
+
+\pre{\startverb
+gget search biorxiv "CRISPR sickle cell" -l 50
+\stopverb}
+
+\p{\strong{Important considerations}:}
+
+\ul{
+\li{Preprints are not peer-reviewed}
+\li{Verify findings with caution}
+\li{Check if preprint has been published (CrossRef)}
+\li{Note preprint version and date}
+}
+}
+
+\subtree{
+\title{arXiv}
+\p{Access via direct API or WebFetch:}
+
+\pre{\startverb
+# Example search categories:
+# q-bio.QM (Quantitative Methods)
+# q-bio.GN (Genomics)
+# q-bio.MN (Molecular Networks)
+# cs.LG (Machine Learning)
+# stat.ML (Machine Learning Statistics)
+
+# Search format: category AND terms
+search_query = "cat:q-bio.QM AND ti:\"single cell sequencing\""
+\stopverb}
+}
+
+\subtree{
+\title{Semantic Scholar}
+\p{Access via direct API (requires API key, or use free tier):}
+
+\ul{
+\li{200M+ papers across all fields}
+\li{Excellent for cross-disciplinary searches}
+\li{Provides citation graphs and paper recommendations}
+\li{Use for finding highly influential papers}
+}
+}
+
+\subtree{
+\title{Specialized Biomedical Databases}
+\p{Use appropriate skills:}
+
+\ul{
+\li{\strong{ChEMBL}: \code{\startverb bioservices\stopverb} skill for chemical bioactivity}
+\li{\strong{UniProt}: \code{\startverb gget\stopverb} or \code{\startverb bioservices\stopverb} skill for protein information}
+\li{\strong{KEGG}: \code{\startverb bioservices\stopverb} skill for pathways and genes}
+\li{\strong{COSMIC}: \code{\startverb gget\stopverb} skill for cancer mutations}
+\li{\strong{AlphaFold}: \code{\startverb gget alphafold\stopverb} for protein structures}
+\li{\strong{PDB}: \code{\startverb gget\stopverb} or direct API for experimental structures}
+}
+}
+
+\subtree{
+\title{Citation Chaining}
+\p{Expand search via citation networks:}
+
+\ol{
+\li{\strong{Forward citations} (papers citing key papers):}
+\li{Use Google Scholar "Cited by"}
+\li{Use Semantic Scholar or OpenAlex APIs}
+\li{Identifies newer research building on seminal work}
+}
+
+\ol{
+\li{\strong{Backward citations} (references from key papers):}
+\li{Extract references from included papers}
+\li{Identify highly cited foundational work}
+\li{Find papers cited by multiple included studies}
+}
+}
+}
+
+\subtree{
+\title{Citation Style Guide}
+\p{Detailed formatting guidelines are in \code{\startverb references/citation_styles.md\stopverb}. Quick reference:}
+
+\subtree{
+\title{APA (7th Edition)}
+\ul{
+\li{In-text: (Smith et al., 2023)}
+\li{Reference: Smith, J. D., Johnson, M. L., & Williams, K. R. (2023). Title. \em{Journal}, \em{22}(4), 301-318. https://doi.org/10.xxx/yyy}
+}
+}
+
+\subtree{
+\title{Nature}
+\ul{
+\li{In-text: Superscript numbers^1,2^}
+\li{Reference: Smith, J. D., Johnson, M. L. & Williams, K. R. Title. *Nat. Rev. Drug Discov.* \strong{22}, 301-318 (2023).}
+}
+}
+
+\subtree{
+\title{Vancouver}
+\ul{
+\li{In-text: Superscript numbers^1,2^}
+\li{Reference: Smith JD, Johnson ML, Williams KR. Title. Nat Rev Drug Discov. 2023;22(4):301-18.}
+}
+
+\p{\strong{Always verify citations} with verify_citations.py before finalizing.}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Search Strategy}
+\ol{
+\li{\strong{Use multiple databases} (minimum 3): Ensures comprehensive coverage}
+\li{\strong{Include preprint servers}: Captures latest unpublished findings}
+\li{\strong{Document everything}: Search strings, dates, result counts for reproducibility}
+\li{\strong{Test and refine}: Run pilot searches, review results, adjust search terms}
+}
+}
+
+\subtree{
+\title{Screening and Selection}
+\ol{
+\li{\strong{Use clear criteria}: Document inclusion/exclusion criteria before screening}
+\li{\strong{Screen systematically}: Title → Abstract → Full text}
+\li{\strong{Document exclusions}: Record reasons for excluding studies}
+\li{\strong{Consider dual screening}: For systematic reviews, have two reviewers screen independently}
+}
+}
+
+\subtree{
+\title{Synthesis}
+\ol{
+\li{\strong{Organize thematically}: Group by themes, NOT by individual studies}
+\li{\strong{Synthesize across studies}: Compare, contrast, identify patterns}
+\li{\strong{Be critical}: Evaluate quality and consistency of evidence}
+\li{\strong{Identify gaps}: Note what's missing or understudied}
+}
+}
+
+\subtree{
+\title{Quality and Reproducibility}
+\ol{
+\li{\strong{Assess study quality}: Use appropriate quality assessment tools}
+\li{\strong{Verify all citations}: Run verify_citations.py script}
+\li{\strong{Document methodology}: Provide enough detail for others to reproduce}
+\li{\strong{Follow guidelines}: Use PRISMA for systematic reviews}
+}
+}
+
+\subtree{
+\title{Writing}
+\ol{
+\li{\strong{Be objective}: Present evidence fairly, acknowledge limitations}
+\li{\strong{Be systematic}: Follow structured template}
+\li{\strong{Be specific}: Include numbers, statistics, effect sizes where available}
+\li{\strong{Be clear}: Use clear headings, logical flow, thematic organization}
+}
+}
+}
+
+\subtree{
+\title{Common Pitfalls to Avoid}
+\ol{
+\li{\strong{Single database search}: Misses relevant papers; always search multiple databases}
+\li{\strong{No search documentation}: Makes review irreproducible; document all searches}
+\li{\strong{Study-by-study summary}: Lacks synthesis; organize thematically instead}
+\li{\strong{Unverified citations}: Leads to errors; always run verify_citations.py}
+\li{\strong{Too broad search}: Yields thousands of irrelevant results; refine with specific terms}
+\li{\strong{Too narrow search}: Misses relevant papers; include synonyms and related terms}
+\li{\strong{Ignoring preprints}: Misses latest findings; include bioRxiv, medRxiv, arXiv}
+\li{\strong{No quality assessment}: Treats all evidence equally; assess and report quality}
+\li{\strong{Publication bias}: Only positive results published; note potential bias}
+\li{\strong{Outdated search}: Field evolves rapidly; clearly state search date}
+}
+}
+
+\subtree{
+\title{Example Workflow}
+\p{Complete workflow for a biomedical literature review:}
+
+\pre{\startverb
+# 1. Create review document from template
+cp assets/review_template.md crispr_sickle_cell_review.md
+
+# 2. Search multiple databases using appropriate skills
+# - Use gget skill for PubMed, bioRxiv
+# - Use direct API access for arXiv, Semantic Scholar
+# - Export results in JSON format
+
+# 3. Aggregate and process results
+python scripts/search_databases.py combined_results.json \
+  --deduplicate \
+  --rank citations \
+  --year-start 2015 \
+  --year-end 2024 \
+  --format markdown \
+  --output search_results.md \
+  --summary
+
+# 4. Screen results and extract data
+# - Manually screen titles, abstracts, full texts
+# - Extract key data into the review document
+# - Organize by themes
+
+# 5. Write the review following template structure
+# - Introduction with clear objectives
+# - Detailed methodology section
+# - Results organized thematically
+# - Critical discussion
+# - Clear conclusions
+
+# 6. Verify all citations
+python scripts/verify_citations.py crispr_sickle_cell_review.md
+
+# Review the citation report
+cat crispr_sickle_cell_review_citation_report.json
+
+# Fix any failed citations and re-verify
+python scripts/verify_citations.py crispr_sickle_cell_review.md
+
+# 7. Generate professional PDF
+python scripts/generate_pdf.py crispr_sickle_cell_review.md \
+  --citation-style nature \
+  --output crispr_sickle_cell_review.pdf
+
+# 8. Review final PDF and markdown outputs
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\p{This skill works seamlessly with other scientific skills:}
+
+\subtree{
+\title{Database Access Skills}
+\ul{
+\li{\strong{gget}: PubMed, bioRxiv, COSMIC, AlphaFold, Ensembl, UniProt}
+\li{\strong{bioservices}: ChEMBL, KEGG, Reactome, UniProt, PubChem}
+\li{\strong{datacommons-client}: Demographics, economics, health statistics}
+}
+}
+
+\subtree{
+\title{Analysis Skills}
+\ul{
+\li{\strong{pydeseq2}: RNA-seq differential expression (for methods sections)}
+\li{\strong{scanpy}: Single-cell analysis (for methods sections)}
+\li{\strong{anndata}: Single-cell data (for methods sections)}
+\li{\strong{biopython}: Sequence analysis (for background sections)}
+}
+}
+
+\subtree{
+\title{Visualization Skills}
+\ul{
+\li{\strong{matplotlib}: Generate figures and plots for review}
+\li{\strong{seaborn}: Statistical visualizations}
+}
+}
+
+\subtree{
+\title{Writing Skills}
+\ul{
+\li{\strong{brand-guidelines}: Apply institutional branding to PDF}
+\li{\strong{internal-comms}: Adapt review for different audiences}
+}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{Bundled Resources}
+\p{\strong{Scripts:}}
+
+\ul{
+\li{\code{\startverb scripts/verify_citations.py\stopverb}: Verify DOIs and generate formatted citations}
+\li{\code{\startverb scripts/generate_pdf.py\stopverb}: Convert markdown to professional PDF}
+\li{\code{\startverb scripts/search_databases.py\stopverb}: Process, deduplicate, and format search results}
+}
+
+\p{\strong{References:}}
+
+\ul{
+\li{\code{\startverb references/citation_styles.md\stopverb}: Detailed citation formatting guide (APA, Nature, Vancouver, Chicago, IEEE)}
+\li{\code{\startverb references/database_strategies.md\stopverb}: Comprehensive database search strategies}
+}
+
+\p{\strong{Assets:}}
+
+\ul{
+\li{\code{\startverb assets/review_template.md\stopverb}: Complete literature review template with all sections}
+}
+}
+
+\subtree{
+\title{External Resources}
+\p{\strong{Guidelines:}}
+
+\ul{
+\li{PRISMA (Systematic Reviews): http://www.prisma-statement.org/}
+\li{Cochrane Handbook: https://training.cochrane.org/handbook}
+\li{AMSTAR 2 (Review Quality): https://amstar.ca/}
+}
+
+\p{\strong{Tools:}}
+
+\ul{
+\li{MeSH Browser: https://meshb.nlm.nih.gov/search}
+\li{PubMed Advanced Search: https://pubmed.ncbi.nlm.nih.gov/advanced/}
+\li{Boolean Search Guide: https://www.ncbi.nlm.nih.gov/books/NBK3827/}
+}
+
+\p{\strong{Citation Styles:}}
+
+\ul{
+\li{APA Style: https://apastyle.apa.org/}
+\li{Nature Portfolio: https://www.nature.com/nature-portfolio/editorial-policies/reporting-standards}
+\li{NLM/Vancouver: https://www.nlm.nih.gov/bsd/uniform_requirements.html}
+}
+}
+}
+
+\subtree{
+\title{Dependencies}
+\subtree{
+\title{Required Python Packages}
+\pre{\startverb
+pip install requests  # For citation verification
+\stopverb}
+}
+
+\subtree{
+\title{Required System Tools}
+\pre{\startverb
+# For PDF generation
+brew install pandoc  # macOS
+apt-get install pandoc  # Linux
+
+# For LaTeX (PDF generation)
+brew install --cask mactex  # macOS
+apt-get install texlive-xetex  # Linux
+\stopverb}
+
+\p{Check dependencies:}
+
+\pre{\startverb
+python scripts/generate_pdf.py --check-deps
+\stopverb}
+}
+}
+
+\subtree{
+\title{Summary}
+\p{This literature-review skill provides:}
+
+\ol{
+\li{\strong{Systematic methodology} following academic best practices}
+\li{\strong{Multi-database integration} via existing scientific skills}
+\li{\strong{Citation verification} ensuring accuracy and credibility}
+\li{\strong{Professional output} in markdown and PDF formats}
+\li{\strong{Comprehensive guidance} covering the entire review process}
+\li{\strong{Quality assurance} with verification and validation tools}
+\li{\strong{Reproducibility} through detailed documentation requirements}
+}
+
+\p{Conduct thorough, rigorous literature reviews that meet academic standards and provide comprehensive synthesis of current knowledge in any domain.}
+}
+}

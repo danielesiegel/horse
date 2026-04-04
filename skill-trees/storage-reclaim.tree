@@ -1,0 +1,167 @@
+\title{Storage Reclaim}
+
+\taxon{skill}
+
+\meta{description}{Rapidly find and reclaim disk storage by identifying build artifacts, git garbage, temp files, and other space hogs. Use when disk is full or running low on space.}
+
+\subtree{
+\title{Storage Reclaim}
+\p{Rapid parallel investigation and cleanup of disk storage.}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# Top-level overview
+du -sh /path/*/ 2>/dev/null | sort -hr | head -20
+
+# Drill into specific directory
+du -sh /path/subdir/*/ 2>/dev/null | sort -hr | head -15
+\stopverb}
+}
+
+\subtree{
+\title{Common Space Hogs}
+\subtree{
+\title{1. Rust Build Artifacts (\code{\startverb target/\stopverb})}
+\ul{
+\li{Location: Any Rust project root}
+\li{Size: 1-10+ GB per project}
+\li{Safe to delete: Yes (rebuilds on next \code{\startverb cargo build\stopverb})}
+}
+
+\pre{\startverb
+# Find all Rust target directories
+find ~ -type d -name "target" -exec du -sh {} \; 2>/dev/null | sort -hr | head -20
+
+# Clean specific project
+rm -rf /path/to/project/target
+
+# Or use cargo
+cd /path/to/project && cargo clean
+\stopverb}
+}
+
+\subtree{
+\title{2. Git Garbage (tmp_pack files)}
+\ul{
+\li{Location: \code{\startverb .git/objects/pack/tmp_pack_*\stopverb}}
+\li{Cause: Interrupted git operations}
+\li{Size: Can be gigabytes}
+}
+
+\pre{\startverb
+# Check for git garbage
+git count-objects -vH
+# Look for "size-garbage" line
+
+# Remove stale pack files
+rm -f .git/objects/pack/tmp_pack_*
+
+# Verify cleanup
+git count-objects -vH
+\stopverb}
+}
+
+\subtree{
+\title{3. Node Modules}
+\ul{
+\li{Location: \code{\startverb node_modules/\stopverb} in JS projects}
+\li{Size: 100MB - 2GB per project}
+}
+
+\pre{\startverb
+# Find all node_modules
+find ~ -type d -name "node_modules" -prune -exec du -sh {} \; 2>/dev/null | sort -hr
+
+# Remove (can reinstall with npm install)
+rm -rf /path/to/project/node_modules
+\stopverb}
+}
+
+\subtree{
+\title{4. Python Virtual Environments}
+\ul{
+\li{Location: \code{\startverb .venv/\stopverb}, \code{\startverb venv/\stopverb}, \code{\startverb env/\stopverb}}
+\li{Size: 100MB - 1GB per environment}
+}
+
+\pre{\startverb
+find ~ -type d \( -name ".venv" -o -name "venv" -o -name "env" \) -exec du -sh {} \; 2>/dev/null | sort -hr
+\stopverb}
+}
+
+\subtree{
+\title{5. Hidden Temp Directories}
+\ul{
+\li{Location: \code{\startverb .tmp/\stopverb}, \code{\startverb .cache/\stopverb}, \code{\startverb \strong{pycache}/\stopverb}}
+\li{Often overlooked by \code{\startverb du\stopverb} on directories}
+}
+
+\pre{\startverb
+# Check hidden dirs specifically
+du -sh /path/.* 2>/dev/null | sort -hr | head -10
+\stopverb}
+}
+
+\subtree{
+\title{6. Julia Artifacts}
+\ul{
+\li{Location: \code{\startverb ~/.julia/artifacts/\stopverb}, \code{\startverb ~/.julia/compiled/\stopverb}}
+\li{Size: Can grow to many GB}
+}
+
+\pre{\startverb
+du -sh ~/.julia/*/ 2>/dev/null | sort -hr
+\stopverb}
+}
+
+\subtree{
+\title{7. Docker}
+\pre{\startverb
+docker system df
+docker system prune -a  # Remove all unused images/containers
+\stopverb}
+}
+
+\subtree{
+\title{8. Homebrew}
+\pre{\startverb
+brew cleanup --dry-run  # Preview
+brew cleanup            # Actually clean
+\stopverb}
+}
+}
+
+\subtree{
+\title{Investigation Pattern}
+\ol{
+\li{\strong{Start broad}: \code{\startverb du -sh /path/*/ | sort -hr | head -20\stopverb}}
+\li{\strong{Drill into largest}: Repeat for subdirectories}
+\li{\strong{Check hidden}: \code{\startverb du -sh /path/.* | sort -hr\stopverb}}
+\li{\strong{Git check}: \code{\startverb git count-objects -vH\stopverb} in any repo}
+\li{\strong{Clean safely}: Remove build artifacts first (always regeneratable)}
+}
+}
+
+\subtree{
+\title{Safety Rules}
+\ul{
+\li{\strong{Always safe to delete}: \code{\startverb target/\stopverb}, \code{\startverb node_modules/\stopverb}, \code{\startverb .tmp/\stopverb}, \code{\startverb \strong{pycache}/\stopverb}, build/}
+\li{\strong{Check first}: \code{\startverb .git/\stopverb} (might have garbage, might be real history)}
+\li{\strong{Never delete blindly}: Actual source code, \code{\startverb .git/objects/pack/*.pack\stopverb} (real packs)}
+\li{\strong{Regeneratable}: Anything that \code{\startverb cargo build\stopverb}, \code{\startverb npm install\stopverb}, \code{\startverb pip install\stopverb} creates}
+}
+}
+
+\subtree{
+\title{Parallel Investigation}
+\p{Run multiple \code{\startverb du\stopverb} commands simultaneously for faster discovery:}
+
+\pre{\startverb
+# In parallel (use separate terminal or background)
+du -sh ~/project1/*/ | sort -hr &
+du -sh ~/project2/*/ | sort -hr &
+wait
+\stopverb}
+}
+}

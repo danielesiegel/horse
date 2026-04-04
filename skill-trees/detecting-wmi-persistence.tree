@@ -1,0 +1,104 @@
+\title{Detecting Wmi Persistence}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{wmi}
+
+\tag{persistence}
+
+\tag{sysmon}
+
+\tag{t1546.003}
+
+\tag{mitre-attack}
+
+\tag{windows}
+
+\tag{dfir}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect WMI event subscription persistence by analyzing Sysmon Event IDs 19, 20, and 21 for malicious EventFilter, EventConsumer, and FilterToConsumerBinding creation.}
+
+\subtree{
+\title{Detecting WMI Persistence}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When hunting for WMI event subscription persistence (MITRE ATT&CK T1546.003)}
+\li{After detecting suspicious WMI activity in endpoint telemetry}
+\li{During incident response to identify attacker persistence mechanisms}
+\li{When Sysmon alerts trigger on Event IDs 19, 20, or 21}
+\li{During purple team exercises testing WMI-based persistence}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Sysmon v6.1+ deployed with WMI event logging enabled (Event IDs 19, 20, 21)}
+\li{Windows Security Event Log forwarding configured}
+\li{SIEM with Sysmon data ingested (Splunk, Elastic, Sentinel)}
+\li{PowerShell access for WMI enumeration on endpoints}
+\li{Sysinternals Autoruns for manual WMI subscription review}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Collect Telemetry}: Parse Sysmon Event IDs 19 (WmiEventFilter), 20 (WmiEventConsumer), 21 (WmiEventConsumerToFilter).}
+\li{\strong{Identify Suspicious Consumers}: Flag CommandLineEventConsumer and ActiveScriptEventConsumer types executing code.}
+\li{\strong{Analyze Event Filters}: Examine WQL queries in EventFilters for process start triggers or timer-based execution.}
+\li{\strong{Correlate Bindings}: Match FilterToConsumerBindings linking suspicious filters to consumers.}
+\li{\strong{Check Persistence Locations}: Query WMI namespaces root\startverb \subscription\stopverb and root\startverb \default\stopverb for active subscriptions.}
+\li{\strong{Validate Findings}: Cross-reference with known-good WMI subscriptions (SCCM, AV products).}
+\li{\strong{Document and Remediate}: Remove malicious subscriptions and update detection rules.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| Sysmon Event 19 | WmiEventFilter creation detected |
+| Sysmon Event 20 | WmiEventConsumer creation detected |
+| Sysmon Event 21 | WmiEventConsumerToFilter binding detected |
+| T1546.003 | Event Triggered Execution: WMI Event Subscription |
+| CommandLineEventConsumer | Executes system commands when filter triggers |
+| ActiveScriptEventConsumer | Runs VBScript/JScript when filter triggers |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Sysmon | Windows event monitoring for WMI activity |
+| WMI Explorer | GUI tool for browsing WMI namespaces |
+| Autoruns | Sysinternals tool listing persistence mechanisms |
+| PowerShell Get-WMIObject | Enumerate WMI event subscriptions |
+| Splunk | SIEM analysis of Sysmon WMI events |
+| Velociraptor | Endpoint WMI artifact collection |
+\stopverb}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-WMI-[DATE]-[SEQ]
+Technique: T1546.003
+Host: [Hostname]
+Event Type: [EventFilter|EventConsumer|Binding]
+Consumer Type: [CommandLine|ActiveScript]
+WQL Query: [Filter query text]
+Command: [Executed command or script]
+Risk Level: [Critical/High/Medium/Low]
+Recommended Action: [Remove subscription, investigate lateral movement]
+\stopverb}
+}
+}

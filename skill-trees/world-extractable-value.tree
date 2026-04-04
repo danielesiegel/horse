@@ -1,0 +1,282 @@
+\title{World Extractable Value}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{"Extract value from world transitions via Markov blanket arbitrage. WEV = PoA - 1. Paradigm Multiverse Finance integration."}
+
+\subtree{
+\title{World Extractable Value (WEV) Skill}
+\blockquote{*"The gap between Nash and Optimal is not waste -- it is extractable value."* *"Multiverse Finance splits the financial system into parallel universes."* -- Dave White, Paradigm}
+
+\subtree{
+\title{Overview}
+\p{\strong{World Extractable Value} quantifies the inefficiency extractable from selfish equilibria, integrated with Paradigm's Multiverse Finance thesis:}
+
+\pre{\startverb
+WEV = Price of Anarchy - 1 = (C_Nash / C_Opt) - 1
+\stopverb}
+
+\p{This bridges:}
+
+\ul{
+\li{\strong{Friston's Free Energy}: Minimize surprise via inference}
+\li{\strong{Roughgarden's PoA}: Bound selfish routing inefficiency}
+\li{\strong{Badiou's World-Hopping}: Events extract truth from being}
+}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+                    ┌─────────────────────────┐
+                    │     WORLD W₁ (Nash)     │
+                    │     Cost = C_Nash       │
+                    └───────────┬─────────────┘
+                                │
+                          ┌─────▼─────┐
+                          │  MARKOV   │
+                          │  BLANKET  │
+                          │  (Event)  │
+                          └─────┬─────┘
+                                │
+                    ┌───────────▼─────────────┐
+                    │    WORLD W₂ (Optimal)   │
+                    │     Cost = C_Opt        │
+                    └─────────────────────────┘
+
+    WEV = C_Nash - C_Opt = C_Opt × (PoA - 1)
+\stopverb}
+}
+
+\subtree{
+\title{Components}
+\subtree{
+\title{1. Price of Anarchy (Roughgarden)}
+\p{For d-regular Ramanujan expanders:}
+
+\pre{\startverb
+PoA = 1 + 1/gap = 1 + 1/(d - 2√(d-1))
+
+d=4: PoA = 1 + 1/0.536 ≈ 2.87
+\stopverb}
+}
+
+\subtree{
+\title{2. Free Energy (Friston)}
+\pre{\startverb
+F = E_q[log q(x) - log p(x,y)]
+  = Prediction_Error + Model_Complexity
+  
+F ≈ 1/gap + 0.1 ≈ 1.96
+\stopverb}
+}
+
+\subtree{
+\title{3. Markov Blanket}
+\p{The boundary between self and world:}
+
+\ul{
+\li{\strong{Sensory states}: Observations from world}
+\li{\strong{Active states}: Actions on world}
+\li{\strong{Internal states}: Agent's model}
+}
+}
+
+\subtree{
+\title{4. Action Direction}
+\pre{\startverb
+| Condition | Strategy | Effect |
+|-----------|----------|--------|
+| Error > 0.5 | Perceptual Inference | Update beliefs |
+| Error ≤ 0.5 | Active Inference | Change world |
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+ramanujan-expander (-1) ⊗ world-extractable-value (0) ⊗ influence-propagation (+1) = 0 ✓
+three-match (-1) ⊗ world-extractable-value (0) ⊗ gay-mcp (+1) = 0 ✓
+sheaf-cohomology (-1) ⊗ world-extractable-value (0) ⊗ open-games (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Implementation}
+\subtree{
+\title{Babashka}
+\pre{\startverb
+(defn compute-wev [seed spectral-data]
+  (let [poa (:price_of_anarchy spectral-data)
+        gap (:spectral_gap spectral-data)
+        wev (- poa 1)
+        free-energy (+ (/ 1 gap) 0.1)
+        action (if (> (/ 1 gap) 0.5)
+                 :perceptual_inference
+                 :active_inference)]
+    {:wev wev
+     :free_energy free-energy
+     :action_direction action
+     :pct_extractable (* 100 (/ wev poa))}))
+\stopverb}
+}
+
+\subtree{
+\title{Julia}
+\pre{\startverb
+function world_extractable_value(d::Int, n::Int)
+    gap = d - 2√(d-1)
+    poa = 1 + 1/gap
+    wev = poa - 1
+    mixing_time = log(n) / gap
+    
+    (wev=wev, poa=poa, gap=gap, mixing=mixing_time)
+end
+\stopverb}
+}
+
+\subtree{
+\title{DuckDB Schema}
+\pre{\startverb
+CREATE TABLE world_extractable_value (
+  wev_id VARCHAR PRIMARY KEY,
+  seed_hex VARCHAR,
+  world_from VARCHAR,
+  world_to VARCHAR,
+  price_of_anarchy FLOAT,
+  free_energy FLOAT,
+  wev FLOAT,
+  prediction_error FLOAT,
+  action_direction VARCHAR,
+  markov_blanket_size INT,
+  extracted_at TIMESTAMP
+);
+
+-- Query extractable value
+SELECT 
+  wev_id,
+  wev,
+  ROUND(wev / price_of_anarchy * 100, 1) as pct_extractable,
+  action_direction
+FROM world_extractable_value
+ORDER BY extracted_at DESC;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Alterpolitics Interpretation}
+\p{\strong{Alterpolitics} = alternative coordination mechanisms that reduce PoA:}
+
+\pre{\startverb
+| Mechanism | Effect on PoA | WEV Change |
+|-----------|---------------|------------|
+| Correlated Equilibrium | PoA → 1.5 | WEV ↓ 0.5 |
+| Smooth Games | PoA → 1.33 | WEV ↓ 0.33 |
+| Stackelberg | PoA → 1.0 | WEV → 0 |
+\stopverb}
+
+\p{The goal: extract value by moving toward coordination.}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just wev-history      # Query WEV log
+just wev-summary      # Aggregate stats
+just wev-compare      # Nash vs Optimal
+just triad-anarchy    # Full anarchy triad
+\stopverb}
+}
+
+\subtree{
+\title{Integration}
+\subtree{
+\title{Pre-Interaction Hook}
+\p{WEV is computed on every interaction via \code{\startverb .ruler/hooks/pre-interaction.bb\stopverb}:}
+
+\pre{\startverb
+7. ALWAYS compute World Extractable Value
+   └─ wev = compute-world-extractable-value(seed, spectral)
+\stopverb}
+}
+
+\subtree{
+\title{Glass Bead Game}
+\p{World-hopping extracts value via Badiou triangle:}
+
+\pre{\startverb
+d(W₁, W₃) ≤ d(W₁, W₂) + d(W₂, W₃)
+
+WEV(hop) = Σ d(Wᵢ, Wᵢ₊₁) × extraction_rate
+\stopverb}
+}
+}
+
+\subtree{
+\title{Paradigm Multiverse Finance Integration}
+\p{Dave White's Multiverse Finance (May 2025) provides the financial mechanism:}
+
+\subtree{
+\title{Verses as Worlds}
+\p{A \strong{verse} is a parallel universe corresponding to a probability event:}
+
+\ul{
+\li{Complement: V and not-V partition the outcome space}
+\li{Union: V1 OR V2 forms new verse}
+\li{Intersection: V1 AND V2 forms child verse}
+}
+}
+
+\subtree{
+\title{Ownership Operations}
+\pre{\startverb
+| Operation | Effect | WEV Implication |
+|-----------|--------|-----------------|
+| push_down(partition) | Split ownership to child verses | Spread risk across worlds |
+| pull_up(resolution) | Combine ownership after oracle | Extract value at resolution |
+\stopverb}
+}
+
+\subtree{
+\title{Multiverse Map}
+\pre{\startverb
+Map[verse_id, owner_address] -> balance
+
+Splitting: parent.balance -= x; for child in partition: child.balance += x
+Combining: for child in partition: child.balance -= x; parent.balance += x
+\stopverb}
+}
+
+\subtree{
+\title{Key Insight}
+\p{Assets in the same verse can be borrowed/lent freely because if one disappears (verse resolves false), all disappear simultaneously. No liquidation risk within a verse.}
+
+\p{WEV extraction = pull_up after favorable verse resolution.}
+}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{\strong{Roughgarden, T. (2002)} -- "How Bad is Selfish Routing?"}
+\li{\strong{Friston, K. (2010)} -- "The Free-Energy Principle"}
+\li{\strong{Roughgarden, T. (2015)} -- "Intrinsic Robustness of the Price of Anarchy"}
+\li{\strong{Powers, W. (1973)} -- "Behavior: The Control of Perception"}
+\li{\strong{White, D. / Paradigm (2025)} -- "Multiverse Finance" https://paradigm.xyz/2025/05/multiverse-finance}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{[ramanujan-expander](../ramanujan-expander/SKILL.md) - Spectral gap}
+\li{[open-games](../open-games/SKILL.md) - Nash equilibrium}
+\li{[glass-bead-game](../glass-bead-game/SKILL.md) - World-hopping}
+\li{[influence-propagation](../influence-propagation/SKILL.md) - Network effects}
+}
+}
+}

@@ -1,0 +1,363 @@
+\title{Implementing Pod Security Admission Controller}
+
+\taxon{skill}
+
+\tag{kubernetes}
+
+\tag{pod-security-admission}
+
+\tag{psa}
+
+\tag{pod-security-standards}
+
+\tag{admission-controller}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement Kubernetes Pod Security Admission to enforce baseline and restricted security profiles at namespace level using built-in admission controller.}
+
+\subtree{
+\title{Implementing Pod Security Admission Controller}
+\subtree{
+\title{Overview}
+\p{Pod Security Admission (PSA) is a built-in Kubernetes admission controller (stable since v1.25) that enforces Pod Security Standards at the namespace level. It replaces the deprecated PodSecurityPolicy (PSP) and provides three security profiles: Privileged, Baseline, and Restricted, with three enforcement modes: enforce, audit, and warn.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing pod security admission controller capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Kubernetes v1.25+ (PSA is stable/GA)}
+\li{kubectl with cluster-admin access}
+\li{No dependency on external tools - PSA is built into kube-apiserver}
+}
+}
+
+\subtree{
+\title{Pod Security Standards}
+\subtree{
+\title{Privileged Profile}
+\ul{
+\li{\strong{Unrestricted} - No restrictions applied}
+\li{Use case: System-level pods (kube-system, monitoring)}
+}
+}
+
+\subtree{
+\title{Baseline Profile}
+\ul{
+\li{\strong{Minimally restrictive} - Prevents known privilege escalation}
+\li{Blocks: privileged containers, hostPID, hostIPC, hostNetwork, hostPorts, certain volume types, adding capabilities beyond runtime defaults}
+}
+}
+
+\subtree{
+\title{Restricted Profile}
+\ul{
+\li{\strong{Heavily restricted} - Follows security best practices}
+\li{Requires: non-root, drop ALL capabilities, seccomp RuntimeDefault, read-only root filesystem considerations}
+\li{Blocks: Everything in Baseline plus running as root, privilege escalation, non-approved volume types}
+}
+}
+}
+
+\subtree{
+\title{Enforcement Modes}
+\pre{\startverb
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| enforce | Reject pods violating policy | Production enforcement |
+| audit | Log violations to audit log | Pre-enforcement assessment |
+| warn | Show warnings to user | Developer feedback |
+\stopverb}
+}
+
+\subtree{
+\title{Implementation}
+\subtree{
+\title{Apply to Namespace via Labels}
+\pre{\startverb
+# Restricted enforcement with audit and warn
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.28
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.28
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.28
+\stopverb}
+
+\pre{\startverb
+# Baseline enforcement for staging
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: v1.28
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.28
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.28
+\stopverb}
+
+\pre{\startverb
+# Privileged for system namespaces
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-system
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+\stopverb}
+}
+
+\subtree{
+\title{Apply Labels with kubectl}
+\pre{\startverb
+# Set restricted enforcement
+kubectl label namespace production \
+  pod-security.kubernetes.io/enforce=restricted \
+  pod-security.kubernetes.io/enforce-version=v1.28 \
+  pod-security.kubernetes.io/audit=restricted \
+  pod-security.kubernetes.io/warn=restricted
+
+# Set baseline enforcement
+kubectl label namespace staging \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/audit=restricted \
+  pod-security.kubernetes.io/warn=restricted
+
+# Check current labels
+kubectl get namespace production -o jsonpath='{.metadata.labels}' | jq .
+\stopverb}
+}
+}
+
+\subtree{
+\title{Dry-Run Testing}
+\pre{\startverb
+# Test what would happen with restricted policy on a namespace
+kubectl label --dry-run=server --overwrite namespace staging \
+  pod-security.kubernetes.io/enforce=restricted
+
+# Output shows existing pods that would violate the policy
+# Warning: existing pods in namespace "staging" violate the new PodSecurity enforce level "restricted:latest"
+\stopverb}
+}
+
+\subtree{
+\title{Cluster-Wide Defaults (AdmissionConfiguration)}
+\pre{\startverb
+# /etc/kubernetes/psa-config.yaml
+apiVersion: apiserver.config.k8s.io/v1
+kind: AdmissionConfiguration
+plugins:
+  - name: PodSecurity
+    configuration:
+      apiVersion: pod-security.admission.config.k8s.io/v1
+      kind: PodSecurityConfiguration
+      defaults:
+        enforce: baseline
+        enforce-version: latest
+        audit: restricted
+        audit-version: latest
+        warn: restricted
+        warn-version: latest
+      exemptions:
+        usernames: []
+        runtimeClasses: []
+        namespaces:
+          - kube-system
+          - kube-public
+          - kube-node-lease
+          - calico-system
+          - gatekeeper-system
+          - monitoring
+          - falco
+\stopverb}
+
+\subtree{
+\title{Apply to API Server}
+\pre{\startverb
+# Add to kube-apiserver manifests
+# /etc/kubernetes/manifests/kube-apiserver.yaml
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --admission-control-config-file=/etc/kubernetes/psa-config.yaml
+    volumeMounts:
+    - name: psa-config
+      mountPath: /etc/kubernetes/psa-config.yaml
+      readOnly: true
+  volumes:
+  - name: psa-config
+    hostPath:
+      path: /etc/kubernetes/psa-config.yaml
+      type: File
+\stopverb}
+}
+}
+
+\subtree{
+\title{Compliant Pod Examples}
+\subtree{
+\title{Restricted-Compliant Pod}
+\pre{\startverb
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restricted-pod
+  namespace: production
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+    seccompProfile:
+      type: RuntimeDefault
+  automountServiceAccountToken: false
+  containers:
+    - name: app
+      image: myregistry/myapp:v1.0.0
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: tmp
+      emptyDir: {}
+\stopverb}
+}
+
+\subtree{
+\title{Baseline-Compliant Pod}
+\pre{\startverb
+apiVersion: v1
+kind: Pod
+metadata:
+  name: baseline-pod
+  namespace: staging
+spec:
+  containers:
+    - name: app
+      image: myregistry/myapp:v1.0.0
+      securityContext:
+        allowPrivilegeEscalation: false
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+\stopverb}
+}
+}
+
+\subtree{
+\title{Migration from PodSecurityPolicy}
+\subtree{
+\title{Step 1: Audit Current State}
+\pre{\startverb
+# Check existing PSPs
+kubectl get psp
+
+# Check which service accounts use which PSP
+kubectl get clusterrolebinding -o json | \
+  jq '.items[] | select(.roleRef.name | startswith("psp-")) | {name: .metadata.name, subjects: .subjects}'
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Map PSP to PSA Profiles}
+\pre{\startverb
+# For each namespace, determine required PSA level
+for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}'); do
+  echo "Namespace: $ns"
+  kubectl label --dry-run=server namespace $ns \
+    pod-security.kubernetes.io/enforce=restricted 2>&1 | head -5
+done
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Apply PSA Labels (Audit First)}
+\pre{\startverb
+# Start with audit mode
+kubectl label namespace production \
+  pod-security.kubernetes.io/audit=restricted \
+  pod-security.kubernetes.io/warn=restricted
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Review and Fix Violations}
+\pre{\startverb
+# Check audit logs for violations
+kubectl get events --field-selector reason=FailedCreate -A
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Enable Enforcement}
+\pre{\startverb
+kubectl label namespace production \
+  pod-security.kubernetes.io/enforce=restricted
+\stopverb}
+}
+}
+
+\subtree{
+\title{Monitoring}
+\pre{\startverb
+# Check PSA violations in events
+kubectl get events --all-namespaces --field-selector reason=FailedCreate
+
+# Check audit logs
+kubectl logs -n kube-system kube-apiserver-* | grep "pod-security.kubernetes.io"
+
+# List namespace PSA labels
+kubectl get namespaces -L pod-security.kubernetes.io/enforce
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Start with audit+warn} before enforce to assess impact}
+\li{\strong{Use dry-run} to test enforcement before applying}
+\li{\strong{Exempt system namespaces} (kube-system, monitoring) in cluster defaults}
+\li{\strong{Pin version} (enforce-version) for predictable behavior across upgrades}
+\li{\strong{Set cluster-wide baseline} as default, then restrict specific namespaces}
+\li{\strong{Combine with Gatekeeper} for additional custom policies beyond PSA}
+\li{\strong{Use restricted profile} for all production workloads}
+\li{\strong{Document exemptions} with clear justification}
+}
+}
+}

@@ -1,0 +1,76 @@
+\title{Sveltekit Remote Functions}
+
+\taxon{skill}
+
+\meta{description}{SvelteKit remote functions guidance. Use for command(), query(), form() patterns in .remote.ts files.}
+
+\subtree{
+\title{SvelteKit Remote Functions}
+\subtree{
+\title{Quick Start}
+\p{\strong{File naming:} \code{\startverb *.remote.ts\stopverb} for remote function files}
+
+\p{\strong{Which function?} One-time action → \code{\startverb command()\stopverb} | Repeated reads → \code{\startverb query()\stopverb} | Forms → \code{\startverb form()\stopverb}}
+}
+
+\subtree{
+\title{Example}
+\pre{\startverb
+// actions.remote.ts
+import { command } from "$app/server";
+import * as v from "valibot";
+
+export const delete_user = command(
+  v.object({ id: v.string() }),
+  async ({ id }) => {
+    await db.users.delete(id);
+    return { success: true };
+  }
+);
+
+// Call from client: await delete_user({ id: '123' });
+\stopverb}
+}
+
+\subtree{
+\title{Reference Files}
+\ul{
+\li{[references/remote-functions.md](references/remote-functions.md) -}
+}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{Remote functions execute on server when called from browser}
+\li{Args/returns must be JSON-serializable}
+\li{Schema validation via StandardSchemaV1 (Valibot/Zod)}
+\li{\code{\startverb getRequestEvent()\stopverb} available for cookies/headers access}
+\li{\strong{In components:} Use \code{\startverb <svelte:boundary>\stopverb} + \code{\startverb {@const await}\stopverb} (no flicker)}
+\li{\strong{Refresh queries:} Call \code{\startverb query().refresh()\stopverb} - updates without flicker}
+\li{\strong{Last verified:} 2025-12-24}
+}
+
+\p{<!-- PROGRESSIVE DISCLOSURE GUIDELINES:}
+
+\ul{
+\li{Keep this file ~50 lines total (max ~150 lines)}
+\li{Use 1-2 code blocks only (recommend 1)}
+\li{Keep description <200 chars for Level 1 efficiency}
+\li{Move detailed docs to references/ for Level 3 loading}
+\li{This is Level 2 - quick reference ONLY, not a manual}
+}
+
+\p{LLM WORKFLOW (when editing this file):}
+
+\ol{
+\li{Write/edit SKILL.md}
+\li{Format (if formatter available)}
+\li{Run: claude-skills-cli validate <path>}
+\li{If multi-line description warning: run claude-skills-cli doctor <path>}
+\li{Validate again to confirm}
+}
+
+\p{-->}
+}
+}

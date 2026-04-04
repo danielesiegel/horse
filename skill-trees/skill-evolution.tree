@@ -1,0 +1,268 @@
+\title{Skill Evolution}
+
+\taxon{skill}
+
+\meta{description}{Patterns for evolutionarily robust skills that adapt across agent generations. Darwin-Godel machine principles for self-improving skill ecosystems.}
+
+\subtree{
+\title{Skill Evolution}
+\p{Self-improving skill ecosystems via evolutionary pressure.}
+
+\subtree{
+\title{Core Principle}
+\p{Skills that survive across agent generations share:}
+
+\ol{
+\li{\strong{Minimal coupling} to specific agent implementations}
+\li{\strong{Clear fitness signals} via validation}
+\li{\strong{Mutation-friendly structure} for iteration}
+\li{\strong{Selection pressure} from cross-platform use}
+}
+}
+
+\subtree{
+\title{Evolutionary Fitness Metrics}
+\subtree{
+\title{1. Compatibility Score}
+\pre{\startverb
+def compatibility_score(skill_dir):
+    validators = [
+        ("codex-rs", run_codex_validator),
+        ("claude-code", run_claude_validator),
+        ("skills-ref", run_agentskills_validator),
+    ]
+    passed = sum(1 for _, v in validators if v(skill_dir))
+    return passed / len(validators)
+\stopverb}
+
+\p{Target: 1.0 (passes all validators)}
+}
+
+\subtree{
+\title{2. Activation Rate}
+\pre{\startverb
+SELECT skill_name, 
+       COUNT(*) as activations,
+       AVG(success_rate) as effectiveness
+FROM skill_usage
+GROUP BY skill_name
+ORDER BY activations DESC
+\stopverb}
+
+\p{Skills with low activation → candidates for mutation or extinction.}
+}
+
+\subtree{
+\title{3. Token Efficiency}
+\pre{\startverb
+def token_efficiency(skill):
+    tokens_used = count_tokens(skill.body)
+    task_success = measure_task_completion(skill)
+    return task_success / tokens_used
+\stopverb}
+
+\p{Smaller skills that accomplish tasks = higher fitness.}
+}
+}
+
+\subtree{
+\title{Mutation Operators}
+\subtree{
+\title{1. Description Refinement}
+\pre{\startverb
+# Before (vague)
+description: Helps with databases
+
+# After (specific triggers)
+description: Design PostgreSQL schemas, write migrations, optimize queries. Use for database design, schema changes, or query performance issues.
+\stopverb}
+}
+
+\subtree{
+\title{2. Body Compression}
+\pre{\startverb
+# Before: 800 lines
+[verbose explanations...]
+
+# After: 200 lines + references/
+See [detailed API](references/API.md) for complete documentation.
+\stopverb}
+}
+
+\subtree{
+\title{3. Triadic Rebalancing}
+\p{When a skill drifts from its trit assignment:}
+
+\pre{\startverb
+# Was ERGODIC (0) but became too generative
+metadata:
+  trit: 0  # Review: should this be +1?
+\stopverb}
+}
+
+\subtree{
+\title{4. Cross-Pollination}
+\p{Combine successful patterns from high-fitness skills:}
+
+\pre{\startverb
+# From pdf skill: structured extraction
+# From code-review skill: checklist pattern
+# Result: new hybrid skill
+\stopverb}
+}
+}
+
+\subtree{
+\title{Selection Pressure}
+\subtree{
+\title{Natural Selection (Usage)}
+\pre{\startverb
+High activation + High success → Proliferate
+High activation + Low success → Mutate
+Low activation + Any success → Specialize or merge
+Low activation + Low success → Deprecate
+\stopverb}
+}
+
+\subtree{
+\title{Artificial Selection (Validation)}
+\pre{\startverb
+# CI pipeline rejects non-compliant skills
+if ! skills-ref validate "$skill"; then
+  echo "Skill failed validation - blocking merge"
+  exit 1
+fi
+\stopverb}
+}
+
+\subtree{
+\title{Sexual Selection (Composition)}
+\p{Skills that compose well with others spread their patterns:}
+
+\pre{\startverb
+structured-decomp ⊗ bumpus-narratives ⊗ gay-mcp = 0 ✓
+\stopverb}
+
+\p{GF(3)-balanced triads have reproductive advantage.}
+}
+}
+
+\subtree{
+\title{Speciation Events}
+\p{When a skill grows too large, split into subspecies:}
+
+\pre{\startverb
+database-design/
+├── SKILL.md (core patterns)
+└── references/
+    ├── postgresql.md
+    ├── mysql.md
+    └── mongodb.md
+
+# Later evolves into:
+database-postgresql/SKILL.md
+database-mysql/SKILL.md
+database-mongodb/SKILL.md
+\stopverb}
+}
+
+\subtree{
+\title{Extinction Criteria}
+\p{Remove skills that:}
+
+\ol{
+\li{Fail validation for 3+ agent generations}
+\li{Zero activations over 90 days}
+\li{Duplicated by platform-native features}
+\li{Superseded by more fit variants}
+}
+}
+
+\subtree{
+\title{Fossil Record}
+\p{Preserve extinct skills for archaeology:}
+
+\pre{\startverb
+skills/.archive/
+├── deprecated-skill-v1/
+│   ├── SKILL.md
+│   └── EXTINCTION_NOTES.md
+\stopverb}
+}
+
+\subtree{
+\title{Cambrian Explosion Triggers}
+\p{Rapid skill diversification when:}
+
+\ol{
+\li{New agent platform launches (Codex, Amp, etc.)}
+\li{New tool category emerges (MCP servers)}
+\li{Cross-platform spec standardizes (agentskills.io)}
+}
+}
+
+\subtree{
+\title{Fitness Landscape Navigation}
+\pre{\startverb
+          ↑ Effectiveness
+          │
+     ●────●────●  Local optima (trap)
+    /│         │
+   / │    ◉    │  Global optimum
+  /  │   /│\   │
+ ●───●──/ │ \──●
+     │  ╱   ╲
+     │ ╱     ╲
+     ●────────●
+          →
+     Generality
+\stopverb}
+
+\p{Avoid local optima via:}
+
+\ul{
+\li{Random mutation (try unexpected patterns)}
+\li{Recombination (merge with distant skills)}
+\li{Environmental change (new agent versions)}
+}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+struct SkillGenome
+    name::String
+    description::String
+    body::String
+    metadata::Dict{String,Any}
+    fitness::Float64
+end
+
+function evolve(population::Vector{SkillGenome}, generations::Int)
+    for _ in 1:generations
+        # Selection
+        survivors = select_fittest(population, 0.5)
+        
+        # Crossover
+        offspring = crossover(survivors)
+        
+        # Mutation
+        mutants = mutate(offspring, rate=0.1)
+        
+        # Validation filter
+        population = filter(validate, vcat(survivors, mutants))
+    end
+    population
+end
+\stopverb}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb skill-specification\stopverb} - Formal SKILL.md schema}
+\li{\code{\startverb godel-machine\stopverb} - Self-improving system theory}
+\li{\code{\startverb bisimulation-game\stopverb} - Skill equivalence testing}
+}
+}
+}

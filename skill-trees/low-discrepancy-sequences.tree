@@ -1,0 +1,228 @@
+\title{Low Discrepancy Sequences}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{"low-discrepancy-sequences skill"}
+
+\subtree{
+\title{Low-Discrepancy Sequences}
+\p{Deterministic color generation via low-discrepancy sequences with bijective index recovery.}
+
+\subtree{
+\title{Purpose}
+\p{Extends beyond the golden angle (φ) with multiple low-discrepancy sequences for uniform color space coverage. All sequences maintain bijectivity: given a color and seed, you can recover the index n.}
+}
+
+\subtree{
+\title{Sequences Implemented}
+\subtree{
+\title{1. Golden Angle (φ)}
+\ul{
+\li{\strong{Dimension}: 1D (hue only)}
+\li{\strong{Uniformity}: Optimal for 1D}
+\li{\strong{Source}: φ = (1 + √5)/2}
+\li{\strong{Formula}: hue = (seed + n/φ) mod 1}
+}
+}
+
+\subtree{
+\title{2. Plastic Constant (φ₂)}
+\ul{
+\li{\strong{Dimension}: 2D (hue + saturation)}
+\li{\strong{Uniformity}: Optimal for 2D}
+\li{\strong{Source}: φ₂ ≈ 1.324717... (root of x³ = x + 1)}
+\li{\strong{Formula}: }
+\li{h = (seed + n/φ₂) mod 1}
+\li{s = (seed + n/φ₂²) mod 1}
+}
+}
+
+\subtree{
+\title{3. Halton Sequence}
+\ul{
+\li{\strong{Dimension}: nD (direct RGB or HSL)}
+\li{\strong{Uniformity}: Good for any dimension}
+\li{\strong{Source}: Prime bases (2, 3, 5, 7...)}
+\li{\strong{Formula}: halton(n, base) = ∑ dᵢ/baseⁱ⁺¹}
+}
+}
+
+\subtree{
+\title{4. R-sequence (Recursive)}
+\ul{
+\li{\strong{Dimension}: nD}
+\li{\strong{Uniformity}: Near-optimal}
+\li{\strong{Source}: φ_d (d-dimensional golden ratio)}
+\li{\strong{Formula}: α_d = roots of x^(d+1) = x + 1}
+}
+}
+
+\subtree{
+\title{5. Kronecker Sequence}
+\ul{
+\li{\strong{Dimension}: 1D}
+\li{\strong{Uniformity}: Optimal (equidistributed)}
+\li{\strong{Source}: Any irrational α}
+\li{\strong{Formula}: {nα} mod 1}
+}
+}
+
+\subtree{
+\title{6. Sobol Sequence}
+\ul{
+\li{\strong{Dimension}: nD (up to 1000+)}
+\li{\strong{Uniformity}: Excellent for high dimensions}
+\li{\strong{Source}: Direction numbers}
+\li{\strong{Formula}: Gray code XOR with direction vectors}
+}
+}
+
+\subtree{
+\title{7. Pisot Sequence}
+\ul{
+\li{\strong{Dimension}: nD}
+\li{\strong{Uniformity}: Quasiperiodic}
+\li{\strong{Source}: Pisot-Vijayaraghavan numbers (algebraic integers)}
+\li{\strong{Formula}: θⁿ rounded to nearest integer}
+}
+}
+
+\subtree{
+\title{8. Continued Fractions}
+\ul{
+\li{\strong{Dimension}: 1D}
+\li{\strong{Uniformity}: Geodesic in hyperbolic geometry}
+\li{\strong{Source}: Continued fraction expansion}
+\li{\strong{Formula}: [a₀; a₁, a₂, ...] convergents}
+}
+}
+}
+
+\subtree{
+\title{Bijection Property}
+\p{All sequences are \strong{bijective on index}: Given (color, seed), you can recover n.}
+
+\p{This enables:}
+
+\ul{
+\li{Reafference: "I generated color C at index n"}
+\li{Inverse queries: "What index produced this color?"}
+\li{Temporal reconstruction: "When did I see this color?"}
+}
+}
+
+\subtree{
+\title{Integration with Gay.jl}
+\p{These sequences extend the existing \code{\startverb gay-mcp\stopverb} MCP server tools:}
+
+\ul{
+\li{\code{\startverb gay_golden_thread\stopverb}: Current φ-based generation}
+\li{\code{\startverb gay_plastic_thread\stopverb}: New φ₂-based 2D generation}
+\li{\code{\startverb gay_halton_color\stopverb}: Direct RGB via Halton}
+\li{\code{\startverb gay_r_sequence\stopverb}: n-dimensional R-sequence}
+\li{\code{\startverb gay_sobol_color\stopverb}: High-dimensional Sobol}
+\li{\code{\startverb gay_invert_color\stopverb}: Recover index from color}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{gay-mcp}: Deterministic color generation foundation}
+\li{\strong{reafference}: Self-recognition via prediction matching}
+\li{\strong{golden-thread}: Original φ spiral implementation}
+\li{\strong{phenomenal-bisect}: Temperature τ bisection using colors}
+\li{\strong{crystal-family}: Crystallographic color assignments}
+\li{\strong{bidirectional-awareness}: Skill graph visualization colors}
+}
+}
+
+\subtree{
+\title{GF(3) Trit Assignment}
+\p{\strong{Trit}: 0 (ERGODIC)}
+
+\p{Low-discrepancy sequences are infrastructure for uniform space coverage - neither generative (+1) nor analytical (-1), but foundational coordination (0).}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Niederreiter, H. (1992). \em{Random Number Generation and Quasi-Monte Carlo Methods}}
+\li{Kuipers, L. & Niederreiter, H. (1974). \em{Uniform Distribution of Sequences}}
+\li{Pisot, C. & Salem, R. (1963). \em{Algebraic Numbers and Fourier Analysis}}
+\li{Arnoux, P. & Ito, S. (2001). Pisot substitutions and Rauzy fractals}
+\li{Series, C. (1985). The geometry of Markoff numbers (continued fractions)}
+}
+}
+
+\subtree{
+\title{Usage Example}
+\pre{\startverb
+using LowDiscrepancySequences
+
+# Golden angle (current method)
+color1 = golden_angle_color(69, seed=42)
+
+# Plastic constant (2D: hue + saturation)
+color2 = plastic_color(69, seed=42)
+
+# Halton (direct RGB)
+color3 = halton_color(69)
+
+# R-sequence (3D)
+color4 = r_sequence_color(69, dim=3, seed=42)
+
+# Invert: recover index
+n = invert_color(color2, method=:plastic, seed=42)
+@assert n == 69
+\stopverb}
+}
+
+\subtree{
+\title{Connections to Geodesics}
+\p{Continued fractions provide \strong{geodesic paths} in hyperbolic geometry (PSL(2,ℝ) action on ℍ²). This connects to:}
+
+\ul{
+\li{Geodesic skill representations (shortest execution paths)}
+\li{Hyperbolic geometry of skill space}
+\li{Non-backtracking paths (prime geodesics)}
+}
+
+\p{The Farey sequence F_n = {p/q : gcd(p,q)=1, 0≤p≤q≤n} gives rational approximations to irrationals via continued fractions, mirroring the discrete approximations to geodesic flows.}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 7. Propagators}
+\p{\strong{Concepts}: propagator, cell, constraint, bidirectional, TMS}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+low-discrepancy-sequences (○) + SDF.Ch7 (○) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch3: Variations on an Arithmetic Theme}
+\li{Ch4: Pattern Matching}
+\li{Ch6: Layering}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Propagators flow constraints bidirectionally. This skill propagates information.}
+}
+}
+}

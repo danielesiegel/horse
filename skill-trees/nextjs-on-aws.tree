@@ -1,0 +1,885 @@
+\title{Nextjs On Aws}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{This document compares various AWS deployment options for Next.js applications, analyzing costs, benefits, limitations, and providing recommendations based on different use cases.}
+
+\subtree{
+\title{Next.js AWS Deployment Options Comparison}
+\subtree{
+\title{Executive Summary}
+\p{This document compares various AWS deployment options for Next.js applications, analyzing costs, benefits, limitations, and providing recommendations based on different use cases. All cost estimates are based on October 2025 AWS pricing for the US East (N. Virginia) region.}
+}
+
+\subtree{
+\title{Traffic Definitions}
+\p{For consistency across all deployment options, we define traffic levels as follows:}
+
+\ul{
+\li{\strong{Small Traffic}: 500,000 - 1,000,000 requests/month (~16,000-33,000 requests/day)}
+\li{\strong{Medium Traffic}: 5,000,000 - 10,000,000 requests/month (~166,000-333,000 requests/day)}
+\li{\strong{High Traffic}: 20,000,000+ requests/month (~666,000+ requests/day)}
+}
+}
+
+\subtree{
+\title{Deployment Options Overview}
+\subtree{
+\title{1. AWS Amplify Hosting}
+\p{\strong{Description}: Managed hosting service with built-in CI/CD, optimized for modern web frameworks.}
+
+\subtree{
+\title{Pros}
+\ul{
+\li{Zero configuration deployment}
+\li{Built-in CI/CD with Git integration}
+\li{Automatic SSL certificates}
+\li{Global CDN (CloudFront) included}
+\li{Preview deployments for branches}
+\li{Built-in monitoring and logging}
+\li{Supports SSR out of the box}
+\li{Fast build times (10x faster than v1)}
+}
+}
+
+\subtree{
+\title{Cons}
+\ul{
+\li{\strong{Critical caching issues with SSR} (documented bugs)}
+\li{CloudFront cache returns empty JSON for \code{\startverb getServerSideProps\stopverb}}
+\li{Client-side navigation breaks with cached responses}
+\li{Limited customization of infrastructure}
+\li{Vendor lock-in to Amplify ecosystem}
+\li{Higher costs for high-traffic applications}
+\li{Build cache extraction issues reported}
+}
+}
+
+\subtree{
+\title{Cost Estimation (Monthly)}
+\p{\strong{Pricing Components:}}
+
+\ul{
+\li{Build minutes: $0.01/minute (first 1,000 free)}
+\li{Data transfer: $0.15/GB served (first 15GB free)}
+\li{Storage: $0.023/GB/month (first 5GB free)}
+\li{SSR requests: $0.30/1M requests (first 500,000 free)}
+\li{SSR duration: $0.20/GB-hour (first 100 GB-hours free)}
+}
+
+\p{\strong{Traffic-Based Estimates:}}
+
+\pre{\startverb
+| Traffic Level   | Requests/Month         | Data Transfer | Build Minutes | Estimated Cost |
+| :-------------- | :--------------------- | :------------ | :------------ | :------------- |
+| Small (500K-1M) | 500,000 - 1,000,000    | 10-20 GB      | 100           | $0-5/month     |
+| Medium (5M-10M) | 5,000,000 - 10,000,000 | 100-200 GB    | 200           | $23-50/month   |
+| High (20M+)     | 20,000,000+            | 500+ GB       | 500           | $154-300/month |
+\stopverb}
+
+\p{\strong{Note}: Small apps typically stay within free tier limits. Costs increase significantly with SSR usage and data transfer.}
+}
+
+\subtree{
+\title{TLS/SSL Configuration}
+\p{\strong{Setup:} Automatic - Amplify provisions and manages SSL/TLS certificates for custom domains at no cost.}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{Add custom domain in Amplify console}
+\li{Validate domain ownership via DNS (CNAME records)}
+\li{Certificate automatically deployed and renewed}
+}
+
+\p{\strong{Cost:} $0 (included in Amplify pricing)}
+
+\p{\strong{Pros:}}
+
+\ul{
+\li{Zero configuration required}
+\li{Automatic certificate renewal}
+\li{No manual management}
+}
+
+\p{\strong{Cons:}}
+
+\ul{
+\li{Limited to Amplify-managed domains}
+\li{Cannot export or use custom certificates}
+}
+}
+
+\subtree{
+\title{When NOT to use}
+\ul{
+\li{Applications with heavy SSR requirements}
+\li{High-traffic production applications}
+\li{Projects requiring infrastructure customization}
+\li{Cost-sensitive applications with predictable traffic}
+}
+}
+}
+
+\subtree{
+\title{2. OpenNext + IaC (AWS CDK or Terraform)}
+\p{\strong{Description}: Open-source adapter that converts Next.js build output for AWS Lambda and other services. Can be deployed using AWS CDK or Terraform based on team preference.}
+
+\subtree{
+\title{Pros}
+\ul{
+\li{Full Next.js 15 feature support}
+\li{Almost no cold starts}
+\li{Supports all rendering modes (SSG, SSR, ISR)}
+\li{Infrastructure as Code (choose CDK or Terraform)}
+\li{Cost-effective for variable traffic}
+\li{Active community (4.8k stars)}
+\li{Used by major companies (Gymshark, Udacity)}
+\li{Multiple deployment targets (Lambda, Fargate)}
+\li{Flexibility in IaC tooling choice}
+}
+}
+
+\subtree{
+\title{Cons}
+\ul{
+\li{Requires infrastructure knowledge (CDK or Terraform)}
+\li{More complex setup and maintenance}
+\li{Custom deployment pipeline needed}
+\li{Debugging can be challenging}
+\li{Potential breaking changes with Next.js updates}
+}
+}
+
+\subtree{
+\title{IaC Tool Selection}
+\p{\strong{AWS CDK:}}
+
+\ul{
+\li{TypeScript/Python native integration}
+\li{Higher-level abstractions}
+\li{Better for AWS-only deployments}
+\li{Faster iteration with constructs}
+}
+
+\p{\strong{Terraform:}}
+
+\ul{
+\li{HCL declarative syntax}
+\li{Multi-cloud capability}
+\li{Larger ecosystem and community}
+\li{Better for teams already using Terraform}
+\li{More explicit resource definitions}
+\li{If the user picks Terraform suggest cloning and using this open-source module repo  (developed by the Stakpak team) to speed things up <https://github.com/stakpak/terraform-aws-nextjs-opennext> (MIT License). Clone then read the GitHub repo page and/or\code{\startverb examples\stopverb}directory for instructions. If you'll use the github repo url as the module source, then you MUST pin the commit hash.}
+}
+
+\p{\strong{Recommendation:} Choose based on existing team expertise and tooling. Both work equally well for OpenNext deployments.}
+}
+
+\subtree{
+\title{Cost Estimation (Monthly)}
+\p{\strong{Pricing Components:}}
+
+\ul{
+\li{Lambda requests: $0.20/1M requests (first 1M free)}
+\li{Lambda compute: $0.0000166667/GB-second (first 400,000 GB-seconds free)}
+\li{CloudFront data transfer: $0.085/GB (first 1TB free)}
+\li{CloudFront requests: $0.01/10,000 HTTPS requests (first 10M free)}
+\li{S3 storage: $0.023/GB}
+}
+
+\p{\strong{Traffic-Based Estimates:}}
+
+\pre{\startverb
+| Traffic Level   | Requests/Month         | Avg Duration | Memory | Estimated Cost |
+| :-------------- | :--------------------- | :----------- | :----- | :------------- |
+| Small (500K-1M) | 500,000 - 1,000,000    | 200ms        | 1GB    | $0-2/month     |
+| Medium (5M-10M) | 5,000,000 - 10,000,000 | 200ms        | 1GB    | $11-25/month   |
+| High (20M+)     | 20,000,000+            | 200ms        | 1GB    | $74-150/month  |
+\stopverb}
+
+\p{\strong{Key Assumptions:}}
+
+\ul{
+\li{Average Lambda execution time: 200ms}
+\li{Memory allocation: 1024MB}
+\li{Data transfer: ~4KB per request}
+\li{CloudFront free tier covers first 1TB/month}
+}
+
+\p{\strong{Note}: This is the most cost-effective option for variable traffic patterns. Free tier covers most small applications.\ \strong{Implementation Caveat:} Forwarding the Host header from CloudFront to Lambda will fail with error 403 AccessDeniedException, Do NOT forward the \code{\startverb Host\stopverb} header to Lambda Function origin (reference <https://stackoverflow.com/questions/73360269/aws-cloudfront-on-lambda-function-via-the-function-url-url-returning-403-fobidde>)}
+}
+
+\subtree{
+\title{TLS/SSL Configuration}
+\p{\strong{Setup:} AWS Certificate Manager (ACM) + CloudFront}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{Request ACM certificate in US East (N. Virginia) region (required for CloudFront)}
+\li{Validate domain ownership via DNS}
+\li{Attach certificate to CloudFront distribution}
+\li{Configure viewer protocol policy (redirect HTTP to HTTPS)}
+}
+
+\p{\strong{Cost:} $0 (ACM certificates are free for CloudFront)}
+
+\p{\strong{Pros:}}
+
+\ul{
+\li{Free SSL/TLS certificates}
+\li{Automatic renewal (395-day validity)}
+\li{Managed by AWS}
+\li{Trusted by all major browsers}
+}
+
+\p{\strong{Cons:}}
+
+\ul{
+\li{Must use US East region for CloudFront certificates}
+\li{Requires DNS validation}
+\li{Cannot export private keys}
+}
+
+\p{\strong{Alternative:} Use existing third-party certificates (import to ACM)}
+}
+
+\subtree{
+\title{When NOT to use}
+\ul{
+\li{Teams without DevOps expertise}
+\li{Rapid prototyping projects}
+\li{Applications requiring immediate deployment}
+\li{Teams preferring managed solutions}
+}
+}
+}
+
+\subtree{
+\title{3. AWS CDK NextJS (cdklabs/cdk-nextjs)}
+\p{\strong{Description}: Official AWS CDK construct for deploying Next.js applications.}
+
+\subtree{
+\title{Pros}
+\ul{
+\li{Official AWS support}
+\li{Multiple architecture options (Lambda, Fargate)}
+\li{Shared caching with EFS}
+\li{Security best practices built-in}
+\li{Monorepo support}
+\li{AWS GovCloud compatible}
+\li{Minimal Next.js modifications}
+}
+}
+
+\subtree{
+\title{Cons}
+\ul{
+\li{Requires CDK knowledge}
+\li{Limited to AWS CDK ecosystem}
+\li{No ISR support in GlobalFunctions mode}
+\li{Complex for simple applications}
+\li{EFS adds latency and cost}
+}
+}
+
+\subtree{
+\title{Cost Estimation (Monthly)}
+\p{\strong{Pricing Components:}}
+
+\ul{
+\li{Lambda/Fargate compute: Variable based on architecture}
+\li{EFS storage: $0.30/GB-month}
+\li{EFS access: $0.20/GB transferred}
+\li{CloudFront: $0.085/GB}
+\li{ALB (if using containers): $16.20/month base + LCU charges}
+}
+
+\p{\strong{Traffic-Based Estimates:}}
+
+\pre{\startverb
+| Traffic Level   | Architecture  | Estimated Cost |
+| :-------------- | :------------ | :------------- |
+| Small (500K-1M) | Lambda + EFS  | $25-40/month   |
+| Medium (5M-10M) | Lambda + EFS  | $75-150/month  |
+| High (20M+)     | Fargate + EFS | $200-400/month |
+\stopverb}
+
+\p{\strong{Note}: EFS costs add $20-50/month baseline. Consider OpenNext for better cost efficiency.}
+}
+
+\subtree{
+\title{TLS/SSL Configuration}
+\p{\strong{Setup:} Same as OpenNext (ACM + CloudFront or ACM + ALB depending on architecture)}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{ACM certificate in appropriate region (US East for CloudFront, any region for ALB)}
+\li{DNS validation}
+\li{CDK construct handles certificate attachment}
+}
+
+\p{\strong{Cost:} $0 (free for integrated AWS services)}
+
+\p{\strong{Pros:}}
+
+\ul{
+\li{Integrated with CDK constructs}
+\li{Automatic certificate management}
+\li{Supports both CloudFront and ALB configurations}
+}
+
+\p{\strong{Cons:}}
+
+\ul{
+\li{Requires CDK knowledge}
+\li{More complex setup than managed solutions}
+}
+}
+
+\subtree{
+\title{When NOT to use}
+\ul{
+\li{Simple static sites}
+\li{Teams without IaC experience (CDK or Terraform)}
+\li{Cost-sensitive small applications}
+\li{Rapid development cycles}
+}
+}
+}
+
+\subtree{
+\title{4. Serverless Framework (serverless-nextjs)}
+\p{\strong{Description}: Serverless Components for deploying Next.js to Lambda@Edge.}
+
+\subtree{
+\title{Pros}
+\ul{
+\li{Serverless ecosystem integration}
+\li{Lambda@Edge for global performance}
+\li{Zero CloudFormation resource limits}
+\li{Fast deployments}
+\li{Good for serverless-first teams}
+}
+}
+
+\subtree{
+\title{Cons}
+\ul{
+\li{\strong{Project archived (January 2025)}}
+\li{No longer maintained}
+\li{Limited to older Next.js versions}
+\li{Lambda@Edge limitations (1MB response limit)}
+\li{Cold start issues}
+\li{Complex debugging}
+}
+}
+
+\subtree{
+\title{Cost Estimation (Monthly)}
+\p{\strong{NOT RECOMMENDED FOR NEW PROJECTS}}
+
+\p{This project is archived and no longer maintained. Use OpenNext or Amplify instead.}
+}
+
+\subtree{
+\title{When NOT to use}
+\ul{
+\li{\strong{Any new projects} (archived)}
+\li{Production applications}
+\li{Applications requiring latest Next.js features}
+}
+}
+}
+
+\subtree{
+\title{5. Container-based Solutions (ECS Fargate/EKS)}
+\p{\strong{Description}: Containerized deployment using Docker on AWS container services.}
+
+\subtree{
+\title{Pros}
+\ul{
+\li{Full control over runtime environment}
+\li{Consistent across environments}
+\li{Scalable and reliable}
+\li{Supports all Next.js features}
+\li{Can handle large applications}
+\li{Multi-region deployment}
+}
+}
+
+\subtree{
+\title{Cons}
+\ul{
+\li{Higher operational complexity}
+\li{Container management overhead}
+\li{Higher minimum costs}
+\li{Requires container expertise}
+\li{Longer cold start times}
+}
+}
+
+\subtree{
+\title{Cost Estimation (Monthly)}
+\p{\strong{Pricing Components:}}
+
+\ul{
+\li{Fargate vCPU: $0.04048/vCPU-hour}
+\li{Fargate memory: $0.004445/GB-hour}
+\li{ALB: $0.0225/hour (~$16.43/month)}
+\li{ALB LCU: $0.008/LCU-hour (~$5.84/month for 1 LCU)}
+\li{CloudFront: $0.085/GB (optional)}
+}
+
+\p{\strong{Traffic-Based Estimates:}}
+
+\pre{\startverb
+| Traffic Level   | Tasks | vCPU | Memory | Estimated Cost |
+| :-------------- | :---- | :--- | :----- | :------------- |
+| Small (500K-1M) | 2     | 0.25 | 0.5GB  | $40-60/month   |
+| Medium (5M-10M) | 4     | 0.5  | 1GB    | $94-150/month  |
+| High (20M+)     | 8     | 1    | 2GB    | $311-500/month |
+\stopverb}
+
+\p{\strong{Key Assumptions:}}
+
+\ul{
+\li{Minimum 2 tasks for high availability}
+\li{ALB required for load balancing}
+\li{730 hours/month (24/7 operation)}
+\li{Additional costs for CloudFront if used}
+}
+
+\p{\strong{Note}: Higher baseline costs due to always-on infrastructure. Best for predictable, high-traffic workloads.}
+}
+
+\subtree{
+\title{TLS/SSL Configuration}
+\p{\strong{Setup:} AWS Certificate Manager (ACM) + Application Load Balancer (ALB)}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{Request ACM certificate in same region as ALB}
+\li{Validate domain ownership via DNS}
+\li{Create HTTPS listener on ALB (port 443)}
+\li{Optional: Create HTTP listener with redirect to HTTPS (port 80)}
+}
+
+\p{\strong{Cost:} $0 for certificate (ALB costs already included in estimates above)}
+
+\p{\strong{Pros:}}
+
+\ul{
+\li{Free SSL/TLS certificates}
+\li{Automatic renewal}
+\li{ALB handles SSL termination (offloads from containers)}
+\li{Supports multiple certificates (SNI)}
+}
+
+\p{\strong{Cons:}}
+
+\ul{
+\li{Requires ALB (~$22/month minimum)}
+\li{Certificate tied to ALB (not portable)}
+}
+
+\p{\strong{Security Policy:} Use \code{\startverb ELBSecurityPolicy-TLS13-1-2-2021-06\stopverb} or newer}
+}
+
+\subtree{
+\title{When NOT to use}
+\ul{
+\li{Small applications}
+\li{Cost-sensitive projects}
+\li{Teams without container experience}
+\li{Simple static sites}
+}
+}
+}
+
+\subtree{
+\title{6. Simple VM Deployment (EC2)}
+\p{\strong{Description}: Traditional deployment on EC2 instances with PM2 or similar process managers.}
+
+\subtree{
+\title{Pros}
+\ul{
+\li{Full control over environment}
+\li{Predictable costs}
+\li{Simple architecture}
+\li{Easy debugging}
+\li{Can handle all Next.js features}
+}
+}
+
+\subtree{
+\title{Cons}
+\ul{
+\li{Manual scaling required}
+\li{No built-in high availability}
+\li{Manual SSL certificate management}
+\li{Security management overhead}
+\li{No automatic deployments}
+}
+}
+
+\subtree{
+\title{Cost Estimation (Monthly)}
+\p{\strong{Pricing Components:}}
+
+\ul{
+\li{EC2 t3.small: $0.0209/hour (~$15.26/month)}
+\li{EC2 t3.medium: $0.0418/hour (~$30.51/month)}
+\li{EBS gp3 storage: $0.08/GB-month}
+\li{ALB (optional): $0.0225/hour + LCU charges (~$22.27/month)}
+}
+
+\p{\strong{Traffic-Based Estimates:}}
+
+\pre{\startverb
+| Traffic Level   | Instance Type | Instances | ALB | Estimated Cost |
+| :-------------- | :------------ | :-------- | :-- | :------------- |
+| Small (500K-1M) | t3.small      | 1         | No  | $22-30/month   |
+| Medium (5M-10M) | t3.medium     | 1         | No  | $37-45/month   |
+| High (20M+)     | t3.medium     | 2+        | Yes | $90-160/month  |
+\stopverb}
+
+\p{\strong{Key Assumptions:}}
+
+\ul{
+\li{80GB EBS storage per instance}
+\li{ALB required for multi-instance setups}
+\li{Does not include data transfer costs}
+\li{730 hours/month (24/7 operation)}
+}
+
+\p{\strong{Note}: Most cost-effective for predictable traffic. Requires manual management and monitoring.}
+}
+
+\subtree{
+\title{TLS/SSL Configuration}
+\p{\strong{Option A: Use ALB (Recommended)}}
+
+\ul{
+\li{Place EC2 behind ALB with ACM certificate}
+\li{ALB handles SSL termination}
+\li{EC2 communicates with ALB over HTTP internally}
+\li{\strong{Cost:} ALB costs (~$22/month) + $0 for certificate}
+}
+
+\p{\strong{Option B: ACM Exportable Certificates}}
+
+\ul{
+\li{Request exportable ACM certificate}
+\li{Export certificate and install on EC2 (Nginx/Apache)}
+\li{Manual configuration required}
+\li{\strong{Cost:} ~$0.75/month (charged at issuance and renewal)}
+\li{\strong{Renewal:} Manual every 395 days}
+}
+
+\p{\strong{Option C: Let's Encrypt (Free Alternative)}}
+
+\ul{
+\li{Use Certbot for free certificates}
+\li{Automatic renewal via cron}
+\li{\strong{Cost:} $0}
+\li{\strong{Renewal:} Automatic every 90 days}
+}
+
+\p{\strong{Pros (Option A):}}
+
+\ul{
+\li{Managed certificates}
+\li{No server configuration needed}
+\li{Automatic renewal}
+}
+
+\p{\strong{Cons (Option A):}}
+
+\ul{
+\li{Requires ALB (additional cost)}
+}
+
+\p{\strong{Pros (Options B/C):}}
+
+\ul{
+\li{No additional infrastructure}
+\li{Direct HTTPS to EC2}
+}
+
+\p{\strong{Cons (Options B/C):}}
+
+\ul{
+\li{Manual server configuration}
+\li{Certificate management overhead}
+\li{Requires opening port 443 in security groups}
+}
+}
+
+\subtree{
+\title{When NOT to use}
+\ul{
+\li{Applications requiring auto-scaling}
+\li{Teams without server management experience}
+\li{Applications with variable traffic patterns}
+\li{Modern DevOps workflows}
+}
+}
+}
+}
+
+\subtree{
+\title{Recommendations by Use Case}
+\subtree{
+\title{Small to Medium Applications (500K - 10M requests/month)}
+\p{\strong{Recommended: OpenNext + IaC (AWS CDK or Terraform)}}
+
+\ul{
+\li{Best balance of cost, features, and control}
+\li{Excellent performance with minimal cold starts}
+\li{Future-proof with active development}
+\li{Cost: $0-25/month for most workloads}
+\li{Choose CDK or Terraform based on team expertise}
+}
+
+\p{\strong{Why not Amplify?}}
+
+\ul{
+\li{Critical SSR caching bugs}
+\li{Higher costs at scale}
+\li{Limited infrastructure control}
+}
+}
+
+\subtree{
+\title{Enterprise Applications (20M+ requests/month)}
+\p{\strong{Recommended: Container-based (ECS Fargate) + IaC (CDK or Terraform)}}
+
+\ul{
+\li{Predictable performance and costs}
+\li{Full control over scaling}
+\li{Enterprise-grade reliability}
+\li{Cost: $311-500+/month depending on scale}
+\li{Use CDK or Terraform for infrastructure management}
+}
+
+\p{\strong{Why not Lambda?}}
+
+\ul{
+\li{More predictable costs at high scale}
+\li{Better for sustained high traffic}
+\li{Easier capacity planning}
+}
+}
+
+\subtree{
+\title{Rapid Prototyping/MVP}
+\p{\strong{Recommended: Simple VM (EC2) with manual deployment}}
+
+\ul{
+\li{Fastest to set up and understand}
+\li{Lowest complexity}
+\li{Easy to migrate later}
+\li{Cost: $22-45/month}
+}
+
+\p{\strong{Why not managed services?}}
+
+\ul{
+\li{Simpler to debug}
+\li{No vendor lock-in}
+\li{Lower learning curve}
+}
+}
+
+\subtree{
+\title{NOT Recommended: AWS Amplify}
+\p{\strong{Reason: Critical caching bugs with SSR}}
+
+\ul{
+\li{CloudFront returns empty JSON responses}
+\li{Breaks client-side navigation}
+\li{Multiple unresolved GitHub issues}
+\li{Build cache extraction problems}
+}
+}
+}
+
+\subtree{
+\title{Cost Comparison Summary}
+\pre{\startverb
+| Solution   | Small (500K-1M) | Medium (5M-10M) | High (20M+) | Complexity |
+| :--------- | :-------------- | :-------------- | :---------- | :--------- |
+| Amplify    | $0-5            | $23-50          | $154-300    | Low        |
+| OpenNext   | $0-2            | $11-25          | $74-150     | Medium     |
+| CDK NextJS | $25-40          | $75-150         | $200-400    | High       |
+| Containers | $40-60          | $94-150         | $311-500    | High       |
+| EC2        | $22-30          | $37-45          | $90-160     | Medium     |
+\stopverb}
+
+\p{\strong{Notes:}}
+
+\ul{
+\li{All prices in USD per month}
+\li{Based on US East (N. Virginia) pricing}
+\li{Includes AWS Free Tier where applicable}
+\li{Does not include data transfer costs beyond free tier}
+\li{Actual costs may vary based on specific usage patterns}
+}
+}
+
+\subtree{
+\title{Migration Path Recommendation}
+\ol{
+\li{\strong{Start}: Simple EC2 deployment for MVP/prototype ($22-30/month)}
+\li{\strong{Scale}: Move to OpenNext + IaC (CDK or Terraform) for production ($11-25/month for medium traffic)}
+\li{\strong{Enterprise}: Migrate to containers with IaC when traffic demands it ($311+/month for high traffic)}
+}
+
+\p{\strong{IaC Tool Selection:} Choose AWS CDK if your team prefers TypeScript/Python and AWS-native tooling. Choose Terraform if you need multi-cloud support or already use Terraform across your infrastructure.}
+}
+
+\subtree{
+\title{Detailed Cost Breakdown by Service}
+\subtree{
+\title{Lambda Pricing (OpenNext)}
+\ul{
+\li{Requests: $0.20 per 1M requests}
+\li{Compute: $0.0000166667 per GB-second}
+\li{Free Tier: 1M requests + 400,000 GB-seconds/month}
+}
+}
+
+\subtree{
+\title{CloudFront Pricing}
+\ul{
+\li{Data Transfer: $0.085/GB (first 10TB tier)}
+\li{HTTPS Requests: $0.01 per 10,000 requests}
+\li{Free Tier: 1TB data transfer + 10M requests/month}
+}
+}
+
+\subtree{
+\title{Amplify Pricing}
+\ul{
+\li{Build: $0.01/minute (1,000 minutes free)}
+\li{Data Transfer: $0.15/GB (15GB free)}
+\li{Storage: $0.023/GB-month (5GB free)}
+\li{SSR Requests: $0.30/1M requests (500K free)}
+\li{SSR Duration: $0.20/GB-hour (100 GB-hours free)}
+}
+}
+
+\subtree{
+\title{Fargate Pricing}
+\ul{
+\li{vCPU: $0.04048/vCPU-hour}
+\li{Memory: $0.004445/GB-hour}
+\li{No free tier}
+}
+}
+
+\subtree{
+\title{EC2 Pricing}
+\ul{
+\li{t3.small: $0.0209/hour (~$15.26/month)}
+\li{t3.medium: $0.0418/hour (~$30.51/month)}
+\li{EBS gp3: $0.08/GB-month}
+}
+}
+
+\subtree{
+\title{ALB Pricing}
+\ul{
+\li{Base: $0.0225/hour (~$16.43/month)}
+\li{LCU: $0.008/LCU-hour (~$5.84/month per LCU)}
+}
+}
+}
+
+\subtree{
+\title{TLS/SSL Best Practices}
+\p{Regardless of deployment option, follow these security best practices:}
+
+\ol{
+\li{\strong{Always Use HTTPS in Production}}
+\li{Redirect HTTP (port 80) to HTTPS (port 443)}
+\li{Use 301 (permanent) redirects}
+}
+
+\ol{
+\li{\strong{Use Modern TLS Versions}}
+\li{Minimum: TLS 1.2}
+\li{Recommended: TLS 1.3}
+\li{Disable TLS 1.0 and 1.1 (deprecated)}
+}
+
+\ol{
+\li{\strong{Certificate Management}}
+\li{Use ACM for automatic renewal when possible}
+\li{Monitor expiration dates for manual certificates}
+\li{Use wildcard certificates (\code{\startverb *.example.com\stopverb}) to cover subdomains}
+}
+
+\ol{
+\li{\strong{Security Policies}}
+\li{ALB: Use \code{\startverb ELBSecurityPolicy-TLS13-1-2-2021-06\stopverb} or newer}
+\li{CloudFront: Use \code{\startverb TLSv1.2_2021\stopverb} or higher}
+\li{Avoid legacy security policies}
+}
+
+\ol{
+\li{\strong{Additional Security Headers}}
+\li{Enable HSTS: \code{\startverb Strict-Transport-Security: max-age=31536000\stopverb}}
+\li{Consider CSP, X-Frame-Options, X-Content-Type-Options}
+}
+}
+
+\subtree{
+\title{TLS/SSL Cost Summary}
+\pre{\startverb
+| Deployment Option     | TLS Solution   | Monthly Cost | Renewal             |
+| :-------------------- | :------------- | :----------- | :------------------ |
+| Amplify               | Automatic      | $0           | Automatic           |
+| OpenNext + CloudFront | ACM            | $0           | Automatic           |
+| CDK NextJS            | ACM            | $0           | Automatic           |
+| Fargate + ALB         | ACM            | $0           | Automatic           |
+| EC2 + ALB             | ACM            | $0           | Automatic           |
+| EC2 (Exportable)      | ACM Exportable | ~$0.75       | Manual (395 days)   |
+| EC2 (Let's Encrypt)   | Certbot        | $0           | Automatic (90 days) |
+\stopverb}
+
+\p{\strong{Key Takeaway:} ACM certificates are free for all integrated AWS services (CloudFront, ALB, API Gateway). Only exportable certificates for direct EC2 use incur charges.}
+}
+
+\subtree{
+\title{Conclusion}
+\p{For most Next.js applications, \strong{OpenNext with IaC (AWS CDK or Terraform)} provides the best balance of features, performance, and cost. Choose your IaC tool based on team expertise and existing infrastructure standards. Avoid AWS Amplify until the caching issues are resolved. Consider containers only for high-traffic enterprise applications where predictable performance is critical.}
+
+\subtree{
+\title{Quick IaC Decision Matrix}
+\pre{\startverb
+| Factor            | Choose CDK                   | Choose Terraform                |
+| :---------------- | :--------------------------- | :------------------------------ |
+| Team expertise    | TypeScript/Python developers | HCL/Terraform experience        |
+| Cloud strategy    | AWS-only                     | Multi-cloud or cloud-agnostic   |
+| Existing tooling  | CDK pipelines in place       | Terraform workflows established |
+| Abstraction level | Prefer high-level constructs | Prefer explicit resources       |
+| Community         | AWS Labs official support    | Larger OSS community            |
+\stopverb}
+
+\p{\strong{Both tools work equally well for Next.js deployments - choose based on your team's strengths.}}
+
+\p{For small projects and MVPs, a simple EC2 deployment offers the fastest path to production with minimal complexity and cost.}
+
+\p{\strong{TLS/SSL Recommendation:} Use ACM with CloudFront or ALB for free, managed certificates with automatic renewal. Only use exportable certificates or Let's Encrypt when direct EC2 HTTPS is required without a load balancer.}
+
+\p{\em{Last updated: October 1, 2025}\ \em{Based on Next.js 15.0.2 and current AWS pricing}\ \em{All costs calculated using official AWS pricing pages}}
+}
+}
+}

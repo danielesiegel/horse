@@ -1,0 +1,70 @@
+\title{Detecting Shadow It Cloud Usage}
+
+\taxon{skill}
+
+\tag{shadow-IT}
+
+\tag{SaaS-discovery}
+
+\tag{proxy-logs}
+
+\tag{DNS-analysis}
+
+\tag{netflow}
+
+\tag{cloud-security}
+
+\tag{pandas}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect unauthorized SaaS and cloud service usage (shadow IT) by analyzing proxy logs, DNS query logs, and netflow data using Python pandas for traffic pattern analysis and domain classification.}
+
+\subtree{
+\title{Detecting Shadow IT Cloud Usage}
+\subtree{
+\title{Overview}
+\p{Shadow IT refers to unauthorized SaaS applications and cloud services used without IT approval. This skill analyzes proxy logs, DNS query logs, and firewall/netflow data to identify unauthorized cloud service usage, classify discovered domains against known SaaS categories, measure data transfer volumes, and flag high-risk services based on security posture and compliance requirements.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting shadow it cloud usage}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb pandas\stopverb}, \code{\startverb tldextract\stopverb}}
+\li{Proxy logs (Squid, Zscaler, or Palo Alto format) or DNS query logs}
+\li{SaaS application catalog/blocklist for classification}
+\li{Network firewall logs with FQDN resolution (optional)}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Parse proxy access logs and extract destination domains with traffic volumes}
+\li{Parse DNS query logs to identify resolved cloud service domains}
+\li{Aggregate traffic by domain using pandas — total bytes, request counts, unique users}
+\li{Classify domains against known SaaS categories (storage, email, dev tools, AI)}
+\li{Flag unauthorized services not on the approved application list}
+\li{Calculate risk scores based on data volume, user count, and service category}
+\li{Generate shadow IT discovery report with remediation recommendations}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing discovered cloud services with traffic volumes, user counts, risk scores, and approval status}
+\li{Top unauthorized services ranked by data exfiltration risk}
+}
+}
+}

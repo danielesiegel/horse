@@ -1,0 +1,232 @@
+\title{Bigquery Asi Interleave}
+
+\taxon{skill}
+
+\tag{bigquery}
+
+\tag{asi}
+
+\tag{duckdb}
+
+\tag{patent}
+
+\tag{looker-studio}
+
+\tag{gf3}
+
+\tag{interleave}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Interleave layer bridging the BigQuery cluster to plurigrid/asi. Routes BigQuery queries through asi's DuckDB stack, wires patent search into asi knowledge graph, connects Looker Studio dashboards to CatColab, and feeds BigQuery ML into the lolita physics emulation pipeline.}
+
+\subtree{
+\title{BigQuery × ASI Interleave}
+\p{Bridge layer connecting the 6-skill BigQuery cluster to plurigrid/asi's 1360+ skill graph.}
+
+\subtree{
+\title{Skill Cluster Map}
+\pre{\startverb
+bigquery (trit:0, comprehensive)          ← hub: bq CLI, GoogleSQL, ML, governance
+  ├── bigquery-table-creator (-1)          ← infra: DDL, partitioned/clustered tables
+  ├── restricted-bigquery-dbt-environment (-1) ← safety: dbt test schema guard
+  ├── bigquery-patent-search (0)           ← bridge: 76M+ patent corpus via BQ public data
+  ├── looker-studio-bigquery (0)           ← bridge: Looker Studio dashboards
+  └── bigquery-table-creator (+1)          ← orchestration: GCP table lifecycle
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Tripartite}
+\p{\code{\startverb bigquery-table-creator(-1) ⊗ bigquery-asi-interleave(0) ⊗ looker-studio-bigquery(+1) = 0\stopverb}}
+
+\p{Infrastructure DDL (-1) × Bridge (0) × Visualization (+1) = balanced data stack.}
+}
+
+\subtree{
+\title{ASI Integration Points}
+\subtree{
+\title{1. BigQuery ↔ DuckDB — Cloud/Local Hybrid Query}
+\p{asi already has rich DuckDB: \code{\startverb duckdb-ies\stopverb}, \code{\startverb duckdb-spatial\stopverb}, \code{\startverb duckdb-quadruple-interleave\stopverb}, \code{\startverb duckdb-timetravel\stopverb}, \code{\startverb duckdb-temporal-versioning\stopverb}.}
+
+\p{BigQuery is the cloud-scale complement:}
+
+\pre{\startverb
+# Export BQ → DuckDB for local analysis
+bq extract --destination_format=PARQUET \
+  'project:dataset.table' gs://bucket/export/*.parquet
+
+# Load into DuckDB for local temporal analysis
+duckdb asi.db << 'EOF'
+INSTALL httpfs; LOAD httpfs;
+CREATE TABLE bq_export AS
+  SELECT * FROM read_parquet('gs://bucket/export/*.parquet');
+-- Now apply duckdb-timetravel patterns locally
+EOF
+\stopverb}
+
+\pre{\startverb
+# Inverse: push DuckDB results to BigQuery
+duckdb asi.db -c "COPY (SELECT * FROM skill_graph) TO '/tmp/skills.parquet' (FORMAT PARQUET)"
+bq load --source_format=PARQUET project:asi_dataset.skill_graph /tmp/skills.parquet
+\stopverb}
+
+\p{Pattern: BQ = warehouse (PB scale), DuckDB = analytical engine (GB scale), asi = skill graph on top.}
+}
+
+\subtree{
+\title{2. Patent Search → ASI Knowledge Graph}
+\p{\code{\startverb bigquery-patent-search\stopverb} queries \code{\startverb patents-public-data.patents\stopverb} (76M+ patents):}
+
+\pre{\startverb
+# Search for prior art on asi's core concepts
+from python.bigquery_search import BigQueryPatentSearch
+searcher = BigQueryPatentSearch()
+
+# GF(3) / ternary computing patents
+gf3_patents = searcher.search_patents(
+    query="ternary logic GF(3) color semantics",
+    cpc_prefix="G06F",  # Computing
+    start_year=2010
+)
+
+# OCapN / capability-secure networking
+ocapn_patents = searcher.search_patents(
+    query="object capability network distributed computing",
+    cpc_prefix="H04L",  # Digital communication
+)
+
+# Latent diffusion physics emulation (lolita)
+lolita_priors = searcher.search_patents(
+    query="latent diffusion physics simulation neural operator",
+    cpc_prefix="G06N",  # ML/neural
+    start_year=2020
+)
+\stopverb}
+
+\p{Wire results into \code{\startverb openalex-database\stopverb} + \code{\startverb hatchery-papers\stopverb} for full prior art graph.}
+}
+
+\subtree{
+\title{3. BigQuery ML → Lolita Physics Pipeline}
+\p{BigQuery ML complements the Vertex AI pipeline (lolita, task#23):}
+
+\pre{\startverb
+-- Train a forecasting model on attractor time series (dysts corpus)
+CREATE OR REPLACE MODEL `asi_project.physics.attractor_forecast`
+OPTIONS (
+  model_type = 'ARIMA_PLUS',
+  time_series_timestamp_col = 'timestep',
+  time_series_data_col = 'value',
+  time_series_id_col = 'attractor_name',
+  auto_arima = TRUE,
+  data_frequency = 'AUTO_FREQUENCY'
+) AS
+SELECT timestep, value, attractor_name
+FROM `asi_project.physics.dysts_trajectories`;
+
+-- Predict next 100 steps
+SELECT *
+FROM ML.FORECAST(
+  MODEL `asi_project.physics.attractor_forecast`,
+  STRUCT(100 AS horizon, 0.9 AS confidence_level)
+);
+\stopverb}
+
+\p{Route predictions back to \code{\startverb lolita\stopverb} (latent diffusion) as warm-start priors.}
+}
+
+\subtree{
+\title{4. Looker Studio → CatColab Dashboard}
+\p{\code{\startverb looker-studio-bigquery\stopverb} + \code{\startverb catcolab-stock-flow\stopverb} + \code{\startverb catcolab-causal-loop\stopverb}:}
+
+\p{F-pattern dashboard for asi skill graph health:}
+
+\pre{\startverb
+-- Skill graph daily metrics (feeds Looker Studio)
+CREATE OR REPLACE TABLE `asi_project.dashboard.skill_metrics` AS
+SELECT
+  CURRENT_DATE() as report_date,
+  COUNT(*) as total_skills,
+  COUNTIF(trit = -1) as negative_skills,
+  COUNTIF(trit = 0) as neutral_skills,
+  COUNTIF(trit = 1) as positive_skills,
+  -- MONOTONIC_SKILL_INVARIANT
+  CASE WHEN COUNT(*) >= 1360 THEN TRUE ELSE FALSE END as invariant_holds
+FROM `asi_project.skills.registry`;
+\stopverb}
+
+\p{KPI tiles: total skills (≥1360), GF(3) trit distribution, hub reachability (17 hubs).}
+}
+
+\subtree{
+\title{5. dbt Safety → ASI Skill Safety}
+\p{\code{\startverb restricted-bigquery-dbt-environment\stopverb} pattern applied to asi skill writes:}
+
+\pre{\startverb
+-- SAFE: Always write to test schema first
+{{ config(
+    schema='asi_test',  -- <- ALWAYS during development
+    materialized='incremental',
+    unique_key='skill_name'
+) }}
+
+SELECT * FROM {{ ref('skill_candidates') }}
+WHERE validated = TRUE
+  AND trit_balance = 0  -- GF(3) invariant
+\stopverb}
+
+\p{Rule: \strong{NEVER commit skill writes without \code{\startverb schema='asi_test'\stopverb} removed}. Run \code{\startverb git diff\stopverb} before push to verify MONOTONIC_SKILL_INVARIANT preserved.}
+}
+
+\subtree{
+\title{6. Skill Prior Art Search — asi × uspto-database}
+\p{Connect \code{\startverb bigquery-patent-search\stopverb} to \code{\startverb uspto-database\stopverb} for full prior art:}
+
+\pre{\startverb
+# Find patent landscape around key asi concepts
+concepts = [
+    ("topological chemputer CRN", "C07", "Chemical reactions"),
+    ("distributed capability object coloring", "H04L", "Networks"),
+    ("GF(3) ternary neural network", "G06N", "ML"),
+    ("category theory compositional game", "G06F", "Computing"),
+    ("latent diffusion physics operator", "G06N", "ML"),
+]
+
+for query, cpc, domain in concepts:
+    results = searcher.search_patents(query=query, cpc_prefix=cpc, limit=5)
+    print(f"\n=== {domain}: {query} ===")
+    for r in results:
+        print(f"  {r['publication_number']}: {r['title'][:60]}")
+\stopverb}
+
+\p{Use results to identify white space for asi's novel contributions.}
+}
+}
+
+\subtree{
+\title{Security Notes}
+\ul{
+\li{\code{\startverb restricted-bigquery-dbt-environment\stopverb}: NEVER run \code{\startverb dbt run\stopverb} without \code{\startverb schema='test'\stopverb}}
+\li{All BQ queries: use \code{\startverb --dry_run\stopverb} to estimate cost before large scans}
+\li{IAM: \code{\startverb bigquery.dataViewer\stopverb} minimum; \code{\startverb bigquery.jobUser\stopverb} for queries}
+\li{Patent data is public — no auth needed for \code{\startverb patents-public-data.*\stopverb}}
+\li{Free tier: 1TB/month queries free; ~20,000 patent searches/month free}
+}
+}
+
+\subtree{
+\title{Related ASI Skills}
+\ul{
+\li{\code{\startverb duckdb-ies\stopverb} / \code{\startverb duckdb-quadruple-interleave\stopverb} — local DuckDB complement to BQ warehouse}
+\li{\code{\startverb lolita\stopverb} / task#23 — physics emulation pipeline fed by BQML forecasting}
+\li{\code{\startverb bigquery-patent-search\stopverb} → \code{\startverb uspto-database\stopverb} + \code{\startverb openalex-database\stopverb} + \code{\startverb hatchery-papers\stopverb}}
+\li{\code{\startverb catcolab-stock-flow\stopverb} / \code{\startverb catcolab-causal-loop\stopverb} — Looker Studio → CatColab olog export}
+\li{\code{\startverb vertex-asi-interleave\stopverb} — parent GCP interleave (BigQuery lives inside the same GCP project)}
+\li{\code{\startverb wolframite-compass\stopverb} — Wolfram data alongside BigQuery public datasets}
+\li{\code{\startverb restricted-bigquery-dbt-environment\stopverb} → model safety pattern for all asi data writes}
+}
+}
+}

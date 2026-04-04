@@ -1,0 +1,307 @@
+\title{Implementing Gcp Organization Policy Constraints}
+
+\taxon{skill}
+
+\tag{gcp}
+
+\tag{organization-policy}
+
+\tag{constraints}
+
+\tag{governance}
+
+\tag{compliance}
+
+\tag{cloud-security}
+
+\tag{resource-manager}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement GCP Organization Policy constraints to enforce security guardrails across the entire resource hierarchy, restricting risky configurations and ensuring compliance at organization, folder, and project levels.}
+
+\subtree{
+\title{Implementing GCP Organization Policy Constraints}
+\subtree{
+\title{Overview}
+\p{The GCP Organization Policy Service provides centralized and programmatic control over cloud resources. Organization policies configure constraints that restrict one or more Google Cloud services, enforced at organization, folder, or project levels. They improve security by blocking external IPs, requiring encryption, and minimizing unauthorized access. Changes can take up to 15 minutes to propagate.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing gcp organization policy constraints capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{GCP Organization with Organization Administrator role}
+\li{\code{\startverb gcloud\stopverb} CLI configured and authenticated}
+\li{Terraform or gcloud for policy management}
+\li{Organization Policy Administrator IAM role (\code{\startverb roles/orgpolicy.policyAdmin\stopverb})}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Constraint Types}
+\ol{
+\li{\strong{List Constraints}: Allow or deny specific values (e.g., allowed regions)}
+\li{\strong{Boolean Constraints}: Enable or disable a capability (e.g., disable serial port access)}
+\li{\strong{Custom Constraints}: User-defined rules targeting specific resource fields (Preview)}
+}
+}
+
+\subtree{
+\title{Policy Inheritance}
+\p{Policies inherit from the lowest ancestor with an enforced policy. If no ancestor has a policy, Google's managed default behavior applies.}
+}
+}
+
+\subtree{
+\title{Essential Security Constraints}
+\subtree{
+\title{Restrict VM External IP Addresses}
+\pre{\startverb
+# Deny external IP addresses on all VMs
+gcloud resource-manager org-policies set-policy \
+  --organization=ORGANIZATION_ID \
+  policy.yaml
+\stopverb}
+
+\p{policy.yaml:}
+
+\pre{\startverb
+constraint: constraints/compute.vmExternalIpAccess
+listPolicy:
+  allValues: DENY
+\stopverb}
+}
+
+\subtree{
+\title{Restrict Resource Locations}
+\pre{\startverb
+gcloud org-policies set-policy \
+  --organization=ORGANIZATION_ID \
+  location-policy.yaml
+\stopverb}
+
+\p{location-policy.yaml:}
+
+\pre{\startverb
+constraint: constraints/gcp.resourceLocations
+listPolicy:
+  allowedValues:
+    - "in:us-locations"
+    - "in:eu-locations"
+\stopverb}
+}
+
+\subtree{
+\title{Disable Default Service Account Creation}
+\pre{\startverb
+constraint: constraints/iam.automaticIamGrantsForDefaultServiceAccounts
+booleanPolicy:
+  enforced: true
+\stopverb}
+}
+
+\subtree{
+\title{Require OS Login for SSH}
+\pre{\startverb
+constraint: constraints/compute.requireOsLogin
+booleanPolicy:
+  enforced: true
+\stopverb}
+}
+
+\subtree{
+\title{Disable Serial Port Access}
+\pre{\startverb
+constraint: constraints/compute.disableSerialPortAccess
+booleanPolicy:
+  enforced: true
+\stopverb}
+}
+
+\subtree{
+\title{Enforce Uniform Bucket-Level Access}
+\pre{\startverb
+constraint: constraints/storage.uniformBucketLevelAccess
+booleanPolicy:
+  enforced: true
+\stopverb}
+}
+
+\subtree{
+\title{Restrict Public IP on Cloud SQL}
+\pre{\startverb
+constraint: constraints/sql.restrictPublicIp
+booleanPolicy:
+  enforced: true
+\stopverb}
+}
+
+\subtree{
+\title{Disable Service Account Key Creation}
+\pre{\startverb
+constraint: constraints/iam.disableServiceAccountKeyCreation
+booleanPolicy:
+  enforced: true
+\stopverb}
+}
+}
+
+\subtree{
+\title{Terraform Implementation}
+\pre{\startverb
+resource "google_organization_policy" "restrict_vm_external_ip" {
+  org_id     = var.org_id
+  constraint = "constraints/compute.vmExternalIpAccess"
+
+  list_policy {
+    deny {
+      all = true
+    }
+  }
+}
+
+resource "google_organization_policy" "restrict_locations" {
+  org_id     = var.org_id
+  constraint = "constraints/gcp.resourceLocations"
+
+  list_policy {
+    allow {
+      values = ["in:us-locations", "in:eu-locations"]
+    }
+  }
+}
+
+resource "google_organization_policy" "require_os_login" {
+  org_id     = var.org_id
+  constraint = "constraints/compute.requireOsLogin"
+
+  boolean_policy {
+    enforced = true
+  }
+}
+
+resource "google_folder_organization_policy" "dev_folder_external_ip" {
+  folder     = google_folder.dev.name
+  constraint = "constraints/compute.vmExternalIpAccess"
+
+  list_policy {
+    allow {
+      values = ["projects/dev-project/zones/us-central1-a/instances/bastion-host"]
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Dry-Run Testing}
+\p{Use Policy Intelligence tools to test changes before enforcement:}
+
+\pre{\startverb
+# Create a dry-run policy to monitor impact
+gcloud org-policies set-policy \
+  --organization=ORGANIZATION_ID \
+  dry-run-policy.yaml
+\stopverb}
+
+\p{dry-run-policy.yaml:}
+
+\pre{\startverb
+constraint: constraints/compute.vmExternalIpAccess
+listPolicy:
+  allValues: DENY
+dryRunSpec: true
+\stopverb}
+
+\pre{\startverb
+# Check violations against dry-run policy
+gcloud org-policies list-custom-constraints \
+  --organization=ORGANIZATION_ID
+\stopverb}
+}
+
+\subtree{
+\title{Custom Constraints}
+\pre{\startverb
+# custom-constraint.yaml
+name: organizations/ORGANIZATION_ID/customConstraints/custom.disableGKEAutoUpgrade
+resourceTypes:
+  - container.googleapis.com/NodePool
+methodTypes:
+  - CREATE
+  - UPDATE
+condition: "resource.management.autoUpgrade == true"
+actionType: DENY
+displayName: Deny GKE auto-upgrade on node pools
+description: Prevents enabling auto-upgrade on GKE node pools for controlled upgrades
+\stopverb}
+
+\pre{\startverb
+gcloud org-policies set-custom-constraint custom-constraint.yaml
+\stopverb}
+}
+
+\subtree{
+\title{Monitoring and Compliance}
+\subtree{
+\title{List active policies}
+\pre{\startverb
+gcloud org-policies list --organization=ORGANIZATION_ID
+\stopverb}
+}
+
+\subtree{
+\title{Describe a specific policy}
+\pre{\startverb
+gcloud org-policies describe constraints/compute.vmExternalIpAccess \
+  --organization=ORGANIZATION_ID
+\stopverb}
+}
+
+\subtree{
+\title{Audit policy violations with Cloud Asset Inventory}
+\pre{\startverb
+gcloud asset search-all-resources \
+  --scope=organizations/ORGANIZATION_ID \
+  --query="policy:constraints/compute.vmExternalIpAccess"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Recommended Baseline Policies}
+\pre{\startverb
+| Constraint | Type | Scope | Purpose |
+|-----------|------|-------|---------|
+| compute.vmExternalIpAccess | List/Deny | Org | Prevent public VM IPs |
+| gcp.resourceLocations | List/Allow | Org | Restrict to approved regions |
+| iam.disableServiceAccountKeyCreation | Boolean | Org | Force Workload Identity |
+| compute.requireOsLogin | Boolean | Org | Mandate OS Login for SSH |
+| storage.uniformBucketLevelAccess | Boolean | Org | Enforce uniform bucket access |
+| sql.restrictPublicIp | Boolean | Org | No public Cloud SQL |
+| compute.disableSerialPortAccess | Boolean | Org | Disable serial port |
+| compute.disableNestedVirtualization | Boolean | Org | No nested VMs |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{GCP Organization Policy Constraints: https://docs.google.com/resource-manager/docs/organization-policy/org-policy-constraints}
+\li{GCP Policy Intelligence: https://cloud.google.com/policy-intelligence}
+\li{CIS GCP Foundations Benchmark}
+}
+}
+}

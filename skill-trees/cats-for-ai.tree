@@ -1,0 +1,448 @@
+\title{Cats For Ai}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{cats.for" (Categories for AI)}
+
+\subtree{
+\title{cats.for" (Categories for AI)}
+\blockquote{"Category theory is compositionality made formal" — Bruno Gavranović, cats.for.ai}
+
+\p{\strong{URL}: https://cats.for.ai \strong{Trit}: 0 (ERGODIC) \strong{Color}: #26D826 (Green) \strong{Status}: ✅ Production Ready}
+
+\subtree{
+\title{Overview}
+\p{\strong{cats.for.ai} is the definitive lecture series connecting category theory to machine learning, organized by DeepMind, Qualcomm AI, and academic researchers.}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         cats.for.ai INTEGRATION                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   POLY INACCESSIBLE WORLDS AS COLORS MAXIMAL                               │
+│                                                                             │
+│   ┌───────────────┐     ┌───────────────┐     ┌───────────────┐            │
+│   │   Poly(y)     │     │  Inaccessible │     │    Colors     │            │
+│   │   Functors    │────▶│    Worlds     │────▶│    Maximal    │            │
+│   │    (-1)       │     │     (0)       │     │     (+1)      │            │
+│   └───────────────┘     └───────────────┘     └───────────────┘            │
+│         │                      │                      │                     │
+│         │    Optics/Lenses     │   Modal Semantics    │   GF(3) Coloring   │
+│         │                      │                      │                     │
+│         └──────────────────────┴──────────────────────┘                     │
+│                                 │                                           │
+│                    GF(3): (-1) + 0 + (+1) ≡ 0                              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Organizing Committee}
+\pre{\startverb
+| Name | Affiliation | Role |
+|------|-------------|------|
+| Bruno Gavranović | Strathclyde / CyberCat | Optics, Lenses, Backprop |
+| Petar Veličković | DeepMind / Cambridge | GNNs, Categories |
+| Pim de Haan | Amsterdam / Qualcomm | Geometric DL, Equivariance |
+| Andrew Dudzik | DeepMind | Monads, RNNs |
+| João G. Araújo | Cohere / USP | LLMs, Semantics |
+\stopverb}
+}
+
+\subtree{
+\title{Guest Speakers}
+\pre{\startverb
+| Speaker | Topic | Trit |
+|---------|-------|------|
+| David Spivak | Poly, Dynamic Systems | 0 (ERGODIC) |
+| Jules Hedges | Categorical Cybernetics | 0 (ERGODIC) |
+| Tai-Danae Bradley | CT for LLMs | +1 (PLUS) |
+| Taco Cohen | Causal Abstraction | -1 (MINUS) |
+| Pietro Vertechi | Parametric Spans | 0 (ERGODIC) |
+| Thomas Gebhart | Sheaves for AI | -1 (MINUS) |
+\stopverb}
+}
+
+\subtree{
+\title{Lecture Program}
+\subtree{
+\title{Part 1: Introductory Lectures (Completed)}
+\pre{\startverb
+| Week | Topic | Speaker | Key Concepts |
+|------|-------|---------|--------------|
+| 1 | Why Category Theory? | Gavranović | Compositionality, Modularity |
+| 2 | Categories & Functors | Veličković | Objects, Morphisms, Functors |
+| 3 | Optics & Lenses | Gavranović | Bidirectional flow, Backprop |
+| 4 | Geometric DL & Naturality | de Haan | Equivariance, Natural transformations |
+| 5 | Monoids, Monads, LSTMs | Dudzik | Recurrence, State |
+\stopverb}
+}
+
+\subtree{
+\title{Part 2: Research Seminars (Ongoing)}
+\pre{\startverb
+| Date | Topic | Speaker |
+|------|-------|---------|
+| Nov 14 | Neural network layers as parametric spans | Vertechi |
+| Nov 21 | Causal Model Abstraction | Cohen |
+| Dec 12 | Category Theory Inspired by LLMs | Bradley |
+| Mar 20 | Categorical Cybernetics | Hedges |
+| Mar 27 | Dynamic organizational systems | Spivak |
+| May 29 | Sheaves for AI | Gebhart |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{1. Polynomial Functors (Py)}
+\pre{\startverb
+-- Poly = polynomial functors on Set
+-- y = representable functor Hom(1, -)
+-- ◁ = composition of polynomials
+
+data Poly where
+  Poly :: { positions :: Type
+          , directions :: positions -> Type
+          } -> Poly
+
+-- Key operations
+(⊗) :: Poly -> Poly -> Poly  -- parallel (tensor)
+(◁) :: Poly -> Poly -> Poly  -- sequential (composition)
+(+) :: Poly -> Poly -> Poly  -- coproduct
+\stopverb}
+}
+
+\subtree{
+\title{2. Inaccessible Worlds (Modal Semantics)}
+\pre{\startverb
+-- Kripke frame with inaccessibility
+record KripkeFrame : Set₁ where
+  field
+    World : Set
+    _≺_ : World → World → Set  -- accessibility
+    inaccessible : World → Set  -- worlds with no predecessors
+
+-- Modal operators
+□ : (World → Prop) → (World → Prop)  -- necessity
+□ φ w = ∀ v → w ≺ v → φ v
+
+◇ : (World → Prop) → (World → Prop)  -- possibility
+◇ φ w = ∃ v → w ≺ v × φ v
+
+-- Inaccessible world: ¬∃v. v ≺ w
+isInaccessible : World → Prop
+isInaccessible w = ∀ v → ¬(v ≺ w)
+\stopverb}
+}
+
+\subtree{
+\title{3. Colors Maximal (GF(3) Saturation)}
+\pre{\startverb
+(ns cats4ai.colors
+  (:require [gay.core :as gay]))
+
+(defn color-world [world-seed trit]
+  "Assign maximal color to world based on trit"
+  (let [hue (case trit
+              :MINUS   (+ 180 (mod (* world-seed 37) 120))  ; cold
+              :ERGODIC (+ 60 (mod (* world-seed 41) 120))   ; neutral
+              :PLUS    (mod (* world-seed 43) 60))          ; warm
+        saturation 1.0  ; MAXIMAL
+        lightness 0.5]
+    {:hue hue :sat saturation :lit lightness
+     :hex (gay/hsl->hex hue saturation lightness)}))
+
+(defn worlds-palette [n]
+  "Generate n inaccessible worlds with maximal colors"
+  (for [i (range n)
+        :let [trit (case (mod i 3) 0 :ERGODIC 1 :PLUS 2 :MINUS)]]
+    {:world-id i
+     :accessible? false  ; inaccessible
+     :color (color-world i trit)
+     :trit trit}))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Optics for Machine Learning}
+\subtree{
+\title{Lens = Backpropagation}
+\pre{\startverb
+-- A lens captures forward/backward pass
+data Lens s t a b = Lens
+  { view :: s -> a        -- forward pass
+  , update :: s -> b -> t  -- backward pass (gradient)
+  }
+
+-- Backprop is lens composition
+backprop :: Lens s t a b -> Lens a b c d -> Lens s t c d
+backprop l1 l2 = Lens
+  { view = view l2 . view l1
+  , update = \s d ->
+      let a = view l1 s
+          b = update l2 a d
+      in update l1 s b
+  }
+
+-- Chain rule emerges from lens composition!
+-- d(g∘f)/dx = dg/df · df/dx
+\stopverb}
+}
+
+\subtree{
+\title{Para = Parametric Morphisms}
+\pre{\startverb
+-- Parametric morphism (neural network layer)
+data Para p a b = Para
+  { params :: p           -- learnable parameters
+  , forward :: p -> a -> b  -- parameterized forward
+  }
+
+-- Para composition
+(>>>) :: Para p a b -> Para q b c -> Para (p, q) a c
+(Para p f) >>> (Para q g) = Para (p, q) (\(p,q) a -> g q (f p a))
+\stopverb}
+}
+
+\subtree{
+\title{Optic = Generalized Bidirectional}
+\pre{\startverb
+-- Optic generalizes lens, prism, traversal
+type Optic p s t a b = p a b -> p s t
+
+-- Specific optics for ML:
+type Lens s t a b = Optic (Star ((->) s)) s t a b      -- deterministic
+type Prism s t a b = Optic (Costar (Either a)) s t a b -- optional
+type Affine s t a b = Optic (Star Maybe) s t a b       -- at most one
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration Map}
+\subtree{
+\title{With Existing Skills}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      cats.for.ai SKILL INTEGRATION                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  cats.for.ai                                                                │
+│       │                                                                     │
+│       ├──▶ open-games (Hedges)                                             │
+│       │         └── Play/Coplay bidirectional                               │
+│       │                                                                     │
+│       ├──▶ catsharp (Spivak)                                               │
+│       │         └── Cat# = Comod(P) equipment                              │
+│       │                                                                     │
+│       ├──▶ topos-catcolab (Patterson)                                      │
+│       │         └── Double theories, ACSets                                 │
+│       │                                                                     │
+│       ├──▶ cybernetic-open-game                                            │
+│       │         └── Agent-O-Rama ↔ Worldnet ↔ STC                          │
+│       │                                                                     │
+│       ├──▶ elements-infinity-cats (Riehl-Verity)                           │
+│       │         └── ∞-cosmos model independence                             │
+│       │                                                                     │
+│       ├──▶ sheaf-laplacian-coordination (Gebhart)                          │
+│       │         └── Sheaf neural networks                                   │
+│       │                                                                     │
+│       ├──▶ crdt (Automerge)                                                │
+│       │         └── Join-semilattice merge                                  │
+│       │                                                                     │
+│       └──▶ derangement-crdt                                                │
+│                 └── Colorable permutations                                  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+# Core cats.for.ai triads
+optics-lenses (-1) ⊗ cats-for-ai (0) ⊗ backprop (+1) = 0 ✓
+sheaves (-1) ⊗ cats-for-ai (0) ⊗ gnns (+1) = 0 ✓
+cybernetics (-1) ⊗ cats-for-ai (0) ⊗ open-games (+1) = 0 ✓
+poly-functors (-1) ⊗ cats-for-ai (0) ⊗ para-morphisms (+1) = 0 ✓
+causal-abstraction (-1) ⊗ cats-for-ai (0) ⊗ llm-semantics (+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Inaccessible Worlds Protocol}
+\p{For each inaccessible world (no predecessor in accessibility relation):}
+
+\pre{\startverb
+class InaccessibleWorld:
+    """A world with no accessible predecessors - epistemic ground truth"""
+
+    def __init__(self, seed: int, trit: int):
+        self.seed = seed
+        self.trit = trit  # -1, 0, +1
+        self.color = self._maximal_color()
+        self.accessible_from = set()  # empty = inaccessible
+
+    def _maximal_color(self) -> dict:
+        """Assign maximally saturated color based on trit"""
+        hue_base = {-1: 240, 0: 120, 1: 0}[self.trit]  # blue/green/red
+        hue = (hue_base + (self.seed * 37) % 60) % 360
+        return {"h": hue, "s": 1.0, "l": 0.5}  # MAXIMAL saturation
+
+    def poly_action(self, p: "Poly") -> "InaccessibleWorld":
+        """Apply polynomial functor action"""
+        new_seed = (self.seed * p.positions + sum(p.directions)) % (2**64)
+        new_trit = (self.trit + p.trit) % 3
+        return InaccessibleWorld(new_seed, new_trit)
+\stopverb}
+}
+
+\subtree{
+\title{YouTube Resources}
+\p{All lectures available: [YouTube Playlist](https://www.youtube.com/playlist?list=PLSdFiFTAI4sQ0Rg4BIZcNnU-45I9DI-VB)}
+
+\pre{\startverb
+| Lecture | Views | Key Insight |
+|---------|-------|-------------|
+| Why Category Theory? | 24K+ | Compositionality = modularity |
+| Optics and Lenses | 15K+ | Chain rule = lens composition |
+| Categorical Cybernetics | 10K+ | Agency via parametrised optics |
+| Sheaves for AI | 8K+ | Local-to-global inference |
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Watch lecture
+just cats4ai-watch LECTURE_NUM
+
+# Run optics demo
+just cats4ai-optics-demo
+
+# Generate inaccessible worlds
+just cats4ai-worlds N
+
+# Color palette
+just cats4ai-colors --maximal
+
+# Integration check
+just cats4ai-integrate SKILL_NAME
+\stopverb}
+}
+
+\subtree{
+\title{Babashka Integration}
+\pre{\startverb
+#!/usr/bin/env bb
+;; cats4ai.bb - Categories for AI utilities
+
+(ns cats4ai
+  (:require [babashka.http-client :as http]
+            [cheshire.core :as json]))
+
+(def LECTURES
+  [{:week 1 :title "Why Category Theory?" :speaker "Gavranović" :trit 0}
+   {:week 2 :title "Categories & Functors" :speaker "Veličković" :trit 0}
+   {:week 3 :title "Optics & Lenses" :speaker "Gavranović" :trit -1}
+   {:week 4 :title "Geometric DL" :speaker "de Haan" :trit +1}
+   {:week 5 :title "Monads & LSTMs" :speaker "Dudzik" :trit 0}])
+
+(defn gf3-conservation? [lectures]
+  (zero? (mod (reduce + (map :trit lectures)) 3)))
+
+(defn inaccessible-world [seed]
+  {:seed seed
+   :trit (case (mod seed 3) 0 :ERGODIC 1 :PLUS 2 :MINUS)
+   :accessible-from #{}
+   :color {:h (mod (* seed 37) 360) :s 1.0 :l 0.5}})
+
+(defn -main [& args]
+  (println "cats.for.ai - Categories for AI")
+  (println "GF(3) conserved?" (gf3-conservation? LECTURES))
+  (println "Inaccessible worlds:"
+           (map inaccessible-world (range 3))))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\subtree{
+\title{Primary}
+\ul{
+\li{[cats.for.ai](https://cats.for.ai) - Official site}
+\li{[YouTube Playlist](https://www.youtube.com/playlist?list=PLSdFiFTAI4sQ0Rg4BIZcNnU-45I9DI-VB)}
+\li{[Zulip Chat](https://cats-for-ai.zulipchat.com/)}
+}
+}
+
+\subtree{
+\title{Papers}
+\ul{
+\li{Gavranović et al. "Categorical Foundations of Gradient-Based Learning" (2024)}
+\li{Hedges "Compositional Game Theory" (2016)}
+\li{Spivak "Poly: An abundant categorical setting" (2020)}
+\li{Bradley "Language Models as Semantic Functors" (2023)}
+\li{Gebhart "Sheaf Neural Networks" (2022)}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb open-games\stopverb} - Hedges' compositional games}
+\li{\code{\startverb catsharp\stopverb} - Spivak's Cat# = Comod(P)}
+\li{\code{\startverb topos-catcolab\stopverb} - Topos collaborative CT}
+\li{\code{\startverb cybernetic-open-game\stopverb} - Cybernetic feedback}
+\li{\code{\startverb sheaf-laplacian-coordination\stopverb} - Gebhart sheaves}
+\li{\code{\startverb crdt\stopverb} - Join-semilattice CRDTs}
+\li{\code{\startverb derangement-crdt\stopverb} - Colorable derangements}
+}
+
+\p{\strong{Skill Name}: cats-for-ai \strong{Type}: Categorical Machine Learning \strong{Trit}: 0 (ERGODIC) \strong{Poly}: Inaccessible worlds as colors maximal \strong{GF(3)}: Conserved across all triads}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+cats-for-ai (+) + SDF.Ch10 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch7: Propagators}
+\li{Ch6: Layering}
+\li{Ch2: Domain-Specific Languages}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+}

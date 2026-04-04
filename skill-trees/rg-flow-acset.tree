@@ -1,0 +1,140 @@
+\title{Rg Flow Acset}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'RG Flow ACSet Skill'}
+
+\subtree{
+\title{RG Flow ACSet Skill}
+\p{Renormalization Group flow with ACSet categorical semantics, XY model topological defects, and Powers PCT hierarchical control.}
+
+\subtree{
+\title{Seed}
+\pre{\startverb
+741086072858456200
+\stopverb}
+}
+
+\subtree{
+\title{Triadic Palette (Powers PCT Cascade)}
+\pre{\startverb
+| Color | Hue | Hex | Role |
+|-------|-----|-----|------|
+| Cyan | 172° | `#23C8B3` | Ordered phase |
+| Purple | 292° | `#AA22BE` | Critical/BKT |
+| Gold | 52° | `#E0CE51` | Converged fixed point |
+\stopverb}
+}
+
+\subtree{
+\title{ACSet Schema: RGFlow}
+\pre{\startverb
+@present SchRGFlow(FreeSchema) begin
+  # Objects
+  Trace::Ob
+  EquivalenceClass::Ob
+  RGStep::Ob
+  FixedPoint::Ob
+  
+  # Morphisms
+  condenses_to::Hom(Trace, EquivalenceClass)
+  transforms_via::Hom(EquivalenceClass, RGStep)
+  flows_to::Hom(RGStep, FixedPoint)
+  
+  # Attributes
+  tau::Attr(RGStep, Float64)
+  net_charge::Attr(RGStep, Int)
+  hue::Attr(EquivalenceClass, Float64)
+end
+
+# Predicates (as computed attributes)
+NetChargeZero(step) = net_charge(step) == 0
+Ordered(step) = tau(step) < 0.893  # Below BKT
+Converged(step) = abs(tau(step) - 0.5) < 0.01
+\stopverb}
+}
+
+\subtree{
+\title{XY Model Configuration (τ=0.5)}
+\pre{\startverb
+Phase: Ordered (below BKT critical τ_c ≈ 0.893)
+Defects: 2 vortex/antivortex pairs
+Net topological charge: 0 (conserved)
+Phenomenal bisect: τ* ≈ 0.5 (converged)
+\stopverb}
+}
+
+\subtree{
+\title{Hierarchical Control (Powers PCT)}
+\pre{\startverb
+Level 5 (Program): "triadic" goal
+    ↓ sets reference for
+Level 4 (Transition): hue velocities [172°, 292°, 52°]
+    ↓ sets reference for
+Level 3 (Configuration): complementary angles
+    ↓ sets reference for
+Level 2 (Sensation): target hues
+    ↓ sets reference for
+Level 1 (Intensity): lightness 0.55
+\stopverb}
+}
+
+\subtree{
+\title{RG Flow Semantics}
+\p{The morphism chain \code{\startverb Trace → EquivalenceClass → RGStep → FixedPoint\stopverb} implements:}
+
+\ol{
+\li{\strong{condenses_to}: Traces coarse-grain to equivalence classes (irrelevant operators drop)}
+\li{\strong{transforms_via}: Equivalence classes evolve under RG transformation}
+\li{\strong{flows_to}: RG steps converge to fixed points (universality)}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Triadic colors sum to 0 (mod 3):}
+
+\ul{
+\li{\code{\startverb #23C8B3\stopverb} → trit 0 (identity)}
+\li{\code{\startverb #AA22BE\stopverb} → trit +1 (creation)}
+\li{\code{\startverb #E0CE51\stopverb} → trit -1 (annihilation)}
+}
+
+\p{Net charge: 0 + 1 + (-1) = 0 ✓}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using ACSets
+
+@acset_type RGFlowACSet(SchRGFlow)
+
+# Create instance at BKT transition
+rg = @acset RGFlowACSet begin
+  Trace = 4
+  EquivalenceClass = 2
+  RGStep = 1
+  FixedPoint = 1
+  condenses_to = [1, 1, 2, 2]
+  transforms_via = [1, 1]
+  flows_to = [1]
+  tau = [0.5]
+  net_charge = [0]
+  hue = [172.0, 292.0]
+end
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb xy-model\stopverb}: XY spin dynamics and BKT transition}
+\li{\code{\startverb phenomenal-bisect\stopverb}: Temperature search for critical τ*}
+\li{\code{\startverb hierarchical-control\stopverb}: Powers PCT cascade}
+\li{\code{\startverb gay-mcp\stopverb}: Deterministic color generation}
+}
+}
+}

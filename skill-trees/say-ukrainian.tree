@@ -1,0 +1,77 @@
+\title{Say Ukrainian}
+
+\taxon{skill}
+
+\meta{description}{Non-Ukrainian voices speak Ukrainian via macOS say command. Load when voicing Ukrainian text through foreign TTS voices for counterfactual narration or ostranення effect.}
+
+\subtree{
+\title{Say Ukrainian}
+\p{Foreign voices speak Ukrainian. Not translations -- refractions. Utterance length matches shared context. Every event gets voiced.}
+
+\subtree{
+\title{Voices}
+\p{Only Enhanced/Premium. Rate 130-160 WPM.}
+
+\pre{\startverb
+| Category | Voices |
+|----------|--------|
+| Cold | Alice (Enhanced), Emma (Enhanced), Federica (Enhanced), Paola (Enhanced) |
+| Neutral | Ava (Premium), Samantha (Enhanced), Allison (Enhanced) |
+| Warm | Nathan (Enhanced), Evan (Enhanced), Nicky (Enhanced), Noelle (Enhanced) |
+\stopverb}
+}
+
+\subtree{
+\title{Forbidden}
+\ul{
+\li{\strong{Lesya} (uk-UA) -- collapses counterfactual}
+\li{\strong{Milena} (ru-RU) -- political charge}
+\li{Compact/super-compact voices}
+\li{Novelty voices, Daniel (en-GB)}
+}
+}
+
+\subtree{
+\title{Transliteration}
+\p{Feed Cyrillic first. Only fall back to Latin when the voice produces silence or reads letter names.}
+
+\p{\strong{Single-letter patch}: Standalone single Cyrillic letters trigger "cyrillic letter X" announcements in non-Ukrainian voices. Pipe all text through \code{\startverb scripts/patch-singles.sh\stopverb} before TTS.}
+
+\pre{\startverb
+echo "rich iz vershkiv i zirok" | scripts/patch-singles.sh
+\stopverb}
+
+\p{\strong{Cyrillic support} (tested):}
+
+\ul{
+\li{Cyrillic works (with patch-singles): Ava (Premium), Nathan (Enhanced), Samantha (Enhanced)}
+\li{Cyrillic silent -- full Latin transliteration: Alice (Enhanced), Federica (Enhanced), Emma (Enhanced), Paola (Enhanced)}
+}
+
+\p{Full Latin transliteration table (only for silent voices):}
+
+\pre{\startverb
+| Cyrillic | Latin | | Cyrillic | Latin |
+|----------|-------|-|----------|-------|
+| i, y | ee | | ch | ch |
+| u | oo | | sh | sh |
+| e | eh | | shch | shch |
+| h | h | | zh | zh |
+| ya | yah | | soft sign | y or omit |
+| yu | yoo | | ye | yeh |
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+| # | Spoken | Source line | Voice |
+|---|--------|------------|-------|
+| 1 | "Rozplyushchuyesh ochi -- lyshe halyavyna z olenyamy" | you open your eyes only a clearing with deer in it | Alice |
+| 2 | "Dozvol meni zrobyty rich iz vershkiv i zirok" | let me make a thing of cream and stars | Ava |
+| 3 | "Chorne nebo pokolote dribnymy vohnykamy" | a black sky prickled with small lights | Nathan |
+| 4 | "Derevyani zaly nache truny" | the wooden halls like caskets | Federica |
+| 5 | "U tebe ochi yak likhtarni" | you get eyes like flashlights | Samantha |
+\stopverb}
+}
+}

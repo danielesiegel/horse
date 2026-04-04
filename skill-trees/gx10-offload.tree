@@ -1,0 +1,172 @@
+\title{Gx10 Offload}
+
+\taxon{skill}
+
+\meta{description}{Offload inference, code generation, and batch processing to local GX10 DGX Spark (GB10 Blackwell) running Ollama}
+
+\subtree{
+\title{GX10 Offload}
+\p{Offload work to the local NVIDIA DGX Spark cluster node running Ollama with Devstral models on GB10 Blackwell GPU (128GB unified memory).}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Long code generation tasks that benefit from a dedicated local model}
+\li{Batch processing of multiple prompts}
+\li{Draft generation for review (speculative decoding pattern)}
+\li{Tasks where latency to cloud APIs is a bottleneck}
+\li{Privacy-sensitive inference that must stay on-premises}
+}
+}
+
+\subtree{
+\title{Connection}
+\pre{\startverb
+| Property | Value |
+|----------|-------|
+| Host (WiFi) | `10.0.0.234` / `gx10-94e2.local` (mDNS) |
+| Host (Tailscale) | `100.67.53.87` (gx10-acee, different unit) |
+| User | `a` |
+| Password | `aaaaaa` |
+| Ollama API | `http://localhost:11434` on the device |
+| SSH tunnel | `ssh -L 11434:localhost:11434 a@10.0.0.234` |
+\stopverb}
+
+\p{\strong{Note}: The WiFi-connected unit is \strong{gx10-94e2} (discovered via mDNS). The Tailscale-reachable unit is \strong{gx10-acee} (different physical Spark).}
+}
+
+\subtree{
+\title{Available Models}
+\pre{\startverb
+| Model | Size | Use Case |
+|-------|------|----------|
+| `devstral` | 14GB | Fast coding tasks, lightweight generation |
+| `devstral-2:123b` | 74GB | Heavy reasoning, complex code generation |
+| `devstral2-4k` | 74GB | Same as above, 4k context window |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Usage}
+\subtree{
+\title{Single prompt via SSH}
+\pre{\startverb
+sshpass -p 'aaaaaa' ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no \
+  a@100.67.53.87 \
+  "curl -s http://localhost:11434/api/generate -d '{\"model\":\"devstral\",\"prompt\":\"YOUR_PROMPT\",\"stream\":false}'"
+\stopverb}
+}
+
+\subtree{
+\title{Via SSH tunnel (persistent)}
+\pre{\startverb
+# Open tunnel in background
+sshpass -p 'aaaaaa' ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no \
+  -fNL 11434:localhost:11434 a@100.67.53.87
+
+# Then use locally as if Ollama were running here
+curl http://localhost:11434/api/generate \
+  -d '{"model":"devstral","prompt":"Hello","stream":false}'
+\stopverb}
+}
+
+\subtree{
+\title{OpenAI-compatible API}
+\pre{\startverb
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "devstral",
+    "messages": [{"role": "user", "content": "Write a Python function to sort a list"}]
+  }'
+\stopverb}
+}
+
+\subtree{
+\title{Using the offload script}
+\pre{\startverb
+# Simple prompt
+~/.claude/skills/gx10-offload/scripts/offload.sh "Write a Rust function for binary search"
+
+# With specific model
+~/.claude/skills/gx10-offload/scripts/offload.sh "Explain monads" devstral-2:123b
+
+# Batch mode (one prompt per line)
+~/.claude/skills/gx10-offload/scripts/offload.sh --batch prompts.txt
+\stopverb}
+}
+}
+
+\subtree{
+\title{Offload Patterns}
+\subtree{
+\title{1. Draft-and-Review}
+\p{Offload draft generation to GX10, then review/refine with Claude:}
+
+\pre{\startverb
+# GX10 generates draft
+DRAFT=$(~/.claude/skills/gx10-offload/scripts/offload.sh "Implement a Redis cache wrapper in Python with TTL support")
+# Claude reviews and improves the draft
+\stopverb}
+}
+
+\subtree{
+\title{2. Batch Code Generation}
+\p{Generate multiple implementations in parallel on GX10:}
+
+\pre{\startverb
+for task in "sort" "search" "hash" "tree"; do
+  ~/.claude/skills/gx10-offload/scripts/offload.sh "Implement $task in Rust" &
+done
+wait
+\stopverb}
+}
+
+\subtree{
+\title{3. Test Generation}
+\p{Offload test writing to the local model:}
+
+\pre{\startverb
+~/.claude/skills/gx10-offload/scripts/offload.sh "Write pytest tests for: $(cat src/main.py)"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Device Status Check}
+\pre{\startverb
+~/.claude/skills/gx10-offload/scripts/offload.sh --status
+\stopverb}
+}
+
+\subtree{
+\title{Ensure Ollama is Running}
+\pre{\startverb
+sshpass -p 'aaaaaa' ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no \
+  a@100.67.53.87 'pgrep ollama || nohup ollama serve > /tmp/ollama.log 2>&1 &'
+\stopverb}
+}
+
+\subtree{
+\title{Hardware}
+\ul{
+\li{\strong{GPU}: NVIDIA GB10 Blackwell (DGX Spark)}
+\li{\strong{Memory}: 128GB unified (Grace-Blackwell architecture)}
+\li{\strong{CPU}: 20-core Grace ARM64}
+\li{\strong{OS}: Ubuntu 24.04 aarch64, kernel 6.14-nvidia}
+\li{\strong{PyTorch}: 2.10.0 with CUDA}
+\li{\strong{Disk}: 510GB free}
+}
+}
+
+\subtree{
+\title{GF(3) Assignment}
+\pre{\startverb
+| Trit | Role | Description |
+|------|------|-------------|
+| +1 | PLUS | Generator - produces code/text offloaded from Claude |
+\stopverb}
+
+\p{Conservation triad: \code{\startverb gx10-offload (+1) + tailscale (0) + skill-creator (-1) = 0\stopverb}}
+}
+}

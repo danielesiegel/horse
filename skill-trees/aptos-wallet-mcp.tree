@@ -1,0 +1,181 @@
+\title{Aptos Wallet Mcp}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Aptos Wallet MCP Skill}
+
+\subtree{
+\title{Aptos Wallet MCP Skill}
+\p{\strong{Trit}: 0 (ERGODIC) \strong{Domain}: blockchain, wallet, mcp}
+
+\subtree{
+\title{Overview}
+\p{Compressed, shareable Aptos wallet MCP configuration with GF(3) conservation.}
+}
+
+\subtree{
+\title{Wallets}
+\pre{\startverb
+| Wallet | Network | Balance | Trit | Role |
+|--------|---------|---------|------|------|
+| alice | mainnet | 0.6130 APT | -1 | MINUS/validator |
+| bob | mainnet | 55.6987 APT | +1 | PLUS/executor |
+| alice | testnet | 0.0000 APT | 0 | ERGODIC |
+| bob | testnet | 0.0000 APT | 0 | ERGODIC |
+\stopverb}
+}
+
+\subtree{
+\title{MCP Server Config}
+\pre{\startverb
+{
+  "alice-aptos": {
+    "command": "node",
+    "args": ["${APTOS_MCP_PATH}/dist/mcp/server.js"],
+    "env": {
+      "APTOS_NETWORK": "mainnet",
+      "APTOS_PRIVATE_KEY": "${ALICE_APTOS_KEY}"
+    }
+  },
+  "bob-aptos": {
+    "command": "node",
+    "args": ["${APTOS_MCP_PATH}/dist/mcp/server.js"],
+    "env": {
+      "APTOS_NETWORK": "mainnet",
+      "APTOS_PRIVATE_KEY": "${BOB_APTOS_KEY}"
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Tools}
+\pre{\startverb
+| Tool | ReadOnly | Approval |
+|------|----------|----------|
+| `aptos_balance` | yes | no |
+| `aptos_view` | yes | no |
+| `aptos_pending` | yes | no |
+| `aptos_transfer` | no | yes |
+| `aptos_swap` | no | yes |
+| `aptos_stake` | no | yes |
+| `aptos_intent` | no | yes |
+| `aptos_approve` | no | yes |
+\stopverb}
+}
+
+\subtree{
+\title{DEX Integrations}
+\ul{
+\li{liquidswap}
+\li{pancakeswap}
+\li{thala}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\pre{\startverb
+alice(-1) + bob(+1) + arbiter(0) = 0 (mod 3) ✓
+\stopverb}
+}
+
+\subtree{
+\title{Environment Template}
+\pre{\startverb
+export APTOS_MCP_PATH="$HOME/aptos-claude-agent"
+export ALICE_APTOS_KEY="0x..."
+export BOB_APTOS_KEY="0x..."
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Check balances
+just aptos-balance alice
+just aptos-balance bob
+
+# Validate wallet config
+just aptos-validate-all
+\stopverb}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+aptos-wallet-mcp (−) + SDF.Ch10 (+) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch5: Evaluation}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

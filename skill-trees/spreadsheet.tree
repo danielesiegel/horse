@@ -1,0 +1,189 @@
+\title{"spreadsheet"}
+
+\taxon{skill}
+
+\meta{description}{"Use when tasks involve creating, editing, analyzing, or formatting spreadsheets (`.xlsx`, `.csv`, `.tsv`) using Python (`openpyxl`, `pandas`), especially when formulas, references, and formatting need to be preserved and verified."}
+
+\subtree{
+\title{Spreadsheet Skill (Create, Edit, Analyze, Visualize)}
+\subtree{
+\title{When to use}
+\ul{
+\li{Build new workbooks with formulas, formatting, and structured layouts.}
+\li{Read or analyze tabular data (filter, aggregate, pivot, compute metrics).}
+\li{Modify existing workbooks without breaking formulas or references.}
+\li{Visualize data with charts/tables and sensible formatting.}
+}
+
+\p{IMPORTANT: System and user instructions always take precedence.}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Confirm the file type and goals (create, edit, analyze, visualize).}
+\li{Use \code{\startverb openpyxl\stopverb} for \code{\startverb .xlsx\stopverb} edits and \code{\startverb pandas\stopverb} for analysis and CSV/TSV workflows.}
+\li{If layout matters, render for visual review (see Rendering and visual checks).}
+\li{Validate formulas and references; note that openpyxl does not evaluate formulas.}
+\li{Save outputs and clean up intermediate files.}
+}
+}
+
+\subtree{
+\title{Temp and output conventions}
+\ul{
+\li{Use \code{\startverb tmp/spreadsheets/\stopverb} for intermediate files; delete when done.}
+\li{Write final artifacts under \code{\startverb output/spreadsheet/\stopverb} when working in this repo.}
+\li{Keep filenames stable and descriptive.}
+}
+}
+
+\subtree{
+\title{Primary tooling}
+\ul{
+\li{Use \code{\startverb openpyxl\stopverb} for creating/editing \code{\startverb .xlsx\stopverb} files and preserving formatting.}
+\li{Use \code{\startverb pandas\stopverb} for analysis and CSV/TSV workflows, then write results back to \code{\startverb .xlsx\stopverb} or \code{\startverb .csv\stopverb}.}
+\li{If you need charts, prefer \code{\startverb openpyxl.chart\stopverb} for native Excel charts.}
+}
+}
+
+\subtree{
+\title{Rendering and visual checks}
+\ul{
+\li{If LibreOffice (\code{\startverb soffice\stopverb}) and Poppler (\code{\startverb pdftoppm\stopverb}) are available, render sheets for visual review:}
+\li{\code{\startverb soffice --headless --convert-to pdf --outdir $OUTDIR $INPUT_XLSX\stopverb}}
+\li{\code{\startverb pdftoppm -png $OUTDIR/$BASENAME.pdf $OUTDIR/$BASENAME\stopverb}}
+\li{If rendering tools are unavailable, ask the user to review the output locally for layout accuracy.}
+}
+}
+
+\subtree{
+\title{Dependencies (install if missing)}
+\p{Prefer \code{\startverb uv\stopverb} for dependency management.}
+
+\p{Python packages:}
+
+\pre{\startverb
+uv pip install openpyxl pandas
+\stopverb}
+
+\p{If \code{\startverb uv\stopverb} is unavailable:}
+
+\pre{\startverb
+python3 -m pip install openpyxl pandas
+\stopverb}
+
+\p{Optional (chart-heavy or PDF review workflows):}
+
+\pre{\startverb
+uv pip install matplotlib
+\stopverb}
+
+\p{If \code{\startverb uv\stopverb} is unavailable:}
+
+\pre{\startverb
+python3 -m pip install matplotlib
+\stopverb}
+
+\p{System tools (for rendering):}
+
+\pre{\startverb
+# macOS (Homebrew)
+brew install libreoffice poppler
+
+# Ubuntu/Debian
+sudo apt-get install -y libreoffice poppler-utils
+\stopverb}
+
+\p{If installation isn't possible in this environment, tell the user which dependency is missing and how to install it locally.}
+}
+
+\subtree{
+\title{Environment}
+\p{No required environment variables.}
+}
+
+\subtree{
+\title{Examples}
+\ul{
+\li{Runnable Codex examples (openpyxl): \code{\startverb references/examples/openpyxl/\stopverb}}
+}
+}
+
+\subtree{
+\title{Formula requirements}
+\ul{
+\li{Use formulas for derived values rather than hardcoding results.}
+\li{Keep formulas simple and legible; use helper cells for complex logic.}
+\li{Avoid volatile functions like INDIRECT and OFFSET unless required.}
+\li{Prefer cell references over magic numbers (e.g., \code{\startverb =H6*(1+$B$3)\stopverb} not \code{\startverb =H6*1.04\stopverb}).}
+\li{Guard against errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?) with validation and checks.}
+\li{openpyxl does not evaluate formulas; leave formulas intact and note that results will calculate in Excel/Sheets.}
+}
+}
+
+\subtree{
+\title{Citation requirements}
+\ul{
+\li{Cite sources inside the spreadsheet using plain text URLs.}
+\li{For financial models, cite sources of inputs in cell comments.}
+\li{For tabular data sourced from the web, include a Source column with URLs.}
+}
+}
+
+\subtree{
+\title{Formatting requirements (existing formatted spreadsheets)}
+\ul{
+\li{Render and inspect a provided spreadsheet before modifying it when possible.}
+\li{Preserve existing formatting and style exactly.}
+\li{Match styles for any newly filled cells that were previously blank.}
+}
+}
+
+\subtree{
+\title{Formatting requirements (new or unstyled spreadsheets)}
+\ul{
+\li{Use appropriate number and date formats (dates as dates, currency with symbols, percentages with sensible precision).}
+\li{Use a clean visual layout: headers distinct from data, consistent spacing, and readable column widths.}
+\li{Avoid borders around every cell; use whitespace and selective borders to structure sections.}
+\li{Ensure text does not spill into adjacent cells.}
+}
+}
+
+\subtree{
+\title{Color conventions (if no style guidance)}
+\ul{
+\li{Blue: user input}
+\li{Black: formulas/derived values}
+\li{Green: linked/imported values}
+\li{Gray: static constants}
+\li{Orange: review/caution}
+\li{Light red: error/flag}
+\li{Purple: control/logic}
+\li{Teal: visualization anchors (key KPIs or chart drivers)}
+}
+}
+
+\subtree{
+\title{Finance-specific requirements}
+\ul{
+\li{Format zeros as "-".}
+\li{Negative numbers should be red and in parentheses.}
+\li{Always specify units in headers (e.g., "Revenue ($mm)").}
+\li{Cite sources for all raw inputs in cell comments.}
+}
+}
+
+\subtree{
+\title{Investment banking layouts}
+\p{If the spreadsheet is an IB-style model (LBO, DCF, 3-statement, valuation):}
+
+\ul{
+\li{Totals should sum the range directly above.}
+\li{Hide gridlines; use horizontal borders above totals across relevant columns.}
+\li{Section headers should be merged cells with dark fill and white text.}
+\li{Column labels for numeric data should be right-aligned; row labels left-aligned.}
+\li{Indent submetrics under their parent line items.}
+}
+}
+}

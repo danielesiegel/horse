@@ -1,0 +1,567 @@
+\title{Iroh P2p}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Build modern peer-to-peer applications with Iroh. QUIC-based P2P networking, hole punching, content distribution, and decentralized data synchronization.}
+
+\subtree{
+\title{Iroh P2P Development}
+\p{Build decentralized, peer-to-peer applications with \strong{Iroh} — a modern Rust P2P library based on QUIC with automatic hole punching, relay fallback, and content distribution.}
+
+\subtree{
+\title{What is Iroh?}
+\p{Iroh is a \strong{nextgen P2P library} that implements:}
+
+\ul{
+\li{🔗 \strong{Direct P2P connections} via QUIC (UDP-based, faster than TCP)}
+\li{🔄 \strong{Automatic hole punching} (NAT traversal without complexity)}
+\li{📡 \strong{Relay fallback} (works even behind restrictive firewalls)}
+\li{📦 \strong{Content distribution} (iroh-blobs for KB-TB transfers)}
+\li{📝 \strong{Document sync} (iroh-docs for collaborative state)}
+\li{💬 \strong{Gossip protocol} (iroh-gossip for message broadcasting)}
+}
+
+\p{\strong{Iroh represents data sovereignty}: users control their own nodes, direct connections replace central servers, and data stays decentralized.}
+}
+
+\subtree{
+\title{Quick Start Project}
+\subtree{
+\title{1. Initialize Iroh Project}
+\pre{\startverb
+cargo new my_p2p_app
+cd my_p2p_app
+
+# Add dependencies
+cargo add iroh@0.13
+cargo add tokio --features full
+cargo add anyhow
+cargo add tracing tracing-subscriber
+\stopverb}
+}
+
+\subtree{
+\title{2. Create a Basic P2P Node}
+\pre{\startverb
+use anyhow::Result;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Spawn an Iroh node with all services
+    let node = iroh::node::Builder::default()
+        .spawn()
+        .await?;
+
+    println!("✅ P2P node started!");
+    println!("  📦 Blobs:  Available");
+    println!("  📝 Docs:   Available");
+    println!("  💬 Gossip: Available");
+
+    // Keep running
+    println!("\n⏳ Running... (Ctrl+C to stop)");
+    tokio::signal::ctrl_c().await?;
+    println!("👋 Shutting down...");
+
+    Ok(())
+}
+\stopverb}
+}
+
+\subtree{
+\title{3. Build and Run}
+\pre{\startverb
+cargo build --release
+./target/release/my_p2p_app
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Node Identity}
+\p{Every Iroh node has a \strong{node ID} (public key) that other peers can connect to:}
+
+\pre{\startverb
+// Access node ID through services
+let node_id = node.blobs.node_id().await?;
+println!("My node ID: {}", node_id);
+
+// Share this with other peers to establish connections
+\stopverb}
+}
+
+\subtree{
+\title{Services}
+\p{Iroh provides modular services you can use independently:}
+
+\subtree{
+\title{📦 iroh-bytes (Content Distribution)}
+\p{Transfer files/blobs between peers (KB to TB):}
+
+\pre{\startverb
+// Publish a blob
+let hash = node.blobs.add_bytes(b"Hello, P2P!").await?;
+
+// Access via peer's node ID
+let peer_id = "..."; // from other peer
+let content = node.blobs.get_bytes(hash).await?;
+\stopverb}
+}
+
+\subtree{
+\title{📝 iroh-docs (Document Sync)}
+\p{Sync structured data between peers with conflict-free resolution:}
+
+\pre{\startverb
+// Create a document (CRDT-based)
+let doc = node.docs.create().await?;
+
+// Write data
+doc.set_bytes(b"key", b"value").await?;
+
+// Other peers auto-sync
+\stopverb}
+}
+
+\subtree{
+\title{💬 iroh-gossip (Message Broadcasting)}
+\p{Broadcast messages across a P2P network (publish/subscribe):}
+
+\pre{\startverb
+// Subscribe to a topic
+let topic = "alerts".as_bytes();
+let mut sub = node.gossip.subscribe(topic.clone()).await?;
+
+// Publish a message
+node.gossip.publish(topic.clone(), b"New alert!").await?;
+
+// Receive messages
+while let Ok(msg) = sub.next().await {
+    println!("Received: {}", String::from_utf8_lossy(&msg));
+}
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Architecture Patterns}
+\subtree{
+\title{Pattern 1: Direct Peer Connections}
+\p{Connect to a peer by their node ID:}
+
+\pre{\startverb
+// Dial a peer directly
+let peer_id = "..."; // node ID of another peer
+let connection = node.net.connect(peer_id).await?;
+
+// Use connection for RPC, streaming, etc.
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Distributed Content Discovery}
+\p{Use Iroh's DHT (Distributed Hash Table) for peer discovery:}
+
+\pre{\startverb
+// Announce your content
+let hash = node.blobs.add_bytes(data).await?;
+
+// Other peers query DHT to find providers
+// Iroh handles this automatically
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Relay Fallback}
+\p{When direct connections fail (firewall), Iroh falls back to relays:}
+
+\pre{\startverb
+// Configured automatically - no code needed
+// If direct connection fails → relay takes over
+// User experiences seamless P2P
+\stopverb}
+}
+}
+
+\subtree{
+\title{Real-World Patterns}
+\subtree{
+\title{1. File Sync Between Two Peers}
+\pre{\startverb
+// Peer A: Share a file
+let path = "/path/to/file.txt";
+let bytes = std::fs::read(path)?;
+let hash = node.blobs.add_bytes(&bytes).await?;
+println!("Share this hash: {}", hash);
+
+// Peer B: Receive the file
+let hash = "..."; // from Peer A
+let bytes = node.blobs.get_bytes(hash).await?;
+std::fs::write("/path/to/downloaded.txt", bytes)?;
+\stopverb}
+}
+
+\subtree{
+\title{2. Live Collaboration (Docs + Gossip)}
+\pre{\startverb
+// Create shared document
+let doc = node.docs.create().await?;
+
+// Publish document ID via gossip
+let doc_id = doc.id().to_string();
+node.gossip.publish(b"shared_docs", doc_id.as_bytes()).await?;
+
+// All peers subscribe and sync the doc
+// Concurrent edits merge automatically (CRDT)
+\stopverb}
+}
+
+\subtree{
+\title{3. Distributed Cache}
+\pre{\startverb
+// Cache data in blobs, announce via gossip
+let cache_entry = serde_json::to_vec(&data)?;
+let hash = node.blobs.add_bytes(&cache_entry).await?;
+
+// Broadcast availability
+node.gossip.publish(b"cache_updates", hash.as_ref()).await?;
+
+// Peers can fetch via hash
+\stopverb}
+}
+}
+
+\subtree{
+\title{Deployment Considerations}
+\subtree{
+\title{1. NAT/Firewall Handling}
+\p{Iroh handles NAT traversal automatically:}
+
+\pre{\startverb
+// Your node automatically:
+// ✓ Detects if behind NAT (via STUN)
+// ✓ Attempts hole punching
+// ✓ Falls back to relays if needed
+// → No manual configuration required
+\stopverb}
+}
+
+\subtree{
+\title{2. Persistent Storage}
+\p{Choose a storage backend:}
+
+\pre{\startverb
+// In-memory (default, for testing)
+let node = iroh::node::Builder::default()
+    .spawn()
+    .await?;
+
+// Persistent storage (recommended)
+let node = iroh::node::Builder::default()
+    .data_dir("/path/to/data")
+    .spawn()
+    .await?;
+\stopverb}
+}
+
+\subtree{
+\title{3. Relay Servers}
+\p{Use public relays (can self-host):}
+
+\pre{\startverb
+// Iroh provides public relays
+// Or run your own relay:
+// https://github.com/n0-computer/iroh/tree/main/iroh-relay
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security}
+\subtree{
+\title{1. Encryption by Default}
+\p{All Iroh connections use TLS 1.3 with perfect forward secrecy:}
+
+\pre{\startverb
+// No extra code needed - automatic
+\stopverb}
+}
+
+\subtree{
+\title{2. Peer Authentication}
+\p{Peers are identified by their \strong{node ID} (public key):}
+
+\pre{\startverb
+// Only trust specific peer IDs
+let trusted_peer = "...";
+if connection.peer_id() == trusted_peer {
+    // Process message
+}
+\stopverb}
+}
+
+\subtree{
+\title{3. Access Control}
+\p{Implement application-level authorization:}
+
+\pre{\startverb
+// Docs can have per-key permissions
+doc.set_bytes_with_author(
+    author_key,
+    key,
+    value,
+).await?;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performance Tuning}
+\subtree{
+\title{1. QUIC Configuration}
+\pre{\startverb
+// Iroh uses Quinn (QUIC implementation)
+// Sensible defaults for most use cases
+// Customize if needed:
+// - Connection timeout
+// - Max streams
+// - MTU size
+\stopverb}
+}
+
+\subtree{
+\title{2. Batch Operations}
+\pre{\startverb
+// Efficient blob operations
+let hashes = futures::stream::iter(data)
+    .then(|item| async move {
+        node.blobs.add_bytes(&item).await
+    })
+    .collect::<Vec<_>>()
+    .await;
+\stopverb}
+}
+
+\subtree{
+\title{3. Content Addressing}
+\pre{\startverb
+// Use content hashes for deduplication
+// Same content = same hash → no duplication
+let hash1 = node.blobs.add_bytes(b"data").await?;
+let hash2 = node.blobs.add_bytes(b"data").await?;
+assert_eq!(hash1, hash2); // Same content address
+\stopverb}
+}
+}
+
+\subtree{
+\title{Testing}
+\subtree{
+\title{Local Network Testing}
+\pre{\startverb
+# Run multiple nodes locally for testing
+
+# Terminal 1
+RUST_LOG=debug cargo run -- --bind 127.0.0.1:0
+
+# Terminal 2
+RUST_LOG=debug cargo run -- --bind 127.0.0.1:0
+
+# Nodes discover and connect automatically via DHT
+\stopverb}
+}
+
+\subtree{
+\title{Integration Testing}
+\pre{\startverb
+#[tokio::test]
+async fn test_p2p_transfer() {
+    let node_a = iroh::node::Builder::default().spawn().await.unwrap();
+    let node_b = iroh::node::Builder::default().spawn().await.unwrap();
+
+    // Transfer data between nodes
+    let data = b"test data";
+    let hash = node_a.blobs.add_bytes(data).await.unwrap();
+
+    let retrieved = node_b.blobs.get_bytes(hash).await.unwrap();
+    assert_eq!(retrieved, data);
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Patterns & Best Practices}
+\pre{\startverb
+| Pattern | Use Case | Example |
+|---------|----------|---------|
+| **Blob Transfer** | File sync, backups | Share files without server |
+| **Doc Sync** | Collaborative editing | Real-time document updates |
+| **Gossip** | Notifications, feeds | Broadcast events to all peers |
+| **Hybrid** | Complex apps | Combine all three services |
+\stopverb}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Always handle errors gracefully} — Network is unreliable}
+\li{\strong{Use persistent storage} — Don't lose data between restarts}
+\li{\strong{Implement exponential backoff} — For retries}
+\li{\strong{Test with firewalls} — Ensure relay fallback works}
+\li{\strong{Monitor bandwidth} — P2P apps can use significant resources}
+\li{\strong{Secure peer IDs} — Verify before trusting}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{"Failed to dial peer"}
+\p{Usually means relay fallback is needed:}
+
+\pre{\startverb
+// Iroh handles this automatically
+// Check logs: RUST_LOG=debug
+// If persistent, peer may be offline
+\stopverb}
+}
+
+\subtree{
+\title{High Latency}
+\p{Could be relay usage (slower than direct):}
+
+\pre{\startverb
+# Check direct connection vs relay
+RUST_LOG=iroh_net=debug
+# Look for "direct" vs "relay" in logs
+\stopverb}
+}
+
+\subtree{
+\title{Storage Growing}
+\p{Blobs are content-addressed and immutable:}
+
+\pre{\startverb
+// Remove old blobs manually if needed
+node.blobs.remove(hash).await?;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\ul{
+\li{\strong{[Iroh Docs](https://www.iroh.computer/)} — Official documentation}
+\li{\strong{[GitHub](https://github.com/n0-computer/iroh)} — Source code & examples}
+\li{\strong{[QUIC Spec](https://datatracker.ietf.org/doc/html/rfc9000)} — Protocol details}
+\li{\strong{[Rust Async](https://tokio.rs/)} — Tokio async runtime guide}
+}
+}
+
+\subtree{
+\title{Examples in This Repo}
+\ul{
+\li{\code{\startverb iroh-basics/\stopverb} — Simple node initialization}
+\li{\code{\startverb iroh-blobs/\stopverb} — Content distribution patterns}
+\li{\code{\startverb iroh-docs/\stopverb} — Document sync example}
+\li{\code{\startverb iroh-gossip/\stopverb} — Broadcasting example}
+\li{\code{\startverb iroh-full-app/\stopverb} — Complete app with all services}
+}
+}
+
+\subtree{
+\title{Data Sovereignty}
+\p{Iroh enables \strong{true data sovereignty}:}
+
+\ul{
+\li{✅ \strong{You own your node} — No registration required}
+\li{✅ \strong{Direct connections} — No central server}
+\li{✅ \strong{End-to-end encrypted} — Even peers see encrypted data}
+\li{✅ \strong{Offline capable} — Local-first with eventual sync}
+\li{✅ \strong{Portable} — Move your node anywhere}
+}
+
+\p{This is the foundation of nextgen protocols: decentralized, user-controlled infrastructure.}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb distributed-systems\stopverb}: 3 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 8. Degeneracy}
+\p{\strong{Concepts}: redundancy, fallback, multiple strategies, robustness}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+iroh-p2p (−) + SDF.Ch8 (−) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch4: Pattern Matching}
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Degeneracy provides fallbacks. This skill offers redundant strategies.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

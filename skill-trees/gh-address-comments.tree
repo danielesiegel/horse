@@ -1,0 +1,40 @@
+\title{Gh Address Comments}
+
+\taxon{skill}
+
+\meta{description}{Help address review/issue comments on the open GitHub PR for the current branch using gh CLI; verify gh auth first and prompt the user to authenticate if not logged in.}
+
+\subtree{
+\title{PR Comment Handler}
+\p{Guide to find the open PR for the current branch and address its comments with gh CLI. Run all \code{\startverb gh\stopverb} commands with elevated network access.}
+
+\p{Prereq: ensure \code{\startverb gh\stopverb} is authenticated (for example, run \code{\startverb gh auth login\stopverb} once), then run \code{\startverb gh auth status\stopverb} with escalated permissions (include workflow/repo scopes) so \code{\startverb gh\stopverb} commands succeed. If sandboxing blocks \code{\startverb gh auth status\stopverb}, rerun it with \code{\startverb sandbox_permissions=require_escalated\stopverb}.}
+
+\subtree{
+\title{1) Inspect comments needing attention}
+\ul{
+\li{Run scripts/fetch_comments.py which will print out all the comments and review threads on the PR}
+}
+}
+
+\subtree{
+\title{2) Ask the user for clarification}
+\ul{
+\li{Number all the review threads and comments and provide a short summary of what would be required to apply a fix for it}
+\li{Ask the user which numbered comments should be addressed}
+}
+}
+
+\subtree{
+\title{3) If user chooses comments}
+\ul{
+\li{Apply fixes for the selected comments}
+}
+
+\p{Notes:}
+
+\ul{
+\li{If gh hits auth/rate issues mid-run, prompt the user to re-authenticate with \code{\startverb gh auth login\stopverb}, then retry.}
+}
+}
+}

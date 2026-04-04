@@ -1,0 +1,67 @@
+\title{Nhero Confidential}
+
+\taxon{skill}
+
+\tag{nhero}
+
+\tag{confidential}
+
+\tag{aptos}
+
+\tag{twisted-elgamal}
+
+\tag{zk-range-proof}
+
+\tag{bulletproofs}
+
+\meta{version}{0.1.0}
+
+\meta{trit}{1}
+
+\meta{description}{Twisted ElGamal encrypted supply tracking on Aptos for nhero devices. ZK range proofs verify supply sufficiency without revealing counts. Nurse auditor key model. Uses @aptos-labs/confidential-assets SDK.}
+
+\subtree{
+\title{nhero-confidential}
+\p{Confidential supply tracking via Twisted ElGamal on Aptos.}
+
+\subtree{
+\title{Privacy Model}
+\pre{\startverb
+| Layer | Visible | Encrypted | Never On-Chain |
+|-------|---------|-----------|----------------|
+| On-chain | slot letter, timestamp, addresses | supply count, dosage mg, pills remaining | medication name, patient ID, diagnosis |
+\stopverb}
+}
+
+\subtree{
+\title{Operations}
+\pre{\startverb
+| Op | Function | Trit |
+|----|----------|------|
+| Register | `register(signer, token_metadata, ek)` | 0 |
+| Deposit | `deposit_to(signer, token, addr, count)` | +1 |
+| Withdraw | `withdraw(signer, token, 1, balance, zkrp, sigma)` | -1 |
+| Audit | `confidential_transfer` with `nurse_auditor_ek` | 0 |
+| Normalize | `normalize(signer, token, ...)` | 0 |
+\stopverb}
+}
+
+\subtree{
+\title{Keypairs}
+\ul{
+\li{\strong{Dispenser ek/dk}: Encrypts supply counts per slot}
+\li{\strong{Nurse auditor ek}: Verifies \code{\startverb remaining > threshold\stopverb} via range proof}
+\li{Proofs: \code{\startverb ConfidentialWithdraw.genSigmaProof()\stopverb} + \code{\startverb .genRangeProof()\stopverb}}
+}
+}
+
+\subtree{
+\title{Module}
+\p{\code{\startverb 0x7::confidential_asset\stopverb} via \code{\startverb @aptos-labs/confidential-assets\stopverb} SDK}
+}
+
+\subtree{
+\title{Parent}
+\p{Part of the [nhero](../nhero/SKILL.md) hierarchy.}
+}
+}

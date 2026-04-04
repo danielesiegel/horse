@@ -1,0 +1,279 @@
+\title{Jj}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{+1}
+
+\meta{description}{Jujutsu (jj) — Git-compatible VCS with automatic change tracking, conflict-aware rebasing, and revset algebra}
+
+\subtree{
+\title{jj}
+\p{Git-compatible next-generation VCS with first-class conflicts, anonymous branches, and operation log undo.}
+
+\p{\strong{Trit}: +1 (PLUS) — Generator role: creates new changes fluidly without staging friction}
+
+\subtree{
+\title{Overview}
+\p{Jujutsu (jj) wraps or replaces Git with a superior mental model:}
+
+\ul{
+\li{\strong{No staging area} — working copy is always a commit, auto-snapshotted}
+\li{\strong{First-class conflicts} — conflicts are values in the tree, not blockers}
+\li{\strong{Operation log} — every repo mutation is logged and undoable (\code{\startverb jj undo\stopverb})}
+\li{\strong{Revsets} — algebraic revision language for selecting/filtering commits}
+\li{\strong{Colocated mode} — works on existing \code{\startverb .git\stopverb} repos alongside \code{\startverb git\stopverb} CLI}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# macOS
+brew install jujutsu
+
+# Nix
+nix profile install nixpkgs#jujutsu
+
+# Cargo
+cargo install --locked jj-cli
+
+# flox
+flox install jujutsu
+\stopverb}
+}
+
+\subtree{
+\title{Setup}
+\pre{\startverb
+jj config set --user user.name "Your Name"
+jj config set --user user.email "you@example.com"
+
+# Initialize in existing git repo (colocated)
+jj git init --colocate
+
+# Clone from remote
+jj git clone <url>
+\stopverb}
+}
+
+\subtree{
+\title{Core Workflow}
+\pre{\startverb
+# Working copy is always @ (current change)
+jj status              # what's changed in @
+jj diff                # show diff of @
+jj log                 # commit graph with change + commit IDs
+
+# Describe current change
+jj describe -m "Add feature"   # alias: jj desc
+
+# Finish current change, start new empty one
+jj new                 # start fresh on top of @
+jj new -m "next task"  # with message
+jj commit -m "msg"     # describe @ then create new on top (like git commit)
+
+# Navigate
+jj prev                # move to parent
+jj next                # move to child
+jj edit <change-id>    # switch to editing a specific change
+\stopverb}
+}
+
+\subtree{
+\title{Bookmarks (Branches)}
+\pre{\startverb
+# Create bookmark at current change
+jj bookmark create <name>
+jj bookmark set -r @ <name>    # point bookmark to @
+
+# List bookmarks
+jj bookmark list
+
+# Track remote bookmark
+jj bookmark track main@origin
+
+# Delete
+jj bookmark delete <name>
+\stopverb}
+}
+
+\subtree{
+\title{Rewriting History}
+\pre{\startverb
+# Squash @ into parent
+jj squash
+
+# Squash into specific change
+jj squash --into <change-id>
+
+# Split current change into multiple
+jj split
+
+# Edit an earlier change (auto-rebases descendants)
+jj edit <change-id>
+
+# Rebase onto another change
+jj rebase -d main
+
+# Absorb — auto-distribute hunks to matching earlier commits
+jj absorb
+
+# Abandon (discard) a change
+jj abandon <change-id>
+\stopverb}
+}
+
+\subtree{
+\title{Git Interop}
+\pre{\startverb
+# Fetch from remote
+jj git fetch
+
+# Push bookmark to remote
+jj git push -b <bookmark> --allow-new
+
+# Push change by ID (auto-creates bookmark)
+jj git push --change <change-id>
+
+# Import/export between jj and git views
+jj git import
+jj git export
+\stopverb}
+}
+
+\subtree{
+\title{Revsets}
+\p{Algebraic expressions for selecting revisions:}
+
+\pre{\startverb
+@              # current working copy
+@-             # parent of @
+main           # bookmark named "main"
+mine()         # changes authored by you
+bookmarks()    # all bookmarked changes
+trunk()        # main trunk bookmark
+
+# Composition
+@::            # @ and all descendants
+..@            # all ancestors of @
+main..@        # changes between main and @
+bookmarks() & ~remote_bookmarks()  # local-only bookmarks
+
+# Use in commands
+jj log -r 'mine() & ~main'
+jj rebase -d 'trunk()'
+\stopverb}
+}
+
+\subtree{
+\title{Conflicts}
+\p{Jujutsu treats conflicts as first-class tree values:}
+
+\pre{\startverb
+# Conflicts don't block work — they're recorded in the commit
+jj status                   # shows conflicted files
+jj resolve <file>           # open merge tool
+jj resolve --list           # list conflicted files
+
+# Rebase through conflicts, resolve later
+jj rebase -d main           # may create conflict commit
+jj edit <conflicted>        # go fix it
+# ... resolve files ...
+jj squash                   # clean up
+\stopverb}
+}
+
+\subtree{
+\title{Operations & Undo}
+\pre{\startverb
+jj undo                     # undo last operation
+jj op log                   # show all operations
+jj op restore <op-id>       # restore to specific operation
+\stopverb}
+}
+
+\subtree{
+\title{Workspaces}
+\pre{\startverb
+jj workspace add ../ws2     # create additional workspace
+jj workspace list
+jj workspace update-stale   # sync after external changes
+\stopverb}
+}
+
+\subtree{
+\title{Useful Aliases}
+\p{Add to \code{\startverb ~/.config/jj/config.toml\stopverb}:}
+
+\pre{\startverb
+[aliases]
+fetch = ["git", "fetch"]
+push = ["git", "push", "--allow-new"]
+tug = ["bookmark", "move", "--from", "heads(::@- & bookmarks())", "--to", "@-"]
+mine = ["bookmark", "list", "-r", "mine()"]
+\stopverb}
+}
+
+\subtree{
+\title{GitHub Workflow}
+\pre{\startverb
+# Start feature from trunk
+jj new main -m "Add widget"
+# ... make changes ...
+jj bookmark create -r @ feature-widget
+jj git push -b feature-widget --allow-new
+# → create PR on GitHub
+
+# Address review feedback
+jj edit <change-id>          # go back to the change
+# ... fix ...
+jj new                       # back to tip
+jj git push -b feature-widget
+
+# Sync with upstream
+jj git fetch
+jj rebase -d main
+\stopverb}
+}
+
+\subtree{
+\title{GH CLI Integration}
+\p{For non-colocated repos, set \code{\startverb GIT_DIR\stopverb}:}
+
+\pre{\startverb
+export GIT_DIR=$PWD/.jj/repo/store/git
+gh pr list   # now works in jj repos
+\stopverb}
+
+\p{Or via \code{\startverb .envrc\stopverb} with direnv:}
+
+\pre{\startverb
+export GIT_DIR=$PWD/.jj/repo/store/git
+\stopverb}
+}
+
+\subtree{
+\title{Triadic Composition}
+\pre{\startverb
+jj (+1)  +  pijul (-1)  +  gh (0)  = 0 ✓
+Generator   Validator     Coordinator
+\stopverb}
+
+\p{jj generates new changes fluidly, pijul validates patch-theoretic correctness, gh coordinates with GitHub remotes.}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Jujutsu Docs](https://docs.jj-vcs.dev/latest/)}
+\li{[CLI Reference](https://docs.jj-vcs.dev/latest/cli-reference/)}
+\li{[GitHub Workflow](https://docs.jj-vcs.dev/latest/github/)}
+\li{[Steve Klabnik's Tutorial](https://steveklabnik.github.io/jujutsu-tutorial/)}
+\li{[Jujutsu for Everyone](https://jj-for-everyone.github.io/)}
+\li{[pijul skill](../pijul/SKILL.md)}
+\li{[gh skill](../gh/SKILL.md)}
+}
+}
+}

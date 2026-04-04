@@ -1,0 +1,385 @@
+\title{Biomni}
+
+\taxon{skill}
+
+\meta{description}{Autonomous biomedical AI agent framework for executing complex research tasks across genomics, drug discovery, molecular biology, and clinical analysis. Use this skill when conducting multi-step biomedical research including CRISPR screening design, single-cell RNA-seq analysis, ADMET prediction, GWAS interpretation, rare disease diagnosis, or lab protocol optimization. Leverages LLM reasoning with code execution and integrated biomedical databases.}
+
+\subtree{
+\title{Biomni}
+\subtree{
+\title{Overview}
+\p{Biomni is an open-source biomedical AI agent framework from Stanford's SNAP lab that autonomously executes complex research tasks across biomedical domains. Use this skill when working on multi-step biological reasoning tasks, analyzing biomedical data, or conducting research spanning genomics, drug discovery, molecular biology, and clinical analysis.}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{Biomni excels at:}
+
+\ol{
+\li{\strong{Multi-step biological reasoning} - Autonomous task decomposition and planning for complex biomedical queries}
+\li{\strong{Code generation and execution} - Dynamic analysis pipeline creation for data processing}
+\li{\strong{Knowledge retrieval} - Access to ~11GB of integrated biomedical databases and literature}
+\li{\strong{Cross-domain problem solving} - Unified interface for genomics, proteomics, drug discovery, and clinical tasks}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use biomni for:}
+
+\ul{
+\li{\strong{CRISPR screening} - Design screens, prioritize genes, analyze knockout effects}
+\li{\strong{Single-cell RNA-seq} - Cell type annotation, differential expression, trajectory analysis}
+\li{\strong{Drug discovery} - ADMET prediction, target identification, compound optimization}
+\li{\strong{GWAS analysis} - Variant interpretation, causal gene identification, pathway enrichment}
+\li{\strong{Clinical genomics} - Rare disease diagnosis, variant pathogenicity, phenotype-genotype mapping}
+\li{\strong{Lab protocols} - Protocol optimization, literature synthesis, experimental design}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Installation and Setup}
+\p{Install Biomni and configure API keys for LLM providers:}
+
+\pre{\startverb
+uv pip install biomni --upgrade
+\stopverb}
+
+\p{Configure API keys (store in \code{\startverb .env\stopverb} file or environment variables):}
+
+\pre{\startverb
+export ANTHROPIC_API_KEY="your-key-here"
+# Optional: OpenAI, Azure, Google, Groq, AWS Bedrock keys
+\stopverb}
+
+\p{Use \code{\startverb scripts/setup_environment.py\stopverb} for interactive setup assistance.}
+}
+
+\subtree{
+\title{Basic Usage Pattern}
+\pre{\startverb
+from biomni.agent import A1
+
+# Initialize agent with data path and LLM choice
+agent = A1(path='./data', llm='claude-sonnet-4-20250514')
+
+# Execute biomedical task autonomously
+agent.go("Your biomedical research question or task")
+
+# Save conversation history and results
+agent.save_conversation_history("report.pdf")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Working with Biomni}
+\subtree{
+\title{1. Agent Initialization}
+\p{The A1 class is the primary interface for biomni:}
+
+\pre{\startverb
+from biomni.agent import A1
+from biomni.config import default_config
+
+# Basic initialization
+agent = A1(
+    path='./data',  # Path to data lake (~11GB downloaded on first use)
+    llm='claude-sonnet-4-20250514'  # LLM model selection
+)
+
+# Advanced configuration
+default_config.llm = "gpt-4"
+default_config.timeout_seconds = 1200
+default_config.max_iterations = 50
+\stopverb}
+
+\p{\strong{Supported LLM Providers:}}
+
+\ul{
+\li{Anthropic Claude (recommended): \code{\startverb claude-sonnet-4-20250514\stopverb}, \code{\startverb claude-opus-4-20250514\stopverb}}
+\li{OpenAI: \code{\startverb gpt-4\stopverb}, \code{\startverb gpt-4-turbo\stopverb}}
+\li{Azure OpenAI: via Azure configuration}
+\li{Google Gemini: \code{\startverb gemini-2.0-flash-exp\stopverb}}
+\li{Groq: \code{\startverb llama-3.3-70b-versatile\stopverb}}
+\li{AWS Bedrock: Various models via Bedrock API}
+}
+
+\p{See \code{\startverb references/llm_providers.md\stopverb} for detailed LLM configuration instructions.}
+}
+
+\subtree{
+\title{2. Task Execution Workflow}
+\p{Biomni follows an autonomous agent workflow:}
+
+\pre{\startverb
+# Step 1: Initialize agent
+agent = A1(path='./data', llm='claude-sonnet-4-20250514')
+
+# Step 2: Execute task with natural language query
+result = agent.go("""
+Design a CRISPR screen to identify genes regulating autophagy in
+HEK293 cells. Prioritize genes based on essentiality and pathway
+relevance.
+""")
+
+# Step 3: Review generated code and analysis
+# Agent autonomously:
+# - Decomposes task into sub-steps
+# - Retrieves relevant biological knowledge
+# - Generates and executes analysis code
+# - Interprets results and provides insights
+
+# Step 4: Save results
+agent.save_conversation_history("autophagy_screen_report.pdf")
+\stopverb}
+}
+
+\subtree{
+\title{3. Common Task Patterns}
+\subtree{
+\title{CRISPR Screening Design}
+\pre{\startverb
+agent.go("""
+Design a genome-wide CRISPR knockout screen for identifying genes
+affecting [phenotype] in [cell type]. Include:
+1. sgRNA library design
+2. Gene prioritization criteria
+3. Expected hit genes based on pathway analysis
+""")
+\stopverb}
+}
+
+\subtree{
+\title{Single-Cell RNA-seq Analysis}
+\pre{\startverb
+agent.go("""
+Analyze this single-cell RNA-seq dataset:
+- Perform quality control and filtering
+- Identify cell populations via clustering
+- Annotate cell types using marker genes
+- Conduct differential expression between conditions
+File path: [path/to/data.h5ad]
+""")
+\stopverb}
+}
+
+\subtree{
+\title{Drug ADMET Prediction}
+\pre{\startverb
+agent.go("""
+Predict ADMET properties for these drug candidates:
+[SMILES strings or compound IDs]
+Focus on:
+- Absorption (Caco-2 permeability, HIA)
+- Distribution (plasma protein binding, BBB penetration)
+- Metabolism (CYP450 interaction)
+- Excretion (clearance)
+- Toxicity (hERG liability, hepatotoxicity)
+""")
+\stopverb}
+}
+
+\subtree{
+\title{GWAS Variant Interpretation}
+\pre{\startverb
+agent.go("""
+Interpret GWAS results for [trait/disease]:
+- Identify genome-wide significant variants
+- Map variants to causal genes
+- Perform pathway enrichment analysis
+- Predict functional consequences
+Summary statistics file: [path/to/gwas_summary.txt]
+""")
+\stopverb}
+
+\p{See \code{\startverb references/use_cases.md\stopverb} for comprehensive task examples across all biomedical domains.}
+}
+}
+
+\subtree{
+\title{4. Data Integration}
+\p{Biomni integrates ~11GB of biomedical knowledge sources:}
+
+\ul{
+\li{\strong{Gene databases} - Ensembl, NCBI Gene, UniProt}
+\li{\strong{Protein structures} - PDB, AlphaFold}
+\li{\strong{Clinical datasets} - ClinVar, OMIM, HPO}
+\li{\strong{Literature indices} - PubMed abstracts, biomedical ontologies}
+\li{\strong{Pathway databases} - KEGG, Reactome, GO}
+}
+
+\p{Data is automatically downloaded to the specified \code{\startverb path\stopverb} on first use.}
+}
+
+\subtree{
+\title{5. MCP Server Integration}
+\p{Extend biomni with external tools via Model Context Protocol:}
+
+\pre{\startverb
+# MCP servers can provide:
+# - FDA drug databases
+# - Web search for literature
+# - Custom biomedical APIs
+# - Laboratory equipment interfaces
+
+# Configure MCP servers in .biomni/mcp_config.json
+\stopverb}
+}
+
+\subtree{
+\title{6. Evaluation Framework}
+\p{Benchmark agent performance on biomedical tasks:}
+
+\pre{\startverb
+from biomni.eval import BiomniEval1
+
+evaluator = BiomniEval1()
+
+# Evaluate on specific task types
+score = evaluator.evaluate(
+    task_type='crispr_design',
+    instance_id='test_001',
+    answer=agent_output
+)
+
+# Access evaluation dataset
+dataset = evaluator.load_dataset()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Task Formulation}
+\ul{
+\li{\strong{Be specific} - Include biological context, organism, cell type, conditions}
+\li{\strong{Specify outputs} - Clearly state desired analysis outputs and formats}
+\li{\strong{Provide data paths} - Include file paths for datasets to analyze}
+\li{\strong{Set constraints} - Mention time/computational limits if relevant}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\p{⚠️ \strong{Important}: Biomni executes LLM-generated code with full system privileges. For production use:}
+
+\ul{
+\li{Run in isolated environments (Docker, VMs)}
+\li{Avoid exposing sensitive credentials}
+\li{Review generated code before execution in sensitive contexts}
+\li{Use sandboxed execution environments when possible}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\ul{
+\li{\strong{Choose appropriate LLMs} - Claude Sonnet 4 recommended for balance of speed/quality}
+\li{\strong{Set reasonable timeouts} - Adjust \code{\startverb default_config.timeout_seconds\stopverb} for complex tasks}
+\li{\strong{Monitor iterations} - Track \code{\startverb max_iterations\stopverb} to prevent runaway loops}
+\li{\strong{Cache data} - Reuse downloaded data lake across sessions}
+}
+}
+
+\subtree{
+\title{Result Documentation}
+\pre{\startverb
+# Always save conversation history for reproducibility
+agent.save_conversation_history("results/project_name_YYYYMMDD.pdf")
+
+# Include in reports:
+# - Original task description
+# - Generated analysis code
+# - Results and interpretations
+# - Data sources used
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{References}
+\p{Detailed documentation available in the \code{\startverb references/\stopverb} directory:}
+
+\ul{
+\li{\strong{\code{\startverb api_reference.md\stopverb}} - Complete API documentation for A1 class, configuration, and evaluation}
+\li{\strong{\code{\startverb llm_providers.md\stopverb}} - LLM provider setup (Anthropic, OpenAI, Azure, Google, Groq, AWS)}
+\li{\strong{\code{\startverb use_cases.md\stopverb}} - Comprehensive task examples for all biomedical domains}
+}
+}
+
+\subtree{
+\title{Scripts}
+\p{Helper scripts in the \code{\startverb scripts/\stopverb} directory:}
+
+\ul{
+\li{\strong{\code{\startverb setup_environment.py\stopverb}} - Interactive environment and API key configuration}
+\li{\strong{\code{\startverb generate_report.py\stopverb}} - Enhanced PDF report generation with custom formatting}
+}
+}
+
+\subtree{
+\title{External Resources}
+\ul{
+\li{\strong{GitHub}: https://github.com/snap-stanford/biomni}
+\li{\strong{Web Platform}: https://biomni.stanford.edu}
+\li{\strong{Paper}: https://www.biorxiv.org/content/10.1101/2025.05.30.656746v1}
+\li{\strong{Model}: https://huggingface.co/biomni/Biomni-R0-32B-Preview}
+\li{\strong{Evaluation Dataset}: https://huggingface.co/datasets/biomni/Eval1}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{Data download fails}}
+
+\pre{\startverb
+# Manually trigger data lake download
+agent = A1(path='./data', llm='your-llm')
+# First .go() call will download data
+\stopverb}
+
+\p{\strong{API key errors}}
+
+\pre{\startverb
+# Verify environment variables
+echo $ANTHROPIC_API_KEY
+# Or check .env file in working directory
+\stopverb}
+
+\p{\strong{Timeout on complex tasks}}
+
+\pre{\startverb
+from biomni.config import default_config
+default_config.timeout_seconds = 3600  # 1 hour
+\stopverb}
+
+\p{\strong{Memory issues with large datasets}}
+
+\ul{
+\li{Use streaming for large files}
+\li{Process data in chunks}
+\li{Increase system memory allocation}
+}
+}
+
+\subtree{
+\title{Getting Help}
+\p{For issues or questions:}
+
+\ul{
+\li{GitHub Issues: https://github.com/snap-stanford/biomni/issues}
+\li{Documentation: Check \code{\startverb references/\stopverb} files for detailed guidance}
+\li{Community: Stanford SNAP lab and biomni contributors}
+}
+}
+}
+}

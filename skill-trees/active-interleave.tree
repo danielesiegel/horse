@@ -1,0 +1,131 @@
+\title{Active Interleave}
+
+\taxon{skill}
+
+\meta{description}{Interleaves context from recently active Claude/Amp threads into current activity via random walk.}
+
+\subtree{
+\title{Active Interleave Skill}
+\p{Interleaves context from recently active Claude/Amp threads into current activity via random walk.}
+
+\subtree{
+\title{bmorphism Contributions}
+\blockquote{*"all is bidirectional"* — [@bmorphism](https://gist.github.com/bmorphism/ead83aec97dab7f581d49ddcb34a46d4), Play/Coplay gist}
+
+\p{\strong{Active Inference Pattern}: The interleave implements [Active Inference in String Diagrams](https://arxiv.org/abs/2308.00861) epistemic foraging — actively sampling from recent contexts to minimize uncertainty about the current task. Each random walk step is an epistemic action that gathers information.}
+
+\p{\strong{Play/Coplay Duality}: The interleave embodies bmorphism's bidirectional principle:}
+
+\ul{
+\li{\strong{Play} (action): Query recent threads, walk the awareness graph}
+\li{\strong{Coplay} (perception): Integrate fragments, update current context}
+}
+
+\p{\strong{GF(3) Balanced Exploration}: The triadic structure (MINUS/ERGODIC/PLUS) ensures balanced exploration — validation filters (MINUS), random walk explores (ERGODIC), and colored emission generates (PLUS). Conservation Σ = 0 maintains coherence.}
+}
+
+\subtree{
+\title{Activation}
+\p{Load when context from recent work would help current task.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Interleave from last 24 hours
+bb ~/.claude/skills/active-interleave/active.bb
+
+# Interleave from last N hours
+bb ~/.claude/skills/active-interleave/active.bb --hours 6
+
+# Query-focused interleave
+bb ~/.claude/skills/active-interleave/active.bb --query "aptos blockchain"
+
+# JSON output
+bb ~/.claude/skills/active-interleave/active.bb --json
+\stopverb}
+}
+
+\subtree{
+\title{Behavior}
+\ol{
+\li{\strong{MINUS (-1)}: Validate recency window, filter to active threads only}
+\li{\strong{ERGODIC (0)}: Random walk through recent sessions following awareness edges  }
+\li{\strong{PLUS (+1)}: Emit interleaved fragments with GF(3) coloring}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Each interleave batch maintains Σ trits ≡ 0 (mod 3).}
+}
+
+\subtree{
+\title{Integration}
+\p{Call from current thread to surface relevant recent context:}
+
+\pre{\startverb
+;; In any bb script
+(require '[babashka.process :refer [shell]])
+(def context (-> (shell {:out :string} "bb" (str (System/getProperty "user.home") 
+                 "/.claude/skills/active-interleave/active.bb") "--json")
+                 :out))
+\stopverb}
+}
+
+\subtree{
+\title{Schema}
+\p{Reads from \code{\startverb ~/worldnet/cognition.duckdb\stopverb}:}
+
+\ul{
+\li{\code{\startverb messages\stopverb} - Content with timestamps}
+\li{\code{\startverb sessions\stopverb} - Session metadata  }
+\li{\code{\startverb awareness_edges\stopverb} - Play/coplay graph}
+\li{\code{\startverb temporal_index\stopverb} - Time-ordered index}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

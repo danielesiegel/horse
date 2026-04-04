@@ -1,0 +1,288 @@
+\title{Analyzing Mft For Deleted File Recovery}
+
+\taxon{skill}
+
+\tag{mft}
+
+\tag{ntfs}
+
+\tag{deleted-files}
+
+\tag{file-recovery}
+
+\tag{mftecmd}
+
+\tag{usn-journal}
+
+\tag{logfile}
+
+\tag{mft-slack-space}
+
+\tag{file-system-forensics}
+
+\tag{dfir}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Analyze the NTFS Master File Table ($MFT) to recover metadata and content of deleted files by examining MFT record entries, $LogFile, $UsnJrnl, and MFT slack space using MFTECmd, analyzeMFT, and X-Ways Forensics.}
+
+\subtree{
+\title{Analyzing MFT for Deleted File Recovery}
+\subtree{
+\title{Overview}
+\p{The NTFS Master File Table ($MFT) is the central metadata repository for every file and directory on an NTFS volume. Each file is represented by at least one 1024-byte MFT record containing attributes such as $STANDARD_INFORMATION (timestamps, permissions), $FILE_NAME (name, parent directory, timestamps), and $DATA (file content or cluster run pointers). When a file is deleted, its MFT record is marked as inactive (InUse flag cleared) but the metadata remains until the entry is reallocated by a new file. This persistence makes MFT analysis a primary technique for recovering deleted file evidence, reconstructing file system timelines, and detecting anti-forensic activity such as timestomping.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing mft for deleted file recovery}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Forensic disk image (E01, raw/dd, VMDK, or VHDX format)}
+\li{MFTECmd (Eric Zimmerman) or analyzeMFT (Python-based)}
+\li{FTK Imager, Arsenal Image Mounter, or similar for image mounting}
+\li{Timeline Explorer or Excel for CSV analysis}
+\li{Python 3.8+ for custom analysis scripts}
+\li{Understanding of NTFS file system internals}
+}
+}
+
+\subtree{
+\title{MFT Structure and Record Layout}
+\subtree{
+\title{MFT Record Header}
+\p{Each MFT record begins with the signature "FILE" (0x46494C45) and contains:}
+
+\pre{\startverb
+| Offset | Size | Field |
+|--------|------|-------|
+| 0x00 | 4 bytes | Signature ("FILE") |
+| 0x04 | 2 bytes | Offset to update sequence |
+| 0x06 | 2 bytes | Size of update sequence |
+| 0x08 | 8 bytes | $LogFile sequence number |
+| 0x10 | 2 bytes | Sequence number |
+| 0x12 | 2 bytes | Hard link count |
+| 0x14 | 2 bytes | Offset to first attribute |
+| 0x16 | 2 bytes | Flags (0x01 = InUse, 0x02 = Directory) |
+| 0x18 | 4 bytes | Used size of MFT record |
+| 0x1C | 4 bytes | Allocated size of MFT record |
+| 0x20 | 8 bytes | Base file record reference |
+| 0x28 | 2 bytes | Next attribute ID |
+\stopverb}
+}
+
+\subtree{
+\title{Key MFT Attributes}
+\pre{\startverb
+| Type ID | Name | Description |
+|---------|------|-------------|
+| 0x10 | $STANDARD_INFORMATION | Timestamps, flags, owner ID, security ID |
+| 0x30 | $FILE_NAME | Filename, parent MFT reference, timestamps |
+| 0x40 | $OBJECT_ID | Unique GUID for the file |
+| 0x50 | $SECURITY_DESCRIPTOR | ACL permissions |
+| 0x60 | $VOLUME_NAME | Volume label (volume metadata files only) |
+| 0x80 | $DATA | File content (resident if <700 bytes) or cluster run list |
+| 0x90 | $INDEX_ROOT | B-tree index root for directories |
+| 0xA0 | $INDEX_ALLOCATION | B-tree index entries for large directories |
+| 0xB0 | $BITMAP | Allocation bitmap for index or MFT |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Deleted File Recovery Techniques}
+\subtree{
+\title{Technique 1: MFT Record Analysis with MFTECmd}
+\pre{\startverb
+# Extract $MFT from forensic image using KAPE or FTK Imager
+# Parse the $MFT with MFTECmd
+MFTECmd.exe -f "C:\Evidence\$MFT" --csv C:\Output --csvf mft_full.csv
+
+# Filter for deleted files (InUse = FALSE) in Timeline Explorer
+# Look for entries where InUse column is False
+\stopverb}
+
+\p{\strong{Identifying Deleted Files in CSV Output:}}
+
+\ul{
+\li{\code{\startverb InUse\stopverb} = False indicates a deleted or reallocated record}
+\li{\code{\startverb ParentPath\stopverb} shows original file location before deletion}
+\li{\code{\startverb FileSize\stopverb} shows the original size (may still be recoverable)}
+\li{Timestamps in \code{\startverb $STANDARD_INFORMATION\stopverb} and \code{\startverb $FILE_NAME\stopverb} attributes persist}
+}
+}
+
+\subtree{
+\title{Technique 2: USN Journal ($UsnJrnl:$J) Analysis}
+\p{The USN Journal records all changes to files on an NTFS volume, including creation, deletion, rename, and data modification events.}
+
+\pre{\startverb
+# Parse USN Journal with MFTECmd
+MFTECmd.exe -f "C:\Evidence\$J" --csv C:\Output --csvf usn_journal.csv
+
+# Key USN reason codes for deletion evidence:
+# USN_REASON_FILE_DELETE     = 0x00000200
+# USN_REASON_CLOSE           = 0x80000000
+# USN_REASON_RENAME_OLD_NAME = 0x00001000
+# USN_REASON_RENAME_NEW_NAME = 0x00002000
+\stopverb}
+}
+
+\subtree{
+\title{Technique 3: $LogFile Transaction Analysis}
+\p{The $LogFile stores NTFS transaction records that can reveal file operations even after the USN Journal has been cycled.}
+
+\pre{\startverb
+# Parse $LogFile with LogFileParser
+LogFileParser.exe -l "C:\Evidence\$LogFile" -o C:\Output
+
+# Look for REDO and UNDO operations indicating file deletion:
+# - DeallocateFileRecordSegment
+# - DeleteAttribute
+# - UpdateResidentValue (clearing InUse flag)
+\stopverb}
+}
+
+\subtree{
+\title{Technique 4: MFT Slack Space Analysis}
+\p{MFT slack space exists between the end of the used portion of an MFT record and the end of the allocated 1024 bytes. This area may contain remnants of previous file records.}
+
+\pre{\startverb
+import struct
+
+def parse_mft_slack(mft_path: str, output_path: str):
+    """Extract and analyze MFT slack space for deleted file remnants."""
+    with open(mft_path, "rb") as f:
+        record_size = 1024
+        record_num = 0
+        slack_findings = []
+
+        while True:
+            record = f.read(record_size)
+            if len(record) < record_size:
+                break
+
+            # Verify FILE signature
+            if record[:4] != b"FILE":
+                record_num += 1
+                continue
+
+            # Get used size from offset 0x18
+            used_size = struct.unpack("<I", record[0x18:0x1C])[0]
+
+            if used_size < record_size:
+                slack = record[used_size:]
+                # Check if slack contains readable strings or attribute headers
+                if any(c > 0x20 and c < 0x7F for c in slack[:50]):
+                    slack_findings.append({
+                        "record": record_num,
+                        "used_size": used_size,
+                        "slack_size": record_size - used_size,
+                        "slack_preview": slack[:100].hex()
+                    })
+
+            record_num += 1
+
+    return slack_findings
+\stopverb}
+}
+}
+
+\subtree{
+\title{Correlation with Supporting Artifacts}
+\subtree{
+\title{Cross-Reference MFT with $Recycle.Bin}
+\pre{\startverb
+# Parse Recycle Bin with RBCmd
+RBCmd.exe -d "C:\Evidence\$Recycle.Bin" --csv C:\Output --csvf recycle_bin.csv
+
+# Correlate: $I files contain original path and deletion timestamp
+# Match MFT entry numbers from $R files back to original MFT records
+\stopverb}
+}
+
+\subtree{
+\title{Cross-Reference MFT with Volume Shadow Copies}
+\pre{\startverb
+# List volume shadow copies
+vssadmin list shadows
+
+# Mount shadow copies and extract $MFT from each
+# Compare MFT records across shadow copies to track file changes over time
+\stopverb}
+}
+}
+
+\subtree{
+\title{Forensic Value}
+\ul{
+\li{\strong{Deleted file metadata recovery}: Original filename, path, size, and timestamps}
+\li{\strong{Timeline reconstruction}: File creation, modification, access, and deletion events}
+\li{\strong{Timestomping detection}: Comparing $SI vs $FN timestamps}
+\li{\strong{Data carving guidance}: MFT cluster runs point to file content on disk}
+\li{\strong{Anti-forensic detection}: Identifying wiped or manipulated MFT records}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{NTFS MFT Advanced Forensic Analysis: https://www.deaddisk.com/posts/ntfs-mft-advanced-forensic-analysis-guide/}
+\li{MFT Slack Space Forensic Value: https://www.sygnia.co/blog/the-forensic-value-of-mft-slack-space/}
+\li{MFTECmd Documentation: https://ericzimmerman.github.io/}
+\li{SANS FOR500: Windows Forensic Analysis}
+}
+}
+
+\subtree{
+\title{Example Output}
+\pre{\startverb
+$ MFTECmd.exe -f "C:\Evidence\$MFT" --csv /analysis/mft_output
+
+MFTECmd v1.2.2 - MFT Parser
+==============================
+Input: C:\Evidence\$MFT (Size: 384 MB)
+Total MFT Entries: 395,264
+
+Parsing MFT entries... Done (12.4 seconds)
+
+--- Deleted File Recovery Summary ---
+Total Entries:          395,264
+Active Files:           245,832
+Deleted Files:          149,432
+  Recoverable:          87,234 (resident data or clusters not reallocated)
+  Partially Recoverable: 31,456 (some clusters overwritten)
+  Unrecoverable:        30,742 (all clusters reallocated)
+
+--- Recently Deleted Files (Incident Window: 2024-01-15 to 2024-01-18) ---
+MFT Entry | Filename                          | Path                               | Size      | Deleted (UTC)         | Recoverable
+----------|-----------------------------------|------------------------------------|-----------|-----------------------|------------
+148923    | exfil_tool.exe                    | C:\ProgramData\Updates\            | 1,258,496 | 2024-01-17 02:45:12   | YES
+148924    | exfil_tool.log                    | C:\ProgramData\Updates\            | 45,312    | 2024-01-17 02:45:14   | YES
+149001    | passwords.txt                     | C:\Users\jsmith\Desktop\           | 2,048     | 2024-01-17 02:50:33   | YES
+149150    | scan_results.csv                  | C:\Users\jsmith\AppData\Local\Temp | 892,416   | 2024-01-17 03:00:01   | PARTIAL
+149200    | mimikatz.exe                      | C:\Windows\Temp\                   | 1,250,816 | 2024-01-18 01:15:22   | YES
+149201    | sekurlsa.log                      | C:\Windows\Temp\                   | 32,768    | 2024-01-18 01:15:25   | YES
+149302    | .bash_history                     | C:\Users\jsmith\                   | 4,096     | 2024-01-18 03:00:00   | NO
+149400    | ClearEventLogs.ps1                | C:\Windows\Temp\                   | 1,536     | 2024-01-18 03:01:12   | YES
+
+--- $STANDARD_INFORMATION vs $FILE_NAME Timestamp Analysis (Timestomping Detection) ---
+MFT Entry | Filename            | $SI Created          | $FN Created          | Delta     | Verdict
+----------|---------------------|----------------------|----------------------|-----------|----------
+148923    | exfil_tool.exe      | 2023-06-15 10:00:00  | 2024-01-15 14:34:02  | -214 days | TIMESTOMPED
+149200    | mimikatz.exe        | 2022-01-01 00:00:00  | 2024-01-16 02:30:15  | -745 days | TIMESTOMPED
+
+Recovered files exported to: /analysis/mft_output/recovered/
+Full CSV report: /analysis/mft_output/mft_analysis.csv (395,264 rows)
+Timeline CSV: /analysis/mft_output/mft_timeline.csv
+\stopverb}
+}
+}

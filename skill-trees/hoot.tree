@@ -1,0 +1,47 @@
+\title{Hoot}
+
+\taxon{skill}
+
+\meta{description}{Scheme→WebAssembly compiler (4K lines info).}
+
+\subtree{
+\title{hoot}
+\p{Scheme→WebAssembly compiler (4K lines info).}
+
+\subtree{
+\title{Compile}
+\pre{\startverb
+guild compile-wasm -o out.wasm script.scm
+\stopverb}
+}
+
+\subtree{
+\title{Features}
+\ul{
+\li{Full tail call optimization}
+\li{First-class continuations}
+\li{JavaScript interop}
+\li{Standalone Wasm modules}
+}
+}
+
+\subtree{
+\title{Example}
+\pre{\startverb
+(define-module (my-module)
+  #:export (greet))
+
+(define (greet name)
+  (string-append "Hello, " name "!"))
+\stopverb}
+}
+
+\subtree{
+\title{Runtime}
+\pre{\startverb
+import { Hoot } from '@aspect/guile-hoot';
+const mod = await Hoot.load('out.wasm');
+mod.greet("World");
+\stopverb}
+}
+}

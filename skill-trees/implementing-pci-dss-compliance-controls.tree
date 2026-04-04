@@ -1,0 +1,208 @@
+\title{Implementing Pci Dss Compliance Controls}
+
+\taxon{skill}
+
+\tag{compliance}
+
+\tag{governance}
+
+\tag{pci-dss}
+
+\tag{payment-security}
+
+\tag{cardholder-data}
+
+\meta{version}{"1.0"}
+
+\meta{description}{PCI DSS 4.0.1 establishes 12 requirements across 6 control objectives for organizations that store, process, or transmit cardholder data. With PCI DSS 3.2.1 retiring April 2024 and 51 new requirements}
+
+\subtree{
+\title{Implementing PCI DSS Compliance Controls}
+\subtree{
+\title{Overview}
+\p{PCI DSS 4.0.1 establishes 12 requirements across 6 control objectives for organizations that store, process, or transmit cardholder data. With PCI DSS 3.2.1 retiring April 2024 and 51 new requirements becoming mandatory March 31, 2025, this skill covers implementing all requirements including the new customized validation approach, enhanced authentication, and continuous monitoring controls.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing pci dss compliance controls capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Understanding of payment card processing flows and cardholder data environment (CDE)}
+\li{Knowledge of network segmentation and security architecture}
+\li{Access to cardholder data environment for scoping}
+\li{Understanding of PCI compliance validation levels (merchant levels 1-4, service provider levels 1-2)}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{12 PCI DSS Requirements by Control Objective}
+\p{\strong{Build and Maintain a Secure Network and Systems}}
+
+\ol{
+\li{Install and maintain network security controls (firewalls, NSCs)}
+\li{Apply secure configurations to all system components}
+}
+
+\p{\strong{Protect Account Data}}
+
+\ol{
+\li{Protect stored account data (encryption, tokenization, truncation)}
+\li{Protect cardholder data with strong cryptography during transmission}
+}
+
+\p{\strong{Maintain a Vulnerability Management Program}}
+
+\ol{
+\li{Protect all systems and networks from malicious software}
+\li{Develop and maintain secure systems and software}
+}
+
+\p{\strong{Implement Strong Access Control Measures}}
+
+\ol{
+\li{Restrict access to system components and cardholder data by business need to know}
+\li{Identify users and authenticate access to system components}
+\li{Restrict physical access to cardholder data}
+}
+
+\p{\strong{Regularly Monitor and Test Networks}}
+
+\ol{
+\li{Log and monitor all access to system components and cardholder data}
+\li{Test security of systems and networks regularly}
+}
+
+\p{\strong{Maintain an Information Security Policy}}
+
+\ol{
+\li{Support information security with organizational policies and programs}
+}
+}
+
+\subtree{
+\title{Key PCI DSS 4.0 Changes}
+\ul{
+\li{\strong{Customized Approach}: Alternative to defined approach, allowing custom control design with objective-based validation}
+\li{\strong{MFA for all CDE access}: Extended beyond admin to all access to cardholder data (Req 8.4.2)}
+\li{\strong{Targeted Risk Analysis}: Organizations perform their own risk analysis for flexible requirements}
+\li{\strong{Authenticated Vulnerability Scanning}: Internal scans must use authenticated scanning (Req 11.3.1.1)}
+\li{\strong{Anti-phishing mechanisms}: Technical controls to detect and protect against phishing (Req 5.4.1)}
+\li{\strong{Automated log review}: Automated mechanisms for review of audit logs (Req 10.4.1.1)}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: Scoping and Assessment (Weeks 1-4)}
+\ol{
+\li{Identify all cardholder data flows (card present, card not present, storage)}
+\li{Define Cardholder Data Environment (CDE) boundaries}
+\li{Validate network segmentation effectiveness}
+\li{Determine compliance validation level}
+\li{Conduct PCI DSS gap assessment against all 12 requirements}
+}
+}
+
+\subtree{
+\title{Phase 2: Network and System Security (Weeks 5-12)}
+\ol{
+\li{Deploy and configure network security controls (Req 1)}
+\li{Implement network segmentation to minimize CDE scope}
+\li{Harden system configurations using CIS Benchmarks (Req 2)}
+\li{Implement WAF for public-facing web applications (Req 6.4.1)}
+\li{Deploy anti-malware on all in-scope systems (Req 5)}
+}
+}
+
+\subtree{
+\title{Phase 3: Data Protection (Weeks 13-20)}
+\ol{
+\li{Implement encryption for stored cardholder data (Req 3)}
+\li{Deploy tokenization where possible to reduce scope}
+\li{Enforce TLS 1.2+ for all cardholder data transmission (Req 4)}
+\li{Implement key management procedures}
+\li{Deploy data discovery tools to locate unencrypted cardholder data}
+}
+}
+
+\subtree{
+\title{Phase 4: Access Controls (Weeks 21-28)}
+\ol{
+\li{Implement RBAC based on business need to know (Req 7)}
+\li{Deploy MFA for all access to CDE (Req 8)}
+\li{Implement unique user IDs for all users}
+\li{Enforce password policies meeting PCI DSS 4.0 requirements}
+\li{Implement physical access controls for CDE facilities (Req 9)}
+}
+}
+
+\subtree{
+\title{Phase 5: Monitoring and Testing (Weeks 29-36)}
+\ol{
+\li{Deploy centralized logging for all CDE components (Req 10)}
+\li{Implement automated log review mechanisms}
+\li{Conduct internal and external vulnerability scans (Req 11)}
+\li{Perform penetration testing (internal and external)}
+\li{Implement file integrity monitoring (FIM) for critical files}
+}
+}
+
+\subtree{
+\title{Phase 6: Policy and Governance (Weeks 37-42)}
+\ol{
+\li{Develop comprehensive information security policy (Req 12)}
+\li{Implement security awareness training including anti-phishing}
+\li{Establish incident response plan specific to cardholder data}
+\li{Conduct targeted risk analyses for flexible requirements}
+\li{Document and validate all controls for assessment}
+}
+}
+}
+
+\subtree{
+\title{Key Artifacts}
+\ul{
+\li{CDE Scope Documentation and Network Diagrams}
+\li{Self-Assessment Questionnaire (SAQ) or Report on Compliance (ROC)}
+\li{Attestation of Compliance (AOC)}
+\li{Quarterly ASV Scan Reports}
+\li{Annual Penetration Test Report}
+\li{Risk Assessment Documentation}
+\li{Security Policies and Procedures}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Scope creep due to inadequate network segmentation}
+\li{Storing prohibited data (CVV, full track data) after authorization}
+\li{Missing the March 2025 deadline for new mandatory requirements}
+\li{Treating PCI DSS as annual compliance rather than continuous security}
+\li{Not including cloud and container environments in CDE scope}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{PCI DSS v4.0.1: https://www.pcisecuritystandards.org/document_library/}
+\li{PCI SSC Quick Reference Guide}
+\li{PCI DSS 4.0 Summary of Changes}
+\li{UpGuard PCI DSS 4.0 Guide: https://www.upguard.com/blog/pci-compliance}
+}
+}
+}

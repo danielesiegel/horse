@@ -1,0 +1,109 @@
+\title{Magic Todo}
+
+\taxon{skill}
+
+\meta{description}{Add TODOs to org files and generate ADHD-friendly task breakdowns with local MLX models on Apple Silicon. Load when creating actionable checklists from vague tasks or populating org-mode files with structured TODO entries.}
+
+\subtree{
+\title{magic-todo}
+\subtree{
+\title{Setup}
+\ul{
+\li{\strong{Python}: \code{\startverb /Users/alice/v/.venv-mlx-lm/bin/python\stopverb}}
+\li{\strong{Script}: \code{\startverb /Users/alice/v/scripts/magic_todo_mlx.py\stopverb}}
+\li{\strong{Default model}: \code{\startverb mlx-community/Qwen3-8B-4bit\stopverb}}
+\li{\strong{Elisp}: \code{\startverb /Users/alice/v/magic-todo-org/emacs/magic-todo-org.el\stopverb}}
+}
+}
+
+\subtree{
+\title{CLI Usage}
+\pre{\startverb
+unset PYTHONPATH
+
+# Generate JSON breakdown
+echo "your task here" | /Users/alice/v/.venv-mlx-lm/bin/python \
+  /Users/alice/v/scripts/magic_todo_mlx.py \
+  --format json --spice 2 \
+  --model mlx-community/Qwen3-8B-4bit \
+  --max-tokens 800
+
+# Generate org-mode checklist
+echo "your task here" | /Users/alice/v/.venv-mlx-lm/bin/python \
+  /Users/alice/v/scripts/magic_todo_mlx.py \
+  --format md --spice 2 \
+  --model mlx-community/Qwen3-8B-4bit \
+  --max-tokens 800
+\stopverb}
+}
+
+\subtree{
+\title{Org File Entry Format}
+\pre{\startverb
+* TODO <task description>
+:PROPERTIES:
+:MAGIC_TODO_TASK: <task description>
+:MAGIC_TODO_SPICE: <1-5>
+:MAGIC_TODO_MODEL: mlx-community/Qwen3-8B-4bit
+:END:
+- [ ] step one
+- [ ] step two
+\stopverb}
+}
+
+\subtree{
+\title{Spice Levels}
+\pre{\startverb
+| Level | Meaning | Guidance |
+|-------|---------|----------|
+| 1 | Trivial | 2-3 quick steps |
+| 2 | Easy | 4-6 clear steps |
+| 3 | Medium | 6-10 steps, may need substeps |
+| 4 | Hard | 8-15 steps with substeps |
+| 5 | Overwhelming | 10-20 steps, deeply broken down |
+\stopverb}
+}
+
+\subtree{
+\title{Parameters}
+\pre{\startverb
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--format` | `text` | Output format: `text`, `md`, `json` |
+| `--spice` | `2` | Difficulty 1-5 |
+| `--model` | `Qwen3-8B-4bit` | MLX model repo id |
+| `--max-tokens` | `2048` | Max generation tokens |
+| `--temp` | `0.7` | Sampling temperature |
+| `--top-p` | `0.9` | Nucleus sampling |
+| `--context` | - | Existing org content for style learning |
+| `--list-models` | - | List cached MLX models |
+\stopverb}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Run the script with \code{\startverb --format json\stopverb} to get structured output}
+\li{Parse the JSON: \code{\startverb {"title": "...", "steps": [{"text": "...", "substeps": null}]}\stopverb}}
+\li{Format as org checklist (\code{\startverb - [ ] step text\stopverb})}
+\li{Append to the target \code{\startverb .org\stopverb} file with PROPERTIES block}
+}
+}
+
+\subtree{
+\title{Output Rules}
+\ul{
+\li{Steps are concise (~10 words max), verb-first}
+\li{Tools are always suggested with alternatives ("using X or Y")}
+\li{No filler: no "review", "test", "document", "audit", "ensure", "plan"}
+\li{ADHD-friendly: many small steps, no walls of text}
+}
+}
+
+\subtree{
+\title{Known Org Files}
+\ul{
+\li{\code{\startverb /Users/alice/vi/plurigrid.org/plurigrid-basinator.org\stopverb}}
+}
+}
+}

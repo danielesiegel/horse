@@ -1,0 +1,78 @@
+\title{Otel Tracing}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{OpenTelemetry tracing for agent observations and SPI verification}
+
+\subtree{
+\title{OpenTelemetry Tracing Skill}
+\p{\strong{Trit}: -1 (VALIDATOR) \strong{Bundle}: infrastructure \strong{Role}: Verification of execution traces and distributed contexts.}
+
+\subtree{
+\title{Overview}
+\p{This skill provides a standard interface for emitting OpenTelemetry spans from agent actions. It is crucial for:}
+
+\ol{
+\li{\strong{SPI Verification}: Tracing execution paths to ensure determinism.}
+\li{\strong{Debugging}: Visualizing distributed agent interactions.}
+\li{\strong{Performance}: Measuring latency in ACSet bridge operations.}
+}
+}
+
+\subtree{
+\title{Integration}
+\subtree{
+\title{Python}
+\pre{\startverb
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+
+def init_tracer(service_name="agent-skill"):
+    provider = TracerProvider()
+    processor = SimpleSpanProcessor(ConsoleSpanExporter())
+    provider.add_span_processor(processor)
+    trace.set_tracer_provider(provider)
+    return trace.get_tracer(service_name)
+
+tracer = init_tracer()
+
+with tracer.start_as_current_span("agent_action") as span:
+    span.set_attribute("agent.trit", -1)
+    span.set_attribute("agent.id", "minus_validator")
+    # ... perform action ...
+\stopverb}
+}
+}
+
+\subtree{
+\title{SPI Verification Pattern}
+\p{To verify Strong Parallelism Invariance (SPI), traces must be deterministic given a seed.}
+
+\pre{\startverb
+def verify_spi_trace(seed, trace_id):
+    expected_hash = compute_spi_hash(seed)
+    actual_hash = hash(trace_id)
+    assert expected_hash == actual_hash
+\stopverb}
+}
+
+\subtree{
+\title{Neo4j Mapping}
+\ul{
+\li{\strong{Nodes}: \code{\startverb Span\stopverb}, \code{\startverb Trace\stopverb}}
+\li{\strong{Relationships}: \code{\startverb PARENT_OF\stopverb}, \code{\startverb NEXT_SIBLING\stopverb}}
+\li{\strong{Properties}: \code{\startverb start_time\stopverb}, \code{\startverb end_time\stopverb}, \code{\startverb attributes\stopverb} (JSON)}
+}
+}
+
+\subtree{
+\title{Commands}
+\ul{
+\li{\code{\startverb trace-agent <agent_id>\stopverb}: Start a trace for an agent.}
+\li{\code{\startverb export-traces\stopverb}: Dump traces to JSON.}
+}
+}
+}

@@ -1,0 +1,283 @@
+\title{Datacommons Client}
+
+\taxon{skill}
+
+\meta{description}{Work with Data Commons, a platform providing programmatic access to public statistical data from global sources. Use this skill when working with demographic data, economic indicators, health statistics, environmental data, or any public datasets available through Data Commons. Applicable for querying population statistics, GDP figures, unemployment rates, disease prevalence, geographic entity resolution, and exploring relationships between statistical entities.}
+
+\subtree{
+\title{Data Commons Client}
+\subtree{
+\title{Overview}
+\p{Provides comprehensive access to the Data Commons Python API v2 for querying statistical observations, exploring the knowledge graph, and resolving entity identifiers. Data Commons aggregates data from census bureaus, health organizations, environmental agencies, and other authoritative sources into a unified knowledge graph.}
+}
+
+\subtree{
+\title{Installation}
+\p{Install the Data Commons Python client with Pandas support:}
+
+\pre{\startverb
+uv pip install "datacommons-client[Pandas]"
+\stopverb}
+
+\p{For basic usage without Pandas:}
+
+\pre{\startverb
+uv pip install datacommons-client
+\stopverb}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{The Data Commons API consists of three main endpoints, each detailed in dedicated reference files:}
+
+\subtree{
+\title{1. Observation Endpoint - Statistical Data Queries}
+\p{Query time-series statistical data for entities. See \code{\startverb references/observation.md\stopverb} for comprehensive documentation.}
+
+\p{\strong{Primary use cases:}}
+
+\ul{
+\li{Retrieve population, economic, health, or environmental statistics}
+\li{Access historical time-series data for trend analysis}
+\li{Query data for hierarchies (all counties in a state, all countries in a region)}
+\li{Compare statistics across multiple entities}
+\li{Filter by data source for consistency}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+from datacommons_client import DataCommonsClient
+
+client = DataCommonsClient()
+
+# Get latest population data
+response = client.observation.fetch(
+    variable_dcids=["Count_Person"],
+    entity_dcids=["geoId/06"],  # California
+    date="latest"
+)
+
+# Get time series
+response = client.observation.fetch(
+    variable_dcids=["UnemploymentRate_Person"],
+    entity_dcids=["country/USA"],
+    date="all"
+)
+
+# Query by hierarchy
+response = client.observation.fetch(
+    variable_dcids=["MedianIncome_Household"],
+    entity_expression="geoId/06<-containedInPlace+{typeOf:County}",
+    date="2020"
+)
+\stopverb}
+}
+
+\subtree{
+\title{2. Node Endpoint - Knowledge Graph Exploration}
+\p{Explore entity relationships and properties within the knowledge graph. See \code{\startverb references/node.md\stopverb} for comprehensive documentation.}
+
+\p{\strong{Primary use cases:}}
+
+\ul{
+\li{Discover available properties for entities}
+\li{Navigate geographic hierarchies (parent/child relationships)}
+\li{Retrieve entity names and metadata}
+\li{Explore connections between entities}
+\li{List all entity types in the graph}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+# Discover properties
+labels = client.node.fetch_property_labels(
+    node_dcids=["geoId/06"],
+    out=True
+)
+
+# Navigate hierarchy
+children = client.node.fetch_place_children(
+    node_dcids=["country/USA"]
+)
+
+# Get entity names
+names = client.node.fetch_entity_names(
+    node_dcids=["geoId/06", "geoId/48"]
+)
+\stopverb}
+}
+
+\subtree{
+\title{3. Resolve Endpoint - Entity Identification}
+\p{Translate entity names, coordinates, or external IDs into Data Commons IDs (DCIDs). See \code{\startverb references/resolve.md\stopverb} for comprehensive documentation.}
+
+\p{\strong{Primary use cases:}}
+
+\ul{
+\li{Convert place names to DCIDs for queries}
+\li{Resolve coordinates to places}
+\li{Map Wikidata IDs to Data Commons entities}
+\li{Handle ambiguous entity names}
+}
+
+\p{\strong{Common patterns:}}
+
+\pre{\startverb
+# Resolve by name
+response = client.resolve.fetch_dcids_by_name(
+    names=["California", "Texas"],
+    entity_type="State"
+)
+
+# Resolve by coordinates
+dcid = client.resolve.fetch_dcid_by_coordinates(
+    latitude=37.7749,
+    longitude=-122.4194
+)
+
+# Resolve Wikidata IDs
+response = client.resolve.fetch_dcids_by_wikidata_id(
+    wikidata_ids=["Q30", "Q99"]
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Typical Workflow}
+\p{Most Data Commons queries follow this pattern:}
+
+\ol{
+\li{\strong{Resolve entities} (if starting with names):}
+}
+
+\ol{
+\li{\strong{Discover available variables} (optional):}
+}
+
+\ol{
+\li{\strong{Query statistical data}:}
+}
+
+\ol{
+\li{\strong{Process results}:}
+}
+
+\subtree{
+\title{As Pandas DataFrame}
+\p{df = response.to_observations_as_records()}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Finding Statistical Variables}
+\p{Statistical variables use specific naming patterns in Data Commons:}
+
+\p{\strong{Common variable patterns:}}
+
+\ul{
+\li{\code{\startverb Count_Person\stopverb} - Total population}
+\li{\code{\startverb Count_Person_Female\stopverb} - Female population}
+\li{\code{\startverb UnemploymentRate_Person\stopverb} - Unemployment rate}
+\li{\code{\startverb Median_Income_Household\stopverb} - Median household income}
+\li{\code{\startverb Count_Death\stopverb} - Death count}
+\li{\code{\startverb Median_Age_Person\stopverb} - Median age}
+}
+
+\p{\strong{Discovery methods:}}
+
+\pre{\startverb
+# Check what variables are available for an entity
+available = client.observation.fetch_available_statistical_variables(
+    entity_dcids=["geoId/06"]
+)
+
+# Or explore via the web interface
+# https://datacommons.org/tools/statvar
+\stopverb}
+}
+
+\subtree{
+\title{Working with Pandas}
+\p{All observation responses integrate with Pandas:}
+
+\pre{\startverb
+response = client.observation.fetch(
+    variable_dcids=["Count_Person"],
+    entity_dcids=["geoId/06", "geoId/48"],
+    date="all"
+)
+
+# Convert to DataFrame
+df = response.to_observations_as_records()
+# Columns: date, entity, variable, value
+
+# Reshape for analysis
+pivot = df.pivot_table(
+    values='value',
+    index='date',
+    columns='entity'
+)
+\stopverb}
+}
+
+\subtree{
+\title{API Authentication}
+\p{\strong{For datacommons.org (default):}}
+
+\ul{
+\li{An API key is required}
+\li{Set via environment variable: \code{\startverb export DC_API_KEY="your_key"\stopverb}}
+\li{Or pass when initializing: \code{\startverb client = DataCommonsClient(api_key="your_key")\stopverb}}
+\li{Request keys at: https://apikeys.datacommons.org/}
+}
+
+\p{\strong{For custom Data Commons instances:}}
+
+\ul{
+\li{No API key required}
+\li{Specify custom endpoint: \code{\startverb client = DataCommonsClient(url="https://custom.datacommons.org")\stopverb}}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{Comprehensive documentation for each endpoint is available in the \code{\startverb references/\stopverb} directory:}
+
+\ul{
+\li{\strong{\code{\startverb references/observation.md\stopverb}}: Complete Observation API documentation with all methods, parameters, response formats, and common use cases}
+\li{\strong{\code{\startverb references/node.md\stopverb}}: Complete Node API documentation for graph exploration, property queries, and hierarchy navigation}
+\li{\strong{\code{\startverb references/resolve.md\stopverb}}: Complete Resolve API documentation for entity identification and DCID resolution}
+\li{\strong{\code{\startverb references/getting_started.md\stopverb}}: Quickstart guide with end-to-end examples and common patterns}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation}: https://docs.datacommons.org/api/python/v2/}
+\li{\strong{Statistical Variable Explorer}: https://datacommons.org/tools/statvar}
+\li{\strong{Data Commons Browser}: https://datacommons.org/browser/}
+\li{\strong{GitHub Repository}: https://github.com/datacommonsorg/api-python}
+}
+}
+
+\subtree{
+\title{Tips for Effective Use}
+\ol{
+\li{\strong{Always start with resolution}: Convert names to DCIDs before querying data}
+\li{\strong{Use relation expressions for hierarchies}: Query all children at once instead of individual queries}
+\li{\strong{Check data availability first}: Use \code{\startverb fetch_available_statistical_variables()\stopverb} to see what's queryable}
+\li{\strong{Leverage Pandas integration}: Convert responses to DataFrames for analysis}
+\li{\strong{Cache resolutions}: If querying the same entities repeatedly, store name→DCID mappings}
+\li{\strong{Filter by facet for consistency}: Use \code{\startverb filter_facet_domains\stopverb} to ensure data from the same source}
+\li{\strong{Read reference docs}: Each endpoint has extensive documentation in the \code{\startverb references/\stopverb} directory}
+}
+}
+}

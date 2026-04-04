@@ -1,0 +1,385 @@
+\title{Implementing Api Security Testing With 42crunch}
+
+\taxon{skill}
+
+\tag{api-security}
+
+\tag{42crunch}
+
+\tag{openapi}
+
+\tag{api-audit}
+
+\tag{api-scan}
+
+\tag{conformance-testing}
+
+\tag{shift-left}
+
+\tag{ci-cd-security}
+
+\tag{owasp-api-top-10}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement comprehensive API security testing using the 42Crunch platform to perform static audit and dynamic conformance scanning of OpenAPI specifications.}
+
+\subtree{
+\title{Implementing API Security Testing with 42Crunch}
+\subtree{
+\title{Overview}
+\p{42Crunch is an API security platform that combines Shift-Left security testing with Shield-Right runtime protection. It provides API Audit for static security analysis of OpenAPI definitions, API Conformance Scan for dynamic vulnerability detection, and API Protect for real-time threat prevention. The platform integrates into CI/CD pipelines and IDEs to identify OWASP API Security Top 10 vulnerabilities before and after deployment.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing api security testing with 42crunch capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{42Crunch platform account (free tier available for evaluation)}
+\li{OpenAPI Specification (OAS) v2.0, v3.0, or v3.1 definitions for target APIs}
+\li{IDE with 42Crunch extension (VS Code, IntelliJ, or Eclipse)}
+\li{CI/CD pipeline (Jenkins, GitHub Actions, Azure DevOps, or GitLab CI)}
+\li{Running API instance for dynamic scanning (conformance scan)}
+\li{Node.js or Python environment for CLI tooling}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{API Audit (Static Analysis)}
+\p{API Audit performs static security analysis of OpenAPI definitions without requiring a running API. It evaluates the specification against 300+ security checks organized into categories:}
+
+\p{\strong{Security Score Categories:}}
+
+\ul{
+\li{\strong{Data Validation}: Schema definitions, parameter constraints, response validation}
+\li{\strong{Authentication}: Security scheme definitions, scope requirements}
+\li{\strong{Transport Security}: Server URL schemes, TLS requirements}
+\li{\strong{Error Handling}: Error response definitions, information leakage prevention}
+}
+
+\p{\strong{Running API Audit via VS Code Extension:}}
+
+\ol{
+\li{Install the 42Crunch extension from the VS Code marketplace}
+\li{Open an OpenAPI specification file (YAML or JSON)}
+\li{Click the security audit icon in the editor toolbar}
+\li{Review the security score (0-100) and individual findings}
+\li{Address issues using the inline remediation guidance}
+}
+
+\p{\strong{Example OpenAPI Definition with Security Controls:}}
+
+\pre{\startverb
+openapi: 3.0.3
+info:
+  title: Secure User API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: Production server (HTTPS only)
+security:
+  - BearerAuth: []
+paths:
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      summary: Retrieve user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+            maxLength: 36
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        name:
+          type: string
+          maxLength: 100
+          pattern: '^[a-zA-Z\s\-]+$'
+      additionalProperties: false
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+          maxLength: 256
+      additionalProperties: false
+\stopverb}
+}
+
+\subtree{
+\title{API Conformance Scan (Dynamic Testing)}
+\p{The conformance scan dynamically tests a running API against its OpenAPI contract to detect runtime vulnerabilities including OWASP API Security Top 10 issues:}
+
+\p{\strong{Scan v2 Configuration:}}
+
+\pre{\startverb
+# 42c-conf.yaml
+version: "2.0"
+scan:
+  target:
+    url: https://api.example.com/v1
+  authentication:
+    - type: bearer
+      token: "${API_TOKEN}"
+      in: header
+      name: Authorization
+  settings:
+    maxScanTime: 3600
+    requestsPerSecond: 10
+    followRedirects: false
+  tests:
+    owasp:
+      - bola
+      - bfla
+      - injection
+      - ssrf
+      - massAssignment
+      - excessiveDataExposure
+\stopverb}
+
+\p{\strong{Running Conformance Scan via CLI:}}
+
+\pre{\startverb
+# Install the 42Crunch CLI
+npm install -g @42crunch/cicd-cli
+
+# Run conformance scan
+42crunch-cli scan \
+  --api-definition ./openapi.yaml \
+  --target-url https://api.example.com/v1 \
+  --token $CRUNCH_TOKEN \
+  --min-score 70 \
+  --report-format sarif \
+  --output scan-report.sarif
+\stopverb}
+}
+
+\subtree{
+\title{CI/CD Pipeline Integration}
+\p{\strong{GitHub Actions Integration:}}
+
+\pre{\startverb
+name: API Security Testing
+on:
+  push:
+    paths:
+      - 'api/**'
+      - 'openapi/**'
+jobs:
+  api-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 42Crunch API Audit
+        uses: 42Crunch/api-security-audit-action@v3
+        with:
+          api-token: ${{ secrets.CRUNCH_API_TOKEN }}
+          collection-name: "my-api-collection"
+          min-score: 75
+          upload-to-code-scanning: true
+
+      - name: 42Crunch Conformance Scan
+        if: github.ref == 'refs/heads/main'
+        uses: 42Crunch/api-conformance-scan@v1
+        with:
+          api-token: ${{ secrets.CRUNCH_API_TOKEN }}
+          target-url: ${{ secrets.STAGING_API_URL }}
+          scan-config: ./42c-conf.yaml
+\stopverb}
+
+\p{\strong{Jenkins Pipeline Integration:}}
+
+\pre{\startverb
+pipeline {
+    agent any
+    stages {
+        stage('API Security Audit') {
+            steps {
+                script {
+                    def auditResult = sh(
+                        script: '''
+                            42crunch-cli audit \
+                              --api-definition openapi.yaml \
+                              --token ${CRUNCH_TOKEN} \
+                              --min-score 75 \
+                              --report-format json \
+                              --output audit-report.json
+                        ''',
+                        returnStatus: true
+                    )
+                    if (auditResult != 0) {
+                        error("API Security Audit failed - score below threshold")
+                    }
+                }
+            }
+        }
+        stage('Conformance Scan') {
+            when { branch 'main' }
+            steps {
+                sh '''
+                    42crunch-cli scan \
+                      --api-definition openapi.yaml \
+                      --target-url ${STAGING_URL} \
+                      --token ${CRUNCH_TOKEN} \
+                      --scan-config 42c-conf.yaml
+                '''
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: '*-report.*'
+            publishHTML([
+                reportDir: '.',
+                reportFiles: 'audit-report.html',
+                reportName: 'API Security Report'
+            ])
+        }
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{API Protect (Runtime Protection)}
+\p{API Protect deploys as a micro-gateway in front of API endpoints to enforce the OpenAPI contract at runtime:}
+
+\pre{\startverb
+# api-protect-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-protect-config
+data:
+  protection-config.json: |
+    {
+      "apiDefinition": "/config/openapi.yaml",
+      "enforcement": {
+        "validateRequests": true,
+        "validateResponses": true,
+        "blockOnFailure": true,
+        "logLevel": "warn"
+      },
+      "rateLimit": {
+        "enabled": true,
+        "requestsPerMinute": 100,
+        "burstSize": 20
+      },
+      "allowlist": {
+        "contentTypes": ["application/json"],
+        "methods": ["GET", "POST", "PUT", "DELETE"]
+      }
+    }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Remediation Workflow}
+\p{When 42Crunch identifies issues, follow this remediation process:}
+
+\ol{
+\li{\strong{Triage}: Review findings sorted by severity (Critical, High, Medium, Low)}
+\li{\strong{Analyze}: Understand the specific security control missing from the OpenAPI definition}
+\li{\strong{Fix}: Apply the recommended changes to the specification}
+\li{\strong{Validate}: Re-run audit to confirm the score improvement}
+\li{\strong{Deploy}: Push the updated specification through the CI/CD pipeline}
+}
+
+\p{\strong{Common Audit Findings and Fixes:}}
+
+\pre{\startverb
+| Finding | Severity | Fix |
+|---------|----------|-----|
+| No authentication defined | Critical | Add securitySchemes and security requirements |
+| Missing input validation | High | Add type, format, pattern, maxLength constraints |
+| Server URL uses HTTP | High | Change server URLs to HTTPS |
+| No error responses defined | Medium | Add 4xx and 5xx response definitions |
+| additionalProperties not restricted | Medium | Set additionalProperties: false on object schemas |
+| Missing rate limiting | Medium | Add x-rateLimit extension or use API Protect |
+\stopverb}
+}
+
+\subtree{
+\title{Key Security Checks}
+\p{42Crunch evaluates APIs against these critical security areas:}
+
+\ul{
+\li{\strong{BOLA Prevention}: Validates that object-level authorization patterns are defined}
+\li{\strong{BFLA Prevention}: Checks for function-level access control definitions}
+\li{\strong{Injection Prevention}: Ensures input parameters have proper type/format/pattern constraints}
+\li{\strong{Data Exposure}: Verifies response schemas limit returned properties}
+\li{\strong{Security Misconfiguration}: Checks authentication schemes, transport security, CORS settings}
+\li{\strong{Mass Assignment}: Validates that request bodies use explicit property allowlists}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{42Crunch API Security Platform: https://42crunch.com/api-security-platform/}
+\li{42Crunch Documentation: https://docs.42crunch.com/}
+\li{Microsoft Defender for Cloud 42Crunch Integration: https://learn.microsoft.com/en-us/azure/defender-for-cloud/onboarding-guide-42crunch}
+\li{OWASP API Security Top 10 2023: https://owasp.org/API-Security/editions/2023/en/0x00-header/}
+\li{Jenkins Plugin for 42Crunch: https://plugins.jenkins.io/42crunch-security-audit/}
+}
+}
+}

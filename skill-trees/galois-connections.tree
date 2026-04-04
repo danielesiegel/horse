@@ -1,0 +1,595 @@
+\title{Galois Connections}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Galois connections for lawful conversions and bi-Heyting topos logic. Lift adjoint pairs as behaviors with floor/ceiling/round/truncate. Derives ∧∨⇒¬∼ from adjoints.}
+
+\subtree{
+\title{galois-connections - Lawful Conversions via Adjoint Pairs}
+\subtree{
+\title{Overview}
+\p{A \strong{Galois connection} between preorders P and Q is a pair of monotone maps \code{\startverb f :: P → Q\stopverb} and \code{\startverb g :: Q → P\stopverb} such that:}
+
+\pre{\startverb
+f(x) ≤ y  ⟺  x ≤ g(y)
+\stopverb}
+
+\p{We say \code{\startverb f\stopverb} is the \strong{left/lower adjoint} and \code{\startverb g\stopverb} is the \strong{right/upper adjoint}.}
+
+\blockquote{\strong{Source}: Fong & Spivak, \em{Seven Sketches in Compositionality} §1.4.1}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         GALOIS CONNECTION                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│      P ─────────f────────→ Q       f = left adjoint (floor-like)            │
+│      │                     │       g = right adjoint (ceiling-like)         │
+│      │    f(x) ≤ y         │                                                │
+│      │       ⟺             │       When f ⊣ g ⊣ h (adjoint string):         │
+│      │    x ≤ g(y)         │         • f = floor                            │
+│      │                     │         • g = round (nearest)                  │
+│      Q ←────────g──────────P         • h = ceiling                          │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Source: cmk/connections}
+\p{Based on [cmk/connections](https://github.com/cmk/connections) - Haskell library for Galois connections.}
+
+\p{Key insight: \strong{Adjoint strings of length 3} (\code{\startverb f ⊣ g ⊣ h\stopverb}) enable lawful rounding:}
+
+\pre{\startverb
+-- Adjoint string: f ⊣ g ⊣ h
+ordbin :: Cast k Ordering Bool
+ordbin = Cast f g h
+  where
+    f LT = False    -- floor (lower adjoint)
+    f _  = True
+
+    g False = LT    -- round (middle)
+    g True = GT
+
+    h GT = True     -- ceiling (upper adjoint)
+    h _  = False
+\stopverb}
+}
+
+\subtree{
+\title{Behaviors Lifted from Galois Connections}
+\subtree{
+\title{Behavior 1: \code{\startverb floor\stopverb} (Left Adjoint)}
+\pre{\startverb
+def floor_behavior(connection, x):
+    """
+    Floor: greatest lower bound in target that is ≤ source.
+    
+    floor(x) = max { y : f(y) ≤ x }
+    
+    Properties:
+    - Monotone: x₁ ≤ x₂ ⟹ floor(x₁) ≤ floor(x₂)
+    - Deflationary: floor(x) ≤ x (when embedded)
+    - Idempotent: floor(floor(x)) = floor(x)
+    """
+    return connection.left_adjoint(x)
+\stopverb}
+
+\p{\strong{Use case}: Safely convert Float → Int without overflow.}
+}
+
+\subtree{
+\title{Behavior 2: \code{\startverb ceiling\stopverb} (Right Adjoint)}
+\pre{\startverb
+def ceiling_behavior(connection, x):
+    """
+    Ceiling: least upper bound in target that is ≥ source.
+    
+    ceiling(x) = min { y : x ≤ g(y) }
+    
+    Properties:
+    - Monotone: x₁ ≤ x₂ ⟹ ceiling(x₁) ≤ ceiling(x₂)
+    - Inflationary: x ≤ ceiling(x) (when embedded)
+    - Idempotent: ceiling(ceiling(x)) = ceiling(x)
+    """
+    return connection.right_adjoint(x)
+\stopverb}
+
+\p{\strong{Use case}: Round up to next representable value.}
+}
+
+\subtree{
+\title{Behavior 3: \code{\startverb round\stopverb} (Middle of Adjoint String)}
+\pre{\startverb
+def round_behavior(connection, x):
+    """
+    Round: nearest value in target (ties to even).
+    
+    Requires adjoint string f ⊣ g ⊣ h.
+    round(x) = g(x) where g is the middle adjoint.
+    
+    Properties:
+    - round(x) minimizes |x - round(x)|
+    - Ties go to even (banker's rounding)
+    """
+    return connection.middle_adjoint(x)
+\stopverb}
+
+\p{\strong{Use case}: Convert with minimal error.}
+}
+
+\subtree{
+\title{Behavior 4: \code{\startverb truncate\stopverb} (Toward Zero)}
+\pre{\startverb
+def truncate_behavior(connection, x):
+    """
+    Truncate: round toward zero.
+    
+    truncate(x) = floor(x) if x ≥ 0 else ceiling(x)
+    
+    Properties:
+    - |truncate(x)| ≤ |x|
+    - truncate(-x) = -truncate(x)
+    """
+    if x >= 0:
+        return connection.left_adjoint(x)
+    else:
+        return connection.right_adjoint(x)
+\stopverb}
+
+\p{\strong{Use case}: Integer division semantics.}
+}
+
+\subtree{
+\title{Behavior 5: \code{\startverb inner\stopverb}/\code{\startverb outer\stopverb} (Interval Bounds)}
+\pre{\startverb
+def inner_outer_behavior(connection, x):
+    """
+    Inner/Outer: find the interval containing x in target type.
+    
+    inner(x) = the unique target value equal to x (if representable)
+    outer(x) = (floor(x), ceiling(x)) bounding interval
+    
+    Properties:
+    - If inner(x) exists: outer(x) = (inner(x), inner(x))
+    - Otherwise: floor(x) < x < ceiling(x)
+    """
+    lo = connection.left_adjoint(x)
+    hi = connection.right_adjoint(x)
+    if lo == hi:
+        return ("exact", lo)
+    else:
+        return ("interval", (lo, hi))
+\stopverb}
+
+\p{\strong{Use case}: Precision analysis (is 1/7 exactly representable as Float?).}
+}
+
+\subtree{
+\title{Behavior 6: \code{\startverb lift\stopverb} (Function Lifting)}
+\pre{\startverb
+def lift_behavior(connection, f, x):
+    """
+    Lift: compute function in higher precision, round result.
+    
+    lift(f)(x) = round(f(embed(x)))
+    
+    Avoids precision loss in intermediate computation.
+    """
+    embedded = connection.embed(x)  # Go to higher precision
+    result = f(embedded)            # Compute there
+    return connection.round(result) # Come back
+\stopverb}
+
+\p{\strong{Use case}: Avoid Float precision loss by computing in Double.}
+}
+}
+
+\subtree{
+\title{Implementation Patterns}
+\subtree{
+\title{Python Implementation}
+\pre{\startverb
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
+
+from dataclasses import dataclass
+from typing import TypeVar, Generic, Callable
+
+P = TypeVar('P')  # Source type
+Q = TypeVar('Q')  # Target type
+
+@dataclass
+class GaloisConnection(Generic[P, Q]):
+    """A Galois connection between preorders P and Q."""
+    
+    left: Callable[[P], Q]   # f: P → Q (floor-like)
+    right: Callable[[Q], P]  # g: Q → P (ceiling-like)
+    
+    def floor(self, x: P) -> Q:
+        return self.left(x)
+    
+    def ceiling(self, x: P) -> Q:
+        # ceiling via adjunction: min { y : x ≤ g(y) }
+        return self.right(x)
+    
+    def is_adjoint(self, x: P, y: Q, le_P, le_Q) -> bool:
+        """Verify adjunction: f(x) ≤ y ⟺ x ≤ g(y)"""
+        return le_Q(self.left(x), y) == le_P(x, self.right(y))
+
+@dataclass 
+class AdjointString(Generic[P, Q]):
+    """Adjoint string f ⊣ g ⊣ h for lawful rounding."""
+    
+    floor: Callable[[P], Q]    # f: left adjoint
+    round: Callable[[P], Q]    # g: middle (both left and right)
+    ceiling: Callable[[P], Q]  # h: right adjoint
+    
+    def truncate(self, x: P, zero: P, le) -> Q:
+        if le(zero, x):
+            return self.floor(x)
+        else:
+            return self.ceiling(x)
+
+# Example: Float32 ↔ Int32
+def make_f32_i32_connection() -> AdjointString[float, int]:
+    import math
+    return AdjointString(
+        floor=lambda x: int(math.floor(x)) if math.isfinite(x) else None,
+        round=lambda x: round(x) if math.isfinite(x) else None,
+        ceiling=lambda x: int(math.ceil(x)) if math.isfinite(x) else None,
+    )
+\stopverb}
+}
+
+\subtree{
+\title{Julia Implementation}
+\pre{\startverb
+"""
+Galois connection between preorders.
+"""
+struct GaloisConnection{P,Q}
+    left::Function   # f: P → Q
+    right::Function  # g: Q → P
+end
+
+floor(gc::GaloisConnection, x) = gc.left(x)
+ceiling(gc::GaloisConnection, x) = gc.right(x)
+
+# Verify adjunction property
+function is_adjoint(gc::GaloisConnection, x, y; leP=(≤), leQ=(≤))
+    leQ(gc.left(x), y) == leP(x, gc.right(y))
+end
+
+"""
+Adjoint string f ⊣ g ⊣ h for full rounding suite.
+"""
+struct AdjointString{P,Q}
+    floor::Function    # f
+    round::Function    # g
+    ceiling::Function  # h
+end
+
+truncate(as::AdjointString, x, zero=0) = x ≥ zero ? as.floor(x) : as.ceiling(x)
+
+# Example: Rational ↔ Float32
+const rat_f32 = AdjointString{Rational,Float32}(
+    r -> prevfloat(Float32(r)),  # floor
+    r -> Float32(r),              # round
+    r -> nextfloat(Float32(r)),  # ceiling
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Domain Connections Table}
+\pre{\startverb
+| Source | Target | Left (floor) | Right (ceiling) | Middle (round) |
+|--------|--------|--------------|-----------------|----------------|
+| Float | Int | `math.floor` | `math.ceil` | `round` |
+| Double | Float | `prevfloat` | `nextfloat` | `Float32` |
+| Rational | Float | `prevfloat(Float(r))` | `nextfloat(Float(r))` | `Float(r)` |
+| Int | Nat | `max(0, x)` | `max(0, x)` | `max(0, x)` |
+| Ordering | Bool | `(≠ LT)` | `(= GT)` | middle |
+\stopverb}
+}
+
+\subtree{
+\title{Lawvere's Derivation: Logical Operations as Adjoints}
+\p{The deepest application of Galois connections is \strong{Lawvere's derivation of propositional logic} from adjoints. Given a C-set X (domain of discourse), the preorder Sub(X) of subobjects supports:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    LOGICAL CONNECTIVES FROM ADJOINTS                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Operation      │ Symbol │  Adjoint Of        │  Formula                    │
+│  ───────────────┼────────┼────────────────────┼─────────────────────────────│
+│  Conjunction    │   ∧    │  Δ (right adjoint) │  C ≤ A∧B ⟺ C≤A and C≤B     │
+│  Disjunction    │   ∨    │  Δ (left adjoint)  │  A∨B ≤ C ⟺ A≤C and B≤C     │
+│  Implication    │   ⇒    │  (−)∧B (right)     │  A∧B ≤ C ⟺ A ≤ B⇒C         │
+│  Subtraction    │   \    │  B∨(−) (left)      │  A ≤ B∨C ⟺ A\B ≤ C         │
+│  Negation       │   ¬    │  derived: A⇒⊥      │  ¬A = largest disjoint      │
+│  Complement     │   ∼    │  derived: ⊤\A      │  ∼A = smallest covering     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+\stopverb}
+
+\subtree{
+\title{Bi-Heyting Topos: Why C-Sets Have Two Negations}
+\p{For a graph schema C = {E ⇉ V}, sub-C-sets (subgraphs) have both:}
+
+\ul{
+\li{\strong{¬A} ("not-A"): All elements \em{not reachable from} A}
+\li{\strong{∼A} ("non-A"): All elements \em{reachable from non-A}}
+}
+
+\p{The \strong{intrinsic boundary} is: ∂A = A ∧ ∼A}
+
+\pre{\startverb
+# Subgraph logic operations via Galois connections
+def negation(A, X):
+    """¬A = largest subobject disjoint from A"""
+    return {x for x in X if not any_edge_to(x, A)}
+
+def complement(A, X):
+    """∼A = smallest subobject covering X with A"""
+    return {x for x in X if any_edge_from_outside(x, A)}
+
+def boundary(A, X):
+    """∂A = intrinsic boundary (vertices touching outside)"""
+    return intersection(A, complement(A, X))
+
+def induced_subgraph(A):
+    """¬¬A = all edges between vertices in A"""
+    return negation(negation(A))
+
+def expand(A):
+    """∼¬A = A expanded one degree outward"""
+    return complement(negation(A))
+
+def contract(A):
+    """¬∼A = A contracted one degree inward"""
+    return negation(complement(A))
+\stopverb}
+}
+
+\subtree{
+\title{Excluded Middle and Discreteness}
+\p{The law of excluded middle (A ∨ ¬A = ⊤) holds for a C-set iff it is \strong{discrete} (no morphisms). For graphs: no edges means classical logic.}
+
+\blockquote{\strong{Reference}: Patterson & Myers, "Graphs and C-sets IV: The propositional logic of subgraphs" (2021)}
+}
+}
+
+\subtree{
+\title{Connection to Other Skills}
+\subtree{
+\title{DisCoPy (rigid categories)}
+\ul{
+\li{Cup/Cap = Unit/Counit of adjunction}
+\li{Left dual \code{\startverb a.l\stopverb} ⊣ Right dual \code{\startverb a.r\stopverb}}
+}
+}
+
+\subtree{
+\title{HoTT (univalence)}
+\ul{
+\li{Limit ⊣ Diagonal ⊣ Colimit}
+\li{Unit-counit formalization}
+}
+}
+
+\subtree{
+\title{CEREBRUM (case system)}
+\ul{
+\li{NOM-ACC ⊣ ERG-ABS alignment adjunction}
+\li{Case transitions as Galois connections}
+}
+}
+
+\subtree{
+\title{ACSets (C-set databases)}
+\ul{
+\li{Sub(X) forms bi-Heyting algebra}
+\li{Logical queries via adjoint operations}
+}
+}
+
+\subtree{
+\title{Plurigrid ASI}
+\ul{
+\li{GF(3) triplets are Galois-connected}
+\li{Attacker⊣Arbiter⊣Defender adjoint string}
+\li{Skill dispersal respects adjunction laws}
+}
+}
+
+\subtree{
+\title{Harmonization Engine}
+\ul{
+\li{\code{\startverb harmonize.py galois\stopverb} shows known connections}
+\li{\code{\startverb harmonize.py missing\stopverb} finds candidates}
+}
+}
+}
+
+\subtree{
+\title{Exa Discovery Queries}
+\pre{\startverb
+# Find Galois connection libraries
+mcp__exa__web_search_exa(
+    query="Galois connection Haskell Julia Python implementation floor ceiling",
+    numResults=10
+)
+
+# Find adjunction papers
+mcp__exa__web_search_exa(
+    query="site:arxiv.org adjoint functor Galois connection type theory",
+    numResults=10
+)
+\stopverb}
+}
+
+\subtree{
+\title{Justfile Recipes}
+\pre{\startverb
+# List known Galois connections
+galois-list:
+    @echo "🔗 Known Galois Connections"
+    @echo "Float32 ↔ Int32: floor/ceiling/round"
+    @echo "Float64 ↔ Float32: prevfloat/nextfloat"
+    @echo "Rational ↔ Float32: exact bounds"
+    @echo "Ordering ↔ Bool: ordbin connection"
+
+# Floor conversion
+galois-floor src dst val:
+    @echo "floor({{val}}) :: {{src}} → {{dst}}"
+    python3 -c "import math; print(int(math.floor({{val}})))"
+
+# Ceiling conversion
+galois-ceiling src dst val:
+    @echo "ceiling({{val}}) :: {{src}} → {{dst}}"
+    python3 -c "import math; print(int(math.ceil({{val}})))"
+
+# Outer interval
+galois-outer src dst val:
+    @echo "outer({{val}}) :: {{src}} → ({{dst}}, {{dst}})"
+    python3 -c "import math; x={{val}}; print(f'({int(math.floor(x))}, {int(math.ceil(x))})')"
+\stopverb}
+}
+
+\subtree{
+\title{Plurigrid ASI Adjoint String}
+\p{The GF(3) bisimulation game forms an \strong{adjoint string}:}
+
+\pre{\startverb
+Attacker (-1) ⊣ Arbiter (0) ⊣ Defender (+1)
+
+           α (attack)                     δ (defend)
+    MINUS ─────────────→ ERGODIC ─────────────→ PLUS
+      │                     │                     │
+      │   α(m) ≤ e         │                     │ e ≤ δ(p)
+      │       ⟺            │       ⟺            │
+      │   m ≤ verify(e)    │   attack(e) ≤ p    │
+      │                     │                     │
+    MINUS ←────────────── ERGODIC ←────────────── PLUS
+           verify (γ)                  retreat (ρ)
+\stopverb}
+
+\p{\strong{GF(3) Conservation as Adjunction Law}:}
+
+\pre{\startverb
+def gf3_adjoint_string(attacker, arbiter, defender):
+    """
+    Attacker ⊣ Arbiter ⊣ Defender forms adjoint string.
+
+    Conservation: (-1) + (0) + (+1) = 0
+
+    Properties:
+    - attack ∘ verify = id (up to arbiter approval)
+    - retreat ∘ defend = id (up to arbiter approval)
+    """
+    assert (attacker + arbiter + defender) % 3 == 0
+    return AdjointString(
+        floor=lambda e: max_attack(e),      # Attacker: maximize disruption
+        round=lambda e: verify(e),           # Arbiter: verify balance
+        ceiling=lambda e: min_defense(e),    # Defender: minimize exposure
+    )
+\stopverb}
+
+\subtree{
+\title{Skill Dispersal via Galois Adjunction}
+\pre{\startverb
+async def disperse_skill_galois(skill_path: str, agents: list):
+    """
+    Disperse skills using Galois connection structure.
+
+    The adjunction ensures:
+    - No information loss (unit η is injective)
+    - No information gain (counit ε is surjective)
+    - GF(3) conservation maintained
+    """
+    gc = gf3_adjoint_string(-1, 0, +1)
+
+    for i, agent in enumerate(agents):
+        trit = (i % 3) - 1  # Cycle: -1, 0, +1
+
+        if trit == -1:
+            # Attacker: floor (aggressive rounding)
+            agent.receive(gc.floor(skill_path))
+        elif trit == 0:
+            # Arbiter: round (balanced)
+            agent.receive(gc.round(skill_path))
+        else:
+            # Defender: ceiling (conservative rounding)
+            agent.receive(gc.ceiling(skill_path))
+
+    # Verify GF(3) conservation
+    assert sum(a.trit for a in agents) % 3 == 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{[cmk/connections](https://github.com/cmk/connections) - Haskell source}
+\li{[haskellari/lattices](https://github.com/haskellari/lattices) - Lattice primitives}
+\li{[AlgebraicJulia/Catlab.jl](https://github.com/AlgebraicJulia/Catlab.jl) - Full adjunction machinery}
+\li{\code{\startverb gh-skill-explorer\stopverb} - Discovery skill that found this}
+\li{\code{\startverb discopy\stopverb} - Rigid categories with adjoint duals}
+\li{\code{\startverb moebius-inversion\stopverb} - Incidence algebras on posets}
+\li{\code{\startverb acsets\stopverb} - C-set databases with bi-Heyting logic}
+\li{\code{\startverb plurigrid-asi-integrated\stopverb} - GF(3) skill dispersal}
+\li{\code{\startverb catsharp-galois\stopverb} - Scale Galois connections via Mazzola}
+\li{~/Desktop/CanonicalC-SetContext.md - Full C-set reference with bi-Heyting logic}
+}
+}
+
+\subtree{
+\title{End-of-Skill Interface}
+
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Show available connections
+just galois-list
+
+# Convert with floor
+just galois-floor float32 int32 3.7
+
+# Convert with ceiling  
+just galois-ceiling float32 int32 3.7
+
+# Show interval bounds
+just galois-outer rational float32 "1/7"
+
+# Lift function to higher precision
+just galois-lift float32 float64 "lambda x: x**2 - 2*x + 1" 1.5
+\stopverb}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

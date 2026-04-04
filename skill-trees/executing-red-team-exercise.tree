@@ -1,0 +1,216 @@
+\title{Executing Red Team Exercise}
+
+\taxon{skill}
+
+\tag{red-team}
+
+\tag{adversary-emulation}
+
+\tag{MITRE-ATT&CK}
+
+\tag{Cobalt-Strike}
+
+\tag{detection-assessment}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Executes comprehensive red team exercises that simulate real-world adversary operations against an organization's people, processes, and technology. The red team operates with stealth as a primary objective, employing the full attack lifecycle from initial reconnaissance through objective completion while testing the organization's detection and response capabilities. This differs from penetration testing by focusing on adversary emulation rather than vulnerability identification. Activates for requests involving red team exercise, adversary simulation, adversary emulation, or full-scope offensive security assessment.}
+
+\subtree{
+\title{Executing Red Team Exercise}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Assessing an organization's ability to detect, respond to, and contain a realistic adversary operation}
+\li{Testing the effectiveness of the security operations center (SOC), incident response team, and threat hunting capabilities}
+\li{Validating security investments by simulating attacks that chain multiple vulnerabilities and techniques}
+\li{Evaluating the organization's security posture against specific threat actors (nation-state, ransomware groups, insider threats)}
+\li{Meeting regulatory requirements for adversary simulation (TIBER-EU, CBEST, AASE, iCAST)}
+}
+
+\p{\strong{Do not use} without executive-level authorization and a detailed Rules of Engagement document, against systems where disruption could affect safety or critical operations, or as a replacement for basic vulnerability management (fix known vulnerabilities first).}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Executive-level written authorization with clearly defined objectives, scope, and off-limits systems}
+\li{Red team command and control (C2) infrastructure: primary and backup C2 channels with domain fronting or redirectors}
+\li{Operator workstations with OPSEC-hardened toolsets (Cobalt Strike, Sliver, Brute Ratel, or Mythic)}
+\li{Threat intelligence on adversary groups relevant to the target organization for adversary emulation planning}
+\li{Trusted agent (white cell) within the target organization who manages the exercise boundaries without alerting defenders}
+\li{MITRE ATT&CK matrix for mapping planned and executed techniques}
+}
+
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Adversary Emulation Planning}
+\p{Develop the operation plan based on a realistic threat model:}
+
+\ul{
+\li{\strong{Threat actor selection}: Select an adversary group relevant to the organization's industry. For financial services, emulate FIN7 or Lazarus Group. For healthcare, emulate APT41 or FIN12. Map the selected adversary's known TTPs from MITRE ATT&CK.}
+\li{\strong{Objective definition}: Define measurable objectives such as "Access customer financial data from the core banking system" or "Demonstrate ability to deploy ransomware across the domain"}
+\li{\strong{Attack plan development}: Create a step-by-step operation plan mapping each phase to ATT&CK tactics:}
+\li{Initial Access (TA0001): Phishing, exploiting public-facing applications, or supply chain compromise}
+\li{Execution (TA0002): PowerShell, scripting, exploitation for client execution}
+\li{Persistence (TA0003): Scheduled tasks, registry modifications, implant deployment}
+\li{Privilege Escalation (TA0004): Token impersonation, exploitation for privilege escalation}
+\li{Defense Evasion (TA0005): Process injection, timestomping, indicator removal}
+\li{Credential Access (TA0006): LSASS dumping, Kerberoasting, credential stuffing}
+\li{Lateral Movement (TA0008): Remote services, pass-the-hash, remote desktop}
+\li{Collection/Exfiltration (TA0009/TA0010): Data staging, exfiltration over C2}
+\li{\strong{Deconfliction plan}: Establish procedures for the white cell to distinguish red team activity from actual threats}
+}
+}
+
+\subtree{
+\title{Step 2: Infrastructure Preparation}
+\p{Build OPSEC-hardened attack infrastructure:}
+
+\ul{
+\li{\strong{C2 infrastructure}: Deploy primary C2 server behind redirectors that filter Blue Team investigation traffic. Use domain fronting or legitimate cloud services (Azure CDN, CloudFront) to blend C2 traffic with normal web traffic.}
+\li{\strong{Phishing infrastructure}: Register aged domains (30+ days old), configure SPF/DKIM/DMARC, and build credential harvesting or payload delivery pages}
+\li{\strong{Payload development}: Create custom implants or configure C2 framework payloads with:}
+\li{AMSI bypass for PowerShell execution}
+\li{ETW patching to evade security product telemetry}
+\li{Sleep masking and memory encryption to defeat memory scanning}
+\li{Signed binary proxy execution (rundll32, msbuild, regsvr32) for defense evasion}
+\li{\strong{Staging infrastructure}: Set up file hosting for second-stage payloads, exfiltration drop servers, and backup communication channels}
+\li{\strong{OPSEC verification}: Test the entire infrastructure against the same EDR/AV products deployed in the target environment before going live}
+}
+}
+
+\subtree{
+\title{Step 3: Initial Access}
+\p{Gain initial foothold in the target environment:}
+
+\ul{
+\li{\strong{Phishing campaign}: Send targeted spear-phishing emails to selected employees with weaponized documents or credential harvesting links. Use pretexts based on OSINT gathered during reconnaissance.}
+\li{\strong{External exploitation}: Exploit vulnerabilities in internet-facing applications (VPN portals, web applications, email servers) identified during reconnaissance}
+\li{\strong{Physical access}: If in scope, attempt physical access to deploy network implants (LAN Turtle, Bash Bunny) or USB drops}
+\li{\strong{Supply chain}: If in scope, compromise a vendor or supplier relationship to gain indirect access}
+\li{Upon successful initial access, establish the first C2 beacon and confirm communication with the C2 server. Immediately implement persistence (multiple mechanisms) to survive reboots and credential changes.}
+}
+}
+
+\subtree{
+\title{Step 4: Post-Exploitation and Objective Completion}
+\p{Operate within the target environment while maintaining stealth:}
+
+\ul{
+\li{\strong{Internal reconnaissance}: Enumerate the domain, identify high-value targets, and map the network using BloodHound and internal scanning, with traffic designed to blend with normal administrative activity}
+\li{\strong{Privilege escalation}: Escalate from initial user to local admin, then to domain admin, using the least detectable techniques (Kerberoasting over pass-the-hash, living-off-the-land over custom tools)}
+\li{\strong{Lateral movement}: Move to target systems using legitimate protocols (RDP, WinRM, SMB) with stolen credentials. Vary techniques to test multiple detection signatures.}
+\li{\strong{Defense evasion}: Continuously adapt to avoid detection. If a technique triggers an alert, note the detection and switch to an alternative approach.}
+\li{\strong{Objective execution}: Complete the defined objectives (access target data, demonstrate ransomware staging, exfiltrate data) and document evidence of achievement}
+\li{\strong{Detection timeline}: Record timestamps for every technique executed to later compare against Blue Team's detection timeline}
+}
+}
+
+\subtree{
+\title{Step 5: Purple Team Integration and Reporting}
+\p{Convert red team findings into defensive improvements:}
+
+\ul{
+\li{\strong{Detection gap analysis}: Compare the red team's technique timeline against the Blue Team's detection log. Identify which techniques were detected, which were missed, and the mean time to detect (MTTD) for each.}
+\li{\strong{ATT&CK coverage mapping}: Create an ATT&CK Navigator heatmap showing which techniques were tested and whether they were detected, missed, or partially detected}
+\li{\strong{Purple team sessions}: Conduct collaborative sessions where the red team reveals each technique step-by-step while the Blue Team identifies where detection should have occurred and writes new detection rules}
+\li{\strong{Report}: Deliver a comprehensive report including the operation narrative, technique-by-technique analysis with detection status, and prioritized recommendations for improving detection and response}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Adversary Emulation** | Simulating the specific TTPs of a known threat actor to test defenses against realistic threats relevant to the organization |
+| **C2 (Command and Control)** | Infrastructure and communication channels used by the red team to remotely control implants deployed on compromised systems |
+| **OPSEC** | Operational Security; practices employed by the red team to avoid detection by the defending team during the exercise |
+| **Domain Fronting** | A technique for hiding C2 traffic behind legitimate CDN domains to evade network-based detection and domain blocking |
+| **Purple Teaming** | Collaborative exercise where red and blue teams work together to improve detection by sharing attack techniques and defensive gaps |
+| **White Cell** | The trusted agent or exercise control group that manages the exercise, handles deconfliction, and mediates between red and blue teams |
+| **Implant** | Software deployed by the red team on compromised systems to maintain access, execute commands, and facilitate lateral movement |
+| **MTTD/MTTR** | Mean Time to Detect / Mean Time to Respond; metrics measuring how long it takes the defending team to identify and contain threats |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Cobalt Strike}: Commercial adversary simulation platform providing beacons, malleable C2 profiles, and post-exploitation capabilities}
+\li{\strong{Sliver}: Open-source C2 framework supporting multiple protocols (mTLS, WireGuard, HTTP/S, DNS) with cross-platform implants}
+\li{\strong{MITRE ATT&CK Navigator}: Tool for visualizing ATT&CK technique coverage, enabling comparison of planned vs. executed vs. detected techniques}
+\li{\strong{Mythic}: Open-source C2 framework with a modular agent architecture and web-based operator interface}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Adversary Emulation of FIN7 Against a Retail Company}
+\p{\strong{Context}: A national retail chain wants to test its defenses against FIN7, a financially motivated threat group known for targeting retail and hospitality organizations with point-of-sale malware, phishing, and data exfiltration.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Emulate FIN7 TTPs: spear-phishing with malicious document containing VBA macros that execute PowerShell}
+\li{Initial access achieved through spear-phishing a marketing employee; macro drops Cobalt Strike beacon using rundll32 proxy execution}
+\li{Internal reconnaissance with BloodHound reveals a path from the compromised user to a service account with access to the POS management server}
+\li{Kerberoast the service account, crack the password, and move laterally to the POS management system}
+\li{Demonstrate data access to cardholder data environment, staging simulated card data for exfiltration}
+\li{Exfiltrate staged data over DNS C2 channel to simulate data theft}
+\li{SOC detected the lateral movement at hour 47 but did not detect the initial phishing, macro execution, or Kerberoasting}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Operating too aggressively and getting detected immediately, providing no value for testing Blue Team's advanced detection capabilities}
+\li{Using exclusively custom tools instead of living-off-the-land techniques that real adversaries prefer}
+\li{Not recording detailed timestamps for every action, making post-exercise analysis and detection gap mapping impossible}
+\li{Failing to establish backup C2 channels, getting burned by a single detection, and losing access without completing objectives}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Red Team Exercise Report - FIN7 Adversary Emulation
+
+### Exercise Summary
+**Duration**: November 4-22, 2025 (15 business days)
+**Objective**: Access cardholder data environment and demonstrate data exfiltration capability
+**Outcome**: OBJECTIVE ACHIEVED - Red team accessed POS management system and staged cardholder data for exfiltration
+
+### ATT&CK Technique Coverage
+| Technique | ID | Status | Detected? | MTTD |
+|-----------|----|--------|-----------|------|
+| Spear-Phishing Attachment | T1566.001 | Executed | No | - |
+| Visual Basic Macro | T1059.005 | Executed | No | - |
+| Process Injection | T1055 | Executed | No | - |
+| Kerberoasting | T1558.003 | Executed | No | - |
+| Remote Desktop Protocol | T1021.001 | Executed | YES | 47h |
+| Data Staged | T1074 | Executed | No | - |
+| Exfiltration Over C2 | T1041 | Executed | No | - |
+
+### Detection Summary
+- **Techniques Executed**: 14
+- **Techniques Detected**: 3 (21.4%)
+- **Mean Time to Detect**: 47 hours (for detected techniques)
+- **Mean Time to Respond**: 4 hours (from detection to containment)
+
+### Priority Recommendations
+1. Deploy email detonation sandboxing for macro-enabled document analysis
+2. Implement Kerberoasting detection via Windows Event ID 4769 monitoring
+3. Enhance PowerShell logging (Script Block Logging, Module Logging)
+4. Deploy memory-scanning EDR capability to detect process injection
+\stopverb}
+}
+}

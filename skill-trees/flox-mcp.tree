@@ -1,0 +1,264 @@
+\title{Flox Mcp}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{MCP server wrapper for flox CLI operations - environment management via JSON-RPC}
+
+\subtree{
+\title{flox-mcp}
+\p{MCP server exposing flox CLI operations over JSON-RPC stdio transport.}
+
+\p{\strong{Trit}: 0 (ERGODIC) - Coordinator role for environment orchestration}
+
+\subtree{
+\title{Overview}
+\p{This skill wraps the flox CLI as an MCP server, enabling AI agents to manage reproducible development environments programmatically. The server communicates via JSON-RPC 2.0 over stdio.}
+}
+
+\subtree{
+\title{MCP Tools}
+\subtree{
+\title{flox_activate}
+\p{Activate a flox environment.}
+
+\pre{\startverb
+{
+  "name": "flox_activate",
+  "description": "Activate a flox environment",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "directory": { "type": "string", "description": "Path to environment directory" },
+      "remote": { "type": "string", "description": "Remote environment (user/env)" }
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{flox_search}
+\p{Search for packages in the flox catalog.}
+
+\pre{\startverb
+{
+  "name": "flox_search",
+  "description": "Search for packages",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": { "type": "string", "description": "Package search query" }
+    },
+    "required": ["query"]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{flox_install}
+\p{Install a package into the current environment.}
+
+\pre{\startverb
+{
+  "name": "flox_install",
+  "description": "Install a package",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "package": { "type": "string", "description": "Package name or pkg-path" }
+    },
+    "required": ["package"]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{flox_list}
+\p{List installed packages in the environment.}
+
+\pre{\startverb
+{
+  "name": "flox_list",
+  "description": "List installed packages",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "directory": { "type": "string", "description": "Environment directory" }
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{flox_services}
+\p{Manage flox services (start/stop/status/restart).}
+
+\pre{\startverb
+{
+  "name": "flox_services",
+  "description": "Manage flox services",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "action": { 
+        "type": "string", 
+        "enum": ["start", "stop", "restart", "status", "logs"],
+        "description": "Service action"
+      },
+      "service": { "type": "string", "description": "Specific service name (optional)" }
+    },
+    "required": ["action"]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{flox_envs}
+\p{List available flox environments.}
+
+\pre{\startverb
+{
+  "name": "flox_envs",
+  "description": "List flox environments",
+  "inputSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{flox_push}
+\p{Push environment to FloxHub.}
+
+\pre{\startverb
+{
+  "name": "flox_push",
+  "description": "Push environment to FloxHub",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "force": { "type": "boolean", "description": "Force overwrite remote" }
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{flox_pull}
+\p{Pull environment from FloxHub.}
+
+\pre{\startverb
+{
+  "name": "flox_pull",
+  "description": "Pull environment from FloxHub",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "remote": { "type": "string", "description": "Remote environment (user/env)" },
+      "force": { "type": "boolean", "description": "Force overwrite local" },
+      "copy": { "type": "boolean", "description": "Copy without remote link" }
+    }
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Start the MCP Server}
+\pre{\startverb
+bb flox-mcp-server.bb
+\stopverb}
+}
+
+\subtree{
+\title{Claude Desktop Configuration}
+\pre{\startverb
+{
+  "mcpServers": {
+    "flox": {
+      "command": "bb",
+      "args": ["<path-to-skills>/flox-mcp/flox-mcp-server.bb"]
+    }
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Role: Coordinator
+Color: #26D826
+
+Triad Formation:
+  flox-mcp (0) + generator (+1) + validator (-1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{The ERGODIC trit reflects flox's role as an infrastructure coordinator - it neither generates nor validates, but orchestrates the environment lifecycle.}
+}
+
+\subtree{
+\title{Dependencies}
+\ul{
+\li{\code{\startverb bb\stopverb} (Babashka) - Clojure scripting runtime}
+\li{\code{\startverb flox\stopverb} - Flox CLI installed and in PATH}
+\li{\code{\startverb cheshire\stopverb} - JSON parsing (bundled with Babashka)}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[flox skill](../flox/SKILL.md) - CLI command reference}
+\li{[MCP Specification](https://modelcontextprotocol.io)}
+\li{[FloxHub](https://hub.flox.dev)}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 10. Adventure Game Example}
+\p{\strong{Concepts}: autonomous agent, game, synthesis}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+flox-mcp (+) + SDF.Ch10 (+) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch5: Evaluation}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Adventure games synthesize techniques. This skill integrates multiple patterns.}
+}
+}
+}

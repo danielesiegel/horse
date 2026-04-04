@@ -1,0 +1,250 @@
+\title{World Replay Buffer}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Maximally snapshotted replay buffer with DuckLake embedding VSS and moments of interaction for world-transition storage}
+
+\subtree{
+\title{World Replay Buffer}
+\p{\strong{Trit}: 0 (ZERO) \strong{Domain}: Reinforcement Learning / World Transitions \strong{Principle}: Worlds (a-z) as successor worlds with GF(3) balanced sampling}
+
+\subtree{
+\title{Overview}
+\p{A maximally snapshotted replay buffer system for storing and retrieving world-transitions with:}
+
+\ul{
+\li{\strong{DuckDB persistence} with vector similarity search (VSS)}
+\li{\strong{GF(3) Galois Field classification} {-1=MINUS, 0=ZERO, +1=PLUS}}
+\li{\strong{Trit-tick timing} at 1/141,120,000 second (~7.09 ns) precision}
+\li{\strong{Content-addressed deduplication} via SHA-256 hashing}
+\li{\strong{Play/Coplay Arena semantics} for action-observation pairs}
+}
+}
+
+\subtree{
+\title{Mathematical Definition}
+\pre{\startverb
+REPLAY: WorldState × Action → WorldState' × Observation × Reward
+GF3_COLOR: Experience → {-1, 0, +1}
+TRIT_TICK: 1 / 141_120_000 seconds ≈ 7.09 nanoseconds
+\stopverb}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│                   World Replay Buffer                    │
+├─────────────────────────────────────────────────────────┤
+│  replay_buffer.lpy    │ Pure Basilisp in-memory buffer  │
+│  replay_buffer.py     │ Python + DuckDB/VSS persistence │
+│  replay_orchestrator.py│ Unified orchestrator with DB   │
+│  replay_bridge.lpy    │ Basilisp-Python interop bridge  │
+└─────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Key Components}
+\subtree{
+\title{1. Experience Storage}
+\pre{\startverb
+;; Basilisp experience structure
+{:world-from "world-a"
+ :world-to   "world-b"
+ :action     {:play [:move :forward]}
+ :obs        {:coplay [:sensor :reading]}
+ :reward     1.0
+ :timestamp  1711471200.0
+ :gf3-color  1}  ; PLUS
+\stopverb}
+}
+
+\subtree{
+\title{2. GF(3) Classification}
+\p{Uses SplitMix64 deterministic hashing for reproducible coloring:}
+
+\pre{\startverb
+def gf3_color(content: str) -> int:
+    """GF(3) classification via SplitMix64 hash."""
+    h = splitmix64_hash(content)
+    return (h % 3) - 1  # {-1, 0, +1}
+\stopverb}
+}
+
+\subtree{
+\title{3. World Transitions}
+\p{Worlds are labeled a-z as \strong{successor worlds}, NOT todos:}
+
+\pre{\startverb
+world-a → world-b → world-c → ... → world-z
+\stopverb}
+
+\p{Each transition stores:}
+
+\ul{
+\li{Source world state}
+\li{Action taken (play)}
+\li{Resulting observation (coplay)}
+\li{Reward signal}
+\li{GF(3) color for balanced sampling}
+}
+}
+
+\subtree{
+\title{4. Prioritized Sampling}
+\p{Balanced sampling across GF(3) classes ensures no class dominates:}
+
+\pre{\startverb
+(defn sample-balanced-gf3
+  "Sample experiences balanced across GF(3) classes."
+  [buffer n]
+  (let [by-color (group-by :gf3-color buffer)
+        per-class (max 1 (quot n 3))]
+    (->> (vals by-color)
+         (mapcat #(take per-class (shuffle %)))
+         (take n))))
+\stopverb}
+}
+}
+
+\subtree{
+\title{DuckDB Schema}
+\pre{\startverb
+CREATE SEQUENCE IF NOT EXISTS exp_id_seq;
+CREATE TABLE IF NOT EXISTS experiences (
+    id INTEGER PRIMARY KEY DEFAULT nextval('exp_id_seq'),
+    world_from TEXT NOT NULL,
+    world_to TEXT NOT NULL,
+    action_json TEXT NOT NULL,
+    obs_json TEXT NOT NULL,
+    reward DOUBLE NOT NULL,
+    timestamp_ns BIGINT NOT NULL,
+    gf3_color INTEGER NOT NULL,
+    content_hash TEXT UNIQUE NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_gf3 ON experiences(gf3_color);
+CREATE INDEX IF NOT EXISTS idx_world_from ON experiences(world_from);
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Basilisp (Pure In-Memory)}
+\pre{\startverb
+(ns replay-buffer)
+
+;; Add experience
+(def exp {:world-from "world-a"
+          :world-to "world-b"
+          :action {:type :move}
+          :obs {:type :sensor}
+          :reward 1.0})
+(add-experience! buffer exp)
+
+;; Sample balanced
+(sample-balanced-gf3 @buffer 10)
+\stopverb}
+}
+
+\subtree{
+\title{Python (With Persistence)}
+\pre{\startverb
+from replay_orchestrator import ReplayOrchestrator
+
+orch = ReplayOrchestrator()
+orch.store_experience(
+    world_from="world-a",
+    world_to="world-b",
+    action={"type": "move"},
+    observation={"type": "sensor"},
+    reward=1.0
+)
+samples = orch.sample_balanced(n=10)
+\stopverb}
+}
+
+\subtree{
+\title{Basilisp-Python Bridge}
+\pre{\startverb
+(ns replay-bridge
+  (:import importlib))
+
+(def orch (get-orchestrator))
+(store-experience! orch {:world-from "world-a" ...})
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with GF(3)}
+\p{This skill participates in triadic composition:}
+
+\ul{
+\li{\strong{Trit 0} (ZERO): Neutral/balanced storage}
+\li{\strong{Conservation}: Σ trits ≡ 0 (mod 3) across skill triplets}
+\li{\strong{Balanced Sampling}: Equal representation of {-1, 0, +1} classes}
+}
+}
+
+\subtree{
+\title{Trit-Tick Timing}
+\pre{\startverb
+TRIT_TICK = 1 / 141_120_000  # ~7.09 nanoseconds
+timestamp_tritticks = int(time.time() / TRIT_TICK)
+\stopverb}
+}
+
+\subtree{
+\title{Files}
+\p{Located in \code{\startverb /Users/alice/worlds/\stopverb}:}
+
+\ul{
+\li{\code{\startverb replay_buffer.lpy\stopverb} - Pure Basilisp implementation}
+\li{\code{\startverb replay_buffer.py\stopverb} - Python with DuckDB}
+\li{\code{\startverb replay_orchestrator.py\stopverb} - Unified orchestrator}
+\li{\code{\startverb replay_bridge.lpy\stopverb} - Basilisp-Python bridge}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{world-hopping (trit +1) - Navigate between worlds}
+\li{worlding (trit -1) - World construction}
+\li{trajectory (trit -1) - Path through phase space}
+\li{gf3-classification (trit 0) - Triadic classification}
+\li{ducklake (trit +1) - DuckDB lakehouse}
+}
+
+\p{\strong{Skill Name}: world-replay-buffer \strong{Type}: Reinforcement Learning / Experience Storage \strong{Trit}: 0 (ZERO) \strong{GF(3)}: Conserved in triplet composition}
+}
+
+\subtree{
+\title{Non-Backtracking Geodesic Qualification}
+\p{\strong{Condition}: μ(n) ≠ 0 (Mobius squarefree)}
+
+\p{This skill is qualified for non-backtracking geodesic traversal:}
+
+\ol{
+\li{\strong{Prime Path}: No world revisited in transition chain}
+\li{\strong{Mobius Filter}: Composite paths (backtracking) cancel via μ-inversion}
+\li{\strong{GF(3) Conservation}: Trit sum ≡ 0 (mod 3) across skill triplets}
+\li{\strong{Content Dedup}: SHA-256 ensures no duplicate experiences}
+}
+
+\pre{\startverb
+Geodesic Invariant:
+  ∀ path P: backtrack(P) = ∅ ⟹ μ(|P|) ≠ 0
+  
+World Transition:
+  world_a →[action]→ world_b →[action]→ world_c
+  
+GF(3) Balance:
+  |{exp : color = -1}| ≈ |{exp : color = 0}| ≈ |{exp : color = +1}|
+\stopverb}
+}
+}

@@ -1,0 +1,566 @@
+\title{Mcp Inspector}
+
+\taxon{skill}
+
+\meta{description}{Test Model Context Protocol (MCP) servers using the MCP Inspector CLI with correct syntax}
+
+\subtree{
+\title{MCP Inspector Testing Skill}
+\p{This skill provides comprehensive testing capabilities for Model Context Protocol (MCP) servers, particularly Julia-based servers using ModelContextProtocol.jl. It uses the correct Inspector CLI syntax verified through extensive testing.}
+
+\subtree{
+\title{Purpose}
+\p{Test MCP servers to verify:}
+
+\ul{
+\li{Protocol compliance (2025-06-18 specification)}
+\li{Tool, resource, and prompt functionality}
+\li{Response format validation}
+\li{Error handling}
+\li{Multi-content returns}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\ul{
+\li{Testing new MCP server implementations}
+\li{Debugging MCP protocol issues}
+\li{Validating tool/resource/prompt definitions}
+\li{Verifying cross-client compatibility}
+\li{Creating test reports for MCP servers}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\subtree{
+\title{1. Resolve Dependencies (CRITICAL)}
+\pre{\startverb
+# For Julia projects - ALWAYS run these first from project root
+cd /path/to/project
+julia --project -e 'using Pkg; Pkg.resolve(); Pkg.precompile()'
+
+# If examples have separate Project.toml
+cd examples && julia --project -e 'using Pkg; Pkg.resolve(); Pkg.instantiate()'
+cd ..
+\stopverb}
+
+\p{\strong{Why}: Julia manifests may be resolved with different versions, causing dependency errors (especially MbedTLS_jll).}
+}
+
+\subtree{
+\title{2. Work from Project Root}
+\pre{\startverb
+# ✅ CORRECT - from project root
+cd /path/to/project
+npx @modelcontextprotocol/inspector --cli julia --project=. examples/server.jl ...
+
+# ❌ WRONG - from subdirectory
+cd examples
+npx @modelcontextprotocol/inspector --cli julia --project examples/server.jl ...
+# Results in "examples/examples/server.jl: No such file" error
+\stopverb}
+}
+}
+
+\subtree{
+\title{Correct Inspector CLI Syntax}
+\subtree{
+\title{Command Structure}
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  <server-command> <server-args> \
+  --method <method-name> \
+  [--tool-name <name>] \
+  [--tool-arg key=value ...] \
+  [--uri <uri>] \
+  [--prompt-name <name>] \
+  [--prompt-args key=value ...]
+\stopverb}
+}
+
+\subtree{
+\title{CRITICAL: Correct Flags}
+\p{\strong{Tool Arguments}:}
+
+\ul{
+\li{✅ Use \code{\startverb --tool-arg key=value\stopverb} (can be repeated)}
+\li{❌ NOT \code{\startverb --params '{"key":"value"}'\stopverb}}
+}
+
+\p{\strong{Prompt Arguments}:}
+
+\ul{
+\li{✅ Use \code{\startverb --prompt-args key=value\stopverb} (can be repeated, note plural)}
+\li{❌ NOT \code{\startverb --prompt-arg\stopverb} (singular)}
+}
+
+\p{\strong{Resource URI}:}
+
+\ul{
+\li{✅ Use \code{\startverb --uri "scheme://path"\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Testing stdio Servers}
+\subtree{
+\title{Basic Operations}
+\p{\strong{List Tools}:}
+
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method tools/list
+\stopverb}
+
+\p{\strong{List Resources}:}
+
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method resources/list
+\stopverb}
+
+\p{\strong{List Prompts}:}
+
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method prompts/list
+\stopverb}
+}
+
+\subtree{
+\title{Call Tool (No Parameters)}
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method tools/call \
+  --tool-name current_time
+\stopverb}
+}
+
+\subtree{
+\title{Call Tool (With Parameters)}
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/multi_content_tool.jl \
+  --method tools/call \
+  --tool-name flexible_response \
+  --tool-arg format=text
+\stopverb}
+
+\p{\strong{Multiple Parameters}:}
+
+\pre{\startverb
+--method tools/call \
+--tool-name analyze \
+--tool-arg param1=value1 \
+--tool-arg param2=value2 \
+--tool-arg param3=value3
+\stopverb}
+}
+
+\subtree{
+\title{Read Resource}
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method resources/read \
+  --uri "character-info://harry-potter/birthday"
+\stopverb}
+}
+
+\subtree{
+\title{Get Prompt (Currently Broken)}
+\pre{\startverb
+# This will fail due to server-side _meta bug
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method prompts/get \
+  --prompt-name movie_analysis \
+  --prompt-args genre="science fiction" \
+  --prompt-args year=1999
+\stopverb}
+
+\p{\strong{Note}: \code{\startverb prompts/get\stopverb} currently fails due to ModelContextProtocol.jl serializing \code{\startverb _meta: null\stopverb} instead of omitting the field.}
+}
+}
+
+\subtree{
+\title{Testing HTTP Servers}
+\subtree{
+\title{Start Server First}
+\pre{\startverb
+# Terminal 1: Start server
+cd /path/to/project
+julia --project=. examples/simple_http_server.jl
+
+# Wait 5-10 seconds for Julia compilation
+\stopverb}
+}
+
+\subtree{
+\title{Test via mcp-remote Bridge}
+\pre{\startverb
+# Terminal 2: Test with Inspector
+npx @modelcontextprotocol/inspector --cli \
+  npx mcp-remote http://127.0.0.1:3000 --allow-http \
+  --method tools/list
+\stopverb}
+}
+
+\subtree{
+\title{Or Test with curl}
+\pre{\startverb
+curl -X POST http://127.0.0.1:3000/ \
+  -H 'Content-Type: application/json' \
+  -H 'MCP-Protocol-Version: 2025-06-18' \
+  -H 'Accept: application/json' \
+  -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-06-18"},"id":1}' \
+| jq .
+\stopverb}
+}
+}
+
+\subtree{
+\title{Standard Test Suite}
+\subtree{
+\title{Complete Server Test}
+\pre{\startverb
+#!/bin/bash
+cd /path/to/project
+
+echo "=== SETUP ==="
+julia --project -e 'using Pkg; Pkg.resolve(); Pkg.precompile()'
+
+echo -e "\n=== TOOLS/LIST ==="
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method tools/list
+
+echo -e "\n=== RESOURCES/LIST ==="
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method resources/list
+
+echo -e "\n=== PROMPTS/LIST ==="
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method prompts/list
+
+echo -e "\n=== TOOLS/CALL (no params) ==="
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method tools/call \
+  --tool-name current_time
+
+echo -e "\n=== RESOURCES/READ ==="
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method resources/read \
+  --uri "character-info://harry-potter/birthday"
+
+echo -e "\n=== TOOLS/CALL (with params) ==="
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/multi_content_tool.jl \
+  --method tools/call \
+  --tool-name flexible_response \
+  --tool-arg format=text
+
+echo -e "\n=== TOOLS/CALL (multi-content) ==="
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/multi_content_tool.jl \
+  --method tools/call \
+  --tool-name flexible_response \
+  --tool-arg format=both
+\stopverb}
+}
+}
+
+\subtree{
+\title{Known Issues}
+\subtree{
+\title{1. ModelContextProtocol.jl _meta Field Bug}
+\p{\strong{Symptom}: \code{\startverb prompts/get\stopverb} fails with validation error about \code{\startverb _meta\stopverb} field}
+
+\p{\strong{Cause}: Server serializes \code{\startverb _meta: null\stopverb} instead of omitting the field}
+
+\p{\strong{Status}: Server-side bug, NOT Inspector CLI issue}
+
+\p{\strong{Workaround}: None - needs fix in ModelContextProtocol.jl}
+}
+
+\subtree{
+\title{2. EmbeddedResource Conversion Error}
+\p{\strong{Symptom}: Tools returning EmbeddedResource content fail with MethodError}
+
+\p{\strong{Cause}: Server cannot convert TextResourceContents to Dict for serialization}
+
+\p{\strong{Status}: Server-side bug}
+
+\p{\strong{Workaround}: Avoid EmbeddedResource content type}
+}
+
+\subtree{
+\title{3. Auto-Registration (FIXED)}
+\p{\strong{Previous Issue}: \code{\startverb reg_dir.jl\stopverb} example returned empty tool/resource/prompt lists}
+
+\p{\strong{Cause}: Julia scoping bug with \code{\startverb names()\stopverb} introspection + Julia 1.12 world age semantics}
+
+\p{\strong{Status}: ✅ \strong{FIXED} - Now uses \code{\startverb include()\stopverb} return value instead of module introspection}
+
+\p{\strong{Verification}:}
+
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli julia --project=. examples/reg_dir.jl -- --method tools/list
+# Returns: 3 tools (gen_2d_array, julia_version, inspect_workspace)
+\stopverb}
+
+\p{\strong{Component File Requirement}: Component must be the last expression in the file}
+
+\p{See: \code{\startverb REG_DIR_BUG_ANALYSIS_AND_FIX.md\stopverb} for technical details}
+}
+
+\subtree{
+\title{4. Julia Version Dependency Issues}
+\p{\strong{Symptom}: \code{\startverb Package MbedTLS_jll is required but does not seem to be installed\stopverb}}
+
+\p{\strong{Cause}: Manifest resolved with different Julia version}
+
+\p{\strong{Workaround}: Run \code{\startverb Pkg.resolve()\stopverb} before testing (see Prerequisites)}
+}
+}
+
+\subtree{
+\title{Response Validation}
+\subtree{
+\title{Valid Tool Response}
+\pre{\startverb
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Tool result text"
+    }
+  ],
+  "is_error": false
+}
+\stopverb}
+}
+
+\subtree{
+\title{Valid Multi-Content Response}
+\pre{\startverb
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Text content"
+    },
+    {
+      "type": "image",
+      "data": "base64data",
+      "mimeType": "image/png"
+    }
+  ],
+  "is_error": false
+}
+\stopverb}
+}
+
+\subtree{
+\title{Valid Resource Response}
+\pre{\startverb
+{
+  "contents": [
+    {
+      "uri": "scheme://path",
+      "mimeType": "application/json",
+      "text": "{\"data\":\"value\"}"
+    }
+  ]
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Example 1: Basic Tool Test}
+\pre{\startverb
+cd /home/kalidke/julia_shared_dev/ModelContextProtocol
+
+# Setup
+julia --project -e 'using Pkg; Pkg.resolve()'
+
+# Test
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method tools/call \
+  --tool-name current_time
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Tool with Parameters}
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/multi_content_tool.jl \
+  --method tools/call \
+  --tool-name flexible_response \
+  --tool-arg format=both
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Resource Read}
+\pre{\startverb
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method resources/read \
+  --uri "character-info://harry-potter/birthday"
+\stopverb}
+}
+
+\subtree{
+\title{Example 4: Full Server Validation}
+\pre{\startverb
+# List all capabilities
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method tools/list > tools.json
+
+npx @modelcontextprotocol/inspector --cli \
+  julia --project=. examples/time_server.jl \
+  --method resources/list > resources.json
+
+# Test each tool
+jq -r '.tools[].name' tools.json | while read tool; do
+  echo "Testing: $tool"
+  npx @modelcontextprotocol/inspector --cli \
+    julia --project=. examples/time_server.jl \
+    --method tools/call \
+    --tool-name "$tool"
+done
+
+# Test each resource
+jq -r '.resources[].uri' resources.json | while read uri; do
+  echo "Testing: $uri"
+  npx @modelcontextprotocol/inspector --cli \
+    julia --project=. examples/time_server.jl \
+    --method resources/read \
+    --uri "$uri"
+done
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Always resolve dependencies first}: Run \code{\startverb Pkg.resolve()\stopverb} and \code{\startverb Pkg.precompile()\stopverb}}
+\li{\strong{Work from project root}: Not from subdirectories}
+\li{\strong{Use correct flags}:}
+\li{\code{\startverb --tool-arg\stopverb} for tool parameters (repeatable)}
+\li{\code{\startverb --prompt-args\stopverb} for prompt parameters (plural, repeatable)}
+\li{\code{\startverb --uri\stopverb} for resource URIs}
+\li{\strong{Test systematically}:}
+\li{List all components first}
+\li{Test each individually}
+\li{Validate responses}
+\li{\strong{Account for Julia JIT}: First request takes 5-10 seconds}
+\li{\strong{Check for server bugs}: Some failures are server-side, not CLI issues}
+}
+}
+
+\subtree{
+\title{Performance Notes}
+\ul{
+\li{\strong{Julia JIT compilation}: First request takes 5-10 seconds (normal)}
+\li{\strong{Subsequent requests}: <100ms typically}
+\li{\strong{Inspector overhead}: Minimal, <1 second per request}
+\li{\strong{HTTP server startup}: Add 5-10 seconds before testing}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Server Won't Start}
+\pre{\startverb
+# Check dependencies
+julia --project -e 'using Pkg; Pkg.status()'
+
+# Resolve dependencies
+julia --project -e 'using Pkg; Pkg.resolve()'
+
+# Run with full error output
+julia --project examples/server.jl 2>&1 | less
+\stopverb}
+}
+
+\subtree{
+\title{Inspector Connection Closed}
+\p{Check you're in the correct directory:}
+
+\pre{\startverb
+# Verify current directory
+pwd
+
+# Verify server file exists
+ls -la examples/server.jl
+
+# Run from project root
+cd /path/to/project
+npx @modelcontextprotocol/inspector --cli julia --project=. examples/server.jl ...
+\stopverb}
+}
+
+\subtree{
+\title{HTTP Port Already in Use}
+\pre{\startverb
+# Find and kill existing server
+ps aux | grep "julia.*server.jl"
+kill <PID>
+
+# Or use different port in server code
+\stopverb}
+}
+}
+
+\subtree{
+\title{Success Metrics}
+\p{Based on testing with ModelContextProtocol.jl:}
+
+\ul{
+\li{✅ tools/list: \strong{Working}}
+\li{✅ resources/list: \strong{Working}}
+\li{✅ prompts/list: \strong{Working}}
+\li{✅ tools/call (no params): \strong{Working}}
+\li{✅ tools/call (with params): \strong{Working}}
+\li{✅ resources/read: \strong{Working}}
+\li{✅ Multi-content returns: \strong{Working}}
+\li{❌ prompts/get: \strong{Broken} (server bug)}
+\li{❌ EmbeddedResource: \strong{Broken} (server bug)}
+\li{❌ Auto-registration: \strong{Broken} (server bug)}
+}
+
+\p{\strong{Success Rate}: 70\% (7/10 operations working)}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{\strong{MCP Specification}: https://modelcontextprotocol.io/specification/2025-06-18/}
+\li{\strong{Inspector CLI}: https://github.com/modelcontextprotocol/inspector}
+\li{\strong{Inspector Documentation}: https://modelcontextprotocol.io/docs/tools/inspector}
+\li{\strong{ModelContextProtocol.jl}: https://github.com/JuliaSMLM/ModelContextProtocol.jl}
+\li{\strong{Test Report}: See \code{\startverb MCP_INSPECTOR_TESTING_REPORT.md\stopverb} in project root}
+}
+}
+}

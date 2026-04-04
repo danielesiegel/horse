@@ -152,7 +152,7 @@ MyProject.scriv/
 \p{Each document's UUID maps to \code{\startverb Files/Data/<UUID>/\stopverb}:}
 
 \ul{
-\li{\strong{content.rtf}: Body text. Contains inline annotations via \code{\startverb {\Scrv_fn=...}\stopverb} custom tags.}
+\li{\strong{content.rtf}: Body text. Contains inline annotations via \code{\startverb {\startverb \Scrv\stopverb_fn=...}\stopverb} custom tags.}
 \li{\strong{notes.rtf}: Inspector notes pane.}
 \li{\strong{synopsis.txt}: Plain text synopsis (corkboard cards).}
 \li{\strong{snapshot-YYYY-MM-DD-HH-MM-SS.rtf}: Version snapshots.}
@@ -259,10 +259,10 @@ clean = re.sub(r'\{\\Scrv_fn=.*?\\end_Scrv_fn\}', '', body)
 \subtree{
 \title{RTF Content Notes}
 \ul{
-\li{\strong{Inline annotations}: \code{\startverb {\Scrv_fn=footnote ...text... \end_Scrv_fn}\stopverb}}
+\li{\strong{Inline annotations}: \code{\startverb {\startverb \Scrv\stopverb_fn=footnote ...text... \startverb \end\stopverb_Scrv_fn}\stopverb}}
 \li{\strong{Comments}: Stored in \code{\startverb comments\stopverb} table with position offsets}
 \li{\strong{Styles}: Referenced by name from \code{\startverb styles.xml\stopverb}}
-\li{\strong{Images}: Embedded as RTF \code{\startverb \pict\stopverb} objects or referenced externally}
+\li{\strong{Images}: Embedded as RTF \code{\startverb \startverb \pict\stopverb\stopverb} objects or referenced externally}
 \li{\strong{Links}: Internal links use \code{\startverb scrivener://\stopverb} protocol with UUID targets}
 }
 }
@@ -315,7 +315,7 @@ def character_chunks(char_name: str) -> list:
 \ol{
 \li{Check that the \code{\startverb .scrivx\stopverb} XML parses and contains \code{\startverb <Binder>\stopverb} with at least one \code{\startverb <BinderItem>\stopverb}}
 \li{Verify UUID directories exist under \code{\startverb Files/Data/\stopverb} for documents listed in the binder}
-\li{Confirm \code{\startverb content.rtf\stopverb} files are valid RTF (start with \code{\startverb {\rtf1\stopverb})}
+\li{Confirm \code{\startverb content.rtf\stopverb} files are valid RTF (start with \code{\startverb {\startverb \rtf\stopverb1\stopverb})}
 \li{If using DuckDB export: \code{\startverb SELECT count(*) FROM documents\stopverb} should match binder item count}
 }
 }

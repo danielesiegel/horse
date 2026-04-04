@@ -1,0 +1,72 @@
+\title{Svelte Deployment}
+
+\taxon{skill}
+
+\meta{description}{Svelte deployment guidance. Use for adapters, Vite config, pnpm setup, library authoring, PWA, or production builds.}
+
+\subtree{
+\title{Svelte Deployment}
+\subtree{
+\title{Quick Start}
+\p{\strong{pnpm 10+:} Add prepare script (postinstall disabled by default):}
+
+\pre{\startverb
+{
+	"scripts": {
+		"prepare": "svelte-kit sync"
+	}
+}
+\stopverb}
+
+\p{\strong{Vite 7:} Update both packages together:}
+
+\pre{\startverb
+pnpm add -D vite@7 @sveltejs/vite-plugin-svelte@6
+\stopverb}
+}
+
+\subtree{
+\title{Adapters}
+\pre{\startverb
+# Static site
+pnpm add -D @sveltejs/adapter-static
+
+# Node server
+pnpm add -D @sveltejs/adapter-node
+
+# Cloudflare
+pnpm add -D @sveltejs/adapter-cloudflare
+\stopverb}
+}
+
+\subtree{
+\title{Reference Files}
+\ul{
+\li{[library-authoring.md](references/library-authoring.md) - Publishing}
+\li{[pwa-setup.md](references/pwa-setup.md) - Offline-first with workbox}
+\li{[cloudflare-gotchas.md](references/cloudflare-gotchas.md) -}
+}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{Cloudflare may strip \code{\startverb Transfer-Encoding: chunked\stopverb} (breaks streaming)}
+\li{Library authors: include \code{\startverb svelte\stopverb} in keywords AND peerDependencies}
+\li{Single-file bundle: \code{\startverb kit.output.bundleStrategy: 'single'\stopverb}}
+\li{\strong{Last verified:} 2025-01-14}
+}
+
+\p{<!-- PROGRESSIVE DISCLOSURE GUIDELINES:}
+
+\ul{
+\li{Keep this file ~50 lines total (max ~150 lines)}
+\li{Use 1-2 code blocks only (recommend 1)}
+\li{Keep description <200 chars for Level 1 efficiency}
+\li{Move detailed docs to references/ for Level 3 loading}
+\li{This is Level 2 - quick reference ONLY, not a manual}
+}
+
+\p{-->}
+}
+}

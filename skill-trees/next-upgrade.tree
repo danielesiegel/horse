@@ -1,0 +1,57 @@
+\title{Next Upgrade}
+
+\taxon{skill}
+
+\meta{description}{Upgrade Next.js to the latest version following official migration guides and codemods}
+
+\subtree{
+\title{Upgrade Next.js}
+\p{Upgrade the current project to the latest Next.js version following official migration guides.}
+
+\subtree{
+\title{Instructions}
+\ol{
+\li{\strong{Detect current version}: Read \code{\startverb package.json\stopverb} to identify the current Next.js version and related dependencies (React, React DOM, etc.)}
+}
+
+\ol{
+\li{\strong{Fetch the latest upgrade guide}: Use WebFetch to get the official upgrade documentation:}
+\li{Codemods: https://nextjs.org/docs/app/building-your-application/upgrading/codemods}
+\li{Version-specific guides (adjust version as needed):}
+\li{https://nextjs.org/docs/app/building-your-application/upgrading/version-15}
+\li{https://nextjs.org/docs/app/building-your-application/upgrading/version-14}
+}
+
+\ol{
+\li{\strong{Determine upgrade path}: Based on current version, identify which migration steps apply. For major version jumps, upgrade incrementally (e.g., 13 → 14 → 15).}
+}
+
+\ol{
+\li{\strong{Run codemods first}: Next.js provides codemods to automate breaking changes:}
+\li{\code{\startverb next-async-request-api\stopverb} - Updates async Request APIs (v15)}
+\li{\code{\startverb next-request-geo-ip\stopverb} - Migrates geo/ip properties (v15)}
+\li{\code{\startverb next-dynamic-access-named-export\stopverb} - Transforms dynamic imports (v15)}
+}
+
+\ol{
+\li{\strong{Update dependencies}: Upgrade Next.js and peer dependencies together:}
+}
+
+\ol{
+\li{\strong{Review breaking changes}: Check the upgrade guide for manual changes needed:}
+\li{API changes (e.g., async params in v15)}
+\li{Configuration changes in \code{\startverb next.config.js\stopverb}}
+\li{Deprecated features being removed}
+}
+
+\ol{
+\li{\strong{Update TypeScript types} (if applicable):}
+}
+
+\ol{
+\li{\strong{Test the upgrade}:}
+\li{Run \code{\startverb npm run build\stopverb} to check for build errors}
+\li{Run \code{\startverb npm run dev\stopverb} and test key functionality}
+}
+}
+}

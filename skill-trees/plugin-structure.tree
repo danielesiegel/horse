@@ -1,0 +1,581 @@
+\title{Plugin structure}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user asks to "create a plugin", "scaffold a plugin", "understand plugin structure", "organize plugin components", "set up plugin.json", "use ${CLAUDE_PLUGIN_ROOT}", "add commands/agents/skills/hooks", "configure auto-discovery", or needs guidance on plugin directory layout, manifest configuration, component organization, file naming conventions, or Claude Code plugin architecture best practices.}
+
+\subtree{
+\title{Plugin Structure for Claude Code}
+\subtree{
+\title{Overview}
+\p{Claude Code plugins follow a standardized directory structure with automatic component discovery. Understanding this structure enables creating well-organized, maintainable plugins that integrate seamlessly with Claude Code.}
+
+\p{\strong{Key concepts:}}
+
+\ul{
+\li{Conventional directory layout for automatic discovery}
+\li{Manifest-driven configuration in \code{\startverb .claude-plugin/plugin.json\stopverb}}
+\li{Component-based organization (commands, agents, skills, hooks)}
+\li{Portable path references using \code{\startverb ${CLAUDE_PLUGIN_ROOT}\stopverb}}
+\li{Explicit vs. auto-discovered component loading}
+}
+}
+
+\subtree{
+\title{Directory Structure}
+\p{Every Claude Code plugin follows this organizational pattern:}
+
+\pre{\startverb
+plugin-name/
+├── .claude-plugin/
+│   └── plugin.json          # Required: Plugin manifest
+├── commands/                 # Slash commands (.md files)
+├── agents/                   # Subagent definitions (.md files)
+├── skills/                   # Agent skills (subdirectories)
+│   └── skill-name/
+│       └── SKILL.md         # Required for each skill
+├── hooks/
+│   └── hooks.json           # Event handler configuration
+├── .mcp.json                # MCP server definitions
+└── scripts/                 # Helper scripts and utilities
+\stopverb}
+
+\p{\strong{Critical rules:}}
+
+\ol{
+\li{\strong{Manifest location}: The \code{\startverb plugin.json\stopverb} manifest MUST be in \code{\startverb .claude-plugin/\stopverb} directory}
+\li{\strong{Component locations}: All component directories (commands, agents, skills, hooks) MUST be at plugin root level, NOT nested inside \code{\startverb .claude-plugin/\stopverb}}
+\li{\strong{Optional components}: Only create directories for components the plugin actually uses}
+\li{\strong{Naming convention}: Use kebab-case for all directory and file names}
+}
+}
+
+\subtree{
+\title{Plugin Manifest (plugin.json)}
+\p{The manifest defines plugin metadata and configuration. Located at \code{\startverb .claude-plugin/plugin.json\stopverb}:}
+
+\subtree{
+\title{Required Fields}
+\pre{\startverb
+{
+  "name": "plugin-name"
+}
+\stopverb}
+
+\p{\strong{Name requirements:}}
+
+\ul{
+\li{Use kebab-case format (lowercase with hyphens)}
+\li{Must be unique across installed plugins}
+\li{No spaces or special characters}
+\li{Example: \code{\startverb code-review-assistant\stopverb}, \code{\startverb test-runner\stopverb}, \code{\startverb api-docs\stopverb}}
+}
+}
+
+\subtree{
+\title{Recommended Metadata}
+\pre{\startverb
+{
+  "name": "plugin-name",
+  "version": "1.0.0",
+  "description": "Brief explanation of plugin purpose",
+  "author": {
+    "name": "Author Name",
+    "email": "author@example.com",
+    "url": "https://example.com"
+  },
+  "homepage": "https://docs.example.com",
+  "repository": "https://github.com/user/plugin-name",
+  "license": "MIT",
+  "keywords": ["testing", "automation", "ci-cd"]
+}
+\stopverb}
+
+\p{\strong{Version format}: Follow semantic versioning (MAJOR.MINOR.PATCH) \strong{Keywords}: Use for plugin discovery and categorization}
+}
+
+\subtree{
+\title{Component Path Configuration}
+\p{Specify custom paths for components (supplements default directories):}
+
+\pre{\startverb
+{
+  "name": "plugin-name",
+  "commands": "./custom-commands",
+  "agents": ["./agents", "./specialized-agents"],
+  "hooks": "./config/hooks.json",
+  "mcpServers": "./.mcp.json"
+}
+\stopverb}
+
+\p{\strong{Important}: Custom paths supplement defaults—they don't replace them. Components in both default directories and custom paths will load.}
+
+\p{\strong{Path rules:}}
+
+\ul{
+\li{Must be relative to plugin root}
+\li{Must start with \code{\startverb ./\stopverb}}
+\li{Cannot use absolute paths}
+\li{Support arrays for multiple locations}
+}
+}
+}
+
+\subtree{
+\title{Component Organization}
+\subtree{
+\title{Commands}
+\p{\strong{Location}: \code{\startverb commands/\stopverb} directory \strong{Format}: Markdown files with YAML frontmatter \strong{Auto-discovery}: All \code{\startverb .md\stopverb} files in \code{\startverb commands/\stopverb} load automatically}
+
+\p{\strong{Example structure}:}
+
+\pre{\startverb
+commands/
+├── review.md        # /review command
+├── test.md          # /test command
+└── deploy.md        # /deploy command
+\stopverb}
+
+\p{\strong{File format}:}
+
+\pre{\startverb
+---
+name: command-name
+description: Command description
+---
+
+Command implementation instructions...
+\stopverb}
+
+\p{\strong{Usage}: Commands integrate as native slash commands in Claude Code}
+}
+
+\subtree{
+\title{Agents}
+\p{\strong{Location}: \code{\startverb agents/\stopverb} directory \strong{Format}: Markdown files with YAML frontmatter \strong{Auto-discovery}: All \code{\startverb .md\stopverb} files in \code{\startverb agents/\stopverb} load automatically}
+
+\p{\strong{Example structure}:}
+
+\pre{\startverb
+agents/
+├── code-reviewer.md
+├── test-generator.md
+└── refactorer.md
+\stopverb}
+
+\p{\strong{File format}:}
+
+\pre{\startverb
+---
+description: Agent role and expertise
+capabilities:
+  - Specific task 1
+  - Specific task 2
+---
+
+Detailed agent instructions and knowledge...
+\stopverb}
+
+\p{\strong{Usage}: Users can invoke agents manually, or Claude Code selects them automatically based on task context}
+}
+
+\subtree{
+\title{Skills}
+\p{\strong{Location}: \code{\startverb skills/\stopverb} directory with subdirectories per skill \strong{Format}: Each skill in its own directory with \code{\startverb SKILL.md\stopverb} file \strong{Auto-discovery}: All \code{\startverb SKILL.md\stopverb} files in skill subdirectories load automatically}
+
+\p{\strong{Example structure}:}
+
+\pre{\startverb
+skills/
+├── api-testing/
+│   ├── SKILL.md
+│   ├── scripts/
+│   │   └── test-runner.py
+│   └── references/
+│       └── api-spec.md
+└── database-migrations/
+    ├── SKILL.md
+    └── examples/
+        └── migration-template.sql
+\stopverb}
+
+\p{\strong{SKILL.md format}:}
+
+\pre{\startverb
+---
+name: Skill Name
+description: When to use this skill
+version: 1.0.0
+---
+
+Skill instructions and guidance...
+\stopverb}
+
+\p{\strong{Supporting files}: Skills can include scripts, references, examples, or assets in subdirectories}
+
+\p{\strong{Usage}: Claude Code autonomously activates skills based on task context matching the description}
+}
+
+\subtree{
+\title{Hooks}
+\p{\strong{Location}: \code{\startverb hooks/hooks.json\stopverb} or inline in \code{\startverb plugin.json\stopverb} \strong{Format}: JSON configuration defining event handlers \strong{Registration}: Hooks register automatically when plugin enables}
+
+\p{\strong{Example structure}:}
+
+\pre{\startverb
+hooks/
+├── hooks.json           # Hook configuration
+└── scripts/
+    ├── validate.sh      # Hook script
+    └── check-style.sh   # Hook script
+\stopverb}
+
+\p{\strong{Configuration format}:}
+
+\pre{\startverb
+{
+  "PreToolUse": [{
+    "matcher": "Write|Edit",
+    "hooks": [{
+      "type": "command",
+      "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/validate.sh",
+      "timeout": 30
+    }]
+  }]
+}
+\stopverb}
+
+\p{\strong{Available events}: PreToolUse, PostToolUse, Stop, SubagentStop, SessionStart, SessionEnd, UserPromptSubmit, PreCompact, Notification}
+
+\p{\strong{Usage}: Hooks execute automatically in response to Claude Code events}
+}
+
+\subtree{
+\title{MCP Servers}
+\p{\strong{Location}: \code{\startverb .mcp.json\stopverb} at plugin root or inline in \code{\startverb plugin.json\stopverb} \strong{Format}: JSON configuration for MCP server definitions \strong{Auto-start}: Servers start automatically when plugin enables}
+
+\p{\strong{Example format}:}
+
+\pre{\startverb
+{
+  "mcpServers": {
+    "server-name": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/servers/server.js"],
+      "env": {
+        "API_KEY": "${API_KEY}"
+      }
+    }
+  }
+}
+\stopverb}
+
+\p{\strong{Usage}: MCP servers integrate seamlessly with Claude Code's tool system}
+}
+}
+
+\subtree{
+\title{Portable Path References}
+\subtree{
+\title{${CLAUDE_PLUGIN_ROOT}}
+\p{Use \code{\startverb ${CLAUDE_PLUGIN_ROOT}\stopverb} environment variable for all intra-plugin path references:}
+
+\pre{\startverb
+{
+  "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/run.sh"
+}
+\stopverb}
+
+\p{\strong{Why it matters}: Plugins install in different locations depending on:}
+
+\ul{
+\li{User installation method (marketplace, local, npm)}
+\li{Operating system conventions}
+\li{User preferences}
+}
+
+\p{\strong{Where to use it}:}
+
+\ul{
+\li{Hook command paths}
+\li{MCP server command arguments}
+\li{Script execution references}
+\li{Resource file paths}
+}
+
+\p{\strong{Never use}:}
+
+\ul{
+\li{Hardcoded absolute paths (\code{\startverb /Users/name/plugins/...\stopverb})}
+\li{Relative paths from working directory (\code{\startverb ./scripts/...\stopverb} in commands)}
+\li{Home directory shortcuts (\code{\startverb ~/plugins/...\stopverb})}
+}
+}
+
+\subtree{
+\title{Path Resolution Rules}
+\p{\strong{In manifest JSON fields} (hooks, MCP servers):}
+
+\pre{\startverb
+"command": "${CLAUDE_PLUGIN_ROOT}/scripts/tool.sh"
+\stopverb}
+
+\p{\strong{In component files} (commands, agents, skills):}
+
+\pre{\startverb
+Reference scripts at: ${CLAUDE_PLUGIN_ROOT}/scripts/helper.py
+\stopverb}
+
+\p{\strong{In executed scripts}:}
+
+\pre{\startverb
+#!/bin/bash
+# ${CLAUDE_PLUGIN_ROOT} available as environment variable
+source "${CLAUDE_PLUGIN_ROOT}/lib/common.sh"
+\stopverb}
+}
+}
+
+\subtree{
+\title{File Naming Conventions}
+\subtree{
+\title{Component Files}
+\p{\strong{Commands}: Use kebab-case \code{\startverb .md\stopverb} files}
+
+\ul{
+\li{\code{\startverb code-review.md\stopverb} → \code{\startverb /code-review\stopverb}}
+\li{\code{\startverb run-tests.md\stopverb} → \code{\startverb /run-tests\stopverb}}
+\li{\code{\startverb api-docs.md\stopverb} → \code{\startverb /api-docs\stopverb}}
+}
+
+\p{\strong{Agents}: Use kebab-case \code{\startverb .md\stopverb} files describing role}
+
+\ul{
+\li{\code{\startverb test-generator.md\stopverb}}
+\li{\code{\startverb code-reviewer.md\stopverb}}
+\li{\code{\startverb performance-analyzer.md\stopverb}}
+}
+
+\p{\strong{Skills}: Use kebab-case directory names}
+
+\ul{
+\li{\code{\startverb api-testing/\stopverb}}
+\li{\code{\startverb database-migrations/\stopverb}}
+\li{\code{\startverb error-handling/\stopverb}}
+}
+}
+
+\subtree{
+\title{Supporting Files}
+\p{\strong{Scripts}: Use descriptive kebab-case names with appropriate extensions}
+
+\ul{
+\li{\code{\startverb validate-input.sh\stopverb}}
+\li{\code{\startverb generate-report.py\stopverb}}
+\li{\code{\startverb process-data.js\stopverb}}
+}
+
+\p{\strong{Documentation}: Use kebab-case markdown files}
+
+\ul{
+\li{\code{\startverb api-reference.md\stopverb}}
+\li{\code{\startverb migration-guide.md\stopverb}}
+\li{\code{\startverb best-practices.md\stopverb}}
+}
+
+\p{\strong{Configuration}: Use standard names}
+
+\ul{
+\li{\code{\startverb hooks.json\stopverb}}
+\li{\code{\startverb .mcp.json\stopverb}}
+\li{\code{\startverb plugin.json\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Auto-Discovery Mechanism}
+\p{Claude Code automatically discovers and loads components:}
+
+\ol{
+\li{\strong{Plugin manifest}: Reads \code{\startverb .claude-plugin/plugin.json\stopverb} when plugin enables}
+\li{\strong{Commands}: Scans \code{\startverb commands/\stopverb} directory for \code{\startverb .md\stopverb} files}
+\li{\strong{Agents}: Scans \code{\startverb agents/\stopverb} directory for \code{\startverb .md\stopverb} files}
+\li{\strong{Skills}: Scans \code{\startverb skills/\stopverb} for subdirectories containing \code{\startverb SKILL.md\stopverb}}
+\li{\strong{Hooks}: Loads configuration from \code{\startverb hooks/hooks.json\stopverb} or manifest}
+\li{\strong{MCP servers}: Loads configuration from \code{\startverb .mcp.json\stopverb} or manifest}
+}
+
+\p{\strong{Discovery timing}:}
+
+\ul{
+\li{Plugin installation: Components register with Claude Code}
+\li{Plugin enable: Components become available for use}
+\li{No restart required: Changes take effect on next Claude Code session}
+}
+
+\p{\strong{Override behavior}: Custom paths in \code{\startverb plugin.json\stopverb} supplement (not replace) default directories}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Organization}
+\ol{
+\li{\strong{Logical grouping}: Group related components together}
+\li{Put test-related commands, agents, and skills together}
+\li{Create subdirectories in \code{\startverb scripts/\stopverb} for different purposes}
+}
+
+\ol{
+\li{\strong{Minimal manifest}: Keep \code{\startverb plugin.json\stopverb} lean}
+\li{Only specify custom paths when necessary}
+\li{Rely on auto-discovery for standard layouts}
+\li{Use inline configuration only for simple cases}
+}
+
+\ol{
+\li{\strong{Documentation}: Include README files}
+\li{Plugin root: Overall purpose and usage}
+\li{Component directories: Specific guidance}
+\li{Script directories: Usage and requirements}
+}
+}
+
+\subtree{
+\title{Naming}
+\ol{
+\li{\strong{Consistency}: Use consistent naming across components}
+\li{If command is \code{\startverb test-runner\stopverb}, name related agent \code{\startverb test-runner-agent\stopverb}}
+\li{Match skill directory names to their purpose}
+}
+
+\ol{
+\li{\strong{Clarity}: Use descriptive names that indicate purpose}
+\li{Good: \code{\startverb api-integration-testing/\stopverb}, \code{\startverb code-quality-checker.md\stopverb}}
+\li{Avoid: \code{\startverb utils/\stopverb}, \code{\startverb misc.md\stopverb}, \code{\startverb temp.sh\stopverb}}
+}
+
+\ol{
+\li{\strong{Length}: Balance brevity with clarity}
+\li{Commands: 2-3 words (\code{\startverb review-pr\stopverb}, \code{\startverb run-ci\stopverb})}
+\li{Agents: Describe role clearly (\code{\startverb code-reviewer\stopverb}, \code{\startverb test-generator\stopverb})}
+\li{Skills: Topic-focused (\code{\startverb error-handling\stopverb}, \code{\startverb api-design\stopverb})}
+}
+}
+
+\subtree{
+\title{Portability}
+\ol{
+\li{\strong{Always use ${CLAUDE_PLUGIN_ROOT}}: Never hardcode paths}
+\li{\strong{Test on multiple systems}: Verify on macOS, Linux, Windows}
+\li{\strong{Document dependencies}: List required tools and versions}
+\li{\strong{Avoid system-specific features}: Use portable bash/Python constructs}
+}
+}
+
+\subtree{
+\title{Maintenance}
+\ol{
+\li{\strong{Version consistently}: Update version in plugin.json for releases}
+\li{\strong{Deprecate gracefully}: Mark old components clearly before removal}
+\li{\strong{Document breaking changes}: Note changes affecting existing users}
+\li{\strong{Test thoroughly}: Verify all components work after changes}
+}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Minimal Plugin}
+\p{Single command with no dependencies:}
+
+\pre{\startverb
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json    # Just name field
+└── commands/
+    └── hello.md       # Single command
+\stopverb}
+}
+
+\subtree{
+\title{Full-Featured Plugin}
+\p{Complete plugin with all component types:}
+
+\pre{\startverb
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json
+├── commands/          # User-facing commands
+├── agents/            # Specialized subagents
+├── skills/            # Auto-activating skills
+├── hooks/             # Event handlers
+│   ├── hooks.json
+│   └── scripts/
+├── .mcp.json          # External integrations
+└── scripts/           # Shared utilities
+\stopverb}
+}
+
+\subtree{
+\title{Skill-Focused Plugin}
+\p{Plugin providing only skills:}
+
+\pre{\startverb
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json
+└── skills/
+    ├── skill-one/
+    │   └── SKILL.md
+    └── skill-two/
+        └── SKILL.md
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Component not loading}:}
+
+\ul{
+\li{Verify file is in correct directory with correct extension}
+\li{Check YAML frontmatter syntax (commands, agents, skills)}
+\li{Ensure skill has \code{\startverb SKILL.md\stopverb} (not \code{\startverb README.md\stopverb} or other name)}
+\li{Confirm plugin is enabled in Claude Code settings}
+}
+
+\p{\strong{Path resolution errors}:}
+
+\ul{
+\li{Replace all hardcoded paths with \code{\startverb ${CLAUDE_PLUGIN_ROOT}\stopverb}}
+\li{Verify paths are relative and start with \code{\startverb ./\stopverb} in manifest}
+\li{Check that referenced files exist at specified paths}
+\li{Test with \code{\startverb echo $CLAUDE_PLUGIN_ROOT\stopverb} in hook scripts}
+}
+
+\p{\strong{Auto-discovery not working}:}
+
+\ul{
+\li{Confirm directories are at plugin root (not in \code{\startverb .claude-plugin/\stopverb})}
+\li{Check file naming follows conventions (kebab-case, correct extensions)}
+\li{Verify custom paths in manifest are correct}
+\li{Restart Claude Code to reload plugin configuration}
+}
+
+\p{\strong{Conflicts between plugins}:}
+
+\ul{
+\li{Use unique, descriptive component names}
+\li{Namespace commands with plugin name if needed}
+\li{Document potential conflicts in plugin README}
+\li{Consider command prefixes for related functionality}
+}
+
+\p{For detailed examples and advanced patterns, see files in \code{\startverb references/\stopverb} and \code{\startverb examples/\stopverb} directories.}
+}
+}

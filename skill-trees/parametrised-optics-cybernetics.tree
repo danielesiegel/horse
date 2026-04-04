@@ -1,0 +1,382 @@
+\title{Parametrised Optics Cybernetics}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Parametrised optics model cybernetic systems - dynamical systems steered by agents. ⊛ represents agency exerted on systems. Connects Para(C), lenses, open games, and PCT.}
+
+\subtree{
+\title{Parametrised Optics for Cybernetic Systems}
+\p{\strong{Status}: Production Ready \strong{Trit}: 0 (ERGODIC - mediates agent↔system) \strong{Color}: #25D09C}
+
+\blockquote{*"Parametrised optics model cybernetic systems, namely dynamical systems steered by one or more agents. Then ⊛ represents agency being exerted on systems."* — Capucci, Gavranović et al.}
+
+\subtree{
+\title{Core Structure}
+\subtree{
+\title{The ⊛ Action (Agency)}
+\pre{\startverb
+        ┌─────────────────────────────────────┐
+        │         CYBERNETIC SYSTEM           │
+        │                                     │
+   P ───┼──⊛──▶ S ────────▶ S'               │
+(params)│      (state)    (next state)        │
+        │        │                            │
+        │        ▼                            │
+        │    observation ◀── environment      │
+        │        │                            │
+        │        ▼                            │
+        │   P' ◀─┘ (updated params)           │
+        └─────────────────────────────────────┘
+\stopverb}
+
+\p{The \strong{actegory action} ⊛ : P × S → S means:}
+
+\ul{
+\li{\strong{P} (parameters/policy) = agent's controllable degrees of freedom}
+\li{\strong{S} (state) = system being controlled}
+\li{\strong{⊛} = agency exerted: parameters steer the system}
+}
+}
+
+\subtree{
+\title{Para Construction}
+\pre{\startverb
+-- Para(C) is the category of parametrised morphisms in C
+data Para c a b where
+  Para :: c p () -> c (p, a) b -> Para c a b
+
+-- Composition via tensor product of parameters
+(>>>) :: Para c a b -> Para c b d -> Para c a d
+Para p f >>> Para q g = Para (p ⊗ q) (f ; (id ⊗ g))
+\stopverb}
+
+\p{In \strong{Poly} (polynomial functors):}
+
+\pre{\startverb
+Para(Poly) ≅ Lens    -- parametrised polynomial = lens
+\stopverb}
+}
+
+\subtree{
+\title{Lens as Bidirectional Control}
+\pre{\startverb
+        get
+    S ────────▶ A        (observation)
+    │           │
+    │    set    │
+    ◀───────────┘        (action)
+    S'    ◀── (S, B)
+\stopverb}
+
+\p{A \strong{lens} \code{\startverb Lens S A\stopverb} has:}
+
+\ul{
+\li{\code{\startverb get : S → A\stopverb} — observe part of state}
+\li{\code{\startverb set : S × A → S\stopverb} — update state with new value}
+}
+
+\p{A \strong{parametrised lens} \code{\startverb PLens P S A\stopverb}:}
+
+\ul{
+\li{\code{\startverb get : P × S → A\stopverb} — observation depends on parameters}
+\li{\code{\startverb set : P × S × A → S\stopverb} — action depends on parameters}
+}
+}
+}
+
+\subtree{
+\title{Connection to Powers PCT}
+\p{The \strong{hierarchical control} from Powers maps directly:}
+
+\pre{\startverb
+| PCT Level | Para/Optic | Role |
+|-----------|------------|------|
+| Level 5: Program | `Para policy` | Agent's high-level goal |
+| Level 4: Transition | `Lens trajectory` | Sequence patterns |
+| Level 3: Configuration | `Lens relationships` | Relational state |
+| Level 2: Sensation | `Lens percept` | Individual observations |
+| Level 1: Intensity | `Lens intensity` | Raw signal strength |
+\stopverb}
+
+\subtree{
+\title{PCT as Parametrised Optic}
+\pre{\startverb
+-- Perceptual Control Theory as Para
+pctController :: Para C Reference Perception
+pctController = Para policy controlLoop
+  where
+    controlLoop (ref, percept) =
+      let error = ref - percept
+          action = gain * error
+      in applyAction action percept
+\stopverb}
+}
+}
+
+\subtree{
+\title{Open Games Connection}
+\p{\strong{Open games} (Hedges) are parametrised optics for strategic interaction:}
+
+\pre{\startverb
+       ┌─────────────────┐
+   X ──┤                 ├──▶ Y     (play)
+       │   Open Game G   │
+   R ◀─┤                 │◀── S     (coutility)
+       └─────────────────┘
+\stopverb}
+
+\p{An open game \code{\startverb G : (X, S) → (Y, R)\stopverb} has:}
+
+\ul{
+\li{\strong{Play}: \code{\startverb X → Y\stopverb} (forward: strategy → outcome)}
+\li{\strong{Coplay}: \code{\startverb X × S → R\stopverb} (backward: utility propagation)}
+}
+
+\p{This is exactly a \strong{parametrised optic} where:}
+
+\ul{
+\li{Parameters = strategies}
+\li{⊛ = strategic interaction}
+\li{Backward pass = utility/gradient flow}
+}
+
+\subtree{
+\title{Nash Equilibria via Optics}
+\pre{\startverb
+-- Nash equilibrium = fixed point of best response
+nashEquilibrium :: OpenGame X S Y R -> X -> Bool
+nashEquilibrium game strategy =
+  bestResponse game strategy == strategy
+\stopverb}
+}
+}
+
+\subtree{
+\title{ALIEN Screenshot Interpretation}
+\p{The ALIEN simulation shows this structure:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│  NEURAL TOPOLOGY (center)     │  MATRIX RAIN (right)    │
+│  ════════════════════════     │  ═══════════════════    │
+│                               │                         │
+│  ●───●───●───●                │  Activity transcript    │
+│  │ ╲ │ ╱ │ ╲ │                │  = feedback signals     │
+│  ●───●───●───●   ◀──P (params)│  = utility gradients    │
+│  │ ╱ │ ╲ │ ╱ │                │  = error propagation    │
+│  ●───●───●───●                │                         │
+│       │                       │                         │
+│       ▼                       │                         │
+│   S (state) ──⊛──▶ S'         │                         │
+│                               │                         │
+└─────────────────────────────────────────────────────────┘
+\stopverb}
+
+\ul{
+\li{\strong{Neural nodes} = parametrised lenses into creature state}
+\li{\strong{Connections} = composition of optics}
+\li{\strong{Matrix rain} = backward pass (coplay/utility/gradients)}
+\li{\strong{⊛ action} = creatures exerting agency on environment}
+}
+}
+
+\subtree{
+\title{Formal Definition}
+\subtree{
+\title{Parametrised Optic}
+\p{Given a monoidal category \code{\startverb (M, ⊗, I)\stopverb} acting on \code{\startverb C\stopverb} via \code{\startverb ⊛\stopverb}:}
+
+\pre{\startverb
+ParaOptic M C (S, S') (A, A') = ∫^P M(I, P) × C(P ⊛ S, A) × C(P ⊛ A', S')
+\stopverb}
+
+\p{This coend captures:}
+
+\ul{
+\li{\strong{Parameters} \code{\startverb P\stopverb} from the monoidal category \code{\startverb M\stopverb}}
+\li{\strong{Forward map} \code{\startverb P ⊛ S → A\stopverb} (observation under parameters)}
+\li{\strong{Backward map} \code{\startverb P ⊛ A' → S'\stopverb} (update under parameters)}
+}
+}
+
+\subtree{
+\title{Actegory}
+\p{An \strong{actegory} is a category \code{\startverb C\stopverb} with an action \code{\startverb ⊛ : M × C → C\stopverb} satisfying:}
+
+\ul{
+\li{\code{\startverb I ⊛ X ≅ X\stopverb} (identity acts trivially)}
+\li{\code{\startverb (P ⊗ Q) ⊛ X ≅ P ⊛ (Q ⊛ X)\stopverb} (associativity)}
+}
+
+\p{\strong{Agency} = choosing \code{\startverb P\stopverb} to steer \code{\startverb X\stopverb}.}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+open-games (-1) ⊗ parametrised-optics (0) ⊗ gay-mcp (+1) = 0 ✓
+powers-pct (-1) ⊗ parametrised-optics (0) ⊗ alife (+1) = 0 ✓
+lens-bidirectional (-1) ⊗ parametrised-optics (0) ⊗ active-inference (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Code Examples}
+\subtree{
+\title{Haskell (Optics)}
+\pre{\startverb
+{-# LANGUAGE GADTs #-}
+
+-- Parametrised lens
+data PLens p s a = PLens
+  { pget :: p -> s -> a
+  , pset :: p -> s -> a -> s
+  }
+
+-- Composition
+(|.|) :: PLens p s a -> PLens p a b -> PLens p s b
+(PLens g1 s1) |.| (PLens g2 s2) = PLens
+  { pget = \p s -> g2 p (g1 p s)
+  , pset = \p s b -> s1 p s (s2 p (g1 p s) b)
+  }
+
+-- Cybernetic control loop
+controlLoop :: PLens Policy State Observation -> State -> State
+controlLoop lens state =
+  let obs = pget lens policy state
+      err = reference - obs
+      action = gain * err
+  in pset lens policy state (obs + action)
+\stopverb}
+}
+
+\subtree{
+\title{Julia (ACSets)}
+\pre{\startverb
+using Catlab, Catlab.CategoricalAlgebra
+
+# Schema for parametrised optic
+@present SchParaOptic(FreeSchema) begin
+  Param::Ob
+  State::Ob
+  Obs::Ob
+
+  # Forward: P ⊛ S → A
+  forward::Hom(Param ⊗ State, Obs)
+
+  # Backward: P ⊛ A' → S'
+  backward::Hom(Param ⊗ Obs, State)
+
+  # Action composition
+  compose::Hom(Param ⊗ Param, Param)
+end
+
+@acset_type ParaOptic(SchParaOptic)
+\stopverb}
+}
+
+\subtree{
+\title{Python (Open Games)}
+\pre{\startverb
+from dataclasses import dataclass
+from typing import Callable, TypeVar
+
+P, S, A, R = TypeVar('P'), TypeVar('S'), TypeVar('A'), TypeVar('R')
+
+@dataclass
+class OpenGame:
+    """Parametrised optic for strategic interaction."""
+    play: Callable[[P, S], A]      # Forward: strategy → outcome
+    coplay: Callable[[P, S, R], R]  # Backward: utility propagation
+
+    def compose(self, other: 'OpenGame') -> 'OpenGame':
+        """Sequential composition via ⊛."""
+        return OpenGame(
+            play=lambda p, s: other.play(p, self.play(p, s)),
+            coplay=lambda p, s, r: self.coplay(p, s, other.coplay(p, self.play(p, s), r))
+        )
+
+    def tensor(self, other: 'OpenGame') -> 'OpenGame':
+        """Parallel composition via ⊗."""
+        return OpenGame(
+            play=lambda p, s: (self.play(p[0], s[0]), other.play(p[1], s[1])),
+            coplay=lambda p, s, r: (self.coplay(p[0], s[0], r[0]),
+                                     other.coplay(p[1], s[1], r[1]))
+        )
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Gay.jl}
+\pre{\startverb
+using Gay
+
+# Seed for cybernetic color palette
+gay_seed!(0xCYBER)
+
+# Hierarchical control colors
+CYBERNETIC_COLORS = Dict(
+    :agent     => color_at(1),  # Parameters
+    :system    => color_at(2),  # State
+    :forward   => color_at(3),  # Observation
+    :backward  => color_at(4),  # Utility/gradient
+)
+
+# ⊛ action visualization
+function visualize_agency(params, state, action)
+    p_color = CYBERNETIC_COLORS[:agent]
+    s_color = CYBERNETIC_COLORS[:system]
+    # Blend represents ⊛ application
+    result_color = blend(p_color, s_color, action.intensity)
+    return result_color
+end
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{\strong{Capucci, M.} - "Seeing Double Through Dependent Optics"}
+\li{\strong{Gavranović, B.} - "Categorical Foundations of Gradient-Based Learning"}
+\li{\strong{Hedges, J.} - "Compositionality and String Diagrams for Game Theory"}
+\li{\strong{Powers, W.T.} - "Behavior: The Control of Perception" (1973)}
+\li{\strong{Riley, M.} - "Categories of Optics"}
+\li{\strong{Spivak, D.I.} - "Poly: An Abundant Categorical Setting"}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\pre{\startverb
+| Skill | Trit | Connection |
+|-------|------|------------|
+| `open-games` | -1 | Strategic optics |
+| `glass-hopping` | 0 | Bridge navigation |
+| `cats-for-ai` | 0 | CT for ML |
+| `powers-pct` | -1 | Hierarchical control |
+| `active-inference` | +1 | Free energy minimization |
+| `alife` | +1 | Agency in simulation |
+\stopverb}
+
+\p{\strong{Skill Name}: parametrised-optics-cybernetics \strong{Type}: Categorical Framework / Cybernetics \strong{Trit}: 0 (ERGODIC - bridges agent and system) \strong{Key Operator}: ⊛ (actegory action = agency) \strong{Structure}: Para(C) with lenses and open games}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

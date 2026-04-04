@@ -1,0 +1,209 @@
+\title{Configuring Multi Factor Authentication With Duo}
+
+\taxon{skill}
+
+\tag{iam}
+
+\tag{identity}
+
+\tag{access-control}
+
+\tag{authentication}
+
+\tag{mfa}
+
+\tag{duo}
+
+\tag{multi-factor}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploy Cisco Duo multi-factor authentication across enterprise applications, VPN, RDP, and SSH access points. This skill covers Duo integration methods, adaptive authentication policies, device trust}
+
+\subtree{
+\title{Configuring Multi-Factor Authentication with Duo}
+\subtree{
+\title{Overview}
+\p{Deploy Cisco Duo multi-factor authentication across enterprise applications, VPN, RDP, and SSH access points. This skill covers Duo integration methods, adaptive authentication policies, device trust assessment, and phishing-resistant MFA deployment aligned with NIST 800-63B AAL2/AAL3 requirements.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring configuring multi factor authentication with duo capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with identity access management concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Configure Duo MFA for VPN, RDP, SSH, and web applications}
+\li{Implement adaptive access policies based on user, device, and network context}
+\li{Deploy phishing-resistant authentication (Duo Verified Push, WebAuthn)}
+\li{Configure device health policies (trusted endpoints, OS version enforcement)}
+\li{Set up Duo Admin Panel monitoring and reporting}
+\li{Implement MFA bypass and emergency access procedures}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Duo Authentication Methods (by security strength)}
+\ol{
+\li{\strong{Security Keys (WebAuthn/FIDO2)}: Phishing-resistant, AAL3 capable}
+\li{\strong{Duo Verified Push}: Requires code entry, resistant to MFA fatigue attacks}
+\li{\strong{Duo Push}: Push notification to Duo Mobile app}
+\li{\strong{TOTP (Duo Mobile Passcode)}: Time-based one-time password}
+\li{\strong{Hardware Tokens}: OTP from physical token}
+\li{\strong{SMS/Phone Call}: Least secure, use only as fallback}
+}
+}
+
+\subtree{
+\title{Duo Integration Architecture}
+\ul{
+\li{\strong{Duo Authentication Proxy}: On-premises proxy for RADIUS/LDAP integration}
+\li{\strong{Duo Web SDK}: Embed Duo MFA in web applications}
+\li{\strong{Duo OIDC/SAML}: SSO integration for cloud applications}
+\li{\strong{Duo for RDP}: Windows Logon MFA}
+\li{\strong{Duo Unix}: PAM-based MFA for SSH}
+}
+}
+
+\subtree{
+\title{Adaptive Access Policies}
+\ul{
+\li{\strong{Trusted Networks}: Reduce MFA friction for corporate networks}
+\li{\strong{Remembered Devices}: Skip MFA for trusted devices (configurable duration)}
+\li{\strong{Device Health}: Block or require MFA based on OS patch level, encryption, firewall}
+\li{\strong{Risk-Based Authentication}: Step-up MFA for anomalous login patterns}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Duo Authentication Proxy Setup}
+\ol{
+\li{Deploy Duo Authentication Proxy on Windows/Linux server}
+\li{Configure primary authentication (AD/LDAP or RADIUS)}
+\li{Configure Duo API credentials (Integration Key, Secret Key, API Hostname)}
+\li{Set failmode (safe=deny if Duo unreachable, secure=allow)}
+\li{Test proxy connectivity to Duo cloud and AD}
+}
+}
+
+\subtree{
+\title{Step 2: VPN MFA Integration}
+\ol{
+\li{Configure VPN concentrator for RADIUS authentication}
+\li{Point RADIUS to Duo Authentication Proxy}
+\li{Configure Duo proxy with [radius_server_auto] section}
+\li{Test VPN login with Duo Push}
+\li{Deploy to all VPN users with enrollment period}
+}
+}
+
+\subtree{
+\title{Step 3: RDP/Windows Logon MFA}
+\ol{
+\li{Install Duo Authentication for Windows Logon on target servers}
+\li{Configure Duo application in Admin Panel}
+\li{Set offline access options (allow N offline logins)}
+\li{Configure bypass for service accounts}
+\li{Test RDP login with Duo MFA}
+}
+}
+
+\subtree{
+\title{Step 4: Adaptive Policy Configuration}
+\ol{
+\li{Create user groups (Standard, Privileged, Contractors)}
+\li{Configure per-group authentication policies:}
+\li{Standard: Duo Push allowed, remembered device 7 days}
+\li{Privileged: Verified Push required, no remembered device}
+\li{Contractors: WebAuthn required, no remembered device}
+\li{Configure device health policies:}
+\li{Require encrypted disk}
+\li{Block outdated OS versions}
+\li{Require firewall enabled}
+\li{Set trusted network exceptions for corporate IPs}
+}
+}
+
+\subtree{
+\title{Step 5: Phishing-Resistant MFA Deployment}
+\ol{
+\li{Enable Verified Push (requires entering 3-digit code from login screen)}
+\li{Register WebAuthn/FIDO2 security keys for privileged users}
+\li{Disable SMS and phone call for high-risk groups}
+\li{Configure Duo Risk-Based Factor Selection}
+\li{Monitor for MFA fatigue attack patterns}
+}
+}
+
+\subtree{
+\title{Step 6: Monitoring and Response}
+\ol{
+\li{Configure Duo Admin Panel alerts}
+\li{Set up authentication log forwarding to SIEM}
+\li{Monitor for: MFA denial patterns, bypass usage, new device enrollments}
+\li{Create incident response playbook for MFA compromise}
+\li{Regular review of bypass and exception policies}
+}
+}
+}
+
+\subtree{
+\title{Security Controls}
+\pre{\startverb
+| Control | NIST 800-53 | Description |
+|---------|-------------|-------------|
+| MFA | IA-2(1) | Multi-factor authentication for network access |
+| MFA for Privileged | IA-2(2) | MFA for privileged account access |
+| Replay Resistance | IA-2(8) | Replay-resistant authentication |
+| Device Identification | IA-3 | Device identity and trust |
+| Authenticator Management | IA-5 | MFA enrollment and lifecycle |
+\stopverb}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Not deploying phishing-resistant MFA (Verified Push/FIDO2) for privileged accounts}
+\li{Setting failmode to "safe" (allow access when Duo is down) in production}
+\li{Not disabling SMS/phone call for users with app-capable devices}
+\li{Forgetting to configure offline access for laptops}
+\li{Not monitoring for MFA fatigue/prompt bombing attacks}
+}
+}
+
+\subtree{
+\title{Verification}
+\ul{
+\li{[ ] VPN login requires Duo MFA}
+\li{[ ] RDP to servers requires Duo MFA}
+\li{[ ] SSH access requires Duo MFA}
+\li{[ ] Verified Push enabled for privileged users}
+\li{[ ] Device health policy blocks non-compliant devices}
+\li{[ ] Authentication logs forwarded to SIEM}
+\li{[ ] Bypass/emergency access procedures tested}
+\li{[ ] MFA fatigue detection alerts configured}
+}
+}
+}

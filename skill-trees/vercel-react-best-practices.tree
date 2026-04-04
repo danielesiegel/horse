@@ -1,0 +1,171 @@
+\title{Vercel React Best Practices}
+
+\taxon{skill}
+
+\meta{description}{React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization, or performance improvements.}
+
+\subtree{
+\title{Vercel React Best Practices}
+\p{Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 57 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.}
+
+\subtree{
+\title{When to Apply}
+\p{Reference these guidelines when:}
+
+\ul{
+\li{Writing new React components or Next.js pages}
+\li{Implementing data fetching (client or server-side)}
+\li{Reviewing code for performance issues}
+\li{Refactoring existing React/Next.js code}
+\li{Optimizing bundle size or load times}
+}
+}
+
+\subtree{
+\title{Rule Categories by Priority}
+\pre{\startverb
+| Priority | Category | Impact | Prefix |
+|----------|----------|--------|--------|
+| 1 | Eliminating Waterfalls | CRITICAL | `async-` |
+| 2 | Bundle Size Optimization | CRITICAL | `bundle-` |
+| 3 | Server-Side Performance | HIGH | `server-` |
+| 4 | Client-Side Data Fetching | MEDIUM-HIGH | `client-` |
+| 5 | Re-render Optimization | MEDIUM | `rerender-` |
+| 6 | Rendering Performance | MEDIUM | `rendering-` |
+| 7 | JavaScript Performance | LOW-MEDIUM | `js-` |
+| 8 | Advanced Patterns | LOW | `advanced-` |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{1. Eliminating Waterfalls (CRITICAL)}
+\ul{
+\li{\code{\startverb async-defer-await\stopverb} - Move await into branches where actually used}
+\li{\code{\startverb async-parallel\stopverb} - Use Promise.all() for independent operations}
+\li{\code{\startverb async-dependencies\stopverb} - Use better-all for partial dependencies}
+\li{\code{\startverb async-api-routes\stopverb} - Start promises early, await late in API routes}
+\li{\code{\startverb async-suspense-boundaries\stopverb} - Use Suspense to stream content}
+}
+}
+
+\subtree{
+\title{2. Bundle Size Optimization (CRITICAL)}
+\ul{
+\li{\code{\startverb bundle-barrel-imports\stopverb} - Import directly, avoid barrel files}
+\li{\code{\startverb bundle-dynamic-imports\stopverb} - Use next/dynamic for heavy components}
+\li{\code{\startverb bundle-defer-third-party\stopverb} - Load analytics/logging after hydration}
+\li{\code{\startverb bundle-conditional\stopverb} - Load modules only when feature is activated}
+\li{\code{\startverb bundle-preload\stopverb} - Preload on hover/focus for perceived speed}
+}
+}
+
+\subtree{
+\title{3. Server-Side Performance (HIGH)}
+\ul{
+\li{\code{\startverb server-auth-actions\stopverb} - Authenticate server actions like API routes}
+\li{\code{\startverb server-cache-react\stopverb} - Use React.cache() for per-request deduplication}
+\li{\code{\startverb server-cache-lru\stopverb} - Use LRU cache for cross-request caching}
+\li{\code{\startverb server-dedup-props\stopverb} - Avoid duplicate serialization in RSC props}
+\li{\code{\startverb server-serialization\stopverb} - Minimize data passed to client components}
+\li{\code{\startverb server-parallel-fetching\stopverb} - Restructure components to parallelize fetches}
+\li{\code{\startverb server-after-nonblocking\stopverb} - Use after() for non-blocking operations}
+}
+}
+
+\subtree{
+\title{4. Client-Side Data Fetching (MEDIUM-HIGH)}
+\ul{
+\li{\code{\startverb client-swr-dedup\stopverb} - Use SWR for automatic request deduplication}
+\li{\code{\startverb client-event-listeners\stopverb} - Deduplicate global event listeners}
+\li{\code{\startverb client-passive-event-listeners\stopverb} - Use passive listeners for scroll}
+\li{\code{\startverb client-localstorage-schema\stopverb} - Version and minimize localStorage data}
+}
+}
+
+\subtree{
+\title{5. Re-render Optimization (MEDIUM)}
+\ul{
+\li{\code{\startverb rerender-defer-reads\stopverb} - Don't subscribe to state only used in callbacks}
+\li{\code{\startverb rerender-memo\stopverb} - Extract expensive work into memoized components}
+\li{\code{\startverb rerender-memo-with-default-value\stopverb} - Hoist default non-primitive props}
+\li{\code{\startverb rerender-dependencies\stopverb} - Use primitive dependencies in effects}
+\li{\code{\startverb rerender-derived-state\stopverb} - Subscribe to derived booleans, not raw values}
+\li{\code{\startverb rerender-derived-state-no-effect\stopverb} - Derive state during render, not effects}
+\li{\code{\startverb rerender-functional-setstate\stopverb} - Use functional setState for stable callbacks}
+\li{\code{\startverb rerender-lazy-state-init\stopverb} - Pass function to useState for expensive values}
+\li{\code{\startverb rerender-simple-expression-in-memo\stopverb} - Avoid memo for simple primitives}
+\li{\code{\startverb rerender-move-effect-to-event\stopverb} - Put interaction logic in event handlers}
+\li{\code{\startverb rerender-transitions\stopverb} - Use startTransition for non-urgent updates}
+\li{\code{\startverb rerender-use-ref-transient-values\stopverb} - Use refs for transient frequent values}
+}
+}
+
+\subtree{
+\title{6. Rendering Performance (MEDIUM)}
+\ul{
+\li{\code{\startverb rendering-animate-svg-wrapper\stopverb} - Animate div wrapper, not SVG element}
+\li{\code{\startverb rendering-content-visibility\stopverb} - Use content-visibility for long lists}
+\li{\code{\startverb rendering-hoist-jsx\stopverb} - Extract static JSX outside components}
+\li{\code{\startverb rendering-svg-precision\stopverb} - Reduce SVG coordinate precision}
+\li{\code{\startverb rendering-hydration-no-flicker\stopverb} - Use inline script for client-only data}
+\li{\code{\startverb rendering-hydration-suppress-warning\stopverb} - Suppress expected mismatches}
+\li{\code{\startverb rendering-activity\stopverb} - Use Activity component for show/hide}
+\li{\code{\startverb rendering-conditional-render\stopverb} - Use ternary, not && for conditionals}
+\li{\code{\startverb rendering-usetransition-loading\stopverb} - Prefer useTransition for loading state}
+}
+}
+
+\subtree{
+\title{7. JavaScript Performance (LOW-MEDIUM)}
+\ul{
+\li{\code{\startverb js-batch-dom-css\stopverb} - Group CSS changes via classes or cssText}
+\li{\code{\startverb js-index-maps\stopverb} - Build Map for repeated lookups}
+\li{\code{\startverb js-cache-property-access\stopverb} - Cache object properties in loops}
+\li{\code{\startverb js-cache-function-results\stopverb} - Cache function results in module-level Map}
+\li{\code{\startverb js-cache-storage\stopverb} - Cache localStorage/sessionStorage reads}
+\li{\code{\startverb js-combine-iterations\stopverb} - Combine multiple filter/map into one loop}
+\li{\code{\startverb js-length-check-first\stopverb} - Check array length before expensive comparison}
+\li{\code{\startverb js-early-exit\stopverb} - Return early from functions}
+\li{\code{\startverb js-hoist-regexp\stopverb} - Hoist RegExp creation outside loops}
+\li{\code{\startverb js-min-max-loop\stopverb} - Use loop for min/max instead of sort}
+\li{\code{\startverb js-set-map-lookups\stopverb} - Use Set/Map for O(1) lookups}
+\li{\code{\startverb js-tosorted-immutable\stopverb} - Use toSorted() for immutability}
+}
+}
+
+\subtree{
+\title{8. Advanced Patterns (LOW)}
+\ul{
+\li{\code{\startverb advanced-event-handler-refs\stopverb} - Store event handlers in refs}
+\li{\code{\startverb advanced-init-once\stopverb} - Initialize app once per app load}
+\li{\code{\startverb advanced-use-latest\stopverb} - useLatest for stable callback refs}
+}
+}
+}
+
+\subtree{
+\title{How to Use}
+\p{Read individual rule files for detailed explanations and code examples:}
+
+\pre{\startverb
+rules/async-parallel.md
+rules/bundle-barrel-imports.md
+\stopverb}
+
+\p{Each rule file contains:}
+
+\ul{
+\li{Brief explanation of why it matters}
+\li{Incorrect code example with explanation}
+\li{Correct code example with explanation}
+\li{Additional context and references}
+}
+}
+
+\subtree{
+\title{Full Compiled Document}
+\p{For the complete guide with all rules expanded: \code{\startverb AGENTS.md\stopverb}}
+}
+}

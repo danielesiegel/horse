@@ -1,0 +1,234 @@
+\title{Deploying Software Defined Perimeter}
+
+\taxon{skill}
+
+\tag{zero-trust}
+
+\tag{sdp}
+
+\tag{software-defined-perimeter}
+
+\tag{network-access}
+
+\tag{ztna}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Deploy a Software-Defined Perimeter using the CSA v2.0 specification with Single Packet Authorization, mutual TLS, and SDP controller/gateway configuration to enforce zero trust network access.}
+
+\subtree{
+\title{Deploying Software-Defined Perimeter}
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Understanding of zero trust principles (NIST SP 800-207)}
+\li{Knowledge of CSA Software-Defined Perimeter specification}
+\li{Familiarity with PKI and mutual TLS authentication}
+\li{Experience with network security architecture}
+}
+}
+
+\subtree{
+\title{Overview}
+\p{A Software-Defined Perimeter (SDP) implements zero trust by creating a dynamically provisioned, identity-centric perimeter around individual resources. Defined by the Cloud Security Alliance (CSA), SDP makes application infrastructure invisible to unauthorized users through a "dark cloud" approach where services are hidden until authenticated and authorized. Unlike traditional VPN, SDP establishes one-to-one encrypted connections between verified users and specific applications.}
+
+\p{This skill covers deploying SDP using the CSA v2.0 specification, implementing Single Packet Authorization (SPA), configuring the SDP controller and gateway, and validating the deployment against NIST SP 800-207 requirements.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring deploying software defined perimeter capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with zero trust architecture concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{SDP Components (CSA Specification)}
+\pre{\startverb
+┌─────────────────────┐
+│ SDP Controller       │
+│ - Authentication     │
+│ - Authorization      │
+│ - Policy management  │
+│ - Key management     │
+└──────────┬──────────┘
+           │
+    ┌──────┴──────┐
+    │             │
+    v             v
+┌────────┐  ┌────────────┐
+│ IH     │  │ AH         │
+│(Client)│  │(Gateway)   │
+│        │  │            │
+│ SPA    │──│ Protected  │
+│ mTLS   │  │ Resources  │
+└────────┘  └────────────┘
+
+IH = Initiating Host (User Device)
+AH = Accepting Host (Application Gateway)
+SPA = Single Packet Authorization
+\stopverb}
+}
+
+\subtree{
+\title{SDP Deployment Models}
+\ol{
+\li{\strong{Client-to-Gateway}: User device connects through SDP gateway to backend applications}
+\li{\strong{Client-to-Server}: Direct connection between user and application server}
+\li{\strong{Server-to-Server}: Workload-to-workload communication through SDP}
+\li{\strong{Gateway-to-Gateway}: Site-to-site connectivity replacing traditional VPN tunnels}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Single Packet Authorization (SPA)}
+\p{SPA is a network security mechanism where the SDP gateway drops all TCP/UDP packets by default. A cryptographically signed single packet must be sent before any connection is established. The gateway validates the SPA packet, and only then opens a temporary port for the authenticated session. This makes the gateway invisible to port scanners.}
+}
+
+\subtree{
+\title{Mutual TLS (mTLS)}
+\p{After SPA validation, both the client and server authenticate each other using X.509 certificates. This bidirectional authentication prevents man-in-the-middle attacks and ensures both endpoints are verified.}
+}
+
+\subtree{
+\title{Dynamic Provisioning}
+\p{SDP connections are provisioned on-demand based on real-time policy evaluation. No persistent network tunnels exist; each session is individually authorized and encrypted.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: SDP Controller Deployment}
+\ol{
+\li{\strong{Deploy SDP Controller}}
+\li{Install SDP controller on hardened, redundant infrastructure}
+\li{Configure PKI integration for certificate issuance}
+\li{Set up authentication backend (LDAP, SAML, OIDC)}
+\li{Configure policy database with application definitions}
+\li{Enable audit logging for all controller decisions}
+}
+
+\ol{
+\li{\strong{Configure Authentication}}
+\li{Integrate with enterprise IdP via SAML 2.0 or OIDC}
+\li{Configure device certificate enrollment (SCEP/EST)}
+\li{Enable multi-factor authentication requirements}
+\li{Set up certificate revocation checking (OCSP/CRL)}
+}
+
+\ol{
+\li{\strong{Define Access Policies}}
+\li{Map users/groups to authorized applications}
+\li{Define device posture requirements per application}
+\li{Configure contextual conditions (location, time, risk level)}
+\li{Set session duration and re-authentication intervals}
+}
+}
+
+\subtree{
+\title{Phase 2: SDP Gateway Deployment}
+\ol{
+\li{\strong{Deploy Accepting Hosts (Gateways)}}
+\li{Install SDP gateway instances in front of protected applications}
+\li{Configure default-drop firewall rules (deny all inbound)}
+\li{Enable SPA listener on designated ports}
+\li{Configure mTLS with controller-issued certificates}
+\li{Set up health monitoring and failover}
+}
+
+\ol{
+\li{\strong{Configure Application Definitions}}
+\li{Register each protected application with the controller}
+\li{Define backend server IPs, ports, and protocols}
+\li{Configure load balancing for multi-instance applications}
+\li{Set up application health checks}
+}
+}
+
+\subtree{
+\title{Phase 3: Client Deployment}
+\ol{
+\li{\strong{Deploy Initiating Hosts (Clients)}}
+\li{Install SDP client software on user endpoints}
+\li{Enroll device certificates through automated provisioning}
+\li{Configure SPA key material distribution}
+\li{Test authentication flow: SPA → mTLS → application access}
+}
+
+\ol{
+\li{\strong{Validate End-to-End Flow}}
+\li{Verify SPA packets are accepted by gateway}
+\li{Confirm mTLS handshake succeeds with valid certificates}
+\li{Test application access through the SDP tunnel}
+\li{Verify unauthorized access is blocked (no SPA = invisible gateway)}
+}
+}
+
+\subtree{
+\title{Phase 4: Operational Validation}
+\ol{
+\li{\strong{Security Testing}}
+\li{Port scan the SDP gateway to confirm invisibility (all ports show filtered/closed)}
+\li{Attempt connection without valid SPA (must fail silently)}
+\li{Test with revoked client certificate (must be denied)}
+\li{Attempt lateral movement from one authorized app to another unauthorized app}
+\li{Validate audit trail completeness}
+}
+
+\ol{
+\li{\strong{Monitoring and Maintenance}}
+\li{Configure SIEM integration for SDP controller and gateway logs}
+\li{Set up alerting for failed SPA attempts and certificate errors}
+\li{Establish certificate rotation schedule}
+\li{Document incident response procedures for SDP events}
+}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] SDP Controller deployed with HA and audit logging}
+\li{[ ] IdP integration tested with SAML/OIDC and MFA}
+\li{[ ] SDP Gateways deployed with default-drop firewall}
+\li{[ ] SPA mechanism validated (gateway invisible to port scans)}
+\li{[ ] mTLS established between clients and gateways}
+\li{[ ] Access policies enforce least-privilege per user/app}
+\li{[ ] Device certificate enrollment automated}
+\li{[ ] Unauthorized access attempts blocked silently}
+\li{[ ] Lateral movement between apps prevented}
+\li{[ ] Logs streaming to SIEM with alerting configured}
+\li{[ ] Certificate rotation and revocation procedures tested}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{CSA Software-Defined Perimeter Architecture Guide v3}
+\li{CSA SDP Specification v2.0}
+\li{NIST SP 800-207: Zero Trust Architecture}
+\li{CISA Zero Trust Maturity Model v2.0}
+\li{fwknop: Single Packet Authorization implementation}
+}
+}
+}

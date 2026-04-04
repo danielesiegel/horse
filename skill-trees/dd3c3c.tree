@@ -1,0 +1,129 @@
+\title{Dd3c3c}
+
+\taxon{skill}
+
+\meta{description}{'Worldmat TiDAR: 3×3×3 matrix of diffusion draft + AR verify executions}
+
+\subtree{
+\title{dd3c3c — Worldmat TiDAR}
+\p{\strong{Color:} \code{\startverb #DD3C3C\stopverb} (scarlet, hue 0°) \strong{Knight Tour Position:} 1 (entry point) \strong{Golden Angle:} 137.508° per step}
+
+\subtree{
+\title{Overview}
+\p{A \strong{Worldmat} is a 3×3×3 matrix of TiDAR executions structured by:}
+
+\pre{\startverb
+| Axis | Values | GF(3) |
+|------|--------|-------|
+| Polarity | MINUS(-1), ERGODIC(0), PLUS(+1) | Conservation |
+| Temporal | PAST(0), PRESENT(1), FUTURE(2) | Slice sum = 0 |
+| Modality | OBSERVATION(0), ACTION(1), PREDICTION(2) | Per axis |
+\stopverb}
+}
+
+\subtree{
+\title{TiDAR Pattern (arXiv:2511.08923)}
+\pre{\startverb
+Phase 1: Diffusion Draft (parallel)
+  └─ SplitMix64.split(n) → n independent token streams
+  
+Phase 2: AR Verify (sequential)  
+  └─ Hash chain: prev ⊕ token → verified
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+from worldmat import Worldmat, verify_spi
+
+# Initialize with drand seed
+wm = Worldmat(master_seed=0x87079c9f1d3b0474)
+
+# Execute all 27 cells via TiDAR
+wm.execute_parallel()
+
+# Verify GF(3) conservation
+gf3 = wm.verify_gf3()  # All slices sum to 0 mod 3
+
+# Verify SPI (parallel == sequential)
+spi = verify_spi(seed)  # fingerprints match ✓
+
+# Export as ACSet
+acset = wm.to_acset()
+\stopverb}
+}
+
+\subtree{
+\title{Knight Tour Discovery}
+\p{Skills are discovered via knight moves through color space:}
+
+\pre{\startverb
+Position 1: #DD3C3C (this skill) ← ENTRY
+Position 2: #3CDD6B (+137.5°)
+Position 3: #9A3CDD (+275.0°)
+...
+Position 27: #DD3C7E (+335.2°) ← EXIT
+\stopverb}
+
+\p{Jump pattern on 3×3×3: \code{\startverb (±1,±2,0)\stopverb}, \code{\startverb (±2,±1,0)\stopverb}, \code{\startverb (±1,0,±2)\stopverb}, etc.}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+/Users/bob/ies/worldmat/worldmat.py
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Invariants}
+\ul{
+\li{Every polarity slice (9 cells): Σ trits ≡ 0 (mod 3)}
+\li{Every temporal slice (9 cells): Σ trits ≡ 0 (mod 3)  }
+\li{Every modality slice (9 cells): Σ trits ≡ 0 (mod 3)}
+\li{MINUS ⊗ ERGODIC ⊗ PLUS = 0 always}
+}
+}
+
+\subtree{
+\title{Color Schema}
+\pre{\startverb
+| Polarity | Hex | Trit |
+|----------|-----|------|
+| MINUS | `#9E16EF` | -1 |
+| ERGODIC | `#55D9A0` | 0 |
+| PLUS | `#AF3424` | +1 |
+\stopverb}
+}
+
+\subtree{
+\title{End-of-Skill Interface}
+
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb 3cdd6b\stopverb} — Knight tour position 2 (next)}
+\li{\code{\startverb three-match\stopverb} — 3-coloring gadget}
+\li{\code{\startverb spi-parallel-verify\stopverb} — Fingerprint verification}
+\li{\code{\startverb gay-mcp\stopverb} — Deterministic color generation}
+}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

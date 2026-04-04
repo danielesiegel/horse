@@ -1,0 +1,217 @@
+\title{Analyzing Ios App Security With Objection}
+
+\taxon{skill}
+
+\tag{mobile-security}
+
+\tag{ios}
+
+\tag{objection}
+
+\tag{frida}
+
+\tag{owasp-mobile}
+
+\tag{penetration-testing}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Performs runtime mobile security exploration of iOS applications using Objection, a Frida-powered toolkit that enables security testers to interact with app internals without jailbreaking. Use when assessing iOS app security posture, bypassing client-side protections, dumping keychain items, inspecting filesystem storage, and evaluating runtime behavior. Activates for requests involving iOS security testing, Objection runtime analysis, Frida-based iOS assessment, or mobile runtime exploration.}
+
+\subtree{
+\title{Analyzing iOS App Security with Objection}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Performing runtime security assessment of iOS applications during authorized penetration tests}
+\li{Inspecting iOS keychain, filesystem, and memory for sensitive data exposure}
+\li{Bypassing client-side security controls (SSL pinning, jailbreak detection) during security testing}
+\li{Evaluating iOS app behavior at runtime without access to source code}
+}
+
+\p{\strong{Do not use} this skill on production devices without explicit authorization -- Objection modifies app runtime behavior and may trigger security monitoring.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.10+ with pip}
+\li{Objection installed: \code{\startverb pip install objection\stopverb}}
+\li{Frida installed: \code{\startverb pip install frida-tools\stopverb}}
+\li{Target iOS device (jailbroken with Frida server, or non-jailbroken with repackaged IPA)}
+\li{For non-jailbroken: \code{\startverb objection patchipa\stopverb} to inject Frida gadget into IPA}
+\li{macOS recommended for iOS testing (Xcode, ideviceinstaller)}
+\li{USB connection to target device or network Frida server}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Prepare the Testing Environment}
+\p{\strong{For jailbroken devices:}}
+
+\pre{\startverb
+# Install Frida server on device via Cydia/Sileo
+# SSH to device and start Frida server
+ssh root@<device_ip> "/usr/sbin/frida-server -D"
+
+# Verify Frida connectivity
+frida-ps -U  # List processes on USB-connected device
+\stopverb}
+
+\p{\strong{For non-jailbroken devices (authorized testing):}}
+
+\pre{\startverb
+# Patch IPA with Frida gadget
+objection patchipa --source target.ipa --codesign-signature "Apple Development: test@example.com"
+
+# Install patched IPA
+ideviceinstaller -i target-patched.ipa
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Attach Objection to Target App}
+\pre{\startverb
+# Attach to running app by bundle ID
+objection --gadget "com.target.app" explore
+
+# Or spawn the app fresh
+objection --gadget "com.target.app" explore --startup-command "ios hooking list classes"
+\stopverb}
+
+\p{Once attached, Objection provides an interactive REPL for runtime exploration.}
+}
+
+\subtree{
+\title{Step 3: Assess Data Storage Security (MASVS-STORAGE)}
+\pre{\startverb
+# Dump iOS Keychain items accessible to the app
+ios keychain dump
+
+# List files in app sandbox
+ios plist cat Info.plist
+env  # Show app environment paths
+
+# Inspect NSUserDefaults for sensitive data
+ios nsuserdefaults get
+
+# List SQLite databases
+sqlite connect app_data.db
+sqlite execute query "SELECT * FROM credentials"
+
+# Check for sensitive data in pasteboard
+ios pasteboard monitor
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Evaluate Network Security (MASVS-NETWORK)}
+\pre{\startverb
+# Disable SSL/TLS certificate pinning
+ios sslpinning disable
+
+# Verify pinning is bypassed by observing traffic in Burp Suite proxy
+# Monitor network-related class method calls
+ios hooking watch class NSURLSession
+ios hooking watch class NSURLConnection
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Inspect Authentication and Authorization (MASVS-AUTH)}
+\pre{\startverb
+# List all Objective-C classes
+ios hooking list classes
+
+# Search for authentication-related classes
+ios hooking search classes Auth
+ios hooking search classes Login
+ios hooking search classes Token
+
+# Hook authentication methods to observe parameters
+ios hooking watch method "+[AuthManager validateToken:]" --dump-args --dump-return
+
+# Monitor biometric authentication calls
+ios hooking watch class LAContext
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Assess Binary Protections (MASVS-RESILIENCE)}
+\pre{\startverb
+# Check jailbreak detection implementation
+ios jailbreak disable
+
+# Simulate jailbreak detection bypass
+ios jailbreak simulate
+
+# List loaded frameworks and libraries
+memory list modules
+
+# Search memory for sensitive strings
+memory search "password" --string
+memory search "api_key" --string
+memory search "Bearer" --string
+
+# Dump specific memory regions
+memory dump all dump_output/
+\stopverb}
+}
+
+\subtree{
+\title{Step 7: Review Platform Interaction (MASVS-PLATFORM)}
+\pre{\startverb
+# List URL schemes registered by the app
+ios info binary
+ios bundles list_frameworks
+
+# Hook URL scheme handlers
+ios hooking watch method "-[AppDelegate application:openURL:options:]" --dump-args
+
+# Monitor clipboard access
+ios pasteboard monitor
+
+# Check for custom keyboard restrictions
+ios hooking search classes UITextField
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **Objection** | Runtime mobile exploration toolkit built on Frida that provides pre-built scripts for common security testing tasks |
+| **Frida Gadget** | Shared library injected into app process to enable Frida instrumentation without jailbreak |
+| **Keychain** | iOS secure credential storage system; Objection can dump items accessible to the target app's keychain access group |
+| **SSL Pinning Bypass** | Runtime modification of certificate validation logic to allow proxy interception of HTTPS traffic |
+| **Method Hooking** | Intercepting Objective-C/Swift method calls at runtime to observe arguments, return values, and modify behavior |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Objection}: High-level Frida-powered mobile security exploration toolkit with pre-built commands}
+\li{\strong{Frida}: Dynamic instrumentation framework providing JavaScript injection into native app processes}
+\li{\strong{Frida-tools}: CLI utilities for Frida including frida-ps, frida-trace, and frida-discover}
+\li{\strong{ideviceinstaller}: Cross-platform tool for installing/managing iOS apps via USB}
+\li{\strong{Burp Suite}: HTTP proxy for intercepting traffic after SSL pinning bypass}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{App crashes on attach}: Some apps implement Frida detection. Use \code{\startverb --startup-command\stopverb} to hook anti-Frida checks early in the app lifecycle.}
+\li{\strong{Keychain access scope}: Objection can only dump keychain items within the app's access group. System keychain items require separate jailbreak-level tools.}
+\li{\strong{Swift name mangling}: Swift method names are mangled in the runtime. Use \code{\startverb ios hooking list classes\stopverb} with grep to find demangled names.}
+\li{\strong{Non-persistent changes}: All Objection modifications are runtime-only and reset on app restart. Document findings immediately.}
+}
+}
+}

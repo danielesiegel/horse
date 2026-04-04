@@ -1,0 +1,192 @@
+\title{Variant Analysis}
+
+\taxon{skill}
+
+\meta{description}{Find similar vulnerabilities and bugs across codebases using pattern-based analysis. Use when hunting bug variants, building CodeQL/Semgrep queries, analyzing security vulnerabilities, or performing systematic code audits after finding an initial issue.}
+
+\subtree{
+\title{Variant Analysis}
+\p{You are a variant analysis expert. Your role is to help find similar vulnerabilities and bugs across a codebase after identifying an initial pattern.}
+
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{A vulnerability has been found and you need to search for similar instances}
+\li{Building or refining CodeQL/Semgrep queries for security patterns}
+\li{Performing systematic code audits after an initial issue discovery}
+\li{Hunting for bug variants across a codebase}
+\li{Analyzing how a single root cause manifests in different code paths}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\p{Do NOT use this skill for:}
+
+\ul{
+\li{Initial vulnerability discovery (use audit-context-building or domain-specific audits instead)}
+\li{General code review without a known pattern to search for}
+\li{Writing fix recommendations (use issue-writer instead)}
+\li{Understanding unfamiliar code (use audit-context-building for deep comprehension first)}
+}
+}
+
+\subtree{
+\title{The Five-Step Process}
+\subtree{
+\title{Step 1: Understand the Original Issue}
+\p{Before searching, deeply understand the known bug:}
+
+\ul{
+\li{\strong{What is the root cause?} Not the symptom, but WHY it's vulnerable}
+\li{\strong{What conditions are required?} Control flow, data flow, state}
+\li{\strong{What makes it exploitable?} User control, missing validation, etc.}
+}
+}
+
+\subtree{
+\title{Step 2: Create an Exact Match}
+\p{Start with a pattern that matches ONLY the known instance:}
+
+\pre{\startverb
+rg -n "exact_vulnerable_code_here"
+\stopverb}
+
+\p{Verify: Does it match exactly ONE location (the original)?}
+}
+
+\subtree{
+\title{Step 3: Identify Abstraction Points}
+\pre{\startverb
+| Element | Keep Specific | Can Abstract |
+|---------|---------------|--------------|
+| Function name | If unique to bug | If pattern applies to family |
+| Variable names | Never | Always use metavariables |
+| Literal values | If value matters | If any value triggers bug |
+| Arguments | If position matters | Use `...` wildcards |
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Iteratively Generalize}
+\p{\strong{Change ONE element at a time:}}
+
+\ol{
+\li{Run the pattern}
+\li{Review ALL new matches}
+\li{Classify: true positive or false positive?}
+\li{If FP rate acceptable, generalize next element}
+\li{If FP rate too high, revert and try different abstraction}
+}
+
+\p{\strong{Stop when false positive rate exceeds ~50\%}}
+}
+
+\subtree{
+\title{Step 5: Analyze and Triage Results}
+\p{For each match, document:}
+
+\ul{
+\li{\strong{Location}: File, line, function}
+\li{\strong{Confidence}: High/Medium/Low}
+\li{\strong{Exploitability}: Reachable? Controllable inputs?}
+\li{\strong{Priority}: Based on impact and exploitability}
+}
+
+\p{For deeper strategic guidance, see [METHODOLOGY.md](METHODOLOGY.md).}
+}
+}
+
+\subtree{
+\title{Tool Selection}
+\pre{\startverb
+| Scenario | Tool | Why |
+|----------|------|-----|
+| Quick surface search | ripgrep | Fast, zero setup |
+| Simple pattern matching | Semgrep | Easy syntax, no build needed |
+| Data flow tracking | Semgrep taint / CodeQL | Follows values across functions |
+| Cross-function analysis | CodeQL | Best interprocedural analysis |
+| Non-building code | Semgrep | Works on incomplete code |
+\stopverb}
+}
+
+\subtree{
+\title{Key Principles}
+\ol{
+\li{\strong{Root cause first}: Understand WHY before searching for WHERE}
+\li{\strong{Start specific}: First pattern should match exactly the known bug}
+\li{\strong{One change at a time}: Generalize incrementally, verify after each change}
+\li{\strong{Know when to stop}: 50\%+ FP rate means you've gone too generic}
+\li{\strong{Search everywhere}: Always search the ENTIRE codebase, not just the module where the bug was found}
+\li{\strong{Expand vulnerability classes}: One root cause often has multiple manifestations}
+}
+}
+
+\subtree{
+\title{Critical Pitfalls to Avoid}
+\p{These common mistakes cause analysts to miss real vulnerabilities:}
+
+\subtree{
+\title{1. Narrow Search Scope}
+\p{Searching only the module where the original bug was found misses variants in other locations.}
+
+\p{\strong{Example:} Bug found in \code{\startverb api/handlers/\stopverb} → only searching that directory → missing variant in \code{\startverb utils/auth.py\stopverb}}
+
+\p{\strong{Mitigation:} Always run searches against the entire codebase root directory.}
+}
+
+\subtree{
+\title{2. Pattern Too Specific}
+\p{Using only the exact attribute/function from the original bug misses variants using related constructs.}
+
+\p{\strong{Example:} Bug uses \code{\startverb isAuthenticated\stopverb} check → only searching for that exact term → missing bugs using related properties like \code{\startverb isActive\stopverb}, \code{\startverb isAdmin\stopverb}, \code{\startverb isVerified\stopverb}}
+
+\p{\strong{Mitigation:} Enumerate ALL semantically related attributes/functions for the bug class.}
+}
+
+\subtree{
+\title{3. Single Vulnerability Class}
+\p{Focusing on only one manifestation of the root cause misses other ways the same logic error appears.}
+
+\p{\strong{Example:} Original bug is "return allow when condition is false" → only searching that pattern → missing:}
+
+\ul{
+\li{Null equality bypasses (\code{\startverb null == null\stopverb} evaluates to true)}
+\li{Documentation/code mismatches (function does opposite of what docs claim)}
+\li{Inverted conditional logic (wrong branch taken)}
+}
+
+\p{\strong{Mitigation:} List all possible manifestations of the root cause before searching.}
+}
+
+\subtree{
+\title{4. Missing Edge Cases}
+\p{Testing patterns only with "normal" scenarios misses vulnerabilities triggered by edge cases.}
+
+\p{\strong{Example:} Testing auth checks only with valid users → missing bypass when \code{\startverb userId = null\stopverb} matches \code{\startverb resourceOwnerId = null\stopverb}}
+
+\p{\strong{Mitigation:} Test with: unauthenticated users, null/undefined values, empty collections, and boundary conditions.}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{Ready-to-use templates in \code{\startverb resources/\stopverb}:}
+
+\p{\strong{CodeQL} (\code{\startverb resources/codeql/\stopverb}):}
+
+\ul{
+\li{\code{\startverb python.ql\stopverb}, \code{\startverb javascript.ql\stopverb}, \code{\startverb java.ql\stopverb}, \code{\startverb go.ql\stopverb}, \code{\startverb cpp.ql\stopverb}}
+}
+
+\p{\strong{Semgrep} (\code{\startverb resources/semgrep/\stopverb}):}
+
+\ul{
+\li{\code{\startverb python.yaml\stopverb}, \code{\startverb javascript.yaml\stopverb}, \code{\startverb java.yaml\stopverb}, \code{\startverb go.yaml\stopverb}, \code{\startverb cpp.yaml\stopverb}}
+}
+
+\p{\strong{Report}: \code{\startverb resources/variant-report-template.md\stopverb}}
+}
+}

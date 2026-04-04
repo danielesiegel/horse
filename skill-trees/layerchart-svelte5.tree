@@ -1,0 +1,61 @@
+\title{Layerchart Svelte5}
+
+\taxon{skill}
+
+\meta{description}{LayerChart Svelte 5 patterns. Use for chart components with tooltip snippets, Chart context access, and all Svelte 5 snippet patterns for tooltips, gradients, highlights, and axes.}
+
+\subtree{
+\title{LayerChart Svelte 5}
+\p{Docs: \strong{next.layerchart.com} (NOT layerchart.com - that's Svelte 4)}
+
+\subtree{
+\title{Install}
+\pre{\startverb
+npm i layerchart@next d3-scale
+\stopverb}
+
+\p{\strong{CRITICAL}: Use \code{\startverb @next\stopverb} tag. Stable (1.x) is Svelte 4 only.}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+<Chart {data} x="date" y="value" tooltip={{ mode: 'bisect-x' }}>
+	<Svg><Area class="fill-primary/20" /><Highlight points /></Svg>
+	<Tooltip.Root>{#snippet children({ data })}{data.value}{/snippet}</Tooltip.Root>
+</Chart>
+\stopverb}
+}
+
+\subtree{
+\title{Core Patterns}
+\ul{
+\li{\strong{Tooltip}: \code{\startverb {#snippet children({ data })}\stopverb} - NOT \code{\startverb let:data\stopverb}}
+\li{\strong{Chart context}: \code{\startverb {#snippet children({ context })}\stopverb}}
+\li{\strong{Gradient}: \code{\startverb {#snippet children({ gradient })}\stopverb}}
+\li{\strong{Enable tooltip}: \code{\startverb tooltip={{ mode: 'band' | 'bisect-x' }}\stopverb}}
+\li{\strong{Type data}: \code{\startverb {#snippet children({ data }: { data: MyType })}\stopverb}}
+}
+}
+
+\subtree{
+\title{Tooltip Modes}
+\pre{\startverb
+| Mode         | Use Case               |
+| ------------ | ---------------------- |
+| `band`       | Bar charts (scaleBand) |
+| `bisect-x`   | Time-series area/line  |
+| `quadtree-x` | Area (nearest x)       |
+| `quadtree`   | Scatter plots          |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[full-patterns.md](references/full-patterns.md) - Area, Bar, Pie,}
+\li{[tooltip-modes.md](references/tooltip-modes.md) - All modes}
+\li{[graph-patterns.md](references/graph-patterns.md) - ForceGraph,}
+}
+}
+}

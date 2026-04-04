@@ -1,0 +1,429 @@
+\title{Cirq}
+
+\taxon{skill}
+
+\meta{description}{Quantum computing framework for building, simulating, optimizing, and executing quantum circuits. Use this skill when working with quantum algorithms, quantum circuit design, quantum simulation (noiseless or noisy), running on quantum hardware (Google, IonQ, AQT, Pasqal), circuit optimization and compilation, noise modeling and characterization, or quantum experiments and benchmarking (VQE, QAOA, QPE, randomized benchmarking).}
+
+\subtree{
+\title{Cirq - Quantum Computing with Python}
+\p{Cirq is Google Quantum AI's open-source framework for designing, simulating, and running quantum circuits on quantum computers and simulators.}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install cirq
+\stopverb}
+
+\p{For hardware integration:}
+
+\pre{\startverb
+# Google Quantum Engine
+uv pip install cirq-google
+
+# IonQ
+uv pip install cirq-ionq
+
+# AQT (Alpine Quantum Technologies)
+uv pip install cirq-aqt
+
+# Pasqal
+uv pip install cirq-pasqal
+
+# Azure Quantum
+uv pip install azure-quantum cirq
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Basic Circuit}
+\pre{\startverb
+import cirq
+import numpy as np
+
+# Create qubits
+q0, q1 = cirq.LineQubit.range(2)
+
+# Build circuit
+circuit = cirq.Circuit(
+    cirq.H(q0),              # Hadamard on q0
+    cirq.CNOT(q0, q1),       # CNOT with q0 control, q1 target
+    cirq.measure(q0, q1, key='result')
+)
+
+print(circuit)
+
+# Simulate
+simulator = cirq.Simulator()
+result = simulator.run(circuit, repetitions=1000)
+
+# Display results
+print(result.histogram(key='result'))
+\stopverb}
+}
+
+\subtree{
+\title{Parameterized Circuit}
+\pre{\startverb
+import sympy
+
+# Define symbolic parameter
+theta = sympy.Symbol('theta')
+
+# Create parameterized circuit
+circuit = cirq.Circuit(
+    cirq.ry(theta)(q0),
+    cirq.measure(q0, key='m')
+)
+
+# Sweep over parameter values
+sweep = cirq.Linspace('theta', start=0, stop=2*np.pi, length=20)
+results = simulator.run_sweep(circuit, params=sweep, repetitions=1000)
+
+# Process results
+for params, result in zip(sweep, results):
+    theta_val = params['theta']
+    counts = result.histogram(key='m')
+    print(f"θ={theta_val:.2f}: {counts}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{Circuit Building}
+\p{For comprehensive information about building quantum circuits, including qubits, gates, operations, custom gates, and circuit patterns, see:}
+
+\ul{
+\li{\strong{[references/building.md](references/building.md)} - Complete guide to circuit construction}
+}
+
+\p{Common topics:}
+
+\ul{
+\li{Qubit types (GridQubit, LineQubit, NamedQubit)}
+\li{Single and two-qubit gates}
+\li{Parameterized gates and operations}
+\li{Custom gate decomposition}
+\li{Circuit organization with moments}
+\li{Standard circuit patterns (Bell states, GHZ, QFT)}
+\li{Import/export (OpenQASM, JSON)}
+\li{Working with qudits and observables}
+}
+}
+
+\subtree{
+\title{Simulation}
+\p{For detailed information about simulating quantum circuits, including exact simulation, noisy simulation, parameter sweeps, and the Quantum Virtual Machine, see:}
+
+\ul{
+\li{\strong{[references/simulation.md](references/simulation.md)} - Complete guide to quantum simulation}
+}
+
+\p{Common topics:}
+
+\ul{
+\li{Exact simulation (state vector, density matrix)}
+\li{Sampling and measurements}
+\li{Parameter sweeps (single and multiple parameters)}
+\li{Noisy simulation}
+\li{State histograms and visualization}
+\li{Quantum Virtual Machine (QVM)}
+\li{Expectation values and observables}
+\li{Performance optimization}
+}
+}
+
+\subtree{
+\title{Circuit Transformation}
+\p{For information about optimizing, compiling, and manipulating quantum circuits, see:}
+
+\ul{
+\li{\strong{[references/transformation.md](references/transformation.md)} - Complete guide to circuit transformations}
+}
+
+\p{Common topics:}
+
+\ul{
+\li{Transformer framework}
+\li{Gate decomposition}
+\li{Circuit optimization (merge gates, eject Z gates, drop negligible operations)}
+\li{Circuit compilation for hardware}
+\li{Qubit routing and SWAP insertion}
+\li{Custom transformers}
+\li{Transformation pipelines}
+}
+}
+
+\subtree{
+\title{Hardware Integration}
+\p{For information about running circuits on real quantum hardware from various providers, see:}
+
+\ul{
+\li{\strong{[references/hardware.md](references/hardware.md)} - Complete guide to hardware integration}
+}
+
+\p{Supported providers:}
+
+\ul{
+\li{\strong{Google Quantum AI} (cirq-google) - Sycamore, Weber processors}
+\li{\strong{IonQ} (cirq-ionq) - Trapped ion quantum computers}
+\li{\strong{Azure Quantum} (azure-quantum) - IonQ and Honeywell backends}
+\li{\strong{AQT} (cirq-aqt) - Alpine Quantum Technologies}
+\li{\strong{Pasqal} (cirq-pasqal) - Neutral atom quantum computers}
+}
+
+\p{Topics include device representation, qubit selection, authentication, job management, and circuit optimization for hardware.}
+}
+
+\subtree{
+\title{Noise Modeling}
+\p{For information about modeling noise, noisy simulation, characterization, and error mitigation, see:}
+
+\ul{
+\li{\strong{[references/noise.md](references/noise.md)} - Complete guide to noise modeling}
+}
+
+\p{Common topics:}
+
+\ul{
+\li{Noise channels (depolarizing, amplitude damping, phase damping)}
+\li{Noise models (constant, gate-specific, qubit-specific, thermal)}
+\li{Adding noise to circuits}
+\li{Readout noise}
+\li{Noise characterization (randomized benchmarking, XEB)}
+\li{Noise visualization (heatmaps)}
+\li{Error mitigation techniques}
+}
+}
+
+\subtree{
+\title{Quantum Experiments}
+\p{For information about designing experiments, parameter sweeps, data collection, and using the ReCirq framework, see:}
+
+\ul{
+\li{\strong{[references/experiments.md](references/experiments.md)} - Complete guide to quantum experiments}
+}
+
+\p{Common topics:}
+
+\ul{
+\li{Experiment design patterns}
+\li{Parameter sweeps and data collection}
+\li{ReCirq framework structure}
+\li{Common algorithms (VQE, QAOA, QPE)}
+\li{Data analysis and visualization}
+\li{Statistical analysis and fidelity estimation}
+\li{Parallel data collection}
+}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Variational Algorithm Template}
+\pre{\startverb
+import scipy.optimize
+
+def variational_algorithm(ansatz, cost_function, initial_params):
+    """Template for variational quantum algorithms."""
+
+    def objective(params):
+        circuit = ansatz(params)
+        simulator = cirq.Simulator()
+        result = simulator.simulate(circuit)
+        return cost_function(result)
+
+    # Optimize
+    result = scipy.optimize.minimize(
+        objective,
+        initial_params,
+        method='COBYLA'
+    )
+
+    return result
+
+# Define ansatz
+def my_ansatz(params):
+    q = cirq.LineQubit(0)
+    return cirq.Circuit(
+        cirq.ry(params[0])(q),
+        cirq.rz(params[1])(q)
+    )
+
+# Define cost function
+def my_cost(result):
+    state = result.final_state_vector
+    # Calculate cost based on state
+    return np.real(state[0])
+
+# Run optimization
+result = variational_algorithm(my_ansatz, my_cost, [0.0, 0.0])
+\stopverb}
+}
+
+\subtree{
+\title{Hardware Execution Template}
+\pre{\startverb
+def run_on_hardware(circuit, provider='google', device_name='weber', repetitions=1000):
+    """Template for running on quantum hardware."""
+
+    if provider == 'google':
+        import cirq_google
+        engine = cirq_google.get_engine()
+        processor = engine.get_processor(device_name)
+        job = processor.run(circuit, repetitions=repetitions)
+        return job.results()[0]
+
+    elif provider == 'ionq':
+        import cirq_ionq
+        service = cirq_ionq.Service()
+        result = service.run(circuit, repetitions=repetitions, target='qpu')
+        return result
+
+    elif provider == 'azure':
+        from azure.quantum.cirq import AzureQuantumService
+        # Setup workspace...
+        service = AzureQuantumService(workspace)
+        result = service.run(circuit, repetitions=repetitions, target='ionq.qpu')
+        return result
+
+    else:
+        raise ValueError(f"Unknown provider: {provider}")
+\stopverb}
+}
+
+\subtree{
+\title{Noise Study Template}
+\pre{\startverb
+def noise_comparison_study(circuit, noise_levels):
+    """Compare circuit performance at different noise levels."""
+
+    results = {}
+
+    for noise_level in noise_levels:
+        # Create noisy circuit
+        noisy_circuit = circuit.with_noise(cirq.depolarize(p=noise_level))
+
+        # Simulate
+        simulator = cirq.DensityMatrixSimulator()
+        result = simulator.run(noisy_circuit, repetitions=1000)
+
+        # Analyze
+        results[noise_level] = {
+            'histogram': result.histogram(key='result'),
+            'dominant_state': max(
+                result.histogram(key='result').items(),
+                key=lambda x: x[1]
+            )
+        }
+
+    return results
+
+# Run study
+noise_levels = [0.0, 0.001, 0.01, 0.05, 0.1]
+results = noise_comparison_study(circuit, noise_levels)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Circuit Design}}
+\li{Use appropriate qubit types for your topology}
+\li{Keep circuits modular and reusable}
+\li{Label measurements with descriptive keys}
+\li{Validate circuits against device constraints before execution}
+}
+
+\ol{
+\li{\strong{Simulation}}
+\li{Use state vector simulation for pure states (more efficient)}
+\li{Use density matrix simulation only when needed (mixed states, noise)}
+\li{Leverage parameter sweeps instead of individual runs}
+\li{Monitor memory usage for large systems (2^n grows quickly)}
+}
+
+\ol{
+\li{\strong{Hardware Execution}}
+\li{Always test on simulators first}
+\li{Select best qubits using calibration data}
+\li{Optimize circuits for target hardware gateset}
+\li{Implement error mitigation for production runs}
+\li{Store expensive hardware results immediately}
+}
+
+\ol{
+\li{\strong{Circuit Optimization}}
+\li{Start with high-level built-in transformers}
+\li{Chain multiple optimizations in sequence}
+\li{Track depth and gate count reduction}
+\li{Validate correctness after transformation}
+}
+
+\ol{
+\li{\strong{Noise Modeling}}
+\li{Use realistic noise models from calibration data}
+\li{Include all error sources (gate, decoherence, readout)}
+\li{Characterize before mitigating}
+\li{Keep circuits shallow to minimize noise accumulation}
+}
+
+\ol{
+\li{\strong{Experiments}}
+\li{Structure experiments with clear separation (data generation, collection, analysis)}
+\li{Use ReCirq patterns for reproducibility}
+\li{Save intermediate results frequently}
+\li{Parallelize independent tasks}
+\li{Document thoroughly with metadata}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation}: https://quantumai.google/cirq}
+\li{\strong{API Reference}: https://quantumai.google/reference/python/cirq}
+\li{\strong{Tutorials}: https://quantumai.google/cirq/tutorials}
+\li{\strong{Examples}: https://github.com/quantumlib/Cirq/tree/master/examples}
+\li{\strong{ReCirq}: https://github.com/quantumlib/ReCirq}
+}
+}
+
+\subtree{
+\title{Common Issues}
+\p{\strong{Circuit too deep for hardware:}}
+
+\ul{
+\li{Use circuit optimization transformers to reduce depth}
+\li{See \code{\startverb transformation.md\stopverb} for optimization techniques}
+}
+
+\p{\strong{Memory issues with simulation:}}
+
+\ul{
+\li{Switch from density matrix to state vector simulator}
+\li{Reduce number of qubits or use stabilizer simulator for Clifford circuits}
+}
+
+\p{\strong{Device validation errors:}}
+
+\ul{
+\li{Check qubit connectivity with device.metadata.nx_graph}
+\li{Decompose gates to device-native gateset}
+\li{See \code{\startverb hardware.md\stopverb} for device-specific compilation}
+}
+
+\p{\strong{Noisy simulation too slow:}}
+
+\ul{
+\li{Density matrix simulation is O(2^2n) - consider reducing qubits}
+\li{Use noise models selectively on critical operations only}
+\li{See \code{\startverb simulation.md\stopverb} for performance optimization}
+}
+}
+}

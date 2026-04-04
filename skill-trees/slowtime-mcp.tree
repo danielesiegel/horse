@@ -1,0 +1,214 @@
+\title{Slowtime Mcp}
+
+\taxon{skill}
+
+\meta{description}{Asymmetric time dilation for MCP operations - deliberate slow paths enable capability accumulation through Cat# bicomodule composition.}
+
+\subtree{
+\title{Slowtime MCP}
+\p{Asymmetric temporal constructs for capability gain through deliberate slowness.}
+
+\subtree{
+\title{Core Asymmetry}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────┐
+│  FAST PATH (Standard MCP)     │  SLOW PATH (Slowtime)       │
+├───────────────────────────────┼─────────────────────────────┤
+│  tool_call → response         │  tool_call → deliberation   │
+│  O(1) latency                 │       ↓                     │
+│  No accumulation              │  Cat# bicomodule check      │
+│                               │       ↓                     │
+│                               │  capability_gain_narrative  │
+│                               │       ↓                     │
+│                               │  response + new_capability  │
+└───────────────────────────────┴─────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Capability Gain via Cat#}
+\p{\strong{Key insight}: Slowness enables bicomodule composition verification.}
+
+\pre{\startverb
+Cat# Capability Accumulation:
+
+  skill₁ ──────────────────────────────► skill₂
+    │                                      │
+    │  [slowtime deliberation]             │
+    ▼                                      ▼
+  cap₁ ───► Cat# bicomodule check ───► cap₁ ⊗ cap₂
+            (Ran/Lan coherence)
+\stopverb}
+
+\subtree{
+\title{Capability Types (Cat# Homes)}
+\pre{\startverb
+| Home | Capability Type | Slowtime Operation |
+|------|-----------------|-------------------|
+| Span | Linear resources | Verify no duplication |
+| Prof | Transformations | Check naturality |
+| Presheaves | Observations | Validate coherence |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Asymmetry Constructs}
+\subtree{
+\title{1. Temporal Asymmetry}
+\pre{\startverb
+class SlowtimeAsymmetry:
+    """Time dilation creates information asymmetry."""
+    
+    def fast_path(self, tool_call):
+        """Standard MCP: immediate response."""
+        return self.execute(tool_call)
+    
+    def slow_path(self, tool_call, deliberation_budget: float):
+        """Slowtime: accumulate capabilities during delay."""
+        
+        # Phase 1: Cat# structure analysis
+        bicomodules = self.analyze_bicomodules(tool_call)
+        
+        # Phase 2: Capability composition check
+        new_caps = self.compose_capabilities(bicomodules)
+        
+        # Phase 3: Coherence verification (takes time)
+        if self.verify_naturality(new_caps, budget=deliberation_budget):
+            self.accumulate(new_caps)
+        
+        return self.execute(tool_call), new_caps
+\stopverb}
+}
+
+\subtree{
+\title{2. Information Asymmetry}
+\p{The slow agent knows MORE than the fast agent:}
+
+\pre{\startverb
+Fast Agent: sees tool_call, response
+Slow Agent: sees tool_call, Cat# structure, capability gains, response
+\stopverb}
+}
+
+\subtree{
+\title{3. Compositional Asymmetry}
+\p{Slow paths enable checking composition that fast paths skip:}
+
+\pre{\startverb
+# Fast: trust composition
+let fast_compose = fun f g => f >> g
+
+# Slow: verify composition via Cat# bicomodule
+let slow_compose = fun f g =>
+  let bicomod = analyze_bicomodule f g in
+  if verify_naturality bicomod
+  then { result = f >> g, capability_gain = bicomod.new_caps }
+  else { error = "Composition fails naturality" }
+\stopverb}
+}
+}
+
+\subtree{
+\title{Plausible Narratives of Capability Gain}
+\subtree{
+\title{Narrative 1: Contract Accumulation}
+\pre{\startverb
+Initial: Agent has `nickel` skill (contracts)
+Slowtime: Agent deliberates on pyUSD query structure
+Cat# Check: DoubleTheory contract validates query schema
+Gain: Agent now has `dune-analytics` + `nickel` composed capability
+      → Can write validated Dune queries with contract guarantees
+\stopverb}
+}
+
+\subtree{
+\title{Narrative 2: Self-Hosting Bootstrap}
+\pre{\startverb
+Initial: Agent has basic Nickel eval
+Slowtime: Agent traces evaluation through self_hosting_monad.ncl
+Cat# Check: 2-monad laws verified (unit/mult coherence)
+Gain: Agent can now describe its own grammar
+      → Metacircular evaluator capability unlocked
+\stopverb}
+}
+
+\subtree{
+\title{Narrative 3: Keyspace Correspondence}
+\pre{\startverb
+Initial: Agent has tree-sitter AST view
+Slowtime: Agent computes Gay.jl colors for AST nodes
+Cat# Check: Bicomodule from Source → Binary categories
+Gain: Agent can now correlate source ↔ binary
+      → Reverse engineering capability via color correspondence
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triads for Slowtime}
+\pre{\startverb
+# Slowtime deliberation triad
+temporal-coalgebra (-1) ⊗ slowtime-mcp (0) ⊗ free-monad-gen (+1) = 0 ✓
+
+# Capability accumulation triad
+nickel (-1) ⊗ slowtime-mcp (0) ⊗ dune-analytics (+1) = 0 ✓
+
+# Self-hosting triad
+sicp (-1) ⊗ slowtime-mcp (0) ⊗ topos-catcolab (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+interface SlowtimeMCP {
+  // Standard MCP tool
+  tool_call(name: string, args: object): Promise<Response>;
+  
+  // Slowtime-enhanced tool
+  slowtime_call(
+    name: string, 
+    args: object,
+    deliberation_ms: number
+  ): Promise<{
+    response: Response;
+    capability_gains: CapabilityGain[];
+    cat_sharp_trace: BicomoduleTrace;
+  }>;
+}
+
+interface CapabilityGain {
+  source_skill: string;
+  target_skill: string;
+  bicomodule: string;  // Cat# structure
+  home: 'Span' | 'Prof' | 'Presheaves';
+  verified: boolean;
+}
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run with slowtime deliberation
+just slowtime-call tool_name --budget 5000ms
+
+# Analyze capability accumulation
+just slowtime-capabilities
+
+# Verify Cat# coherence
+just slowtime-verify-naturality
+\stopverb}
+}
+
+\subtree{
+\title{Trit Assignment}
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof (bicomodule coordinator)
+Poly Op: ⊗ (parallel composition during deliberation)
+Color: #FFFF00 (yellow - caution/deliberation)
+\stopverb}
+}
+}

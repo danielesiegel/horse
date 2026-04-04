@@ -1,0 +1,508 @@
+\title{Lamindb}
+
+\taxon{skill}
+
+\meta{description}{This skill should be used when working with LaminDB, an open-source data framework for biology that makes data queryable, traceable, reproducible, and FAIR. Use when managing biological datasets (scRNA-seq, spatial, flow cytometry, etc.), tracking computational workflows, curating and validating data with biological ontologies, building data lakehouses, or ensuring data lineage and reproducibility in biological research. Covers data management, annotation, ontologies (genes, cell types, diseases, tissues), schema validation, integrations with workflow managers (Nextflow, Snakemake) and MLOps platforms (W&B, MLflow), and deployment strategies.}
+
+\subtree{
+\title{LaminDB}
+\subtree{
+\title{Overview}
+\p{LaminDB is an open-source data framework for biology designed to make data queryable, traceable, reproducible, and FAIR (Findable, Accessible, Interoperable, Reusable). It provides a unified platform that combines lakehouse architecture, lineage tracking, feature stores, biological ontologies, LIMS (Laboratory Information Management System), and ELN (Electronic Lab Notebook) capabilities through a single Python API.}
+
+\p{\strong{Core Value Proposition:}}
+
+\ul{
+\li{\strong{Queryability}: Search and filter datasets by metadata, features, and ontology terms}
+\li{\strong{Traceability}: Automatic lineage tracking from raw data through analysis to results}
+\li{\strong{Reproducibility}: Version control for data, code, and environment}
+\li{\strong{FAIR Compliance}: Standardized annotations using biological ontologies}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when:}
+
+\ul{
+\li{\strong{Managing biological datasets}: scRNA-seq, bulk RNA-seq, spatial transcriptomics, flow cytometry, multi-modal data, EHR data}
+\li{\strong{Tracking computational workflows}: Notebooks, scripts, pipeline execution (Nextflow, Snakemake, Redun)}
+\li{\strong{Curating and validating data}: Schema validation, standardization, ontology-based annotation}
+\li{\strong{Working with biological ontologies}: Genes, proteins, cell types, tissues, diseases, pathways (via Bionty)}
+\li{\strong{Building data lakehouses}: Unified query interface across multiple datasets}
+\li{\strong{Ensuring reproducibility}: Automatic versioning, lineage tracking, environment capture}
+\li{\strong{Integrating ML pipelines}: Connecting with Weights & Biases, MLflow, HuggingFace, scVI-tools}
+\li{\strong{Deploying data infrastructure}: Setting up local or cloud-based data management systems}
+\li{\strong{Collaborating on datasets}: Sharing curated, annotated data with standardized metadata}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{LaminDB provides six interconnected capability areas, each documented in detail in the references folder.}
+
+\subtree{
+\title{1. Core Concepts and Data Lineage}
+\p{\strong{Core entities:}}
+
+\ul{
+\li{\strong{Artifacts}: Versioned datasets (DataFrame, AnnData, Parquet, Zarr, etc.)}
+\li{\strong{Records}: Experimental entities (samples, perturbations, instruments)}
+\li{\strong{Runs & Transforms}: Computational lineage tracking (what code produced what data)}
+\li{\strong{Features}: Typed metadata fields for annotation and querying}
+}
+
+\p{\strong{Key workflows:}}
+
+\ul{
+\li{Create and version artifacts from files or Python objects}
+\li{Track notebook/script execution with \code{\startverb ln.track()\stopverb} and \code{\startverb ln.finish()\stopverb}}
+\li{Annotate artifacts with typed features}
+\li{Visualize data lineage graphs with \code{\startverb artifact.view_lineage()\stopverb}}
+\li{Query by provenance (find all outputs from specific code/inputs)}
+}
+
+\p{\strong{Reference:} \code{\startverb references/core-concepts.md\stopverb} - Read this for detailed information on artifacts, records, runs, transforms, features, versioning, and lineage tracking.}
+}
+
+\subtree{
+\title{2. Data Management and Querying}
+\p{\strong{Query capabilities:}}
+
+\ul{
+\li{Registry exploration and lookup with auto-complete}
+\li{Single record retrieval with \code{\startverb get()\stopverb}, \code{\startverb one()\stopverb}, \code{\startverb one_or_none()\stopverb}}
+\li{Filtering with comparison operators (\code{\startverb \strong{gt\stopverb}, \code{\startverb }lte\stopverb}, \code{\startverb \strong{contains\stopverb}, \code{\startverb }startswith\stopverb})}
+\li{Feature-based queries (query by annotated metadata)}
+\li{Cross-registry traversal with double-underscore syntax}
+\li{Full-text search across registries}
+\li{Advanced logical queries with Q objects (AND, OR, NOT)}
+\li{Streaming large datasets without loading into memory}
+}
+
+\p{\strong{Key workflows:}}
+
+\ul{
+\li{Browse artifacts with filters and ordering}
+\li{Query by features, creation date, creator, size, etc.}
+\li{Stream large files in chunks or with array slicing}
+\li{Organize data with hierarchical keys}
+\li{Group artifacts into collections}
+}
+
+\p{\strong{Reference:} \code{\startverb references/data-management.md\stopverb} - Read this for comprehensive query patterns, filtering examples, streaming strategies, and data organization best practices.}
+}
+
+\subtree{
+\title{3. Annotation and Validation}
+\p{\strong{Curation process:}}
+
+\ol{
+\li{\strong{Validation}: Confirm datasets match desired schemas}
+\li{\strong{Standardization}: Fix typos, map synonyms to canonical terms}
+\li{\strong{Annotation}: Link datasets to metadata entities for queryability}
+}
+
+\p{\strong{Schema types:}}
+
+\ul{
+\li{\strong{Flexible schemas}: Validate only known columns, allow additional metadata}
+\li{\strong{Minimal required schemas}: Specify essential columns, permit extras}
+\li{\strong{Strict schemas}: Complete control over structure and values}
+}
+
+\p{\strong{Supported data types:}}
+
+\ul{
+\li{DataFrames (Parquet, CSV)}
+\li{AnnData (single-cell genomics)}
+\li{MuData (multi-modal)}
+\li{SpatialData (spatial transcriptomics)}
+\li{TileDB-SOMA (scalable arrays)}
+}
+
+\p{\strong{Key workflows:}}
+
+\ul{
+\li{Define features and schemas for data validation}
+\li{Use \code{\startverb DataFrameCurator\stopverb} or \code{\startverb AnnDataCurator\stopverb} for validation}
+\li{Standardize values with \code{\startverb .cat.standardize()\stopverb}}
+\li{Map to ontologies with \code{\startverb .cat.add_ontology()\stopverb}}
+\li{Save curated artifacts with schema linkage}
+\li{Query validated datasets by features}
+}
+
+\p{\strong{Reference:} \code{\startverb references/annotation-validation.md\stopverb} - Read this for detailed curation workflows, schema design patterns, handling validation errors, and best practices.}
+}
+
+\subtree{
+\title{4. Biological Ontologies}
+\p{\strong{Available ontologies (via Bionty):}}
+
+\ul{
+\li{Genes (Ensembl), Proteins (UniProt)}
+\li{Cell types (CL), Cell lines (CLO)}
+\li{Tissues (Uberon), Diseases (Mondo, DOID)}
+\li{Phenotypes (HPO), Pathways (GO)}
+\li{Experimental factors (EFO), Developmental stages}
+\li{Organisms (NCBItaxon), Drugs (DrugBank)}
+}
+
+\p{\strong{Key workflows:}}
+
+\ul{
+\li{Import public ontologies with \code{\startverb bt.CellType.import_source()\stopverb}}
+\li{Search ontologies with keyword or exact matching}
+\li{Standardize terms using synonym mapping}
+\li{Explore hierarchical relationships (parents, children, ancestors)}
+\li{Validate data against ontology terms}
+\li{Annotate datasets with ontology records}
+\li{Create custom terms and hierarchies}
+\li{Handle multi-organism contexts (human, mouse, etc.)}
+}
+
+\p{\strong{Reference:} \code{\startverb references/ontologies.md\stopverb} - Read this for comprehensive ontology operations, standardization strategies, hierarchy navigation, and annotation workflows.}
+}
+
+\subtree{
+\title{5. Integrations}
+\p{\strong{Workflow managers:}}
+
+\ul{
+\li{Nextflow: Track pipeline processes and outputs}
+\li{Snakemake: Integrate into Snakemake rules}
+\li{Redun: Combine with Redun task tracking}
+}
+
+\p{\strong{MLOps platforms:}}
+
+\ul{
+\li{Weights & Biases: Link experiments with data artifacts}
+\li{MLflow: Track models and experiments}
+\li{HuggingFace: Track model fine-tuning}
+\li{scVI-tools: Single-cell analysis workflows}
+}
+
+\p{\strong{Storage systems:}}
+
+\ul{
+\li{Local filesystem, AWS S3, Google Cloud Storage}
+\li{S3-compatible (MinIO, Cloudflare R2)}
+\li{HTTP/HTTPS endpoints (read-only)}
+\li{HuggingFace datasets}
+}
+
+\p{\strong{Array stores:}}
+
+\ul{
+\li{TileDB-SOMA (with cellxgene support)}
+\li{DuckDB for SQL queries on Parquet files}
+}
+
+\p{\strong{Visualization:}}
+
+\ul{
+\li{Vitessce for interactive spatial/single-cell visualization}
+}
+
+\p{\strong{Version control:}}
+
+\ul{
+\li{Git integration for source code tracking}
+}
+
+\p{\strong{Reference:} \code{\startverb references/integrations.md\stopverb} - Read this for integration patterns, code examples, and troubleshooting for third-party systems.}
+}
+
+\subtree{
+\title{6. Setup and Deployment}
+\p{\strong{Installation:}}
+
+\ul{
+\li{Basic: \code{\startverb uv pip install lamindb\stopverb}}
+\li{With extras: \code{\startverb uv pip install 'lamindb[gcp,zarr,fcs]'\stopverb}}
+\li{Modules: bionty, wetlab, clinical}
+}
+
+\p{\strong{Instance types:}}
+
+\ul{
+\li{Local SQLite (development)}
+\li{Cloud storage + SQLite (small teams)}
+\li{Cloud storage + PostgreSQL (production)}
+}
+
+\p{\strong{Storage options:}}
+
+\ul{
+\li{Local filesystem}
+\li{AWS S3 with configurable regions and permissions}
+\li{Google Cloud Storage}
+\li{S3-compatible endpoints (MinIO, Cloudflare R2)}
+}
+
+\p{\strong{Configuration:}}
+
+\ul{
+\li{Cache management for cloud files}
+\li{Multi-user system configurations}
+\li{Git repository sync}
+\li{Environment variables}
+}
+
+\p{\strong{Deployment patterns:}}
+
+\ul{
+\li{Local dev → Cloud production migration}
+\li{Multi-region deployments}
+\li{Shared storage with personal instances}
+}
+
+\p{\strong{Reference:} \code{\startverb references/setup-deployment.md\stopverb} - Read this for detailed installation, configuration, storage setup, database management, security best practices, and troubleshooting.}
+}
+}
+
+\subtree{
+\title{Common Use Case Workflows}
+\subtree{
+\title{Use Case 1: Single-Cell RNA-seq Analysis with Ontology Validation}
+\pre{\startverb
+import lamindb as ln
+import bionty as bt
+import anndata as ad
+
+# Start tracking
+ln.track(params={"analysis": "scRNA-seq QC and annotation"})
+
+# Import cell type ontology
+bt.CellType.import_source()
+
+# Load data
+adata = ad.read_h5ad("raw_counts.h5ad")
+
+# Validate and standardize cell types
+adata.obs["cell_type"] = bt.CellType.standardize(adata.obs["cell_type"])
+
+# Curate with schema
+curator = ln.curators.AnnDataCurator(adata, schema)
+curator.validate()
+artifact = curator.save_artifact(key="scrna/validated.h5ad")
+
+# Link ontology annotations
+cell_types = bt.CellType.from_values(adata.obs.cell_type)
+artifact.feature_sets.add_ontology(cell_types)
+
+ln.finish()
+\stopverb}
+}
+
+\subtree{
+\title{Use Case 2: Building a Queryable Data Lakehouse}
+\pre{\startverb
+import lamindb as ln
+
+# Register multiple experiments
+for i, file in enumerate(data_files):
+    artifact = ln.Artifact.from_anndata(
+        ad.read_h5ad(file),
+        key=f"scrna/batch_{i}.h5ad",
+        description=f"scRNA-seq batch {i}"
+    ).save()
+
+    # Annotate with features
+    artifact.features.add_values({
+        "batch": i,
+        "tissue": tissues[i],
+        "condition": conditions[i]
+    })
+
+# Query across all experiments
+immune_datasets = ln.Artifact.filter(
+    key__startswith="scrna/",
+    tissue="PBMC",
+    condition="treated"
+).to_dataframe()
+
+# Load specific datasets
+for artifact in immune_datasets:
+    adata = artifact.load()
+    # Analyze
+\stopverb}
+}
+
+\subtree{
+\title{Use Case 3: ML Pipeline with W&B Integration}
+\pre{\startverb
+import lamindb as ln
+import wandb
+
+# Initialize both systems
+wandb.init(project="drug-response", name="exp-42")
+ln.track(params={"model": "random_forest", "n_estimators": 100})
+
+# Load training data from LaminDB
+train_artifact = ln.Artifact.get(key="datasets/train.parquet")
+train_data = train_artifact.load()
+
+# Train model
+model = train_model(train_data)
+
+# Log to W&B
+wandb.log({"accuracy": 0.95})
+
+# Save model in LaminDB with W&B linkage
+import joblib
+joblib.dump(model, "model.pkl")
+model_artifact = ln.Artifact("model.pkl", key="models/exp-42.pkl").save()
+model_artifact.features.add_values({"wandb_run_id": wandb.run.id})
+
+ln.finish()
+wandb.finish()
+\stopverb}
+}
+
+\subtree{
+\title{Use Case 4: Nextflow Pipeline Integration}
+\pre{\startverb
+# In Nextflow process script
+import lamindb as ln
+
+ln.track()
+
+# Load input artifact
+input_artifact = ln.Artifact.get(key="raw/batch_${batch_id}.fastq.gz")
+input_path = input_artifact.cache()
+
+# Process (alignment, quantification, etc.)
+# ... Nextflow process logic ...
+
+# Save output
+output_artifact = ln.Artifact(
+    "counts.csv",
+    key="processed/batch_${batch_id}_counts.csv"
+).save()
+
+ln.finish()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Getting Started Checklist}
+\p{To start using LaminDB effectively:}
+
+\ol{
+\li{\strong{Installation & Setup} (\code{\startverb references/setup-deployment.md\stopverb})}
+\li{Install LaminDB and required extras}
+\li{Authenticate with \code{\startverb lamin login\stopverb}}
+\li{Initialize instance with \code{\startverb lamin init --storage ...\stopverb}}
+}
+
+\ol{
+\li{\strong{Learn Core Concepts} (\code{\startverb references/core-concepts.md\stopverb})}
+\li{Understand Artifacts, Records, Runs, Transforms}
+\li{Practice creating and retrieving artifacts}
+\li{Implement \code{\startverb ln.track()\stopverb} and \code{\startverb ln.finish()\stopverb} in workflows}
+}
+
+\ol{
+\li{\strong{Master Querying} (\code{\startverb references/data-management.md\stopverb})}
+\li{Practice filtering and searching registries}
+\li{Learn feature-based queries}
+\li{Experiment with streaming large files}
+}
+
+\ol{
+\li{\strong{Set Up Validation} (\code{\startverb references/annotation-validation.md\stopverb})}
+\li{Define features relevant to research domain}
+\li{Create schemas for data types}
+\li{Practice curation workflows}
+}
+
+\ol{
+\li{\strong{Integrate Ontologies} (\code{\startverb references/ontologies.md\stopverb})}
+\li{Import relevant biological ontologies (genes, cell types, etc.)}
+\li{Validate existing annotations}
+\li{Standardize metadata with ontology terms}
+}
+
+\ol{
+\li{\strong{Connect Tools} (\code{\startverb references/integrations.md\stopverb})}
+\li{Integrate with existing workflow managers}
+\li{Link ML platforms for experiment tracking}
+\li{Configure cloud storage and compute}
+}
+}
+
+\subtree{
+\title{Key Principles}
+\p{Follow these principles when working with LaminDB:}
+
+\ol{
+\li{\strong{Track everything}: Use \code{\startverb ln.track()\stopverb} at the start of every analysis for automatic lineage capture}
+}
+
+\ol{
+\li{\strong{Validate early}: Define schemas and validate data before extensive analysis}
+}
+
+\ol{
+\li{\strong{Use ontologies}: Leverage public biological ontologies for standardized annotations}
+}
+
+\ol{
+\li{\strong{Organize with keys}: Structure artifact keys hierarchically (e.g., \code{\startverb project/experiment/batch/file.h5ad\stopverb})}
+}
+
+\ol{
+\li{\strong{Query metadata first}: Filter and search before loading large files}
+}
+
+\ol{
+\li{\strong{Version, don't duplicate}: Use built-in versioning instead of creating new keys for modifications}
+}
+
+\ol{
+\li{\strong{Annotate with features}: Define typed features for queryable metadata}
+}
+
+\ol{
+\li{\strong{Document thoroughly}: Add descriptions to artifacts, schemas, and transforms}
+}
+
+\ol{
+\li{\strong{Leverage lineage}: Use \code{\startverb view_lineage()\stopverb} to understand data provenance}
+}
+
+\ol{
+\li{\strong{Start local, scale cloud}: Develop locally with SQLite, deploy to cloud with PostgreSQL}
+}
+}
+
+\subtree{
+\title{Reference Files}
+\p{This skill includes comprehensive reference documentation organized by capability:}
+
+\ul{
+\li{\strong{\code{\startverb references/core-concepts.md\stopverb}} - Artifacts, records, runs, transforms, features, versioning, lineage}
+\li{\strong{\code{\startverb references/data-management.md\stopverb}} - Querying, filtering, searching, streaming, organizing data}
+\li{\strong{\code{\startverb references/annotation-validation.md\stopverb}} - Schema design, curation workflows, validation strategies}
+\li{\strong{\code{\startverb references/ontologies.md\stopverb}} - Biological ontology management, standardization, hierarchies}
+\li{\strong{\code{\startverb references/integrations.md\stopverb}} - Workflow managers, MLOps platforms, storage systems, tools}
+\li{\strong{\code{\startverb references/setup-deployment.md\stopverb}} - Installation, configuration, deployment, troubleshooting}
+}
+
+\p{Read the relevant reference file(s) based on the specific LaminDB capability needed for the task at hand.}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation}: https://docs.lamin.ai}
+\li{\strong{API Reference}: https://docs.lamin.ai/api}
+\li{\strong{GitHub Repository}: https://github.com/laminlabs/lamindb}
+\li{\strong{Tutorial}: https://docs.lamin.ai/tutorial}
+\li{\strong{FAQ}: https://docs.lamin.ai/faq}
+}
+}
+}

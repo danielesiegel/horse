@@ -1,0 +1,211 @@
+\title{"speech"}
+
+\taxon{skill}
+
+\meta{description}{"Use when the user asks for text-to-speech narration or voiceover, accessibility reads, audio prompts, or batch speech generation via the OpenAI Audio API; run the bundled CLI (`scripts/text_to_speech.py`) with built-in voices and require `OPENAI_API_KEY` for live calls. Custom voice creation is out of scope."}
+
+\subtree{
+\title{Speech Generation Skill}
+\p{Generate spoken audio for the current project (narration, product demo voiceover, IVR prompts, accessibility reads). Defaults to \code{\startverb gpt-4o-mini-tts-2025-12-15\stopverb} and built-in voices, and prefers the bundled CLI for deterministic, reproducible runs.}
+
+\subtree{
+\title{When to use}
+\ul{
+\li{Generate a single spoken clip from text}
+\li{Generate a batch of prompts (many lines, many files)}
+}
+}
+
+\subtree{
+\title{Decision tree (single vs batch)}
+\ul{
+\li{If the user provides multiple lines/prompts or wants many outputs -> \strong{batch}}
+\li{Else -> \strong{single}}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Decide intent: single vs batch (see decision tree above).}
+\li{Collect inputs up front: exact text (verbatim), desired voice, delivery style, format, and any constraints.}
+\li{If batch: write a temporary JSONL under tmp/ (one job per line), run once, then delete the JSONL.}
+\li{Augment instructions into a short labeled spec without rewriting the input text.}
+\li{Run the bundled CLI (\code{\startverb scripts/text_to_speech.py\stopverb}) with sensible defaults (see references/cli.md).}
+\li{For important clips, validate: intelligibility, pacing, pronunciation, and adherence to constraints.}
+\li{Iterate with a single targeted change (voice, speed, or instructions), then re-check.}
+\li{Save/return final outputs and note the final text + instructions + flags used.}
+}
+}
+
+\subtree{
+\title{Temp and output conventions}
+\ul{
+\li{Use \code{\startverb tmp/speech/\stopverb} for intermediate files (for example JSONL batches); delete when done.}
+\li{Write final artifacts under \code{\startverb output/speech/\stopverb} when working in this repo.}
+\li{Use \code{\startverb --out\stopverb} or \code{\startverb --out-dir\stopverb} to control output paths; keep filenames stable and descriptive.}
+}
+}
+
+\subtree{
+\title{Dependencies (install if missing)}
+\p{Prefer \code{\startverb uv\stopverb} for dependency management.}
+
+\p{Python packages:}
+
+\pre{\startverb
+uv pip install openai
+\stopverb}
+
+\p{If \code{\startverb uv\stopverb} is unavailable:}
+
+\pre{\startverb
+python3 -m pip install openai
+\stopverb}
+}
+
+\subtree{
+\title{Environment}
+\ul{
+\li{\code{\startverb OPENAI_API_KEY\stopverb} must be set for live API calls.}
+}
+
+\p{If the key is missing, give the user these steps:}
+
+\ol{
+\li{Create an API key in the OpenAI platform UI: https://platform.openai.com/api-keys}
+\li{Set \code{\startverb OPENAI_API_KEY\stopverb} as an environment variable in their system.}
+\li{Offer to guide them through setting the environment variable for their OS/shell if needed.}
+}
+
+\ul{
+\li{Never ask the user to paste the full key in chat. Ask them to set it locally and confirm when ready.}
+}
+
+\p{If installation isn't possible in this environment, tell the user which dependency is missing and how to install it locally.}
+}
+
+\subtree{
+\title{Defaults & rules}
+\ul{
+\li{Use \code{\startverb gpt-4o-mini-tts-2025-12-15\stopverb} unless the user requests another model.}
+\li{Default voice: \code{\startverb cedar\stopverb}. If the user wants a brighter tone, prefer \code{\startverb marin\stopverb}.}
+\li{Built-in voices only. Custom voices are out of scope for this skill.}
+\li{\code{\startverb instructions\stopverb} are supported for GPT-4o mini TTS models, but not for \code{\startverb tts-1\stopverb} or \code{\startverb tts-1-hd\stopverb}.}
+\li{Input length must be <= 4096 characters per request. Split longer text into chunks.}
+\li{Enforce 50 requests/minute. The CLI caps \code{\startverb --rpm\stopverb} at 50.}
+\li{Require \code{\startverb OPENAI_API_KEY\stopverb} before any live API call.}
+\li{Provide a clear disclosure to end users that the voice is AI-generated.}
+\li{Use the OpenAI Python SDK (\code{\startverb openai\stopverb} package) for all API calls; do not use raw HTTP.}
+\li{Prefer the bundled CLI (\code{\startverb scripts/text_to_speech.py\stopverb}) over writing new one-off scripts.}
+\li{Never modify \code{\startverb scripts/text_to_speech.py\stopverb}. If something is missing, ask the user before doing anything else.}
+}
+}
+
+\subtree{
+\title{Instruction augmentation}
+\p{Reformat user direction into a short, labeled spec. Only make implicit details explicit; do not invent new requirements.}
+
+\p{Quick clarification (augmentation vs invention):}
+
+\ul{
+\li{If the user says "narration for a demo", you may add implied delivery constraints (clear, steady pacing, friendly tone).}
+\li{Do not introduce a new persona, accent, or emotional style the user did not request.}
+}
+
+\p{Template (include only relevant lines):}
+
+\pre{\startverb
+Voice Affect: <overall character and texture of the voice>
+Tone: <attitude, formality, warmth>
+Pacing: <slow, steady, brisk>
+Emotion: <key emotions to convey>
+Pronunciation: <words to enunciate or emphasize>
+Pauses: <where to add intentional pauses>
+Emphasis: <key words or phrases to stress>
+Delivery: <cadence or rhythm notes>
+\stopverb}
+
+\p{Augmentation rules:}
+
+\ul{
+\li{Keep it short; add only details the user already implied or provided elsewhere.}
+\li{Do not rewrite the input text.}
+\li{If any critical detail is missing and blocks success, ask a question; otherwise proceed.}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Single example (narration)}
+\pre{\startverb
+Input text: "Welcome to the demo. Today we'll show how it works."
+Instructions:
+Voice Affect: Warm and composed.
+Tone: Friendly and confident.
+Pacing: Steady and moderate.
+Emphasis: Stress "demo" and "show".
+\stopverb}
+}
+
+\subtree{
+\title{Batch example (IVR prompts)}
+\pre{\startverb
+{"input":"Thank you for calling. Please hold.","voice":"cedar","response_format":"mp3","out":"hold.mp3"}
+{"input":"For sales, press 1. For support, press 2.","voice":"marin","instructions":"Tone: Clear and neutral. Pacing: Slow.","response_format":"wav"}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Instructioning best practices (short list)}
+\ul{
+\li{Structure directions as: affect -> tone -> pacing -> emotion -> pronunciation/pauses -> emphasis.}
+\li{Keep 4 to 8 short lines; avoid conflicting guidance.}
+\li{For names/acronyms, add pronunciation hints (e.g., "enunciate A-I") or supply a phonetic spelling in the text.}
+\li{For edits/iterations, repeat invariants (e.g., "keep pacing steady") to reduce drift.}
+\li{Iterate with single-change follow-ups.}
+}
+
+\p{More principles: \code{\startverb references/prompting.md\stopverb}. Copy/paste specs: \code{\startverb references/sample-prompts.md\stopverb}.}
+}
+
+\subtree{
+\title{Guidance by use case}
+\p{Use these modules when the request is for a specific delivery style. They provide targeted defaults and templates.}
+
+\ul{
+\li{Narration / explainer: \code{\startverb references/narration.md\stopverb}}
+\li{Product demo / voiceover: \code{\startverb references/voiceover.md\stopverb}}
+\li{IVR / phone prompts: \code{\startverb references/ivr.md\stopverb}}
+\li{Accessibility reads: \code{\startverb references/accessibility.md\stopverb}}
+}
+}
+
+\subtree{
+\title{CLI + environment notes}
+\ul{
+\li{CLI commands + examples: \code{\startverb references/cli.md\stopverb}}
+\li{API parameter quick reference: \code{\startverb references/audio-api.md\stopverb}}
+\li{Instruction patterns + examples: \code{\startverb references/voice-directions.md\stopverb}}
+\li{If network approvals / sandbox settings are getting in the way: \code{\startverb references/codex-network.md\stopverb}}
+}
+}
+
+\subtree{
+\title{Reference map}
+\ul{
+\li{\strong{\code{\startverb references/cli.md\stopverb}}: how to run speech generation/batches via \code{\startverb scripts/text_to_speech.py\stopverb} (commands, flags, recipes).}
+\li{\strong{\code{\startverb references/audio-api.md\stopverb}}: API parameters, limits, voice list.}
+\li{\strong{\code{\startverb references/voice-directions.md\stopverb}}: instruction patterns and examples.}
+\li{\strong{\code{\startverb references/prompting.md\stopverb}}: instruction best practices (structure, constraints, iteration patterns).}
+\li{\strong{\code{\startverb references/sample-prompts.md\stopverb}}: copy/paste instruction recipes (examples only; no extra theory).}
+\li{\strong{\code{\startverb references/narration.md\stopverb}}: templates + defaults for narration and explainers.}
+\li{\strong{\code{\startverb references/voiceover.md\stopverb}}: templates + defaults for product demo voiceovers.}
+\li{\strong{\code{\startverb references/ivr.md\stopverb}}: templates + defaults for IVR/phone prompts.}
+\li{\strong{\code{\startverb references/accessibility.md\stopverb}}: templates + defaults for accessibility reads.}
+\li{\strong{\code{\startverb references/codex-network.md\stopverb}}: environment/sandbox/network-approval troubleshooting.}
+}
+}
+}

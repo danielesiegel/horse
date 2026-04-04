@@ -1,0 +1,329 @@
+\title{Pun Decomposition}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Pun Decomposition Skill (MINUS -1)}
+
+\subtree{
+\title{Pun Decomposition Skill (MINUS -1)}
+\blockquote{*"A pun exploits multiple valid decompositions of the same phonetic surface."*}
+
+\subtree{
+\title{Core Insight}
+\p{A \strong{pun} is an information reflow that maps a single surface form to multiple semantic contexts. The humor arises from the unexpected context switch—the inductive bias favors one parse, but the pun activates another.}
+
+\pre{\startverb
+pun : Surface → {Context₁, Context₂, ...}
+where each Contextᵢ has a valid decomposition
+\stopverb}
+}
+
+\subtree{
+\title{Neighbor Awareness (Braided Monoidal)}
+\p{This skill knows its neighbors in the triad:}
+
+\pre{\startverb
+| Position | Skill | Trit | Role |
+|----------|-------|------|------|
+| **Left** | gestalt-hacking | 0 | Perceptual grouping exploitation |
+| **Self** | pun-decomposition | -1 | Multiple parse validation |
+| **Right** | acsets | 0 | Schema-aware decomposition |
+\stopverb}
+
+\p{\strong{Yang-Baxter coherence}: \code{\startverb (σ₁⊗id)(id⊗σ₁)(σ₁⊗id) = (id⊗σ₁)(σ₁⊗id)(id⊗σ₁)\stopverb}}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+pun-decomposition (-1) ⊗ gestalt-hacking (0) ⊗ gay-mcp (+1) = 0 ✓  [Core Pun]
+pun-decomposition (-1) ⊗ acsets (0) ⊗ topos-generate (+1) = 0 ✓  [Schema Pun]
+pun-decomposition (-1) ⊗ reflow (0) ⊗ gay-mcp (+1) = 0 ✓  [Reflow Pun]
+three-match (-1) ⊗ gestalt-hacking (0) ⊗ gay-mcp (+1) = 0 ✓  [Pattern Match]
+\stopverb}
+}
+
+\subtree{
+\title{Pun as Gestalt Attack}
+\p{From the gestalt hacking thread:}
+
+\pre{\startverb
+enum GestaltPrinciple {
+    Proximity,    // Close morphemes group
+    Similarity,   // Similar sounds group  
+    Closure,      // Incomplete parse completed
+    Continuity,   // Smooth phonetic path preferred
+    FigureGround, // Dominant meaning masks secondary
+}
+\stopverb}
+
+\p{A pun exploits \strong{Closure} and \strong{FigureGround}:}
+
+\ul{
+\li{\strong{Closure}: The listener completes the parse with the expected meaning}
+\li{\strong{FigureGround}: The secondary meaning lurks in background until activated}
+}
+}
+
+\subtree{
+\title{Decomposition Types}
+\subtree{
+\title{Morphemic Decomposition}
+\pre{\startverb
+# "I'm reading a book about anti-gravity. It's impossible to put down."
+{
+  surface: "put down",
+  decompositions: [
+    { parse: ["put", "down"], meaning: "place on surface", trit: 1 },
+    { parse: ["put-down"], meaning: "stop reading", trit: -1 },
+  ],
+  inductive_bias: 0.7,  # Favors first parse
+  pun_strength: 0.3     # Second parse activation
+}
+\stopverb}
+}
+
+\subtree{
+\title{Phonetic Decomposition}
+\pre{\startverb
+# "Time flies like an arrow. Fruit flies like a banana."
+{
+  surface: "flies like",
+  decompositions: [
+    { parse: ["flies", "like"], pos: ["verb", "prep"], trit: 1 },
+    { parse: ["flies", "like"], pos: ["noun", "verb"], trit: -1 },
+  ],
+  gestalt_principle: :figure_ground,
+  context_switch: "arrow → banana"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Etymological Decomposition}
+\pre{\startverb
+# From the reflow skill:
+{
+  word: "trimester",
+  decomposition: ["tri-", "mester"],
+  trits: [0, 0],
+  gf3_sum: 0,  # Balanced!
+  resonance: :strong
+}
+
+{
+  word: "semester", 
+  decomposition: ["se-", "mester"],  # se- = six (2×3)
+  trits: [0, 0],
+  gf3_sum: 0,  # Also balanced via factorization
+  resonance: :moderate
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{ACSet Schema for Puns}
+\pre{\startverb
+@present SchPun(FreeSchema) begin
+  Surface::Ob
+  Parse::Ob
+  Morpheme::Ob
+  Meaning::Ob
+  
+  surface::Hom(Parse, Surface)
+  morphemes::Hom(Morpheme, Parse)
+  meaning::Hom(Parse, Meaning)
+  
+  # Attributes
+  Text::AttrType
+  Trit::AttrType
+  Bias::AttrType
+  
+  text::Attr(Surface, Text)
+  trit::Attr(Parse, Trit)
+  bias::Attr(Parse, Bias)
+end
+
+@acset_type Pun(SchPun, index=[:surface, :meaning])
+\stopverb}
+}
+
+\subtree{
+\title{Inductive Bias as Prior}
+\p{The inductive bias determines which decomposition is "default":}
+
+\pre{\startverb
+P(parse₁ | surface) = softmax(bias₁ / τ)
+P(parse₂ | surface) = softmax(bias₂ / τ)
+
+where τ = temperature (context sensitivity)
+\stopverb}
+
+\p{At low temperature (focused context), one parse dominates. At high temperature (open context), multiple parses activate → PUN.}
+}
+
+\subtree{
+\title{OpenGame Structure}
+\p{From gestalt hacking thread:}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────────┐
+│  PunGame ∆                                              │
+│  ─────────────────────────────────────────────────────  │
+│  play     :: Surface → ∆ [Parse]     ← enumerate parses │
+│  evaluate :: [Parse] → Meaning       ← select by context│
+│                                                         │
+│  Pun = play produces multiple; evaluate oscillates      │
+└─────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Defense: 2-Poisson Disambiguation}
+\p{When puns attack comprehension, use stochastic sampling:}
+
+\pre{\startverb
+impl PunDefender {
+    fn disambiguate(&mut self, surface: &str) -> Parse {
+        let parses = self.decompose(surface);
+        
+        if parses.len() > 1 {
+            // Multiple valid parses detected
+            let (_, selected) = self.poisson.next_arrival(0.0);
+            // Use Poisson timing to break tie
+            parses[selected.to_usize() % parses.len()].clone()
+        } else {
+            parses[0].clone()
+        }
+    }
+}
+\stopverb}
+}
+
+\subtree{
+\title{LMBIH Seed Integration}
+\p{Using the LMBIH seed (327833753928) for pun coloring:}
+
+\pre{\startverb
+# XIP-7074D4: LMBIH Etymological Resonance
+seed = 327833753928  # "LMBIH".bytes → hex
+index = 43
+
+color_at(seed, index)  # => #7074D4 (purple-blue)
+
+# The pun lives in the purple-blue spectrum:
+# - Blue = validation (checking parses)
+# - Purple = blend of generation + validation
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just pun-decompose "time flies"     # Enumerate parses
+just pun-triad gestalt acsets       # Show GF(3) triad
+just pun-bias 0.7                   # Set inductive bias
+just pun-attack closure             # Test gestalt attack
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{gestalt-hacking} (left neighbor): Perceptual grouping exploitation}
+\li{\strong{acsets} (right neighbor): Schema-aware decomposition storage}
+\li{\strong{reflow}: Cross-context meaning preservation}
+\li{\strong{three-match}: Colored subgraph isomorphism for parse matching}
+\li{\strong{etymological-resonance}: Morpheme-level decomposition}
+}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{[etymological_resonance.rb](file:///Users/bob/ies/music-topos/lib/etymological_resonance.rb)}
+\li{[gestalt hacking thread](https://ampcode.com/threads/T-019b3e8d-1ab1-7548-ab74-fdd531cda57f)}
+\li{[chromatic verifier thread](https://ampcode.com/threads/T-019b0ce1-815d-773b-b2ce-f5ef9b26e48d)}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb algorithms\stopverb}: 19 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 5. Evaluation}
+\p{\strong{Concepts}: eval, apply, interpreter, environment}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+pun-decomposition (+) + SDF.Ch5 (−) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch4: Pattern Matching}
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Evaluation interprets expressions. This skill processes or generates evaluable forms.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

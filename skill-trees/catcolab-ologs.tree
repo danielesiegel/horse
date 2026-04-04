@@ -1,0 +1,198 @@
+\title{Catcolab Ologs}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{CatColab Ologs (Ontology Logs) - category-theoretic knowledge representation where objects are concepts and morphisms are functional relationships. Foundation for database schemas and conceptual modeling.}
+
+\subtree{
+\title{CatColab Ologs: Ontology Logs}
+\p{\strong{Trit}: -1 (MINUS - validator/verifier) \strong{Color}: Cyan (#00CED1)}
+
+\subtree{
+\title{Overview}
+\p{Ologs (Ontology Logs) are category-theoretic representations of knowledge domains, introduced by Spivak and Kent (2011). In CatColab, ologs serve as:}
+
+\ul{
+\li{\strong{Conceptual Foundations}: Objects = concepts/types, Morphisms = functional relations}
+\li{\strong{Database Ontologies}: The schema layer before populating with data}
+\li{\strong{Knowledge Graphs}: Categorical structure for reasoning about domains}
+}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\p{An olog is a \strong{category} where:}
+
+\ul{
+\li{Objects represent \strong{types} or \strong{concepts} (e.g., "a person", "a company")}
+\li{Morphisms represent \strong{functional relationships} (e.g., "works for", "has birthday")}
+\li{Commutative diagrams encode \strong{logical constraints}}
+}
+
+\pre{\startverb
+┌─────────────────────────────────────────────────────┐
+│                     OLOG                             │
+├─────────────────────────────────────────────────────┤
+│  Objects:                                            │
+│    Person, Company, Date, Department                 │
+│                                                      │
+│  Morphisms (functional):                             │
+│    works_for: Person → Company                       │
+│    has_birthday: Person → Date                       │
+│    employs: Company → Department                     │
+│                                                      │
+│  Commutative Diagram (constraint):                   │
+│    Person ──works_for──► Company                     │
+│      │                     │                         │
+│   in_dept              employs                       │
+│      ▼                     ▼                         │
+│    Dept ════════════════► Dept                       │
+│           (must agree)                               │
+└─────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{CatColab Implementation}
+\subtree{
+\title{Object Declaration}
+\pre{\startverb
+// In CatColab notebook
+{
+  "type": "ObDecl",
+  "name": "Person",
+  "description": "a person in the organization"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Morphism Declaration}
+\pre{\startverb
+{
+  "type": "MorDecl",
+  "name": "works_for",
+  "dom": "Person",
+  "cod": "Company",
+  "description": "the company that employs this person"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Equation (Commutative Diagram)}
+\pre{\startverb
+{
+  "type": "EqDecl",
+  "lhs": "Person.in_dept",
+  "rhs": "Person.works_for.employs",
+  "description": "a person's department agrees with their company's structure"
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Double Theory}
+\p{Ologs in CatColab are instances of the \strong{SimpleCategory} double theory:}
+
+\pre{\startverb
+// From catlog
+pub fn th_category() -> DiscreteDblTheory {
+    let mut cat = FpCategory::new();
+    cat.add_ob_generator(name("Ob"));
+    cat.add_mor_generator(name("Hom"), name("Ob"), name("Ob"));
+    // Composition and identity axioms
+    cat.into()
+}
+\stopverb}
+}
+
+\subtree{
+\title{Practical Examples}
+\subtree{
+\title{Example 1: Academic Institution}
+\pre{\startverb
+Objects: Professor, Student, Course, Department, University
+
+Morphisms:
+  teaches: Professor → Course
+  enrolled: Student → Course
+  member_of: Professor → Department
+  part_of: Department → University
+
+Diagram (functorial):
+  Professor ──teaches──► Course
+      │                    │
+  member_of            offered_by
+      ▼                    ▼
+  Department ◄──────────── Department
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Supply Chain}
+\pre{\startverb
+Objects: Supplier, Warehouse, Product, Customer
+
+Morphisms:
+  supplies: Supplier → Product
+  stores: Warehouse → Product
+  orders: Customer → Product
+  ships_from: Product → Warehouse
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Schemas}
+\p{Ologs upgrade to \strong{Schemas} by distinguishing:}
+
+\ul{
+\li{\strong{Entities} (tables with identity)}
+\li{\strong{Attributes} (columns/properties)}
+}
+
+\pre{\startverb
+OLOG:                           SCHEMA:
+  Person ──name──► String   →     Person (Entity)
+                                    ├── id: UUID
+                                    └── name: String (Attr)
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+catcolab-ologs (-1) ⊗ topos-catcolab (0) ⊗ catcolab-schemas (+1) = 0 ✓
+catcolab-ologs (-1) ⊗ acsets-relational-thinking (0) ⊗ database-design (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Create new olog
+just catcolab-new category "my-ontology"
+
+# Validate olog constraints
+just catcolab-validate my-ontology
+
+# Export to JSON-LD
+just catcolab-export my-ontology --format=jsonld
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Spivak & Kent (2011) "Ologs: A Categorical Framework for Knowledge Representation"}
+\li{[CatColab Documentation](https://catcolab.org/help)}
+\li{[RelationalThinking Book](https://toposinstitute.github.io/RelationalThinking-Book/)}
+}
+
+\p{\strong{Skill Name}: catcolab-ologs \strong{Type}: Knowledge Representation / Ontology \strong{Trit}: -1 (MINUS) \strong{GF(3)}: Conserved via triadic composition}
+}
+}

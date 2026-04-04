@@ -1,0 +1,59 @@
+\title{Structured Decompositions Jl}
+
+\taxon{skill}
+
+\meta{description}{Use when users ask about StructuredDecompositions.jl, structured decompositions,}
+
+\subtree{
+\title{StructuredDecompositions.jl}
+\p{You help with Julia tasks involving StructuredDecompositions.jl. Prefer precise, minimal examples and reuse the package's existing API rather than inventing new abstractions.}
+
+\subtree{
+\title{Quick start}
+\ul{
+\li{\code{\startverb using StructuredDecompositions\stopverb}}
+\li{Build a decomposition from a graph: \code{\startverb d = StrDecomp(graph)\stopverb} (optional \code{\startverb alg\stopverb} and \code{\startverb snd\stopverb} keywords).}
+\li{Build from a shape + diagram: \code{\startverb d = StrDecomp(shape, diagram, Decomposition)\stopverb} or \code{\startverb CoDecomposition\stopverb}.}
+\li{Inspect: \code{\startverb bags(d)\stopverb}, \code{\startverb adhesions(d)\stopverb}, \code{\startverb adhesionSpans(d)\stopverb} (pass \code{\startverb true\stopverb} for indexed pairs).}
+\li{Lift a functor: use the bold-D function (type \code{\startverb \startverb \mathbf\stopverb{D}\stopverb} then Tab in Julia) with signature \code{\startverb D(f, d, t::DecompType = d.decomp_type)\stopverb}.}
+\li{Decide a sheaf-encoded problem: \code{\startverb ok, witness = decide_sheaf_tree_shape(f, d)\stopverb}.}
+}
+}
+
+\subtree{
+\title{Guidelines}
+\ul{
+\li{\code{\startverb decide_sheaf_tree_shape\stopverb} assumes FinSet-valued sheaves; if you pass a \code{\startverb solution_space_decomp\stopverb}, ensure it is a \code{\startverb CoDecomposition\stopverb}.}
+\li{\code{\startverb adhesion_filter\stopverb} (not exported) errors on \code{\startverb Decomposition\stopverb}; only use it with \code{\startverb CoDecomposition\stopverb}.}
+\li{Use Catlab types (\code{\startverb Graph\stopverb}, \code{\startverb ACSetTransformation\stopverb}, \code{\startverb FinDomFunctor\stopverb}, \code{\startverb FinSet\stopverb}, \code{\startverb FinFunction\stopverb}) to build diagrams.}
+\li{Prefer small, runnable snippets. If a full example is large, summarize and point to the references.}
+\li{If a task needs ACSet schema definitions or Catlab graph basics, consult \code{\startverb references/acsets-bridge.md\stopverb} or load the \code{\startverb acsets-algebraic-databases\stopverb} skill.}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{\code{\startverb references/overview.md\stopverb} for the API map and key behaviors.}
+\li{\code{\startverb references/examples.md\stopverb} for minimal usage sketches.}
+\li{\code{\startverb references/graph-coloring.md\stopverb} for an ASCII-only end-to-end coloring example.}
+\li{\code{\startverb references/acsets-bridge.md\stopverb} for ACSet/Catlab basics used by this package.}
+}
+}
+
+\subtree{
+\title{Scripts}
+\ul{
+\li{\code{\startverb scripts/quickstart.jl\stopverb} builds a simple decomposition and prints bags/adhesions.}
+}
+}
+
+\subtree{
+\title{Example triggers}
+\ul{
+\li{"Make a structured decomposition for this graph."}
+\li{"Lift a functor over a decomposition and decide a sheaf."}
+\li{"How do I use decide_sheaf_tree_shape for graph coloring?"}
+}
+}
+}

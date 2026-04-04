@@ -1,0 +1,412 @@
+\title{Aptos Agent}
+
+\taxon{skill}
+
+\meta{description}{Interact with Aptos blockchain - check balances, transfer APT, swap tokens, stake, and execute Move view functions. Features game-theoretic decision analysis with Nash equilibrium detection. All transactions require explicit approval.}
+
+\subtree{
+\title{Aptos Claude Agent}
+\p{Aptos blockchain interaction with game-theoretic decision analysis.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Check APT wallet balances}
+\li{Transfer APT tokens}
+\li{Swap tokens on DEX (Liquidswap, etc.)}
+\li{Stake APT}
+\li{Call Move view functions}
+\li{Process natural language blockchain intents}
+\li{Query NFT/token collections}
+\li{Interact with multisig accounts}
+}
+}
+
+\subtree{
+\title{Setup}
+\p{MCP server configured in \code{\startverb ~/.mcp.json\stopverb}:}
+
+\pre{\startverb
+{
+  "aptos": {
+    "command": "node",
+    "args": ["/path/to/aptos-claude-agent/dist/mcp/server.js"],
+    "env": {
+      "APTOS_NETWORK": "mainnet",
+      "APTOS_PRIVATE_KEY": "${APTOS_PRIVATE_KEY}"
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Available MCP Tools}
+\pre{\startverb
+| Tool | Description |
+|------|-------------|
+| `aptos_balance` | Get wallet balance |
+| `aptos_transfer` | Transfer APT (requires approval) |
+| `aptos_swap` | Swap tokens on DEX (requires approval) |
+| `aptos_stake` | Stake APT (requires approval) |
+| `aptos_view` | Read-only view function call |
+| `aptos_intent` | Process natural language intent |
+| `aptos_approve` | Approve/reject pending decision |
+| `aptos_pending` | List pending decisions |
+\stopverb}
+}
+
+\subtree{
+\title{Security Model}
+\ol{
+\li{\strong{Simulation First}: All transactions simulated before execution}
+\li{\strong{Approval Required}: Every state-changing operation needs explicit approval}
+\li{\strong{Game-Theoretic Analysis}: Transactions modeled as open games}
+\li{\strong{Wallet Validation}: ALWAYS validate key→address before funding}
+}
+}
+
+\subtree{
+\title{CRITICAL: Wallet Derivation Safety}
+\p{\strong{NEVER use \code{\startverb derive-resource-account-address\stopverb} for wallet creation.}}
+
+\subtree{
+\title{Correct Workflow}
+\pre{\startverb
+# 1. Generate key
+aptos key generate --output-file my_key
+
+# 2. Derive address FROM PRIVATE KEY
+aptos init --private-key-file my_key --network mainnet --profile my_wallet
+
+# 3. VALIDATE before funding
+just aptos-validate "PRIVATE_KEY" "EXPECTED_ADDRESS"
+
+# 4. Only fund AFTER validation passes
+\stopverb}
+}
+
+\subtree{
+\title{What Can Go Wrong}
+\ul{
+\li{Using \code{\startverb derive-resource-account-address\stopverb} with pubkey = \strong{PERMANENT FUND LOSS}}
+\li{Resource accounts need signer capabilities from source account}
+\li{If key doesn't match address, funds are unrecoverable}
+}
+}
+
+\subtree{
+\title{Validation}
+\p{Run \code{\startverb just aptos-validate-all\stopverb} to verify all configured wallets before any funding operation.}
+}
+}
+
+\subtree{
+\title{Aptos Framework Reference (0x1)}
+\subtree{
+\title{Core Modules}
+\pre{\startverb
+| Module | Purpose |
+|--------|---------|
+| `0x1::coin` | Legacy fungible token standard |
+| `0x1::fungible_asset` | New FA standard (object-based) |
+| `0x1::aptos_coin` | Native APT token |
+| `0x1::account` | Account creation/management |
+| `0x1::object` | Object model foundation |
+| `0x1::stake` | Validator staking |
+| `0x1::delegation_pool` | Delegated staking |
+| `0x1::multisig_account` | Multi-signature accounts |
+| `0x1::aptos_governance` | On-chain governance |
+| `0x1::code` | Module deployment |
+\stopverb}
+}
+
+\subtree{
+\title{0x1::coin Module}
+\p{\strong{Key Structs:}}
+
+\ul{
+\li{\code{\startverb Coin<CoinType>\stopverb} - Fungible token container}
+\li{\code{\startverb CoinStore<CoinType>\stopverb} - Account balance storage}
+\li{\code{\startverb CoinInfo<CoinType>\stopverb} - Token metadata}
+\li{\code{\startverb MintCapability<CoinType>\stopverb} - Minting rights}
+\li{\code{\startverb BurnCapability<CoinType>\stopverb} - Burning rights}
+\li{\code{\startverb FreezeCapability<CoinType>\stopverb} - Freeze rights}
+}
+
+\p{\strong{View Functions:}}
+
+\pre{\startverb
+0x1::coin::balance<CoinType>(owner: address): u64
+0x1::coin::is_account_registered<CoinType>(account: address): bool
+0x1::coin::name<CoinType>(): vector<u8>
+0x1::coin::symbol<CoinType>(): vector<u8>
+0x1::coin::decimals<CoinType>(): u8
+0x1::coin::supply<CoinType>(): Option<u128>
+\stopverb}
+
+\p{\strong{Entry Functions:}}
+
+\pre{\startverb
+0x1::coin::transfer<CoinType>(from: &signer, to: address, amount: u64)
+0x1::coin::register<CoinType>(account: &signer)
+\stopverb}
+}
+
+\subtree{
+\title{0x1::fungible_asset Module}
+\p{\strong{Key Structs:}}
+
+\ul{
+\li{\code{\startverb Metadata\stopverb} - Asset metadata object}
+\li{\code{\startverb FungibleStore\stopverb} - Balance storage}
+\li{\code{\startverb FungibleAsset\stopverb} - Asset container}
+\li{\code{\startverb MintRef\stopverb}, \code{\startverb BurnRef\stopverb}, \code{\startverb TransferRef\stopverb} - Capabilities}
+}
+
+\p{\strong{View Functions:}}
+
+\pre{\startverb
+0x1::fungible_asset::balance<T>(store: Object<T>): u64
+0x1::primary_fungible_store::balance(account: address, metadata: Object<Metadata>): u64
+\stopverb}
+}
+
+\subtree{
+\title{0x1::stake Module}
+\p{\strong{Key Structs:}}
+
+\ul{
+\li{\code{\startverb StakePool\stopverb} - Validator stake pool}
+\li{\code{\startverb ValidatorConfig\stopverb} - Validator configuration}
+\li{\code{\startverb OwnerCapability\stopverb} - Pool ownership}
+}
+
+\p{\strong{View Functions:}}
+
+\pre{\startverb
+0x1::stake::get_validator_state(pool_address: address): u64
+0x1::stake::get_stake(pool_address: address): (u64, u64, u64, u64)
+\stopverb}
+}
+
+\subtree{
+\title{0x1::delegation_pool Module}
+\p{\strong{View Functions:}}
+
+\pre{\startverb
+0x1::delegation_pool::get_stake(pool_address: address, delegator: address): (u64, u64, u64)
+0x1::delegation_pool::calculate_and_update_voter_total_voting_power(pool_address: address): u64
+\stopverb}
+}
+
+\subtree{
+\title{0x1::multisig_account Module}
+\p{\strong{Key Functions:}}
+
+\pre{\startverb
+0x1::multisig_account::create(owner: &signer, num_signatures_required: u64, owners: vector<address>)
+0x1::multisig_account::create_transaction(multisig: address, payload: vector<u8>)
+0x1::multisig_account::approve_transaction(owner: &signer, multisig: address, sequence_number: u64)
+0x1::multisig_account::execute_transaction(multisig: address, sequence_number: u64)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Token Standards Reference}
+\subtree{
+\title{Legacy Token (0x3::token)}
+\p{\strong{Key Structs:}}
+
+\ul{
+\li{\code{\startverb Token\stopverb} - Token instance with id, amount, properties}
+\li{\code{\startverb TokenId\stopverb} - Global unique identifier (creator + collection + name + version)}
+\li{\code{\startverb TokenData\stopverb} - Shared metadata (max supply, uri, royalty)}
+\li{\code{\startverb TokenStore\stopverb} - Account's token holdings}
+\li{\code{\startverb CollectionData\stopverb} - Collection metadata}
+\li{\code{\startverb Royalty\stopverb} - Royalty configuration}
+}
+
+\p{\strong{Entry Functions:}}
+
+\pre{\startverb
+0x3::token::create_collection_script(creator: &signer, name: String, description: String, uri: String, maximum: u64)
+0x3::token::create_token_script(creator: &signer, collection: String, name: String, description: String, ...)
+0x3::token::mint_script(creator: &signer, token_data_address: address, collection: String, name: String, amount: u64)
+0x3::token::direct_transfer_script(sender: &signer, receiver: &signer, creators_address: address, ...)
+\stopverb}
+
+\p{\strong{View Functions:}}
+
+\pre{\startverb
+0x3::token::balance_of(owner: address, id: TokenId): u64
+0x3::token::get_royalty(token_data_id: TokenDataId): Royalty
+0x3::token::get_token_supply(creator: address, collection: String, name: String): Option<u64>
+\stopverb}
+}
+
+\subtree{
+\title{Digital Asset (0x4::token + 0x4::aptos_token)}
+\p{\strong{Key Structs (0x4::token):}}
+
+\ul{
+\li{\code{\startverb Token\stopverb} - Object-based token with collection, index, description, name}
+\li{\code{\startverb BurnRef\stopverb} - Burning capability}
+\li{\code{\startverb MutatorRef\stopverb} - Mutation capability}
+}
+
+\p{\strong{Key Structs (0x4::aptos_token):}}
+
+\ul{
+\li{\code{\startverb AptosCollection\stopverb} - No-code collection with mutability settings}
+\li{\code{\startverb AptosToken\stopverb} - Minimally viable token}
+}
+
+\p{\strong{Entry Functions:}}
+
+\pre{\startverb
+0x4::aptos_token::create_collection(creator: &signer, description: String, name: String, uri: String, ...)
+0x4::aptos_token::mint(creator: &signer, collection: String, description: String, name: String, uri: String, ...)
+0x4::aptos_token::mint_token_object(creator: &signer, collection: String, ...) -> Object<AptosToken>
+0x4::aptos_token::burn(owner: &signer, token: Object<AptosToken>)
+0x4::aptos_token::freeze_transfer(creator: &signer, token: Object<AptosToken>)
+0x4::aptos_token::set_description(creator: &signer, token: Object<AptosToken>, description: String)
+\stopverb}
+
+\p{\strong{View Functions:}}
+
+\pre{\startverb
+0x4::token::creator(token: Object<Token>): address
+0x4::token::collection_name(token: Object<Token>): String
+0x4::aptos_token::are_properties_mutable(token: Object<AptosToken>): bool
+0x4::aptos_token::is_burnable(token: Object<AptosToken>): bool
+\stopverb}
+}
+
+\subtree{
+\title{Supporting Modules}
+\p{\strong{0x4::collection:}}
+
+\pre{\startverb
+0x4::collection::count(collection: Object<Collection>): Option<u64>
+0x4::collection::creator(collection: Object<Collection>): address
+0x4::collection::name(collection: Object<Collection>): String
+\stopverb}
+
+\p{\strong{0x4::royalty:}}
+
+\pre{\startverb
+0x4::royalty::get(token: Object<Token>): Option<Royalty>
+0x4::royalty::payee_address(royalty: &Royalty): address
+0x4::royalty::numerator(royalty: &Royalty): u64
+0x4::royalty::denominator(royalty: &Royalty): u64
+\stopverb}
+
+\p{\strong{0x4::property_map:}}
+
+\pre{\startverb
+0x4::property_map::read_string(object: &Object<T>, key: &String): String
+0x4::property_map::read_u64(object: &Object<T>, key: &String): u64
+0x4::property_map::read_bool(object: &Object<T>, key: &String): bool
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common View Function Patterns}
+\subtree{
+\title{Check APT Balance}
+\pre{\startverb
+aptos_view(
+  functionId: "0x1::coin::balance",
+  typeArgs: ["0x1::aptos_coin::AptosCoin"],
+  args: ["0xADDRESS"]
+)
+\stopverb}
+}
+
+\subtree{
+\title{Check Token Balance (Legacy)}
+\pre{\startverb
+aptos_view(
+  functionId: "0x3::token::balance_of",
+  typeArgs: [],
+  args: ["0xOWNER", { token_data_id: {...}, property_version: 0 }]
+)
+\stopverb}
+}
+
+\subtree{
+\title{Check Stake}
+\pre{\startverb
+aptos_view(
+  functionId: "0x1::stake::get_stake",
+  typeArgs: [],
+  args: ["0xVALIDATOR_POOL"]
+)
+\stopverb}
+}
+
+\subtree{
+\title{Check Delegation}
+\pre{\startverb
+aptos_view(
+  functionId: "0x1::delegation_pool::get_stake",
+  typeArgs: [],
+  args: ["0xPOOL", "0xDELEGATOR"]
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Game-Theoretic Features}
+\subtree{
+\title{Nashator Analysis}
+\p{Computes deviation incentives for transactions:}
+
+\ul{
+\li{\strong{LAX monoidal} (\code{\startverb fire\stopverb}): Actual execution}
+\li{\strong{STRONG monoidal} (\code{\startverb exec\stopverb}): Simulation only}
+}
+}
+
+\subtree{
+\title{Bisimulation Self-Play}
+\p{Explores alternatives via attacker/defender games. Equilibrium detected when \code{\startverb |utility - quality| < 0.15\stopverb}.}
+}
+
+\subtree{
+\title{Risk Visualization}
+\p{Decisions map to colors via deterministic LCG:}
+
+\ul{
+\li{\strong{HOT ZONE [160-220]}: High-risk indices}
+}
+}
+}
+
+\subtree{
+\title{DeFi Protocols on Aptos}
+\pre{\startverb
+| Protocol | Category | Key Functions |
+|----------|----------|---------------|
+| **Liquidswap** | DEX | Swap, add/remove liquidity |
+| **Thala** | DEX + Stablecoin | MOD stablecoin, LP farming |
+| **Amnis Finance** | Liquid Staking | stAPT, 7-8% APY |
+| **Aries Markets** | Lending | Supply, borrow, liquidate |
+| **Cellana** | DEX | ve(3,3) model |
+| **Echo Protocol** | BTC Bridge | Cross-chain BTC |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb aptos-trading\stopverb} - Alpha executor trading scripts}
+\li{\code{\startverb acsets-algebraic-databases\stopverb} - ACSet schemas for Aptos data}
+\li{\code{\startverb asi-integrated\stopverb} - Unified ASI skill orchestration}
+}
+}
+}

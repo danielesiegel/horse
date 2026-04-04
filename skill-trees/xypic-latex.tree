@@ -1,0 +1,238 @@
+\title{Xypic Latex}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{"XY-pic commutative diagrams in LaTeX with Emacs/AUCTeX preview"}
+
+\subtree{
+\title{XY-pic LaTeX Diagrams}
+\p{Typeset commutative diagrams, automata, and categorical constructions using XY-pic in LaTeX, with inline Emacs preview via AUCTeX.}
+
+\subtree{
+\title{Setup}
+\subtree{
+\title{Preamble}
+\pre{\startverb
+\usepackage[all,cmtip]{xy}
+\stopverb}
+
+\ul{
+\li{\code{\startverb all\stopverb} loads every XY-pic extension (matrix, arrow, curve, frame, etc.)}
+\li{\code{\startverb cmtip\stopverb} uses Computer Modern arrowheads (cleaner than default)}
+}
+}
+
+\subtree{
+\title{Emacs / AUCTeX preview}
+\p{Add to init.el for inline \code{\startverb C-c C-p C-p\stopverb} preview of xymatrix environments:}
+
+\pre{\startverb
+(eval-after-load "preview"
+  '(add-to-list 'preview-default-preamble "\\PreviewEnvironment{xymatrix}" t))
+\stopverb}
+
+\p{Ensure PDF mode is active: \code{\startverb C-c C-t C-p\stopverb}.}
+}
+}
+
+\subtree{
+\title{Core Syntax}
+\p{Diagrams are matrices. \code{\startverb &\stopverb} separates columns, \code{\startverb \\\stopverb} separates rows. Arrows use \code{\startverb \startverb \ar\stopverb[direction]\stopverb} where direction combines: \code{\startverb u\stopverb}(up), \code{\startverb d\stopverb}(down), \code{\startverb l\stopverb}(left), \code{\startverb r\stopverb}(right).}
+
+\subtree{
+\title{Commutative Square}
+\pre{\startverb
+\[
+\xymatrix{
+  A \ar[r]^f \ar[d]_g & B \ar[d]^h \\
+  C \ar[r]_k           & D
+}
+\]
+\stopverb}
+}
+
+\subtree{
+\title{Arrow Labels}
+\pre{\startverb
+| Syntax         | Position                    |
+|----------------|-----------------------------|
+| `\ar[r]^f`     | label above/right of arrow  |
+| `\ar[r]_f`     | label below/left of arrow   |
+| `\ar[r]\|f`    | label on arrow (breaks it)  |
+| `\ar[r]|-{f}`  | label in gap on arrow       |
+\stopverb}
+}
+
+\subtree{
+\title{Arrow Styles}
+\pre{\startverb
+\ar@{->}[r]        % normal (default)
+\ar@{.>}[r]        % dotted
+\ar@{=>}[r]        % double (natural transformation)
+\ar@{-->}[r]       % dashed
+\ar@{~>}[r]        % squiggly
+\ar@{->>}[r]       % two-headed (epi)
+\ar@{^{(}->}[r]    % hook (mono)
+\ar@{=}[r]         % equals
+\ar@{}[r]          % phantom (for label placement only)
+\stopverb}
+}
+
+\subtree{
+\title{Curved Arrows}
+\pre{\startverb
+\ar@/^/[r]^f       % curve up/right
+\ar@/_/[r]_g       % curve down/left
+\ar@/^1pc/[r]      % curve with specific radius
+\ar@(ur,dr)[r]     % loop from upper-right to down-right
+\stopverb}
+}
+
+\subtree{
+\title{Spacing Control}
+\pre{\startverb
+\xymatrix@R=2pc@C=3pc{...}    % set row/column spacing
+\xymatrix@C-1pc{...}           % reduce column spacing by 1pc
+\xymatrix@1{...}               % entries are 1em wide
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Diagram Patterns}
+\subtree{
+\title{Pullback / Fiber Product}
+\pre{\startverb
+\[
+\xymatrix{
+  U \ar@/_/[ddr]_y \ar@/^/[drr]^x \ar@{.>}[dr]|-{(x,y)} \\
+  & X \times_Z Y \ar[d]^q \ar[r]_p & X \ar[d]_f \\
+  & Y \ar[r]^g                      & Z
+}
+\]
+\stopverb}
+}
+
+\subtree{
+\title{Short Exact Sequence}
+\pre{\startverb
+\[
+\xymatrix{
+  0 \ar[r] & A \ar[r]^i & B \ar[r]^p & C \ar[r] & 0
+}
+\]
+\stopverb}
+}
+
+\subtree{
+\title{Adjunction}
+\pre{\startverb
+\[
+\xymatrix@C=4pc{
+  \mathcal{C} \ar@<1ex>[r]^{F} \ar@{}[r]|{\perp}
+  & \mathcal{D} \ar@<1ex>[l]^{G}
+}
+\]
+\stopverb}
+}
+
+\subtree{
+\title{Natural Transformation (2-cell)}
+\pre{\startverb
+\[
+\xymatrix{
+  \mathcal{C} \rtwocell^F_G{\alpha} & \mathcal{D}
+}
+\]
+\stopverb}
+
+\p{(Requires \code{\startverb \startverb \usepackage\stopverb[all,2cell]{xy} \startverb \UseTwocells\stopverb\stopverb})}
+}
+
+\subtree{
+\title{Long Exact Sequence (wrapping)}
+\pre{\startverb
+\[
+\xymatrix{
+  \cdots \ar[r] & H_n(A) \ar[r]^{i_*} & H_n(X) \ar[r]^{j_*}
+  & H_n(X,A) \ar[dll]_{\partial} \\
+  & H_{n-1}(A) \ar[r]^{i_*} & H_{n-1}(X) \ar[r] & \cdots
+}
+\]
+\stopverb}
+}
+
+\subtree{
+\title{Cube Diagram}
+\pre{\startverb
+\[
+\xymatrix{
+  A \ar[rr] \ar[dd] \ar[dr] && B \ar[dd] \ar[dr] \\
+  & C \ar[rr] \ar[dd]       && D \ar[dd]          \\
+  E \ar[rr] \ar[dr]         && F \ar[dr]           \\
+  & G \ar[rr]                && H
+}
+\]
+\stopverb}
+}
+
+\subtree{
+\title{Automaton (DFA)}
+\pre{\startverb
+\[
+\xymatrix{
+  *+[o][F-]{q_0} \ar[r]^a \ar@(ul,dl)[]_b
+  & *+[o][F=]{q_1} \ar@/^/[r]^a \ar@(ur,dr)[]^b
+  & *+[o][F-]{q_2} \ar@/^/[l]^{a,b}
+}
+\]
+\stopverb}
+
+\ul{
+\li{\code{\startverb *+[o][F-]\stopverb} = circle, single border}
+\li{\code{\startverb *+[o][F=]\stopverb} = circle, double border (accepting state)}
+}
+}
+}
+
+\subtree{
+\title{Tips}
+\ul{
+\li{\strong{Diagonal arrows}: \code{\startverb \startverb \ar\stopverb[dr]\stopverb} goes down-right, \code{\startverb \startverb \ar\stopverb[ull]\stopverb} goes up-left-left (two columns)}
+\li{\strong{Phantom arrows} \code{\startverb \startverb \ar\stopverb@{}[r]|{\startverb \cong\stopverb}\stopverb} place a symbol between entries without drawing}
+\li{\strong{Compile twice} if arrow positions look wrong on first pass}
+\li{\strong{Debugging}: add \code{\startverb \startverb \entrymodifiers\stopverb={+!!<0pt,\startverb \fontdimen\stopverb22\startverb \textfont\stopverb2>}\stopverb} to baseline-align entries}
+\li{\strong{2-cells}: load \code{\startverb \startverb \usepackage\stopverb[all,2cell]{xy}\stopverb} and \code{\startverb \startverb \UseTwocells\stopverb\stopverb} for natural transformations}
+}
+}
+
+\subtree{
+\title{Alternative: tikz-cd}
+\p{For simpler syntax with TikZ backend:}
+
+\pre{\startverb
+\usepackage{tikz-cd}
+\[
+\begin{tikzcd}
+  A \arrow[r, "f"] \arrow[d, "g"'] & B \arrow[d, "h"] \\
+  C \arrow[r, "k"']                & D
+\end{tikzcd}
+\]
+\stopverb}
+
+\p{Both are available in \code{\startverb texliveFull\stopverb}.}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[XY-pic User's Guide (PDF)](https://texdoc.org/serve/xyguide.pdf/0) — official reference}
+\li{[Alsani's examples (PDF)](https://sites.math.washington.edu/~reu/docs/xypic.pdf) — beginner walkthrough}
+\li{[Milne's CD package comparison](https://www.jmilne.org/not/CDGuide06.pdf) — xy-pic vs tikz-cd vs amscd}
+\li{[Debray's automata guide (PDF)](https://adebray.github.io/lecture_notes/using_xy.pdf) — XY-pic for DFA/NFA}
+\li{Run \code{\startverb texdoc xypic\stopverb} locally for offline docs}
+}
+}
+}

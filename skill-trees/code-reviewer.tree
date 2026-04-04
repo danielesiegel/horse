@@ -1,0 +1,87 @@
+\title{Code Reviewer}
+
+\taxon{skill}
+
+\subtree{
+\title{Code Reviewer}
+\p{This skill guides the agent in conducting professional and thorough code reviews for both local development and remote Pull Requests.}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{1. Determine Review Target}
+\ul{
+\li{\strong{Remote PR}: If the user provides a PR number or URL (e.g., "Review PR #123"), target that remote PR.}
+\li{\strong{Local Changes}: If no specific PR is mentioned, or if the user asks to "review my changes", target the current local file system states (staged and unstaged changes).}
+}
+}
+
+\subtree{
+\title{2. Preparation}
+\subtree{
+\title{For Remote PRs:}
+\ol{
+\li{\strong{Checkout}: Use the GitHub CLI to checkout the PR.}
+\li{\strong{Preflight}: Execute the project's standard verification suite to catch automated failures early.}
+\li{\strong{Context}: Read the PR description and any existing comments to understand the goal and history.}
+}
+}
+
+\subtree{
+\title{For Local Changes:}
+\ol{
+\li{\strong{Identify Changes}:}
+\li{Check status: \code{\startverb git status\stopverb}}
+\li{Read diffs: \code{\startverb git diff\stopverb} (working tree) and/or \code{\startverb git diff --staged\stopverb} (staged).}
+\li{\strong{Preflight (Optional)}: If the changes are substantial, ask the user if they want to run \code{\startverb npm run preflight\stopverb} before reviewing.}
+}
+}
+}
+
+\subtree{
+\title{3. In-Depth Analysis}
+\p{Analyze the code changes based on the following pillars:}
+
+\ul{
+\li{\strong{Correctness}: Does the code achieve its stated purpose without bugs or logical errors?}
+\li{\strong{Maintainability}: Is the code clean, well-structured, and easy to understand and modify in the future? Consider factors like code clarity, modularity, and adherence to established design patterns.}
+\li{\strong{Readability}: Is the code well-commented (where necessary) and consistently formatted according to our project's coding style guidelines?}
+\li{\strong{Efficiency}: Are there any obvious performance bottlenecks or resource inefficiencies introduced by the changes?}
+\li{\strong{Security}: Are there any potential security vulnerabilities or insecure coding practices?}
+\li{\strong{Edge Cases and Error Handling}: Does the code appropriately handle edge cases and potential errors?}
+\li{\strong{Testability}: Is the new or modified code adequately covered by tests (even if preflight checks pass)? Suggest additional test cases that would improve coverage or robustness.}
+}
+}
+
+\subtree{
+\title{4. Provide Feedback}
+\subtree{
+\title{Structure}
+\ul{
+\li{\strong{Summary}: A high-level overview of the review.}
+\li{\strong{Findings}:}
+\li{\strong{Critical}: Bugs, security issues, or breaking changes.}
+\li{\strong{Improvements}: Suggestions for better code quality or performance.}
+\li{\strong{Nitpicks}: Formatting or minor style issues (optional).}
+\li{\strong{Conclusion}: Clear recommendation (Approved / Request Changes).}
+}
+}
+
+\subtree{
+\title{Tone}
+\ul{
+\li{Be constructive, professional, and friendly.}
+\li{Explain \em{why} a change is requested.}
+\li{For approvals, acknowledge the specific value of the contribution.}
+}
+}
+}
+
+\subtree{
+\title{5. Cleanup (Remote PRs only)}
+\ul{
+\li{After the review, ask the user if they want to switch back to the default branch (e.g., \code{\startverb main\stopverb} or \code{\startverb master\stopverb}).}
+}
+}
+}
+}

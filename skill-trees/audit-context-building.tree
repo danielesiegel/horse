@@ -1,0 +1,362 @@
+\title{Audit Context Building}
+
+\taxon{skill}
+
+\meta{description}{Enables ultra-granular, line-by-line code analysis to build deep architectural context before vulnerability or bug finding.}
+
+\subtree{
+\title{Deep Context Builder Skill (Ultra-Granular Pure Context Mode)}
+\subtree{
+\title{1. Purpose}
+\p{This skill governs \strong{how Claude thinks} during the context-building phase of an audit.}
+
+\p{When active, Claude will:}
+
+\ul{
+\li{Perform \strong{line-by-line / block-by-block} code analysis by default.}
+\li{Apply \strong{First Principles}, \strong{5 Whys}, and \strong{5 Hows} at micro scale.}
+\li{Continuously link insights → functions → modules → entire system.}
+\li{Maintain a stable, explicit mental model that evolves with new evidence.}
+\li{Identify invariants, assumptions, flows, and reasoning hazards.}
+}
+
+\p{This skill defines a structured analysis format (see Example: Function Micro-Analysis below) and runs \strong{before} the vulnerability-hunting phase.}
+}
+
+\subtree{
+\title{2. When to Use This Skill}
+\p{Use when:}
+
+\ul{
+\li{Deep comprehension is needed before bug or vulnerability discovery.}
+\li{You want bottom-up understanding instead of high-level guessing.}
+\li{Reducing hallucinations, contradictions, and context loss is critical.}
+\li{Preparing for security auditing, architecture review, or threat modeling.}
+}
+
+\p{Do \strong{not} use for:}
+
+\ul{
+\li{Vulnerability findings}
+\li{Fix recommendations}
+\li{Exploit reasoning}
+\li{Severity/impact rating}
+}
+}
+
+\subtree{
+\title{3. How This Skill Behaves}
+\p{When active, Claude will:}
+
+\ul{
+\li{Default to \strong{ultra-granular analysis} of each block and line.}
+\li{Apply micro-level First Principles, 5 Whys, and 5 Hows.}
+\li{Build and refine a persistent global mental model.}
+\li{Update earlier assumptions when contradicted ("Earlier I thought X; now Y.").}
+\li{Periodically anchor summaries to maintain stable context.}
+\li{Avoid speculation; express uncertainty explicitly when needed.}
+}
+
+\p{Goal: \strong{deep, accurate understanding}, not conclusions.}
+}
+
+\subtree{
+\title{Rationalizations (Do Not Skip)}
+\pre{\startverb
+| Rationalization | Why It's Wrong | Required Action |
+|-----------------|----------------|-----------------|
+| "I get the gist" | Gist-level understanding misses edge cases | Line-by-line analysis required |
+| "This function is simple" | Simple functions compose into complex bugs | Apply 5 Whys anyway |
+| "I'll remember this invariant" | You won't. Context degrades. | Write it down explicitly |
+| "External call is probably fine" | External = adversarial until proven otherwise | Jump into code or model as hostile |
+| "I can skip this helper" | Helpers contain assumptions that propagate | Trace the full call chain |
+| "This is taking too long" | Rushed context = hallucinated vulnerabilities later | Slow is fast |
+\stopverb}
+}
+
+\subtree{
+\title{4. Phase 1 — Initial Orientation (Bottom-Up Scan)}
+\p{Before deep analysis, Claude performs a minimal mapping:}
+
+\ol{
+\li{Identify major modules/files/contracts.}
+\li{Note obvious public/external entrypoints.}
+\li{Identify likely actors (users, owners, relayers, oracles, other contracts).}
+\li{Identify important storage variables, dicts, state structs, or cells.}
+\li{Build a preliminary structure without assuming behavior.}
+}
+
+\p{This establishes anchors for detailed analysis.}
+}
+
+\subtree{
+\title{5. Phase 2 — Ultra-Granular Function Analysis (Default Mode)}
+\p{Every non-trivial function receives full micro analysis.}
+
+\subtree{
+\title{5.1 Per-Function Microstructure Checklist}
+\p{For each function:}
+
+\ol{
+\li{\strong{Purpose}}
+\li{Why the function exists and its role in the system.}
+}
+
+\ol{
+\li{\strong{Inputs & Assumptions}}
+\li{Parameters and implicit inputs (state, sender, env).}
+\li{Preconditions and constraints.}
+}
+
+\ol{
+\li{\strong{Outputs & Effects}}
+\li{Return values.}
+\li{State/storage writes.}
+\li{Events/messages.}
+\li{External interactions.}
+}
+
+\ol{
+\li{\strong{Block-by-Block / Line-by-Line Analysis}}
+\li{What it does.}
+\li{Why it appears here (ordering logic).}
+\li{What assumptions it relies on.}
+\li{What invariants it establishes or maintains.}
+\li{What later logic depends on it.}
+}
+
+\p{Apply per-block:}
+
+\ul{
+\li{\strong{First Principles}}
+\li{\strong{5 Whys}}
+\li{\strong{5 Hows}}
+}
+}
+
+\subtree{
+\title{5.2 Cross-Function & External Flow Analysis}
+\p{*(Full Integration of Jump-Into-External-Code Rule)*}
+
+\p{When encountering calls, \strong{continue the same micro-first analysis across boundaries.}}
+
+\subtree{
+\title{Internal Calls}
+\ul{
+\li{Jump into the callee immediately.}
+\li{Perform block-by-block analysis of relevant code.}
+\li{Track flow of data, assumptions, and invariants:}
+\li{Note if callee logic behaves differently in this specific call context.}
+}
+}
+
+\subtree{
+\title{External Calls — Two Cases}
+\p{\strong{Case A — External Call to a Contract Whose Code Exists in the Codebase} Treat as an internal call:}
+
+\ul{
+\li{Jump into the target contract/function.}
+\li{Continue block-by-block micro-analysis.}
+\li{Propagate invariants and assumptions seamlessly.}
+\li{Consider edge cases based on the \em{actual} code, not a black-box guess.}
+}
+
+\p{\strong{Case B — External Call Without Available Code (True External / Black Box)} Analyze as adversarial:}
+
+\ul{
+\li{Describe payload/value/gas or parameters sent.}
+\li{Identify assumptions about the target.}
+\li{Consider all outcomes:}
+\li{revert}
+\li{incorrect/strange return values}
+\li{unexpected state changes}
+\li{misbehavior}
+\li{reentrancy (if applicable)}
+}
+}
+
+\subtree{
+\title{Continuity Rule}
+\p{Treat the entire call chain as \strong{one continuous execution flow}. Never reset context. All invariants, assumptions, and data dependencies must propagate across calls.}
+}
+}
+
+\subtree{
+\title{5.3 Complete Analysis Example}
+\p{See [FUNCTION_MICRO_ANALYSIS_EXAMPLE.md](resources/FUNCTION_MICRO_ANALYSIS_EXAMPLE.md) for a complete walkthrough demonstrating:}
+
+\ul{
+\li{Full micro-analysis of a DEX swap function}
+\li{Application of First Principles, 5 Whys, and 5 Hows}
+\li{Block-by-block analysis with invariants and assumptions}
+\li{Cross-function dependency mapping}
+\li{Risk analysis for external interactions}
+}
+
+\p{This example demonstrates the level of depth and structure required for all analyzed functions.}
+}
+
+\subtree{
+\title{5.4 Output Requirements}
+\p{When performing ultra-granular analysis, Claude MUST structure output following the format defined in [OUTPUT_REQUIREMENTS.md](resources/OUTPUT_REQUIREMENTS.md).}
+
+\p{Key requirements:}
+
+\ul{
+\li{\strong{Purpose} (2-3 sentences minimum)}
+\li{\strong{Inputs & Assumptions} (all parameters, preconditions, trust assumptions)}
+\li{\strong{Outputs & Effects} (returns, state writes, external calls, events, postconditions)}
+\li{\strong{Block-by-Block Analysis} (What, Why here, Assumptions, First Principles/5 Whys/5 Hows)}
+\li{\strong{Cross-Function Dependencies} (internal calls, external calls with risk analysis, shared state)}
+}
+
+\p{Quality thresholds:}
+
+\ul{
+\li{Minimum 3 invariants per function}
+\li{Minimum 5 assumptions documented}
+\li{Minimum 3 risk considerations for external interactions}
+\li{At least 1 First Principles application}
+\li{At least 3 combined 5 Whys/5 Hows applications}
+}
+}
+
+\subtree{
+\title{5.5 Completeness Checklist}
+\p{Before concluding micro-analysis of a function, verify against the [COMPLETENESS_CHECKLIST.md](resources/COMPLETENESS_CHECKLIST.md):}
+
+\ul{
+\li{\strong{Structural Completeness}: All required sections present (Purpose, Inputs, Outputs, Block-by-Block, Dependencies)}
+\li{\strong{Content Depth}: Minimum thresholds met (invariants, assumptions, risk analysis, First Principles)}
+\li{\strong{Continuity & Integration}: Cross-references, propagated assumptions, invariant couplings}
+\li{\strong{Anti-Hallucination}: Line number citations, no vague statements, evidence-based claims}
+}
+
+\p{Analysis is complete when all checklist items are satisfied and no unresolved "unclear" items remain.}
+}
+}
+
+\subtree{
+\title{6. Phase 3 — Global System Understanding}
+\p{After sufficient micro-analysis:}
+
+\ol{
+\li{\strong{State & Invariant Reconstruction}}
+\li{Map reads/writes of each state variable.}
+\li{Derive multi-function and multi-module invariants.}
+}
+
+\ol{
+\li{\strong{Workflow Reconstruction}}
+\li{Identify end-to-end flows (deposit, withdraw, lifecycle, upgrades).}
+\li{Track how state transforms across these flows.}
+\li{Record assumptions that persist across steps.}
+}
+
+\ol{
+\li{\strong{Trust Boundary Mapping}}
+\li{Actor → entrypoint → behavior.}
+\li{Identify untrusted input paths.}
+\li{Privilege changes and implicit role expectations.}
+}
+
+\ol{
+\li{\strong{Complexity & Fragility Clustering}}
+\li{Functions with many assumptions.}
+\li{High branching logic.}
+\li{Multi-step dependencies.}
+\li{Coupled state changes across modules.}
+}
+
+\p{These clusters help guide the vulnerability-hunting phase.}
+}
+
+\subtree{
+\title{7. Stability & Consistency Rules}
+\p{*(Anti-Hallucination, Anti-Contradiction)*}
+
+\p{Claude must:}
+
+\ul{
+\li{\strong{Never reshape evidence to fit earlier assumptions.}}
+\li{Update the model.}
+\li{State the correction explicitly.}
+}
+
+\ul{
+\li{\strong{Periodically anchor key facts}}
+\li{invariants}
+\li{state relationships}
+\li{actor roles}
+\li{workflows}
+}
+
+\ul{
+\li{\strong{Avoid vague guesses}}
+\li{"Unclear; need to inspect X."}
+\li{"It probably…"}
+}
+
+\ul{
+\li{\strong{Cross-reference constantly}}
+}
+}
+
+\subtree{
+\title{8. Subagent Usage}
+\p{Claude may spawn subagents for:}
+
+\ul{
+\li{Dense or complex functions.}
+\li{Long data-flow or control-flow chains.}
+\li{Cryptographic / mathematical logic.}
+\li{Complex state machines.}
+\li{Multi-module workflow reconstruction.}
+}
+
+\p{Use the \strong{\code{\startverb function-analyzer\stopverb}} agent for per-function deep analysis. It follows the full microstructure checklist, cross-function flow rules, and quality thresholds defined in this skill, and enforces the pure-context-building constraint.}
+
+\p{Subagents must:}
+
+\ul{
+\li{Follow the same micro-first rules.}
+\li{Return summaries that Claude integrates into its global model.}
+}
+}
+
+\subtree{
+\title{9. Relationship to Other Phases}
+\p{This skill runs \strong{before}:}
+
+\ul{
+\li{Vulnerability discovery}
+\li{Classification / triage}
+\li{Report writing}
+\li{Impact modeling}
+\li{Exploit reasoning}
+}
+
+\p{It exists solely to build:}
+
+\ul{
+\li{Deep understanding}
+\li{Stable context}
+\li{System-level clarity}
+}
+}
+
+\subtree{
+\title{10. Non-Goals}
+\p{While active, Claude should NOT:}
+
+\ul{
+\li{Identify vulnerabilities}
+\li{Propose fixes}
+\li{Generate proofs-of-concept}
+\li{Model exploits}
+\li{Assign severity or impact}
+}
+
+\p{This is \strong{pure context building} only.}
+}
+}

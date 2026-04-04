@@ -1,0 +1,57 @@
+\title{Self Validation Loop}
+
+\taxon{skill}
+
+\meta{description}{Run self-validation loops for triadic color systems using prediction}
+
+\subtree{
+\title{Self-Validation Loop}
+\p{Use when training or evaluating self-validation for 3-stream color systems.}
+
+\subtree{
+\title{Inputs}
+\ul{
+\li{seed, indices}
+\li{sources: splitmix_ternary, xoroshiro_3color, gay_mcp}
+\li{comparator: reafference or comparator}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Predict expected colors (efference copy).}
+\li{Observe actual colors (color_at or stream generation).}
+\li{Compare predictions with observations.}
+\li{Aggregate accuracy and surprise.}
+}
+}
+
+\subtree{
+\title{Gay MCP tools}
+\ul{
+\li{gay_seed, efference_copy, color_at, reafference, comparator, active_inference, self_model}
+}
+}
+
+\subtree{
+\title{Metrics}
+\ul{
+\li{accuracy = matches / total}
+\li{surprise = mismatch count or summed error}
+\li{pass threshold: accuracy >= 0.99 or surprise == 0}
+}
+}
+
+\subtree{
+\title{Output}
+\ul{
+\li{JSON log with seed, indices, predicted, observed, errors, accuracy, surprise}
+}
+}
+
+\subtree{
+\title{Example prompt}
+\p{"Run a self-validation loop over indices 1..20 and report accuracy and surprise."}
+}
+}

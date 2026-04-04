@@ -1,0 +1,64 @@
+\title{Media}
+
+\taxon{skill}
+
+\meta{description}{Media processing = ffmpeg + imagemagick + sox.}
+
+\subtree{
+\title{media}
+\p{Media processing = ffmpeg + imagemagick + sox.}
+
+\subtree{
+\title{Atomic Skills}
+\pre{\startverb
+| Skill | Domain |
+|-------|--------|
+| ffmpeg | Video/audio |
+| imagemagick | Images |
+| sox | Audio |
+\stopverb}
+}
+
+\subtree{
+\title{Video}
+\pre{\startverb
+# Convert
+ffmpeg -i in.mov -c:v libx264 out.mp4
+
+# Resize
+ffmpeg -i in.mp4 -vf scale=1280:-1 out.mp4
+
+# GIF
+ffmpeg -i in.mp4 -vf "fps=10,scale=320:-1" out.gif
+\stopverb}
+}
+
+\subtree{
+\title{Audio}
+\pre{\startverb
+# Extract
+ffmpeg -i video.mp4 -vn -c:a aac audio.m4a
+
+# Convert
+sox in.wav -r 44100 out.wav
+\stopverb}
+}
+
+\subtree{
+\title{Image}
+\pre{\startverb
+# Resize
+convert in.png -resize 800x600 out.png
+
+# Format
+convert in.png out.jpg
+\stopverb}
+}
+
+\subtree{
+\title{Pipeline}
+\pre{\startverb
+ffmpeg -i in.mp4 -f image2pipe - | convert - -resize 50% out.gif
+\stopverb}
+}
+}

@@ -1,0 +1,648 @@
+\title{Pubchem Database}
+
+\taxon{skill}
+
+\meta{description}{"Query PubChem via PUG-REST API/PubChemPy (110M+ compounds). Search by name/CID/SMILES, retrieve properties, similarity/substructure searches, bioactivity, for cheminformatics."}
+
+\subtree{
+\title{PubChem Database}
+\subtree{
+\title{Overview}
+\p{PubChem is the world's largest freely available chemical database with 110M+ compounds and 270M+ bioactivities. Query chemical structures by name, CID, or SMILES, retrieve molecular properties, perform similarity and substructure searches, access bioactivity data using PUG-REST API and PubChemPy.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Searching for chemical compounds by name, structure (SMILES/InChI), or molecular formula}
+\li{Retrieving molecular properties (MW, LogP, TPSA, hydrogen bonding descriptors)}
+\li{Performing similarity searches to find structurally related compounds}
+\li{Conducting substructure searches for specific chemical motifs}
+\li{Accessing bioactivity data from screening assays}
+\li{Converting between chemical identifier formats (CID, SMILES, InChI)}
+\li{Batch processing multiple compounds for drug-likeness screening or property analysis}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Chemical Structure Search}
+\p{Search for compounds using multiple identifier types:}
+
+\p{\strong{By Chemical Name}:}
+
+\pre{\startverb
+import pubchempy as pcp
+compounds = pcp.get_compounds('aspirin', 'name')
+compound = compounds[0]
+\stopverb}
+
+\p{\strong{By CID (Compound ID)}:}
+
+\pre{\startverb
+compound = pcp.Compound.from_cid(2244)  # Aspirin
+\stopverb}
+
+\p{\strong{By SMILES}:}
+
+\pre{\startverb
+compound = pcp.get_compounds('CC(=O)OC1=CC=CC=C1C(=O)O', 'smiles')[0]
+\stopverb}
+
+\p{\strong{By InChI}:}
+
+\pre{\startverb
+compound = pcp.get_compounds('InChI=1S/C9H8O4/...', 'inchi')[0]
+\stopverb}
+
+\p{\strong{By Molecular Formula}:}
+
+\pre{\startverb
+compounds = pcp.get_compounds('C9H8O4', 'formula')
+# Returns all compounds matching this formula
+\stopverb}
+}
+
+\subtree{
+\title{2. Property Retrieval}
+\p{Retrieve molecular properties for compounds using either high-level or low-level approaches:}
+
+\p{\strong{Using PubChemPy (Recommended)}:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+# Get compound object with all properties
+compound = pcp.get_compounds('caffeine', 'name')[0]
+
+# Access individual properties
+molecular_formula = compound.molecular_formula
+molecular_weight = compound.molecular_weight
+iupac_name = compound.iupac_name
+smiles = compound.canonical_smiles
+inchi = compound.inchi
+xlogp = compound.xlogp  # Partition coefficient
+tpsa = compound.tpsa    # Topological polar surface area
+\stopverb}
+
+\p{\strong{Get Specific Properties}:}
+
+\pre{\startverb
+# Request only specific properties
+properties = pcp.get_properties(
+    ['MolecularFormula', 'MolecularWeight', 'CanonicalSMILES', 'XLogP'],
+    'aspirin',
+    'name'
+)
+# Returns list of dictionaries
+\stopverb}
+
+\p{\strong{Batch Property Retrieval}:}
+
+\pre{\startverb
+import pandas as pd
+
+compound_names = ['aspirin', 'ibuprofen', 'paracetamol']
+all_properties = []
+
+for name in compound_names:
+    props = pcp.get_properties(
+        ['MolecularFormula', 'MolecularWeight', 'XLogP'],
+        name,
+        'name'
+    )
+    all_properties.extend(props)
+
+df = pd.DataFrame(all_properties)
+\stopverb}
+
+\p{\strong{Available Properties}: MolecularFormula, MolecularWeight, CanonicalSMILES, IsomericSMILES, InChI, InChIKey, IUPACName, XLogP, TPSA, HBondDonorCount, HBondAcceptorCount, RotatableBondCount, Complexity, Charge, and many more (see \code{\startverb references/api_reference.md\stopverb} for complete list).}
+}
+
+\subtree{
+\title{3. Similarity Search}
+\p{Find structurally similar compounds using Tanimoto similarity:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+# Start with a query compound
+query_compound = pcp.get_compounds('gefitinib', 'name')[0]
+query_smiles = query_compound.canonical_smiles
+
+# Perform similarity search
+similar_compounds = pcp.get_compounds(
+    query_smiles,
+    'smiles',
+    searchtype='similarity',
+    Threshold=85,  # Similarity threshold (0-100)
+    MaxRecords=50
+)
+
+# Process results
+for compound in similar_compounds[:10]:
+    print(f"CID {compound.cid}: {compound.iupac_name}")
+    print(f"  MW: {compound.molecular_weight}")
+\stopverb}
+
+\p{\strong{Note}: Similarity searches are asynchronous for large queries and may take 15-30 seconds to complete. PubChemPy handles the asynchronous pattern automatically.}
+}
+
+\subtree{
+\title{4. Substructure Search}
+\p{Find compounds containing a specific structural motif:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+# Search for compounds containing pyridine ring
+pyridine_smiles = 'c1ccncc1'
+
+matches = pcp.get_compounds(
+    pyridine_smiles,
+    'smiles',
+    searchtype='substructure',
+    MaxRecords=100
+)
+
+print(f"Found {len(matches)} compounds containing pyridine")
+\stopverb}
+
+\p{\strong{Common Substructures}:}
+
+\ul{
+\li{Benzene ring: \code{\startverb c1ccccc1\stopverb}}
+\li{Pyridine: \code{\startverb c1ccncc1\stopverb}}
+\li{Phenol: \code{\startverb c1ccc(O)cc1\stopverb}}
+\li{Carboxylic acid: \code{\startverb C(=O)O\stopverb}}
+}
+}
+
+\subtree{
+\title{5. Format Conversion}
+\p{Convert between different chemical structure formats:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+compound = pcp.get_compounds('aspirin', 'name')[0]
+
+# Convert to different formats
+smiles = compound.canonical_smiles
+inchi = compound.inchi
+inchikey = compound.inchikey
+cid = compound.cid
+
+# Download structure files
+pcp.download('SDF', 'aspirin', 'name', 'aspirin.sdf', overwrite=True)
+pcp.download('JSON', '2244', 'cid', 'aspirin.json', overwrite=True)
+\stopverb}
+}
+
+\subtree{
+\title{6. Structure Visualization}
+\p{Generate 2D structure images:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+# Download compound structure as PNG
+pcp.download('PNG', 'caffeine', 'name', 'caffeine.png', overwrite=True)
+
+# Using direct URL (via requests)
+import requests
+
+cid = 2244  # Aspirin
+url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/PNG?image_size=large"
+response = requests.get(url)
+
+with open('structure.png', 'wb') as f:
+    f.write(response.content)
+\stopverb}
+}
+
+\subtree{
+\title{7. Synonym Retrieval}
+\p{Get all known names and synonyms for a compound:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+synonyms_data = pcp.get_synonyms('aspirin', 'name')
+
+if synonyms_data:
+    cid = synonyms_data[0]['CID']
+    synonyms = synonyms_data[0]['Synonym']
+
+    print(f"CID {cid} has {len(synonyms)} synonyms:")
+    for syn in synonyms[:10]:  # First 10
+        print(f"  - {syn}")
+\stopverb}
+}
+
+\subtree{
+\title{8. Bioactivity Data Access}
+\p{Retrieve biological activity data from assays:}
+
+\pre{\startverb
+import requests
+import json
+
+# Get bioassay summary for a compound
+cid = 2244  # Aspirin
+url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/assaysummary/JSON"
+
+response = requests.get(url)
+if response.status_code == 200:
+    data = response.json()
+    # Process bioassay information
+    table = data.get('Table', {})
+    rows = table.get('Row', [])
+    print(f"Found {len(rows)} bioassay records")
+\stopverb}
+
+\p{\strong{For more complex bioactivity queries}, use the \code{\startverb scripts/bioactivity_query.py\stopverb} helper script which provides:}
+
+\ul{
+\li{Bioassay summaries with activity outcome filtering}
+\li{Assay target identification}
+\li{Search for compounds by biological target}
+\li{Active compound lists for specific assays}
+}
+}
+
+\subtree{
+\title{9. Comprehensive Compound Annotations}
+\p{Access detailed compound information through PUG-View:}
+
+\pre{\startverb
+import requests
+
+cid = 2244
+url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
+
+response = requests.get(url)
+if response.status_code == 200:
+    annotations = response.json()
+    # Contains extensive data including:
+    # - Chemical and Physical Properties
+    # - Drug and Medication Information
+    # - Pharmacology and Biochemistry
+    # - Safety and Hazards
+    # - Toxicity
+    # - Literature references
+    # - Patents
+\stopverb}
+
+\p{\strong{Get Specific Section}:}
+
+\pre{\startverb
+# Get only drug information
+url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON?heading=Drug and Medication Information"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Installation Requirements}
+\p{Install PubChemPy for Python-based access:}
+
+\pre{\startverb
+uv pip install pubchempy
+\stopverb}
+
+\p{For direct API access and bioactivity queries:}
+
+\pre{\startverb
+uv pip install requests
+\stopverb}
+
+\p{Optional for data analysis:}
+
+\pre{\startverb
+uv pip install pandas
+\stopverb}
+}
+
+\subtree{
+\title{Helper Scripts}
+\p{This skill includes Python scripts for common PubChem tasks:}
+
+\subtree{
+\title{scripts/compound_search.py}
+\p{Provides utility functions for searching and retrieving compound information:}
+
+\p{\strong{Key Functions}:}
+
+\ul{
+\li{\code{\startverb search_by_name(name, max_results=10)\stopverb}: Search compounds by name}
+\li{\code{\startverb search_by_smiles(smiles)\stopverb}: Search by SMILES string}
+\li{\code{\startverb get_compound_by_cid(cid)\stopverb}: Retrieve compound by CID}
+\li{\code{\startverb get_compound_properties(identifier, namespace, properties)\stopverb}: Get specific properties}
+\li{\code{\startverb similarity_search(smiles, threshold, max_records)\stopverb}: Perform similarity search}
+\li{\code{\startverb substructure_search(smiles, max_records)\stopverb}: Perform substructure search}
+\li{\code{\startverb get_synonyms(identifier, namespace)\stopverb}: Get all synonyms}
+\li{\code{\startverb batch_search(identifiers, namespace, properties)\stopverb}: Batch search multiple compounds}
+\li{\code{\startverb download_structure(identifier, namespace, format, filename)\stopverb}: Download structures}
+\li{\code{\startverb print_compound_info(compound)\stopverb}: Print formatted compound information}
+}
+
+\p{\strong{Usage}:}
+
+\pre{\startverb
+from scripts.compound_search import search_by_name, get_compound_properties
+
+# Search for a compound
+compounds = search_by_name('ibuprofen')
+
+# Get specific properties
+props = get_compound_properties('aspirin', 'name', ['MolecularWeight', 'XLogP'])
+\stopverb}
+}
+
+\subtree{
+\title{scripts/bioactivity_query.py}
+\p{Provides functions for retrieving biological activity data:}
+
+\p{\strong{Key Functions}:}
+
+\ul{
+\li{\code{\startverb get_bioassay_summary(cid)\stopverb}: Get bioassay summary for compound}
+\li{\code{\startverb get_compound_bioactivities(cid, activity_outcome)\stopverb}: Get filtered bioactivities}
+\li{\code{\startverb get_assay_description(aid)\stopverb}: Get detailed assay information}
+\li{\code{\startverb get_assay_targets(aid)\stopverb}: Get biological targets for assay}
+\li{\code{\startverb search_assays_by_target(target_name, max_results)\stopverb}: Find assays by target}
+\li{\code{\startverb get_active_compounds_in_assay(aid, max_results)\stopverb}: Get active compounds}
+\li{\code{\startverb get_compound_annotations(cid, section)\stopverb}: Get PUG-View annotations}
+\li{\code{\startverb summarize_bioactivities(cid)\stopverb}: Generate bioactivity summary statistics}
+\li{\code{\startverb find_compounds_by_bioactivity(target, threshold, max_compounds)\stopverb}: Find compounds by target}
+}
+
+\p{\strong{Usage}:}
+
+\pre{\startverb
+from scripts.bioactivity_query import get_bioassay_summary, summarize_bioactivities
+
+# Get bioactivity summary
+summary = summarize_bioactivities(2244)  # Aspirin
+print(f"Total assays: {summary['total_assays']}")
+print(f"Active: {summary['active']}, Inactive: {summary['inactive']}")
+\stopverb}
+}
+}
+
+\subtree{
+\title{API Rate Limits and Best Practices}
+\p{\strong{Rate Limits}:}
+
+\ul{
+\li{Maximum 5 requests per second}
+\li{Maximum 400 requests per minute}
+\li{Maximum 300 seconds running time per minute}
+}
+
+\p{\strong{Best Practices}:}
+
+\ol{
+\li{\strong{Use CIDs for repeated queries}: CIDs are more efficient than names or structures}
+\li{\strong{Cache results locally}: Store frequently accessed data}
+\li{\strong{Batch requests}: Combine multiple queries when possible}
+\li{\strong{Implement delays}: Add 0.2-0.3 second delays between requests}
+\li{\strong{Handle errors gracefully}: Check for HTTP errors and missing data}
+\li{\strong{Use PubChemPy}: Higher-level abstraction handles many edge cases}
+\li{\strong{Leverage asynchronous pattern}: For large similarity/substructure searches}
+\li{\strong{Specify MaxRecords}: Limit results to avoid timeouts}
+}
+
+\p{\strong{Error Handling}:}
+
+\pre{\startverb
+from pubchempy import BadRequestError, NotFoundError, TimeoutError
+
+try:
+    compound = pcp.get_compounds('query', 'name')[0]
+except NotFoundError:
+    print("Compound not found")
+except BadRequestError:
+    print("Invalid request format")
+except TimeoutError:
+    print("Request timed out - try reducing scope")
+except IndexError:
+    print("No results returned")
+\stopverb}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Chemical Identifier Conversion Pipeline}
+\p{Convert between different chemical identifiers:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+# Start with any identifier type
+compound = pcp.get_compounds('caffeine', 'name')[0]
+
+# Extract all identifier formats
+identifiers = {
+    'CID': compound.cid,
+    'Name': compound.iupac_name,
+    'SMILES': compound.canonical_smiles,
+    'InChI': compound.inchi,
+    'InChIKey': compound.inchikey,
+    'Formula': compound.molecular_formula
+}
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Drug-Like Property Screening}
+\p{Screen compounds using Lipinski's Rule of Five:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+def check_drug_likeness(compound_name):
+    compound = pcp.get_compounds(compound_name, 'name')[0]
+
+    # Lipinski's Rule of Five
+    rules = {
+        'MW <= 500': compound.molecular_weight <= 500,
+        'LogP <= 5': compound.xlogp <= 5 if compound.xlogp else None,
+        'HBD <= 5': compound.h_bond_donor_count <= 5,
+        'HBA <= 10': compound.h_bond_acceptor_count <= 10
+    }
+
+    violations = sum(1 for v in rules.values() if v is False)
+    return rules, violations
+
+rules, violations = check_drug_likeness('aspirin')
+print(f"Lipinski violations: {violations}")
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 3: Finding Similar Drug Candidates}
+\p{Identify structurally similar compounds to a known drug:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+# Start with known drug
+reference_drug = pcp.get_compounds('imatinib', 'name')[0]
+reference_smiles = reference_drug.canonical_smiles
+
+# Find similar compounds
+similar = pcp.get_compounds(
+    reference_smiles,
+    'smiles',
+    searchtype='similarity',
+    Threshold=85,
+    MaxRecords=20
+)
+
+# Filter by drug-like properties
+candidates = []
+for comp in similar:
+    if comp.molecular_weight and 200 <= comp.molecular_weight <= 600:
+        if comp.xlogp and -1 <= comp.xlogp <= 5:
+            candidates.append(comp)
+
+print(f"Found {len(candidates)} drug-like candidates")
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 4: Batch Compound Property Comparison}
+\p{Compare properties across multiple compounds:}
+
+\pre{\startverb
+import pubchempy as pcp
+import pandas as pd
+
+compound_list = ['aspirin', 'ibuprofen', 'naproxen', 'celecoxib']
+
+properties_list = []
+for name in compound_list:
+    try:
+        compound = pcp.get_compounds(name, 'name')[0]
+        properties_list.append({
+            'Name': name,
+            'CID': compound.cid,
+            'Formula': compound.molecular_formula,
+            'MW': compound.molecular_weight,
+            'LogP': compound.xlogp,
+            'TPSA': compound.tpsa,
+            'HBD': compound.h_bond_donor_count,
+            'HBA': compound.h_bond_acceptor_count
+        })
+    except Exception as e:
+        print(f"Error processing {name}: {e}")
+
+df = pd.DataFrame(properties_list)
+print(df.to_string(index=False))
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 5: Substructure-Based Virtual Screening}
+\p{Screen for compounds containing specific pharmacophores:}
+
+\pre{\startverb
+import pubchempy as pcp
+
+# Define pharmacophore (e.g., sulfonamide group)
+pharmacophore_smiles = 'S(=O)(=O)N'
+
+# Search for compounds containing this substructure
+hits = pcp.get_compounds(
+    pharmacophore_smiles,
+    'smiles',
+    searchtype='substructure',
+    MaxRecords=100
+)
+
+# Further filter by properties
+filtered_hits = [
+    comp for comp in hits
+    if comp.molecular_weight and comp.molecular_weight < 500
+]
+
+print(f"Found {len(filtered_hits)} compounds with desired substructure")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{For detailed API documentation, including complete property lists, URL patterns, advanced query options, and more examples, consult \code{\startverb references/api_reference.md\stopverb}. This comprehensive reference includes:}
+
+\ul{
+\li{Complete PUG-REST API endpoint documentation}
+\li{Full list of available molecular properties}
+\li{Asynchronous request handling patterns}
+\li{PubChemPy API reference}
+\li{PUG-View API for annotations}
+\li{Common workflows and use cases}
+\li{Links to official PubChem documentation}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Compound Not Found}:}
+
+\ul{
+\li{Try alternative names or synonyms}
+\li{Use CID if known}
+\li{Check spelling and chemical name format}
+}
+
+\p{\strong{Timeout Errors}:}
+
+\ul{
+\li{Reduce MaxRecords parameter}
+\li{Add delays between requests}
+\li{Use CIDs instead of names for faster queries}
+}
+
+\p{\strong{Empty Property Values}:}
+
+\ul{
+\li{Not all properties are available for all compounds}
+\li{Check if property exists before accessing: \code{\startverb if compound.xlogp:\stopverb}}
+\li{Some properties only available for certain compound types}
+}
+
+\p{\strong{Rate Limit Exceeded}:}
+
+\ul{
+\li{Implement delays (0.2-0.3 seconds) between requests}
+\li{Use batch operations where possible}
+\li{Consider caching results locally}
+}
+
+\p{\strong{Similarity/Substructure Search Hangs}:}
+
+\ul{
+\li{These are asynchronous operations that may take 15-30 seconds}
+\li{PubChemPy handles polling automatically}
+\li{Reduce MaxRecords if timing out}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{PubChem Home: https://pubchem.ncbi.nlm.nih.gov/}
+\li{PUG-REST Documentation: https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest}
+\li{PUG-REST Tutorial: https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest-tutorial}
+\li{PubChemPy Documentation: https://pubchempy.readthedocs.io/}
+\li{PubChemPy GitHub: https://github.com/mcs07/PubChemPy}
+}
+}
+}

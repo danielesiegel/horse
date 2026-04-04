@@ -1,0 +1,226 @@
+\title{Implementing Zero Trust Network Access With Zscaler}
+
+\taxon{skill}
+
+\tag{zero-trust}
+
+\tag{ztna}
+
+\tag{zscaler}
+
+\tag{network-access}
+
+\tag{vpn-replacement}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement Zero Trust Network Access using Zscaler Private Access (ZPA) to replace traditional VPN with identity-based, context-aware access to private applications through the Zscaler Zero Trust Exchange.}
+
+\subtree{
+\title{Implementing Zero Trust Network Access with Zscaler}
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Understanding of zero trust principles (NIST SP 800-207)}
+\li{Familiarity with identity providers (Okta, Azure AD, Ping Identity)}
+\li{Knowledge of network security fundamentals}
+\li{Access to Zscaler Private Access (ZPA) tenant}
+}
+}
+
+\subtree{
+\title{Overview}
+\p{Zero Trust Network Access (ZTNA) replaces traditional VPN architectures by enforcing identity-based, context-aware access to private applications without placing users on the corporate network. Zscaler Private Access (ZPA) is a leading ZTNA solution that brokers secure connections between authenticated users and internal applications through the Zscaler Zero Trust Exchange cloud platform.}
+
+\p{This skill covers end-to-end deployment of ZPA including connector setup, application segmentation, policy configuration, and integration with identity providers for continuous verification.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing zero trust network access with zscaler capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with zero trust architecture concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Architecture}
+\subtree{
+\title{Zscaler Private Access Components}
+\ol{
+\li{\strong{Client Connector}: Lightweight agent on user endpoints that establishes outbound TLS tunnels to the nearest ZPA Service Edge}
+\li{\strong{ZPA Service Edge}: Cloud-hosted broker (or Private Service Edge on-premises) that stitches user-to-app connections after policy evaluation}
+\li{\strong{App Connector}: Lightweight VM deployed in the application environment that creates outbound tunnels to the Service Edge}
+\li{\strong{ZPA Admin Portal}: Centralized management console for defining applications, segments, and access policies}
+}
+}
+
+\subtree{
+\title{Connection Flow}
+\pre{\startverb
+User Device (Client Connector)
+    |
+    v [Outbound TLS tunnel]
+ZPA Service Edge (Policy Evaluation + IdP Auth)
+    |
+    v [Outbound TLS tunnel]
+App Connector --> Internal Application
+\stopverb}
+
+\p{Key principle: No inbound connections are required. Both the Client Connector and App Connector initiate outbound-only connections, eliminating the attack surface of traditional VPNs.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Application Segments}
+\p{Define specific applications or groups of applications by IP address, FQDN, port, and protocol. Segments enable granular microsegmentation rather than broad network access.}
+}
+
+\subtree{
+\title{Access Policies}
+\p{Policies combine user identity, group membership, device posture, and contextual signals (location, time) to grant or deny access to application segments.}
+}
+
+\subtree{
+\title{Server Groups}
+\p{Logical groupings of App Connectors that serve specific application segments, enabling high availability and geographic distribution.}
+}
+
+\subtree{
+\title{Browser Access}
+\p{ZPA supports clientless browser-based access for web applications, enabling ZTNA for unmanaged devices and third-party users without requiring the Client Connector.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: Foundation Setup}
+\ol{
+\li{\strong{Configure Identity Provider Integration}}
+\li{Navigate to Administration > IdP Configuration in ZPA Admin Portal}
+\li{Add SAML 2.0 or OIDC integration with your IdP (Azure AD, Okta, Ping)}
+\li{Configure SCIM provisioning for automatic user/group synchronization}
+\li{Test SSO authentication flow}
+}
+
+\ol{
+\li{\strong{Deploy App Connectors}}
+\li{Provision App Connector VMs in each application environment (data center, AWS VPC, Azure VNet)}
+\li{Download the provisioning key from ZPA Admin Portal}
+\li{Install and enroll the App Connector using the provisioning key}
+\li{Verify connector status shows "Healthy" in the admin portal}
+\li{Deploy at least two connectors per environment for high availability}
+}
+
+\ol{
+\li{\strong{Create Server Groups}}
+\li{Group App Connectors by geographic location or application tier}
+\li{Configure health check intervals and failover behavior}
+}
+}
+
+\subtree{
+\title{Phase 2: Application Segmentation}
+\ol{
+\li{\strong{Define Application Segments}}
+\li{Create segments for each application or logical group}
+\li{Specify domains/IPs, ports, and protocols}
+\li{Associate segments with appropriate server groups}
+\li{Enable or disable browser access as needed}
+}
+
+\ol{
+\li{\strong{Create Segment Groups}}
+\li{Organize application segments into logical groups (e.g., HR apps, Finance apps)}
+\li{Use segment groups to simplify policy management}
+}
+}
+
+\subtree{
+\title{Phase 3: Policy Configuration}
+\ol{
+\li{\strong{Configure Access Policies}}
+\li{Define rules matching user groups to application segments}
+\li{Apply conditions: device posture, client type, SAML attributes}
+\li{Order rules by priority (most restrictive first)}
+\li{Create deny rules for blocked access scenarios}
+}
+
+\ol{
+\li{\strong{Enable Device Posture Checks}}
+\li{Configure posture profiles requiring OS patch level, disk encryption, antivirus status}
+\li{Integrate with endpoint management (CrowdStrike, Microsoft Intune, Carbon Black)}
+\li{Associate posture profiles with access policies}
+}
+}
+
+\subtree{
+\title{Phase 4: Client Deployment}
+\ol{
+\li{\strong{Deploy Client Connector}}
+\li{Package the Zscaler Client Connector with enrollment token}
+\li{Deploy via MDM (Intune, Jamf, SCCM) or manual installation}
+\li{Configure forwarding profile to route private app traffic through ZPA}
+\li{Test user authentication and application access}
+}
+}
+
+\subtree{
+\title{Phase 5: Monitoring and Optimization}
+\ol{
+\li{\strong{Enable Logging and Monitoring}}
+\li{Configure log streaming to SIEM (Splunk, Sentinel, QRadar)}
+\li{Set up alerts for policy violations, connector health, and authentication failures}
+\li{Review ZPA Insights dashboard for usage analytics}
+}
+
+\ol{
+\li{\strong{Iterative Refinement}}
+\li{Analyze access logs to identify shadow IT and unauthorized access attempts}
+\li{Refine application segments based on actual traffic patterns}
+\li{Expand coverage from pilot applications to full enterprise deployment}
+}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] Identity provider integration tested with SSO and SCIM sync}
+\li{[ ] App Connectors deployed and showing healthy status in all environments}
+\li{[ ] Application segments defined with correct IPs/FQDNs, ports, protocols}
+\li{[ ] Access policies enforce least-privilege per user group}
+\li{[ ] Device posture checks block non-compliant endpoints}
+\li{[ ] Client Connector deployed to all managed endpoints}
+\li{[ ] Log streaming to SIEM confirmed with test events}
+\li{[ ] Failover tested by disabling one App Connector per server group}
+\li{[ ] Browser Access configured for web apps requiring third-party access}
+\li{[ ] VPN decommission plan documented with rollback procedures}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{NIST SP 800-207: Zero Trust Architecture}
+\li{CISA Zero Trust Maturity Model v2.0 - Network Pillar}
+\li{Zscaler Private Access Architecture Guide}
+\li{CSA Software-Defined Perimeter and Zero Trust Specification v2.0}
+}
+}
+}

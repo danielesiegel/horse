@@ -1,0 +1,94 @@
+\title{Notion Meeting Intelligence}
+
+\taxon{skill}
+
+\meta{description}{Prepare meeting materials with Notion context and Codex research; use when gathering context, drafting agendas/pre-reads, and tailoring materials to attendees.}
+
+\subtree{
+\title{Meeting Intelligence}
+\p{Prep meetings by pulling Notion context, tailoring agendas/pre-reads, and enriching with Codex research.}
+
+\subtree{
+\title{Quick start}
+\ol{
+\li{Confirm meeting goal, attendees, date/time, and decisions needed.}
+\li{Gather context: search with \code{\startverb Notion:notion-search\stopverb}, then fetch with \code{\startverb Notion:notion-fetch\stopverb} (prior notes, specs, OKRs, decisions).}
+\li{Pick the right template via \code{\startverb reference/template-selection-guide.md\stopverb} (status, decision, planning, retro, 1:1, brainstorming).}
+\li{Draft agenda/pre-read in Notion with \code{\startverb Notion:notion-create-pages\stopverb}, embedding source links and owner/timeboxes.}
+\li{Enrich with Codex research (industry insights, benchmarks, risks) and update the page with \code{\startverb Notion:notion-update-page\stopverb} as plans change.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{0) If any MCP call fails because Notion MCP is not connected, pause and set it up:}
+\ol{
+\li{Add the Notion MCP:}
+\li{\code{\startverb codex mcp add notion --url https://mcp.notion.com/mcp\stopverb}}
+\li{Enable remote MCP client:}
+\li{Set \code{\startverb [features].rmcp_client = true\stopverb} in \code{\startverb config.toml\stopverb} \strong{or} run \code{\startverb codex --enable rmcp_client\stopverb}}
+\li{Log in with OAuth:}
+\li{\code{\startverb codex mcp login notion\stopverb}}
+}
+
+\p{After successful login, the user will have to restart codex. You should finish your answer and tell them so when they try again they can continue with Step 1.}
+}
+
+\subtree{
+\title{1) Gather inputs}
+\ul{
+\li{Ask for objective, desired outcomes/decisions, attendees, duration, date/time, and prior materials.}
+\li{Search Notion for relevant docs, past notes, specs, and action items (\code{\startverb Notion:notion-search\stopverb}), then fetch key pages (\code{\startverb Notion:notion-fetch\stopverb}).}
+\li{Capture blockers/risks and open questions up front.}
+}
+}
+
+\subtree{
+\title{2) Choose format}
+\ul{
+\li{Status/update → status template.}
+\li{Decision/approval → decision template.}
+\li{Planning (sprint/project) → planning template.}
+\li{Retro/feedback → retrospective template.}
+\li{1:1 → one-on-one template.}
+\li{Ideation → brainstorming template.}
+\li{Use \code{\startverb reference/template-selection-guide.md\stopverb} to confirm.}
+}
+}
+
+\subtree{
+\title{3) Build the agenda/pre-read}
+\ul{
+\li{Start from the chosen template in \code{\startverb reference/\stopverb} and adapt sections (context, goals, agenda, owner/time per item, decisions, risks, prep asks).}
+\li{Include links to pulled Notion pages and any required pre-reading.}
+\li{Assign owners for each agenda item; call out timeboxes and expected outputs.}
+}
+}
+
+\subtree{
+\title{4) Enrich with research}
+\ul{
+\li{Add concise Codex research where helpful: market/industry facts, benchmarks, risks, best practices.}
+\li{Keep claims cited with source links; separate fact from opinion.}
+}
+}
+
+\subtree{
+\title{5) Finalize and share}
+\ul{
+\li{Add next steps and owners for follow-ups.}
+\li{If tasks arise, create/link tasks in the relevant Notion database.}
+\li{Update the page via \code{\startverb Notion:notion-update-page\stopverb} when details change; keep a brief changelog if multiple edits.}
+}
+}
+}
+
+\subtree{
+\title{References and examples}
+\ul{
+\li{\code{\startverb reference/\stopverb} — template picker and meeting templates (e.g., \code{\startverb template-selection-guide.md\stopverb}, \code{\startverb status-update-template.md\stopverb}, \code{\startverb decision-meeting-template.md\stopverb}, \code{\startverb sprint-planning-template.md\stopverb}, \code{\startverb one-on-one-template.md\stopverb}, \code{\startverb retrospective-template.md\stopverb}, \code{\startverb brainstorming-template.md\stopverb}).}
+\li{\code{\startverb examples/\stopverb} — end-to-end meeting preps (e.g., \code{\startverb executive-review.md\stopverb}, \code{\startverb project-decision.md\stopverb}, \code{\startverb sprint-planning.md\stopverb}, \code{\startverb customer-meeting.md\stopverb}).}
+}
+}
+}

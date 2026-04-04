@@ -1,0 +1,178 @@
+\title{Benchmark}
+
+\taxon{skill}
+
+\meta{description}{Run and interpret engine-stack benchmarks (Steel, ember, shale)}
+
+\subtree{
+\title{Project Engines Benchmark Skill}
+\p{Run benchmarks for Steel, ember, and shale engines.}
+
+\subtree{
+\title{CRITICAL: Read Before Benchmarking}
+\p{\strong{ALWAYS read first}: \code{\startverb ~/p/benchmark-suite/docs/BENCHMARK_FAIRNESS.md\stopverb}}
+
+\p{This document contains hard-won lessons about benchmark fairness. Ignoring it leads to misleading claims.}
+}
+
+\subtree{
+\title{Pre-Benchmark Checklist}
+\pre{\startverb
+| Check | Why | How |
+|-------|-----|-----|
+| Read BENCHMARK_FAIRNESS.md | Contains all fairness lessons | `cat ~/p/benchmark-suite/docs/BENCHMARK_FAIRNESS.md` |
+| Use `--batched` for LMDB/redb | 7-24x improvement with proper config | Add `--batched --batch-size 1000` |
+| Scale sled cache | Undersized cache = 17x slower | Add `--cache-mb 2048` for 1M+ records |
+| Check dataset vs RAM | If data fits in RAM, you're measuring memory | Use larger datasets for I/O testing |
+\stopverb}
+
+\p{\strong{Note}: Steel uses verify-once checksums (like RocksDB/WiredTiger) - verify on first read from disk, then trust page cache. Use \code{\startverb FileLayoutConfig::fast()\stopverb} to disable checksums entirely for ZFS/ECC storage.}
+}
+
+\subtree{
+\title{Quick Commands}
+\subtree{
+\title{Steel (Oak engine)}
+\pre{\startverb
+# Build
+cd ~/p/benchmark-suite && graft build --release -p ycsb-steel
+
+# Single-threaded
+ycsb-steel --fast --data-dir /tmp/bench --workload a --records 50000 --ops 200000
+
+# Multi-threaded with sharding
+ycsb-steel --fast --shards 64 --threads 4 --data-dir /tmp/bench --workload a --records 50000 --ops 200000
+
+# Ultimate adversarial benchmark (vs sled)
+cd ~/p/engine-stack/engines/steel
+graft run --release --example ultimate_adversarial
+\stopverb}
+}
+
+\subtree{
+\title{Fair 4-Engine Comparison}
+\pre{\startverb
+# Use the fair comparison script (includes proper batching for all engines)
+RECORDS=50000 OPS=200000 ~/p/benchmark-suite/scripts/steel-fair-compare.sh
+\stopverb}
+}
+
+\subtree{
+\title{Individual Engine Commands (Fair Config)}
+\pre{\startverb
+# Steel
+ycsb-steel --fast --workload a --records 50000 --ops 200000 --data-dir /tmp/bench
+
+# sled (scaled cache)
+ycsb-sled --high-throughput --cache-mb 256 --workload a --records 50000 --ops 200000 --data-dir /tmp/bench
+
+# LMDB (batched + nosync)
+ycsb-lmdb --batched --nosync --batch-size 1000 --workload a --records 50000 --ops 200000 --data-dir /tmp/bench
+
+# redb (batched)
+ycsb-redb --batched --batch-size 1000 --workload a --records 50000 --ops 200000 --data-dir /tmp/bench
+\stopverb}
+}
+}
+
+\subtree{
+\title{Steel Results (2025-12-23) - Steel Wins All}
+\p{\strong{Steel now beats LMDB on ALL workloads!}}
+
+\pre{\startverb
+| Workload | Steel | LMDB | redb | sled | Winner |
+|----------|------|------|------|------|--------|
+| A (writes) | **2.49M** | 2.24M | 687K | 744K | Steel +11% |
+| B (reads) | **3.01M** | 2.90M | 2.05M | 1.55M | Steel +3.8% |
+| C (pure read) | **3.03M** | 1.79M | 1.05M | 1.81M | Steel +69% |
+\stopverb}
+
+\subtree{
+\title{Optimizations That Closed the Gap}
+\p{\strong{Implemented} (see \code{\startverb docs/STEEL_OPTIMIZATIONS.md\stopverb}):}
+
+\ul{
+\li{\code{\startverb get_ref()\stopverb} +8.4\% - zero-copy reads (KEY WIN)}
+\li{\code{\startverb get_cached_epoch()\stopverb} +1\% - thread-local epoch}
+\li{\code{\startverb get_fast()\stopverb} - seqlock skip (no gain, kept for API)}
+}
+
+\p{\strong{Gap closed!} Previous 43\% gap on Workload B eliminated via zero-copy optimization.}
+}
+
+\subtree{
+\title{Where Steel Actually Wins}
+\pre{\startverb
+| Scenario | Steel Advantage | Notes |
+|----------|----------------|-------|
+| Write-heavy (Workload A) | 1.07x vs LMDB | COW efficiency |
+| Pure reads (Workload C) | 1.52x vs LMDB | Zero-copy mmap |
+| Cold reads after restart | 3x vs sled | No log replay |
+| Range scans | 3.4x vs sled | COW pages |
+| Simplicity | ~6K LOC vs 20K+ | Easier to understand/debug |
+\stopverb}
+}
+
+\subtree{
+\title{Sharded Write Performance (2025-12-25)}
+\p{With 64 shards, Steel \strong{beats sled by 2.3x}:}
+
+\pre{\startverb
+| Writers | Shards | Steel writes/s | vs sled |
+|---------|--------|----------------|---------|
+| 1 | 16 | 3.0M | 149% |
+| 4 | 64 | 10.8M | 230% |
+| 8 | 64 | **16.8M** | **237%** |
+\stopverb}
+}
+
+\subtree{
+\title{Where Steel Does NOT Win}
+\pre{\startverb
+| Scenario | Winner | Notes |
+|----------|--------|-------|
+| Multi-key transactions | redb/LMDB | Steel has single-key atomicity only |
+| 30+ years production hardening | LMDB | Ecosystem maturity |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Mistakes (Avoid These)}
+\pre{\startverb
+| Mistake | What Happens | Fix |
+|---------|--------------|-----|
+| Benchmark LMDB without `--batched` | 7.9x slower | Use `--batched --batch-size 1000` |
+| Benchmark redb without `--batched` | 24x slower | Use `--batched --batch-size 1000` |
+| Claim "47x faster than redb" | Misleading | Fair comparison is ~1.9x |
+| Small dataset (50MB) | Memory-bound, not I/O | Use 500MB+ for I/O testing |
+| Forget to clear between engines | Cache effects | Sleep or clear page cache |
+\stopverb}
+}
+
+\subtree{
+\title{Key Files}
+\pre{\startverb
+| Purpose | Location |
+|---------|----------|
+| Steel YCSB | `~/p/benchmark-suite/engines/ycsb-steel/` |
+| Fair script | `~/p/benchmark-suite/scripts/steel-fair-compare.sh` |
+| Fairness docs | `~/p/benchmark-suite/docs/BENCHMARK_FAIRNESS.md` |
+| Steel benchmarks | `~/p/engine-stack/engines/steel/BENCHMARKS.md` |
+| **Roadmap to #1** | `~/p/engine-stack/engines/steel/ROADMAP_BEST_KV.md` |
+| Ultimate adversarial | `~/p/engine-stack/engines/steel/examples/ultimate_adversarial.rs` |
+\stopverb}
+}
+
+\subtree{
+\title{Dialectical Improvement}
+\p{When benchmarking, always ask:}
+
+\ol{
+\li{"What would a competitor's maintainer criticize about this benchmark?"}
+\li{"Am I using each engine's recommended configuration?"}
+\li{"What am I NOT measuring that matters?"}
+\li{"Is this result surprising? If so, investigate before publishing."}
+}
+}
+}

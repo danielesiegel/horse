@@ -1,0 +1,564 @@
+\title{Alphafold Database}
+
+\taxon{skill}
+
+\meta{description}{"Access AlphaFold's 200M+ AI-predicted protein structures. Retrieve structures by UniProt ID, download PDB/mmCIF files, analyze confidence metrics (pLDDT, PAE), for drug discovery and structural biology."}
+
+\subtree{
+\title{AlphaFold Database}
+\subtree{
+\title{Overview}
+\p{AlphaFold DB is a public repository of AI-predicted 3D protein structures for over 200 million proteins, maintained by DeepMind and EMBL-EBI. Access structure predictions with confidence metrics, download coordinate files, retrieve bulk datasets, and integrate predictions into computational workflows.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when working with AI-predicted protein structures in scenarios such as:}
+
+\ul{
+\li{Retrieving protein structure predictions by UniProt ID or protein name}
+\li{Downloading PDB/mmCIF coordinate files for structural analysis}
+\li{Analyzing prediction confidence metrics (pLDDT, PAE) to assess reliability}
+\li{Accessing bulk proteome datasets via Google Cloud Platform}
+\li{Comparing predicted structures with experimental data}
+\li{Performing structure-based drug discovery or protein engineering}
+\li{Building structural models for proteins lacking experimental structures}
+\li{Integrating AlphaFold predictions into computational pipelines}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Searching and Retrieving Predictions}
+\p{\strong{Using Biopython (Recommended):}}
+
+\p{The Biopython library provides the simplest interface for retrieving AlphaFold structures:}
+
+\pre{\startverb
+from Bio.PDB import alphafold_db
+
+# Get all predictions for a UniProt accession
+predictions = list(alphafold_db.get_predictions("P00520"))
+
+# Download structure file (mmCIF format)
+for prediction in predictions:
+    cif_file = alphafold_db.download_cif_for(prediction, directory="./structures")
+    print(f"Downloaded: {cif_file}")
+
+# Get Structure objects directly
+from Bio.PDB import MMCIFParser
+structures = list(alphafold_db.get_structural_models_for("P00520"))
+\stopverb}
+
+\p{\strong{Direct API Access:}}
+
+\p{Query predictions using REST endpoints:}
+
+\pre{\startverb
+import requests
+
+# Get prediction metadata for a UniProt accession
+uniprot_id = "P00520"
+api_url = f"https://alphafold.ebi.ac.uk/api/prediction/{uniprot_id}"
+response = requests.get(api_url)
+prediction_data = response.json()
+
+# Extract AlphaFold ID
+alphafold_id = prediction_data[0]['entryId']
+print(f"AlphaFold ID: {alphafold_id}")
+\stopverb}
+
+\p{\strong{Using UniProt to Find Accessions:}}
+
+\p{Search UniProt to find protein accessions first:}
+
+\pre{\startverb
+import urllib.parse, urllib.request
+
+def get_uniprot_ids(query, query_type='PDB_ID'):
+    """Query UniProt to get accession IDs"""
+    url = 'https://www.uniprot.org/uploadlists/'
+    params = {
+        'from': query_type,
+        'to': 'ACC',
+        'format': 'txt',
+        'query': query
+    }
+    data = urllib.parse.urlencode(params).encode('ascii')
+    with urllib.request.urlopen(urllib.request.Request(url, data)) as response:
+        return response.read().decode('utf-8').splitlines()
+
+# Example: Find UniProt IDs for a protein name
+protein_ids = get_uniprot_ids("hemoglobin", query_type="GENE_NAME")
+\stopverb}
+}
+
+\subtree{
+\title{2. Downloading Structure Files}
+\p{AlphaFold provides multiple file formats for each prediction:}
+
+\p{\strong{File Types Available:}}
+
+\ul{
+\li{\strong{Model coordinates} (\code{\startverb model_v4.cif\stopverb}): Atomic coordinates in mmCIF/PDBx format}
+\li{\strong{Confidence scores} (\code{\startverb confidence_v4.json\stopverb}): Per-residue pLDDT scores (0-100)}
+\li{\strong{Predicted Aligned Error} (\code{\startverb predicted_aligned_error_v4.json\stopverb}): PAE matrix for residue pair confidence}
+}
+
+\p{\strong{Download URLs:}}
+
+\pre{\startverb
+import requests
+
+alphafold_id = "AF-P00520-F1"
+version = "v4"
+
+# Model coordinates (mmCIF)
+model_url = f"https://alphafold.ebi.ac.uk/files/{alphafold_id}-model_{version}.cif"
+response = requests.get(model_url)
+with open(f"{alphafold_id}.cif", "w") as f:
+    f.write(response.text)
+
+# Confidence scores (JSON)
+confidence_url = f"https://alphafold.ebi.ac.uk/files/{alphafold_id}-confidence_{version}.json"
+response = requests.get(confidence_url)
+confidence_data = response.json()
+
+# Predicted Aligned Error (JSON)
+pae_url = f"https://alphafold.ebi.ac.uk/files/{alphafold_id}-predicted_aligned_error_{version}.json"
+response = requests.get(pae_url)
+pae_data = response.json()
+\stopverb}
+
+\p{\strong{PDB Format (Alternative):}}
+
+\pre{\startverb
+# Download as PDB format instead of mmCIF
+pdb_url = f"https://alphafold.ebi.ac.uk/files/{alphafold_id}-model_{version}.pdb"
+response = requests.get(pdb_url)
+with open(f"{alphafold_id}.pdb", "wb") as f:
+    f.write(response.content)
+\stopverb}
+}
+
+\subtree{
+\title{3. Working with Confidence Metrics}
+\p{AlphaFold predictions include confidence estimates critical for interpretation:}
+
+\p{\strong{pLDDT (per-residue confidence):}}
+
+\pre{\startverb
+import json
+import requests
+
+# Load confidence scores
+alphafold_id = "AF-P00520-F1"
+confidence_url = f"https://alphafold.ebi.ac.uk/files/{alphafold_id}-confidence_v4.json"
+confidence = requests.get(confidence_url).json()
+
+# Extract pLDDT scores
+plddt_scores = confidence['confidenceScore']
+
+# Interpret confidence levels
+# pLDDT > 90: Very high confidence
+# pLDDT 70-90: High confidence
+# pLDDT 50-70: Low confidence
+# pLDDT < 50: Very low confidence
+
+high_confidence_residues = [i for i, score in enumerate(plddt_scores) if score > 90]
+print(f"High confidence residues: {len(high_confidence_residues)}/{len(plddt_scores)}")
+\stopverb}
+
+\p{\strong{PAE (Predicted Aligned Error):}}
+
+\p{PAE indicates confidence in relative domain positions:}
+
+\pre{\startverb
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load PAE matrix
+pae_url = f"https://alphafold.ebi.ac.uk/files/{alphafold_id}-predicted_aligned_error_v4.json"
+pae = requests.get(pae_url).json()
+
+# Visualize PAE matrix
+pae_matrix = np.array(pae['distance'])
+plt.figure(figsize=(10, 8))
+plt.imshow(pae_matrix, cmap='viridis_r', vmin=0, vmax=30)
+plt.colorbar(label='PAE (Å)')
+plt.title(f'Predicted Aligned Error: {alphafold_id}')
+plt.xlabel('Residue')
+plt.ylabel('Residue')
+plt.savefig(f'{alphafold_id}_pae.png', dpi=300, bbox_inches='tight')
+
+# Low PAE values (<5 Å) indicate confident relative positioning
+# High PAE values (>15 Å) suggest uncertain domain arrangements
+\stopverb}
+}
+
+\subtree{
+\title{4. Bulk Data Access via Google Cloud}
+\p{For large-scale analyses, use Google Cloud datasets:}
+
+\p{\strong{Google Cloud Storage:}}
+
+\pre{\startverb
+# Install gsutil
+uv pip install gsutil
+
+# List available data
+gsutil ls gs://public-datasets-deepmind-alphafold-v4/
+
+# Download entire proteomes (by taxonomy ID)
+gsutil -m cp gs://public-datasets-deepmind-alphafold-v4/proteomes/proteome-tax_id-9606-*.tar .
+
+# Download specific files
+gsutil cp gs://public-datasets-deepmind-alphafold-v4/accession_ids.csv .
+\stopverb}
+
+\p{\strong{BigQuery Metadata Access:}}
+
+\pre{\startverb
+from google.cloud import bigquery
+
+# Initialize client
+client = bigquery.Client()
+
+# Query metadata
+query = """
+SELECT
+  entryId,
+  uniprotAccession,
+  organismScientificName,
+  globalMetricValue,
+  fractionPlddtVeryHigh
+FROM `bigquery-public-data.deepmind_alphafold.metadata`
+WHERE organismScientificName = 'Homo sapiens'
+  AND fractionPlddtVeryHigh > 0.8
+LIMIT 100
+"""
+
+results = client.query(query).to_dataframe()
+print(f"Found {len(results)} high-confidence human proteins")
+\stopverb}
+
+\p{\strong{Download by Species:}}
+
+\pre{\startverb
+import subprocess
+
+def download_proteome(taxonomy_id, output_dir="./proteomes"):
+    """Download all AlphaFold predictions for a species"""
+    pattern = f"gs://public-datasets-deepmind-alphafold-v4/proteomes/proteome-tax_id-{taxonomy_id}-*_v4.tar"
+    cmd = f"gsutil -m cp {pattern} {output_dir}/"
+    subprocess.run(cmd, shell=True, check=True)
+
+# Download E. coli proteome (tax ID: 83333)
+download_proteome(83333)
+
+# Download human proteome (tax ID: 9606)
+download_proteome(9606)
+\stopverb}
+}
+
+\subtree{
+\title{5. Parsing and Analyzing Structures}
+\p{Work with downloaded AlphaFold structures using BioPython:}
+
+\pre{\startverb
+from Bio.PDB import MMCIFParser, PDBIO
+import numpy as np
+
+# Parse mmCIF file
+parser = MMCIFParser(QUIET=True)
+structure = parser.get_structure("protein", "AF-P00520-F1-model_v4.cif")
+
+# Extract coordinates
+coords = []
+for model in structure:
+    for chain in model:
+        for residue in chain:
+            if 'CA' in residue:  # Alpha carbons only
+                coords.append(residue['CA'].get_coord())
+
+coords = np.array(coords)
+print(f"Structure has {len(coords)} residues")
+
+# Calculate distances
+from scipy.spatial.distance import pdist, squareform
+distance_matrix = squareform(pdist(coords))
+
+# Identify contacts (< 8 Å)
+contacts = np.where((distance_matrix > 0) & (distance_matrix < 8))
+print(f"Number of contacts: {len(contacts[0]) // 2}")
+\stopverb}
+
+\p{\strong{Extract B-factors (pLDDT values):}}
+
+\p{AlphaFold stores pLDDT scores in the B-factor column:}
+
+\pre{\startverb
+from Bio.PDB import MMCIFParser
+
+parser = MMCIFParser(QUIET=True)
+structure = parser.get_structure("protein", "AF-P00520-F1-model_v4.cif")
+
+# Extract pLDDT from B-factors
+plddt_scores = []
+for model in structure:
+    for chain in model:
+        for residue in chain:
+            if 'CA' in residue:
+                plddt_scores.append(residue['CA'].get_bfactor())
+
+# Identify high-confidence regions
+high_conf_regions = [(i, score) for i, score in enumerate(plddt_scores, 1) if score > 90]
+print(f"High confidence residues: {len(high_conf_regions)}")
+\stopverb}
+}
+
+\subtree{
+\title{6. Batch Processing Multiple Proteins}
+\p{Process multiple predictions efficiently:}
+
+\pre{\startverb
+from Bio.PDB import alphafold_db
+import pandas as pd
+
+uniprot_ids = ["P00520", "P12931", "P04637"]  # Multiple proteins
+results = []
+
+for uniprot_id in uniprot_ids:
+    try:
+        # Get prediction
+        predictions = list(alphafold_db.get_predictions(uniprot_id))
+
+        if predictions:
+            pred = predictions[0]
+
+            # Download structure
+            cif_file = alphafold_db.download_cif_for(pred, directory="./batch_structures")
+
+            # Get confidence data
+            alphafold_id = pred['entryId']
+            conf_url = f"https://alphafold.ebi.ac.uk/files/{alphafold_id}-confidence_v4.json"
+            conf_data = requests.get(conf_url).json()
+
+            # Calculate statistics
+            plddt_scores = conf_data['confidenceScore']
+            avg_plddt = np.mean(plddt_scores)
+            high_conf_fraction = sum(1 for s in plddt_scores if s > 90) / len(plddt_scores)
+
+            results.append({
+                'uniprot_id': uniprot_id,
+                'alphafold_id': alphafold_id,
+                'avg_plddt': avg_plddt,
+                'high_conf_fraction': high_conf_fraction,
+                'length': len(plddt_scores)
+            })
+    except Exception as e:
+        print(f"Error processing {uniprot_id}: {e}")
+
+# Create summary DataFrame
+df = pd.DataFrame(results)
+print(df)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Installation and Setup}
+\subtree{
+\title{Python Libraries}
+\pre{\startverb
+# Install Biopython for structure access
+uv pip install biopython
+
+# Install requests for API access
+uv pip install requests
+
+# For visualization and analysis
+uv pip install numpy matplotlib pandas scipy
+
+# For Google Cloud access (optional)
+uv pip install google-cloud-bigquery gsutil
+\stopverb}
+}
+
+\subtree{
+\title{3D-Beacons API Alternative}
+\p{AlphaFold can also be accessed via the 3D-Beacons federated API:}
+
+\pre{\startverb
+import requests
+
+# Query via 3D-Beacons
+uniprot_id = "P00520"
+url = f"https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/api/uniprot/summary/{uniprot_id}.json"
+response = requests.get(url)
+data = response.json()
+
+# Filter for AlphaFold structures
+af_structures = [s for s in data['structures'] if s['provider'] == 'AlphaFold DB']
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Use Cases}
+\subtree{
+\title{Structural Proteomics}
+\ul{
+\li{Download complete proteome predictions for analysis}
+\li{Identify high-confidence structural regions across proteins}
+\li{Compare predicted structures with experimental data}
+\li{Build structural models for protein families}
+}
+}
+
+\subtree{
+\title{Drug Discovery}
+\ul{
+\li{Retrieve target protein structures for docking studies}
+\li{Analyze binding site conformations}
+\li{Identify druggable pockets in predicted structures}
+\li{Compare structures across homologs}
+}
+}
+
+\subtree{
+\title{Protein Engineering}
+\ul{
+\li{Identify stable/unstable regions using pLDDT}
+\li{Design mutations in high-confidence regions}
+\li{Analyze domain architectures using PAE}
+\li{Model protein variants and mutations}
+}
+}
+
+\subtree{
+\title{Evolutionary Studies}
+\ul{
+\li{Compare ortholog structures across species}
+\li{Analyze conservation of structural features}
+\li{Study domain evolution patterns}
+\li{Identify functionally important regions}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\p{\strong{UniProt Accession:} Primary identifier for proteins (e.g., "P00520"). Required for querying AlphaFold DB.}
+
+\p{\strong{AlphaFold ID:} Internal identifier format: \code{\startverb AF-[UniProt accession]-F[fragment number]\stopverb} (e.g., "AF-P00520-F1").}
+
+\p{\strong{pLDDT (predicted Local Distance Difference Test):} Per-residue confidence metric (0-100). Higher values indicate more confident predictions.}
+
+\p{\strong{PAE (Predicted Aligned Error):} Matrix indicating confidence in relative positions between residue pairs. Low values (<5 Å) suggest confident relative positioning.}
+
+\p{\strong{Database Version:} Current version is v4. File URLs include version suffix (e.g., \code{\startverb model_v4.cif\stopverb}).}
+
+\p{\strong{Fragment Number:} Large proteins may be split into fragments. Fragment number appears in AlphaFold ID (e.g., F1, F2).}
+}
+
+\subtree{
+\title{Confidence Interpretation Guidelines}
+\p{\strong{pLDDT Thresholds:}}
+
+\ul{
+\li{\strong{>90}: Very high confidence - suitable for detailed analysis}
+\li{\strong{70-90}: High confidence - generally reliable backbone structure}
+\li{\strong{50-70}: Low confidence - use with caution, flexible regions}
+\li{\strong{<50}: Very low confidence - likely disordered or unreliable}
+}
+
+\p{\strong{PAE Guidelines:}}
+
+\ul{
+\li{\strong{<5 Å}: Confident relative positioning of domains}
+\li{\strong{5-10 Å}: Moderate confidence in arrangement}
+\li{\strong{>15 Å}: Uncertain relative positions, domains may be mobile}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{references/api_reference.md}
+\p{Comprehensive API documentation covering:}
+
+\ul{
+\li{Complete REST API endpoint specifications}
+\li{File format details and data schemas}
+\li{Google Cloud dataset structure and access patterns}
+\li{Advanced query examples and batch processing strategies}
+\li{Rate limiting, caching, and best practices}
+\li{Troubleshooting common issues}
+}
+
+\p{Consult this reference for detailed API information, bulk download strategies, or when working with large-scale datasets.}
+}
+}
+
+\subtree{
+\title{Important Notes}
+\subtree{
+\title{Data Usage and Attribution}
+\ul{
+\li{AlphaFold DB is freely available under CC-BY-4.0 license}
+\li{Cite: Jumper et al. (2021) Nature and Varadi et al. (2022) Nucleic Acids Research}
+\li{Predictions are computational models, not experimental structures}
+\li{Always assess confidence metrics before downstream analysis}
+}
+}
+
+\subtree{
+\title{Version Management}
+\ul{
+\li{Current database version: v4 (as of 2024-2025)}
+\li{File URLs include version suffix (e.g., \code{\startverb _v4.cif\stopverb})}
+\li{Check for database updates regularly}
+\li{Older versions may be deprecated over time}
+}
+}
+
+\subtree{
+\title{Data Quality Considerations}
+\ul{
+\li{High pLDDT doesn't guarantee functional accuracy}
+\li{Low confidence regions may be disordered in vivo}
+\li{PAE indicates relative domain confidence, not absolute positioning}
+\li{Predictions lack ligands, post-translational modifications, and cofactors}
+\li{Multi-chain complexes are not predicted (single chains only)}
+}
+}
+
+\subtree{
+\title{Performance Tips}
+\ul{
+\li{Use Biopython for simple single-protein access}
+\li{Use Google Cloud for bulk downloads (much faster than individual files)}
+\li{Cache downloaded files locally to avoid repeated downloads}
+\li{BigQuery free tier: 1 TB processed data per month}
+\li{Consider network bandwidth for large-scale downloads}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{AlphaFold DB Website:} https://alphafold.ebi.ac.uk/}
+\li{\strong{API Documentation:} https://alphafold.ebi.ac.uk/api-docs}
+\li{\strong{Google Cloud Dataset:} https://cloud.google.com/blog/products/ai-machine-learning/alphafold-protein-structure-database}
+\li{\strong{3D-Beacons API:} https://www.ebi.ac.uk/pdbe/pdbe-kb/3dbeacons/}
+\li{\strong{AlphaFold Papers:}}
+\li{Nature (2021): https://doi.org/10.1038/s41586-021-03819-2}
+\li{Nucleic Acids Research (2024): https://doi.org/10.1093/nar/gkad1011}
+\li{\strong{Biopython Documentation:} https://biopython.org/docs/dev/api/Bio.PDB.alphafold_db.html}
+\li{\strong{GitHub Repository:} https://github.com/google-deepmind/alphafold}
+}
+}
+}

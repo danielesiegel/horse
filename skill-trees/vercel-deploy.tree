@@ -1,0 +1,74 @@
+\title{Vercel Deploy}
+
+\taxon{skill}
+
+\meta{description}{Deploy applications and websites to Vercel. Use when the user requests deployment actions like "deploy my app", "deploy and give me the link", "push this live", or "create a preview deployment".}
+
+\subtree{
+\title{Vercel Deploy}
+\p{Deploy any project to Vercel instantly. \strong{Always deploy as preview} (not production) unless the user explicitly asks for production.}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{When sandboxing blocks the deployment network calls, rerun with \code{\startverb sandbox_permissions=require_escalated\stopverb}.}
+\li{The deployment might take a few minutes. Use appropriate timeout values.}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\p{\strong{Just run this (with a 10 minute timeout):}}
+
+\pre{\startverb
+vercel deploy [path] -y
+\stopverb}
+
+\p{\strong{Important:} Use a 10 minute (600000ms) timeout for the deploy command since builds can take a while.}
+
+\p{If that fails with "No existing credentials found", use the fallback method below.}
+}
+
+\subtree{
+\title{Fallback (No Auth)}
+\p{If CLI fails with auth error, use the deploy script:}
+
+\pre{\startverb
+./scripts/deploy.sh [path]
+\stopverb}
+
+\p{The script handles framework detection, packaging, and deployment. It waits for the build to complete and returns JSON with \code{\startverb previewUrl\stopverb} and \code{\startverb claimUrl\stopverb}.}
+
+\p{\strong{Tell the user:} "Your deployment is ready at [previewUrl]. Claim it at [claimUrl] to manage your deployment."}
+}
+
+\subtree{
+\title{Production Deploys}
+\p{Only if user explicitly asks:}
+
+\pre{\startverb
+vercel deploy [path] --prod -y
+\stopverb}
+}
+
+\subtree{
+\title{Output}
+\p{Show the user the deployment URL. For fallback deployments, also show the claim URL.}
+
+\p{\strong{Do not} curl or fetch the deployed URL to verify it works. Just return the link.}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Escalated Network Access}
+\p{If deployment fails due to network issues (timeouts, DNS errors, connection resets), rerun the deploy with escalated permissions (use \code{\startverb sandbox_permissions=require_escalated\stopverb}). The deploy requires escalated network access when sandbox networking blocks outbound requests.}
+
+\p{Example guidance to the user:}
+
+\pre{\startverb
+The deploy needs escalated network access to deploy to Vercel. I can rerun the command with escalated permissions—want me to proceed?
+\stopverb}
+}
+}
+}

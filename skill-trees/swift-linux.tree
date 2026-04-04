@@ -1,0 +1,91 @@
+\title{Swift Linux}
+
+\taxon{skill}
+
+\meta{description}{Install and configure Swift programming language on Debian Linux for server-side development. Use when building Swift applications on Linux or setting up a Swift development environment.}
+
+\subtree{
+\title{Swift Installation Guide for Debian Linux}
+\p{This document provides instructions for installing Swift on Debian 12 (Bookworm).}
+
+\blockquote{This setup is intended for non-UI development tasks on Swift on Linux.}
+
+\subtree{
+\title{Prerequisites}
+\p{Before installing Swift, you need to install the required dependencies for your system. You can find the most up-to-date list of dependencies for your specific Linux distribution and version at the [Swift.org tarball installation guide](https://www.swift.org/install/linux/tarball/).}
+
+\p{FOR EXAMPLE, the dependencies you may need to install for Debian 12 could be:}
+
+\pre{\startverb
+sudo apt-get update
+sudo apt-get install -y \
+  binutils-gold \
+  gcc \
+  git \
+  libcurl4-openssl-dev \
+  libedit-dev \
+  libicu-dev \
+  libncurses-dev \
+  libpython3-dev \
+  libsqlite3-dev \
+  libxml2-dev \
+  pkg-config \
+  tzdata \
+  uuid-dev
+\stopverb}
+}
+
+\subtree{
+\title{Download and Install Swift}
+\ol{
+\li{Find the latest Swift version for Debian:}
+}
+
+\p{Go to the [Swift.org download page](https://www.swift.org/download/) to find the latest Swift version compatible with Debian 12 (Bookworm).}
+
+\p{Look for a tarball named something like \code{\startverb swift-<VERSION>-RELEASE-debian12.tar.gz\stopverb} (e.g., \code{\startverb swift-6.0.3-RELEASE-debian12.tar.gz\stopverb}).}
+
+\p{The URL pattern is typically:}
+
+\pre{\startverb
+   https://download.swift.org/swift-<VERSION>-release/debian12/swift-<VERSION>-RELEASE/swift-<VERSION>-RELEASE-debian12.tar.gz
+\stopverb}
+
+\p{Where \code{\startverb <VERSION>\stopverb} is the Swift version number (e.g., \code{\startverb 6.0.3\stopverb}).}
+
+\ol{
+\li{Download the Swift binary for Debian 12:}
+}
+
+\pre{\startverb
+cd /workspace
+wget https://download.swift.org/swift-6.0.3-release/debian12/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE-debian12.tar.gz
+\stopverb}
+
+\ol{
+\li{Extract the archive:}
+}
+
+\blockquote{\strong{Note}: Make sure to install Swift in the \code{\startverb /workspace\stopverb} directory, but outside the git repository to avoid committing the Swift binaries.}
+
+\ol{
+\li{Add Swift to your PATH by adding the following line to your \code{\startverb ~/.bashrc\stopverb} file:}
+}
+
+\pre{\startverb
+echo 'export PATH=/workspace/swift-6.0.3-RELEASE-debian12/usr/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+\stopverb}
+
+\blockquote{\strong{Note}: Make sure to update the version number in the PATH to match the version you downloaded.}
+}
+
+\subtree{
+\title{Verify Installation}
+\p{Verify that Swift is correctly installed by running:}
+
+\pre{\startverb
+swift --version
+\stopverb}
+}
+}

@@ -1,0 +1,297 @@
+\title{Performing Aws Account Enumeration With Scout Suite}
+
+\taxon{skill}
+
+\tag{aws}
+
+\tag{scoutsuite}
+
+\tag{cloud-security}
+
+\tag{enumeration}
+
+\tag{misconfiguration}
+
+\tag{security-audit}
+
+\tag{cspm}
+
+\tag{nccgroup}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Perform comprehensive security posture assessment of AWS accounts using ScoutSuite to enumerate resources, identify misconfigurations, and generate actionable security reports.}
+
+\subtree{
+\title{Performing AWS Account Enumeration with ScoutSuite}
+\subtree{
+\title{Overview}
+\p{ScoutSuite is an open-source multi-cloud security auditing tool developed by NCC Group that enables comprehensive security posture assessment of AWS environments. It queries AWS APIs to gather configuration data across all services, stores results locally, and generates interactive HTML reports highlighting high-risk areas. ScoutSuite is agentless and works by analyzing how cloud resources are configured, accessed, and monitored.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing aws account enumeration with scout suite}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.6+ installed}
+\li{AWS CLI configured with appropriate IAM credentials}
+\li{Read-only IAM permissions across target AWS services (SecurityAudit managed policy recommended)}
+\li{pip package manager for ScoutSuite installation}
+\li{Network access to AWS API endpoints}
+}
+}
+
+\subtree{
+\title{Installation and Setup}
+\subtree{
+\title{Install ScoutSuite}
+\pre{\startverb
+pip install scoutsuite
+\stopverb}
+}
+
+\subtree{
+\title{Verify installation}
+\pre{\startverb
+scout --version
+\stopverb}
+}
+
+\subtree{
+\title{Configure AWS credentials}
+\pre{\startverb
+aws configure
+# Or use environment variables:
+export AWS_ACCESS_KEY_ID=<your-key>
+export AWS_SECRET_ACCESS_KEY=<your-secret>
+export AWS_DEFAULT_REGION=us-east-1
+\stopverb}
+}
+
+\subtree{
+\title{Required IAM Policy}
+\p{Attach the AWS managed policy \code{\startverb SecurityAudit\stopverb} and \code{\startverb ViewOnlyAccess\stopverb} to the IAM user or role running ScoutSuite. For comprehensive scanning, a custom policy may be needed:}
+
+\pre{\startverb
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "acm:Describe*",
+        "acm:List*",
+        "cloudformation:Describe*",
+        "cloudformation:Get*",
+        "cloudformation:List*",
+        "cloudtrail:Describe*",
+        "cloudtrail:Get*",
+        "cloudtrail:List*",
+        "cloudwatch:Describe*",
+        "cloudwatch:Get*",
+        "cloudwatch:List*",
+        "config:Describe*",
+        "config:Get*",
+        "config:List*",
+        "dynamodb:Describe*",
+        "dynamodb:List*",
+        "ec2:Describe*",
+        "ec2:Get*",
+        "elasticloadbalancing:Describe*",
+        "iam:Generate*",
+        "iam:Get*",
+        "iam:List*",
+        "iam:Simulate*",
+        "kms:Describe*",
+        "kms:Get*",
+        "kms:List*",
+        "lambda:Get*",
+        "lambda:List*",
+        "logs:Describe*",
+        "logs:Get*",
+        "rds:Describe*",
+        "rds:List*",
+        "redshift:Describe*",
+        "route53:Get*",
+        "route53:List*",
+        "s3:Get*",
+        "s3:List*",
+        "ses:Get*",
+        "ses:List*",
+        "sns:Get*",
+        "sns:List*",
+        "sqs:Get*",
+        "sqs:List*",
+        "ssm:Describe*",
+        "ssm:Get*",
+        "ssm:List*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Running ScoutSuite}
+\subtree{
+\title{Full AWS scan}
+\pre{\startverb
+scout aws
+\stopverb}
+}
+
+\subtree{
+\title{Scan specific services only}
+\pre{\startverb
+scout aws --services s3 iam ec2 rds
+\stopverb}
+}
+
+\subtree{
+\title{Scan specific regions}
+\pre{\startverb
+scout aws --regions us-east-1 us-west-2 eu-west-1
+\stopverb}
+}
+
+\subtree{
+\title{Use an assumed role for cross-account scanning}
+\pre{\startverb
+scout aws --profile target-account-profile
+\stopverb}
+}
+
+\subtree{
+\title{Exclude specific services from scan}
+\pre{\startverb
+scout aws --skip iam ec2
+\stopverb}
+}
+
+\subtree{
+\title{Specify output directory}
+\pre{\startverb
+scout aws --report-dir /tmp/scoutsuite-reports/
+\stopverb}
+}
+}
+
+\subtree{
+\title{Report Analysis}
+\p{ScoutSuite generates an interactive HTML report stored locally. The report includes:}
+
+\ol{
+\li{\strong{Dashboard}: Overview of findings by severity (danger, warning, good)}
+\li{\strong{Service-level findings}: Grouped by AWS service (IAM, S3, EC2, RDS, etc.)}
+\li{\strong{Rule-based checks}: Each finding maps to a security best practice rule}
+\li{\strong{Resource inventory}: Complete listing of enumerated resources}
+}
+
+\subtree{
+\title{Key areas to review in the report}
+\pre{\startverb
+| Service | Critical Checks |
+|---------|----------------|
+| IAM | Root account MFA, password policy, unused credentials, overprivileged policies |
+| S3 | Public buckets, unencrypted buckets, versioning disabled, logging disabled |
+| EC2 | Security groups with 0.0.0.0/0, unencrypted EBS volumes, public IPs |
+| RDS | Public accessibility, unencrypted databases, backup retention |
+| CloudTrail | Logging disabled, log file validation, multi-region disabled |
+| Lambda | Public access, environment variable secrets, VPC configuration |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Interpreting Findings}
+\subtree{
+\title{Severity Levels}
+\ul{
+\li{\strong{Danger (Red)}: Critical security issues requiring immediate remediation (e.g., S3 buckets with public write access)}
+\li{\strong{Warning (Orange)}: Moderate risk findings that should be addressed (e.g., unused IAM access keys)}
+\li{\strong{Good (Green)}: Security best practices that are properly configured}
+}
+}
+
+\subtree{
+\title{Common High-Risk Findings}
+\ol{
+\li{\strong{IAM root account without MFA}: The AWS root account has no multi-factor authentication enabled}
+\li{\strong{S3 bucket policy allows public access}: Bucket policies with Principal set to "*"}
+\li{\strong{Security group allows unrestricted SSH}: Inbound rule allowing 0.0.0.0/0 on port 22}
+\li{\strong{CloudTrail not enabled in all regions}: Audit logging gaps allow unmonitored API activity}
+\li{\strong{RDS instance publicly accessible}: Database endpoints reachable from the internet}
+}
+}
+}
+
+\subtree{
+\title{Remediation Workflow}
+\ol{
+\li{Run ScoutSuite scan to establish baseline}
+\li{Export findings and prioritize by severity}
+\li{Create remediation tickets for danger and warning findings}
+\li{Implement fixes (update security groups, enable encryption, restrict access)}
+\li{Re-run ScoutSuite to verify remediation}
+\li{Schedule regular scans (weekly or after infrastructure changes)}
+}
+}
+
+\subtree{
+\title{Integration with CI/CD}
+\pre{\startverb
+# Run ScoutSuite in CI/CD pipeline and fail on danger findings
+scout aws --services s3 iam ec2 --no-browser --report-dir ./scout-report/
+
+# Parse results programmatically
+python -c "
+import json
+with open('./scout-report/scoutsuite-results/scoutsuite_results.json') as f:
+    results = json.load(f)
+    for service in results.get('services', {}):
+        findings = results['services'][service].get('findings', {})
+        for finding_id, finding in findings.items():
+            if finding.get('flagged_items', 0) > 0 and finding.get('level') == 'danger':
+                print(f'CRITICAL: {finding_id} - {finding.get(\"description\", \"\")}')
+"
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Cloud Capability}
+\p{ScoutSuite supports multiple cloud providers using the same framework:}
+
+\pre{\startverb
+# Azure
+scout azure --cli
+
+# GCP
+scout gcp --user-account
+
+# AWS with specific profile
+scout aws --profile production
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{ScoutSuite GitHub Repository: https://github.com/nccgroup/ScoutSuite}
+\li{AWS Security Audit Checklist}
+\li{CIS AWS Foundations Benchmark}
+\li{AWS Well-Architected Security Pillar}
+}
+}
+}

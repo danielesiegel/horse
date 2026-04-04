@@ -1,0 +1,246 @@
+\title{Conducting Mobile App Penetration Test}
+
+\taxon{skill}
+
+\tag{mobile-pentest}
+
+\tag{OWASP-MASTG}
+
+\tag{Android-security}
+
+\tag{iOS-security}
+
+\tag{mobile-application-security}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Conducts penetration testing of iOS and Android mobile applications following the OWASP Mobile Application Security Testing Guide (MASTG) to identify vulnerabilities in data storage, network communication, authentication, cryptography, and platform-specific security controls. The tester performs static analysis of application binaries, dynamic analysis at runtime, and API security testing to evaluate the complete mobile attack surface. Activates for requests involving mobile app pentest, iOS security assessment, Android security testing, or OWASP MASTG assessment.}
+
+\subtree{
+\title{Conducting Mobile App Penetration Test}
+\subtree{
+\title{When to Use}
+\ul{
+\li{Testing mobile applications before release to identify security vulnerabilities and data protection issues}
+\li{Conducting compliance assessments against OWASP MASVS (Mobile Application Security Verification Standard) levels L1 and L2}
+\li{Evaluating the security of mobile banking, healthcare, or government applications handling sensitive data}
+\li{Testing mobile apps that interact with backend APIs to assess the end-to-end security of the mobile ecosystem}
+\li{Assessing mobile application resistance to reverse engineering, tampering, and runtime manipulation}
+}
+
+\p{\strong{Do not use} against mobile applications without written authorization from the application owner, for distributing modified or repackaged applications, or for testing apps on the public app stores without a separate test build.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Target application IPA (iOS) and APK (Android) files or access to download from a private distribution channel}
+\li{Rooted Android device or emulator (Genymotion, Android Studio AVD) with Frida, Objection, and Magisk installed}
+\li{Jailbroken iOS device or Corellium virtual device with Frida, Objection, and SSL Kill Switch installed}
+\li{Static analysis tools: jadx (Android decompilation), Hopper/Ghidra (iOS binary analysis), MobSF (automated scanning)}
+\li{Burp Suite Professional configured as proxy for intercepting mobile app traffic with CA certificate installed on the test device}
+}
+
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Static Analysis}
+\p{Analyze the application binary without executing it:}
+
+\p{\strong{Android Static Analysis:}}
+
+\ul{
+\li{Decompile the APK: \code{\startverb jadx -d output/ target.apk\stopverb} to obtain Java/Kotlin source code}
+\li{Review \code{\startverb AndroidManifest.xml\stopverb} for exported components (activities, services, receivers, content providers), permissions, and debuggable flag}
+\li{Search for hardcoded secrets: \code{\startverb grep -rn "api_key\|password\|secret\|token\|aws_" output/\stopverb}}
+\li{Identify insecure data storage patterns: SharedPreferences with sensitive data, SQLite databases without encryption, files in external storage}
+\li{Check for WebView vulnerabilities: \code{\startverb setJavaScriptEnabled(true)\stopverb}, \code{\startverb addJavascriptInterface()\stopverb}, and loading untrusted content}
+\li{Run MobSF automated scan: \code{\startverb python manage.py runserver\stopverb} and upload the APK for automated static analysis}
+}
+
+\p{\strong{iOS Static Analysis:}}
+
+\ul{
+\li{Extract the IPA and locate the Mach-O binary}
+\li{Use \code{\startverb otool -L <binary>\stopverb} to list linked frameworks and identify third-party libraries}
+\li{Analyze with Ghidra or Hopper for hardcoded URLs, API endpoints, and embedded credentials}
+\li{Check Info.plist for App Transport Security (ATS) exceptions that allow insecure HTTP connections}
+\li{Review embedded entitlements for excessive capabilities}
+}
+}
+
+\subtree{
+\title{Step 2: Network Security Testing}
+\p{Intercept and analyze all network communications:}
+
+\ul{
+\li{Configure Burp Suite as proxy on the test device and install the Burp CA certificate}
+\li{Exercise all application functionality while Burp captures API traffic}
+\li{\strong{SSL/TLS validation}: Verify the app validates server certificates properly. If the app fails to connect through the proxy, it may implement certificate pinning.}
+\li{\strong{Certificate pinning bypass}:}
+\li{Android: Use Frida script: \code{\startverb frida -U -f com.target.app -l ssl-pinning-bypass.js --no-pause\stopverb}}
+\li{iOS: Use SSL Kill Switch or Objection: \code{\startverb objection -g "Target App" explore --startup-command "ios sslpinning disable"\stopverb}}
+\li{\strong{API traffic analysis}: Review all API calls for:}
+\li{Sensitive data transmitted without encryption}
+\li{Authentication tokens in URL parameters (visible in logs)}
+\li{Excessive data in API responses beyond what the UI displays}
+\li{Missing or weak authentication on API endpoints}
+\li{\strong{WebSocket and custom protocols}: Check for non-HTTP communication channels that may bypass standard proxy interception}
+}
+}
+
+\subtree{
+\title{Step 3: Data Storage Analysis}
+\p{Test for insecure local data storage:}
+
+\p{\strong{Android Data Storage:}}
+
+\ul{
+\li{Access app data directory: \code{\startverb /data/data/com.target.app/\stopverb}}
+\li{Check SharedPreferences XML files for stored credentials, tokens, and PII}
+\li{Examine SQLite databases: \code{\startverb sqlite3 /data/data/com.target.app/databases/*.db ".dump"\stopverb}}
+\li{Check for sensitive data in application logs: \code{\startverb logcat -d | grep -i "password\|token\|key"\stopverb}}
+\li{Verify that application data is excluded from backups: \code{\startverb android:allowBackup="false"\stopverb} in AndroidManifest.xml}
+\li{Check clipboard for sensitive data leakage}
+}
+
+\p{\strong{iOS Data Storage:}}
+
+\ul{
+\li{Examine the Keychain for stored credentials: \code{\startverb objection -g "Target App" explore\stopverb} then \code{\startverb ios keychain dump\stopverb}}
+\li{Check NSUserDefaults/plist files: \code{\startverb find /var/mobile/Containers/Data/Application/ -name "*.plist" -exec plutil -p {} \;\stopverb}}
+\li{Inspect SQLite databases and Core Data stores for unencrypted sensitive data}
+\li{Check for data leaking through screenshots (iOS captures screenshots during app backgrounding)}
+\li{Verify data protection class: sensitive files should use NSFileProtectionComplete}
+}
+}
+
+\subtree{
+\title{Step 4: Authentication and Session Management}
+\p{Test mobile-specific authentication controls:}
+
+\ul{
+\li{\strong{Biometric bypass}: Test if biometric authentication can be bypassed by hooking the authentication callback with Frida to always return success}
+\li{\strong{Token storage}: Verify that authentication tokens are stored in the Keychain (iOS) or Android Keystore, not in SharedPreferences or files}
+\li{\strong{Session timeout}: Verify that sessions expire after a reasonable idle timeout and that tokens are invalidated server-side on logout}
+\li{\strong{Root/jailbreak detection bypass}: Test if the app detects rooted/jailbroken devices and if the detection can be bypassed with Frida or Magisk Hide}
+\li{\strong{Deep link abuse}: Test if custom URL schemes or universal links can be used to bypass authentication or access restricted functionality}
+}
+}
+
+\subtree{
+\title{Step 5: Runtime Manipulation}
+\p{Test the application's resistance to runtime attacks:}
+
+\ul{
+\li{\strong{Frida hooking}: Use Frida to hook and modify application functions at runtime:}
+\li{Bypass root detection: hook the detection function to return false}
+\li{Modify return values of authentication checks}
+\li{Intercept encryption functions to capture plaintext data before encryption}
+\li{Bypass certificate pinning by hooking SSL verification}
+\li{\strong{Method swizzling} (iOS): Use Frida to replace Objective-C method implementations}
+\li{\strong{Intent manipulation} (Android): Send crafted intents to exported components: \code{\startverb adb shell am start -n com.target.app/.InternalActivity -e "user_id" "admin"\stopverb}}
+\li{\strong{Tampering detection}: Modify the APK/IPA (add code, change resources), re-sign, and install. Verify whether the app detects tampering.}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **OWASP MASTG** | Mobile Application Security Testing Guide; comprehensive manual for mobile app security testing covering both iOS and Android platforms |
+| **Certificate Pinning** | A mobile security control that restricts which TLS certificates the app trusts, preventing man-in-the-middle attacks through proxy interception |
+| **Frida** | Dynamic instrumentation toolkit that allows injection of JavaScript into running processes to hook functions, modify behavior, and bypass security controls |
+| **Root/Jailbreak Detection** | Application-level checks to detect if the device has been modified to grant root access, typically blocking app usage on compromised devices |
+| **Android Keystore** | Hardware-backed credential storage on Android that protects cryptographic keys and secrets from extraction even on rooted devices |
+| **App Transport Security (ATS)** | iOS security feature that enforces HTTPS connections by default; ATS exceptions may indicate insecure network communication |
+| **Deep Links** | URL schemes that open specific screens within a mobile application, which may bypass normal navigation and authentication flows if not properly validated |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Frida / Objection}: Dynamic instrumentation tools for hooking functions, bypassing security controls, and manipulating application behavior at runtime}
+\li{\strong{MobSF (Mobile Security Framework)}: Automated static and dynamic analysis platform for Android and iOS applications}
+\li{\strong{jadx}: Android decompiler that converts APK bytecode to readable Java source code for manual code review}
+\li{\strong{Burp Suite Professional}: HTTP proxy for intercepting and modifying mobile app API traffic after bypassing certificate pinning}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Mobile Banking Application Security Assessment}
+\p{\strong{Context}: A bank is launching a new mobile banking app for iOS and Android. The app handles account viewing, fund transfers, bill payment, and check deposit. OWASP MASVS L2 compliance is required due to the financial data handled.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Static analysis of the Android APK reveals API endpoints, a hardcoded staging server URL, and an AWS API key in a configuration file}
+\li{Certificate pinning is implemented but bypassed with Frida SSL pinning bypass script}
+\li{API traffic analysis reveals that the balance check endpoint returns all account numbers associated with the user, not just the requested account}
+\li{Local data storage analysis finds that the app caches the last 10 transactions in an unencrypted SQLite database}
+\li{Biometric authentication bypass: Frida hook on the biometric callback always returns success, granting access without fingerprint}
+\li{Root detection is present but bypassed with Magisk Hide module, allowing the app to run on a rooted device with full data access}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Testing only on an emulator and missing hardware-specific security features (Android Keystore hardware backing, iOS Secure Enclave)}
+\li{Not testing both iOS and Android versions, as they may have different implementations and different vulnerabilities}
+\li{Ignoring the backend API security because it was "tested separately" when the mobile app may call API endpoints differently than the web app}
+\li{Failing to test certificate pinning bypass, resulting in an incomplete network analysis}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Finding: Biometric Authentication Bypass via Frida Instrumentation
+
+**ID**: MOB-003
+**Severity**: High (CVSS 7.7)
+**Platform**: Android and iOS
+**OWASP MASVS**: MASVS-AUTH-2 (Biometric Authentication)
+
+**Description**:
+The mobile banking app's biometric authentication can be bypassed using Frida
+dynamic instrumentation. The authentication callback function accepts a boolean
+result from the biometric API, which can be hooked and forced to return true
+without presenting a valid fingerprint or face scan.
+
+**Proof of Concept (Android)**:
+frida -U -f com.bank.mobileapp -l bypass-biometric.js --no-pause
+
+// bypass-biometric.js
+Java.perform(function() {
+  var BiometricCallback = Java.use("com.bank.mobileapp.auth.BiometricCallback");
+  BiometricCallback.onAuthenticationSucceeded.implementation = function(result) {
+    console.log("[*] Biometric bypassed");
+    this.onAuthenticationSucceeded(result);
+  };
+});
+
+**Impact**:
+An attacker with physical access to an unlocked device can bypass biometric
+authentication and access the victim's bank accounts, initiate transfers,
+and view financial data without biometric verification.
+
+**Remediation**:
+1. Implement server-side biometric verification using Android BiometricPrompt
+   CryptoObject tied to a Keystore key
+2. Require the biometric operation to decrypt a server-side challenge, making
+   client-side bypass ineffective
+3. Add runtime integrity checks to detect Frida and other instrumentation frameworks
+4. Implement step-up authentication for high-risk operations (transfers > threshold)
+\stopverb}
+}
+}

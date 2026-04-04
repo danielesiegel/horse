@@ -1,0 +1,105 @@
+\title{"oriented Simplicial Networks"}
+
+\taxon{skill}
+
+\meta{description}{"**Category:** Phase 3 Core - Geometric Deep Learning"}
+
+\subtree{
+\title{Oriented Simplicial Networks}
+\p{\strong{Category:} Phase 3 Core - Geometric Deep Learning \strong{Status:} Skeleton Implementation \strong{Dependencies:} \code{\startverb categorical-composition\stopverb}, \code{\startverb persistent-homology\stopverb}}
+
+\subtree{
+\title{Overview}
+\p{Implements directional simplicial neural networks (Dir-SNNs) with asymmetric message passing operators, E(n)-equivariance constraints, and persistent homology tracking for topological feature learning.}
+}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{\strong{Directional Message Passing}: Asymmetric operators respecting simplex orientation}
+\li{\strong{E(n)-Equivariance}: Rotation/translation invariant representations}
+\li{\strong{Persistent Homology}: Track topological features during training}
+\li{\strong{Simplicial Attention}: Higher-order attention mechanisms on simplicial complexes}
+}
+}
+
+\subtree{
+\title{Core Components}
+\ol{
+\li{\strong{Simplicial Complex Builder} (\code{\startverb simplicial_complex.jl\stopverb})}
+\li{Construct oriented simplicial complexes from data}
+\li{Boundary operator computation}
+\li{Coboundary and Laplacian matrices}
+}
+
+\ol{
+\li{\strong{Dir-SNN Layers} (\code{\startverb dirsnn_layers.jl\stopverb})}
+\li{Asymmetric message passing on simplices}
+\li{E(n)-equivariant convolutions}
+\li{Higher-order pooling operators}
+}
+
+\ol{
+\li{\strong{Persistent Homology Tracker} (\code{\startverb persistent_homology.jl\stopverb})}
+\li{Compute persistence diagrams during forward pass}
+\li{Track birth/death of topological features}
+\li{Bottleneck/Wasserstein distance metrics}
+}
+
+\ol{
+\li{\strong{Training Loop} (\code{\startverb train_dirsnn.jl\stopverb})}
+\li{Integration with Flux.jl}
+\li{Topologically-aware loss functions}
+\li{Gradient flow on simplicial manifolds}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Input from}: \code{\startverb sheaf-theoretic-coordination\stopverb} (sheaf structures on simplicial complexes)}
+\li{\strong{Output to}: \code{\startverb categorical-composition\stopverb} (functorial network composition)}
+\li{\strong{Coordinates with}: \code{\startverb formal-verification-ai\stopverb} (verify topological invariants)}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using OrientedSimplicialNetworks
+
+# Build simplicial complex from point cloud
+complex = SimplicialComplex(points, max_dimension=2)
+
+# Create Dir-SNN model
+model = DirSNN([
+    SimplicialConv(in_features=3, out_features=16, dimension=0),
+    SimplicialConv(in_features=16, out_features=32, dimension=1),
+    SimplicialPooling(dimension=1)
+])
+
+# Train with persistent homology tracking
+train!(model, complex, labels; track_topology=true)
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Bodnar et al. "Weisfeiler and Lehman Go Cellular" (NeurIPS 2021)}
+\li{Hajij et al. "Topological Deep Learning" (Nature 2023)}
+\li{Carlsson "Topology and Data" (AMS 2009)}
+}
+}
+
+\subtree{
+\title{Implementation Status}
+\ul{
+\li{[x] Core data structures}
+\li{[x] Basic message passing}
+\li{[ ] Full E(n)-equivariance}
+\li{[ ] Persistent homology integration}
+\li{[ ] Benchmark suite}
+}
+}
+}

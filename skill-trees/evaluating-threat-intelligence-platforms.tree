@@ -1,0 +1,212 @@
+\title{Evaluating Threat Intelligence Platforms}
+
+\taxon{skill}
+
+\tag{TIP}
+
+\tag{ThreatConnect}
+
+\tag{MISP}
+
+\tag{OpenCTI}
+
+\tag{Anomali}
+
+\tag{EclecticIQ}
+
+\tag{STIX-TAXII}
+
+\tag{CTI-program}
+
+\tag{procurement}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Evaluates and selects Threat Intelligence Platform (TIP) products based on organizational requirements including feed integration capability, STIX/TAXII support, workflow automation, analyst interface, and total cost of ownership. Use when conducting a TIP procurement, migrating between TIP solutions, or assessing whether the current TIP meets program maturity requirements. Activates for requests involving ThreatConnect, MISP, OpenCTI, Anomali, EclecticIQ, or TIP procurement decisions.}
+
+\subtree{
+\title{Evaluating Threat Intelligence Platforms}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Conducting a formal RFP or vendor evaluation for a TIP solution}
+\li{Assessing whether the current TIP (e.g., MISP) needs to be replaced or augmented as the CTI program scales}
+\li{Establishing evaluation criteria aligned to organizational maturity and budget}
+}
+
+\p{\strong{Do not use} this skill for evaluating feed quality independently of the TIP — feed evaluation is a separate workflow focused on data quality rather than platform capabilities.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Documented CTI program requirements: team size, feed sources, integration targets, use cases}
+\li{Budget range and procurement timeline}
+\li{Technical staff who will administer the platform (Python/API experience for open-source TIPs)}
+\li{List of current and planned integrations (SIEM, SOAR, EDR, firewalls)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Define Evaluation Criteria}
+\p{Structure requirements into mandatory (M) and desired (D) categories:}
+
+\p{\strong{Core TIP Functions}:}
+
+\ul{
+\li{M: STIX 2.1 import/export with TAXII 2.1 server}
+\li{M: REST API for automated IOC ingestion and export}
+\li{M: Indicator deduplication and TTL management}
+\li{M: TLP classification enforcement}
+\li{D: Built-in MITRE ATT&CK integration and technique tagging}
+\li{D: Graph visualization of indicator relationships}
+\li{D: Workflow automation for analyst triage}
+}
+
+\p{\strong{Integrations}:}
+
+\ul{
+\li{M: SIEM integration (Splunk, Sentinel, QRadar) via syslog, API, or native connector}
+\li{M: EDR integration for IOC push (CrowdStrike, Defender, SentinelOne)}
+\li{D: SOAR integration (XSOAR, Splunk SOAR) for playbook triggers}
+\li{D: Ticketing system (ServiceNow, Jira) for intelligence task tracking}
+}
+
+\p{\strong{Operational}:}
+
+\ul{
+\li{M: Role-based access control with TLP-aware data segregation}
+\li{M: Audit logging for all analyst actions}
+\li{D: Multi-tenancy for MSSP use cases}
+}
+}
+
+\subtree{
+\title{Step 2: Evaluate Major TIP Options}
+\p{\strong{MISP (Open Source)}:}
+
+\ul{
+\li{Cost: Free (self-hosted infrastructure cost only)}
+\li{Strengths: Largest community, 250+ modules, extensive ISAC usage, STIX 2.0 native}
+\li{Weaknesses: Requires dedicated admin, limited visualization, UI dated}
+\li{Best for: Budget-constrained teams with technical staff; government/ISAC sharing programs}
+}
+
+\p{\strong{OpenCTI (Open Source)}:}
+
+\ul{
+\li{Cost: Free (self-hosted); paid SaaS at ~$3,000–$15,000/year}
+\li{Strengths: Native STIX 2.1, graph visualization, ATT&CK integration, modern API}
+\li{Weaknesses: Resource-intensive deployment (Elasticsearch, MinIO required)}
+\li{Best for: Teams wanting open source with modern UX; SOC/CTI integration focus}
+}
+
+\p{\strong{ThreatConnect (Commercial)}:}
+
+\ul{
+\li{Cost: $50,000–$500,000/year depending on scale}
+\li{Strengths: End-to-end CTI lifecycle, playbook automation, TC Exchange marketplace, analyst workflow}
+\li{Weaknesses: High cost; complex implementation; best value at larger scale}
+\li{Best for: Mature enterprise CTI programs; MSSPs; red team/blue team integration}
+}
+
+\p{\strong{Anomali ThreatStream (Commercial)}:}
+
+\ul{
+\li{Cost: $30,000–$200,000/year}
+\li{Strengths: Strong feed aggregation, Splunk-native integration, extensive pre-built connectors}
+\li{Weaknesses: Graph visualization weaker than OpenCTI; UI refresh lagging}
+\li{Best for: Splunk-heavy environments; teams prioritizing feed volume over analysis workflows}
+}
+
+\p{\strong{EclecticIQ Platform (Commercial)}:}
+
+\ul{
+\li{Cost: $40,000–$300,000/year}
+\li{Strengths: STIX 2.1 native, collaborative intelligence workbench, strong European customer base}
+\li{Weaknesses: Smaller partner ecosystem than ThreatConnect}
+\li{Best for: Teams with MITRE ATT&CK-centric workflows; EMEA-focused organizations}
+}
+}
+
+\subtree{
+\title{Step 3: Conduct Proof of Concept}
+\p{Request 30-day PoC from finalists. Test:}
+
+\ol{
+\li{Feed onboarding: Can your top 5 feeds be ingested within 4 hours?}
+\li{SIEM integration: Can enriched IOCs push to your SIEM in <5 minutes?}
+\li{ATT&CK mapping: Can analysts tag indicators with ATT&CK techniques efficiently?}
+\li{Report generation: Can the platform produce a tactical IOC bulletin with one click?}
+\li{API performance: Can the REST API handle 10,000 indicator queries per day?}
+}
+}
+
+\subtree{
+\title{Step 4: Score and Select}
+\p{Use weighted scoring matrix (weight each criterion by organizational priority):}
+
+\pre{\startverb
+Criterion                 Weight   Vendor A   Vendor B
+STIX 2.1 compliance       20%      95         85
+SIEM integration          25%      90         70
+ATT&CK mapping            15%      85         95
+Cost (inverse)            20%      60         90
+UI/analyst experience     10%      80         75
+Vendor support quality    10%      85         80
+TOTAL                     100%     82.0       81.5
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Implementation and Onboarding Planning}
+\p{Plan 90-day implementation:}
+
+\ul{
+\li{Week 1–2: Infrastructure deployment (cloud or on-prem)}
+\li{Week 3–4: Feed onboarding and deduplication tuning}
+\li{Week 5–6: SIEM/SOAR integration and testing}
+\li{Week 7–8: Analyst workflow configuration and training}
+\li{Week 9–12: Operational validation and go-live}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **TIP** | Threat Intelligence Platform — software for collecting, processing, analyzing, and disseminating cyber threat intelligence |
+| **TAXII Server** | Component of a TIP that serves STIX bundles to consuming systems on request |
+| **TC Exchange** | ThreatConnect's commercial marketplace for pre-built feed integrations and app connectors |
+| **Multi-tenancy** | TIP capability to serve multiple organizational units or customers with isolated data environments |
+| **Deduplication** | Process of identifying and merging duplicate indicators within a TIP to reduce analyst noise |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{MISP}: Open-source TIP used by 6,000+ organizations; strongest ISAC/government community integration}
+\li{\strong{OpenCTI}: Modern open-source TIP with native STIX 2.1 and graph-based analysis}
+\li{\strong{ThreatConnect}: Enterprise commercial TIP with lifecycle management and SOAR playbook integration}
+\li{\strong{Anomali ThreatStream}: Commercial TIP with strong Splunk ecosystem integration}
+\li{\strong{EclecticIQ}: Commercial TIP with ATT&CK-centric workflow design}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{Selecting TIP before defining requirements}: Technology selection before use case definition leads to expensive mismatches.}
+\li{\strong{Underestimating administration burden}: MISP and OpenCTI require dedicated admin time (minimum 0.25 FTE); budget accordingly.}
+\li{\strong{Ignoring data migration costs}: Moving historical intelligence from one TIP to another is costly and often impractical for legacy systems.}
+\li{\strong{Not testing SIEM integration in PoC}: TIP value depends heavily on downstream integration quality; always test SIEM/SOAR connectivity during evaluation.}
+}
+}
+}

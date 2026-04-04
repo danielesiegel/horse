@@ -1,0 +1,96 @@
+\title{Artifacts Builder}
+
+\taxon{skill}
+
+\meta{description}{Suite of tools for creating elaborate, multi-component claude.ai HTML}
+
+\subtree{
+\title{Artifacts Builder}
+\p{To build powerful frontend claude.ai artifacts, follow these steps:}
+
+\ol{
+\li{Initialize the frontend repo using \code{\startverb scripts/init-artifact.sh\stopverb}}
+\li{Develop your artifact by editing the generated code}
+\li{Bundle all code into a single HTML file using \code{\startverb scripts/bundle-artifact.sh\stopverb}}
+\li{Display artifact to user}
+\li{(Optional) Test the artifact}
+}
+
+\p{\strong{Stack}: React 18 + TypeScript + Vite + Parcel (bundling) + Tailwind CSS + shadcn/ui}
+
+\subtree{
+\title{Design & Style Guidelines}
+\p{VERY IMPORTANT: To avoid what is often referred to as "AI slop", avoid using excessive centered layouts, purple gradients, uniform rounded corners, and Inter font.}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Step 1: Initialize Project}
+\p{Run the initialization script to create a new React project:}
+
+\pre{\startverb
+bash scripts/init-artifact.sh <project-name>
+cd <project-name>
+\stopverb}
+
+\p{This creates a fully configured project with:}
+
+\ul{
+\li{✅ React + TypeScript (via Vite)}
+\li{✅ Tailwind CSS 3.4.1 with shadcn/ui theming system}
+\li{✅ Path aliases (\code{\startverb @/\stopverb}) configured}
+\li{✅ 40+ shadcn/ui components pre-installed}
+\li{✅ All Radix UI dependencies included}
+\li{✅ Parcel configured for bundling (via .parcelrc)}
+\li{✅ Node 18+ compatibility (auto-detects and pins Vite version)}
+}
+}
+
+\subtree{
+\title{Step 2: Develop Your Artifact}
+\p{To build the artifact, edit the generated files. See \strong{Common Development Tasks} below for guidance.}
+}
+
+\subtree{
+\title{Step 3: Bundle to Single HTML File}
+\p{To bundle the React app into a single HTML artifact:}
+
+\pre{\startverb
+bash scripts/bundle-artifact.sh
+\stopverb}
+
+\p{This creates \code{\startverb bundle.html\stopverb} - a self-contained artifact with all JavaScript, CSS, and dependencies inlined. This file can be directly shared in Claude conversations as an artifact.}
+
+\p{\strong{Requirements}: Your project must have an \code{\startverb index.html\stopverb} in the root directory.}
+
+\p{\strong{What the script does}:}
+
+\ul{
+\li{Installs bundling dependencies (parcel, @parcel/config-default, parcel-resolver-tspaths, html-inline)}
+\li{Creates \code{\startverb .parcelrc\stopverb} config with path alias support}
+\li{Builds with Parcel (no source maps)}
+\li{Inlines all assets into single HTML using html-inline}
+}
+}
+
+\subtree{
+\title{Step 4: Share Artifact with User}
+\p{Finally, share the bundled HTML file in conversation with the user so they can view it as an artifact.}
+}
+
+\subtree{
+\title{Step 5: Testing/Visualizing the Artifact (Optional)}
+\p{Note: This is a completely optional step. Only perform if necessary or requested.}
+
+\p{To test/visualize the artifact, use available tools (including other Skills or built-in tools like Playwright or Puppeteer). In general, avoid testing the artifact upfront as it adds latency between the request and when the finished artifact can be seen. Test later, after presenting the artifact, if requested or if issues arise.}
+}
+}
+
+\subtree{
+\title{Reference}
+\ul{
+\li{\strong{shadcn/ui components}: https://ui.shadcn.com/docs/components}
+}
+}
+}

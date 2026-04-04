@@ -1,0 +1,209 @@
+\title{Secure Workflow Guide}
+
+\taxon{skill}
+
+\meta{description}{Guides through Trail of Bits' 5-step secure development workflow. Runs Slither scans, checks special features (upgradeability/ERC conformance/token integration), generates visual security diagrams, helps document security properties for fuzzing/verification, and reviews manual security areas.}
+
+\subtree{
+\title{Secure Workflow Guide}
+\subtree{
+\title{Purpose}
+\p{Guides through Trail of Bits' secure development workflow - a 5-step process to enhance smart contract security throughout development.}
+
+\p{\strong{Use this}: On every check-in, before deployment, or when you want a security review}
+}
+
+\subtree{
+\title{The 5-Step Workflow}
+\p{Covers a security workflow including:}
+
+\subtree{
+\title{Step 1: Check for Known Security Issues}
+\p{Run Slither with 70+ built-in detectors to find common vulnerabilities:}
+
+\ul{
+\li{Parse findings by severity}
+\li{Explain each issue with file references}
+\li{Recommend fixes}
+\li{Help triage false positives}
+}
+
+\p{\strong{Goal}: Clean Slither report or documented triages}
+}
+
+\subtree{
+\title{Step 2: Check Special Features}
+\p{Detect and validate applicable features:}
+
+\ul{
+\li{\strong{Upgradeability}: slither-check-upgradeability (17 upgrade risks)}
+\li{\strong{ERC conformance}: slither-check-erc (6 common specs)}
+\li{\strong{Token integration}: Recommend token-integration-analyzer skill}
+\li{\strong{Security properties}: slither-prop for ERC20}
+}
+
+\p{\strong{Note}: Only runs checks that apply to your codebase}
+}
+
+\subtree{
+\title{Step 3: Visual Security Inspection}
+\p{Generate 3 security diagrams:}
+
+\ul{
+\li{\strong{Inheritance graph}: Identify shadowing and C3 linearization issues}
+\li{\strong{Function summary}: Show visibility and access controls}
+\li{\strong{Variables and authorization}: Map who can write to state variables}
+}
+
+\p{Review each diagram for security concerns}
+}
+
+\subtree{
+\title{Step 4: Document Security Properties}
+\p{Help document critical security properties:}
+
+\ul{
+\li{State machine transitions and invariants}
+\li{Access control requirements}
+\li{Arithmetic constraints and precision}
+\li{External interaction safety}
+\li{Standards conformance}
+}
+
+\p{Then set up testing:}
+
+\ul{
+\li{\strong{Echidna}: Property-based fuzzing with invariants}
+\li{\strong{Manticore}: Formal verification with symbolic execution}
+\li{\strong{Custom Slither checks}: Project-specific business logic}
+}
+
+\p{\strong{Note}: Most important activity for security}
+}
+
+\subtree{
+\title{Step 5: Manual Review Areas}
+\p{Analyze areas automated tools miss:}
+
+\ul{
+\li{\strong{Privacy}: On-chain secrets, commit-reveal needs}
+\li{\strong{Front-running}: Slippage protection, ordering risks, MEV}
+\li{\strong{Cryptography}: Weak randomness, signature issues, hash collisions}
+\li{\strong{DeFi interactions}: Oracle manipulation, flash loans, protocol assumptions}
+}
+
+\p{Search codebase for these patterns and flag risks}
+
+\p{For detailed instructions, commands, and explanations for each step, see [WORKFLOW_STEPS.md](resources/WORKFLOW_STEPS.md).}
+}
+}
+
+\subtree{
+\title{How I Work}
+\p{When invoked, I will:}
+
+\ol{
+\li{\strong{Explore your codebase} to understand structure}
+\li{\strong{Run Step 1}: Slither security scan}
+\li{\strong{Detect and run Step 2}: Special feature checks (only what applies)}
+\li{\strong{Generate Step 3}: Visual security diagrams}
+\li{\strong{Guide Step 4}: Security property documentation}
+\li{\strong{Analyze Step 5}: Manual review areas}
+\li{\strong{Provide action plan}: Prioritized fixes and next steps}
+}
+
+\p{Adapts based on:}
+
+\ul{
+\li{What tools you have installed}
+\li{What's applicable to your project}
+\li{Where you are in development}
+}
+}
+
+\subtree{
+\title{Rationalizations (Do Not Skip)}
+\pre{\startverb
+| Rationalization | Why It's Wrong | Required Action |
+|-----------------|----------------|-----------------|
+| "Slither not available, I'll check manually" | Manual checking misses 70+ detector patterns | Install and run Slither, or document why it's blocked |
+| "Can't generate diagrams, I'll describe the architecture" | Descriptions aren't visual - diagrams reveal patterns text misses | Execute slither --print commands, generate actual visual outputs |
+| "No upgrades detected, skip upgradeability checks" | Proxies and upgrades are often implicit or planned | Verify with codebase search before skipping Step 2 checks |
+| "Not a token, skip ERC checks" | Tokens can be integrated without obvious ERC inheritance | Check for token interactions, transfers, balances before skipping |
+| "Can't set up Echidna now, suggesting it for later" | Property-based testing is Step 4, not optional | Document properties now, set up fuzzing infrastructure |
+| "No DeFi interactions, skip oracle/flash loan checks" | DeFi patterns appear in unexpected places (price feeds, external calls) | Complete Step 5 manual review, search codebase for patterns |
+| "This step doesn't apply to my project" | "Not applicable" without verification = missed vulnerabilities | Verify with explicit codebase search before declaring N/A |
+| "I'll provide generic security advice instead of running workflow" | Generic advice isn't actionable, workflow finds specific issues | Execute all 5 steps, generate project-specific findings with file:line references |
+\stopverb}
+}
+
+\subtree{
+\title{Example Output}
+\p{When I complete the workflow, you'll get a comprehensive security report covering:}
+
+\ul{
+\li{\strong{Step 1}: Slither findings with severity, file references, and fix recommendations}
+\li{\strong{Step 2}: Special feature validation results (upgradeability, ERC conformance, etc.)}
+\li{\strong{Step 3}: Visual diagrams analyzing inheritance, functions, and state variable authorization}
+\li{\strong{Step 4}: Documented security properties and testing setup (Echidna/Manticore)}
+\li{\strong{Step 5}: Manual review findings (privacy, front-running, cryptography, DeFi risks)}
+\li{\strong{Action plan}: Critical/high/medium priority tasks with effort estimates}
+\li{\strong{Workflow checklist}: Progress on all 5 steps}
+}
+
+\p{For a complete example workflow report, see [EXAMPLE_REPORT.md](resources/EXAMPLE_REPORT.md).}
+}
+
+\subtree{
+\title{What You'll Get}
+\p{\strong{Security Report}:}
+
+\ul{
+\li{Slither findings with severity and fixes}
+\li{Special feature validation results}
+\li{Visual diagrams (PNG/PDF)}
+\li{Manual review findings}
+}
+
+\p{\strong{Action Plan}:}
+
+\ul{
+\li{[ ] Critical issues to fix immediately}
+\li{[ ] Security properties to document}
+\li{[ ] Testing to set up (Echidna/Manticore)}
+\li{[ ] Manual areas to review}
+}
+
+\p{\strong{Workflow Checklist}:}
+
+\ul{
+\li{[ ] Clean Slither report}
+\li{[ ] Special features validated}
+\li{[ ] Visual inspection complete}
+\li{[ ] Properties documented}
+\li{[ ] Manual review done}
+}
+}
+
+\subtree{
+\title{Getting Help}
+\p{\strong{Trail of Bits Resources}:}
+
+\ul{
+\li{Office Hours: Every Tuesday ([schedule](https://meetings.hubspot.com/trailofbits/office-hours))}
+\li{Empire Hacking Slack: #crytic and #ethereum channels}
+}
+
+\p{\strong{Other Security}:}
+
+\ul{
+\li{Remember: Security is about more than smart contracts}
+\li{Off-chain security (owner keys, infrastructure) equally critical}
+}
+}
+
+\subtree{
+\title{Ready to Start}
+\p{Let me know when you're ready and I'll run through the workflow with your codebase!}
+}
+}

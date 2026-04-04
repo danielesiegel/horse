@@ -1,0 +1,166 @@
+\title{Skill Creation}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Create, improve, and manage Droid skills. Use when the user wants to: - Create new skills from scratch or from session learnings - Improve existing skills based on user preferences - Analyze sessions to identify patterns worth codifying - Understand best practices for agentic skill design This is a meta-skill for self-improvement and continuous learning.}
+
+\subtree{
+\title{Skill creation}
+\p{This skill helps you build new skills and improve existing ones. Think of it as the skill that teaches you how to learn.}
+
+\subtree{
+\title{Why bother with skills?}
+\p{Every time you solve a problem, that knowledge usually dies with the session. Skills fix that. They're how you turn "I figured this out once" into "I know how to do this."}
+
+\p{A few reasons to extract skills:}
+
+\ul{
+\li{You won't have to re-discover the same solution next month}
+\li{Other sessions (and other users) benefit from what you learned}
+\li{Complex workflows become repeatable instead of fragile}
+}
+}
+
+\subtree{
+\title{The basic format}
+\p{Skills live in a folder with a \code{\startverb SKILL.md\stopverb} file:}
+
+\pre{\startverb
+.factory/skills/my-skill/
+└── SKILL.md
+\stopverb}
+
+\p{The file has YAML frontmatter and markdown content:}
+
+\pre{\startverb
+---
+name: my-skill
+version: 1.0.0
+description: |
+  What this skill does.
+  When to use it.
+---
+
+# My skill
+
+Instructions go here.
+\stopverb}
+
+\p{The \code{\startverb description\stopverb} matters a lot. It's how the agent decides whether to load your skill for a given task. Be specific about the problems it solves.}
+}
+
+\subtree{
+\title{When to create a skill}
+\p{Not everything deserves to be a skill. Skills are for complex or long workflows that someone might need to repeat or share. If it's a simple one-off task, a skill is overkill.}
+
+\p{The right level of specificity matters. A skill for "debugging in a codebase" is useful if there's a lot of common failure modes that agents might encounter. A skill for "debugging the login flow" is probably too narrow. Find the balance between general enough to reuse and specific enough to be helpful.}
+
+\p{Ask yourself:}
+
+\ul{
+\li{Did I have to dig around to figure this out?}
+\li{Would I be annoyed if I had to solve this again from scratch?}
+\li{Is there something here that isn't obvious from the docs?}
+}
+
+\p{If yes to any of those, probably worth extracting. If it was straightforward or you just followed a tutorial, skip it.}
+
+\p{Skills can also encode preferences and best practices. Maybe a user always logs into a specific platform when doing data analysis. Maybe there's a gotcha the team keeps hitting. If you notice you're consistently doing something the user has to correct or adjust, that's worth including.}
+}
+
+\subtree{
+\title{Extracting skills from sessions}
+\p{Use the \code{\startverb session-navigation\stopverb} skill to dig through past sessions and find patterns worth extracting. Look for things that came up multiple times, solutions that took real effort to figure out, or workflows you keep repeating.}
+
+\p{Once you've found something, generalize it. Replace specific paths with patterns, note the prerequisites, call out assumptions. The skill should work for similar situations, not just the exact case you found.}
+}
+
+\subtree{
+\title{Skill design tips}
+\p{When writing the skill, use the \code{\startverb human-writing\stopverb} skill. Skill docs that read like marketing copy are harder to follow.}
+
+\p{\strong{Start small.} A skill that does one thing well beats a skill that tries to cover everything. You can always compose multiple skills together.}
+
+\p{\strong{Include verification.} How do you know the skill worked? Add a check at the end:}
+
+\pre{\startverb
+## Verify it worked
+
+Run `npm test` and make sure nothing broke.
+Check that the new file exists at `src/config.ts`.
+\stopverb}
+
+\p{\strong{Document the failures too.} What doesn't work? What should you avoid? This saves future pain:}
+
+\pre{\startverb
+## What not to do
+
+Don't run this on a dirty git working directory.
+The `--force` flag will overwrite without asking.
+\stopverb}
+
+\p{\strong{Keep it fresh.} Skills rot. Dependencies change, APIs update, better approaches emerge. If a skill stops working or feels outdated, update it or delete it.}
+}
+
+\subtree{
+\title{Where skills live}
+\pre{\startverb
+| Location             | Who sees it                                |
+| -------------------- | ------------------------------------------ |
+| `.factory/skills/`   | Everyone on the project (commit it to git) |
+| `~/.factory/skills/` | Just you, across all projects              |
+\stopverb}
+
+\p{Project skills are good for team conventions. Personal skills are good for your own workflows.}
+}
+
+\subtree{
+\title{Improving existing skills}
+\p{Signs a skill needs work:}
+
+\ul{
+\li{Users ask follow-up questions after it runs}
+\li{It fails on edge cases that keep coming up}
+\li{There's a better approach now than when it was written}
+}
+
+\p{To find patterns:}
+
+\pre{\startverb
+# Which sessions used this skill?
+rg -l "skill-name" ~/.factory/sessions/*.jsonl
+
+# Where did things go wrong?
+rg "error|failed|retry" ~/.factory/sessions/*.jsonl -C 3
+\stopverb}
+
+\p{When you update a skill, bump the version. If it's a breaking change (different output, different inputs), bump the major version.}
+}
+
+\subtree{
+\title{Research notes}
+\p{Some of this comes from academic work on agents that learn:}
+
+\p{\strong{Voyager} showed that agents can build up skill libraries over time, with each skill composed from simpler ones.}
+
+\p{\strong{CASCADE} demonstrated that skills can be shared between agents, not just stored for one agent's use.}
+
+\p{\strong{SEAgent} found that learning from failures is as valuable as learning from successes.}
+
+\p{\strong{Reflexion} showed that verbal feedback (explaining what went wrong in plain language) beats numeric scores for improving agent behavior.}
+}
+
+\subtree{
+\title{The loop}
+\ol{
+\li{Work on something}
+\li{Notice when you learn something non-obvious}
+\li{Extract it as a skill}
+\li{Use the skill next time}
+\li{Improve the skill based on how it goes}
+\li{Repeat}
+}
+}
+}

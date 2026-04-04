@@ -1,0 +1,201 @@
+\title{Elevenlabs Acset}
+
+\taxon{skill}
+
+\meta{description}{"Skill elevenlabs-acset"}
+
+\subtree{
+\title{ElevenLabs ACSet: Voice Synthesis as Typed Data Structure}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - consumption/input to creative pipeline) \strong{Principle}: OpenAPI → ACSet deterministic conversion for voice synthesis \strong{Frame}: Voice as typed data structure in categorical database}
+
+\subtree{
+\title{Overview}
+\p{This skill bridges the ElevenLabs API to the ACSet ecosystem, enabling:}
+
+\ol{
+\li{\strong{OpenAPI → ACSet} schema generation from ElevenLabs API spec}
+\li{\strong{Voice selection} as typed morphisms}
+\li{\strong{Phone agent configuration} for +14156960069 special agent}
+\li{\strong{DuckDB persistence} of voice generation history}
+\li{\strong{Gay.jl color integration} for voice identity}
+}
+}
+
+\subtree{
+\title{API Endpoints → ACSet Objects}
+\pre{\startverb
+| ElevenLabs Endpoint | ACSet Object | Trit | Color |
+|---------------------|--------------|------|-------|
+| `/v1/text-to-speech` | `TTSRequest` | -1 | #0243d2 |
+| `/v1/voices` | `Voice` | 0 | #26D826 |
+| `/v1/models` | `Model` | 0 | #FFD700 |
+| `/v1/history` | `HistoryItem` | +1 | #FF6B6B |
+| `/v1/sound-generation` | `SoundEffect` | -1 | #9B59B6 |
+| `/v1/audio-isolation` | `AudioIsolation` | 0 | #3498DB |
+\stopverb}
+}
+
+\subtree{
+\title{Schema}
+\pre{\startverb
+@present SchElevenLabsACSet(FreeSchema) begin
+    # Objects
+    Voice::Ob
+    Model::Ob
+    TTSRequest::Ob
+    HistoryItem::Ob
+    
+    # Morphisms
+    voice_for_request::Hom(TTSRequest, Voice)
+    model_for_request::Hom(TTSRequest, Model)
+    history_of_request::Hom(HistoryItem, TTSRequest)
+    
+    # Attributes
+    VoiceId::AttrType
+    VoiceName::AttrType
+    ModelId::AttrType
+    Text::AttrType
+    AudioBytes::AttrType
+    Timestamp::AttrType
+    CharacterCount::AttrType
+    
+    voice_id::Attr(Voice, VoiceId)
+    voice_name::Attr(Voice, VoiceName)
+    model_id::Attr(Model, ModelId)
+    request_text::Attr(TTSRequest, Text)
+    history_audio::Attr(HistoryItem, AudioBytes)
+    history_timestamp::Attr(HistoryItem, Timestamp)
+    history_chars::Attr(HistoryItem, CharacterCount)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Phone Agent Configuration}
+\p{The special agent at \strong{+14156960069} uses this ACSet for:}
+
+\pre{\startverb
+# ~/.topos/skills/elevenlabs-acset/phone_agent.yaml
+agent_id: monaduck69-voice
+phone: "+14156960069"
+voice_settings:
+  voice_id: "cgSgspJ2msm6clMCkdW9"  # Default ElevenLabs voice
+  model_id: "eleven_multilingual_v2"
+  stability: 0.5
+  similarity_boost: 0.75
+  style: 0.4
+  speed: 1.0
+
+media_sources:
+  soundcloud: "rickroderick"
+  bandcamp: "monaduck69"
+  poe: "bmorphism"
+
+capabilities:
+  - text_to_speech
+  - voice_cloning
+  - audio_isolation
+  - sound_effects
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Julia Integration}
+\pre{\startverb
+include("ElevenLabsACSet.jl")
+using .ElevenLabsACSetModule
+
+# Initialize with API key from environment
+acset = create_elevenlabs_acset()
+
+# Add voices
+voice_id = add_voice!(acset, "cgSgspJ2msm6clMCkdW9", "Default Voice")
+
+# Add model
+model_id = add_model!(acset, "eleven_multilingual_v2")
+
+# Generate TTS request
+request_id = add_tts_request!(acset, voice_id, model_id, "Hello from ACSet!")
+
+# Persist to DuckDB
+persist_to_duckdb!(acset, "~/.topos/elevenlabs.duckdb")
+\stopverb}
+}
+
+\subtree{
+\title{MCP Server Integration}
+\p{The \code{\startverb bmorphism__elevenlabs-mcp-enhanced\stopverb} server provides:}
+
+\pre{\startverb
+# Start the unified server
+uvx elevenlabs-mcp
+
+# Tools available:
+# - text_to_speech (with V3 audio tags)
+# - list_voices
+# - get_voice
+# - voice_design
+# - sound_effects
+# - audio_isolation
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\pre{\startverb
+elevenlabs-acset (-1) ⊗ crossmodal-gf3 (0) ⊗ gesture-hypergestures (+1) = 0 ✓
+\stopverb}
+
+\pre{\startverb
+| Trit | Role | Description |
+|------|------|-------------|
+| MINUS (-1) | Input | Voice synthesis consumes text |
+| ERGODIC (0) | Transform | crossmodal-gf3 maps to modalities |
+| PLUS (+1) | Output | gesture-hypergestures performs |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{rick-roderick}: Philosophy lectures on SoundCloud}
+\li{\strong{catsharp-sonification}: Color → Sound mapping}
+\li{\strong{say-narration}: macOS TTS with mathematician personas}
+\li{\strong{crossmodal-gf3}: GF(3) → {Tactile, Auditory, Haptic}}
+}
+}
+
+\subtree{
+\title{Environment Variables}
+\pre{\startverb
+# Required
+ELEVENLABS_API_KEY=xi-xxxxxxxx  # or sk-xxxxxxxx
+
+# Optional
+ELEVENLABS_DEBUG=false
+ELEVENLABS_OUTPUT_DIR=~/Desktop
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Test connection
+just elevenlabs-test
+
+# List voices
+just elevenlabs-voices
+
+# Generate speech
+just elevenlabs-tts "Hello world"
+
+# Sync history to DuckDB
+just elevenlabs-sync
+\stopverb}
+
+\p{\strong{Skill Name}: elevenlabs-acset \strong{Type}: Voice Synthesis / OpenAPI ACSet / Media Pipeline \strong{Trit}: -1 (MINUS) \strong{Source}: [ElevenLabs API](https://elevenlabs.io/docs/api-reference/introduction) \strong{MCP}: \code{\startverb bmorphism__elevenlabs-mcp-enhanced\stopverb}}
+}
+}

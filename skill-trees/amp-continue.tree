@@ -1,0 +1,99 @@
+\title{Amp Continue}
+
+\taxon{skill}
+
+\meta{description}{"Export AMP threads as markdown and fork continuation paths. Use when managing AMP conversation threads, exporting thread history, or branching thread execution across skills."}
+
+\subtree{
+\title{amp-continue}
+\p{Export AMP threads to structured markdown and fork continuation paths across skills.}
+
+\subtree{
+\title{CLI Interface}
+\pre{\startverb
+# Export threads to markdown
+amp continue export \
+  --threads "T-019b5df7..." "T-019b5df0..." \
+  --output threads.md \
+  --max-depth 3
+
+# Fork to multiple parallel skills
+amp continue fork \
+  --thread "T-019b5df7-50e8-744e-a95a-eb8d3fd72927" \
+  --decision +1 \
+  --skills "skill-maker" "chromatic-walk" "cq-ai" \
+  --parallel 8
+
+# Filter thread with selector
+amp continue filter \
+  --thread "T-019b5da5-ee78-7113-b839-5c066cc98d4a" \
+  --decision -1 \
+  --selector "messages.length > 10" \
+  --target-skill "summarize"
+
+# Continue linearly to next skill
+amp continue next \
+  --thread "T-019b5ddc-ea96-72ff-b26a-270b7e4527a1" \
+  --decision 0 \
+  --skill "load-sicp"
+\stopverb}
+}
+
+\subtree{
+\title{Clojure API}
+\pre{\startverb
+;; Export threads to markdown
+(amp/export {:threads [thread-ids]
+             :format :markdown
+             :include-metadata true
+             :include-messages true})
+
+;; Fork continuation across skills
+(amp/continue {:thread-id thread-id
+               :decision :plus   ; or :minus, :zero
+               :skills [skill-names]
+               :parallel true})
+
+;; Classify thread continuation strategy
+(amp-continue/classify {:thread-id "T-..."
+                        :heuristic :message-count}) ; or :complexity, :entropy
+\stopverb}
+
+\subtree{
+\title{Decision values}
+\ul{
+\li{\code{\startverb :plus\stopverb} / \code{\startverb +1\stopverb} -- expand to N parallel execution paths}
+\li{\code{\startverb :zero\stopverb} / \code{\startverb 0\stopverb} -- continue serially to next skill}
+\li{\code{\startverb :minus\stopverb} / \code{\startverb -1\stopverb} -- apply filters to reduce paths}
+}
+}
+}
+
+\subtree{
+\title{MCP Registration}
+\pre{\startverb
+{
+  "name": "amp_continue",
+  "description": "Export AMP threads and fork classified continuation",
+  "resources": [
+    {"uri": "amp://threads", "name": "All threads", "type": "read"},
+    {"uri": "amp://continuations", "name": "Active continuations", "type": "read"}
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Storage}
+\ul{
+\li{\strong{Threads:} \code{\startverb ~/.local/share/amp/threads/*.json\stopverb}}
+\li{\strong{Continuations:} \code{\startverb ~/.local/share/amp/continuations/*.json\stopverb}}
+\li{\strong{Exports:} \code{\startverb ~/.local/share/amp/exports/\stopverb}}
+}
+}
+
+\subtree{
+\title{Determinism}
+\p{Same thread ID + same seed produces the same continuation path (SplitMix64). Pass \code{\startverb --seed\stopverb} / \code{\startverb :seed\stopverb} for reproducibility.}
+}
+}

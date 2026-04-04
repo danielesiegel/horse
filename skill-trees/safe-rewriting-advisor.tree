@@ -1,0 +1,106 @@
+\title{"safe Rewriting Advisor"}
+
+\taxon{skill}
+
+\meta{description}{"Strategic selective edge removal maintaining spectral gap ≥ 0.25."}
+
+\subtree{
+\title{Safe Rewriting Advisor}
+\p{\strong{Category}: Graph Optimization + Remediation \strong{Type}: Strategic Edge Removal Analysis \strong{Language}: Julia \strong{Status}: Production Ready \strong{Version}: 1.0.0 \strong{Date}: December 22, 2025}
+
+\subtree{
+\title{Overview}
+\p{Strategic selective edge removal maintaining spectral gap ≥ 0.25. Analyzes edge criticality via betweenness centrality to identify which proof dependencies can be safely removed without breaking system connectivity (Ramanujan property).}
+}
+
+\subtree{
+\title{Key Data Structures}
+\pre{\startverb
+struct EdgeImportance
+    edge_id::Tuple{Int, Int}
+    betweenness_centrality::Float64
+    gap_sensitivity::Float64
+    redundancy_score::Float64
+    recommendation::String
+end
+
+struct RewritePlan
+    edges_to_remove::Vector{Tuple{Int, Int}}
+    edges_to_split::Vector{Tuple{Int, Int}}
+    cycle_breakers::Vector{String}
+    expected_gap_before::Float64
+    expected_gap_after::Float64
+    safe::Bool
+    complexity::String
+end
+\stopverb}
+}
+
+\subtree{
+\title{Key Functions}
+\ul{
+\li{\strong{\code{\startverb compute_edge_importance(adjacency)\stopverb}}: Betweenness centrality analysis}
+\li{\strong{\code{\startverb identify_redundant_edges(edges)\stopverb}}: Find safe-to-remove edges}
+\li{\strong{\code{\startverb generate_rewrite_plan(adjacency, gap)\stopverb}}: Strategic remediation}
+\li{\strong{\code{\startverb generate_rewrite_report(adjacency, gap)\stopverb}}: Human-readable analysis}
+}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\p{\strong{Edge Criticality Classification}}
+
+\pre{\startverb
+gap_sensitivity > 80%  : CRITICAL - essential for connectivity
+40-80%                 : IMPORTANT - remove only if necessary
+< 40%                  : REDUNDANT - safe to remove
+\stopverb}
+
+\p{Uses betweenness centrality to measure how many paths depend on each edge. Recommends cycle-breaking via intermediate theorems for low-gap systems.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+using SafeRewriting
+
+# Analyze current system
+plan = generate_rewrite_plan(adjacency, current_gap)
+
+# Check if transformation is safe
+if plan.safe && plan.expected_gap_after >= 0.25
+    println("✓ Safe to apply $(length(plan.edges_to_remove)) edge removals")
+    println("  Gap projection: $(plan.expected_gap_before) → $(plan.expected_gap_after)")
+end
+
+# Get recommendations
+report = generate_rewrite_report(adjacency, current_gap)
+\stopverb}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{Week 4 remediation planning phase}
+\li{Automated maintenance pipeline for continuous-inverter}
+\li{Gap recovery strategy after tangled dependencies identified}
+}
+}
+
+\subtree{
+\title{Performance}
+\ul{
+\li{Edge analysis: < 2 seconds}
+\li{Plan generation: < 1 second}
+\li{Scales to 100,000+ edges}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Betweenness centrality: Freeman (1977)}
+\li{Graph remediation strategies for network optimization}
+}
+}
+}

@@ -1,0 +1,189 @@
+\title{Generating Threat Intelligence Reports}
+
+\taxon{skill}
+
+\tag{CTI}
+
+\tag{threat-intelligence}
+
+\tag{intelligence-products}
+
+\tag{TLP}
+
+\tag{PIR}
+
+\tag{report-writing}
+
+\tag{NIST-CSF}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Generates structured cyber threat intelligence reports at strategic, operational, and tactical levels tailored to specific audiences including executives, security operations teams, and technical analysts. Use when producing finished intelligence products from raw collection data, creating sector threat briefings, or delivering post-incident intelligence assessments. Activates for requests involving CTI report writing, threat briefings, intelligence products, finished intelligence, or executive security reporting.}
+
+\subtree{
+\title{Generating Threat Intelligence Reports}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Producing weekly, monthly, or quarterly threat intelligence summaries for security leadership}
+\li{Creating a rapid intelligence assessment in response to a breaking threat (e.g., new zero-day, active ransomware campaign)}
+\li{Generating sector-specific threat briefings for executive decision-making on security investments}
+}
+
+\p{\strong{Do not use} this skill for raw IOC distribution — use TIP/MISP for automated IOC sharing and reserve report generation for analyzed, finished intelligence.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Completed analysis from collection and processing phase (PIRs partially or fully answered)}
+\li{Audience profile: technical level, decision-making authority, information classification clearance}
+\li{TLP classification decision for the product}
+\li{Organization-specific reporting template aligned to audience expectations}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Determine Report Type and Audience}
+\p{Select the appropriate intelligence product type:}
+
+\p{\strong{Strategic Intelligence Report}: For C-suite, board, risk committee}
+
+\ul{
+\li{Content: Threat landscape trends, adversary intent vs. capability, risk to business objectives}
+\li{Format: 1–3 pages, minimal jargon, business impact language, recommended decisions}
+\li{Frequency: Monthly/Quarterly}
+}
+
+\p{\strong{Operational Intelligence Report}: For CISO, security directors, IR leads}
+
+\ul{
+\li{Content: Active campaigns, adversary TTPs, defensive recommendations, sector peer incidents}
+\li{Format: 3–8 pages, moderate technical detail, mitigation priority list}
+\li{Frequency: Weekly}
+}
+
+\p{\strong{Tactical Intelligence Bulletin}: For SOC analysts, threat hunters, vulnerability management}
+
+\ul{
+\li{Content: Specific IOCs, YARA rules, Sigma detections, CVEs, patching guidance}
+\li{Format: Structured tables, code blocks, 1–2 pages}
+\li{Frequency: Daily or as-needed}
+}
+
+\p{\strong{Flash Report}: Urgent notification for imminent or active threats}
+
+\ul{
+\li{Content: What is happening, immediate risk, what to do right now}
+\li{Format: 1 page maximum, distributed within 2 hours of threat identification}
+\li{Frequency: As-needed (zero-day, active campaign targeting sector)}
+}
+}
+
+\subtree{
+\title{Step 2: Structure Report Using Intelligence Standards}
+\p{Apply intelligence writing standards from government and professional practice:}
+
+\p{\strong{Headline/Key Judgment}: Lead with the most important finding in plain language.}
+
+\ul{
+\li{Bad: "This report examines threat actor TTPs associated with Cl0p ransomware"}
+\li{Good: "Cl0p ransomware group is actively exploiting CVE-2024-20353 in Cisco ASA devices to gain initial access; organizations using unpatched ASA appliances face imminent ransomware risk"}
+}
+
+\p{\strong{Confidence Qualifiers} (use language from DNI ICD 203):}
+
+\ul{
+\li{High confidence: "assess with high confidence" — strong evidence, few assumptions}
+\li{Medium confidence: "assess" — credible sources but analytical assumptions required}
+\li{Low confidence: "suggests" — limited sources, significant uncertainty}
+}
+
+\p{\strong{Evidence Attribution}: Cite sources using reference numbers [1], [2]; maintain source anonymization in TLP:AMBER/RED products.}
+}
+
+\subtree{
+\title{Step 3: Write Report Body}
+\p{Use structured format:}
+
+\p{\strong{Executive Summary} (3–5 bullet points): Key findings, immediate business risk, top recommended action}
+
+\p{\strong{Threat Overview}: Who is the adversary? What is their objective? Why does this matter to us?}
+
+\p{\strong{Technical Analysis}: TTPs with ATT&CK technique IDs, IOCs, observed campaign behavior}
+
+\p{\strong{Impact Assessment}: Potential operational, financial, reputational impact if attack succeeds}
+
+\p{\strong{Recommended Actions}: Prioritized, time-bound defensive measures with owner assignment}
+
+\p{\strong{Appendices}: Full IOC lists, YARA rules, Sigma detections, raw source references}
+}
+
+\subtree{
+\title{Step 4: Apply TLP and Distribution Controls}
+\p{Select TLP based on source sensitivity and sharing agreements:}
+
+\ul{
+\li{\strong{TLP:RED}: Named recipients only; cannot be shared outside briefing room}
+\li{\strong{TLP:AMBER+STRICT}: Organization only; no sharing with subsidiaries or partners}
+\li{\strong{TLP:AMBER}: Organization and trusted partners with need-to-know}
+\li{\strong{TLP:GREEN}: Community-wide sharing (ISAC members, sector peers)}
+\li{\strong{TLP:WHITE/CLEAR}: Public distribution; no restrictions}
+}
+
+\p{Include TLP watermark on every page header and footer.}
+}
+
+\subtree{
+\title{Step 5: Review and Quality Control}
+\p{Before dissemination, apply these checks:}
+
+\ul{
+\li{\strong{Accuracy}: Are all facts sourced and cited? No unsubstantiated claims.}
+\li{\strong{Clarity}: Can the target audience understand this without additional context?}
+\li{\strong{Actionability}: Does every report section drive a decision or action?}
+\li{\strong{Classification}: Is TLP correctly applied? No source identification in AMBER/RED products?}
+\li{\strong{Timeliness}: Is this intelligence still current? Events older than 48 hours require freshness assessment.}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **Finished Intelligence** | Analyzed, contextualized intelligence product ready for consumption by decision-makers; distinct from raw collected data |
+| **Key Judgment** | Primary analytical conclusion of a report; clearly stated in opening paragraph |
+| **TLP** | Traffic Light Protocol — FIRST-standard classification system for controlling intelligence sharing scope |
+| **ICD 203** | Intelligence Community Directive 203 — US government standard for analytic standards including confidence language |
+| **Flash Report** | Urgent, time-sensitive intelligence notification for imminent threats; prioritizes speed over depth |
+| **Intelligence Gap** | Area where collection is insufficient to answer a PIR; should be explicitly documented in reports |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{ThreatConnect Reports}: Built-in report templates with ATT&CK mapping, IOC tables, and stakeholder distribution controls}
+\li{\strong{Recorded Future}: Pre-built intelligence report templates with automated sourcing from proprietary datasets}
+\li{\strong{OpenCTI Reports}: STIX-based report objects with linked entities for structured finished intelligence}
+\li{\strong{Microsoft Word/Confluence}: Common report delivery formats; use organization-approved templates with TLP headers}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{Writing for analysts instead of the audience}: Technical detail appropriate for SOC analysts overwhelms executives. Maintain strict audience segmentation.}
+\li{\strong{Omitting confidence levels}: Statements presented without confidence qualifiers appear as established facts when they may be low-confidence assessments.}
+\li{\strong{Intelligence without recommendations}: Reports that describe threats without prescribing actions leave stakeholders without direction.}
+\li{\strong{Stale intelligence}: Publishing a report on a threat campaign that was resolved 2 weeks ago creates alarm without utility. Include freshness dating on all claims.}
+\li{\strong{Over-classification}: Applying TLP:RED to information that could be TLP:GREEN impedes community sharing and limits defensive value across the sector.}
+}
+}
+}

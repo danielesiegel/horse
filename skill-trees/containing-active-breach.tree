@@ -1,0 +1,263 @@
+\title{Containing Active Breach}
+
+\taxon{skill}
+
+\tag{breach-containment}
+
+\tag{lateral-movement}
+
+\tag{network-isolation}
+
+\tag{credential-revocation}
+
+\tag{live-response}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Executes containment strategies to stop active adversary operations and prevent lateral movement during a confirmed security breach. Implements short-term and long-term containment using network segmentation, endpoint isolation, credential revocation, and access control modifications. Activates for requests involving breach containment, lateral movement prevention, network isolation, active threat containment, or live incident response.}
+
+\subtree{
+\title{Containing Active Breaches}
+\subtree{
+\title{When to Use}
+\ul{
+\li{A confirmed intrusion is in progress with an active adversary on the network}
+\li{Malware is spreading laterally across endpoints or servers}
+\li{A compromised account is being used for unauthorized access to systems}
+\li{Ransomware encryption has been detected and is actively propagating}
+\li{An attacker has established command-and-control communications from internal hosts}
+}
+
+\p{\strong{Do not use} for post-incident cleanup when the adversary is no longer active; use eradication procedures instead.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Confirmed incident classification with P1 or P2 severity from triage}
+\li{EDR console access with host isolation capabilities (CrowdStrike Falcon, Microsoft Defender for Endpoint, SentinelOne)}
+\li{Network firewall and switch management access for segmentation}
+\li{Active Directory or identity provider administrative access for credential actions}
+\li{Pre-approved containment authority documented in the incident response plan}
+\li{Evidence preservation plan to avoid destroying forensic artifacts during containment}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Assess Containment Scope}
+\p{Before taking containment actions, map the full scope of compromise to avoid partial containment that alerts the adversary:}
+
+\ul{
+\li{Identify all confirmed compromised hosts via EDR telemetry and SIEM correlation}
+\li{Map lateral movement paths using authentication logs (Windows Event ID 4624 Type 3 and Type 10)}
+\li{Identify all compromised credentials (check for pass-the-hash, Kerberoasting, DCSync activity)}
+\li{Determine C2 channels (beacon intervals, domains, IPs, protocols)}
+\li{Assess whether the adversary has domain admin or equivalent privileges}
+}
+
+\pre{\startverb
+Containment Scope Assessment:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Compromised Hosts:     5 (WKSTN-042, WKSTN-087, SRV-FILE01, SRV-DC02, WKSTN-103)
+Compromised Accounts:  3 (jsmith, svc-backup, admin-tier0)
+C2 Channels:           HTTPS beacon to 185.220.x.x every 60s ± 15% jitter
+Lateral Movement:      PsExec via svc-backup, RDP via admin-tier0
+Adversary Privilege:   Domain Admin (admin-tier0 compromised)
+Data at Risk:          Finance share (\\SRV-FILE01\finance$) accessed
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Execute Short-Term Containment}
+\p{Implement immediate actions to stop adversary operations without destroying evidence:}
+
+\p{\strong{Network Containment:}}
+
+\ul{
+\li{Isolate confirmed compromised endpoints via EDR network containment (maintains agent communication)}
+\li{Block C2 IP addresses and domains at perimeter firewall and internal DNS}
+\li{Implement microsegmentation rules to prevent communication between compromised hosts}
+\li{Sinkhole C2 domains at internal DNS to capture connection attempts from undiscovered implants}
+}
+
+\p{\strong{Identity Containment:}}
+
+\ul{
+\li{Disable compromised user accounts in Active Directory (do not delete; preserve audit trail)}
+\li{Reset passwords for all compromised accounts}
+\li{Revoke active sessions and tokens (Azure AD: \code{\startverb Revoke-AzureADUserAllRefreshToken\stopverb})}
+\li{Disable the compromised service account and rotate its credentials}
+\li{If Domain Admin is compromised: double-reset the KRBTGT password (reset twice, 12 hours apart)}
+}
+
+\p{\strong{Endpoint Containment:}}
+
+\ul{
+\li{Use EDR to terminate malicious processes on contained hosts}
+\li{Block known malicious hashes in EDR prevention policy}
+\li{Quarantine identified malware samples}
+\li{Disable remote services (WinRM, RDP, SMB) on critical servers not yet compromised}
+}
+}
+
+\subtree{
+\title{Step 3: Execute Long-Term Containment}
+\p{Implement sustainable containment while the investigation continues:}
+
+\ul{
+\li{Create network ACLs isolating the compromised VLAN/subnet while allowing business-critical traffic}
+\li{Deploy temporary jump hosts for administrators to access contained systems for investigation}
+\li{Implement enhanced monitoring (full packet capture) on network segments adjacent to compromised hosts}
+\li{Enable advanced audit policies on all domain controllers (4768, 4769, 4771 for Kerberos attacks)}
+\li{Deploy canary tokens and honeypot accounts to detect adversary attempts to expand from containment}
+}
+}
+
+\subtree{
+\title{Step 4: Validate Containment Effectiveness}
+\p{Confirm that containment measures have stopped adversary operations:}
+
+\ul{
+\li{Monitor for new C2 callbacks from any internal host to known adversary infrastructure}
+\li{Check for new lateral movement attempts (failed authentication from disabled accounts)}
+\li{Verify that contained hosts cannot reach the internet except through the EDR agent}
+\li{Confirm that compromised credentials produce authentication failures}
+\li{Review SIEM for any new alerts matching the adversary's known TTPs}
+}
+
+\pre{\startverb
+Containment Validation Checklist:
+[x] C2 beacon traffic ceased from all known compromised hosts
+[x] Disabled accounts producing expected 4625 failure events (no new successes)
+[x] Contained hosts unreachable via network scan from adjacent subnets
+[x] No new hosts exhibiting IOCs from the initial compromise
+[x] Honeypot account has not been accessed (adversary may be dormant)
+[ ] Full packet capture running on finance VLAN (pending switch config)
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Preserve Evidence During Containment}
+\p{Containment must not destroy forensic evidence:}
+
+\ul{
+\li{Capture memory dumps from compromised hosts before any remediation (use WinPmem or Magnet RAM Capture)}
+\li{Collect volatile data: running processes, network connections, logged-on users, scheduled tasks}
+\li{Export relevant event logs before they rotate (Security, System, PowerShell, Sysmon)}
+\li{Capture network traffic between compromised hosts and C2 infrastructure}
+\li{Document all containment actions with timestamps for the incident timeline}
+}
+}
+
+\subtree{
+\title{Step 6: Communicate Containment Status}
+\p{Provide structured status updates to incident commander and stakeholders:}
+
+\ul{
+\li{Current containment effectiveness (percentage of adversary activity stopped)}
+\li{Remaining risks (undiscovered implants, persistence mechanisms not yet identified)}
+\li{Business impact of containment actions (which systems are offline, user impact)}
+\li{Estimated timeline for eradication phase}
+\li{Escalation needs (law enforcement notification, external IR retainer activation)}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **Short-Term Containment** | Immediate actions to stop active adversary operations; typically network isolation and credential disablement |
+| **Long-Term Containment** | Sustainable measures allowing continued investigation while preventing adversary re-access |
+| **KRBTGT Double Reset** | Resetting the KRBTGT password twice to invalidate all existing Kerberos tickets including golden tickets |
+| **Network Containment** | EDR feature that isolates an endpoint from all network communication except the EDR management channel |
+| **Lateral Movement** | Adversary technique of moving from one compromised system to another within a network using stolen credentials or exploits |
+| **C2 Sinkholing** | Redirecting DNS queries for C2 domains to an internal server to prevent adversary communication and detect additional victims |
+| **Microsegmentation** | Granular network access controls between workloads that limit lateral communication paths |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{CrowdStrike Falcon}: Endpoint containment with one-click network isolation preserving agent connectivity}
+\li{\strong{Microsoft Defender for Endpoint}: Live response console for remote containment actions and evidence collection}
+\li{\strong{Palo Alto Networks NGFW}: Application-aware firewall rules for C2 traffic blocking and microsegmentation}
+\li{\strong{Velociraptor}: Open-source endpoint monitoring and response tool for artifact collection during containment}
+\li{\strong{BloodHound}: Active Directory attack path mapping to identify potential lateral movement routes the adversary may exploit}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Ransomware Lateral Propagation via SMB}
+\p{\strong{Context}: EDR alerts on three file servers showing rapid file encryption. The ransomware is spreading via SMB using a compromised domain service account.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Immediately isolate all three file servers via EDR network containment}
+\li{Disable the compromised service account in Active Directory}
+\li{Block SMB (TCP 445) between all server VLANs at the network switch layer}
+\li{Deploy an emergency GPO disabling the SMB server service on non-critical endpoints}
+\li{Capture memory from one encrypted server before it reboots}
+\li{Search for the ransomware binary hash across all endpoints using EDR threat hunting}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Shutting down servers immediately, destroying volatile memory evidence}
+\li{Only disabling the known compromised account without checking for other persistence mechanisms}
+\li{Restoring from backup before confirming the adversary's access has been fully revoked}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+CONTAINMENT STATUS REPORT
+=========================
+Incident:        INC-2025-1547
+Status:          CONTAINED (Short-Term)
+Timestamp:       2025-11-15T15:47:00Z
+Containment Lead: [Name]
+
+ACTIONS TAKEN
+Network:
+- [x] 5 hosts isolated via CrowdStrike containment
+- [x] C2 IP 185.220.x.x blocked at perimeter FW (rule #4521)
+- [x] C2 domain evil.example[.]com sinkholed to 10.0.0.99
+
+Identity:
+- [x] jsmith account disabled
+- [x] svc-backup account disabled, password rotated
+- [x] admin-tier0 account disabled
+- [x] KRBTGT first reset completed at 15:30 UTC
+
+Endpoint:
+- [x] Malicious hash blocked in EDR prevention policy
+- [x] Malware processes terminated on all contained hosts
+
+EVIDENCE PRESERVED
+- Memory dumps: 3 of 5 hosts completed
+- Event logs exported: all 5 hosts
+- Network capture: running on finance VLAN
+
+REMAINING RISKS
+- Possible undiscovered implants on non-EDR endpoints (15 legacy hosts)
+- KRBTGT second reset pending (scheduled 03:30 UTC +1 day)
+- Adversary may have exfiltrated data before containment
+
+BUSINESS IMPACT
+- Finance file share offline (affects 42 users)
+- 3 user workstations isolated (users reassigned to loaners)
+- Estimated restoration: pending eradication completion
+\stopverb}
+}
+}

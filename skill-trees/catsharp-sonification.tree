@@ -1,0 +1,144 @@
+\title{Catsharp Sonification}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{Sonify GF(3) color streams via CatSharp scale. Maps Gay.jl colors to pitch classes and plays through sox. No voice synthesis.}
+
+\subtree{
+\title{CatSharp Sonification}
+\p{Sonify deterministic color streams using the CatSharp scale (Mazzola's Topos of Music).}
+
+\subtree{
+\title{Galois Chain}
+\pre{\startverb
+seed ⊣ γ ⊣ color ⊣ hue ⊣ pitch ⊣ freq ⊣ tone
+\stopverb}
+}
+
+\subtree{
+\title{Mappings}
+\subtree{
+\title{Hue → Trit (Gay.jl spec)}
+\pre{\startverb
+| Hue Range | Trit | Role | Temperature |
+|-----------|------|------|-------------|
+| 0-60°, 300-360° | +1 | PLUS | warm |
+| 60-180° | 0 | ERGODIC | neutral |
+| 180-300° | -1 | MINUS | cold |
+\stopverb}
+}
+
+\subtree{
+\title{Trit → Waveform}
+\pre{\startverb
+| Trit | Waveform | Character |
+|------|----------|-----------|
+| +1 | sine | smooth, harmonic |
+| 0 | triangle | balanced, neutral |
+| -1 | square | harsh, digital |
+\stopverb}
+}
+
+\subtree{
+\title{Hue → Pitch Class}
+\pre{\startverb
+pitch_class = floor(hue / 30) mod 12
+\stopverb}
+
+\p{30° per semitone maps the color wheel to the chromatic scale.}
+}
+
+\subtree{
+\title{CatSharp Pitch → Trit}
+\pre{\startverb
+| Pitch Classes | Trit | Structure |
+|---------------|------|-----------|
+| {0, 4, 8} (C, E, G#) | +1 | Augmented triad |
+| {3, 6, 9} (Eb, F#, A) | 0 | Diminished subset |
+| Circle of fifths | -1 | Fifths stack |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Python (sox required)}
+\pre{\startverb
+import subprocess
+
+def play_color(r, g, b, duration=0.15):
+    hue = rgb_to_hue(r, g, b)
+    trit = hue_to_trit(hue)
+    pc = int(hue / 30) % 12
+    freq = 261.63 * (2 ** (pc / 12))  # C4 base
+    wave = {1: "sine", 0: "triangle", -1: "square"}[trit]
+    subprocess.run(["play", "-q", "-n", "synth", str(duration), 
+                    wave, str(freq), "vol", "0.3"])
+\stopverb}
+}
+
+\subtree{
+\title{Babashka}
+\pre{\startverb
+(defn play-trit [trit freq]
+  (let [wave (case trit 1 "sine" 0 "triangle" -1 "square")]
+    (shell "play" "-q" "-n" "synth" "0.15" wave (str freq) "vol" "0.3")))
+\stopverb}
+}
+
+\subtree{
+\title{Julia (Gay.jl)}
+\pre{\startverb
+using Gay
+
+function sonify_stream(seed, n=12)
+    Gay.gay_seed!(seed)
+    for _ in 1:n
+        c = Gay.next_color()
+        hue = Gay.Colors.convert(Gay.HSL, c).h
+        pc = mod(round(Int, hue / 30), 12)
+        freq = 261.63 * 2^(pc / 12)
+        trit = hue < 60 || hue >= 300 ? 1 : hue < 180 ? 0 : -1
+        wave = Dict(1 => "sine", 0 => "triangle", -1 => "square")[trit]
+        run(`play -q -n synth 0.15 $wave $freq vol 0.3`)
+    end
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Every tripartite emission sums to 0 mod 3:}
+
+\pre{\startverb
+MINUS(-1) + ERGODIC(0) + PLUS(+1) = 0
+\stopverb}
+}
+
+\subtree{
+\title{Modelica Formulation}
+\p{See \code{\startverb catsharp.mo\stopverb} for acausal equation-based model.}
+}
+
+\subtree{
+\title{Dependencies}
+\ul{
+\li{\code{\startverb sox\stopverb} (via flox: \code{\startverb flox install sox\stopverb})}
+\li{Python 3.x or Julia with Gay.jl}
+\li{macOS \code{\startverb afplay\stopverb} as fallback}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb gay-mcp\stopverb}: Deterministic color generation}
+\li{\code{\startverb rubato-composer\stopverb}: Mazzola's mathematical music theory}
+\li{\code{\startverb topos-of-music\stopverb}: Full categorical music implementation}
+}
+}
+}

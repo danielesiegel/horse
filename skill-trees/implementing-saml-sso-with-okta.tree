@@ -1,0 +1,199 @@
+\title{Implementing Saml Sso With Okta}
+
+\taxon{skill}
+
+\tag{iam}
+
+\tag{identity}
+
+\tag{access-control}
+
+\tag{authentication}
+
+\tag{saml}
+
+\tag{sso}
+
+\tag{okta}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Implement SAML 2.0 Single Sign-On (SSO) using Okta as the Identity Provider (IdP). This skill covers end-to-end configuration of SAML authentication flows, attribute mapping, certificate management, a}
+
+\subtree{
+\title{Implementing SAML SSO with Okta}
+\subtree{
+\title{Overview}
+\p{Implement SAML 2.0 Single Sign-On (SSO) using Okta as the Identity Provider (IdP). This skill covers end-to-end configuration of SAML authentication flows, attribute mapping, certificate management, and security hardening for enterprise SSO deployments.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing saml sso with okta capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with identity access management concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Configure Okta as a SAML 2.0 Identity Provider}
+\li{Implement SP-initiated and IdP-initiated SSO flows}
+\li{Map SAML attributes and configure assertion encryption}
+\li{Enforce SHA-256 signatures and secure certificate rotation}
+\li{Test SSO flows with SAML tracer tools}
+\li{Implement Single Logout (SLO) handling}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{SAML 2.0 Authentication Flow}
+\ol{
+\li{\strong{SP-Initiated Flow}: User accesses Service Provider -> SP generates AuthnRequest -> Redirect to Okta IdP -> User authenticates -> Okta sends SAML Response -> SP validates assertion -> Access granted}
+\li{\strong{IdP-Initiated Flow}: User authenticates at Okta -> Selects application -> Okta sends unsolicited SAML Response -> SP validates -> Access granted}
+}
+}
+
+\subtree{
+\title{Critical Security Requirements}
+\ul{
+\li{\strong{SHA-256 Signatures}: All SAML assertions must use SHA-256 (not SHA-1) for digital signatures}
+\li{\strong{Assertion Encryption}: Encrypt SAML assertions using AES-256 to protect attribute values in transit}
+\li{\strong{Audience Restriction}: Configure audience URI to prevent assertion replay across different SPs}
+\li{\strong{NotBefore/NotOnOrAfter}: Enforce time validity windows to prevent stale assertion usage}
+\li{\strong{InResponseTo Validation}: Verify assertion corresponds to the original AuthnRequest}
+}
+}
+
+\subtree{
+\title{Okta Application Configuration}
+\ul{
+\li{\strong{Single Sign-On URL}: The ACS (Assertion Consumer Service) endpoint on the SP}
+\li{\strong{Audience URI (SP Entity ID)}: Unique identifier for the SP}
+\li{\strong{Name ID Format}: EmailAddress, Persistent, or Transient}
+\li{\strong{Attribute Statements}: Map Okta user profile attributes to SAML assertion attributes}
+\li{\strong{Group Attribute Statements}: Include group membership for RBAC}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Create SAML Application in Okta}
+\ol{
+\li{Navigate to Applications > Create App Integration}
+\li{Select SAML 2.0 as the sign-on method}
+\li{Configure General Settings (App Name, Logo)}
+\li{Set Single Sign-On URL (ACS URL)}
+\li{Set Audience URI (SP Entity ID)}
+\li{Configure Name ID Format and Application Username}
+}
+}
+
+\subtree{
+\title{Step 2: Configure Attribute Mapping}
+\ul{
+\li{Map \code{\startverb user.email\stopverb} to \code{\startverb email\stopverb} attribute}
+\li{Map \code{\startverb user.firstName\stopverb} and \code{\startverb user.lastName\stopverb} to name attributes}
+\li{Add group attribute statements for role-based access}
+\li{Configure attribute value formats (Basic, URI Reference, Unspecified)}
+}
+}
+
+\subtree{
+\title{Step 3: Download and Install IdP Metadata}
+\ul{
+\li{Download Okta IdP metadata XML}
+\li{Extract IdP SSO URL, IdP Entity ID, and X.509 certificate}
+\li{Install certificate on SP side for signature validation}
+\li{Configure SP metadata with ACS URL and Entity ID}
+}
+}
+
+\subtree{
+\title{Step 4: Implement SP-Side SAML Processing}
+\ul{
+\li{Parse and validate SAML Response XML}
+\li{Verify digital signature using IdP certificate}
+\li{Check audience restriction, time conditions, and InResponseTo}
+\li{Extract authenticated user identity and attributes}
+\li{Create application session based on assertion data}
+}
+}
+
+\subtree{
+\title{Step 5: Security Hardening}
+\ul{
+\li{Enforce SHA-256 for all signature operations}
+\li{Enable assertion encryption with AES-256-CBC}
+\li{Configure session timeout and re-authentication policies}
+\li{Implement SAML artifact binding for sensitive deployments}
+\li{Set up certificate rotation procedure before expiry}
+}
+}
+
+\subtree{
+\title{Step 6: Testing and Validation}
+\ul{
+\li{Use SAML Tracer browser extension for debugging}
+\li{Validate SP-initiated and IdP-initiated flows}
+\li{Test with multiple user accounts and group memberships}
+\li{Verify SLO functionality}
+\li{Test certificate rotation without downtime}
+}
+}
+}
+
+\subtree{
+\title{Security Controls}
+\pre{\startverb
+| Control | NIST 800-53 | Description |
+|---------|-------------|-------------|
+| Authentication | IA-2 | Multi-factor authentication through Okta |
+| Session Management | SC-23 | SAML session lifetime controls |
+| Audit Logging | AU-3 | Log all SSO authentication events |
+| Certificate Management | SC-17 | PKI certificate lifecycle management |
+| Access Enforcement | AC-3 | SAML attribute-based access control |
+\stopverb}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{Using SHA-1 instead of SHA-256 for SAML signatures}
+\li{Not validating InResponseTo in SAML responses (replay attacks)}
+\li{Clock skew between IdP and SP causing assertion rejection}
+\li{Failing to restrict audience URI allowing assertion forwarding}
+\li{Not implementing certificate rotation before expiry causes outage}
+}
+}
+
+\subtree{
+\title{Verification}
+\ul{
+\li{[ ] SAML SSO login completes successfully via SP-initiated flow}
+\li{[ ] IdP-initiated flow correctly authenticates users}
+\li{[ ] SAML assertions use SHA-256 signatures}
+\li{[ ] Attribute mapping correctly populates user profile}
+\li{[ ] Session timeout forces re-authentication}
+\li{[ ] SLO properly terminates sessions on both IdP and SP}
+\li{[ ] Certificate rotation tested without service interruption}
+}
+}
+}

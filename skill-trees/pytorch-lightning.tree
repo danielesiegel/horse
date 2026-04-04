@@ -1,0 +1,208 @@
+\title{Pytorch Lightning}
+
+\taxon{skill}
+
+\meta{description}{"Deep learning framework (PyTorch Lightning). Organize PyTorch code into LightningModules, configure Trainers for multi-GPU/TPU, implement data pipelines, callbacks, logging (W&B, TensorBoard), distributed training (DDP, FSDP, DeepSpeed), for scalable neural network training."}
+
+\subtree{
+\title{PyTorch Lightning}
+\subtree{
+\title{Overview}
+\p{PyTorch Lightning is a deep learning framework that organizes PyTorch code to eliminate boilerplate while maintaining full flexibility. Automate training workflows, multi-device orchestration, and implement best practices for neural network training and scaling across multiple GPUs/TPUs.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Building, training, or deploying neural networks using PyTorch Lightning}
+\li{Organizing PyTorch code into LightningModules}
+\li{Configuring Trainers for multi-GPU/TPU training}
+\li{Implementing data pipelines with LightningDataModules}
+\li{Working with callbacks, logging, and distributed training strategies (DDP, FSDP, DeepSpeed)}
+\li{Structuring deep learning projects professionally}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. LightningModule - Model Definition}
+\p{Organize PyTorch models into six logical sections:}
+
+\ol{
+\li{\strong{Initialization} - \code{\startverb \strong{init}()\stopverb} and \code{\startverb setup()\stopverb}}
+\li{\strong{Training Loop} - \code{\startverb training_step(batch, batch_idx)\stopverb}}
+\li{\strong{Validation Loop} - \code{\startverb validation_step(batch, batch_idx)\stopverb}}
+\li{\strong{Test Loop} - \code{\startverb test_step(batch, batch_idx)\stopverb}}
+\li{\strong{Prediction} - \code{\startverb predict_step(batch, batch_idx)\stopverb}}
+\li{\strong{Optimizer Configuration} - \code{\startverb configure_optimizers()\stopverb}}
+}
+
+\p{\strong{Quick template reference:} See \code{\startverb scripts/template_lightning_module.py\stopverb} for a complete boilerplate.}
+
+\p{\strong{Detailed documentation:} Read \code{\startverb references/lightning_module.md\stopverb} for comprehensive method documentation, hooks, properties, and best practices.}
+}
+
+\subtree{
+\title{2. Trainer - Training Automation}
+\p{The Trainer automates the training loop, device management, gradient operations, and callbacks. Key features:}
+
+\ul{
+\li{Multi-GPU/TPU support with strategy selection (DDP, FSDP, DeepSpeed)}
+\li{Automatic mixed precision training}
+\li{Gradient accumulation and clipping}
+\li{Checkpointing and early stopping}
+\li{Progress bars and logging}
+}
+
+\p{\strong{Quick setup reference:} See \code{\startverb scripts/quick_trainer_setup.py\stopverb} for common Trainer configurations.}
+
+\p{\strong{Detailed documentation:} Read \code{\startverb references/trainer.md\stopverb} for all parameters, methods, and configuration options.}
+}
+
+\subtree{
+\title{3. LightningDataModule - Data Pipeline Organization}
+\p{Encapsulate all data processing steps in a reusable class:}
+
+\ol{
+\li{\code{\startverb prepare_data()\stopverb} - Download and process data (single-process)}
+\li{\code{\startverb setup()\stopverb} - Create datasets and apply transforms (per-GPU)}
+\li{\code{\startverb train_dataloader()\stopverb} - Return training DataLoader}
+\li{\code{\startverb val_dataloader()\stopverb} - Return validation DataLoader}
+\li{\code{\startverb test_dataloader()\stopverb} - Return test DataLoader}
+}
+
+\p{\strong{Quick template reference:} See \code{\startverb scripts/template_datamodule.py\stopverb} for a complete boilerplate.}
+
+\p{\strong{Detailed documentation:} Read \code{\startverb references/data_module.md\stopverb} for method details and usage patterns.}
+}
+
+\subtree{
+\title{4. Callbacks - Extensible Training Logic}
+\p{Add custom functionality at specific training hooks without modifying your LightningModule. Built-in callbacks include:}
+
+\ul{
+\li{\strong{ModelCheckpoint} - Save best/latest models}
+\li{\strong{EarlyStopping} - Stop when metrics plateau}
+\li{\strong{LearningRateMonitor} - Track LR scheduler changes}
+\li{\strong{BatchSizeFinder} - Auto-determine optimal batch size}
+}
+
+\p{\strong{Detailed documentation:} Read \code{\startverb references/callbacks.md\stopverb} for built-in callbacks and custom callback creation.}
+}
+
+\subtree{
+\title{5. Logging - Experiment Tracking}
+\p{Integrate with multiple logging platforms:}
+
+\ul{
+\li{TensorBoard (default)}
+\li{Weights & Biases (WandbLogger)}
+\li{MLflow (MLFlowLogger)}
+\li{Neptune (NeptuneLogger)}
+\li{Comet (CometLogger)}
+\li{CSV (CSVLogger)}
+}
+
+\p{Log metrics using \code{\startverb self.log("metric_name", value)\stopverb} in any LightningModule method.}
+
+\p{\strong{Detailed documentation:} Read \code{\startverb references/logging.md\stopverb} for logger setup and configuration.}
+}
+
+\subtree{
+\title{6. Distributed Training - Scale to Multiple Devices}
+\p{Choose the right strategy based on model size:}
+
+\ul{
+\li{\strong{DDP} - For models <500M parameters (ResNet, smaller transformers)}
+\li{\strong{FSDP} - For models 500M+ parameters (large transformers, recommended for Lightning users)}
+\li{\strong{DeepSpeed} - For cutting-edge features and fine-grained control}
+}
+
+\p{Configure with: \code{\startverb Trainer(strategy="ddp", accelerator="gpu", devices=4)\stopverb}}
+
+\p{\strong{Detailed documentation:} Read \code{\startverb references/distributed_training.md\stopverb} for strategy comparison and configuration.}
+}
+
+\subtree{
+\title{7. Best Practices}
+\ul{
+\li{Device agnostic code - Use \code{\startverb self.device\stopverb} instead of \code{\startverb .cuda()\stopverb}}
+\li{Hyperparameter saving - Use \code{\startverb self.save_hyperparameters()\stopverb} in \code{\startverb \strong{init}()\stopverb}}
+\li{Metric logging - Use \code{\startverb self.log()\stopverb} for automatic aggregation across devices}
+\li{Reproducibility - Use \code{\startverb seed_everything()\stopverb} and \code{\startverb Trainer(deterministic=True)\stopverb}}
+\li{Debugging - Use \code{\startverb Trainer(fast_dev_run=True)\stopverb} to test with 1 batch}
+}
+
+\p{\strong{Detailed documentation:} Read \code{\startverb references/best_practices.md\stopverb} for common patterns and pitfalls.}
+}
+}
+
+\subtree{
+\title{Quick Workflow}
+\ol{
+\li{\strong{Define model:}}
+}
+
+\p{def training_step(self, batch, batch_idx): x, y = batch loss = F.cross_entropy(self.model(x), y) self.log("train_loss", loss) return loss}
+
+\p{def configure_optimizers(self): return torch.optim.Adam(self.parameters())}
+
+\pre{\startverb
+
+2. **Prepare data:**
+\stopverb}
+
+\subtree{
+\title{Option 1: Direct DataLoaders}
+\p{train_loader = DataLoader(train_dataset, batch_size=32)}
+}
+
+\subtree{
+\title{Option 2: LightningDataModule (recommended for reusability)}
+\p{dm = MyDataModule(batch_size=32)}
+
+\pre{\startverb
+
+3. **Train:**
+\stopverb}
+
+\p{trainer = L.Trainer(max_epochs=10, accelerator="gpu", devices=2) trainer.fit(model, train_loader)  # or trainer.fit(model, datamodule=dm)}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{scripts/}
+\p{Executable Python templates for common PyTorch Lightning patterns:}
+
+\ul{
+\li{\code{\startverb template_lightning_module.py\stopverb} - Complete LightningModule boilerplate}
+\li{\code{\startverb template_datamodule.py\stopverb} - Complete LightningDataModule boilerplate}
+\li{\code{\startverb quick_trainer_setup.py\stopverb} - Common Trainer configuration examples}
+}
+}
+
+\subtree{
+\title{references/}
+\p{Detailed documentation for each PyTorch Lightning component:}
+
+\ul{
+\li{\code{\startverb lightning_module.md\stopverb} - Comprehensive LightningModule guide (methods, hooks, properties)}
+\li{\code{\startverb trainer.md\stopverb} - Trainer configuration and parameters}
+\li{\code{\startverb data_module.md\stopverb} - LightningDataModule patterns and methods}
+\li{\code{\startverb callbacks.md\stopverb} - Built-in and custom callbacks}
+\li{\code{\startverb logging.md\stopverb} - Logger integrations and usage}
+\li{\code{\startverb distributed_training.md\stopverb} - DDP, FSDP, DeepSpeed comparison and setup}
+\li{\code{\startverb best_practices.md\stopverb} - Common patterns, tips, and pitfalls}
+}
+}
+}
+}

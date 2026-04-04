@@ -1,0 +1,289 @@
+\title{Conformal Ga}
+
+\taxon{skill}
+
+\meta{description}{"Conformal Geometric Algebra (CGA) for circles, spheres, and Möbius transformations"}
+
+\subtree{
+\title{conformal-ga}
+\blockquote{CGA: Embed Euclidean space into a higher-dimensional conformal space}
+
+\p{\strong{Version}: 1.0.0 \strong{Trit}: -1 (MINUS - contractive/measurement)}
+
+\subtree{
+\title{Overview}
+\p{Conformal Geometric Algebra (CGA) extends PGA by adding two extra dimensions that encode \strong{scale} and \strong{infinity}. This allows representing circles and spheres as simple blades.}
+}
+
+\subtree{
+\title{Algebra Signatures}
+\pre{\startverb
+| Algebra | Signature | Euclidean Dim | Total Dim |
+|---------|-----------|---------------|-----------|
+| CGA2D | Cl(3,1) | 2D | 4D → 16 basis |
+| CGA3D | Cl(4,1) | 3D | 5D → 32 basis |
+| DCGA3D | Cl(6,2) | 3D (double) | 8D → 256 basis |
+\stopverb}
+}
+
+\subtree{
+\title{Null Basis}
+\p{The key insight: two null vectors encode the origin and infinity:}
+
+\pre{\startverb
+Algebra(4,1, () => {
+  // Standard basis: e1, e2, e3 (Euclidean), e4 (+), e5 (-)
+  
+  // Null vectors
+  var no = 0.5*(1e5 - 1e4);  // Origin (null)
+  var ni = 1e4 + 1e5;         // Infinity (null)
+  
+  // Key property: no · ni = -1
+  console.log((no << ni).s);  // -1
+  
+  // Point embedding: x ↦ no + x + (x²/2)ni
+  var point = (x,y,z) => {
+    var x2 = x*x + y*y + z*z;
+    return no + x*1e1 + y*1e2 + z*1e3 + 0.5*x2*ni;
+  };
+});
+\stopverb}
+}
+
+\subtree{
+\title{Geometric Objects as Blades}
+\subtree{
+\title{Points (Grade 1 OPNS)}
+\pre{\startverb
+var P = point(1, 2, 3);  // Null vector
+// P · P = 0 (null)
+\stopverb}
+}
+
+\subtree{
+\title{Point Pairs (Grade 2)}
+\pre{\startverb
+var A = point(0,0,0), B = point(1,0,0);
+var pointPair = A ^ B;  // Wedge of two points
+\stopverb}
+}
+
+\subtree{
+\title{Circles (Grade 3)}
+\pre{\startverb
+var A = point(0,0,0), B = point(1,0,0), C = point(0,1,0);
+var circle = A ^ B ^ C;  // Through three points
+
+// Or: dual sphere intersected with plane
+var sphere = dualSphere(center, radius);
+var plane = dualPlane(normal, distance);
+var circle2 = sphere ^ plane;
+\stopverb}
+}
+
+\subtree{
+\title{Spheres (Grade 4 OPNS / Grade 1 IPNS)}
+\pre{\startverb
+// OPNS: 4 points define a sphere
+var sphere = A ^ B ^ C ^ D;
+
+// IPNS (dual): center + radius encoding
+var dualSphere = (c, r) => point(c.x, c.y, c.z) - 0.5*r*r*ni;
+\stopverb}
+}
+
+\subtree{
+\title{Planes (Grade 4 OPNS)}
+\pre{\startverb
+// OPNS: 3 points + infinity
+var plane = A ^ B ^ C ^ ni;
+
+// IPNS (dual): normal + distance
+var dualPlane = (n, d) => n.x*1e1 + n.y*1e2 + n.z*1e3 + d*ni;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Conformal Transformations}
+\p{All Möbius transformations are motors in CGA!}
+
+\subtree{
+\title{Rotation}
+\pre{\startverb
+// Same as PGA - bivector in Euclidean part
+var rotor = Math.cos(angle/2) + Math.sin(angle/2)*1e12;
+var rotated = rotor * object * ~rotor;
+\stopverb}
+}
+
+\subtree{
+\title{Translation}
+\pre{\startverb
+// Translator uses ni (infinity)
+var translator = 1 - 0.5*distance*(direction ^ ni);
+var translated = translator * object * ~translator;
+\stopverb}
+}
+
+\subtree{
+\title{Dilation (Scaling)}
+\pre{\startverb
+// Unique to CGA - uses no and ni
+var dilator = Math.cosh(s/2) + Math.sinh(s/2)*(no ^ ni);
+var scaled = dilator * object * ~dilator;
+// Scales by e^s
+\stopverb}
+}
+
+\subtree{
+\title{Inversion (Circle/Sphere)}
+\pre{\startverb
+// Reflect in a sphere - a versor!
+var inverted = sphere * point * sphere;
+// Maps inside to outside
+\stopverb}
+}
+}
+
+\subtree{
+\title{Distance and Angle Extraction}
+\subtree{
+\title{Distance Between Points}
+\pre{\startverb
+function distance(P, Q) {
+  return Math.sqrt(-2 * (P << Q).s);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Radius of Sphere/Circle}
+\pre{\startverb
+function radius(sphere) {
+  var s2 = (sphere * sphere).s;
+  var sni = (sphere << ni).s;
+  return Math.sqrt(Math.abs(s2)) / Math.abs(sni);
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{OPNS vs IPNS}
+\pre{\startverb
+| Representation | Meaning | Grade |
+|----------------|---------|-------|
+| **OPNS** (Outer Product Null Space) | Object = span of null vectors | Higher |
+| **IPNS** (Inner Product Null Space) | Object = things with zero inner product | Lower |
+\stopverb}
+
+\pre{\startverb
+// Convert between them via dualization
+var ipns = !opns;  // Dual
+var opns = !ipns;  // UnDual
+\stopverb}
+}
+
+\subtree{
+\title{ganja.js CGA Examples}
+\pre{\startverb
+Algebra(4,1, () => {
+  var no = 0.5*(1e5-1e4), ni = 1e4+1e5;
+  var point = (x,y,z) => no + x*1e1 + y*1e2 + z*1e3 + 0.5*(x*x+y*y+z*z)*ni;
+  
+  // Three points define a circle
+  var A = point(1,0,0), B = point(0,1,0), C = point(-1,0,0);
+  var circle = A ^ B ^ C;
+  
+  // Render it
+  return this.graph([
+    0xFF0000, A, B, C,
+    0x00FF00, circle
+  ], {conformal: true, gl: true});
+});
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Role}
+\p{CGA is MINUS (-1) because it primarily \strong{measures} and \strong{contracts}:}
+
+\ul{
+\li{Distance computation uses inner product (contraction)}
+\li{Sphere/circle radius extraction}
+\li{Intersection (meet) operations}
+}
+
+\subtree{
+\title{Conservation Triad}
+\pre{\startverb
+conformal-ga (-1) ⊗ pga-motor-interpolation (0) ⊗ ga-visualization (+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Applications}
+\ol{
+\li{\strong{Computer Vision}: Circle/sphere fitting}
+\li{\strong{Robotics}: Kinematics with scaling}
+\li{\strong{Graphics}: Ray-sphere intersection}
+\li{\strong{Physics}: Conformal field theory}
+}
+}
+
+\subtree{
+\title{Related Algebras}
+\pre{\startverb
+| Name | Signature | Use Case |
+|------|-----------|----------|
+| CGA2D | Cl(3,1) | 2D circles |
+| CGA3D | Cl(4,1) | 3D spheres |
+| DCGA | Cl(6,2) | Quadric surfaces |
+| TCGA | Cl(9,3) | Cubic surfaces |
+| QCGA | Cl(9,6) | Quartic surfaces |
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# ganja.js CGA demo
+node -e "var A=require('ganja.js'); A(4,1,()=>{
+  var no=0.5*(1e5-1e4), ni=1e4+1e5;
+  var pt=(x,y,z)=>no+x*1e1+y*1e2+z*1e3+0.5*(x*x+y*y+z*z)*ni;
+  console.log('Origin:', pt(0,0,0));
+  console.log('ni:', ni);
+})()"
+
+# Python clifford
+python3 -c "from clifford.g3c import *; print(eo, einf)"
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[ganja.js CGA examples](https://enkimute.github.io/ganja.js/examples/coffeeshop.html#cga3d_points_spheres_planes)}
+\li{[Geometric Algebra for Computer Science](https://www.geometricalgebra.net/) - Dorst, Fontijne, Mann}
+\li{[clifford Python library](https://github.com/pygae/clifford)}
+\li{[bivector.net CGA tutorials](https://bivector.net/)}
+}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

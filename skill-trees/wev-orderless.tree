@@ -1,0 +1,135 @@
+\title{Wev Orderless}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'WEV Orderless — World Extractable Value'}
+
+\subtree{
+\title{WEV Orderless — World Extractable Value}
+\p{\strong{Trit}: 0 (ERGODIC) — Value flow coordinator \strong{Status}: Production Ready}
+
+\subtree{
+\title{Overview}
+\p{World Extractable Value (WEV) exploits \strong{knowledge differentials} in orderless execution environments. Unlike MEV (Maximal Extractable Value) which requires transaction ordering control, WEV operates in parallel execution systems where order doesn't matter.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Extracting value from knowledge asymmetry between Aptos world wallets}
+\li{Coordinating parallel transactions with GF(3) conservation}
+\li{Implementing epistemic arbitrage across skill domains}
+\li{Building order-invariant DeFi strategies}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{WEV vs MEV}
+\pre{\startverb
+| MEV | WEV |
+|-----|-----|
+| Order-dependent | Order-invariant |
+| Front-running | Epistemic transfer |
+| Zero-sum | Positive-sum |
+| Sequential | Parallel (Block-STM) |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{All WEV transactions must satisfy:}
+
+\pre{\startverb
+Σ trit(world_i) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures triadic balance: PLUS, ERGODIC, MINUS worlds cooperate.}
+}
+
+\subtree{
+\title{Epistemic Arbitrage}
+\p{Value extraction via knowledge transfer:}
+
+\pre{\startverb
+WEV = knowledge_value(source) × transfer_efficiency - gas_cost
+\stopverb}
+}
+}
+
+\subtree{
+\title{26 World Wallet Society}
+\pre{\startverb
+PLUS  (+1): A, B, C, D, E, W, X, Y, Z  (9 worlds)
+ERGODIC(0): F, G, H, I, J, K, L, M     (8 worlds)
+MINUS (-1): N, O, P, Q, R, S, T, U, V  (9 worlds)
+
+Total: 9 - 9 = 0 ✓ GF(3) conserved
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Scan for WEV opportunities
+just wev-scan
+
+# Execute knowledge transfer between worlds
+just wev-transfer a p
+
+# Verify GF(3) conservation
+just aptos-gf3-verify
+
+# Show world wallet balances
+just aptos-world-balances
+\stopverb}
+}
+
+\subtree{
+\title{Triadic Transaction Pattern}
+\pre{\startverb
+(defn wev-triplet [from-world to-world]
+  {:plus    {:role :generator :trit +1}
+   :ergodic {:role :coordinator :trit 0}
+   :minus   {:role :validator :trit -1}
+   :sum 0
+   :orderless true})
+\stopverb}
+}
+
+\subtree{
+\title{Integration}
+\pre{\startverb
+| Skill | Integration |
+|-------|-------------|
+| `aptos-agent` | Execute blockchain transactions |
+| `epistemic-arbitrage` | Propagator network for knowledge flow |
+| `spi-parallel-verify` | Verify order-invariance |
+| `gay-mcp` | Deterministic coloring for world visualization |
+| `local-compositionality-gadget` | GF(3) triplet generation |
+\stopverb}
+}
+
+\subtree{
+\title{Block-STM Compatibility}
+\p{WEV is designed for Aptos Block-STM:}
+
+\ul{
+\li{Speculative parallel execution}
+\li{Automatic conflict detection}
+\li{Deterministic final state regardless of execution order}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{[dev/WEV_SYNTHESIS.md](file:///Users/alice/agent-o-rama/agent-o-rama/dev/WEV_SYNTHESIS.md)}
+\li{[dev/secure_wallets.json](file:///Users/alice/agent-o-rama/agent-o-rama/dev/secure_wallets.json)}
+\li{[SKILL_ADJUNCTIONS.md](file:///Users/alice/agent-o-rama/agent-o-rama/dev/SKILL_ADJUNCTIONS.md)}
+}
+}
+}

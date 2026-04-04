@@ -1,0 +1,70 @@
+\title{Analyzing Office365 Audit Logs For Compromise}
+
+\taxon{skill}
+
+\tag{Office365}
+
+\tag{Microsoft-Graph}
+
+\tag{audit-logs}
+
+\tag{email-compromise}
+
+\tag{inbox-rules}
+
+\tag{OAuth}
+
+\tag{BEC}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Parse Office 365 Unified Audit Logs via Microsoft Graph API to detect email forwarding rule creation, inbox delegation, suspicious OAuth app grants, and other indicators of account compromise.}
+
+\subtree{
+\title{Analyzing Office 365 Audit Logs for Compromise}
+\subtree{
+\title{Overview}
+\p{Business Email Compromise (BEC) attacks often leave traces in Office 365 audit logs: suspicious inbox rule creation, email forwarding to external addresses, mailbox delegation changes, and unauthorized OAuth application consent grants. This skill uses the Microsoft Graph API to query the Unified Audit Log, enumerate inbox rules across mailboxes, detect forwarding configurations, and identify compromised account indicators.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing office365 audit logs for compromise}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Azure AD app registration with \code{\startverb AuditLog.Read.All\stopverb}, \code{\startverb MailboxSettings.Read\stopverb}, \code{\startverb Mail.Read\stopverb} (application permissions)}
+\li{Python 3.9+ with \code{\startverb msal\stopverb}, \code{\startverb requests\stopverb}}
+\li{Client secret or certificate for authentication}
+\li{Global Reader or Security Reader role}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Authenticate to Microsoft Graph using MSAL client credentials flow}
+\li{Query Unified Audit Log for suspicious operations (Set-Mailbox, New-InboxRule)}
+\li{Enumerate inbox rules across mailboxes and flag forwarding rules}
+\li{Detect mailbox delegation changes (Add-MailboxPermission)}
+\li{Identify OAuth consent grants to suspicious applications}
+\li{Check for suspicious sign-in patterns from audit logs}
+\li{Generate compromise indicator report with timeline}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing forwarding rules, delegation changes, OAuth grants, and suspicious audit events with risk scores}
+\li{Timeline of compromise indicators with affected mailboxes}
+}
+}
+}

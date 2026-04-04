@@ -1,0 +1,277 @@
+\title{Video Processor}
+
+\taxon{skill}
+
+\meta{description}{"Automated video processing: metadata extraction, thumbnails, transcoding, audio extraction with DuckDB tracking"}
+
+\subtree{
+\title{Video Processor Skill}
+\p{\strong{Trit}: 0 (ERGODIC - pipeline coordinator) \strong{Foundation}: Babashka + FFmpeg + DuckDB}
+
+\subtree{
+\title{Overview}
+\p{Automated video processing pipeline that:}
+
+\ol{
+\li{Extracts metadata via \code{\startverb ffprobe\stopverb}}
+\li{Generates thumbnails at 5s mark}
+\li{Transcodes to web-friendly H.264/AAC}
+\li{Extracts audio as MP3}
+\li{Records processing to DuckDB with Gay.jl coloring}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Processing downloaded videos for analysis}
+\li{Extracting frames for multimodal understanding}
+\li{Preparing videos for web playback}
+\li{Building searchable video metadata indexes}
+\li{Automated video ingestion pipelines}
+}
+}
+
+\subtree{
+\title{Supported Formats}
+\pre{\startverb
+(def video-extensions
+  #{"mp4" "mov" "mkv" "webm" "avi" "m4v" "flv" "wmv" "mpg" "mpeg"})
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Process Single Video}
+\pre{\startverb
+bb video-processor.bb /path/to/video.mp4
+\stopverb}
+}
+
+\subtree{
+\title{Watch Directory}
+\pre{\startverb
+bb video-processor.bb /path/to/watch/dir
+\stopverb}
+}
+
+\subtree{
+\title{Environment Variables}
+\pre{\startverb
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VIDEO_OUTPUT_DIR` | `/tmp/processed_videos` | Output directory |
+| `AMP_THREAD_ID` | `video-processor` | Session ID for DuckDB |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Pipeline Stages}
+\subtree{
+\title{1. Metadata Extraction}
+\pre{\startverb
+(defn extract-metadata [path]
+  (shell {:out :string}
+         "ffprobe" "-v" "quiet"
+         "-print_format" "json"
+         "-show_format" "-show_streams"
+         path))
+\stopverb}
+
+\p{Returns JSON with duration, codec, bitrate, resolution.}
+}
+
+\subtree{
+\title{2. Thumbnail Generation}
+\pre{\startverb
+(defn generate-thumbnail [input output]
+  (shell "ffmpeg" "-y" "-i" input
+         "-ss" "00:00:05" "-vframes" "1"
+         "-vf" "scale=320:-1"
+         output))
+\stopverb}
+
+\p{Creates 320px wide JPEG at 5 second mark.}
+}
+
+\subtree{
+\title{3. Web Transcoding}
+\pre{\startverb
+(defn transcode-web [input output]
+  (shell "ffmpeg" "-y" "-i" input
+         "-c:v" "libx264" "-preset" "fast" "-crf" "23"
+         "-c:a" "aac" "-b:a" "128k"
+         "-movflags" "+faststart"
+         output))
+\stopverb}
+
+\p{H.264/AAC with fast-start for streaming.}
+}
+
+\subtree{
+\title{4. Audio Extraction}
+\pre{\startverb
+(defn extract-audio [input output]
+  (shell "ffmpeg" "-y" "-i" input
+         "-vn" "-c:a" "libmp3lame" "-q:a" "2"
+         output))
+\stopverb}
+
+\p{High-quality MP3 (VBR ~190kbps).}
+}
+
+\subtree{
+\title{5. DuckDB Recording}
+\pre{\startverb
+(defn record-processing! [path metadata outputs]
+  (shell "duckdb" db-path
+         (format "INSERT INTO fs_events
+                  (path, event_type, size, checksum, session_id)
+                  VALUES ('%s', 'video_processed', %s, '%s', '%s')"
+                 path size checksum session-id)))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Output Structure}
+\pre{\startverb
+/tmp/processed_videos/
+├── video_thumb.jpg      # Thumbnail
+├── video_web.mp4        # Transcoded (if needed)
+└── video_audio.mp3      # Extracted audio
+\stopverb}
+}
+
+\subtree{
+\title{DuckDB Schema}
+\pre{\startverb
+CREATE TABLE IF NOT EXISTS fs_events (
+    path VARCHAR,
+    event_type VARCHAR,
+    size BIGINT,
+    checksum VARCHAR,
+    session_id VARCHAR,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Query processed videos
+SELECT * FROM fs_events
+WHERE event_type = 'video_processed'
+ORDER BY timestamp DESC;
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad Integration}
+\pre{\startverb
+spi-parallel-verify (-1) ⊗ video-processor (0) ⊗ ffmpeg-media (+1) = 0 ✓
+video-downloader (-1) ⊗ video-processor (0) ⊗ gay-mcp (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Voice Announcements}
+\p{Processing stages announced via macOS \code{\startverb say\stopverb}:}
+
+\pre{\startverb
+(defn announce [message]
+  (shell "say" "-v" "Samantha (Enhanced)" message))
+\stopverb}
+}
+
+\subtree{
+\title{Dependencies}
+\ul{
+\li{\strong{babashka}: Clojure scripting runtime}
+\li{\strong{ffmpeg/ffprobe}: Media processing}
+\li{\strong{duckdb}: Metadata storage}
+}
+
+\p{Install via:}
+
+\pre{\startverb
+brew install babashka ffmpeg duckdb
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Video Understanding}
+\subtree{
+\title{For Multimodal Analysis}
+\pre{\startverb
+# 1. Download video
+/video-downloader https://youtube.com/watch?v=...
+
+# 2. Process and extract frames
+bb video-processor.bb ~/Downloads/video.mp4
+
+# 3. Analyze frames with Claude
+# (frames available as thumbnails or extract more with ffmpeg)
+ffmpeg -i video.mp4 -vf "fps=1" frames/frame_%04d.jpg
+\stopverb}
+}
+
+\subtree{
+\title{For ACSet Modeling}
+\pre{\startverb
+# Model video as temporal graph
+@present SchVideo(FreeSchema) begin
+    Frame::Ob
+    Segment::Ob
+    frame_of::Hom(Frame, Segment)
+    next_frame::Hom(Frame, Frame)
+
+    Timestamp::AttrType
+    time::Attr(Frame, Timestamp)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Process single video
+just video-process /path/to/video.mp4
+
+# Watch directory
+just video-watch /path/to/dir
+
+# Query processed videos
+just video-list
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{video-downloader} (0): Download from platforms}
+\li{\strong{ffmpeg-media} (+1): Advanced transcoding}
+\li{\strong{duckdb-ies} (+1): Interactome analytics}
+\li{\strong{fswatch-duckdb} (0): File system watching}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+}
+}
+}

@@ -1,0 +1,266 @@
+\title{Building Soc Escalation Matrix}
+
+\taxon{skill}
+
+\tag{soc}
+
+\tag{escalation}
+
+\tag{incident-management}
+
+\tag{severity}
+
+\tag{sla}
+
+\tag{triage}
+
+\tag{tiered-soc}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Build a structured SOC escalation matrix defining severity tiers, response SLAs, escalation paths, and notification procedures for security incidents.}
+
+\subtree{
+\title{Building SOC Escalation Matrix}
+\subtree{
+\title{Overview}
+\p{A SOC escalation matrix defines how security incidents move through the organization based on severity, impact, and response requirements. Modern SOCs use context-driven escalation combining business risk, asset criticality, and data sensitivity rather than purely severity-based models. Organizations using AI and automation in their SOC cut detection-and-containment lifecycle to approximately 161 days, an 80-day improvement over the 241-day industry average.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring building soc escalation matrix capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with soc operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{SOC Tier Structure}
+\subtree{
+\title{Tier 1 - Alert Triage Analyst}
+\ul{
+\li{Monitors SIEM dashboards and alert queues}
+\li{Performs initial alert classification (true/false positive)}
+\li{Handles P3 and P4 incidents to resolution}
+\li{Escalates P1 and P2 incidents to Tier 2 within SLA}
+\li{Documents initial findings in ticketing system}
+}
+}
+
+\subtree{
+\title{Tier 2 - Incident Analyst}
+\ul{
+\li{Performs deep-dive investigation on escalated incidents}
+\li{Conducts root cause analysis and scoping}
+\li{Executes containment procedures}
+\li{Handles P2 incidents to resolution}
+\li{Escalates P1 incidents to Tier 3 or management}
+}
+}
+
+\subtree{
+\title{Tier 3 - Senior Analyst / Threat Hunter}
+\ul{
+\li{Handles P1 critical incidents and APT investigations}
+\li{Performs proactive threat hunting}
+\li{Develops detection rules and playbooks}
+\li{Conducts malware reverse engineering}
+\li{Leads incident response for major breaches}
+}
+}
+
+\subtree{
+\title{Management Escalation}
+\ul{
+\li{SOC Manager: Operational decisions, resource allocation}
+\li{CISO: Business impact decisions, executive communication}
+\li{Legal/PR: Data breach notification, media response}
+\li{External IR: Third-party incident response engagement}
+}
+}
+}
+
+\subtree{
+\title{Severity Classification}
+\subtree{
+\title{P1 - Critical}
+\pre{\startverb
+| Attribute | Value |
+|---|---|
+| Impact | Active data breach, ransomware spreading, critical systems compromised |
+| Business Impact | Revenue loss, regulatory exposure, customer data at risk |
+| Initial Response | 15 minutes |
+| Escalation to Tier 2 | Immediate |
+| Escalation to Management | 30 minutes |
+| Resolution Target | 4 hours |
+| Communication | Every 30 minutes to stakeholders |
+| Examples | Active ransomware, confirmed data exfiltration, domain admin compromise |
+\stopverb}
+}
+
+\subtree{
+\title{P2 - High}
+\pre{\startverb
+| Attribute | Value |
+|---|---|
+| Impact | Confirmed compromise, limited scope, no active exfiltration |
+| Business Impact | Potential revenue impact, contained risk |
+| Initial Response | 30 minutes |
+| Escalation to Tier 2 | 30 minutes if unresolved |
+| Escalation to Management | 2 hours |
+| Resolution Target | 8 hours |
+| Communication | Every 2 hours to SOC management |
+| Examples | Compromised user account, malware on single endpoint, insider threat indicator |
+\stopverb}
+}
+
+\subtree{
+\title{P3 - Medium}
+\pre{\startverb
+| Attribute | Value |
+|---|---|
+| Impact | Suspicious activity requiring investigation |
+| Business Impact | Low immediate risk |
+| Initial Response | 4 hours |
+| Escalation to Tier 2 | 8 hours if unresolved |
+| Resolution Target | 24 hours |
+| Communication | Daily status update |
+| Examples | Policy violation, failed brute force, suspicious email report |
+\stopverb}
+}
+
+\subtree{
+\title{P4 - Low}
+\pre{\startverb
+| Attribute | Value |
+|---|---|
+| Impact | Informational alerts, routine security events |
+| Business Impact | Minimal |
+| Initial Response | 8 hours |
+| Escalation | Only if pattern emerges |
+| Resolution Target | 72 hours |
+| Communication | Weekly summary |
+| Examples | Vulnerability scan findings, expired certificates, policy exceptions |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Escalation Decision Matrix}
+\pre{\startverb
+                    Asset Criticality
+                    Low        Medium      High        Critical
+Severity  Low      P4         P4          P3          P3
+          Medium   P4         P3          P2          P2
+          High     P3         P2          P2          P1
+          Critical P2         P1          P1          P1
+\stopverb}
+}
+
+\subtree{
+\title{Context-Driven Escalation Triggers}
+\subtree{
+\title{Automatic Escalation (no analyst decision needed)}
+\pre{\startverb
+| Trigger | Action |
+|---|---|
+| Ransomware detected on any endpoint | P1 - Immediate Tier 3 + Management |
+| Domain admin account compromise | P1 - Immediate Tier 3 + Management |
+| Active data exfiltration to external IP | P1 - Immediate Tier 3 + Management |
+| Critical infrastructure (DC, SCADA) alert | P1 - Immediate Tier 2 minimum |
+| Executive account anomaly | P2 - Immediate Tier 2 |
+| Multiple hosts with same malware | P1 - Immediate Tier 2 |
+\stopverb}
+}
+
+\subtree{
+\title{Time-Based Escalation}
+\pre{\startverb
+| Condition | Action |
+|---|---|
+| P2 unresolved after 4 hours | Escalate to Tier 3 |
+| P3 unresolved after 12 hours | Escalate to Tier 2 |
+| Any incident unresolved past SLA | Escalate to SOC Manager |
+| P1 unresolved after 2 hours | Escalate to CISO |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Communication Templates}
+\subtree{
+\title{P1 Initial Notification}
+\pre{\startverb
+SUBJECT: [P1 CRITICAL] Security Incident - {Incident_ID}
+
+Incident Summary:
+- Type: {incident_type}
+- Affected Systems: {systems}
+- Affected Users: {users}
+- Current Status: {status}
+- Assigned To: {analyst}
+
+Impact Assessment:
+- Business Impact: {impact}
+- Data at Risk: {data_risk}
+- Containment Status: {containment}
+
+Next Actions:
+- {action_1}
+- {action_2}
+
+Next Update: {time} (30-minute intervals)
+Bridge Line: {conference_details}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Escalation Matrix Implementation}
+\subtree{
+\title{SOAR Integration}
+\pre{\startverb
+# XSOAR escalation playbook trigger
+trigger:
+  condition: incident.severity == "critical" AND incident.asset_criticality == "high"
+  action:
+    - assign_tier: 3
+    - notify: [soc_manager, ciso]
+    - create_war_room: true
+    - start_bridge: true
+    - set_sla: 4h
+
+auto_escalation_rules:
+  - name: P2 Time-Based Escalation
+    condition: incident.severity == "high" AND incident.age > 4h AND incident.status != "resolved"
+    action:
+      - escalate_tier: 3
+      - notify: soc_manager
+      - add_comment: "Auto-escalated due to SLA breach"
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Torq - Threat Escalation Matrix for Modern Security Challenges](https://torq.io/blog/escalation-matrix/)}
+\li{[ClearFeed - Incident Escalation Matrix](https://clearfeed.ai/blogs/incident-escalation-matrix)}
+\li{[Vectra - SOC Operations Guide](https://www.vectra.ai/topics/soc-operations)}
+\li{[Runframe - Incident Priority Levels Explained](https://runframe.io/learn/incident-priority)}
+}
+}
+}

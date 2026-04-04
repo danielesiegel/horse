@@ -1,0 +1,604 @@
+\title{Pubmed Database}
+
+\taxon{skill}
+
+\meta{description}{"Direct REST API access to PubMed. Advanced Boolean/MeSH queries, E-utilities API, batch processing, citation management. For Python workflows, prefer biopython (Bio.Entrez). Use this for direct HTTP/REST work or custom API implementations."}
+
+\subtree{
+\title{PubMed Database}
+\subtree{
+\title{Overview}
+\p{PubMed is the U.S. National Library of Medicine's comprehensive database providing free access to MEDLINE and life sciences literature. Construct advanced queries with Boolean operators, MeSH terms, and field tags, access data programmatically via E-utilities API for systematic reviews and literature analysis.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Searching for biomedical or life sciences research articles}
+\li{Constructing complex search queries with Boolean operators, field tags, or MeSH terms}
+\li{Conducting systematic literature reviews or meta-analyses}
+\li{Accessing PubMed data programmatically via the E-utilities API}
+\li{Finding articles by specific criteria (author, journal, publication date, article type)}
+\li{Retrieving citation information, abstracts, or full-text articles}
+\li{Working with PMIDs (PubMed IDs) or DOIs}
+\li{Creating automated workflows for literature monitoring or data extraction}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Advanced Search Query Construction}
+\p{Construct sophisticated PubMed queries using Boolean operators, field tags, and specialized syntax.}
+
+\p{\strong{Basic Search Strategies}:}
+
+\ul{
+\li{Combine concepts with Boolean operators (AND, OR, NOT)}
+\li{Use field tags to limit searches to specific record parts}
+\li{Employ phrase searching with double quotes for exact matches}
+\li{Apply wildcards for term variations}
+\li{Use proximity searching for terms within specified distances}
+}
+
+\p{\strong{Example Queries}:}
+
+\pre{\startverb
+# Recent systematic reviews on diabetes treatment
+diabetes mellitus[mh] AND treatment[tiab] AND systematic review[pt] AND 2023:2024[dp]
+
+# Clinical trials comparing two drugs
+(metformin[nm] OR insulin[nm]) AND diabetes mellitus, type 2[mh] AND randomized controlled trial[pt]
+
+# Author-specific research
+smith ja[au] AND cancer[tiab] AND 2023[dp] AND english[la]
+\stopverb}
+
+\p{\strong{When to consult search_syntax.md}:}
+
+\ul{
+\li{Need comprehensive list of available field tags}
+\li{Require detailed explanation of search operators}
+\li{Constructing complex proximity searches}
+\li{Understanding automatic term mapping behavior}
+\li{Need specific syntax for date ranges, wildcards, or special characters}
+}
+
+\p{Grep pattern for field tags: \code{\startverb \[au\]|\[ti\]|\[ab\]|\[mh\]|\[pt\]|\[dp\]\stopverb}}
+}
+
+\subtree{
+\title{2. MeSH Terms and Controlled Vocabulary}
+\p{Use Medical Subject Headings (MeSH) for precise, consistent searching across the biomedical literature.}
+
+\p{\strong{MeSH Searching}:}
+
+\ul{
+\li{[mh] tag searches MeSH terms with automatic inclusion of narrower terms}
+\li{[majr] tag limits to articles where the topic is the main focus}
+\li{Combine MeSH terms with subheadings for specificity (e.g., diabetes mellitus/therapy[mh])}
+}
+
+\p{\strong{Common MeSH Subheadings}:}
+
+\ul{
+\li{/diagnosis - Diagnostic methods}
+\li{/drug therapy - Pharmaceutical treatment}
+\li{/epidemiology - Disease patterns and prevalence}
+\li{/etiology - Disease causes}
+\li{/prevention & control - Preventive measures}
+\li{/therapy - Treatment approaches}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+# Diabetes therapy with specific focus
+diabetes mellitus, type 2[mh]/drug therapy AND cardiovascular diseases[mh]/prevention & control
+\stopverb}
+}
+
+\subtree{
+\title{3. Article Type and Publication Filtering}
+\p{Filter results by publication type, date, text availability, and other attributes.}
+
+\p{\strong{Publication Types} (use [pt] field tag):}
+
+\ul{
+\li{Clinical Trial}
+\li{Meta-Analysis}
+\li{Randomized Controlled Trial}
+\li{Review}
+\li{Systematic Review}
+\li{Case Reports}
+\li{Guideline}
+}
+
+\p{\strong{Date Filtering}:}
+
+\ul{
+\li{Single year: \code{\startverb 2024[dp]\stopverb}}
+\li{Date range: \code{\startverb 2020:2024[dp]\stopverb}}
+\li{Specific date: \code{\startverb 2024/03/15[dp]\stopverb}}
+}
+
+\p{\strong{Text Availability}:}
+
+\ul{
+\li{Free full text: Add \code{\startverb AND free full text[sb]\stopverb} to query}
+\li{Has abstract: Add \code{\startverb AND hasabstract[text]\stopverb} to query}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+# Recent free full-text RCTs on hypertension
+hypertension[mh] AND randomized controlled trial[pt] AND 2023:2024[dp] AND free full text[sb]
+\stopverb}
+}
+
+\subtree{
+\title{4. Programmatic Access via E-utilities API}
+\p{Access PubMed data programmatically using the NCBI E-utilities REST API for automation and bulk operations.}
+
+\p{\strong{Core API Endpoints}:}
+
+\ol{
+\li{\strong{ESearch} - Search database and retrieve PMIDs}
+\li{\strong{EFetch} - Download full records in various formats}
+\li{\strong{ESummary} - Get document summaries}
+\li{\strong{EPost} - Upload UIDs for batch processing}
+\li{\strong{ELink} - Find related articles and linked data}
+}
+
+\p{\strong{Basic Workflow}:}
+
+\pre{\startverb
+import requests
+
+# Step 1: Search for articles
+base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+search_url = f"{base_url}esearch.fcgi"
+params = {
+    "db": "pubmed",
+    "term": "diabetes[tiab] AND 2024[dp]",
+    "retmax": 100,
+    "retmode": "json",
+    "api_key": "YOUR_API_KEY"  # Optional but recommended
+}
+response = requests.get(search_url, params=params)
+pmids = response.json()["esearchresult"]["idlist"]
+
+# Step 2: Fetch article details
+fetch_url = f"{base_url}efetch.fcgi"
+params = {
+    "db": "pubmed",
+    "id": ",".join(pmids),
+    "rettype": "abstract",
+    "retmode": "text",
+    "api_key": "YOUR_API_KEY"
+}
+response = requests.get(fetch_url, params=params)
+abstracts = response.text
+\stopverb}
+
+\p{\strong{Rate Limits}:}
+
+\ul{
+\li{Without API key: 3 requests/second}
+\li{With API key: 10 requests/second}
+\li{Always include User-Agent header}
+}
+
+\p{\strong{Best Practices}:}
+
+\ul{
+\li{Use history server (usehistory=y) for large result sets}
+\li{Implement batch operations via EPost for multiple UIDs}
+\li{Cache results locally to minimize redundant calls}
+\li{Respect rate limits to avoid service disruption}
+}
+
+\p{\strong{When to consult api_reference.md}:}
+
+\ul{
+\li{Need detailed endpoint documentation}
+\li{Require parameter specifications for each E-utility}
+\li{Constructing batch operations or history server workflows}
+\li{Understanding response formats (XML, JSON, text)}
+\li{Troubleshooting API errors or rate limit issues}
+}
+
+\p{Grep pattern for API endpoints: \code{\startverb esearch|efetch|esummary|epost|elink|einfo\stopverb}}
+}
+
+\subtree{
+\title{5. Citation Matching and Article Retrieval}
+\p{Find articles using partial citation information or specific identifiers.}
+
+\p{\strong{By Identifier}:}
+
+\pre{\startverb
+# By PMID
+12345678[pmid]
+
+# By DOI
+10.1056/NEJMoa123456[doi]
+
+# By PMC ID
+PMC123456[pmc]
+\stopverb}
+
+\p{\strong{Citation Matching} (via ECitMatch API): Use journal name, year, volume, page, and author to find PMIDs:}
+
+\pre{\startverb
+Format: journal|year|volume|page|author|key|
+Example: Science|2008|320|5880|1185|key1|
+\stopverb}
+
+\p{\strong{By Author and Metadata}:}
+
+\pre{\startverb
+# First author with year and topic
+smith ja[1au] AND 2023[dp] AND cancer[tiab]
+
+# Journal, volume, and page
+nature[ta] AND 2024[dp] AND 456[vi] AND 123-130[pg]
+\stopverb}
+}
+
+\subtree{
+\title{6. Systematic Literature Reviews}
+\p{Conduct comprehensive literature searches for systematic reviews and meta-analyses.}
+
+\p{\strong{PICO Framework} (Population, Intervention, Comparison, Outcome): Structure clinical research questions systematically:}
+
+\pre{\startverb
+# Example: Diabetes treatment effectiveness
+# P: diabetes mellitus, type 2[mh]
+# I: metformin[nm]
+# C: lifestyle modification[tiab]
+# O: glycemic control[tiab]
+
+diabetes mellitus, type 2[mh] AND
+(metformin[nm] OR lifestyle modification[tiab]) AND
+glycemic control[tiab] AND
+randomized controlled trial[pt]
+\stopverb}
+
+\p{\strong{Comprehensive Search Strategy}:}
+
+\pre{\startverb
+# Include multiple synonyms and MeSH terms
+(disease name[tiab] OR disease name[mh] OR synonym[tiab]) AND
+(treatment[tiab] OR therapy[tiab] OR intervention[tiab]) AND
+(systematic review[pt] OR meta-analysis[pt] OR randomized controlled trial[pt]) AND
+2020:2024[dp] AND
+english[la]
+\stopverb}
+
+\p{\strong{Search Refinement}:}
+
+\ol{
+\li{Start broad, review results}
+\li{Add specificity with field tags}
+\li{Apply date and publication type filters}
+\li{Use Advanced Search to view query translation}
+\li{Combine search history for complex queries}
+}
+
+\p{\strong{When to consult common_queries.md}:}
+
+\ul{
+\li{Need example queries for specific disease types or research areas}
+\li{Require templates for different study designs}
+\li{Looking for population-specific query patterns (pediatric, geriatric, etc.)}
+\li{Constructing methodology-specific searches}
+\li{Need quality filters or best practice patterns}
+}
+
+\p{Grep pattern for query examples: \code{\startverb diabetes|cancer|cardiovascular|clinical trial|systematic review\stopverb}}
+}
+
+\subtree{
+\title{7. Search History and Saved Searches}
+\p{Use PubMed's search history and My NCBI features for efficient research workflows.}
+
+\p{\strong{Search History} (via Advanced Search):}
+
+\ul{
+\li{Maintains up to 100 searches}
+\li{Expires after 8 hours of inactivity}
+\li{Combine previous searches using # references}
+\li{Preview result counts before executing}
+}
+
+\p{\strong{Example}:}
+
+\pre{\startverb
+#1: diabetes mellitus[mh]
+#2: cardiovascular diseases[mh]
+#3: #1 AND #2 AND risk factors[tiab]
+\stopverb}
+
+\p{\strong{My NCBI Features}:}
+
+\ul{
+\li{Save searches indefinitely}
+\li{Set up email alerts for new matching articles}
+\li{Create collections of saved articles}
+\li{Organize research by project or topic}
+}
+
+\p{\strong{RSS Feeds}: Create RSS feeds for any search to monitor new publications in your area of interest.}
+}
+
+\subtree{
+\title{8. Related Articles and Citation Discovery}
+\p{Find related research and explore citation networks.}
+
+\p{\strong{Similar Articles Feature}: Every PubMed article includes pre-calculated related articles based on:}
+
+\ul{
+\li{Title and abstract similarity}
+\li{MeSH term overlap}
+\li{Weighted algorithmic matching}
+}
+
+\p{\strong{ELink for Related Data}:}
+
+\pre{\startverb
+# Find related articles programmatically
+elink.fcgi?dbfrom=pubmed&db=pubmed&id=PMID&cmd=neighbor
+\stopverb}
+
+\p{\strong{Citation Links}:}
+
+\ul{
+\li{LinkOut to full text from publishers}
+\li{Links to PubMed Central free articles}
+\li{Connections to related NCBI databases (GenBank, ClinicalTrials.gov, etc.)}
+}
+}
+
+\subtree{
+\title{9. Export and Citation Management}
+\p{Export search results in various formats for citation management and further analysis.}
+
+\p{\strong{Export Formats}:}
+
+\ul{
+\li{.nbib files for reference managers (Zotero, Mendeley, EndNote)}
+\li{AMA, MLA, APA, NLM citation styles}
+\li{CSV for data analysis}
+\li{XML for programmatic processing}
+}
+
+\p{\strong{Clipboard and Collections}:}
+
+\ul{
+\li{Clipboard: Temporary storage for up to 500 items (8-hour expiration)}
+\li{Collections: Permanent storage via My NCBI account}
+}
+
+\p{\strong{Batch Export via API}:}
+
+\pre{\startverb
+# Export citations in MEDLINE format
+efetch.fcgi?db=pubmed&id=PMID1,PMID2&rettype=medline&retmode=text
+\stopverb}
+}
+}
+
+\subtree{
+\title{Working with Reference Files}
+\p{This skill includes three comprehensive reference files in the \code{\startverb references/\stopverb} directory:}
+
+\subtree{
+\title{references/api_reference.md}
+\p{Complete E-utilities API documentation including all nine endpoints, parameters, response formats, and best practices. Consult when:}
+
+\ul{
+\li{Implementing programmatic PubMed access}
+\li{Constructing API requests}
+\li{Understanding rate limits and authentication}
+\li{Working with large datasets via history server}
+\li{Troubleshooting API errors}
+}
+}
+
+\subtree{
+\title{references/search_syntax.md}
+\p{Detailed guide to PubMed search syntax including field tags, Boolean operators, wildcards, and special characters. Consult when:}
+
+\ul{
+\li{Constructing complex search queries}
+\li{Understanding automatic term mapping}
+\li{Using advanced search features (proximity, wildcards)}
+\li{Applying filters and limits}
+\li{Troubleshooting unexpected search results}
+}
+}
+
+\subtree{
+\title{references/common_queries.md}
+\p{Extensive collection of example queries for various research scenarios, disease types, and methodologies. Consult when:}
+
+\ul{
+\li{Starting a new literature search}
+\li{Need templates for specific research areas}
+\li{Looking for best practice query patterns}
+\li{Conducting systematic reviews}
+\li{Searching for specific study designs or populations}
+}
+
+\p{\strong{Reference Loading Strategy}: Load reference files into context as needed based on the specific task. For brief queries or basic searches, the information in this SKILL.md may be sufficient. For complex operations, consult the appropriate reference file.}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Basic Literature Search}
+\ol{
+\li{Identify key concepts and synonyms}
+\li{Construct query with Boolean operators and field tags}
+\li{Review initial results and refine query}
+\li{Apply filters (date, article type, language)}
+\li{Export results for analysis}
+}
+}
+
+\subtree{
+\title{Workflow 2: Systematic Review Search}
+\ol{
+\li{Define research question using PICO framework}
+\li{Identify all relevant MeSH terms and synonyms}
+\li{Construct comprehensive search strategy}
+\li{Search multiple databases (include PubMed)}
+\li{Document search strategy and date}
+\li{Export results for screening and review}
+}
+}
+
+\subtree{
+\title{Workflow 3: Programmatic Data Extraction}
+\ol{
+\li{Design search query and test in web interface}
+\li{Implement search using ESearch API}
+\li{Use history server for large result sets}
+\li{Retrieve detailed records with EFetch}
+\li{Parse XML/JSON responses}
+\li{Store data locally with caching}
+\li{Implement rate limiting and error handling}
+}
+}
+
+\subtree{
+\title{Workflow 4: Citation Discovery}
+\ol{
+\li{Start with known relevant article}
+\li{Use Similar Articles to find related work}
+\li{Check citing articles (when available)}
+\li{Explore MeSH terms from relevant articles}
+\li{Construct new searches based on discoveries}
+\li{Use ELink to find related database entries}
+}
+}
+
+\subtree{
+\title{Workflow 5: Ongoing Literature Monitoring}
+\ol{
+\li{Construct comprehensive search query}
+\li{Test and refine query for precision}
+\li{Save search to My NCBI account}
+\li{Set up email alerts for new matches}
+\li{Create RSS feed for feed reader monitoring}
+\li{Review new articles regularly}
+}
+}
+}
+
+\subtree{
+\title{Tips and Best Practices}
+\subtree{
+\title{Search Strategy}
+\ul{
+\li{Start broad, then narrow with field tags and filters}
+\li{Include synonyms and MeSH terms for comprehensive coverage}
+\li{Use quotation marks for exact phrases}
+\li{Check Search Details in Advanced Search to verify query translation}
+\li{Combine multiple searches using search history}
+}
+}
+
+\subtree{
+\title{API Usage}
+\ul{
+\li{Obtain API key for higher rate limits (10 req/sec vs 3 req/sec)}
+\li{Use history server for result sets > 500 articles}
+\li{Implement exponential backoff for rate limit handling}
+\li{Cache results locally to minimize redundant requests}
+\li{Always include descriptive User-Agent header}
+}
+}
+
+\subtree{
+\title{Quality Filtering}
+\ul{
+\li{Prefer systematic reviews and meta-analyses for synthesized evidence}
+\li{Use publication type filters to find specific study designs}
+\li{Filter by date for most recent research}
+\li{Apply language filters as appropriate}
+\li{Use free full text filter for immediate access}
+}
+}
+
+\subtree{
+\title{Citation Management}
+\ul{
+\li{Export early and often to avoid losing search results}
+\li{Use .nbib format for compatibility with most reference managers}
+\li{Create My NCBI account for permanent collections}
+\li{Document search strategies for reproducibility}
+\li{Use Collections to organize research by project}
+}
+}
+}
+
+\subtree{
+\title{Limitations and Considerations}
+\subtree{
+\title{Database Coverage}
+\ul{
+\li{Primarily biomedical and life sciences literature}
+\li{Pre-1975 articles often lack abstracts}
+\li{Full author names available from 2002 forward}
+\li{Non-English abstracts available but may default to English display}
+}
+}
+
+\subtree{
+\title{Search Limitations}
+\ul{
+\li{Display limited to 10,000 results maximum}
+\li{Search history expires after 8 hours of inactivity}
+\li{Clipboard holds max 500 items with 8-hour expiration}
+\li{Automatic term mapping may produce unexpected results}
+}
+}
+
+\subtree{
+\title{API Considerations}
+\ul{
+\li{Rate limits apply (3-10 requests/second)}
+\li{Large queries may time out (use history server)}
+\li{XML parsing required for detailed data extraction}
+\li{API key recommended for production use}
+}
+}
+
+\subtree{
+\title{Access Limitations}
+\ul{
+\li{PubMed provides citations and abstracts (not always full text)}
+\li{Full text access depends on publisher, institutional access, or open access status}
+\li{LinkOut availability varies by journal and institution}
+\li{Some content requires subscription or payment}
+}
+}
+}
+
+\subtree{
+\title{Support Resources}
+\ul{
+\li{\strong{PubMed Help}: https://pubmed.ncbi.nlm.nih.gov/help/}
+\li{\strong{E-utilities Documentation}: https://www.ncbi.nlm.nih.gov/books/NBK25501/}
+\li{\strong{NLM Help Desk}: 1-888-FIND-NLM (1-888-346-3656)}
+\li{\strong{Technical Support}: vog.hin.mln.ibcn@seitilitue}
+\li{\strong{Mailing List}: utilities-announce@ncbi.nlm.nih.gov}
+}
+}
+}

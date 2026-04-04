@@ -1,0 +1,1210 @@
+\title{Github Workflow Automation}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Advanced GitHub Actions workflow automation with AI swarm coordination, intelligent CI/CD pipelines, and comprehensive repository management}
+
+\subtree{
+\title{GitHub Workflow Automation Skill}
+\subtree{
+\title{Overview}
+\p{This skill provides comprehensive GitHub Actions automation with AI swarm coordination. It integrates intelligent CI/CD pipelines, workflow orchestration, and repository management to create self-organizing, adaptive GitHub workflows.}
+}
+
+\subtree{
+\title{Quick Start}
+\p{<details> <summary>💡 Basic Usage - Click to expand</summary>}
+
+\subtree{
+\title{Initialize GitHub Workflow Automation}
+\pre{\startverb
+# Start with a simple workflow
+npx ruv-swarm actions generate-workflow \
+  --analyze-codebase \
+  --detect-languages \
+  --create-optimal-pipeline
+\stopverb}
+}
+
+\subtree{
+\title{Common Commands}
+\pre{\startverb
+# Optimize existing workflow
+npx ruv-swarm actions optimize \
+  --workflow ".github/workflows/ci.yml" \
+  --suggest-parallelization
+
+# Analyze failed runs
+gh run view <run-id> --json jobs,conclusion | \
+  npx ruv-swarm actions analyze-failure \
+    --suggest-fixes
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{🤖 Swarm-Powered GitHub Modes}
+\p{<details> <summary>Available GitHub Integration Modes</summary>}
+
+\subtree{
+\title{1. gh-coordinator}
+\p{\strong{GitHub workflow orchestration and coordination}}
+
+\ul{
+\li{\strong{Coordination Mode}: Hierarchical}
+\li{\strong{Max Parallel Operations}: 10}
+\li{\strong{Batch Optimized}: Yes}
+\li{\strong{Best For}: Complex GitHub workflows, multi-repo coordination}
+}
+
+\pre{\startverb
+# Usage example
+npx claude-flow@alpha github gh-coordinator \
+  "Coordinate multi-repo release across 5 repositories"
+\stopverb}
+}
+
+\subtree{
+\title{2. pr-manager}
+\p{\strong{Pull request management and review coordination}}
+
+\ul{
+\li{\strong{Review Mode}: Automated}
+\li{\strong{Multi-reviewer}: Yes}
+\li{\strong{Conflict Resolution}: Intelligent}
+}
+
+\pre{\startverb
+# Create PR with automated review
+gh pr create --title "Feature: New capability" \
+  --body "Automated PR with swarm review" | \
+  npx ruv-swarm actions pr-validate \
+    --spawn-agents "linter,tester,security,docs"
+\stopverb}
+}
+
+\subtree{
+\title{3. issue-tracker}
+\p{\strong{Issue management and project coordination}}
+
+\ul{
+\li{\strong{Issue Workflow}: Automated}
+\li{\strong{Label Management}: Smart}
+\li{\strong{Progress Tracking}: Real-time}
+}
+
+\pre{\startverb
+# Create coordinated issue workflow
+npx claude-flow@alpha github issue-tracker \
+  "Manage sprint issues with automated tracking"
+\stopverb}
+}
+
+\subtree{
+\title{4. release-manager}
+\p{\strong{Release coordination and deployment}}
+
+\ul{
+\li{\strong{Release Pipeline}: Automated}
+\li{\strong{Versioning}: Semantic}
+\li{\strong{Deployment}: Multi-stage}
+}
+
+\pre{\startverb
+# Automated release management
+npx claude-flow@alpha github release-manager \
+  "Create v2.0.0 release with changelog and deployment"
+\stopverb}
+}
+
+\subtree{
+\title{5. repo-architect}
+\p{\strong{Repository structure and organization}}
+
+\ul{
+\li{\strong{Structure Optimization}: Yes}
+\li{\strong{Multi-repo Support}: Yes}
+\li{\strong{Template Management}: Advanced}
+}
+
+\pre{\startverb
+# Optimize repository structure
+npx claude-flow@alpha github repo-architect \
+  "Restructure monorepo with optimal organization"
+\stopverb}
+}
+
+\subtree{
+\title{6. code-reviewer}
+\p{\strong{Automated code review and quality assurance}}
+
+\ul{
+\li{\strong{Review Quality}: Deep}
+\li{\strong{Security Analysis}: Yes}
+\li{\strong{Performance Check}: Automated}
+}
+
+\pre{\startverb
+# Automated code review
+gh pr view 123 --json files | \
+  npx ruv-swarm actions pr-validate \
+    --deep-review \
+    --security-scan
+\stopverb}
+}
+
+\subtree{
+\title{7. ci-orchestrator}
+\p{\strong{CI/CD pipeline coordination}}
+
+\ul{
+\li{\strong{Pipeline Management}: Advanced}
+\li{\strong{Test Coordination}: Parallel}
+\li{\strong{Deployment}: Automated}
+}
+
+\pre{\startverb
+# Orchestrate CI/CD pipeline
+npx claude-flow@alpha github ci-orchestrator \
+  "Setup parallel test execution with smart caching"
+\stopverb}
+}
+
+\subtree{
+\title{8. security-guardian}
+\p{\strong{Security and compliance management}}
+
+\ul{
+\li{\strong{Security Scan}: Automated}
+\li{\strong{Compliance Check}: Continuous}
+\li{\strong{Vulnerability Management}: Proactive}
+}
+
+\pre{\startverb
+# Security audit
+npx ruv-swarm actions security \
+  --deep-scan \
+  --compliance-check \
+  --create-issues
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{🔧 Workflow Templates}
+\p{<details> <summary>Production-Ready GitHub Actions Templates</summary>}
+
+\subtree{
+\title{1. Intelligent CI with Swarms}
+\pre{\startverb
+# .github/workflows/swarm-ci.yml
+name: Intelligent CI with Swarms
+on: [push, pull_request]
+
+jobs:
+  swarm-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize Swarm
+        uses: ruvnet/swarm-action@v1
+        with:
+          topology: mesh
+          max-agents: 6
+
+      - name: Analyze Changes
+        run: |
+          npx ruv-swarm actions analyze \
+            --commit ${{ github.sha }} \
+            --suggest-tests \
+            --optimize-pipeline
+\stopverb}
+}
+
+\subtree{
+\title{2. Multi-Language Detection}
+\pre{\startverb
+# .github/workflows/polyglot-swarm.yml
+name: Polyglot Project Handler
+on: push
+
+jobs:
+  detect-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Detect Languages
+        id: detect
+        run: |
+          npx ruv-swarm actions detect-stack \
+            --output json > stack.json
+
+      - name: Dynamic Build Matrix
+        run: |
+          npx ruv-swarm actions create-matrix \
+            --from stack.json \
+            --parallel-builds
+\stopverb}
+}
+
+\subtree{
+\title{3. Adaptive Security Scanning}
+\pre{\startverb
+# .github/workflows/security-swarm.yml
+name: Intelligent Security Scan
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  security-swarm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Security Analysis Swarm
+        run: |
+          SECURITY_ISSUES=$(npx ruv-swarm actions security \
+            --deep-scan \
+            --format json)
+
+          echo "$SECURITY_ISSUES" | jq -r '.issues[]? | @base64' | while read -r issue; do
+            _jq() {
+              echo ${issue} | base64 --decode | jq -r ${1}
+            }
+            gh issue create \
+              --title "$(_jq '.title')" \
+              --body "$(_jq '.body')" \
+              --label "security,critical"
+          done
+\stopverb}
+}
+
+\subtree{
+\title{4. Self-Healing Pipeline}
+\pre{\startverb
+# .github/workflows/self-healing.yml
+name: Self-Healing Pipeline
+on: workflow_run
+
+jobs:
+  heal-pipeline:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Diagnose and Fix
+        run: |
+          npx ruv-swarm actions self-heal \
+            --run-id ${{ github.event.workflow_run.id }} \
+            --auto-fix-common \
+            --create-pr-complex
+\stopverb}
+}
+
+\subtree{
+\title{5. Progressive Deployment}
+\pre{\startverb
+# .github/workflows/smart-deployment.yml
+name: Smart Deployment
+on:
+  push:
+    branches: [main]
+
+jobs:
+  progressive-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analyze Risk
+        id: risk
+        run: |
+          npx ruv-swarm actions deploy-risk \
+            --changes ${{ github.sha }} \
+            --history 30d
+
+      - name: Choose Strategy
+        run: |
+          npx ruv-swarm actions deploy-strategy \
+            --risk ${{ steps.risk.outputs.level }} \
+            --auto-execute
+\stopverb}
+}
+
+\subtree{
+\title{6. Performance Regression Detection}
+\pre{\startverb
+# .github/workflows/performance-guard.yml
+name: Performance Guard
+on: pull_request
+
+jobs:
+  perf-swarm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Performance Analysis
+        run: |
+          npx ruv-swarm actions perf-test \
+            --baseline main \
+            --threshold 10% \
+            --auto-profile-regression
+\stopverb}
+}
+
+\subtree{
+\title{7. PR Validation Swarm}
+\pre{\startverb
+# .github/workflows/pr-validation.yml
+name: PR Validation Swarm
+on: pull_request
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Multi-Agent Validation
+        run: |
+          PR_DATA=$(gh pr view ${{ github.event.pull_request.number }} --json files,labels)
+
+          RESULTS=$(npx ruv-swarm actions pr-validate \
+            --spawn-agents "linter,tester,security,docs" \
+            --parallel \
+            --pr-data "$PR_DATA")
+
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "$RESULTS"
+\stopverb}
+}
+
+\subtree{
+\title{8. Intelligent Release}
+\pre{\startverb
+# .github/workflows/intelligent-release.yml
+name: Intelligent Release
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Swarm
+        run: |
+          npx ruv-swarm actions release \
+            --analyze-changes \
+            --generate-notes \
+            --create-artifacts \
+            --publish-smart
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{📊 Monitoring & Analytics}
+\p{<details> <summary>Workflow Analysis & Optimization</summary>}
+
+\subtree{
+\title{Workflow Analytics}
+\pre{\startverb
+# Analyze workflow performance
+npx ruv-swarm actions analytics \
+  --workflow "ci.yml" \
+  --period 30d \
+  --identify-bottlenecks \
+  --suggest-improvements
+\stopverb}
+}
+
+\subtree{
+\title{Cost Optimization}
+\pre{\startverb
+# Optimize GitHub Actions costs
+npx ruv-swarm actions cost-optimize \
+  --analyze-usage \
+  --suggest-caching \
+  --recommend-self-hosted
+\stopverb}
+}
+
+\subtree{
+\title{Failure Pattern Analysis}
+\pre{\startverb
+# Identify failure patterns
+npx ruv-swarm actions failure-patterns \
+  --period 90d \
+  --classify-failures \
+  --suggest-preventions
+\stopverb}
+}
+
+\subtree{
+\title{Resource Management}
+\pre{\startverb
+# Optimize resource usage
+npx ruv-swarm actions resources \
+  --analyze-usage \
+  --suggest-runners \
+  --cost-optimize
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{🧪 Dynamic Test Strategies}
+\p{<details> <summary>Intelligent Test Selection & Execution</summary>}
+
+\subtree{
+\title{Smart Test Selection}
+\pre{\startverb
+# Automatically select relevant tests
+- name: Swarm Test Selection
+  run: |
+    npx ruv-swarm actions smart-test \
+      --changed-files ${{ steps.files.outputs.all }} \
+      --impact-analysis \
+      --parallel-safe
+\stopverb}
+}
+
+\subtree{
+\title{Dynamic Test Matrix}
+\pre{\startverb
+# Generate test matrix from code analysis
+jobs:
+  generate-matrix:
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          MATRIX=$(npx ruv-swarm actions test-matrix \
+            --detect-frameworks \
+            --optimize-coverage)
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+
+  test:
+    needs: generate-matrix
+    strategy:
+      matrix: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
+\stopverb}
+}
+
+\subtree{
+\title{Intelligent Parallelization}
+\pre{\startverb
+# Determine optimal parallelization
+npx ruv-swarm actions parallel-strategy \
+  --analyze-dependencies \
+  --time-estimates \
+  --cost-aware
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{🔮 Predictive Analysis}
+\p{<details> <summary>AI-Powered Workflow Predictions</summary>}
+
+\subtree{
+\title{Predictive Failures}
+\pre{\startverb
+# Predict potential failures
+npx ruv-swarm actions predict \
+  --analyze-history \
+  --identify-risks \
+  --suggest-preventive
+\stopverb}
+}
+
+\subtree{
+\title{Workflow Recommendations}
+\pre{\startverb
+# Get workflow recommendations
+npx ruv-swarm actions recommend \
+  --analyze-repo \
+  --suggest-workflows \
+  --industry-best-practices
+\stopverb}
+}
+
+\subtree{
+\title{Automated Optimization}
+\pre{\startverb
+# Continuously optimize workflows
+npx ruv-swarm actions auto-optimize \
+  --monitor-performance \
+  --apply-improvements \
+  --track-savings
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{🎯 Custom Actions Development}
+\p{<details> <summary>Build Your Own Swarm Actions</summary>}
+
+\subtree{
+\title{Custom Swarm Action Template}
+\pre{\startverb
+// action.yml
+name: 'Swarm Custom Action'
+description: 'Custom swarm-powered action'
+inputs:
+  task:
+    description: 'Task for swarm'
+    required: true
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
+
+// index.js
+const { SwarmAction } = require('ruv-swarm');
+
+async function run() {
+  const swarm = new SwarmAction({
+    topology: 'mesh',
+    agents: ['analyzer', 'optimizer']
+  });
+
+  await swarm.execute(core.getInput('task'));
+}
+
+run().catch(error => core.setFailed(error.message));
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Integration with Claude-Flow}
+\subtree{
+\title{🔄 Swarm Coordination Patterns}
+\p{<details> <summary>MCP-Based GitHub Workflow Coordination</summary>}
+
+\subtree{
+\title{Initialize GitHub Swarm}
+\pre{\startverb
+// Step 1: Initialize swarm coordination
+mcp__claude-flow__swarm_init {
+  topology: "hierarchical",
+  maxAgents: 8
+}
+
+// Step 2: Spawn specialized agents
+mcp__claude-flow__agent_spawn { type: "coordinator", name: "GitHub Coordinator" }
+mcp__claude-flow__agent_spawn { type: "reviewer", name: "Code Reviewer" }
+mcp__claude-flow__agent_spawn { type: "tester", name: "QA Agent" }
+mcp__claude-flow__agent_spawn { type: "analyst", name: "Security Analyst" }
+
+// Step 3: Orchestrate GitHub workflow
+mcp__claude-flow__task_orchestrate {
+  task: "Complete PR review and merge workflow",
+  strategy: "parallel",
+  priority: "high"
+}
+\stopverb}
+}
+
+\subtree{
+\title{GitHub Hooks Integration}
+\pre{\startverb
+# Pre-task: Setup GitHub context
+npx claude-flow@alpha hooks pre-task \
+  --description "PR review workflow" \
+  --context "pr-123"
+
+# During task: Track progress
+npx claude-flow@alpha hooks notify \
+  --message "Completed security scan" \
+  --type "github-action"
+
+# Post-task: Export results
+npx claude-flow@alpha hooks post-task \
+  --task-id "pr-review-123" \
+  --export-github-summary
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{📦 Batch Operations}
+\p{<details> <summary>Concurrent GitHub Operations</summary>}
+
+\subtree{
+\title{Parallel GitHub CLI Commands}
+\pre{\startverb
+// Single message with all GitHub operations
+[Concurrent Execution]:
+  Bash("gh issue create --title 'Feature A' --body 'Description A' --label 'enhancement'")
+  Bash("gh issue create --title 'Feature B' --body 'Description B' --label 'enhancement'")
+  Bash("gh pr create --title 'PR 1' --head 'feature-a' --base 'main'")
+  Bash("gh pr create --title 'PR 2' --head 'feature-b' --base 'main'")
+  Bash("gh pr checks 123 --watch")
+  TodoWrite { todos: [
+    {content: "Review security scan results", status: "pending"},
+    {content: "Merge approved PRs", status: "pending"},
+    {content: "Update changelog", status: "pending"}
+  ]}
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{🏗️ Workflow Organization}
+\p{<details> <summary>Structure Your GitHub Workflows</summary>}
+
+\subtree{
+\title{1. Use Reusable Workflows}
+\pre{\startverb
+# .github/workflows/reusable-swarm.yml
+name: Reusable Swarm Workflow
+on:
+  workflow_call:
+    inputs:
+      topology:
+        required: true
+        type: string
+
+jobs:
+  swarm-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initialize Swarm
+        run: |
+          npx ruv-swarm init --topology ${{ inputs.topology }}
+\stopverb}
+}
+
+\subtree{
+\title{2. Implement Proper Caching}
+\pre{\startverb
+- name: Cache Swarm Dependencies
+  uses: actions/cache@v3
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-swarm-${{ hashFiles('**/package-lock.json') }}
+\stopverb}
+}
+
+\subtree{
+\title{3. Set Appropriate Timeouts}
+\pre{\startverb
+jobs:
+  swarm-task:
+    timeout-minutes: 30
+    steps:
+      - name: Swarm Operation
+        timeout-minutes: 10
+\stopverb}
+}
+
+\subtree{
+\title{4. Use Workflow Dependencies}
+\pre{\startverb
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+
+  deploy:
+    needs: [setup, test]
+    runs-on: ubuntu-latest
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{🔒 Security Best Practices}
+\p{<details> <summary>Secure Your GitHub Workflows</summary>}
+
+\subtree{
+\title{1. Store Configurations Securely}
+\pre{\startverb
+- name: Setup Swarm
+  env:
+    SWARM_CONFIG: ${{ secrets.SWARM_CONFIG }}
+    API_KEY: ${{ secrets.API_KEY }}
+  run: |
+    npx ruv-swarm init --config "$SWARM_CONFIG"
+\stopverb}
+}
+
+\subtree{
+\title{2. Use OIDC Authentication}
+\pre{\startverb
+permissions:
+  id-token: write
+  contents: read
+
+- name: Configure AWS Credentials
+  uses: aws-actions/configure-aws-credentials@v2
+  with:
+    role-to-assume: arn:aws:iam::123456789012:role/GitHubAction
+    aws-region: us-east-1
+\stopverb}
+}
+
+\subtree{
+\title{3. Implement Least-Privilege}
+\pre{\startverb
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+\stopverb}
+}
+
+\subtree{
+\title{4. Audit Swarm Operations}
+\pre{\startverb
+- name: Audit Swarm Actions
+  run: |
+    npx ruv-swarm actions audit \
+      --export-logs \
+      --compliance-report
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{⚡ Performance Optimization}
+\p{<details> <summary>Maximize Workflow Performance</summary>}
+
+\subtree{
+\title{1. Cache Swarm Dependencies}
+\pre{\startverb
+- uses: actions/cache@v3
+  with:
+    path: |
+      ~/.npm
+      node_modules
+    key: ${{ runner.os }}-swarm-${{ hashFiles('**/package-lock.json') }}
+\stopverb}
+}
+
+\subtree{
+\title{2. Use Appropriate Runner Sizes}
+\pre{\startverb
+jobs:
+  heavy-task:
+    runs-on: ubuntu-latest-4-cores
+    steps:
+      - name: Intensive Swarm Operation
+\stopverb}
+}
+
+\subtree{
+\title{3. Implement Early Termination}
+\pre{\startverb
+- name: Quick Fail Check
+  run: |
+    if ! npx ruv-swarm actions pre-check; then
+      echo "Pre-check failed, terminating early"
+      exit 1
+    fi
+\stopverb}
+}
+
+\subtree{
+\title{4. Optimize Parallel Execution}
+\pre{\startverb
+strategy:
+  matrix:
+    include:
+      - runner: ubuntu-latest
+        task: test
+      - runner: ubuntu-latest
+        task: lint
+      - runner: ubuntu-latest
+        task: security
+  max-parallel: 3
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Debugging & Troubleshooting}
+\subtree{
+\title{🐛 Debug Tools}
+\p{<details> <summary>Debug GitHub Workflow Issues</summary>}
+
+\subtree{
+\title{Debug Mode}
+\pre{\startverb
+- name: Debug Swarm
+  run: |
+    npx ruv-swarm actions debug \
+      --verbose \
+      --trace-agents \
+      --export-logs
+  env:
+    ACTIONS_STEP_DEBUG: true
+\stopverb}
+}
+
+\subtree{
+\title{Performance Profiling}
+\pre{\startverb
+# Profile workflow performance
+npx ruv-swarm actions profile \
+  --workflow "ci.yml" \
+  --identify-slow-steps \
+  --suggest-optimizations
+\stopverb}
+}
+
+\subtree{
+\title{Failure Analysis}
+\pre{\startverb
+# Analyze failed runs
+gh run view <run-id> --json jobs,conclusion | \
+  npx ruv-swarm actions analyze-failure \
+    --suggest-fixes \
+    --auto-retry-flaky
+\stopverb}
+}
+
+\subtree{
+\title{Log Analysis}
+\pre{\startverb
+# Download and analyze logs
+gh run download <run-id>
+npx ruv-swarm actions analyze-logs \
+  --directory ./logs \
+  --identify-errors
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Real-World Examples}
+\subtree{
+\title{🚀 Complete Workflows}
+\p{<details> <summary>Production-Ready Integration Examples</summary>}
+
+\subtree{
+\title{Example 1: Full-Stack Application CI/CD}
+\pre{\startverb
+name: Full-Stack CI/CD with Swarms
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    outputs:
+      swarm-id: ${{ steps.init.outputs.swarm-id }}
+    steps:
+      - id: init
+        run: |
+          SWARM_ID=$(npx ruv-swarm init --topology mesh --output json | jq -r '.id')
+          echo "swarm-id=${SWARM_ID}" >> $GITHUB_OUTPUT
+
+  backend:
+    needs: initialize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Backend Tests
+        run: |
+          npx ruv-swarm agents spawn --type tester \
+            --task "Run backend test suite" \
+            --swarm-id ${{ needs.initialize.outputs.swarm-id }}
+
+  frontend:
+    needs: initialize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Frontend Tests
+        run: |
+          npx ruv-swarm agents spawn --type tester \
+            --task "Run frontend test suite" \
+            --swarm-id ${{ needs.initialize.outputs.swarm-id }}
+
+  security:
+    needs: initialize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Security Scan
+        run: |
+          npx ruv-swarm agents spawn --type security \
+            --task "Security audit" \
+            --swarm-id ${{ needs.initialize.outputs.swarm-id }}
+
+  deploy:
+    needs: [backend, frontend, security]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        run: |
+          npx ruv-swarm actions deploy \
+            --strategy progressive \
+            --swarm-id ${{ needs.initialize.outputs.swarm-id }}
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Monorepo Management}
+\pre{\startverb
+name: Monorepo Coordination
+on: push
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.detect.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - id: detect
+        run: |
+          PACKAGES=$(npx ruv-swarm actions detect-changes \
+            --monorepo \
+            --output json)
+          echo "packages=${PACKAGES}" >> $GITHUB_OUTPUT
+
+  build-packages:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
+    steps:
+      - name: Build Package
+        run: |
+          npx ruv-swarm actions build \
+            --package ${{ matrix.package }} \
+            --parallel-deps
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Multi-Repo Synchronization}
+\pre{\startverb
+# Synchronize multiple repositories
+npx claude-flow@alpha github sync-coordinator \
+  "Synchronize version updates across:
+   - github.com/org/repo-a
+   - github.com/org/repo-b
+   - github.com/org/repo-c
+
+   Update dependencies, align versions, create PRs"
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Command Reference}
+\subtree{
+\title{📚 Quick Command Guide}
+\p{<details> <summary>All Available Commands</summary>}
+
+\subtree{
+\title{Workflow Generation}
+\pre{\startverb
+npx ruv-swarm actions generate-workflow [options]
+  --analyze-codebase       Analyze repository structure
+  --detect-languages       Detect programming languages
+  --create-optimal-pipeline Generate optimized workflow
+\stopverb}
+}
+
+\subtree{
+\title{Optimization}
+\pre{\startverb
+npx ruv-swarm actions optimize [options]
+  --workflow <path>        Path to workflow file
+  --suggest-parallelization Suggest parallel execution
+  --reduce-redundancy      Remove redundant steps
+  --estimate-savings       Estimate time/cost savings
+\stopverb}
+}
+
+\subtree{
+\title{Analysis}
+\pre{\startverb
+npx ruv-swarm actions analyze [options]
+  --commit <sha>           Analyze specific commit
+  --suggest-tests          Suggest test improvements
+  --optimize-pipeline      Optimize pipeline structure
+\stopverb}
+}
+
+\subtree{
+\title{Testing}
+\pre{\startverb
+npx ruv-swarm actions smart-test [options]
+  --changed-files <files>  Files that changed
+  --impact-analysis        Analyze test impact
+  --parallel-safe          Only parallel-safe tests
+\stopverb}
+}
+
+\subtree{
+\title{Security}
+\pre{\startverb
+npx ruv-swarm actions security [options]
+  --deep-scan             Deep security analysis
+  --format <format>       Output format (json/text)
+  --create-issues         Auto-create GitHub issues
+\stopverb}
+}
+
+\subtree{
+\title{Deployment}
+\pre{\startverb
+npx ruv-swarm actions deploy [options]
+  --strategy <type>       Deployment strategy
+  --risk <level>          Risk assessment level
+  --auto-execute          Execute automatically
+\stopverb}
+}
+
+\subtree{
+\title{Monitoring}
+\pre{\startverb
+npx ruv-swarm actions analytics [options]
+  --workflow <name>       Workflow to analyze
+  --period <duration>     Analysis period
+  --identify-bottlenecks  Find bottlenecks
+  --suggest-improvements  Improvement suggestions
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Integration Checklist}
+\subtree{
+\title{✅ Setup Verification}
+\p{<details> <summary>Verify Your Setup</summary>}
+
+\ul{
+\li{[ ] GitHub CLI (\code{\startverb gh\stopverb}) installed and authenticated}
+\li{[ ] Git configured with user credentials}
+\li{[ ] Node.js v16+ installed}
+\li{[ ] \code{\startverb claude-flow@alpha\stopverb} package available}
+\li{[ ] Repository has \code{\startverb .github/workflows\stopverb} directory}
+\li{[ ] GitHub Actions enabled on repository}
+\li{[ ] Necessary secrets configured}
+\li{[ ] Runner permissions verified}
+}
+
+\subtree{
+\title{Quick Setup Script}
+\pre{\startverb
+#!/bin/bash
+# setup-github-automation.sh
+
+# Install dependencies
+npm install -g claude-flow@alpha
+
+# Verify GitHub CLI
+gh auth status || gh auth login
+
+# Create workflow directory
+mkdir -p .github/workflows
+
+# Generate initial workflow
+npx ruv-swarm actions generate-workflow \
+  --analyze-codebase \
+  --create-optimal-pipeline > .github/workflows/ci.yml
+
+echo "✅ GitHub workflow automation setup complete"
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb github-pr-enhancement\stopverb} - Advanced PR management}
+\li{\code{\startverb release-coordination\stopverb} - Release automation}
+\li{\code{\startverb swarm-coordination\stopverb} - Multi-agent orchestration}
+\li{\code{\startverb ci-cd-optimization\stopverb} - Pipeline optimization}
+}
+}
+
+\subtree{
+\title{Support & Documentation}
+\ul{
+\li{\strong{GitHub CLI Docs}: https://cli.github.com/manual/}
+\li{\strong{GitHub Actions}: https://docs.github.com/en/actions}
+\li{\strong{Claude-Flow}: https://github.com/ruvnet/claude-flow}
+\li{\strong{Ruv-Swarm}: https://github.com/ruvnet/ruv-swarm}
+}
+}
+
+\subtree{
+\title{Version History}
+\ul{
+\li{\strong{v1.0.0} (2025-01-19): Initial skill consolidation}
+\li{Merged workflow-automation.md (441 lines)}
+\li{Merged github-modes.md (146 lines)}
+\li{Added progressive disclosure}
+\li{Enhanced with swarm coordination patterns}
+\li{Added comprehensive examples and best practices}
+}
+
+\p{\strong{Skill Status}: ✅ Production Ready \strong{Last Updated}: 2025-01-19 \strong{Maintainer}: claude-flow team}
+}
+}

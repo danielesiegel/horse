@@ -1,0 +1,171 @@
+\title{Monitoring Darkweb Sources}
+
+\taxon{skill}
+
+\tag{dark-web}
+
+\tag{OSINT}
+
+\tag{credential-monitoring}
+
+\tag{ransomware-leaks}
+
+\tag{Recorded-Future}
+
+\tag{SpiderFoot}
+
+\tag{CTI}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Monitors dark web forums, marketplaces, paste sites, and ransomware leak sites for mentions of organizational assets, leaked credentials, threatened attacks, and threat actor communications to provide early warning intelligence. Use when establishing dark web monitoring coverage, investigating specific data breach claims, or enriching incident investigations with dark web context. Activates for requests involving dark web OSINT, leak site monitoring, credential exposure, Recorded Future dark web, or Tor hidden service intelligence.}
+
+\subtree{
+\title{Monitoring Dark Web Sources}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Establishing continuous monitoring for organizational domain names, executive names, and product brands on dark web forums}
+\li{Investigating a reported data breach claim found on a ransomware leak site or paste site}
+\li{Enriching an incident investigation with context about stolen credentials or planned attacks}
+}
+
+\p{\strong{Do not use} this skill without proper operational security measures — dark web browsing without isolation exposes analyst infrastructure to adversary counter-intelligence.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Commercial dark web monitoring service (Recorded Future, Flashpoint, Intel 471, or Cybersixgill)}
+\li{Isolated operational environment: Whonix OS or Tails OS running in a VM with no persistent storage}
+\li{Keyword watchlist: organization domain, key executive names, product names, IP ranges, known credentials}
+\li{Legal guidance confirming passive monitoring is authorized in your jurisdiction}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Establish Keyword Monitoring via Commercial Services}
+\p{Configure dark web monitoring keywords in your CTI platform (e.g., Recorded Future Exposure module):}
+
+\ul{
+\li{Domain variations: \code{\startverb company.com\stopverb}, \code{\startverb @company.com\stopverb}, \code{\startverb company[dot]com\stopverb}}
+\li{Executive names: CEO, CISO, CFO full names}
+\li{Product/brand names}
+\li{Internal codenames or project names (if suspected breach scope is broad)}
+\li{Known email domains for credential monitoring}
+}
+
+\p{Most commercial services (Flashpoint, Intel 471, Cybersixgill) crawl forums like XSS, Exploit[.]in, BreachForums, and Russian-language cybercriminal communities without analyst exposure.}
+}
+
+\subtree{
+\title{Step 2: Manual Investigation with Operational Security}
+\p{For investigations requiring direct dark web access:}
+
+\p{\strong{Environment setup}:}
+
+\ol{
+\li{Use a dedicated physical machine or air-gapped VM (Whonix + VirtualBox)}
+\li{Connect via Tor Browser only — never via standard browser}
+\li{Use a cover identity with no links to organization}
+\li{Never log in with real credentials to any dark web site}
+\li{Document all sessions in investigation log with timestamps}
+}
+
+\p{\strong{Paste site monitoring} (clearnet-accessible, no Tor required):}
+
+\pre{\startverb
+# Hunt paste sites via API
+curl "https://psbdmp.ws/api/search/company.com" | jq '.data[].id'
+curl "https://pastebin.com/search?q=company.com" # Rate-limited public search
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Investigate Ransomware Leak Sites}
+\p{Ransomware groups maintain .onion leak sites. Monitor these through commercial services rather than direct access. When a claim appears about your organization:}
+
+\ol{
+\li{Capture screenshot evidence via commercial service (do not access directly)}
+\li{Assess legitimacy: Does the threat actor's claimed data align with any known internal systems?}
+\li{Check timestamp: Is this claim recent or historical?}
+\li{Cross-reference with any known security incidents or phishing campaigns from that timeframe}
+\li{Engage IR team if claim appears credible before public disclosure}
+}
+
+\p{Known active ransomware leak site operators (as of early 2025): LockBit (disrupted Feb 2024), ALPHV/BlackCat (disrupted Dec 2023), Cl0p, RansomHub, Play.}
+}
+
+\subtree{
+\title{Step 4: Credential Exposure Monitoring}
+\p{For leaked credential monitoring:}
+
+\ul{
+\li{\strong{Have I Been Pwned Enterprise}: Domain-level notification for credential exposures in breach datasets}
+\li{\strong{SpyCloud}: Commercial credential monitoring with anti-cracking and plaintext password recovery from criminal markets}
+\li{\strong{Flare Systems}: Automated monitoring of paste sites and dark web markets for credential dumps}
+}
+
+\p{When credential exposures are confirmed:}
+
+\ol{
+\li{Force password reset for affected accounts immediately}
+\li{Check if credentials provide access to any organizational systems (SSO, VPN)}
+\li{Review access logs for the period between credential exposure and detection for unauthorized access}
+}
+}
+
+\subtree{
+\title{Step 5: Document and Escalate Findings}
+\p{For each dark web finding:}
+
+\ul{
+\li{Capture evidence (commercial service screenshot, paste site archive)}
+\li{Classify severity: P1 (imminent attack threat or active data exposure), P2 (credential exposure), P3 (general mention)}
+\li{Notify appropriate stakeholders within defined SLAs}
+\li{Open investigation ticket and link to evidence artifacts}
+\li{Apply TLP:RED for any findings referencing named executives or specific attack plans}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **Dark Web** | Tor-accessible hidden services (.onion domains) not indexed by standard search engines; hosts both legitimate and criminal content |
+| **Paste Site** | Clearnet text-sharing sites (Pastebin, Ghostbin) frequently used to publish stolen data or malware configurations |
+| **Ransomware Leak Site** | .onion site operated by ransomware group to publish stolen victim data as extortion leverage |
+| **Operational Security (OPSEC)** | Protecting analyst identity and organizational affiliation during dark web investigation |
+| **Credential Stuffing** | Automated use of leaked username/password pairs against authentication systems |
+| **Stealer Logs** | Data packages exfiltrated by infostealer malware containing saved browser credentials, cookies, and session tokens |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Recorded Future Dark Web Module}: Automated monitoring of dark web sources with alerting on organization-specific keywords}
+\li{\strong{Flashpoint}: Dark web forum monitoring with human intelligence augmentation for criminal community context}
+\li{\strong{Intel 471}: Closed-source access to cybercriminal communities with structured intelligence on threat actors}
+\li{\strong{SpyCloud}: Credential exposure monitoring with recaptured plaintext passwords from criminal markets}
+\li{\strong{Have I Been Pwned Enterprise}: Domain-level breach notification API for credential monitoring at scale}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{Direct access without OPSEC}: Accessing dark web forums without Tor and a cover identity can expose analyst IP, browser fingerprint, and organization affiliation to adversaries.}
+\li{\strong{Overreacting to unverified claims}: Ransomware groups and forum posters fabricate attack claims for extortion or reputation. Verify before escalating to incident response.}
+\li{\strong{Missing clearnet sources}: Most dark web intelligence programs miss Telegram channels, Discord servers, and paste sites which operate on the clearnet and host significant criminal activity.}
+\li{\strong{Inadequate legal review}: Dark web monitoring must be reviewed by legal counsel — passive monitoring is generally lawful but active participation in criminal markets is not.}
+\li{\strong{No evidence preservation}: Dark web content disappears rapidly. Capture timestamped evidence immediately upon discovery using commercial service exports.}
+}
+}
+}

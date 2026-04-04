@@ -1,0 +1,178 @@
+\title{Sqlite Scanner}
+
+\taxon{skill}
+
+\meta{description}{Scan filesystems for SQLite databases by magic-byte detection. Wraps simonw/sqlite-scanner (Go binary via PyPI/uvx). Use for forensic inventory, honeypot canary detection, VM disk auditing, and database cataloging.}
+
+\subtree{
+\title{sqlite-scanner - SQLite Database Filesystem Scanner}
+\subtree{
+\title{Overview}
+\p{\strong{sqlite-scanner} wraps Simon Willison's Go CLI tool that identifies SQLite databases by reading the first 16 bytes of every file and comparing against the magic header \code{\startverb SQLite format 3\startverb \x\stopverb00\stopverb}. No file extension guessing — pure binary signature detection.}
+
+\p{\strong{Role}: MINUS verifier in triadic consensus — validates filesystem state by detecting hidden/renamed SQLite databases.}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# One-shot via uvx (no install needed)
+uvx sqlite-scanner ~/
+
+# With JSON output and sizes
+uvx sqlite-scanner --json --size /path/to/scan
+
+# Streaming JSONL for pipeline consumption
+uvx sqlite-scanner --jsonl --size ~/Library ~/Documents
+\stopverb}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{\strong{Forensic inventory}: Find all SQLite databases on a system regardless of extension}
+\li{\strong{VM disk auditing}: Scan mounted VM disk images for database artifacts}
+\li{\strong{Honeypot validation}: Verify canary SQLite files are planted correctly}
+\li{\strong{Pre-migration cataloging}: Inventory databases before system moves}
+\li{\strong{Stealer artifact detection}: Find browser/app databases in unexpected locations}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Querying database contents (use DuckDB or sqlite3)}
+\li{Modifying databases (use appropriate write tools)}
+\li{Scanning network shares (latency makes magic-byte reads slow)}
+}
+}
+
+\subtree{
+\title{CLI Reference}
+\pre{\startverb
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--workers N` | `NumCPU()` | Parallel worker goroutines |
+| `--size` | `false` | Include file size in output |
+| `--json` | `false` | Pretty-printed JSON array |
+| `--jsonl` | `false` | Newline-delimited JSON |
+| `--version` | - | Print version |
+\stopverb}
+
+\p{\strong{Positional args}: One or more directories to scan. Defaults to \code{\startverb .\stopverb} if none given.}
+}
+
+\subtree{
+\title{Output Formats}
+\subtree{
+\title{Plain text (default)}
+\pre{\startverb
+/Users/bob/Library/Safari/History.db
+/Users/bob/Library/Messages/chat.db
+\stopverb}
+}
+
+\subtree{
+\title{JSON (\code{\startverb --json --size\stopverb})}
+\pre{\startverb
+{"entries": [
+  {"path": "/Users/bob/Library/Safari/History.db", "size": 1048576},
+  {"path": "/Users/bob/Library/Messages/chat.db", "size": 524288}
+]}
+\stopverb}
+}
+
+\subtree{
+\title{JSONL (\code{\startverb --jsonl --size\stopverb})}
+\pre{\startverb
+{"path":"/Users/bob/Library/Safari/History.db","size":1048576}
+{"path":"/Users/bob/Library/Messages/chat.db","size":524288}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Detection Method}
+\pre{\startverb
+var sqliteMagic = []byte("SQLite format 3\x00")
+
+func checkSQLiteMagic(path string) bool {
+    f, _ := os.Open(path)
+    buf := make([]byte, 16)
+    io.ReadFull(f, buf)
+    return bytes.Equal(buf, sqliteMagic)
+}
+\stopverb}
+
+\p{Worker-pool pattern: \code{\startverb filepath.WalkDir\stopverb} feeds paths channel, N workers read 16 bytes each, matches stream to output immediately.}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{sqlite-scanner is assigned \strong{trit = -1 (MINUS)} for verification role:}
+
+\pre{\startverb
+Verifier (-1) + Coordinator (0) + Generator (+1) = 0 (mod 3)
+[sqlite-scanner]  [jo-clojure]     [hy-regime]
+\stopverb}
+
+\p{Triad semantics:}
+
+\ul{
+\li{\strong{sqlite-scanner} detects/validates SQLite presence (MINUS)}
+\li{\strong{jo-clojure} orchestrates scan → query → report pipeline (ERGODIC)}
+\li{\strong{hy-regime} generates analysis reports from discovered databases (PLUS)}
+}
+}
+
+\subtree{
+\title{Boxxy Activities}
+\subtree{
+\title{scan-host}
+\p{Scan host filesystem for all SQLite databases.}
+
+\pre{\startverb
+(sqlite-scanner/scan ["/Users/bob"] {:json true :size true :workers 8})
+\stopverb}
+}
+
+\subtree{
+\title{scan-vm-disk}
+\p{Mount and scan a VM disk image.}
+
+\pre{\startverb
+(sqlite-scanner/scan-mounted disk-mount-path {:jsonl true})
+\stopverb}
+}
+
+\subtree{
+\title{canary-audit}
+\p{Verify honeypot canary databases are in place.}
+
+\pre{\startverb
+(sqlite-scanner/verify-canaries canary-paths scan-results)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Architecture}
+\ul{
+\li{\strong{upstream}: \code{\startverb github.com/simonw/sqlite-scanner\stopverb} (single main.go, ~250 LOC)}
+\li{\strong{distribution}: PyPI wheels via \code{\startverb go-to-wheel\stopverb} (8 platform targets)}
+\li{\strong{invocation}: \code{\startverb uvx sqlite-scanner\stopverb} (zero-install) or \code{\startverb go install\stopverb}}
+\li{\strong{concurrency}: Go worker pool, \code{\startverb runtime.NumCPU()\stopverb} default workers}
+\li{\strong{integration}: Joker \code{\startverb .joke\stopverb} activities wrap via \code{\startverb joker.os/exec\stopverb}}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Blog post](https://simonwillison.net/2026/Feb/4/distributing-go-binaries/) — Distribution pattern}
+\li{[GitHub](https://github.com/simonw/sqlite-scanner) — Source}
+\li{[PyPI](https://pypi.org/project/sqlite-scanner/) — Package}
+\li{[go-to-wheel](https://github.com/simonw/go-to-wheel) — Build tool}
+}
+}
+}

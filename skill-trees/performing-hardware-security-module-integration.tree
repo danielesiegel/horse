@@ -1,0 +1,71 @@
+\title{Performing Hardware Security Module Integration}
+
+\taxon{skill}
+
+\tag{HSM}
+
+\tag{PKCS11}
+
+\tag{CloudHSM}
+
+\tag{YubiHSM2}
+
+\tag{key-management}
+
+\tag{cryptographic-operations}
+
+\tag{hardware-security}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Integrate Hardware Security Modules (HSMs) using PKCS#11 interface for cryptographic key management, signing operations, and secure key storage with python-pkcs11, AWS CloudHSM, and YubiHSM2.}
+
+\subtree{
+\title{Performing Hardware Security Module Integration}
+\subtree{
+\title{Overview}
+\p{Hardware Security Modules (HSMs) provide tamper-resistant cryptographic key storage and operations. This skill covers integrating with HSMs via the PKCS#11 standard interface using python-pkcs11, performing key generation, signing, encryption, and verification operations, querying token and slot information, and validating HSM configuration for compliance with FIPS 140-2/3 requirements.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing hardware security module integration}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{HSM device or software HSM (SoftHSM2 for testing)}
+\li{PKCS#11 shared library (.so/.dll) for the HSM vendor}
+\li{Python 3.9+ with \code{\startverb python-pkcs11\stopverb}}
+\li{Token initialized with SO PIN and user PIN}
+\li{For AWS CloudHSM: \code{\startverb cloudhsm-pkcs11\stopverb} provider configured}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Load PKCS#11 library and enumerate available slots and tokens}
+\li{Open session and authenticate with user PIN}
+\li{Generate RSA 2048-bit or EC P-256 key pairs on the HSM}
+\li{Perform signing and verification using on-device keys}
+\li{List all objects (keys, certificates) stored on the token}
+\li{Query mechanism list to verify supported algorithms}
+\li{Generate compliance report with key inventory and algorithm audit}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report listing HSM slots, tokens, stored keys, supported mechanisms, and compliance status}
+\li{Signing test results with key metadata and algorithm details}
+}
+}
+}

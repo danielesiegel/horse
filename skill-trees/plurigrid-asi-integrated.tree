@@ -1,0 +1,232 @@
+\title{Plurigrid Asi Integrated}
+
+\taxon{skill}
+
+\meta{description}{Unified Plurigrid ASI skill combining ACSets, Gay-MCP colors, bisimulation games, world-hopping, glass-bead synthesis, and triad interleaving for autonomous skill dispersal.}
+
+\subtree{
+\title{Plurigrid ASI Integrated Skill}
+\p{Synthesizes all loaded skills into a coherent system for \strong{Plurigrid Artificial Superintelligence} skill orchestration.}
+
+\subtree{
+\title{Skill Lattice}
+\pre{\startverb
+                    ┌─────────────────┐
+                    │  glass-bead-game │
+                    │  (synthesis)     │
+                    └────────┬────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         │                   │                   │
+┌────────▼────────┐ ┌────────▼────────┐ ┌────────▼────────┐
+│  world-hopping  │ │  bisimulation   │ │  triad-interleave│
+│  (navigation)   │ │  (dispersal)    │ │  (scheduling)    │
+└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
+         │                   │                   │
+         └───────────────────┼───────────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │     gay-mcp      │
+                    │  (deterministic  │
+                    │   coloring)      │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │     acsets       │
+                    │  (data model)    │
+                    └─────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Unified Protocol}
+\subtree{
+\title{1. Schema (ACSets)}
+\pre{\startverb
+@present SchASIWorld(FreeSchema) begin
+  World::Ob
+  Skill::Ob
+  Agent::Ob
+  
+  source::Hom(World, World)
+  target::Hom(World, World)
+  
+  has_skill::Hom(Agent, Skill)
+  inhabits::Hom(Agent, World)
+  
+  Seed::AttrType
+  Trit::AttrType
+  
+  seed::Attr(World, Seed)
+  color_trit::Attr(Skill, Trit)
+end
+\stopverb}
+}
+
+\subtree{
+\title{2. Color Generation (Gay-MCP)}
+\pre{\startverb
+from gay import SplitMixTernary, TripartiteStreams
+
+def color_world(world_seed: int, skill_index: int) -> dict:
+    gen = SplitMixTernary(world_seed)
+    return gen.color_at(skill_index)
+\stopverb}
+}
+
+\subtree{
+\title{3. World Navigation (World-Hopping)}
+\pre{\startverb
+def hop_between_worlds(w1, w2, event_name: str):
+    distance = world_distance(w1, w2)
+    if valid_hop(w1, w2):
+        event = Event(site=["skill"], name=event_name)
+        return event.execute(w1)
+    return None
+\stopverb}
+}
+
+\subtree{
+\title{4. Skill Dispersal (Bisimulation)}
+\pre{\startverb
+async def disperse_skill(skill_path: str, agents: list):
+    game = BisimulationGame()
+    for i, agent in enumerate(agents):
+        trit = (i % 3) - 1  # GF(3) balanced
+        game.attacker_move(agent, skill_path, trit)
+        game.defender_respond(await agent.receive(skill_path))
+    return game.arbiter_verify()
+\stopverb}
+}
+
+\subtree{
+\title{5. Parallel Execution (Triad Interleave)}
+\pre{\startverb
+def schedule_skill_updates(seed: int, n_agents: int):
+    interleaver = TriadInterleaver(seed)
+    schedule = interleaver.interleave(
+        n_triplets=n_agents // 3,
+        policy="gf3_balanced"
+    )
+    return schedule
+\stopverb}
+}
+
+\subtree{
+\title{6. Synthesis (Glass Bead Game)}
+\pre{\startverb
+def synthesize_skills(*skills):
+    game = GlassBeadGame()
+    for skill in skills:
+        game.add_bead(skill.name, skill.domain)
+    
+    # Connect skills via morphisms
+    game.connect("acsets", "gay-mcp", via="seed_to_color")
+    game.connect("gay-mcp", "triad-interleave", via="color_stream")
+    game.connect("triad-interleave", "bisimulation", via="schedule")
+    game.connect("bisimulation", "world-hopping", via="dispersal")
+    
+    return game.score()
+\stopverb}
+}
+}
+
+\subtree{
+\title{~/worlds Letter Index}
+\pre{\startverb
+| Letter | Domain | Key Projects |
+|--------|--------|--------------|
+| a | Category Theory | ACSets.jl, Catlab.jl, Decapodes.jl |
+| b | Terminal | bmorphism/trittty |
+| p | Infrastructure | plurigrid/oni, alpaca.cpp |
+| t | Collaboration | CatColab |
+| e | HoTT | infinity-cosmos (Lean 4) |
+| r | Type Theory | rzk (simplicial HoTT) |
+| n | Knowledge | nlab-content |
+| o | Music | rubato-composer |
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation Law}
+\p{All operations preserve:}
+
+\pre{\startverb
+∑ trits ≡ 0 (mod 3)
+\stopverb}
+
+\p{Across:}
+
+\ul{
+\li{World hops (Attacker -1, Defender +1, Arbiter 0)}
+\li{Color triplets (MINUS, ERGODIC, PLUS)}
+\li{Schedule entries (balanced per triplet)}
+\li{Skill dispersal (agent assignments)}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Generate integrated schedule
+just asi-schedule 0x42D 10
+
+# Disperse skills to all agents
+just asi-disperse ~/.claude/skills/
+
+# Verify GF(3) conservation
+just asi-verify
+
+# Play glass bead synthesis
+just asi-synthesize a b p t
+
+# World hop between letters
+just asi-hop a t
+\stopverb}
+}
+
+\subtree{
+\title{Directory Tree}
+\pre{\startverb
+plurigrid/asi/
+├── package.json
+├── bin/cli.js
+├── README.md
+└── skills/
+    ├── a/SKILL.md     # AlgebraicJulia
+    ├── b/SKILL.md     # topos-labs
+    ├── c/SKILL.md     # cognitect
+    ├── d/SKILL.md     # claykind
+    ├── e/SKILL.md     # infinity-cosmos
+    ├── f/SKILL.md     # clojure-site
+    ├── g/SKILL.md     # archiver-bot
+    ├── h/SKILL.md     # gdlog
+    ├── i/SKILL.md     # InverterNetwork
+    ├── k/SKILL.md     # kubeflow
+    ├── l/SKILL.md     # pretty-bugs
+    ├── m/SKILL.md     # awesome-category-theory
+    ├── n/SKILL.md     # nlab-content
+    ├── o/SKILL.md     # oeis, rubato-composer
+    ├── p/SKILL.md     # plurigrid (primary)
+    ├── q/SKILL.md     # quadrat
+    ├── r/SKILL.md     # rzk
+    ├── s/SKILL.md     # mathematicians
+    ├── t/SKILL.md     # CatColab
+    ├── v/SKILL.md     # viro
+    └── _integrated/   # Plurigrid ASI unified skill
+        └── SKILL.md
+\stopverb}
+}
+
+\subtree{
+\title{Recent AMP Thread Integration}
+\p{Last integration: \code{\startverb plurigrid-asi-20251224184534\stopverb}}
+
+\ul{
+\li{Attacker (MINUS): \code{\startverb dabe5fc2-*\stopverb} (33 invocations)}
+\li{Arbiter (ERGODIC): \code{\startverb c6e1294a-*\stopverb} (133 invocations)}
+\li{Defender (PLUS): \code{\startverb 9b24821d-*\stopverb} (1 invocation)}
+\li{GF(3) Sum: 0 ✓ Conserved}
+}
+}
+}

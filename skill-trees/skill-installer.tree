@@ -1,0 +1,70 @@
+\title{Skill Installer}
+
+\taxon{skill}
+
+\meta{description}{Install Codex skills into $CODEX_HOME/skills from a curated list or a GitHub repo path. Use when a user asks to list installable skills, install a curated skill, or install a skill from another repo (including private repos).}
+
+\subtree{
+\title{Skill Installer}
+\p{Helps install skills. By default these are from https://github.com/openai/skills/tree/main/skills/.curated, but users can also provide other locations.}
+
+\p{Use the helper scripts based on the task:}
+
+\ul{
+\li{List curated skills when the user asks what is available, or if the user uses this skill without specifying what to do.}
+\li{Install from the curated list when the user provides a skill name.}
+\li{Install from another repo when the user provides a GitHub repo/path (including private repos).}
+}
+
+\p{Install skills with the helper scripts.}
+
+\subtree{
+\title{Communication}
+\p{When listing curated skills, output approximately as follows, depending on the context of the user's request: """ Skills from {repo}:}
+
+\ol{
+\li{skill-1}
+\li{skill-2 (already installed)}
+\li{...}
+}
+
+\p{Which ones would you like installed? """}
+
+\p{After installing a skill, tell the user: "Restart Codex to pick up new skills."}
+}
+
+\subtree{
+\title{Scripts}
+\p{All of these scripts use network, so when running in the sandbox, request escalation when running them.}
+
+\ul{
+\li{\code{\startverb scripts/list-curated-skills.py\stopverb} (prints curated list with installed annotations)}
+\li{\code{\startverb scripts/list-curated-skills.py --format json\stopverb}}
+\li{\code{\startverb scripts/install-skill-from-github.py --repo <owner>/<repo> --path <path/to/skill> [<path/to/skill> ...]\stopverb}}
+\li{\code{\startverb scripts/install-skill-from-github.py --url https://github.com/<owner>/<repo>/tree/<ref>/<path>\stopverb}}
+}
+}
+
+\subtree{
+\title{Behavior and Options}
+\ul{
+\li{Defaults to direct download for public GitHub repos.}
+\li{If download fails with auth/permission errors, falls back to git sparse checkout.}
+\li{Aborts if the destination skill directory already exists.}
+\li{Installs into \code{\startverb $CODEX_HOME/skills/<skill-name>\stopverb} (defaults to \code{\startverb ~/.codex/skills\stopverb}).}
+\li{Multiple \code{\startverb --path\stopverb} values install multiple skills in one run, each named from the path basename unless \code{\startverb --name\stopverb} is supplied.}
+\li{Options: \code{\startverb --ref <ref>\stopverb} (default \code{\startverb main\stopverb}), \code{\startverb --dest <path>\stopverb}, \code{\startverb --method auto|download|git\stopverb}.}
+}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{Curated listing is fetched from \code{\startverb https://github.com/openai/skills/tree/main/skills/.curated\stopverb} via the GitHub API. If it is unavailable, explain the error and exit.}
+\li{Private GitHub repos can be accessed via existing git credentials or optional \code{\startverb GITHUB_TOKEN\stopverb}/\code{\startverb GH_TOKEN\stopverb} for download.}
+\li{Git fallback tries HTTPS first, then SSH.}
+\li{The skills at https://github.com/openai/skills/tree/main/skills/.system are preinstalled, so no need to help users install those. If they ask, just explain this. If they insist, you can download and overwrite.}
+\li{Installed annotations come from \code{\startverb $CODEX_HOME/skills\stopverb}.}
+}
+}
+}

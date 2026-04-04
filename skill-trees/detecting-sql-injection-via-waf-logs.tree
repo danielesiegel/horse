@@ -1,0 +1,69 @@
+\title{Detecting Sql Injection Via Waf Logs}
+
+\taxon{skill}
+
+\tag{detecting}
+
+\tag{sql}
+
+\tag{injection}
+
+\tag{via}
+
+\meta{version}{"1.0"}
+
+\meta{description}{>-}
+
+\subtree{
+\title{Detecting SQL Injection via WAF Logs}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting sql injection via waf logs}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with security operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\ol{
+\li{Install dependencies: \code{\startverb pip install requests\stopverb}}
+\li{Collect WAF logs (ModSecurity audit log, AWS WAF JSON logs, or Cloudflare firewall events).}
+\li{Run the agent to parse and analyze:}
+\li{Detect SQLi payloads via 15+ regex patterns}
+\li{Classify attacks by OWASP injection type (classic, blind, time-based, UNION-based)}
+\li{Identify persistent attackers by IP clustering}
+\li{Correlate multi-request injection campaigns}
+\li{Calculate attack success probability based on response codes}
+}
+
+\pre{\startverb
+python scripts/agent.py --log-file /var/log/modsec_audit.log --format modsecurity --output sqli_report.json
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{ModSecurity SQLi Detection}
+\pre{\startverb
+Rule 942100 triggered: SQL Injection Attack Detected via libinjection
+URI: /api/users?id=1' UNION SELECT username,password FROM users--
+Source IP: 203.0.113.42 (47 requests in 5 minutes)
+Classification: UNION-based SQLi campaign
+\stopverb}
+}
+}
+}

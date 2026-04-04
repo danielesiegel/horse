@@ -1,0 +1,113 @@
+\title{Configuring Certificate Authority With Openssl}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{pki}
+
+\tag{certificate-authority}
+
+\tag{openssl}
+
+\tag{x509}
+
+\meta{version}{"1.0"}
+
+\meta{description}{A Certificate Authority (CA) is the trust anchor in a PKI hierarchy, responsible for issuing, signing, and revoking digital certificates. This skill covers building a two-tier CA hierarchy (Root CA +}
+
+\subtree{
+\title{Configuring Certificate Authority with OpenSSL}
+\subtree{
+\title{Overview}
+\p{A Certificate Authority (CA) is the trust anchor in a PKI hierarchy, responsible for issuing, signing, and revoking digital certificates. This skill covers building a two-tier CA hierarchy (Root CA + Intermediate CA) using OpenSSL and the Python cryptography library, including CRL distribution, OCSP responder configuration, and certificate policy management.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring configuring certificate authority with openssl capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Create a Root CA with self-signed certificate}
+\li{Create an Intermediate CA signed by the Root CA}
+\li{Issue server and client certificates from the Intermediate CA}
+\li{Configure Certificate Revocation Lists (CRLs)}
+\li{Implement certificate policies and constraints}
+\li{Build a complete PKI hierarchy programmatically}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{CA Hierarchy}
+\pre{\startverb
+Root CA (offline, air-gapped)
+  |
+  +-- Intermediate CA (online, operational)
+        |
+        +-- Server Certificates
+        +-- Client Certificates
+        +-- Code Signing Certificates
+\stopverb}
+}
+
+\subtree{
+\title{Certificate Extensions}
+\pre{\startverb
+| Extension | Purpose | Critical |
+|-----------|---------|----------|
+| basicConstraints | CA:TRUE/FALSE, pathLenConstraint | Yes |
+| keyUsage | keyCertSign, cRLSign, digitalSignature | Yes |
+| extendedKeyUsage | serverAuth, clientAuth, codeSigning | No |
+| subjectKeyIdentifier | Hash of public key | No |
+| authorityKeyIdentifier | Issuer's key identifier | No |
+| crlDistributionPoints | URL to CRL | No |
+| authorityInfoAccess | OCSP responder URL | No |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Root CA private key must be stored offline (air-gapped HSM)}
+\li{Use minimum 4096-bit RSA or P-384 ECDSA for CA keys}
+\li{Set path length constraints on intermediate CAs}
+\li{Implement certificate policies (OIDs)}
+\li{Enable CRL and OCSP for revocation checking}
+\li{Audit all certificate issuance operations}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] Root CA self-signed certificate is valid}
+\li{[ ] Intermediate CA certificate chains to Root CA}
+\li{[ ] Issued certificates chain to Intermediate -> Root}
+\li{[ ] Path length constraints are enforced}
+\li{[ ] CRL is generated and accessible}
+\li{[ ] Revoked certificates appear in CRL}
+\li{[ ] Certificate policies are correctly embedded}
+}
+}
+}

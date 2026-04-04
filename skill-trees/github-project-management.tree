@@ -1,0 +1,1316 @@
+\title{Github Project Management}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{version}{2.0.0}
+
+\meta{description}{Comprehensive GitHub project management with swarm-coordinated issue tracking, project board automation, and sprint planning}
+
+\subtree{
+\title{GitHub Project Management}
+\subtree{
+\title{Overview}
+\p{A comprehensive skill for managing GitHub projects using AI swarm coordination. This skill combines intelligent issue management, automated project board synchronization, and swarm-based coordination for efficient project delivery.}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Basic Issue Creation with Swarm Coordination}
+\pre{\startverb
+# Create a coordinated issue
+gh issue create \
+  --title "Feature: Advanced Authentication" \
+  --body "Implement OAuth2 with social login..." \
+  --label "enhancement,swarm-ready"
+
+# Initialize swarm for issue
+npx claude-flow@alpha hooks pre-task --description "Feature implementation"
+\stopverb}
+}
+
+\subtree{
+\title{Project Board Quick Setup}
+\pre{\startverb
+# Get project ID
+PROJECT_ID=$(gh project list --owner @me --format json | \
+  jq -r '.projects[0].id')
+
+# Initialize board sync
+npx ruv-swarm github board-init \
+  --project-id "$PROJECT_ID" \
+  --sync-mode "bidirectional"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Issue Management & Triage}
+\p{<details> <summary><strong>Automated Issue Creation</strong></summary>}
+
+\subtree{
+\title{Single Issue with Swarm Coordination}
+\pre{\startverb
+// Initialize issue management swarm
+mcp__claude-flow__swarm_init { topology: "star", maxAgents: 3 }
+mcp__claude-flow__agent_spawn { type: "coordinator", name: "Issue Coordinator" }
+mcp__claude-flow__agent_spawn { type: "researcher", name: "Requirements Analyst" }
+mcp__claude-flow__agent_spawn { type: "coder", name: "Implementation Planner" }
+
+// Create comprehensive issue
+mcp__github__create_issue {
+  owner: "org",
+  repo: "repository",
+  title: "Integration Review: Complete system integration",
+  body: `## 🔄 Integration Review
+
+  ### Overview
+  Comprehensive review and integration between components.
+
+  ### Objectives
+  - [ ] Verify dependencies and imports
+  - [ ] Ensure API integration
+  - [ ] Check hook system integration
+  - [ ] Validate data systems alignment
+
+  ### Swarm Coordination
+  This issue will be managed by coordinated swarm agents for optimal progress tracking.`,
+  labels: ["integration", "review", "enhancement"],
+  assignees: ["username"]
+}
+
+// Set up automated tracking
+mcp__claude-flow__task_orchestrate {
+  task: "Monitor and coordinate issue progress with automated updates",
+  strategy: "adaptive",
+  priority: "medium"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Batch Issue Creation}
+\pre{\startverb
+# Create multiple related issues using gh CLI
+gh issue create \
+  --title "Feature: Advanced GitHub Integration" \
+  --body "Implement comprehensive GitHub workflow automation..." \
+  --label "feature,github,high-priority"
+
+gh issue create \
+  --title "Bug: Merge conflicts in integration branch" \
+  --body "Resolve merge conflicts..." \
+  --label "bug,integration,urgent"
+
+gh issue create \
+  --title "Documentation: Update integration guides" \
+  --body "Update all documentation..." \
+  --label "documentation,integration"
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Issue-to-Swarm Conversion</strong></summary>}
+}
+
+\subtree{
+\title{Transform Issues into Swarm Tasks}
+\pre{\startverb
+# Get issue details
+ISSUE_DATA=$(gh issue view 456 --json title,body,labels,assignees,comments)
+
+# Create swarm from issue
+npx ruv-swarm github issue-to-swarm 456 \
+  --issue-data "$ISSUE_DATA" \
+  --auto-decompose \
+  --assign-agents
+
+# Batch process multiple issues
+ISSUES=$(gh issue list --label "swarm-ready" --json number,title,body,labels)
+npx ruv-swarm github issues-batch \
+  --issues "$ISSUES" \
+  --parallel
+
+# Update issues with swarm status
+echo "$ISSUES" | jq -r '.[].number' | while read -r num; do
+  gh issue edit $num --add-label "swarm-processing"
+done
+\stopverb}
+}
+
+\subtree{
+\title{Issue Comment Commands}
+\p{Execute swarm operations via issue comments:}
+
+\pre{\startverb
+<!-- In issue comment -->
+/swarm analyze
+/swarm decompose 5
+/swarm assign @agent-coder
+/swarm estimate
+/swarm start
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Automated Issue Triage</strong></summary>}
+}
+
+\subtree{
+\title{Auto-Label Based on Content}
+\pre{\startverb
+// .github/swarm-labels.json
+{
+  "rules": [
+    {
+      "keywords": ["bug", "error", "broken"],
+      "labels": ["bug", "swarm-debugger"],
+      "agents": ["debugger", "tester"]
+    },
+    {
+      "keywords": ["feature", "implement", "add"],
+      "labels": ["enhancement", "swarm-feature"],
+      "agents": ["architect", "coder", "tester"]
+    },
+    {
+      "keywords": ["slow", "performance", "optimize"],
+      "labels": ["performance", "swarm-optimizer"],
+      "agents": ["analyst", "optimizer"]
+    }
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Automated Triage System}
+\pre{\startverb
+# Analyze and triage unlabeled issues
+npx ruv-swarm github triage \
+  --unlabeled \
+  --analyze-content \
+  --suggest-labels \
+  --assign-priority
+
+# Find and link duplicate issues
+npx ruv-swarm github find-duplicates \
+  --threshold 0.8 \
+  --link-related \
+  --close-duplicates
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Task Decomposition & Progress Tracking</strong></summary>}
+}
+
+\subtree{
+\title{Break Down Issues into Subtasks}
+\pre{\startverb
+# Get issue body
+ISSUE_BODY=$(gh issue view 456 --json body --jq '.body')
+
+# Decompose into subtasks
+SUBTASKS=$(npx ruv-swarm github issue-decompose 456 \
+  --body "$ISSUE_BODY" \
+  --max-subtasks 10 \
+  --assign-priorities)
+
+# Update issue with checklist
+CHECKLIST=$(echo "$SUBTASKS" | jq -r '.tasks[] | "- [ ] " + .description')
+UPDATED_BODY="$ISSUE_BODY
+
+## Subtasks
+$CHECKLIST"
+
+gh issue edit 456 --body "$UPDATED_BODY"
+
+# Create linked issues for major subtasks
+echo "$SUBTASKS" | jq -r '.tasks[] | select(.priority == "high")' | while read -r task; do
+  TITLE=$(echo "$task" | jq -r '.title')
+  BODY=$(echo "$task" | jq -r '.description')
+
+  gh issue create \
+    --title "$TITLE" \
+    --body "$BODY
+
+Parent issue: #456" \
+    --label "subtask"
+done
+\stopverb}
+}
+
+\subtree{
+\title{Automated Progress Updates}
+\pre{\startverb
+# Get current issue state
+CURRENT=$(gh issue view 456 --json body,labels)
+
+# Get swarm progress
+PROGRESS=$(npx ruv-swarm github issue-progress 456)
+
+# Update checklist in issue body
+UPDATED_BODY=$(echo "$CURRENT" | jq -r '.body' | \
+  npx ruv-swarm github update-checklist --progress "$PROGRESS")
+
+# Edit issue with updated body
+gh issue edit 456 --body "$UPDATED_BODY"
+
+# Post progress summary as comment
+SUMMARY=$(echo "$PROGRESS" | jq -r '
+"## 📊 Progress Update
+
+**Completion**: \(.completion)%
+**ETA**: \(.eta)
+
+### Completed Tasks
+\(.completed | map("- ✅ " + .) | join("\n"))
+
+### In Progress
+\(.in_progress | map("- 🔄 " + .) | join("\n"))
+
+### Remaining
+\(.remaining | map("- ⏳ " + .) | join("\n"))
+
+---
+🤖 Automated update by swarm agent"')
+
+gh issue comment 456 --body "$SUMMARY"
+
+# Update labels based on progress
+if [[ $(echo "$PROGRESS" | jq -r '.completion') -eq 100 ]]; then
+  gh issue edit 456 --add-label "ready-for-review" --remove-label "in-progress"
+fi
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Stale Issue Management</strong></summary>}
+}
+
+\subtree{
+\title{Auto-Close Stale Issues with Swarm Analysis}
+\pre{\startverb
+# Find stale issues
+STALE_DATE=$(date -d '30 days ago' --iso-8601)
+STALE_ISSUES=$(gh issue list --state open --json number,title,updatedAt,labels \
+  --jq ".[] | select(.updatedAt < \"$STALE_DATE\")")
+
+# Analyze each stale issue
+echo "$STALE_ISSUES" | jq -r '.number' | while read -r num; do
+  # Get full issue context
+  ISSUE=$(gh issue view $num --json title,body,comments,labels)
+
+  # Analyze with swarm
+  ACTION=$(npx ruv-swarm github analyze-stale \
+    --issue "$ISSUE" \
+    --suggest-action)
+
+  case "$ACTION" in
+    "close")
+      gh issue comment $num --body "This issue has been inactive for 30 days and will be closed in 7 days if there's no further activity."
+      gh issue edit $num --add-label "stale"
+      ;;
+    "keep")
+      gh issue edit $num --remove-label "stale" 2>/dev/null || true
+      ;;
+    "needs-info")
+      gh issue comment $num --body "This issue needs more information. Please provide additional context or it may be closed as stale."
+      gh issue edit $num --add-label "needs-info"
+      ;;
+  esac
+done
+
+# Close issues that have been stale for 37+ days
+gh issue list --label stale --state open --json number,updatedAt \
+  --jq ".[] | select(.updatedAt < \"$(date -d '37 days ago' --iso-8601)\") | .number" | \
+  while read -r num; do
+    gh issue close $num --comment "Closing due to inactivity. Feel free to reopen if this is still relevant."
+  done
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{2. Project Board Automation}
+\p{<details> <summary><strong>Board Initialization & Configuration</strong></summary>}
+
+\subtree{
+\title{Connect Swarm to GitHub Project}
+\pre{\startverb
+# Get project details
+PROJECT_ID=$(gh project list --owner @me --format json | \
+  jq -r '.projects[] | select(.title == "Development Board") | .id')
+
+# Initialize swarm with project
+npx ruv-swarm github board-init \
+  --project-id "$PROJECT_ID" \
+  --sync-mode "bidirectional" \
+  --create-views "swarm-status,agent-workload,priority"
+
+# Create project fields for swarm tracking
+gh project field-create $PROJECT_ID --owner @me \
+  --name "Swarm Status" \
+  --data-type "SINGLE_SELECT" \
+  --single-select-options "pending,in_progress,completed"
+\stopverb}
+}
+
+\subtree{
+\title{Board Mapping Configuration}
+\pre{\startverb
+# .github/board-sync.yml
+version: 1
+project:
+  name: "AI Development Board"
+  number: 1
+
+mapping:
+  # Map swarm task status to board columns
+  status:
+    pending: "Backlog"
+    assigned: "Ready"
+    in_progress: "In Progress"
+    review: "Review"
+    completed: "Done"
+    blocked: "Blocked"
+
+  # Map agent types to labels
+  agents:
+    coder: "🔧 Development"
+    tester: "🧪 Testing"
+    analyst: "📊 Analysis"
+    designer: "🎨 Design"
+    architect: "🏗️ Architecture"
+
+  # Map priority to project fields
+  priority:
+    critical: "🔴 Critical"
+    high: "🟡 High"
+    medium: "🟢 Medium"
+    low: "⚪ Low"
+
+  # Custom fields
+  fields:
+    - name: "Agent Count"
+      type: number
+      source: task.agents.length
+    - name: "Complexity"
+      type: select
+      source: task.complexity
+    - name: "ETA"
+      type: date
+      source: task.estimatedCompletion
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Task Synchronization</strong></summary>}
+}
+
+\subtree{
+\title{Real-time Board Sync}
+\pre{\startverb
+# Sync swarm tasks with project cards
+npx ruv-swarm github board-sync \
+  --map-status '{
+    "todo": "To Do",
+    "in_progress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  }' \
+  --auto-move-cards \
+  --update-metadata
+
+# Enable real-time board updates
+npx ruv-swarm github board-realtime \
+  --webhook-endpoint "https://api.example.com/github-sync" \
+  --update-frequency "immediate" \
+  --batch-updates false
+\stopverb}
+}
+
+\subtree{
+\title{Convert Issues to Project Cards}
+\pre{\startverb
+# List issues with label
+ISSUES=$(gh issue list --label "enhancement" --json number,title,body)
+
+# Add issues to project
+echo "$ISSUES" | jq -r '.[].number' | while read -r issue; do
+  gh project item-add $PROJECT_ID --owner @me --url "https://github.com/$GITHUB_REPOSITORY/issues/$issue"
+done
+
+# Process with swarm
+npx ruv-swarm github board-import-issues \
+  --issues "$ISSUES" \
+  --add-to-column "Backlog" \
+  --parse-checklist \
+  --assign-agents
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Smart Card Management</strong></summary>}
+}
+
+\subtree{
+\title{Auto-Assignment}
+\pre{\startverb
+# Automatically assign cards to agents
+npx ruv-swarm github board-auto-assign \
+  --strategy "load-balanced" \
+  --consider "expertise,workload,availability" \
+  --update-cards
+\stopverb}
+}
+
+\subtree{
+\title{Intelligent Card State Transitions}
+\pre{\startverb
+# Smart card movement based on rules
+npx ruv-swarm github board-smart-move \
+  --rules '{
+    "auto-progress": "when:all-subtasks-done",
+    "auto-review": "when:tests-pass",
+    "auto-done": "when:pr-merged"
+  }'
+\stopverb}
+}
+
+\subtree{
+\title{Bulk Operations}
+\pre{\startverb
+# Bulk card operations
+npx ruv-swarm github board-bulk \
+  --filter "status:blocked" \
+  --action "add-label:needs-attention" \
+  --notify-assignees
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Custom Views & Dashboards</strong></summary>}
+}
+
+\subtree{
+\title{View Configuration}
+\pre{\startverb
+// Custom board views
+{
+  "views": [
+    {
+      "name": "Swarm Overview",
+      "type": "board",
+      "groupBy": "status",
+      "filters": ["is:open"],
+      "sort": "priority:desc"
+    },
+    {
+      "name": "Agent Workload",
+      "type": "table",
+      "groupBy": "assignedAgent",
+      "columns": ["title", "status", "priority", "eta"],
+      "sort": "eta:asc"
+    },
+    {
+      "name": "Sprint Progress",
+      "type": "roadmap",
+      "dateField": "eta",
+      "groupBy": "milestone"
+    }
+  ]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Dashboard Configuration}
+\pre{\startverb
+// Dashboard with performance widgets
+{
+  "dashboard": {
+    "widgets": [
+      {
+        "type": "chart",
+        "title": "Task Completion Rate",
+        "data": "completed-per-day",
+        "visualization": "line"
+      },
+      {
+        "type": "gauge",
+        "title": "Sprint Progress",
+        "data": "sprint-completion",
+        "target": 100
+      },
+      {
+        "type": "heatmap",
+        "title": "Agent Activity",
+        "data": "agent-tasks-per-day"
+      }
+    ]
+  }
+}
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{3. Sprint Planning & Tracking}
+\p{<details> <summary><strong>Sprint Management</strong></summary>}
+
+\subtree{
+\title{Initialize Sprint with Swarm Coordination}
+\pre{\startverb
+# Manage sprints with swarms
+npx ruv-swarm github sprint-manage \
+  --sprint "Sprint 23" \
+  --auto-populate \
+  --capacity-planning \
+  --track-velocity
+
+# Track milestone progress
+npx ruv-swarm github milestone-track \
+  --milestone "v2.0 Release" \
+  --update-board \
+  --show-dependencies \
+  --predict-completion
+\stopverb}
+}
+
+\subtree{
+\title{Agile Development Board Setup}
+\pre{\startverb
+# Setup agile board
+npx ruv-swarm github agile-board \
+  --methodology "scrum" \
+  --sprint-length "2w" \
+  --ceremonies "planning,review,retro" \
+  --metrics "velocity,burndown"
+\stopverb}
+}
+
+\subtree{
+\title{Kanban Flow Board Setup}
+\pre{\startverb
+# Setup kanban board
+npx ruv-swarm github kanban-board \
+  --wip-limits '{
+    "In Progress": 5,
+    "Review": 3
+  }' \
+  --cycle-time-tracking \
+  --continuous-flow
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Progress Tracking & Analytics</strong></summary>}
+}
+
+\subtree{
+\title{Board Analytics}
+\pre{\startverb
+# Fetch project data
+PROJECT_DATA=$(gh project item-list $PROJECT_ID --owner @me --format json)
+
+# Get issue metrics
+ISSUE_METRICS=$(echo "$PROJECT_DATA" | jq -r '.items[] | select(.content.type == "Issue")' | \
+  while read -r item; do
+    ISSUE_NUM=$(echo "$item" | jq -r '.content.number')
+    gh issue view $ISSUE_NUM --json createdAt,closedAt,labels,assignees
+  done)
+
+# Generate analytics with swarm
+npx ruv-swarm github board-analytics \
+  --project-data "$PROJECT_DATA" \
+  --issue-metrics "$ISSUE_METRICS" \
+  --metrics "throughput,cycle-time,wip" \
+  --group-by "agent,priority,type" \
+  --time-range "30d" \
+  --export "dashboard"
+\stopverb}
+}
+
+\subtree{
+\title{Performance Reports}
+\pre{\startverb
+# Track and visualize progress
+npx ruv-swarm github board-progress \
+  --show "burndown,velocity,cycle-time" \
+  --time-period "sprint" \
+  --export-metrics
+
+# Generate reports
+npx ruv-swarm github board-report \
+  --type "sprint-summary" \
+  --format "markdown" \
+  --include "velocity,burndown,blockers" \
+  --distribute "slack,email"
+\stopverb}
+}
+
+\subtree{
+\title{KPI Tracking}
+\pre{\startverb
+# Track board performance
+npx ruv-swarm github board-kpis \
+  --metrics '[
+    "average-cycle-time",
+    "throughput-per-sprint",
+    "blocked-time-percentage",
+    "first-time-pass-rate"
+  ]' \
+  --dashboard-url
+
+# Track team performance
+npx ruv-swarm github team-metrics \
+  --board "Development" \
+  --per-member \
+  --include "velocity,quality,collaboration" \
+  --anonymous-option
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Release Planning</strong></summary>}
+}
+
+\subtree{
+\title{Release Coordination}
+\pre{\startverb
+# Plan releases using board data
+npx ruv-swarm github release-plan-board \
+  --analyze-velocity \
+  --estimate-completion \
+  --identify-risks \
+  --optimize-scope
+\stopverb}
+
+\p{</details>}
+}
+}
+
+\subtree{
+\title{4. Advanced Coordination}
+\p{<details> <summary><strong>Multi-Board Synchronization</strong></summary>}
+
+\subtree{
+\title{Cross-Board Sync}
+\pre{\startverb
+# Sync across multiple boards
+npx ruv-swarm github multi-board-sync \
+  --boards "Development,QA,Release" \
+  --sync-rules '{
+    "Development->QA": "when:ready-for-test",
+    "QA->Release": "when:tests-pass"
+  }'
+
+# Cross-organization sync
+npx ruv-swarm github cross-org-sync \
+  --source "org1/Project-A" \
+  --target "org2/Project-B" \
+  --field-mapping "custom" \
+  --conflict-resolution "source-wins"
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Issue Dependencies & Epic Management</strong></summary>}
+}
+
+\subtree{
+\title{Dependency Resolution}
+\pre{\startverb
+# Handle issue dependencies
+npx ruv-swarm github issue-deps 456 \
+  --resolve-order \
+  --parallel-safe \
+  --update-blocking
+\stopverb}
+}
+
+\subtree{
+\title{Epic Coordination}
+\pre{\startverb
+# Coordinate epic-level swarms
+npx ruv-swarm github epic-swarm \
+  --epic 123 \
+  --child-issues "456,457,458" \
+  --orchestrate
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Cross-Repository Coordination</strong></summary>}
+}
+
+\subtree{
+\title{Multi-Repo Issue Management}
+\pre{\startverb
+# Handle issues across repositories
+npx ruv-swarm github cross-repo \
+  --issue "org/repo#456" \
+  --related "org/other-repo#123" \
+  --coordinate
+\stopverb}
+
+\p{</details>}
+
+\p{<details> <summary><strong>Team Collaboration</strong></summary>}
+}
+
+\subtree{
+\title{Work Distribution}
+\pre{\startverb
+# Distribute work among team
+npx ruv-swarm github board-distribute \
+  --strategy "skills-based" \
+  --balance-workload \
+  --respect-preferences \
+  --notify-assignments
+\stopverb}
+}
+
+\subtree{
+\title{Standup Automation}
+\pre{\startverb
+# Generate standup reports
+npx ruv-swarm github standup-report \
+  --team "frontend" \
+  --include "yesterday,today,blockers" \
+  --format "slack" \
+  --schedule "daily-9am"
+\stopverb}
+}
+
+\subtree{
+\title{Review Coordination}
+\pre{\startverb
+# Coordinate reviews via board
+npx ruv-swarm github review-coordinate \
+  --board "Code Review" \
+  --assign-reviewers \
+  --track-feedback \
+  --ensure-coverage
+\stopverb}
+
+\p{</details>}
+}
+}
+}
+
+\subtree{
+\title{Issue Templates}
+\subtree{
+\title{Integration Issue Template}
+\pre{\startverb
+## 🔄 Integration Task
+
+### Overview
+[Brief description of integration requirements]
+
+### Objectives
+- [ ] Component A integration
+- [ ] Component B validation
+- [ ] Testing and verification
+- [ ] Documentation updates
+
+### Integration Areas
+#### Dependencies
+- [ ] Package.json updates
+- [ ] Version compatibility
+- [ ] Import statements
+
+#### Functionality
+- [ ] Core feature integration
+- [ ] API compatibility
+- [ ] Performance validation
+
+#### Testing
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] End-to-end validation
+
+### Swarm Coordination
+- **Coordinator**: Overall progress tracking
+- **Analyst**: Technical validation
+- **Tester**: Quality assurance
+- **Documenter**: Documentation updates
+
+### Progress Tracking
+Updates will be posted automatically by swarm agents during implementation.
+
+---
+🤖 Generated with Claude Code
+\stopverb}
+}
+
+\subtree{
+\title{Bug Report Template}
+\pre{\startverb
+## 🐛 Bug Report
+
+### Problem Description
+[Clear description of the issue]
+
+### Expected Behavior
+[What should happen]
+
+### Actual Behavior
+[What actually happens]
+
+### Reproduction Steps
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+### Environment
+- Package: [package name and version]
+- Node.js: [version]
+- OS: [operating system]
+
+### Investigation Plan
+- [ ] Root cause analysis
+- [ ] Fix implementation
+- [ ] Testing and validation
+- [ ] Regression testing
+
+### Swarm Assignment
+- **Debugger**: Issue investigation
+- **Coder**: Fix implementation
+- **Tester**: Validation and testing
+
+---
+🤖 Generated with Claude Code
+\stopverb}
+}
+
+\subtree{
+\title{Feature Request Template}
+\pre{\startverb
+## ✨ Feature Request
+
+### Feature Description
+[Clear description of the proposed feature]
+
+### Use Cases
+1. [Use case 1]
+2. [Use case 2]
+3. [Use case 3]
+
+### Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
+
+### Implementation Approach
+#### Design
+- [ ] Architecture design
+- [ ] API design
+- [ ] UI/UX mockups
+
+#### Development
+- [ ] Core implementation
+- [ ] Integration with existing features
+- [ ] Performance optimization
+
+#### Testing
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] User acceptance testing
+
+### Swarm Coordination
+- **Architect**: Design and planning
+- **Coder**: Implementation
+- **Tester**: Quality assurance
+- **Documenter**: Documentation
+
+---
+🤖 Generated with Claude Code
+\stopverb}
+}
+
+\subtree{
+\title{Swarm Task Template}
+\pre{\startverb
+<!-- .github/ISSUE_TEMPLATE/swarm-task.yml -->
+name: Swarm Task
+description: Create a task for AI swarm processing
+body:
+  - type: dropdown
+    id: topology
+    attributes:
+      label: Swarm Topology
+      options:
+        - mesh
+        - hierarchical
+        - ring
+        - star
+  - type: input
+    id: agents
+    attributes:
+      label: Required Agents
+      placeholder: "coder, tester, analyst"
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Task Breakdown
+      placeholder: |
+        1. Task one description
+        2. Task two description
+\stopverb}
+}
+}
+
+\subtree{
+\title{Workflow Integration}
+\subtree{
+\title{GitHub Actions for Issue Management}
+\pre{\startverb
+# .github/workflows/issue-swarm.yml
+name: Issue Swarm Handler
+on:
+  issues:
+    types: [opened, labeled, commented]
+
+jobs:
+  swarm-process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process Issue
+        uses: ruvnet/swarm-action@v1
+        with:
+          command: |
+            if [[ "${{ github.event.label.name }}" == "swarm-ready" ]]; then
+              npx ruv-swarm github issue-init ${{ github.event.issue.number }}
+            fi
+\stopverb}
+}
+
+\subtree{
+\title{Board Integration Workflow}
+\pre{\startverb
+# Sync with project board
+npx ruv-swarm github issue-board-sync \
+  --project "Development" \
+  --column-mapping '{
+    "To Do": "pending",
+    "In Progress": "active",
+    "Done": "completed"
+  }'
+\stopverb}
+}
+}
+
+\subtree{
+\title{Specialized Issue Strategies}
+\subtree{
+\title{Bug Investigation Swarm}
+\pre{\startverb
+# Specialized bug handling
+npx ruv-swarm github bug-swarm 456 \
+  --reproduce \
+  --isolate \
+  --fix \
+  --test
+\stopverb}
+}
+
+\subtree{
+\title{Feature Implementation Swarm}
+\pre{\startverb
+# Feature implementation swarm
+npx ruv-swarm github feature-swarm 456 \
+  --design \
+  --implement \
+  --document \
+  --demo
+\stopverb}
+}
+
+\subtree{
+\title{Technical Debt Refactoring}
+\pre{\startverb
+# Refactoring swarm
+npx ruv-swarm github debt-swarm 456 \
+  --analyze-impact \
+  --plan-migration \
+  --execute \
+  --validate
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{1. Swarm-Coordinated Issue Management}
+\ul{
+\li{Always initialize swarm for complex issues}
+\li{Assign specialized agents based on issue type}
+\li{Use memory for progress coordination}
+\li{Regular automated progress updates}
+}
+}
+
+\subtree{
+\title{2. Board Organization}
+\ul{
+\li{Clear column definitions with consistent naming}
+\li{Systematic labeling strategy across repositories}
+\li{Regular board grooming and maintenance}
+\li{Well-defined automation rules}
+}
+}
+
+\subtree{
+\title{3. Data Integrity}
+\ul{
+\li{Bidirectional sync validation}
+\li{Conflict resolution strategies}
+\li{Comprehensive audit trails}
+\li{Regular backups of project data}
+}
+}
+
+\subtree{
+\title{4. Team Adoption}
+\ul{
+\li{Comprehensive training materials}
+\li{Clear, documented workflows}
+\li{Regular team reviews and retrospectives}
+\li{Active feedback loops for improvement}
+}
+}
+
+\subtree{
+\title{5. Smart Labeling and Organization}
+\ul{
+\li{Consistent labeling strategy across repositories}
+\li{Priority-based issue sorting and assignment}
+\li{Milestone integration for project coordination}
+\li{Agent-type to label mapping}
+}
+}
+
+\subtree{
+\title{6. Automated Progress Tracking}
+\ul{
+\li{Regular automated updates with swarm coordination}
+\li{Progress metrics and completion tracking}
+\li{Cross-issue dependency management}
+\li{Real-time status synchronization}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Sync Issues}
+\pre{\startverb
+# Diagnose sync problems
+npx ruv-swarm github board-diagnose \
+  --check "permissions,webhooks,rate-limits" \
+  --test-sync \
+  --show-conflicts
+\stopverb}
+}
+
+\subtree{
+\title{Performance Optimization}
+\pre{\startverb
+# Optimize board performance
+npx ruv-swarm github board-optimize \
+  --analyze-size \
+  --archive-completed \
+  --index-fields \
+  --cache-views
+\stopverb}
+}
+
+\subtree{
+\title{Data Recovery}
+\pre{\startverb
+# Recover board data
+npx ruv-swarm github board-recover \
+  --backup-id "2024-01-15" \
+  --restore-cards \
+  --preserve-current \
+  --merge-conflicts
+\stopverb}
+}
+}
+
+\subtree{
+\title{Metrics & Analytics}
+\subtree{
+\title{Performance Metrics}
+\p{Automatic tracking of:}
+
+\ul{
+\li{Issue creation and resolution times}
+\li{Agent productivity metrics}
+\li{Project milestone progress}
+\li{Cross-repository coordination efficiency}
+\li{Sprint velocity and burndown}
+\li{Cycle time and throughput}
+\li{Work-in-progress limits}
+}
+}
+
+\subtree{
+\title{Reporting Features}
+\ul{
+\li{Weekly progress summaries}
+\li{Agent performance analytics}
+\li{Project health metrics}
+\li{Integration success rates}
+\li{Team collaboration metrics}
+\li{Quality and defect tracking}
+}
+}
+
+\subtree{
+\title{Issue Resolution Time}
+\pre{\startverb
+# Analyze swarm performance
+npx ruv-swarm github issue-metrics \
+  --issue 456 \
+  --metrics "time-to-close,agent-efficiency,subtask-completion"
+\stopverb}
+}
+
+\subtree{
+\title{Swarm Effectiveness}
+\pre{\startverb
+# Generate effectiveness report
+npx ruv-swarm github effectiveness \
+  --issues "closed:>2024-01-01" \
+  --compare "with-swarm,without-swarm"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Security & Permissions}
+\ol{
+\li{\strong{Command Authorization}: Validate user permissions before executing commands}
+\li{\strong{Rate Limiting}: Prevent spam and abuse of issue commands}
+\li{\strong{Audit Logging}: Track all swarm operations on issues and boards}
+\li{\strong{Data Privacy}: Respect private repository settings}
+\li{\strong{Access Control}: Proper GitHub permissions for board operations}
+\li{\strong{Webhook Security}: Secure webhook endpoints for real-time updates}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\subtree{
+\title{Seamless Integration With:}
+\ul{
+\li{\code{\startverb github-pr-workflow\stopverb} - Link issues to pull requests automatically}
+\li{\code{\startverb github-release-management\stopverb} - Coordinate release issues and milestones}
+\li{\code{\startverb sparc-orchestrator\stopverb} - Complex project coordination workflows}
+\li{\code{\startverb sparc-tester\stopverb} - Automated testing workflows for issues}
+}
+}
+}
+
+\subtree{
+\title{Complete Workflow Example}
+\subtree{
+\title{Full-Stack Feature Development}
+\pre{\startverb
+# 1. Create feature issue with swarm coordination
+gh issue create \
+  --title "Feature: Real-time Collaboration" \
+  --body "$(cat <<EOF
+## Feature: Real-time Collaboration
+
+### Overview
+Implement real-time collaboration features using WebSockets.
+
+### Objectives
+- [ ] WebSocket server setup
+- [ ] Client-side integration
+- [ ] Presence tracking
+- [ ] Conflict resolution
+- [ ] Testing and documentation
+
+### Swarm Coordination
+This feature will use mesh topology for parallel development.
+EOF
+)" \
+  --label "enhancement,swarm-ready,high-priority"
+
+# 2. Initialize swarm and decompose tasks
+ISSUE_NUM=$(gh issue list --label "swarm-ready" --limit 1 --json number --jq '.[0].number')
+npx ruv-swarm github issue-init $ISSUE_NUM \
+  --topology mesh \
+  --auto-decompose \
+  --assign-agents "architect,coder,tester"
+
+# 3. Add to project board
+PROJECT_ID=$(gh project list --owner @me --format json | jq -r '.projects[0].id')
+gh project item-add $PROJECT_ID --owner @me \
+  --url "https://github.com/$GITHUB_REPOSITORY/issues/$ISSUE_NUM"
+
+# 4. Set up automated tracking
+npx ruv-swarm github board-sync \
+  --auto-move-cards \
+  --update-metadata
+
+# 5. Monitor progress
+npx ruv-swarm github issue-progress $ISSUE_NUM \
+  --auto-update-comments \
+  --notify-on-completion
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quick Reference Commands}
+\pre{\startverb
+# Issue Management
+gh issue create --title "..." --body "..." --label "..."
+npx ruv-swarm github issue-init <number>
+npx ruv-swarm github issue-decompose <number>
+npx ruv-swarm github triage --unlabeled
+
+# Project Boards
+npx ruv-swarm github board-init --project-id <id>
+npx ruv-swarm github board-sync
+npx ruv-swarm github board-analytics
+
+# Sprint Management
+npx ruv-swarm github sprint-manage --sprint "Sprint X"
+npx ruv-swarm github milestone-track --milestone "vX.X"
+
+# Analytics
+npx ruv-swarm github issue-metrics --issue <number>
+npx ruv-swarm github board-kpis
+\stopverb}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{[GitHub CLI Documentation](https://cli.github.com/manual/)}
+\li{[GitHub Projects Documentation](https://docs.github.com/en/issues/planning-and-tracking-with-projects)}
+\li{[Swarm Coordination Guide](https://github.com/ruvnet/ruv-swarm)}
+\li{[Claude Flow Documentation](https://github.com/ruvnet/claude-flow)}
+}
+
+\p{\strong{Last Updated}: 2025-10-19 \strong{Version}: 2.0.0 \strong{Maintainer}: Claude Code}
+}
+}

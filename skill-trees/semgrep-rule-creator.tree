@@ -1,0 +1,199 @@
+\title{Semgrep Rule Creator}
+
+\taxon{skill}
+
+\meta{description}{Creates custom Semgrep rules for detecting security vulnerabilities, bug patterns, and code patterns. Use when writing Semgrep rules or building custom static analysis detections.}
+
+\subtree{
+\title{Semgrep Rule Creator}
+\p{Create production-quality Semgrep rules with proper testing and validation.}
+
+\subtree{
+\title{When to Use}
+\p{\strong{Ideal scenarios:}}
+
+\ul{
+\li{Writing Semgrep rules for specific bug patterns}
+\li{Writing rules to detect security vulnerabilities in your codebase}
+\li{Writing taint mode rules for data flow vulnerabilities}
+\li{Writing rules to enforce coding standards}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\p{Do NOT use this skill for:}
+
+\ul{
+\li{Running existing Semgrep rulesets}
+\li{General static analysis without custom rules (use \code{\startverb static-analysis\stopverb} skill)}
+}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\p{When writing Semgrep rules, reject these common shortcuts:}
+
+\ul{
+\li{\strong{"The pattern looks complete"} → Still run \code{\startverb semgrep --test --config <rule-id>.yaml <rule-id>.<ext>\stopverb} to verify. Untested rules have hidden false positives/negatives.}
+\li{\strong{"It matches the vulnerable case"} → Matching vulnerabilities is half the job. Verify safe cases don't match (false positives break trust).}
+\li{\strong{"Taint mode is overkill for this"} → If data flows from user input to a dangerous sink, taint mode gives better precision than pattern matching.}
+\li{\strong{"One test is enough"} → Include edge cases: different coding styles, sanitized inputs, safe alternatives, and boundary conditions.}
+\li{\strong{"I'll optimize the patterns first"} → Write correct patterns first, optimize after all tests pass. Premature optimization causes regressions.}
+\li{\strong{"The AST dump is too complex"} → The AST reveals exactly how Semgrep sees code. Skipping it leads to patterns that miss syntactic variations.}
+}
+}
+
+\subtree{
+\title{Anti-Patterns}
+\p{\strong{Too broad} - matches everything, useless for detection:}
+
+\pre{\startverb
+# BAD: Matches any function call
+pattern: $FUNC(...)
+
+# GOOD: Specific dangerous function
+pattern: eval(...)
+\stopverb}
+
+\p{\strong{Missing safe cases in tests} - leads to undetected false positives:}
+
+\pre{\startverb
+# BAD: Only tests vulnerable case
+# ruleid: my-rule
+dangerous(user_input)
+
+# GOOD: Include safe cases to verify no false positives
+# ruleid: my-rule
+dangerous(user_input)
+
+# ok: my-rule
+dangerous(sanitize(user_input))
+
+# ok: my-rule
+dangerous("hardcoded_safe_value")
+\stopverb}
+
+\p{\strong{Overly specific patterns} - misses variations:}
+
+\pre{\startverb
+# BAD: Only matches exact format
+pattern: os.system("rm " + $VAR)
+
+# GOOD: Matches all os.system calls with taint tracking
+mode: taint
+pattern-sources:
+  - pattern: input(...)
+pattern-sinks:
+  - pattern: os.system(...)
+\stopverb}
+}
+
+\subtree{
+\title{Strictness Level}
+\p{This workflow is \strong{strict} - do not skip steps:}
+
+\ul{
+\li{\strong{Read documentation first}: See [Documentation](#documentation) before writing Semgrep rules}
+\li{\strong{Test-first is mandatory}: Never write a rule without tests}
+\li{\strong{100\% test pass is required}: "Most tests pass" is not acceptable}
+\li{\strong{Optimization comes last}: Only simplify patterns after all tests pass}
+\li{\strong{Avoid generic patterns}: Rules must be specific, not match broad patterns}
+\li{\strong{Prioritize taint mode}: For data flow vulnerabilities}
+\li{\strong{One YAML file - one Semgrep rule}: Each YAML file must contain only one Semgrep rule; don't combine multiple rules in a single file}
+\li{\strong{No generic rules}: When targeting a specific language for Semgrep rules - avoid generic pattern matching (\code{\startverb languages: generic\stopverb})}
+\li{\strong{Forbidden \code{\startverb todook\stopverb} and \code{\startverb todoruleid\stopverb} test annotations}: \code{\startverb todoruleid: <rule-id>\stopverb} and \code{\startverb todook: <rule-id>\stopverb} annotations in tests files for future rule improvements are forbidden}
+}
+}
+
+\subtree{
+\title{Overview}
+\p{This skill guides creation of Semgrep rules that detect security vulnerabilities and code patterns. Rules are created iteratively: analyze the problem, write tests first, analyze AST structure, write the rule, iterate until all tests pass, optimize the rule.}
+
+\p{\strong{Approach selection:}}
+
+\ul{
+\li{\strong{Taint mode} (prioritize): Data flow issues where untrusted input reaches dangerous sinks}
+\li{\strong{Pattern matching}: Simple syntactic patterns without data flow requirements}
+}
+
+\p{\strong{Why prioritize taint mode?} Pattern matching finds syntax but misses context. A pattern \code{\startverb eval($X)\stopverb} matches both \code{\startverb eval(user_input)\stopverb} (vulnerable) and \code{\startverb eval("safe_literal")\stopverb} (safe). Taint mode tracks data flow, so it only alerts when untrusted data actually reaches the sink—dramatically reducing false positives for injection vulnerabilities.}
+
+\p{\strong{Iterating between approaches:} It's okay to experiment. If you start with taint mode and it's not working well (e.g., taint doesn't propagate as expected, too many false positives/negatives), switch to pattern matching. Conversely, if pattern matching produces too many false positives on safe cases, try taint mode instead. The goal is a working rule—not rigid adherence to one approach.}
+
+\p{\strong{Output structure} - exactly 2 files in a directory named after the rule-id:}
+
+\pre{\startverb
+<rule-id>/
+├── <rule-id>.yaml     # Semgrep rule
+└── <rule-id>.<ext>    # Test file with ruleid/ok annotations
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+rules:
+  - id: insecure-eval
+    languages: [python]
+    severity: HIGH
+    message: User input passed to eval() allows code execution
+    mode: taint
+    pattern-sources:
+      - pattern: request.args.get(...)
+    pattern-sinks:
+      - pattern: eval(...)
+\stopverb}
+
+\p{Test file (\code{\startverb insecure-eval.py\stopverb}):}
+
+\pre{\startverb
+# ruleid: insecure-eval
+eval(request.args.get('code'))
+
+# ok: insecure-eval
+eval("print('safe')")
+\stopverb}
+
+\p{Run tests (from rule directory): \code{\startverb semgrep --test --config <rule-id>.yaml <rule-id>.<ext>\stopverb}}
+}
+
+\subtree{
+\title{Quick Reference}
+\ul{
+\li{For commands, pattern operators, and taint mode syntax, see [quick-reference.md]({baseDir}/references/quick-reference.md).}
+\li{For detailed workflow and examples, you MUST see [workflow.md]({baseDir}/references/workflow.md)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\p{Copy this checklist and track progress:}
+
+\pre{\startverb
+Semgrep Rule Progress:
+- [ ] Step 1: Analyze the Problem
+- [ ] Step 2: Write Tests First
+- [ ] Step 3: Analyze AST structure
+- [ ] Step 4: Write the rule
+- [ ] Step 5: Iterate until all tests pass (semgrep --test)
+- [ ] Step 6: Optimize the rule (remove redundancies, re-test)
+- [ ] Step 7: Final Run
+\stopverb}
+}
+
+\subtree{
+\title{Documentation}
+\p{\strong{REQUIRED}: Before writing any rule, use WebFetch to read \strong{all} of these 7 links with Semgrep documentation:}
+
+\ol{
+\li{[Rule Syntax](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/rule-syntax.md)}
+\li{[Pattern Syntax](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/pattern-syntax.mdx)}
+\li{[Testing Rules](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/testing-rules.md)}
+\li{[Taint analysis](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/data-flow/taint-mode/overview.md)}
+\li{[Advanced techniques for taint analysis](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/data-flow/taint-mode/advanced.md)}
+\li{[Constant propagation](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/data-flow/constant-propagation.md)}
+\li{[Trail of Bits Testing Handbook - Semgrep chapter](https://raw.githubusercontent.com/trailofbits/testing-handbook/refs/heads/main/content/docs/static-analysis/semgrep/10-advanced.md)}
+}
+}
+}

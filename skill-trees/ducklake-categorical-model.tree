@@ -1,0 +1,379 @@
+\title{Ducklake Categorical Model}
+
+\taxon{skill}
+
+\meta{description}{Categorical modeling for DuckLake with ACSet schemas}
+
+\subtree{
+\title{Ducklake Categorical Model}
+\p{\strong{Version:} 1.0.0 \strong{Status:} Production Ready \strong{Created:} 2025-12-21 \strong{Schema:} DucklakeMentionGraph}
+
+\subtree{
+\title{Overview}
+\p{Loads ACSet model from ecosystem integration and provides functions for categorical database operations, morphism verification, and GF(3)-based colorization.}
+}
+
+\subtree{
+\title{Purpose}
+\p{Enable categorical modeling of ducklake mentions:}
+
+\ul{
+\li{ACSet instantiation (DucklakeMentionGraph schema)}
+\li{Morphism composition verification}
+\li{Path queries between objects}
+\li{Deterministic GF(3) colorization}
+}
+}
+
+\subtree{
+\title{Data Sources}
+\ul{
+\li{\strong{Primary:} \code{\startverb /Users/bob/ies/ducklake_acset_model_complete.json\stopverb}}
+\li{\strong{Schema Definition:} DucklakeMentionGraph (7 objects, 8 morphisms)}
+\li{\strong{Julia Integration:} Catlab.jl via ACSets.jl}
+}
+}
+
+\subtree{
+\title{ACSet Schema}
+\subtree{
+\title{Objects}
+\ol{
+\li{\strong{DucklakeMention} - Individual mention instances}
+\li{\strong{Session} - Claude conversation sessions}
+\li{\strong{Project} - File system projects}
+\li{\strong{Timestamp} - Temporal ordering}
+\li{\strong{SemanticCluster} - Intent/semantic groups}
+\li{\strong{PhaseNode} - Development phases}
+\li{\strong{ColorTrit} - GF(3) color assignments}
+}
+}
+
+\subtree{
+\title{Morphisms}
+\ol{
+\li{\code{\startverb belongs_to\stopverb}: DucklakeMention → Session}
+\li{\code{\startverb in_project\stopverb}: DucklakeMention → Project}
+\li{\code{\startverb temporal_order\stopverb}: DucklakeMention → Timestamp}
+\li{\code{\startverb semantic_cluster\stopverb}: DucklakeMention → SemanticCluster}
+\li{\code{\startverb phase_transition\stopverb}: DucklakeMention → PhaseNode}
+\li{\code{\startverb color_assignment\stopverb}: DucklakeMention → ColorTrit}
+\li{\code{\startverb session_to_project\stopverb}: Session → Project}
+\li{\code{\startverb cluster_to_phase\stopverb}: SemanticCluster → PhaseNode}
+}
+}
+
+\subtree{
+\title{Composition Laws}
+\pre{\startverb
+compose(belongs_to, session_to_project) == in_project
+\stopverb}
+}
+}
+
+\subtree{
+\title{Functions}
+\subtree{
+\title{instantiate_acset(objects: dict, morphisms: dict) -> ACSet}
+\p{Create ACSet instance from objects and morphisms.}
+
+\pre{\startverb
+from julia import Julia, Main
+jl = Julia(compiled_modules=False)
+jl.eval('using Catlab, Catlab.CategoricalAlgebra')
+
+acset = instantiate_acset(
+    objects={
+        "DucklakeMention": 18,
+        "Session": 12,
+        "Project": 3,
+        "Timestamp": 18,
+        "SemanticCluster": 5,
+        "PhaseNode": 3,
+        "ColorTrit": 18
+    },
+    morphisms={
+        "belongs_to": [1, 1, 2, 2, 3, ...],  # 18 elements
+        "in_project": [1, 1, 1, 2, 2, ...],
+        "temporal_order": [1, 2, 3, 4, 5, ...]
+    }
+)
+\stopverb}
+
+\p{\strong{Returns:} Catlab ACSet instance}
+
+\p{\strong{Implementation:}}
+
+\pre{\startverb
+import json
+from pathlib import Path
+
+def instantiate_acset(objects: dict, morphisms: dict):
+    """Instantiate DucklakeMentionGraph ACSet"""
+
+    # Load schema from Julia
+    jl.eval('''
+    using Catlab, Catlab.CategoricalAlgebra
+
+    @present SchDucklakeMentionGraph(FreeSchema) begin
+        DucklakeMention::Ob
+        Session::Ob
+        Project::Ob
+        Timestamp::Ob
+        SemanticCluster::Ob
+        PhaseNode::Ob
+        ColorTrit::Ob
+
+        belongs_to::Hom(DucklakeMention, Session)
+        in_project::Hom(DucklakeMention, Project)
+        temporal_order::Hom(DucklakeMention, Timestamp)
+        semantic_cluster::Hom(DucklakeMention, SemanticCluster)
+        phase_transition::Hom(DucklakeMention, PhaseNode)
+        color_assignment::Hom(DucklakeMention, ColorTrit)
+        session_to_project::Hom(Session, Project)
+        cluster_to_phase::Hom(SemanticCluster, PhaseNode)
+
+        MentionText::AttrType
+        ConfidenceScore::AttrType
+        SemanticIntent::AttrType
+        TritValue::AttrType
+        TimestampValue::AttrType
+
+        mention_text::Attr(DucklakeMention, MentionText)
+        confidence_score::Attr(DucklakeMention, ConfidenceScore)
+        semantic_intent::Attr(DucklakeMention, SemanticIntent)
+        color_trit::Attr(ColorTrit, TritValue)
+        timestamp_value::Attr(Timestamp, TimestampValue)
+    end
+
+    @acset_type DucklakeMentionGraph(SchDucklakeMentionGraph,
+        index=[:belongs_to, :in_project, :temporal_order, :semantic_cluster]
+    ){String, Float64, String, Int, Float64}
+    ''')
+
+    # Create instance
+    Main.graph = jl.eval("DucklakeMentionGraph()")
+
+    # Add parts
+    for obj, count in objects.items():
+        jl.eval(f"add_parts!(graph, :{obj}, {count})")
+
+    # Set morphisms
+    for morph, values in morphisms.items():
+        for i, val in enumerate(values, 1):
+            jl.eval(f"set_subpart!(graph, {i}, :{morph}, {val})")
+
+    return Main.graph
+\stopverb}
+}
+
+\subtree{
+\title{verify_composition(m1: str, m2: str) -> bool}
+\p{Verify morphism composition law.}
+
+\pre{\startverb
+valid = verify_composition("belongs_to", "session_to_project")
+# Returns: True (composes to in_project)
+\stopverb}
+
+\p{\strong{Composition Rules:}}
+
+\ul{
+\li{\code{\startverb belongs_to ∘ session_to_project = in_project\stopverb} ✓}
+\li{Invalid compositions return False}
+}
+}
+
+\subtree{
+\title{query_morphisms(source: str, target: str) -> list}
+\p{Find all morphism paths from source to target.}
+
+\pre{\startverb
+paths = query_morphisms("DucklakeMention", "Project")
+# Returns: [
+#   ["in_project"],
+#   ["belongs_to", "session_to_project"]
+# ]
+\stopverb}
+
+\p{\strong{Algorithm:} Breadth-first search through morphism graph}
+}
+
+\subtree{
+\title{colorize_by_gf3(objects: list, seed: int) -> dict}
+\p{Assign GF(3) colors deterministically.}
+
+\pre{\startverb
+colors = colorize_by_gf3(
+    objects=["mention_1", "mention_2", "mention_3"],
+    seed=0x6475636b6c616b65
+)
+# Returns: {
+#   "mention_1": {"trit": -1, "color": "#2673D8", "gf3": 2},
+#   "mention_2": {"trit": 0, "color": "#4FD826", "gf3": 1},
+#   "mention_3": {"trit": 1, "color": "#D84F2C", "gf3": 0}
+# }
+\stopverb}
+
+\p{\strong{Color Algorithm:}}
+
+\ol{
+\li{SplitMix64 PRNG with golden angle}
+\li{Map to trit ∈ {-1, 0, +1}}
+\li{Generate OkLCH color (L, C, H)}
+\li{Convert to hex}
+\li{Verify GF(3) conservation: Σ trits ≡ 0 (mod 3)}
+}
+}
+}
+
+\subtree{
+\title{Usage Example}
+\pre{\startverb
+from skills.ducklake_categorical_model import *
+
+# Load temporal analysis data
+with open("/Users/bob/ies/ducklake_temporal_analysis.json") as f:
+    temporal = json.load(f)
+
+# Build ACSet
+mention_count = len(temporal["detailed_samples"])
+session_count = len(temporal["session_analysis"]["sessions"])
+project_count = len(temporal["project_distribution"]["projects"])
+
+acset = instantiate_acset(
+    objects={
+        "DucklakeMention": mention_count,
+        "Session": session_count,
+        "Project": project_count,
+        "Timestamp": mention_count,
+        "SemanticCluster": 5,
+        "PhaseNode": 3,
+        "ColorTrit": mention_count
+    },
+    morphisms={
+        "belongs_to": [s["sessionId"] for s in temporal["detailed_samples"]],
+        "in_project": [s["project"] for s in temporal["detailed_samples"]],
+        "temporal_order": list(range(1, mention_count + 1))
+    }
+)
+
+# Verify composition
+assert verify_composition("belongs_to", "session_to_project")
+
+# Find paths
+paths = query_morphisms("DucklakeMention", "Project")
+print(f"Found {len(paths)} paths from DucklakeMention to Project")
+
+# Colorize mentions
+mention_ids = [f"mention_{i}" for i in range(1, mention_count + 1)]
+colors = colorize_by_gf3(mention_ids, seed=0x6475636b6c616b65)
+
+# Verify GF(3) conservation
+trit_sum = sum(c["trit"] for c in colors.values())
+assert trit_sum % 3 == 0, f"GF(3) conservation violated: {trit_sum} mod 3 ≠ 0"
+print(f"GF(3) verified: Σ trits = {trit_sum} ≡ 0 (mod 3) ✓")
+\stopverb}
+}
+
+\subtree{
+\title{Skills Dependencies}
+\ul{
+\li{acsets (ACSet instantiation and queries)}
+\li{gay-mcp (SplitMix64 color generation)}
+\li{spi-parallel-verify (GF(3) conservation verification)}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Temporal Introspection:} Map sessions to ACSet Session objects}
+\li{\strong{Semantic Analyzer:} Map intents to SemanticCluster attributes}
+\li{\strong{Pattern Expansion:} Query morphism paths for pattern discovery}
+}
+}
+
+\subtree{
+\title{Schema Statistics}
+\ul{
+\li{Objects: 7}
+\li{Morphisms: 8}
+\li{Composition laws: 1}
+\li{Attribute types: 5}
+\li{Attributes: 5}
+\li{Indexed morphisms: 4}
+}
+}
+
+\subtree{
+\title{GF(3) Color Distribution}
+\p{For 18 mentions with balanced ternary:}
+
+\ul{
+\li{RED (trit=1): 6 mentions}
+\li{GREEN (trit=0): 6 mentions}
+\li{BLUE (trit=-1): 6 mentions}
+\li{Sum: 6×1 + 6×0 + 6×(-1) = 0 ≡ 0 (mod 3) ✓}
+}
+}
+
+\subtree{
+\title{Categorical Laws}
+\subtree{
+\title{Composition}
+\pre{\startverb
+∀ f: A → B, g: B → C:
+  compose(f, g): A → C
+\stopverb}
+}
+
+\subtree{
+\title{Associativity}
+\pre{\startverb
+compose(compose(f, g), h) = compose(f, compose(g, h))
+\stopverb}
+}
+
+\subtree{
+\title{Identity}
+\pre{\startverb
+compose(id_A, f) = f = compose(f, id_B)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Queries}
+\pre{\startverb
+# Find all mentions in a session
+session_id = 1
+mentions = incident(graph, session_id, :belongs_to)
+
+# Find project for a mention
+mention_id = 5
+project = graph[mention_id, :in_project]
+
+# Verify composition
+for m in 1:nparts(graph, :DucklakeMention)
+    session = graph[m, :belongs_to]
+    proj_direct = graph[m, :in_project]
+    proj_composed = graph[session, :session_to_project]
+    @assert proj_direct == proj_composed
+end
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Distribution}
+\p{This skill operates in the \strong{YELLOW (GF3=1)} structural category:}
+
+\ul{
+\li{ACSet schema definition}
+\li{Morphism composition}
+\li{Categorical database operations}
+}
+
+\p{\strong{Skill Type:} Categorical Modeling \strong{Color:} YELLOW \strong{Polarity:} GF(3) = 1 \strong{Access Pattern:} Read/Write ACSet instances}
+}
+}

@@ -1,0 +1,285 @@
+\title{Implementing Azure Ad Privileged Identity Management}
+
+\taxon{skill}
+
+\tag{azure-ad}
+
+\tag{pim}
+
+\tag{entra-id}
+
+\tag{just-in-time}
+
+\tag{privileged-roles}
+
+\tag{identity-governance}
+
+\tag{zero-trust}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Configure Microsoft Entra Privileged Identity Management to enforce just-in-time role activation, approval workflows, and access reviews for Azure AD privileged roles.}
+
+\subtree{
+\title{Implementing Azure AD Privileged Identity Management}
+\subtree{
+\title{Overview}
+\p{Microsoft Entra Privileged Identity Management (PIM) provides time-based and approval-based role activation to mitigate risks from excessive, unnecessary, or misused access to critical resources. PIM replaces permanent (standing) privilege assignments with eligible assignments that require users to explicitly activate their role before use, with configurable duration, MFA enforcement, approval workflows, and justification requirements. This is a core component of Zero Trust identity governance in Microsoft environments.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing azure ad privileged identity management capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Microsoft Entra ID P2 or Microsoft Entra ID Governance license}
+\li{Global Administrator or Privileged Role Administrator role}
+\li{Azure subscription for Azure resource role management}
+\li{MFA configured for all privileged users}
+\li{Microsoft Authenticator or FIDO2 key for admin accounts}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Assignment Types}
+\pre{\startverb
+| Type | Behavior | Use Case |
+|------|----------|----------|
+| Eligible | User must activate the role before use; expires after configured duration | Day-to-day admin work |
+| Active | Role is always active; no activation needed | Service accounts, break-glass accounts |
+| Time-Bound | Either type with explicit start/end dates | Temporary project access, contractor access |
+\stopverb}
+}
+
+\subtree{
+\title{PIM Activation Flow}
+\pre{\startverb
+User with Eligible Assignment
+        │
+        ├── Opens PIM portal → My Roles
+        │
+        ├── Clicks "Activate" on the desired role
+        │
+        ├── Provides justification and optional ticket number
+        │
+        ├── Completes MFA challenge (if required)
+        │
+        ├── [If approval required] → Notification sent to approvers
+        │       │
+        │       ├── Approver reviews and approves/denies
+        │       └── User notified of decision
+        │
+        ├── Role activated for configured duration (e.g., 8 hours)
+        │
+        └── Role automatically deactivated when duration expires
+\stopverb}
+}
+
+\subtree{
+\title{Supported Resource Types}
+\ol{
+\li{\strong{Microsoft Entra Roles}: Global Admin, Exchange Admin, Security Admin, etc.}
+\li{\strong{Azure Resource Roles}: Owner, Contributor, User Access Administrator on subscriptions/resource groups}
+\li{\strong{PIM for Groups}: Manage membership in privileged security groups}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Plan Role Assignments}
+\p{Audit current permanent role assignments and determine which should be converted to eligible:}
+
+\pre{\startverb
+| Current Role | Permanent Holders | Action |
+|-------------|-------------------|--------|
+| Global Administrator | 2-3 admins | Convert to eligible, keep 1 break-glass active |
+| Exchange Administrator | IT team | Convert all to eligible |
+| Security Administrator | SOC team | Convert to eligible |
+| User Administrator | Help desk | Convert to eligible |
+| Application Administrator | DevOps | Convert to eligible |
+\stopverb}
+
+\p{Best practice: Maintain no more than 2 permanent Global Administrators (break-glass accounts).}
+}
+
+\subtree{
+\title{Step 2: Configure Role Settings}
+\p{For each Entra directory role, configure PIM settings:}
+
+\p{\strong{Via Microsoft Entra Admin Center:}}
+
+\ol{
+\li{Navigate to Identity Governance > Privileged Identity Management > Microsoft Entra roles}
+\li{Select "Settings" and choose the role to configure}
+\li{Configure the following:}
+}
+
+\p{\strong{Activation Settings:}}
+
+\ul{
+\li{Maximum activation duration: 8 hours (recommended; max 72 hours)}
+\li{Require MFA on activation: Enabled}
+\li{Require justification: Enabled}
+\li{Require ticket information: Enabled (for change management integration)}
+\li{Require approval: Enabled for Global Admin, Security Admin}
+}
+
+\p{\strong{Assignment Settings:}}
+
+\ul{
+\li{Allow permanent eligible assignment: No (set expiry)}
+\li{Expire eligible assignments after: 6 months (requires re-certification)}
+\li{Allow permanent active assignment: Only for break-glass accounts}
+\li{Require MFA on active assignment: Enabled}
+\li{Require justification on active assignment: Enabled}
+}
+
+\p{\strong{Notification Settings:}}
+
+\ul{
+\li{Send email when members are assigned eligible: Role assigners, admins}
+\li{Send email when members activate: Admins, security team}
+\li{Send email when eligible members activate roles: Role assignees}
+}
+}
+
+\subtree{
+\title{Step 3: Configure via Microsoft Graph API}
+\pre{\startverb
+import requests
+
+# Acquire token for Microsoft Graph
+def get_graph_token(tenant_id, client_id, client_secret):
+    url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "scope": "https://graph.microsoft.com/.default"
+    }
+    response = requests.post(url, data=data)
+    return response.json()["access_token"]
+
+# Create eligible role assignment
+def create_eligible_assignment(token, role_definition_id, principal_id,
+                                directory_scope="/", duration_hours=8):
+    url = "https://graph.microsoft.com/v1.0/roleManagement/directory/roleEligibilityScheduleRequests"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    body = {
+        "action": "adminAssign",
+        "justification": "PIM eligible assignment",
+        "roleDefinitionId": role_definition_id,
+        "directoryScopeId": directory_scope,
+        "principalId": principal_id,
+        "scheduleInfo": {
+            "startDateTime": "2025-01-01T00:00:00Z",
+            "expiration": {
+                "type": "afterDuration",
+                "duration": "P180D"  # 180-day eligible window
+            }
+        }
+    }
+    response = requests.post(url, headers=headers, json=body)
+    return response.json()
+
+# Activate a role (user self-service)
+def activate_role(token, role_definition_id, principal_id, justification,
+                   duration_hours=8):
+    url = "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignmentScheduleRequests"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    body = {
+        "action": "selfActivate",
+        "principalId": principal_id,
+        "roleDefinitionId": role_definition_id,
+        "directoryScopeId": "/",
+        "justification": justification,
+        "scheduleInfo": {
+            "startDateTime": None,  # Now
+            "expiration": {
+                "type": "afterDuration",
+                "duration": f"PT{duration_hours}H"
+            }
+        }
+    }
+    response = requests.post(url, headers=headers, json=body)
+    return response.json()
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Configure Access Reviews}
+\p{Set up recurring access reviews to verify eligible assignments remain appropriate:}
+
+\ol{
+\li{Navigate to Identity Governance > Access Reviews > New Access Review}
+\li{Configure:}
+\li{Review scope: Privileged Identity Management role assignments}
+\li{Roles: Select all critical roles (Global Admin, Security Admin, etc.)}
+\li{Reviewers: Managers or self-review with justification}
+\li{Frequency: Quarterly for critical roles, semi-annually for others}
+\li{Auto-apply results: Remove access for non-responsive reviews}
+\li{Duration: 14 days for reviewers to respond}
+}
+}
+
+\subtree{
+\title{Step 5: Configure Alerts}
+\p{Enable PIM security alerts:}
+
+\pre{\startverb
+| Alert | Trigger | Action |
+|-------|---------|--------|
+| Too many global admins | > 5 Global Admins | Review and reduce |
+| Roles being assigned outside PIM | Direct role assignment | Investigate and convert to PIM |
+| Roles not requiring MFA | Activation without MFA | Enable MFA requirement |
+| Stale eligible assignments | Not activated in 90 days | Review and potentially remove |
+| Potential stale service accounts | Active assignments not used | Investigate and decommission |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\ul{
+\li{[ ] All permanent privileged role assignments converted to eligible (except break-glass)}
+\li{[ ] Break-glass accounts configured as active with monitoring alerts}
+\li{[ ] MFA required for all role activations}
+\li{[ ] Approval workflow configured for Global Administrator and Security Administrator}
+\li{[ ] Maximum activation duration set to 8 hours or less for critical roles}
+\li{[ ] Eligible assignments expire after 6 months (requires re-certification)}
+\li{[ ] Justification and ticket information required for activations}
+\li{[ ] Email notifications configured for role assignments and activations}
+\li{[ ] Access reviews scheduled quarterly for all privileged roles}
+\li{[ ] PIM alerts enabled and reviewed weekly}
+\li{[ ] Audit logs forwarded to SIEM for monitoring}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Microsoft Entra PIM Documentation](https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure)}
+\li{[Plan a PIM Deployment](https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-deployment-plan)}
+\li{[Start Using PIM](https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-getting-started)}
+\li{[Microsoft Graph PIM API](https://learn.microsoft.com/en-us/graph/api/resources/privilegedidentitymanagementv3-overview)}
+}
+}
+}

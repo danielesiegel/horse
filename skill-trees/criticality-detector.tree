@@ -1,0 +1,154 @@
+\title{Criticality Detector}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'Criticality Detector Skill'}
+
+\subtree{
+\title{Criticality Detector Skill}
+\p{Measures distance to fixed point via comparator error and detects self-loop closure for phase classification in dynamical systems.}
+
+\subtree{
+\title{Seed}
+\pre{\startverb
+741086072858456200
+\stopverb}
+}
+
+\subtree{
+\title{Core Principle}
+\p{\strong{Generator ≡ Observer} when same seed: the fixed point structure where action → prediction → sensation → match completes the loop.}
+}
+
+\subtree{
+\title{Phase Classification}
+\pre{\startverb
+| Phase      | Error Bound     | Color (Golden Thread) | Interpretation        |
+|------------|-----------------|----------------------|----------------------|
+| **Chaos**  | error > 0.5     | H=137.51° #3FF1A7    | Far from attractor   |
+| **Critical**| error ≈ 0.1    | H=275.02° #10B99D    | Edge of order/chaos  |
+| **Ordered**| error < 0.01    | H=52.52° #DF9811     | At fixed point       |
+\stopverb}
+}
+
+\subtree{
+\title{Predicates}
+\subtree{
+\title{AtFixedPoint(seed, index) → Bool}
+\pre{\startverb
+AtFixedPoint(s, i) := |comparator_error(s, i)| < ε
+where ε = 0.01 (ordered threshold)
+\stopverb}
+}
+
+\subtree{
+\title{LoopClosed(seed, iterations) → Bool}
+\pre{\startverb
+LoopClosed(s, n) := ∀k ∈ [1..n]: predicted(s, k) = observed(s, k)
+-- Verified: 3 iterations all matched (self ≡ self)
+\stopverb}
+}
+
+\subtree{
+\title{PhaseClassified(error) → Phase}
+\pre{\startverb
+PhaseClassified(e) :=
+  | e > 0.5  → Chaos
+  | e > 0.01 → Critical  
+  | _        → Ordered
+\stopverb}
+}
+}
+
+\subtree{
+\title{MCP Integration}
+\subtree{
+\title{Measure Distance to Fixed Point}
+\pre{\startverb
+# Current error: 0.8153 → Chaos phase
+comparator_result = mcp.gay.comparator(
+    reference_hex="#3FF1A7",  # desired state
+    perception_hex="#DF9811"  # current perception
+)
+error = comparator_result["error_magnitude"]  # 0.8153
+phase = PhaseClassified(error)  # Chaos
+\stopverb}
+}
+
+\subtree{
+\title{Detect Self-Loop Closure}
+\pre{\startverb
+# Loopy strange: Generator/Observer identity verification
+loop_result = mcp.gay.loopy_strange(
+    seed=741086072858456200,
+    iterations=3
+)
+# Returns: colors #3FF1A7, #10B99D, #DF9811
+# All matched → LoopClosed = True
+\stopverb}
+}
+
+\subtree{
+\title{Golden Thread Visualization}
+\pre{\startverb
+# φ-derived hue spiral: 137.508° increments
+golden_hues = mcp.gay.golden_thread(
+    steps=3,
+    start_hue=0,
+    saturation=0.7,
+    lightness=0.55
+)
+# Yields: 137.51°, 275.02°, 52.52° (mod 360)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Criticality Detection Algorithm}
+\pre{\startverb
+detect_criticality(seed, max_iter=10):
+  1. Generate efference copy: expected ← color_at(seed, index)
+  2. Observe actual sensation: observed ← next_color()
+  3. Compute error: e ← comparator(expected, observed).magnitude
+  4. Classify phase: p ← PhaseClassified(e)
+  5. Check loop: closed ← LoopClosed(seed, iterations)
+  
+  IF closed AND p = Ordered:
+    RETURN AtFixedPoint(seed) = True
+  ELSE IF p = Critical:
+    RETURN "Edge of chaos - bifurcation possible"
+  ELSE:
+    RETURN "Chaos - control action needed"
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Phase transitions conserve triadic balance:}
+
+\pre{\startverb
+Chaos(+1) + Critical(0) + Ordered(-1) ≡ 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Invoke via Gay.jl MCP
+mcp.gay.comparator(reference_hex, perception_hex)
+mcp.gay.loopy_strange(seed, iterations)
+mcp.gay.perceptual_control(reference_index, current_index, seed)
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb self-validation-loop\stopverb} - Prediction vs observation verification}
+\li{\code{\startverb cybernetic-immune\stopverb} - Reafference and self/non-self discrimination}
+\li{\code{\startverb koopman-generator\stopverb} - Observable dynamics and fixed points}
+}
+}
+}

@@ -1,0 +1,339 @@
+\title{Behaviour Surprisal Analysis}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Behaviour Surprisal Analysis}
+
+\subtree{
+\title{Behaviour Surprisal Analysis}
+\p{\strong{Status}: Production Ready (v3.0 - Cat# Integration) \strong{Trit}: 0 (ERGODIC - measurement/observation) \strong{Principle}: S(x) = -log₂(P(x|attention_mode)) \strong{Frame}: Tri-channel prediction evaluation with AGM belief revision + Cat# bicomodule structure}
+
+\subtree{
+\title{Overview}
+\p{\strong{Behaviour Surprisal Analysis} calculates information-theoretic surprise between predictions and observed outcomes using three complementary attention channels mapped to Cat# = Comod(P) structure:}
+
+\pre{\startverb
+| Channel | Trit | Home | Poly Op | Kan Role | Description |
+|---------|------|------|---------|----------|-------------|
+| **Direct** (α) | −1 | Span | × (product) | Ran_K | Exact artifact matching |
+| **Diffuse** (β) | 0 | Prof | ⊗ (parallel) | Adj | Thematic/structural matching |
+| **Meta** (γ) | +1 | Presheaves | ◁ (substitution) | Lan_K | Capability/infrastructure tracking |
+\stopverb}
+
+\pre{\startverb
+Total Surprisal = α·S_direct + β·S_diffuse + γ·S_meta
+where α + β + γ = 1 and typically α=0.3, β=0.5, γ=0.2
+\stopverb}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 5. Evaluation}
+\p{\strong{Concepts}: eval, apply, interpreter, environment}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+behaviour-surprisal-analysis (−) + SDF.Ch5 (−) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch4: Pattern Matching}
+\li{Ch6: Layering}
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Evaluation interprets expressions. This skill processes or generates evaluable forms.}
+}
+}
+
+\subtree{
+\title{Cat# Integration (v3.0)}
+\subtree{
+\title{Galois Adjunction α ⊣ γ}
+\p{The Direct and Meta channels form a Galois adjunction through the Diffuse bridge:}
+
+\pre{\startverb
+         α (abstract)
+  Direct ─────────────→ Diffuse
+    ↑                      │
+    │        CatSharp      │ γ (concretize)
+    │         Scale        │
+    └──────────────────────┘
+           Meta
+
+  GF(3): (−1) + (0) + (+1) = 0 ✓
+\stopverb}
+
+\ul{
+\li{\strong{α (abstraction)}: Direct predictions → Diffuse patterns}
+\li{\strong{γ (concretization)}: Diffuse patterns → Direct predictions}
+\li{\strong{Unit η}: id → γ∘α verifies coherence}
+}
+}
+
+\subtree{
+\title{Three Homes (Spivak ACT 2023)}
+\p{Each channel lives in a specific Cat# home:}
+
+\pre{\startverb
+┌────────────┬─────────────┬──────────┬───────────────┬────────────┐
+│  Channel   │  Poly Op    │ Kan Role │   Structure   │   Home     │
+├────────────┼─────────────┼──────────┼───────────────┼────────────┤
+│  Direct    │  × (prod)   │  Ran_K   │ cofree t_p    │   Span     │
+│  Diffuse   │  ⊗ (para)   │  Adj     │ bicomodule    │   Prof     │
+│  Meta      │  ◁ (subst)  │  Lan_K   │ free m_p      │ Presheaves │
+└────────────┴─────────────┴──────────┴───────────────┴────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Bicomodule Coherence}
+\p{Predictions and observations form bicomodule pairs. Coherence is verified by:}
+
+\ol{
+\li{\strong{Galois unit check}: η: id → γ∘α preserves trits}
+\li{\strong{Bicomodule compatibility}: pred_trit ↔ obs_trit compatible homes}
+}
+}
+}
+
+\subtree{
+\title{CatSharp Scale Sonification}
+\p{Surprisal values map to pitch classes via the CatSharp scale:}
+
+\pre{\startverb
+| Trit | Pitch Classes | Chord Type | Hz Range |
+|------|---------------|------------|----------|
+| +1 (PLUS) | {0, 4, 8} | Augmented triad | C-E-G# |
+| 0 (ERGODIC) | {3, 6, 9} | Diminished 7th | D#-F#-A-C |
+| −1 (MINUS) | {1,2,5,7,10,11} | Fifths cycle | C#,D,F,G,A#,B |
+\stopverb}
+
+\pre{\startverb
+;; Surprisal → Pitch class → Frequency
+(defn surprisal->pitch-class [surp]
+  (mod (Math/round (* (min surp 10.0) 1.2)) 12))
+
+(defn pitch-class->freq [pc]
+  (* 261.63 (Math/pow 2 (/ pc 12.0))))  ;; C4 = 261.63 Hz
+\stopverb}
+
+\p{Enable with \code{\startverb --sonify\stopverb} flag to hear the surprisal as tones via sox.}
+}
+
+\subtree{
+\title{AGM Belief Revision (Levi Identity)}
+\p{Based on [Baker 2023](https://ijcai.org/proceedings/2023/811):}
+
+\pre{\startverb
+K * φ = (K − ¬φ) + φ   (Levi Identity)
+\stopverb}
+
+\ul{
+\li{\strong{Contraction (K − ¬φ)}: Remove predictions contradicted by observations}
+\li{\strong{Expansion (+ φ)}: Add new beliefs from observed data}
+\li{\strong{Revision (K * φ)}: Combined operation via Levi identity}
+}
+
+\subtree{
+\title{Spohn κ-Ranking}
+\p{Predictions ranked by entrenchment:}
+
+\pre{\startverb
+(defn kappa-rank [belief]
+  (- (Math/log (/ 1 (max 0.01 (:confidence belief))))))
+\stopverb}
+
+\p{Lower κ = more entrenched = harder to revise.}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Full Cat# analysis with sonification
+bb ~/.claude/skills/behaviour-surprisal-analysis/analyse.bb \
+  --predictions predictions.json \
+  --observed observed.json \
+  --alpha 0.3 --beta 0.5 --gamma 0.2 \
+  --sonify
+
+# With capability tracking
+bb analyse.bb \
+  --predictions predictions.json \
+  --observed observed.json \
+  --skills-before skills_t0.txt \
+  --skills-after skills_t30.txt
+
+# Direct-heavy (Span home focus)
+bb analyse.bb --alpha 0.7 --beta 0.2 --gamma 0.1
+
+# Meta-heavy (Presheaves home focus)
+bb analyse.bb --alpha 0.1 --beta 0.3 --gamma 0.6 --sonify
+\stopverb}
+}
+
+\subtree{
+\title{Input Format}
+\pre{\startverb
+{
+  "predictions": {
+    "direct": [
+      {"content": "Ruby MCP SDK for skill markets", "confidence": 0.8},
+      {"content": "VirtualizationBridge sandbox test", "confidence": 0.7}
+    ],
+    "diffuse": [
+      {"theme": "GF(3) conservation", "keywords": ["trit", "lattice", "conservation"]},
+      {"theme": "skill markets", "keywords": ["confidential", "commitment", "beacon"]}
+    ],
+    "meta": {
+      "skills_before": 45,
+      "mcp_servers_before": 12,
+      "config_hash": "a3f2c1"
+    }
+  },
+  "observed": {
+    "threads": [
+      "Ruby MCP SDK for confidential skill markets",
+      "GF(3) skill composition and Galois connection verification",
+      "Derangement operators and GF(3) entropy management"
+    ],
+    "capability_events": [
+      {"type": "skill_install", "count": 373, "source": "plurigrid/asi"},
+      {"type": "mcp_addition", "server": "world_a_aptos"}
+    ]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+╔══════════════════════════════════════════════════════════════════╗
+║  BEHAVIOUR SURPRISAL ANALYSIS v3.0 (Cat# + AGM)                  ║
+║  α=0.30 (Span/Ran) β=0.50 (Prof/Adj) γ=0.20 (Presh/Lan)          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+  DIRECT ATTENTION (Home: Span, Kan: Ran_K)
+  ───────────────────────────────────────────────────────────────
+  Prediction                      │ Match │ S_dir │ Trit │ PC │ Home
+  ────────────────────────────────┼───────┼───────┼──────┼────┼─────
+  VirtualizationBridge sandbox    │  34.9% │  1.52 │  +   │  2 │ Span
+  ...
+
+  CAT# COHERENCE
+  ───────────────────────────────────────────────────────────────
+  Galois adjunction α ⊣ γ:    ✓ coherent
+  Bicomodule compatibility:   85.0% (✓)
+
+  CATSHARP SONIFICATION
+  ───────────────────────────────────────────────────────────────
+  ♪ Direct (Ran_K): 293.7 Hz
+  ♪ Diffuse (Adj): 329.6 Hz
+  ♪ Meta (Lan_K): 261.6 Hz
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\p{The skill participates in balanced triads:}
+
+\pre{\startverb
+behaviour-surprisal-analysis (0) ⊗ catsharp-galois (0) ⊗ gay-mcp (-1) + operad-compose (+1) = 0 ✓
+
+# Internal channel triad
+Direct (−1) + Diffuse (0) + Meta (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Attention Calibration}
+\pre{\startverb
+| Prediction Style | Recommended (α,β,γ) | Cat# Focus |
+|-----------------|---------------------|------------|
+| Specific artifacts | (0.6, 0.3, 0.1) | Span heavy |
+| Thematic directions | (0.2, 0.6, 0.2) | Prof heavy |
+| Capability exploration | (0.2, 0.3, 0.5) | Presheaves heavy |
+| Mixed/balanced | (0.3, 0.5, 0.2) | Bicomodule equilibrium |
+\stopverb}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+(require '[behaviour-surprisal-analysis :as bsa])
+
+;; Full Cat# analysis
+(bsa/combined-analysis
+  predictions observed
+  0.3 0.5 0.2          ;; α β γ
+  before-state after-state
+  capability-events
+  true)                ;; sonify?
+
+;; Galois adjunction verification
+(bsa/verify-galois-unit direct-result)
+
+;; Bicomodule coherence check
+(bsa/check-bicomodule-coherence direct diffuse meta)
+
+;; Sonify channel
+(bsa/sonify-channel results "Direct" 0.3)
+\stopverb}
+}
+
+\subtree{
+\title{Philosophical Foundation}
+\p{The tri-channel Cat# model reflects:}
+
+\ol{
+\li{\strong{Cat# Three Homes}: Span (comodules), Prof (bimodules), Presheaves (right modules)}
+\li{\strong{Kan Extensions}: Ran_K (limit/consume), Lan_K (colimit/generate), Adj (bridge)}
+\li{\strong{Galois Adjunction}: α ⊣ γ for abstraction/concretization}
+\li{\strong{AGM Epistemology}: Contraction, Expansion, Revision via Levi identity}
+\li{\strong{CatSharp Scale}: Mazzola's categorical music theory for sonification}
+}
+
+\subtree{
+\title{Key Insight: GF(3) = Naturality}
+\p{GF(3) conservation IS the naturality condition of Cat# equipment:}
+
+\pre{\startverb
+For a triad (s₋₁, s₀, s₊₁):
+  Ran_K(s₋₁) →[bicomodule]→ s₀ →[bicomodule]→ Lan_K(s₊₁)
+  
+  The commuting square:
+    G(f) ∘ η_A = η_B ∘ F(f)
+    
+  Becomes the GF(3) equation:
+    (−1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{\strong{Skill Name}: behaviour-surprisal-analysis \strong{Version}: 3.0.0 (Cat# Integration) \strong{Type}: Prediction Evaluation / Information Theory / Belief Revision / Category Theory \strong{Trit}: 0 (ERGODIC) \strong{GF(3)}: Conserved via Cat# bicomodule structure \strong{Dependencies}: sox (optional, for sonification) \strong{Sources}:}
+
+\ul{
+\li{[Spivak "All Concepts are Cat#" (ACT 2023)](https://topos.site/p/2023-act-tutorial)}
+\li{[Baker 2023 - AGM for Human Reasoning](https://ijcai.org/proceedings/2023/811)}
+\li{[Mazzola "The Topos of Music" (2002)](https://www.springer.com/gp/book/9783764357313)}
+\li{[arxiv:2505.13763 - LLM Metacognition](https://arxiv.org/abs/2505.13763)}
+}
+}
+}
+}

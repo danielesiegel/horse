@@ -1,0 +1,153 @@
+\title{Ducklake}
+
+\taxon{skill}
+
+\meta{description}{Create, query, migrate, and maintain DuckLake lakehouse databases using the DuckDB ducklake extension. Use when working with DuckLake catalogs, time travel queries, snapshots, schema evolution, cross-lake federation, or migrating plain DuckDB files to DuckLake format.}
+
+\subtree{
+\title{DuckLake}
+\p{DuckLake is an integrated data lake and catalog format from the DuckDB team. It stores metadata in a catalog database (DuckDB, PostgreSQL, SQLite, MySQL) and data as Parquet files. MIT licensed.}
+
+\p{Docs: https://ducklake.select/docs/stable/}
+
+\subtree{
+\title{Setup}
+\pre{\startverb
+INSTALL ducklake;
+LOAD ducklake;
+\stopverb}
+}
+
+\subtree{
+\title{Connecting}
+\pre{\startverb
+-- DuckDB catalog (auto-creates if not exists, data in .files/ sibling dir)
+ATTACH 'ducklake:my_catalog.ducklake' AS my_lake;
+
+-- PostgreSQL catalog + S3 storage
+ATTACH 'ducklake:postgres:dbname=catalog host=pg_host' AS my_lake (DATA_PATH 's3://bucket/data/');
+
+-- SQLite catalog
+ATTACH 'ducklake:sqlite:metadata.sqlite' AS my_lake (DATA_PATH 'data_files/');
+
+-- Read-only
+ATTACH 'ducklake:my_catalog.ducklake' (READ_ONLY);
+
+-- At specific snapshot
+ATTACH 'ducklake:my_catalog.ducklake' (SNAPSHOT_VERSION 3);
+ATTACH 'ducklake:my_catalog.ducklake' (SNAPSHOT_TIME '2025-01-15 00:00:00');
+\stopverb}
+}
+
+\subtree{
+\title{Snapshots}
+\p{Every mutation creates a snapshot. List them:}
+
+\pre{\startverb
+SELECT * FROM my_lake.snapshots();
+SELECT * FROM my_lake.current_snapshot();
+\stopverb}
+
+\p{Add commit messages inside transactions:}
+
+\pre{\startverb
+BEGIN;
+INSERT INTO my_lake.events VALUES (...);
+CALL my_lake.set_commit_message('alice', 'Daily ingest', extra_info => '{"source": "amp"}');
+COMMIT;
+\stopverb}
+}
+
+\subtree{
+\title{Time Travel}
+\pre{\startverb
+SELECT * FROM tbl AT (VERSION => 3);
+SELECT * FROM tbl AT (TIMESTAMP => now() - INTERVAL '1 week');
+\stopverb}
+}
+
+\subtree{
+\title{Schema Evolution}
+\p{Add/drop/rename columns freely. Each change creates a new snapshot:}
+
+\pre{\startverb
+ALTER TABLE my_lake.tbl ADD COLUMN new_col VARCHAR;
+ALTER TABLE my_lake.tbl DROP COLUMN old_col;
+ALTER TABLE my_lake.tbl RENAME COLUMN x TO y;
+\stopverb}
+}
+
+\subtree{
+\title{Cross-Lake Federation}
+\p{Attach multiple DuckLakes and JOIN across them:}
+
+\pre{\startverb
+ATTACH 'ducklake:lake_a.ducklake' AS a;
+ATTACH 'ducklake:lake_b.ducklake' AS b;
+SELECT * FROM a.events JOIN b.users ON a.events.user_id = b.users.id;
+\stopverb}
+}
+
+\subtree{
+\title{Maintenance}
+\p{Run periodically or use \code{\startverb CHECKPOINT\stopverb}:}
+
+\pre{\startverb
+-- Merge small Parquet files (after many small inserts)
+CALL my_lake.merge_adjacent_files('my_table');
+
+-- Expire old snapshots (frees time travel before cutoff)
+CALL my_lake.expire_snapshots(TIMESTAMP '2025-01-01');
+
+-- Cleanup unreferenced files after expiry
+CALL my_lake.cleanup_files();
+
+-- Rewrite files with many deletes
+CALL my_lake.rewrite_data_files('my_table');
+
+-- All-in-one
+CHECKPOINT my_lake;
+\stopverb}
+}
+
+\subtree{
+\title{Migrating DuckDB to DuckLake}
+\p{\code{\startverb COPY FROM DATABASE\stopverb} works but fails on:}
+
+\ul{
+\li{\strong{Non-literal defaults} (e.g., \code{\startverb CURRENT_TIMESTAMP\stopverb}) -- use \code{\startverb CREATE TABLE AS SELECT\stopverb} instead}
+\li{\strong{PRIMARY KEY / UNIQUE constraints} -- not supported in DuckLake by design}
+}
+
+\p{Workaround pattern:}
+
+\pre{\startverb
+ATTACH 'old.duckdb' AS src;
+ATTACH 'ducklake:new.ducklake' AS dst;
+CREATE TABLE dst.my_table AS SELECT * FROM src.my_table;
+\stopverb}
+}
+
+\subtree{
+\title{Unsupported Features}
+\p{\strong{Will not be supported:} PRIMARY KEY, UNIQUE, FOREIGN KEY, indexes, sequences, VARINT, BITSTRING, UNION types.}
+
+\p{\strong{May be supported later:} User-defined types, ARRAY type, ENUM type, CHECK constraints, non-literal defaults, generated columns, macros.}
+
+\p{\strong{Extension limitations:} Data inlining only works with DuckDB catalogs. MySQL catalogs not fully supported.}
+}
+
+\subtree{
+\title{Advanced Features}
+\ul{
+\li{\strong{Partitioning}: \code{\startverb ALTER TABLE tbl ADD PARTITION (col)\stopverb}}
+\li{\strong{Data inlining}: Small tables stored inline in catalog (DuckDB catalogs only): \code{\startverb ATTACH ... (DATA_INLINING_ROW_LIMIT 1000)\stopverb}}
+\li{\strong{Encryption}: \code{\startverb ATTACH ... (ENCRYPTED true)\stopverb}}
+\li{\strong{Row lineage}: Track row-level provenance}
+\li{\strong{Views}: \code{\startverb CREATE VIEW my_lake.v AS SELECT ...\stopverb}}
+\li{\strong{Data change feed}: Query changes between snapshots}
+\li{\strong{Upserting}: Via \code{\startverb MERGE INTO\stopverb} (not \code{\startverb INSERT ON CONFLICT\stopverb} since no PKs)}
+\li{\strong{Secrets}: Persist connection config: \code{\startverb CREATE PERSISTENT SECRET (TYPE ducklake, METADATA_PATH '...', DATA_PATH '...')\stopverb}}
+}
+}
+}

@@ -1,0 +1,150 @@
+\title{"jupyter Notebook"}
+
+\taxon{skill}
+
+\meta{description}{"Use when the user asks to create, scaffold, or edit Jupyter notebooks (`.ipynb`) for experiments, explorations, or tutorials; prefer the bundled templates and run the helper script `new_notebook.py` to generate a clean starting notebook."}
+
+\subtree{
+\title{Jupyter Notebook Skill}
+\p{Create clean, reproducible Jupyter notebooks for two primary modes:}
+
+\ul{
+\li{Experiments and exploratory analysis}
+\li{Tutorials and teaching-oriented walkthroughs}
+}
+
+\p{Prefer the bundled templates and the helper script for consistent structure and fewer JSON mistakes.}
+
+\subtree{
+\title{When to use}
+\ul{
+\li{Create a new \code{\startverb .ipynb\stopverb} notebook from scratch.}
+\li{Convert rough notes or scripts into a structured notebook.}
+\li{Refactor an existing notebook to be more reproducible and skimmable.}
+\li{Build experiments or tutorials that will be read or re-run by other people.}
+}
+}
+
+\subtree{
+\title{Decision tree}
+\ul{
+\li{If the request is exploratory, analytical, or hypothesis-driven, choose \code{\startverb experiment\stopverb}.}
+\li{If the request is instructional, step-by-step, or audience-specific, choose \code{\startverb tutorial\stopverb}.}
+\li{If editing an existing notebook, treat it as a refactor: preserve intent and improve structure.}
+}
+}
+
+\subtree{
+\title{Skill path (set once)}
+\pre{\startverb
+export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+export JUPYTER_NOTEBOOK_CLI="$CODEX_HOME/skills/jupyter-notebook/scripts/new_notebook.py"
+\stopverb}
+
+\p{User-scoped skills install under \code{\startverb $CODEX_HOME/skills\stopverb} (default: \code{\startverb ~/.codex/skills\stopverb}).}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Lock the intent.}
+}
+
+\p{Identify the notebook kind: \code{\startverb experiment\stopverb} or \code{\startverb tutorial\stopverb}. Capture the objective, audience, and what "done" looks like.}
+
+\ol{
+\li{Scaffold from the template.}
+}
+
+\p{Use the helper script to avoid hand-authoring raw notebook JSON.}
+
+\pre{\startverb
+uv run --python 3.12 python "$JUPYTER_NOTEBOOK_CLI" \
+  --kind experiment \
+  --title "Compare prompt variants" \
+  --out output/jupyter-notebook/compare-prompt-variants.ipynb
+\stopverb}
+
+\pre{\startverb
+uv run --python 3.12 python "$JUPYTER_NOTEBOOK_CLI" \
+  --kind tutorial \
+  --title "Intro to embeddings" \
+  --out output/jupyter-notebook/intro-to-embeddings.ipynb
+\stopverb}
+
+\ol{
+\li{Fill the notebook with small, runnable steps.}
+}
+
+\p{Keep each code cell focused on one step. Add short markdown cells that explain the purpose and expected result. Avoid large, noisy outputs when a short summary works.}
+
+\ol{
+\li{Apply the right pattern.}
+}
+
+\p{For experiments, follow \code{\startverb references/experiment-patterns.md\stopverb}. For tutorials, follow \code{\startverb references/tutorial-patterns.md\stopverb}.}
+
+\ol{
+\li{Edit safely when working with existing notebooks.}
+}
+
+\p{Preserve the notebook structure; avoid reordering cells unless it improves the top-to-bottom story. Prefer targeted edits over full rewrites. If you must edit raw JSON, review \code{\startverb references/notebook-structure.md\stopverb} first.}
+
+\ol{
+\li{Validate the result.}
+}
+
+\p{Run the notebook top-to-bottom when the environment allows. If execution is not possible, say so explicitly and call out how to validate locally. Use the final pass checklist in \code{\startverb references/quality-checklist.md\stopverb}.}
+}
+
+\subtree{
+\title{Templates and helper script}
+\ul{
+\li{Templates live in \code{\startverb assets/experiment-template.ipynb\stopverb} and \code{\startverb assets/tutorial-template.ipynb\stopverb}.}
+\li{The helper script loads a template, updates the title cell, and writes a notebook.}
+}
+
+\p{Script path:}
+
+\ul{
+\li{\code{\startverb $JUPYTER_NOTEBOOK_CLI\stopverb} (installed default: \code{\startverb $CODEX_HOME/skills/jupyter-notebook/scripts/new_notebook.py\stopverb})}
+}
+}
+
+\subtree{
+\title{Temp and output conventions}
+\ul{
+\li{Use \code{\startverb tmp/jupyter-notebook/\stopverb} for intermediate files; delete when done.}
+\li{Write final artifacts under \code{\startverb output/jupyter-notebook/\stopverb} when working in this repo.}
+\li{Use stable, descriptive filenames (for example, \code{\startverb ablation-temperature.ipynb\stopverb}).}
+}
+}
+
+\subtree{
+\title{Dependencies (install only when needed)}
+\p{Prefer \code{\startverb uv\stopverb} for dependency management.}
+
+\p{Optional Python packages for local notebook execution:}
+
+\pre{\startverb
+uv pip install jupyterlab ipykernel
+\stopverb}
+
+\p{The bundled scaffold script uses only the Python standard library and does not require extra dependencies.}
+}
+
+\subtree{
+\title{Environment}
+\p{No required environment variables.}
+}
+
+\subtree{
+\title{Reference map}
+\ul{
+\li{\code{\startverb references/experiment-patterns.md\stopverb}: experiment structure and heuristics.}
+\li{\code{\startverb references/tutorial-patterns.md\stopverb}: tutorial structure and teaching flow.}
+\li{\code{\startverb references/notebook-structure.md\stopverb}: notebook JSON shape and safe editing rules.}
+\li{\code{\startverb references/quality-checklist.md\stopverb}: final validation checklist.}
+}
+}
+}

@@ -1,0 +1,114 @@
+\title{Docx}
+
+\taxon{skill}
+
+\meta{description}{Comprehensive document creation, editing, and analysis with support for}
+
+\subtree{
+\title{DOCX Processing}
+\subtree{
+\title{Workflow Decision Tree}
+\ul{
+\li{\strong{Reading/Analyzing}: Use text extraction or raw XML access}
+\li{\strong{Creating New Document}: Use docx-js (JavaScript)}
+\li{\strong{Editing Existing}: Use OOXML editing or redlining workflow}
+}
+}
+
+\subtree{
+\title{Reading Content}
+\subtree{
+\title{Text Extraction with Pandoc}
+\pre{\startverb
+# Convert to markdown with tracked changes
+pandoc --track-changes=all file.docx -o output.md
+\stopverb}
+}
+
+\subtree{
+\title{Raw XML Access}
+\pre{\startverb
+# Unpack document
+unzip document.docx -d unpacked/
+# Key files:
+# word/document.xml - Main content
+# word/comments.xml - Comments
+# word/media/ - Images
+\stopverb}
+}
+}
+
+\subtree{
+\title{Creating New Documents (docx-js)}
+\pre{\startverb
+import { Document, Paragraph, TextRun, Packer } from 'docx';
+import fs from 'fs';
+
+const doc = new Document({
+  sections: [{
+    children: [
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Hello ", bold: true }),
+          new TextRun({ text: "World", italics: true })
+        ]
+      })
+    ]
+  }]
+});
+
+const buffer = await Packer.toBuffer(doc);
+fs.writeFileSync('document.docx', buffer);
+\stopverb}
+}
+
+\subtree{
+\title{Editing Existing Documents}
+\subtree{
+\title{Simple Edits}
+\ol{
+\li{Unpack: \code{\startverb unzip doc.docx -d unpacked/\stopverb}}
+\li{Edit \code{\startverb word/document.xml\stopverb}}
+\li{Repack: \code{\startverb cd unpacked && zip -r ../edited.docx .\stopverb}}
+}
+}
+
+\subtree{
+\title{Tracked Changes (Redlining)}
+\p{For professional documents, use tracked changes:}
+
+\pre{\startverb
+<!-- Deletion -->
+<w:del w:author="Author" w:date="2025-01-01T00:00:00Z">
+  <w:r><w:delText>old text</w:delText></w:r>
+</w:del>
+
+<!-- Insertion -->
+<w:ins w:author="Author" w:date="2025-01-01T00:00:00Z">
+  <w:r><w:t>new text</w:t></w:r>
+</w:ins>
+\stopverb}
+}
+}
+
+\subtree{
+\title{Converting to Images}
+\pre{\startverb
+# DOCX to PDF
+soffice --headless --convert-to pdf document.docx
+
+# PDF to images
+pdftoppm -jpeg -r 150 document.pdf page
+\stopverb}
+}
+
+\subtree{
+\title{Best Practices}
+\ul{
+\li{Use Pandoc for text extraction}
+\li{Use docx-js for creating new documents}
+\li{For legal/business docs, always use tracked changes}
+\li{Preserve original RSIDs when editing}
+}
+}
+}

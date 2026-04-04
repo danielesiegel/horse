@@ -1,0 +1,101 @@
+\title{Tree Sitter}
+
+\taxon{skill}
+
+\meta{description}{AST-based code analysis using tree-sitter. Use for parsing code structure, extracting symbols, finding patterns with tree-sitter queries, analyzing complexity, and understanding code architecture. Supports Python, JavaScript, TypeScript, Go, Rust, C, C++, Swift, Java, Kotlin, Julia, and more.}
+
+\subtree{
+\title{Tree-sitter Code Analysis}
+\p{Intelligent code analysis via AST parsing with tree-sitter.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Understanding code structure across multiple languages}
+\li{Extracting function/class definitions}
+\li{Finding code patterns with tree-sitter queries}
+\li{Analyzing code complexity}
+\li{Symbol extraction and dependency analysis}
+}
+}
+
+\subtree{
+\title{Setup}
+\p{MCP server configured in \code{\startverb ~/.mcp.json\stopverb}:}
+
+\pre{\startverb
+{
+  "tree-sitter": {
+    "command": "python3",
+    "args": ["-m", "mcp_server_tree_sitter.server"],
+    "cwd": "/Users/alice/mcp-server-tree-sitter"
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Usage Pattern}
+\subtree{
+\title{1. Register a Project First}
+\pre{\startverb
+register_project_tool(path="/path/to/project", name="my-project")
+\stopverb}
+}
+
+\subtree{
+\title{2. Explore Files}
+\pre{\startverb
+list_files(project="my-project", pattern="**/*.py")
+get_file(project="my-project", path="src/main.py")
+\stopverb}
+}
+
+\subtree{
+\title{3. Analyze Structure}
+\pre{\startverb
+get_ast(project="my-project", path="src/main.py", max_depth=3)
+get_symbols(project="my-project", path="src/main.py")
+\stopverb}
+}
+
+\subtree{
+\title{4. Search with Queries}
+\pre{\startverb
+find_text(project="my-project", pattern="function", file_pattern="**/*.py")
+run_query(
+  project="my-project",
+  query='(function_definition name: (identifier) @function.name)',
+  language="python"
+)
+\stopverb}
+}
+
+\subtree{
+\title{5. Complexity Analysis}
+\pre{\startverb
+analyze_complexity(project="my-project", path="src/main.py")
+\stopverb}
+}
+}
+
+\subtree{
+\title{Available Tools}
+\ul{
+\li{\strong{Project}: \code{\startverb register_project_tool\stopverb}, \code{\startverb list_projects_tool\stopverb}, \code{\startverb remove_project_tool\stopverb}}
+\li{\strong{Language}: \code{\startverb list_languages\stopverb}, \code{\startverb check_language_available\stopverb}}
+\li{\strong{Files}: \code{\startverb list_files\stopverb}, \code{\startverb get_file\stopverb}, \code{\startverb get_file_metadata\stopverb}}
+\li{\strong{AST}: \code{\startverb get_ast\stopverb}, \code{\startverb get_node_at_position\stopverb}}
+\li{\strong{Search}: \code{\startverb find_text\stopverb}, \code{\startverb run_query\stopverb}}
+\li{\strong{Symbols}: \code{\startverb get_symbols\stopverb}, \code{\startverb find_usage\stopverb}}
+\li{\strong{Analysis}: \code{\startverb analyze_project\stopverb}, \code{\startverb get_dependencies\stopverb}, \code{\startverb analyze_complexity\stopverb}}
+\li{\strong{Queries}: \code{\startverb get_query_template_tool\stopverb}, \code{\startverb build_query\stopverb}, \code{\startverb adapt_query\stopverb}}
+\li{\strong{Similar Code}: \code{\startverb find_similar_code\stopverb}}
+}
+}
+
+\subtree{
+\title{Supported Languages}
+\p{Python, JavaScript, TypeScript, Go, Rust, C, C++, Swift, Java, Kotlin, Julia, APL, and many more via tree-sitter-language-pack.}
+}
+}

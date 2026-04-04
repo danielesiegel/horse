@@ -1,0 +1,331 @@
+\title{Recovering From Ransomware Attack}
+
+\taxon{skill}
+
+\tag{ransomware}
+
+\tag{recovery}
+
+\tag{incident-response}
+
+\tag{backup}
+
+\tag{defense}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Executes structured recovery from a ransomware incident following NIST and CISA frameworks, including environment isolation, forensic evidence preservation, clean infrastructure rebuild, prioritized system restoration from verified backups, credential reset, and validation against re-infection. Covers Active Directory recovery, database restoration, and application stack rebuild in dependency order. Activates for requests involving ransomware recovery, post-encryption restoration, or disaster recovery from ransomware.}
+
+\subtree{
+\title{Recovering from Ransomware Attack}
+\subtree{
+\title{When to Use}
+\ul{
+\li{After ransomware has encrypted production systems and the decision has been made to recover from backups}
+\li{When building or validating a ransomware recovery runbook before an actual incident}
+\li{After receiving a decryption key (paid ransom or law enforcement provided) and needing to safely decrypt}
+\li{When partial recovery is needed alongside decryption of remaining systems}
+\li{Conducting a recovery drill to validate RTO commitments}
+}
+
+\p{\strong{Do not use} before completing containment and forensic scoping. Premature recovery without understanding the attacker's access and persistence mechanisms risks re-infection.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Incident declared and containment phase completed (all attacker access severed)}
+\li{Forensic evidence preserved (disk images, memory dumps, network captures)}
+\li{Backup integrity verified (immutable/air-gapped copies confirmed clean)}
+\li{Clean build media available (OS installation media, golden images)}
+\li{Recovery environment prepared (clean network segment isolated from compromised infrastructure)}
+\li{Recovery priority list documented (Tier 1/2/3 systems in dependency order)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Establish Clean Recovery Environment}
+\p{Build recovery infrastructure isolated from the compromised network:}
+
+\pre{\startverb
+# Create isolated recovery VLAN
+# No connectivity to compromised network segments
+# Dedicated internet access for patch downloads only (via proxy)
+
+# Recovery network architecture:
+# VLAN 999 (Recovery) - 10.99.0.0/24
+#   - Recovery workstations (10.99.0.10-20)
+#   - Recovered DCs (10.99.0.50-55)
+#   - Recovered servers (10.99.0.100+)
+#   - Proxy for internet (10.99.0.1) - patches and updates only
+
+# Firewall rules: DENY all from recovery VLAN to production VLANs
+# Allow: Recovery VLAN -> Internet (HTTPS only, via proxy)
+# Allow: Recovery VLAN -> Backup infrastructure (restore traffic only)
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Recover Identity Infrastructure First}
+\p{Active Directory must be recovered before any domain-joined systems:}
+
+\pre{\startverb
+# AD Recovery Procedure
+# Step 2a: Restore AD from known-good backup
+# Use DSRM (Directory Services Restore Mode) boot
+
+# 1. Build clean Windows Server from ISO
+# 2. Promote as DC using AD restore
+# 3. Restore System State from immutable backup
+
+# Verify AD backup is pre-compromise
+# Check backup timestamp against earliest known compromise date
+wbadmin get versions -backuptarget:E: -machine:DC01
+
+# Restore system state in DSRM
+wbadmin start systemstaterecovery -version:02/15/2026-04:00 -backuptarget:E: -machine:DC01 -quiet
+
+# After restore, reset critical accounts
+# Reset krbtgt password TWICE (invalidates all Kerberos tickets)
+# This prevents Golden Ticket persistence
+Import-Module ActiveDirectory
+Set-ADAccountPassword -Identity krbtgt -Reset -NewPassword (ConvertTo-SecureString "NewKrbtgt2026!Complex#1" -AsPlainText -Force)
+# Wait for replication (minimum 12 hours), then reset again
+Set-ADAccountPassword -Identity krbtgt -Reset -NewPassword (ConvertTo-SecureString "NewKrbtgt2026!Complex#2" -AsPlainText -Force)
+
+# Reset all privileged account passwords
+$privilegedGroups = @("Domain Admins", "Enterprise Admins", "Schema Admins", "Administrators")
+foreach ($group in $privilegedGroups) {
+    Get-ADGroupMember -Identity $group -Recursive | ForEach-Object {
+        Set-ADAccountPassword -Identity $_.SamAccountName -Reset `
+            -NewPassword (ConvertTo-SecureString (New-Guid).Guid -AsPlainText -Force)
+        Set-ADUser -Identity $_.SamAccountName -ChangePasswordAtLogon $true
+    }
+}
+
+# Validate AD health
+dcdiag /v /c /d /e /s:DC01
+repadmin /showrepl
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Validate Backup Integrity Before Restoration}
+\pre{\startverb
+# Scan backup files for ransomware artifacts before restoring
+# Use offline antivirus scanning on backup mount
+
+# Mount backup as read-only
+mount -o ro,noexec /dev/backup_lv /mnt/backup_verify
+
+# Scan with ClamAV
+clamscan -r --infected --log=/var/log/backup_scan.log /mnt/backup_verify
+
+# Check for known ransomware indicators
+find /mnt/backup_verify -name "*.encrypted" -o -name "*.locked" \
+    -o -name "*.lockbit" -o -name "DECRYPT_*" -o -name "readme.txt" \
+    -o -name "RECOVER-*" -o -name "HOW_TO_*" | tee /var/log/ransomware_check.log
+
+# Verify database consistency (SQL Server example)
+# Restore database to temporary instance for validation
+RESTORE VERIFYONLY FROM DISK = '/mnt/backup_verify/databases/erp_db.bak'
+    WITH CHECKSUM
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Restore Systems in Priority Order}
+\p{Follow dependency-based recovery sequence:}
+
+\pre{\startverb
+Recovery Order:
+Phase 1 (Hours 0-4): Identity & Infrastructure
+  1. Domain Controllers (AD, DNS, DHCP)
+  2. Certificate Authority (if applicable)
+  3. Core network services (DHCP, NTP)
+
+Phase 2 (Hours 4-12): Critical Business Systems
+  4. Database servers (SQL, Oracle, PostgreSQL)
+  5. Core business applications (ERP, CRM)
+  6. Email (Exchange, M365 hybrid)
+
+Phase 3 (Hours 12-24): Important Systems
+  7. File servers
+  8. Web applications
+  9. Monitoring and security tools (SIEM, EDR)
+
+Phase 4 (Hours 24-48): Remaining Systems
+  10. Development environments
+  11. Archive systems
+  12. Non-critical applications
+\stopverb}
+
+\pre{\startverb
+# Veeam Instant Recovery - fastest restore for VMware/Hyper-V
+# Boots VM directly from backup file, then migrates to production storage
+
+# Instant recovery for Tier 1 system
+Start-VBRInstantRecovery -RestorePoint (Get-VBRRestorePoint -Name "DC01" |
+    Sort-Object CreationTime -Descending | Select-Object -First 1) `
+    -VMName "DC01-Recovered" `
+    -Server (Get-VBRServer -Name "esxi01.recovery.local") `
+    -Datastore "recovery-datastore"
+
+# After validation, migrate to production storage
+Start-VBRQuickMigration -VM "DC01-Recovered" `
+    -Server (Get-VBRServer -Name "esxi01.prod.local") `
+    -Datastore "production-datastore"
+\stopverb}
+}
+
+\subtree{
+\title{Step 5: Validate Recovered Systems and Harden}
+\p{Before connecting recovered systems to production:}
+
+\pre{\startverb
+# Check for persistence mechanisms
+# Scheduled Tasks
+Get-ScheduledTask | Where-Object {$_.State -ne "Disabled"} |
+    Select-Object TaskName, TaskPath, State, Author |
+    Export-Csv C:\recovery\scheduled_tasks.csv
+
+# Services
+Get-Service | Where-Object {$_.StartType -eq "Automatic"} |
+    Select-Object Name, DisplayName, StartType, Status |
+    Export-Csv C:\recovery\auto_services.csv
+
+# Startup items
+Get-CimInstance Win32_StartupCommand |
+    Select-Object Name, Command, Location, User |
+    Export-Csv C:\recovery\startup_items.csv
+
+# WMI event subscriptions (common persistence)
+Get-WmiObject -Namespace root\subscription -Class __EventFilter
+Get-WmiObject -Namespace root\subscription -Class __EventConsumer
+
+# Registry run keys
+Get-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run"
+Get-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce"
+Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+
+# Verify no unauthorized admin accounts
+Get-LocalGroupMember -Group "Administrators"
+Get-ADGroupMember -Identity "Domain Admins"
+
+# Apply latest patches before connecting to production
+Install-WindowsUpdate -AcceptAll -AutoReboot
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Phased Network Reconnection}
+\pre{\startverb
+Phase 1: Reconnect identity infrastructure
+  - DCs online in production VLAN
+  - Validate replication and authentication
+  - Monitor for suspicious authentication patterns
+
+Phase 2: Reconnect Tier 1 systems
+  - One system at a time
+  - Monitor EDR for 1 hour before proceeding to next
+  - Validate application functionality
+
+Phase 3: Reconnect remaining systems
+  - Groups of 5-10 systems
+  - Continue monitoring for re-infection indicators
+
+Throughout: SOC monitoring on high alert
+  - EDR in aggressive blocking mode
+  - All previous IOCs loaded in detection rules
+  - Canary files deployed on recovered systems
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **DSRM** | Directory Services Restore Mode: special boot mode for domain controllers that allows AD database restoration |
+| **krbtgt Reset** | Resetting the krbtgt account password twice invalidates all Kerberos tickets, defeating Golden Ticket persistence |
+| **Instant Recovery** | Backup technology that boots a VM directly from backup storage for immediate availability while migrating data in background |
+| **Evidence Preservation** | Maintaining forensic images and logs before recovery begins, required for law enforcement and insurance claims |
+| **Clean Build** | Rebuilding systems from trusted installation media rather than attempting to clean infected systems |
+| **Dependency Chain** | The order in which systems must be recovered based on service dependencies (e.g., AD before domain members) |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{Veeam Instant Recovery}: Boots VMs directly from backup with near-zero RTO, then live-migrates to production}
+\li{\strong{Microsoft DSRM}: AD-specific recovery mode for restoring domain controllers from backup}
+\li{\strong{DSInternals PowerShell Module}: Validates AD database integrity and identifies compromised credentials post-recovery}
+\li{\strong{Rubrik Instant Recovery}: Mounts backup as live VM in seconds for rapid recovery validation}
+\li{\strong{ClamAV}: Open-source antivirus for scanning backup files before restoration}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Manufacturing Company Full Recovery After LockBit Attack}
+\p{\strong{Context}: A manufacturer with 300 servers has 80\% of infrastructure encrypted by LockBit. Immutable backups from 48 hours ago are verified clean. Production lines are down, costing $500K/day.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Establish recovery VLAN (10.99.0.0/24) isolated from compromised network}
+\li{Restore 2 domain controllers from immutable backup using Veeam Instant Recovery (2 hours)}
+\li{Reset krbtgt password twice with 12-hour gap, reset all admin passwords}
+\li{Validate AD with dcdiag, scan for Golden Ticket indicators with DSInternals}
+\li{Restore ERP database (SAP) and verify data consistency (4 hours)}
+\li{Restore MES (Manufacturing Execution System) and SCADA historians (3 hours)}
+\li{Bring production line controllers online in isolated OT network first}
+\li{Phased reconnection over 48 hours with continuous EDR monitoring}
+\li{Total recovery: 72 hours (within 96-hour RTO commitment)}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Rushing to reconnect systems without validating absence of persistence mechanisms, causing re-infection}
+\li{Restoring from the most recent backup without verifying it predates the compromise (attacker may have poisoned recent backups)}
+\li{Not resetting the krbtgt password twice, allowing attackers to maintain Golden Ticket access}
+\li{Restoring systems in the wrong order (application servers before their database dependencies)}
+}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+## Ransomware Recovery Status Report
+
+**Incident ID**: [ID]
+**Recovery Start**: [Timestamp]
+**Current Phase**: [1-4]
+**Estimated Completion**: [Timestamp]
+
+### Recovery Progress
+| Phase | Systems | Status | Started | Completed | RTO Target |
+|-------|---------|--------|---------|-----------|------------|
+| 1 - Identity | DC01, DC02, DNS | Complete | HH:MM | HH:MM | 4 hours |
+| 2 - Critical | ERP, DB01, DB02 | In Progress | HH:MM | -- | 12 hours |
+| 3 - Important | FS01, Email, Web | Pending | -- | -- | 24 hours |
+| 4 - Remaining | Dev, Archive | Pending | -- | -- | 48 hours |
+
+### Validation Checklist
+- [ ] AD integrity verified (dcdiag, repadmin)
+- [ ] krbtgt password reset (2x with interval)
+- [ ] All admin passwords reset
+- [ ] Persistence mechanisms scanned
+- [ ] EDR deployed and active on recovered systems
+- [ ] IOCs loaded in detection rules
+- [ ] Canary files deployed
+\stopverb}
+}
+}

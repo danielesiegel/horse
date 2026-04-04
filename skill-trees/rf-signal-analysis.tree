@@ -1,0 +1,288 @@
+\title{Rf Signal Analysis}
+
+\taxon{skill}
+
+\meta{description}{Analyze wireless and radio frequency security in applications, protocols, and hardware. Covers WiFi, Bluetooth/BLE, RFID/NFC, Zigbee, LoRa, cellular, and SDR-based analysis. Use when auditing IoT devices, wireless protocols, access control systems, or any RF-enabled infrastructure.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{IoT devices with wireless connectivity (WiFi, BLE, Zigbee, LoRa, cellular)}
+\li{Wireless protocol implementations and custom RF protocols}
+\li{Physical access control systems (RFID badges, NFC readers, garage doors)}
+\li{Bluetooth peripherals (keyboards, locks, medical devices, fitness trackers)}
+\li{WiFi infrastructure (access points, captive portals, enterprise WPA)}
+\li{Cellular and baseband components (modems, SIM provisioning, SMS gateways)}
+\li{Any RF-emitting device or system (sub-GHz remotes, key fobs, TPMS sensors)}
+\li{Embedded firmware that handles wireless communication stacks}
+}
+}
+
+\subtree{
+\title{Protocol Attack Surface}
+\subtree{
+\title{WiFi (802.11)}
+\pre{\startverb
+| Vector | Description |
+|--------|-------------|
+| WPA2 PSK | PMKID capture, 4-way handshake capture, offline dictionary attack |
+| WPA3/SAE | Dragonblood side-channel and downgrade attacks |
+| WPA2-Enterprise | EAP identity theft, evil twin with RADIUS impersonation |
+| Captive Portals | MAC spoofing, DNS tunneling, portal bypass |
+| Deauthentication | Client disconnection, DoS, forced reconnection to rogue AP |
+| Evil Twin | Rogue AP with matching SSID, credential harvesting |
+| KRACK | Key reinstallation attacks on 4-way handshake nonce reuse |
+| PMKID | Clientless attack against AP, hashcat-crackable |
+\stopverb}
+}
+
+\subtree{
+\title{Bluetooth / BLE}
+\pre{\startverb
+| Vector | Description |
+|--------|-------------|
+| Pairing Vulnerabilities | Just Works passkey bypass, MITM during pairing |
+| GATT Enumeration | Service/characteristic discovery, read/write unprotected attrs |
+| Relay/Replay Attacks | Proximity relay (e.g., car unlock), captured GATT writes |
+| KNOB Attack | Key negotiation entropy reduction to 1 byte |
+| BIAS Attack | Impersonation via role switching during secure connection |
+| BLE Sniffing | Advertisement channel capture, connection following |
+| MAC Randomization Bypass | Tracking via advertising data fingerprinting |
+\stopverb}
+}
+
+\subtree{
+\title{RFID / NFC}
+\pre{\startverb
+| Vector | Description |
+|--------|-------------|
+| Badge Cloning | EM4100/HID 125kHz long-range read and duplicate |
+| Mifare Classic | Nested attack, hardnested, darkside key recovery |
+| HID iClass | Standard key looper, elite key diversification attacks |
+| DESFire | Side-channel key recovery on older implementations |
+| Replay Attacks | Captured credential replay on access controllers |
+| NFC MITM | Relay between card and reader (NFCGate) |
+| Skimming | Long-range unauthorized credential reads |
+\stopverb}
+}
+
+\subtree{
+\title{Zigbee / Z-Wave}
+\pre{\startverb
+| Vector | Description |
+|--------|-------------|
+| Default Trust Center Key | Well-known ZigBee HA key (5A 69 67...) |
+| Touchlink Commissioning | Factory reset and re-pair to attacker network |
+| Key Sniffing | OTA key transport capture during join |
+| Z-Wave S0 Downgrade | Force insecure inclusion, capture network key |
+| Z-Wave S2 | DSK interception during inclusion ceremony |
+\stopverb}
+}
+
+\subtree{
+\title{LoRa / LoRaWAN}
+\pre{\startverb
+| Vector | Description |
+|--------|-------------|
+| ABP vs OTAA | ABP uses static session keys, vulnerable to key reuse |
+| Frame Counter Reset | Device reset replays previously seen frames |
+| Session Key Reuse | ABP keys persist across sessions, enable decryption |
+| Join-Accept Replay | Replay captured OTAA join responses |
+| Bit-Flipping | Unencrypted FPort/FOpts manipulation |
+\stopverb}
+}
+
+\subtree{
+\title{Cellular}
+\pre{\startverb
+| Vector | Description |
+|--------|-------------|
+| IMSI Catching | Fake base station, device identity capture (Stingray) |
+| SS7 Exploitation | Location tracking, SMS interception, call redirect |
+| SIM Swap | Social engineering carrier to transfer number |
+| Baseband Attacks | RCE via malformed RRC/NAS messages |
+| 2G Downgrade | Force device to GSM, no mutual authentication |
+| VoLTE | SIP/RTP interception on LTE voice channels |
+\stopverb}
+}
+
+\subtree{
+\title{Sub-GHz (ISM Band)}
+\pre{\startverb
+| Vector | Description |
+|--------|-------------|
+| Garage Doors | Fixed code capture and replay (300-433 MHz) |
+| Car Key Fobs | RollJam (jam + capture rolling code), relay attack |
+| TPMS Sensors | Spoofed tire pressure to trigger warnings (315/433 MHz) |
+| ISM Band Jamming | Broadband noise on 315/433/868/915 MHz |
+| ASK/OOK Replay | Simple modulation schemes trivially replayed |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Tool Reference}
+\subtree{
+\title{SDR Hardware & Software}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| HackRF One | TX/RX 1 MHz–6 GHz, 20 MHz bandwidth |
+| RTL-SDR | RX-only dongle, 24–1766 MHz, low cost recon |
+| YARD Stick One | Sub-GHz TX/RX (< 1 GHz), ISM band attacks |
+| GNU Radio | Signal processing flowgraph framework |
+| Universal Radio Hacker | Protocol analysis, demod, decoding, fuzzing |
+| SDR++ / GQRX | Real-time spectrum visualization |
+\stopverb}
+}
+
+\subtree{
+\title{WiFi Tools}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| aircrack-ng suite | Monitor mode, capture, deauth, crack WPA |
+| bettercap | MITM framework, WiFi deauth, evil twin |
+| hostapd-mana | Rogue AP with EAP credential capture |
+| hcxdumptool | PMKID and handshake capture (clientless) |
+| hcxtools | Convert captures to hashcat/JTR format |
+| wifite2 | Automated WiFi audit wrapper |
+\stopverb}
+}
+
+\subtree{
+\title{Bluetooth Tools}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Ubertooth One | BLE and classic BT sniffing (2.4 GHz) |
+| btlejack | BLE connection hijacking and sniffing |
+| gatttool / bluetoothctl | GATT service enumeration and interaction |
+| nRF Connect (app/desktop) | BLE scanning, GATT browser, DFU testing |
+| Bettercap BLE module | BLE enumeration and write injection |
+| CrackLE | Crack BLE Legacy Pairing (Just Works/passkey) |
+\stopverb}
+}
+
+\subtree{
+\title{RFID Tools}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Proxmark3 (RDV4) | Multi-frequency RFID read/write/emulate/sniff |
+| Flipper Zero | Sub-GHz, RFID, NFC, IR, iButton swiss army knife |
+| libnfc | Open-source NFC library and utilities |
+| mfoc / mfcuk | Mifare Classic offline/unknown key cracking |
+| ACR122U | USB NFC reader for desktop analysis |
+\stopverb}
+}
+
+\subtree{
+\title{Signal Analysis}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Wireshark | 802.11, BLE, Zigbee protocol decode |
+| inspectrum | Spectrogram analysis and signal measurement |
+| baudline | Real-time FFT signal analysis |
+| SigDigger | Qt-based signal analyzer with inspectrum-like features |
+| rtl_433 | Decode OOK/FSK protocols from ISM band devices |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Audit Methodology}
+\subtree{
+\title{Phase 1: RF Reconnaissance}
+\ul{
+\li{Perform broadband spectrum sweep (SDR + GQRX/SDR++)}
+\li{Identify active frequencies, modulations, duty cycles}
+\li{Catalog all wireless interfaces on target devices}
+\li{Map wireless network topology and access points}
+\li{Document regulatory bands in use and transmission power}
+}
+}
+
+\subtree{
+\title{Phase 2: Protocol Enumeration}
+\ul{
+\li{Identify protocols on discovered frequencies (WiFi, BLE, Zigbee, proprietary)}
+\li{Enumerate advertised services (GATT, SSIDs, PAN IDs, device names)}
+\li{Fingerprint firmware versions and chipset identifiers}
+\li{Map protocol state machines and message sequences}
+\li{Identify supported security modes and negotiation behavior}
+}
+}
+
+\subtree{
+\title{Phase 3: Authentication Analysis}
+\ul{
+\li{Test pairing and association mechanisms for weaknesses}
+\li{Attempt default/well-known key access (Zigbee HA key, HID iClass standard)}
+\li{Evaluate key derivation and entropy (PRNG seeding, key length negotiation)}
+\li{Test credential storage on device (flash dump, JTAG/SWD extraction)}
+\li{Assess mutual authentication requirements (or lack thereof)}
+}
+}
+
+\subtree{
+\title{Phase 4: Traffic Analysis}
+\ul{
+\li{Capture and decode protocol traffic (Wireshark, URH, rtl_433)}
+\li{Identify cleartext or weakly encrypted data transmissions}
+\li{Analyze session management (frame counters, sequence numbers, nonces)}
+\li{Look for information leakage in metadata, headers, or advertisements}
+\li{Correlate traffic patterns with device behavior}
+}
+}
+
+\subtree{
+\title{Phase 5: Injection & Manipulation}
+\ul{
+\li{Replay captured frames and assess acceptance (replay protection)}
+\li{Inject crafted packets to test input validation}
+\li{Attempt protocol downgrade attacks (WPA3→WPA2, S2→S0, BLE SC→Legacy)}
+\li{Fuzz protocol parsers with malformed frames}
+\li{Test jamming resilience and failover behavior}
+}
+}
+
+\subtree{
+\title{Phase 6: Persistence & Lateral Movement}
+\ul{
+\li{Assess post-compromise persistence on wireless devices (firmware implants)}
+\li{Test pivot from wireless to wired network segments}
+\li{Evaluate OTA update mechanisms for hijacking potential}
+\li{Check for mesh network propagation of compromised keys}
+\li{Document trust relationships between wireless components}
+}
+}
+}
+
+\subtree{
+\title{Code Review Patterns}
+\p{When reviewing source code for RF/wireless implementations, flag:}
+
+\ul{
+\li{\strong{Hardcoded Keys}: Encryption keys, PINs, or network credentials in source/firmware}
+\li{\strong{Weak Randomness}: Use of \code{\startverb rand()\stopverb}, \code{\startverb millis()\stopverb}, or predictable seeds for nonces/keys}
+\li{\strong{Missing Replay Protection}: No frame counter, sequence number, or timestamp validation}
+\li{\strong{Cleartext Transmission}: Sensitive data sent without encryption over RF}
+\li{\strong{Weak Key Derivation}: Short keys, no KDF, or insufficient PBKDF2/scrypt rounds}
+\li{\strong{Missing Mutual Authentication}: Device trusts any peer without verifying identity}
+\li{\strong{No Firmware Signature Verification}: OTA updates accepted without code signing}
+\li{\strong{Static Session Keys}: ABP-style fixed keys that survive device reboot}
+\li{\strong{Insufficient Key Rotation}: Long-lived symmetric keys without renegotiation}
+\li{\strong{Debug Interfaces Left Open}: JTAG/SWD/UART enabled in production firmware}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb reverse-engineering\stopverb} — Firmware extraction, binary analysis, protocol RE}
+\li{\code{\startverb entry-point-analyzer\stopverb} — Identify attack entry points across system boundaries}
+\li{\code{\startverb iot-device-provisioning\stopverb} — Secure device onboarding and credential management}
+}
+}

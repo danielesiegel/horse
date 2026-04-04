@@ -1,0 +1,79 @@
+\title{Performing Cloud Native Forensics With Falco}
+
+\taxon{skill}
+
+\tag{performing}
+
+\tag{cloud}
+
+\tag{native}
+
+\tag{forensics}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Uses Falco YAML rules for runtime threat detection in containers and Kubernetes, monitoring syscalls for shell spawns, file tampering, network anomalies, and privilege escalation. Manages Falco rules via the Falco gRPC API and parses Falco alert output. Use when building container runtime security or investigating k8s cluster compromises.}
+
+\subtree{
+\title{Performing Cloud Native Forensics with Falco}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing cloud native forensics with falco}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cloud security concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\p{Deploy and manage Falco rules for runtime security detection in containerized environments. Parse Falco alerts for incident response.}
+
+\pre{\startverb
+# Custom Falco rule for detecting shell in container
+- rule: Shell Spawned in Container
+  desc: Detect shell process started in a container
+  condition: >
+    spawned_process and container
+    and proc.name in (bash, sh, zsh, dash, csh)
+    and not proc.pname in (docker-entrypo, supervisord)
+  output: >
+    Shell spawned in container
+    (user=%user.name command=%proc.cmdline container=%container.name
+     image=%container.image.repository)
+  priority: WARNING
+  tags: [container, shell, mitre_execution]
+\stopverb}
+
+\p{Key detection rules:}
+
+\ol{
+\li{Shell spawn in non-interactive containers}
+\li{Sensitive file access (/etc/shadow, /etc/passwd)}
+\li{Outbound connections from unexpected containers}
+\li{Privilege escalation via setuid/setgid}
+\li{Container escape via mount or ptrace}
+}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+# Run Falco with custom rules
+falco -r /etc/falco/custom_rules.yaml -o json_output=true
+# Parse JSON alerts
+cat /var/log/falco/alerts.json | python3 -c "import json,sys; [print(json.loads(l)['output']) for l in sys.stdin]"
+\stopverb}
+}
+}

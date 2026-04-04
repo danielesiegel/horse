@@ -1,0 +1,340 @@
+\title{Qutip}
+
+\taxon{skill}
+
+\meta{description}{"Quantum mechanics simulations and analysis using QuTiP (Quantum Toolbox in Python). Use when working with quantum systems including: (1) quantum states (kets, bras, density matrices), (2) quantum operators and gates, (3) time evolution and dynamics (Schrödinger, master equations, Monte Carlo), (4) open quantum systems with dissipation, (5) quantum measurements and entanglement, (6) visualization (Bloch sphere, Wigner functions), (7) steady states and correlation functions, or (8) advanced methods (Floquet theory, HEOM, stochastic solvers). Handles both closed and open quantum systems across various domains including quantum optics, quantum computing, and condensed matter physics."}
+
+\subtree{
+\title{QuTiP: Quantum Toolbox in Python}
+\subtree{
+\title{Overview}
+\p{QuTiP provides comprehensive tools for simulating and analyzing quantum mechanical systems. It handles both closed (unitary) and open (dissipative) quantum systems with multiple solvers optimized for different scenarios.}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install qutip
+\stopverb}
+
+\p{Optional packages for additional functionality:}
+
+\pre{\startverb
+# Quantum information processing (circuits, gates)
+uv pip install qutip-qip
+
+# Quantum trajectory viewer
+uv pip install qutip-qtrl
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+from qutip import *
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Create quantum state
+psi = basis(2, 0)  # |0⟩ state
+
+# Create operator
+H = sigmaz()  # Hamiltonian
+
+# Time evolution
+tlist = np.linspace(0, 10, 100)
+result = sesolve(H, psi, tlist, e_ops=[sigmaz()])
+
+# Plot results
+plt.plot(tlist, result.expect[0])
+plt.xlabel('Time')
+plt.ylabel('⟨σz⟩')
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Quantum Objects and States}
+\p{Create and manipulate quantum states and operators:}
+
+\pre{\startverb
+# States
+psi = basis(N, n)  # Fock state |n⟩
+psi = coherent(N, alpha)  # Coherent state |α⟩
+rho = thermal_dm(N, n_avg)  # Thermal density matrix
+
+# Operators
+a = destroy(N)  # Annihilation operator
+H = num(N)  # Number operator
+sx, sy, sz = sigmax(), sigmay(), sigmaz()  # Pauli matrices
+
+# Composite systems
+psi_AB = tensor(psi_A, psi_B)  # Tensor product
+\stopverb}
+
+\p{\strong{See} \code{\startverb references/core_concepts.md\stopverb} for comprehensive coverage of quantum objects, states, operators, and tensor products.}
+}
+
+\subtree{
+\title{2. Time Evolution and Dynamics}
+\p{Multiple solvers for different scenarios:}
+
+\pre{\startverb
+# Closed systems (unitary evolution)
+result = sesolve(H, psi0, tlist, e_ops=[num(N)])
+
+# Open systems (dissipation)
+c_ops = [np.sqrt(0.1) * destroy(N)]  # Collapse operators
+result = mesolve(H, psi0, tlist, c_ops, e_ops=[num(N)])
+
+# Quantum trajectories (Monte Carlo)
+result = mcsolve(H, psi0, tlist, c_ops, ntraj=500, e_ops=[num(N)])
+\stopverb}
+
+\p{\strong{Solver selection guide:}}
+
+\ul{
+\li{\code{\startverb sesolve\stopverb}: Pure states, unitary evolution}
+\li{\code{\startverb mesolve\stopverb}: Mixed states, dissipation, general open systems}
+\li{\code{\startverb mcsolve\stopverb}: Quantum jumps, photon counting, individual trajectories}
+\li{\code{\startverb brmesolve\stopverb}: Weak system-bath coupling}
+\li{\code{\startverb fmmesolve\stopverb}: Time-periodic Hamiltonians (Floquet)}
+}
+
+\p{\strong{See} \code{\startverb references/time_evolution.md\stopverb} for detailed solver documentation, time-dependent Hamiltonians, and advanced options.}
+}
+
+\subtree{
+\title{3. Analysis and Measurement}
+\p{Compute physical quantities:}
+
+\pre{\startverb
+# Expectation values
+n_avg = expect(num(N), psi)
+
+# Entropy measures
+S = entropy_vn(rho)  # Von Neumann entropy
+C = concurrence(rho)  # Entanglement (two qubits)
+
+# Fidelity and distance
+F = fidelity(psi1, psi2)
+D = tracedist(rho1, rho2)
+
+# Correlation functions
+corr = correlation_2op_1t(H, rho0, taulist, c_ops, A, B)
+w, S = spectrum_correlation_fft(taulist, corr)
+
+# Steady states
+rho_ss = steadystate(H, c_ops)
+\stopverb}
+
+\p{\strong{See} \code{\startverb references/analysis.md\stopverb} for entropy, fidelity, measurements, correlation functions, and steady state calculations.}
+}
+
+\subtree{
+\title{4. Visualization}
+\p{Visualize quantum states and dynamics:}
+
+\pre{\startverb
+# Bloch sphere
+b = Bloch()
+b.add_states(psi)
+b.show()
+
+# Wigner function (phase space)
+xvec = np.linspace(-5, 5, 200)
+W = wigner(psi, xvec, xvec)
+plt.contourf(xvec, xvec, W, 100, cmap='RdBu')
+
+# Fock distribution
+plot_fock_distribution(psi)
+
+# Matrix visualization
+hinton(rho)  # Hinton diagram
+matrix_histogram(H.full())  # 3D bars
+\stopverb}
+
+\p{\strong{See} \code{\startverb references/visualization.md\stopverb} for Bloch sphere animations, Wigner functions, Q-functions, and matrix visualizations.}
+}
+
+\subtree{
+\title{5. Advanced Methods}
+\p{Specialized techniques for complex scenarios:}
+
+\pre{\startverb
+# Floquet theory (periodic Hamiltonians)
+T = 2 * np.pi / w_drive
+f_modes, f_energies = floquet_modes(H, T, args)
+result = fmmesolve(H, psi0, tlist, c_ops, T=T, args=args)
+
+# HEOM (non-Markovian, strong coupling)
+from qutip.nonmarkov.heom import HEOMSolver, BosonicBath
+bath = BosonicBath(Q, ck_real, vk_real)
+hsolver = HEOMSolver(H_sys, [bath], max_depth=5)
+result = hsolver.run(rho0, tlist)
+
+# Permutational invariance (identical particles)
+psi = dicke(N, j, m)  # Dicke states
+Jz = jspin(N, 'z')  # Collective operators
+\stopverb}
+
+\p{\strong{See} \code{\startverb references/advanced.md\stopverb} for Floquet theory, HEOM, permutational invariance, stochastic solvers, superoperators, and performance optimization.}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Simulating a Damped Harmonic Oscillator}
+\pre{\startverb
+# System parameters
+N = 20  # Hilbert space dimension
+omega = 1.0  # Oscillator frequency
+kappa = 0.1  # Decay rate
+
+# Hamiltonian and collapse operators
+H = omega * num(N)
+c_ops = [np.sqrt(kappa) * destroy(N)]
+
+# Initial state
+psi0 = coherent(N, 3.0)
+
+# Time evolution
+tlist = np.linspace(0, 50, 200)
+result = mesolve(H, psi0, tlist, c_ops, e_ops=[num(N)])
+
+# Visualize
+plt.plot(tlist, result.expect[0])
+plt.xlabel('Time')
+plt.ylabel('⟨n⟩')
+plt.title('Photon Number Decay')
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Two-Qubit Entanglement Dynamics}
+\pre{\startverb
+# Create Bell state
+psi0 = bell_state('00')
+
+# Local dephasing on each qubit
+gamma = 0.1
+c_ops = [
+    np.sqrt(gamma) * tensor(sigmaz(), qeye(2)),
+    np.sqrt(gamma) * tensor(qeye(2), sigmaz())
+]
+
+# Track entanglement
+def compute_concurrence(t, psi):
+    rho = ket2dm(psi) if psi.isket else psi
+    return concurrence(rho)
+
+tlist = np.linspace(0, 10, 100)
+result = mesolve(qeye([2, 2]), psi0, tlist, c_ops)
+
+# Compute concurrence for each state
+C_t = [concurrence(state.proj()) for state in result.states]
+
+plt.plot(tlist, C_t)
+plt.xlabel('Time')
+plt.ylabel('Concurrence')
+plt.title('Entanglement Decay')
+plt.show()
+\stopverb}
+}
+
+\subtree{
+\title{Jaynes-Cummings Model}
+\pre{\startverb
+# System parameters
+N = 10  # Cavity Fock space
+wc = 1.0  # Cavity frequency
+wa = 1.0  # Atom frequency
+g = 0.05  # Coupling strength
+
+# Operators
+a = tensor(destroy(N), qeye(2))  # Cavity
+sm = tensor(qeye(N), sigmam())  # Atom
+
+# Hamiltonian (RWA)
+H = wc * a.dag() * a + wa * sm.dag() * sm + g * (a.dag() * sm + a * sm.dag())
+
+# Initial state: cavity in coherent state, atom in ground state
+psi0 = tensor(coherent(N, 2), basis(2, 0))
+
+# Dissipation
+kappa = 0.1  # Cavity decay
+gamma = 0.05  # Atomic decay
+c_ops = [np.sqrt(kappa) * a, np.sqrt(gamma) * sm]
+
+# Observables
+n_cav = a.dag() * a
+n_atom = sm.dag() * sm
+
+# Evolve
+tlist = np.linspace(0, 50, 200)
+result = mesolve(H, psi0, tlist, c_ops, e_ops=[n_cav, n_atom])
+
+# Plot
+fig, axes = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+axes[0].plot(tlist, result.expect[0])
+axes[0].set_ylabel('⟨n_cavity⟩')
+axes[1].plot(tlist, result.expect[1])
+axes[1].set_ylabel('⟨n_atom⟩')
+axes[1].set_xlabel('Time')
+plt.tight_layout()
+plt.show()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Tips for Efficient Simulations}
+\ol{
+\li{\strong{Truncate Hilbert spaces}: Use smallest dimension that captures dynamics}
+\li{\strong{Choose appropriate solver}: \code{\startverb sesolve\stopverb} for pure states is faster than \code{\startverb mesolve\stopverb}}
+\li{\strong{Time-dependent terms}: String format (e.g., \code{\startverb 'cos(w*t)'\stopverb}) is fastest}
+\li{\strong{Store only needed data}: Use \code{\startverb e_ops\stopverb} instead of storing all states}
+\li{\strong{Adjust tolerances}: Balance accuracy with computation time via \code{\startverb Options\stopverb}}
+\li{\strong{Parallel trajectories}: \code{\startverb mcsolve\stopverb} automatically uses multiple CPUs}
+\li{\strong{Check convergence}: Vary \code{\startverb ntraj\stopverb}, Hilbert space size, and tolerances}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\p{\strong{Memory issues}: Reduce Hilbert space dimension, use \code{\startverb store_final_state\stopverb} option, or consider Krylov methods}
+
+\p{\strong{Slow simulations}: Use string-based time-dependence, increase tolerances slightly, or try \code{\startverb method='bdf'\stopverb} for stiff problems}
+
+\p{\strong{Numerical instabilities}: Decrease time steps (\code{\startverb nsteps\stopverb} option), increase tolerances, or check Hamiltonian/operators are properly defined}
+
+\p{\strong{Import errors}: Ensure QuTiP is installed correctly; quantum gates require \code{\startverb qutip-qip\stopverb} package}
+}
+
+\subtree{
+\title{References}
+\p{This skill includes detailed reference documentation:}
+
+\ul{
+\li{\strong{\code{\startverb references/core_concepts.md\stopverb}}: Quantum objects, states, operators, tensor products, composite systems}
+\li{\strong{\code{\startverb references/time_evolution.md\stopverb}}: All solvers (sesolve, mesolve, mcsolve, brmesolve, etc.), time-dependent Hamiltonians, solver options}
+\li{\strong{\code{\startverb references/visualization.md\stopverb}}: Bloch sphere, Wigner functions, Q-functions, Fock distributions, matrix plots}
+\li{\strong{\code{\startverb references/analysis.md\stopverb}}: Expectation values, entropy, fidelity, entanglement measures, correlation functions, steady states}
+\li{\strong{\code{\startverb references/advanced.md\stopverb}}: Floquet theory, HEOM, permutational invariance, stochastic methods, superoperators, performance tips}
+}
+}
+
+\subtree{
+\title{External Resources}
+\ul{
+\li{Documentation: https://qutip.readthedocs.io/}
+\li{Tutorials: https://qutip.org/qutip-tutorials/}
+\li{API Reference: https://qutip.readthedocs.io/en/stable/apidoc/apidoc.html}
+\li{GitHub: https://github.com/qutip/qutip}
+}
+}
+}

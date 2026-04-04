@@ -1,0 +1,163 @@
+\title{Ghostty}
+
+\taxon{skill}
+
+\meta{description}{"Control Ghostty terminal emulator via CLI. Manage windows, tabs, splits, and configuration."}
+
+\subtree{
+\title{Ghostty Skill}
+\p{Use the \code{\startverb ghostty\stopverb} CLI to control and configure the Ghostty terminal emulator.}
+
+\subtree{
+\title{CLI Location}
+\pre{\startverb
+/Applications/Ghostty.app/Contents/MacOS/ghostty
+\stopverb}
+
+\p{Or if symlinked: \code{\startverb ghostty\stopverb}}
+}
+
+\subtree{
+\title{Actions (IPC Commands)}
+\p{Ghostty supports actions via \code{\startverb +action\stopverb} flag. These control the running instance.}
+
+\p{List available actions:}
+
+\pre{\startverb
+ghostty +list-actions
+\stopverb}
+
+\p{Create new window:}
+
+\pre{\startverb
+ghostty +new-window
+\stopverb}
+
+\p{Create new tab:}
+
+\pre{\startverb
+ghostty +new-tab
+\stopverb}
+
+\p{Create splits:}
+
+\pre{\startverb
+ghostty +new-split:right
+ghostty +new-split:down
+\stopverb}
+
+\p{Navigate splits:}
+
+\pre{\startverb
+ghostty +goto-split:previous
+ghostty +goto-split:next
+ghostty +goto-split:up
+ghostty +goto-split:down
+ghostty +goto-split:left
+ghostty +goto-split:right
+\stopverb}
+
+\p{Close current surface:}
+
+\pre{\startverb
+ghostty +close-surface
+\stopverb}
+
+\p{Toggle fullscreen:}
+
+\pre{\startverb
+ghostty +toggle-fullscreen
+\stopverb}
+
+\p{Reload configuration:}
+
+\pre{\startverb
+ghostty +reload-config
+\stopverb}
+}
+
+\subtree{
+\title{Font Management}
+\p{Increase/decrease font size:}
+
+\pre{\startverb
+ghostty +increase-font-size:1
+ghostty +decrease-font-size:1
+\stopverb}
+
+\p{Reset font size:}
+
+\pre{\startverb
+ghostty +reset-font-size
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\p{Config file location:}
+
+\pre{\startverb
+~/.config/ghostty/config
+\stopverb}
+
+\p{Show current config:}
+
+\pre{\startverb
+ghostty +show-config
+\stopverb}
+
+\p{List available themes:}
+
+\pre{\startverb
+ghostty +list-themes
+\stopverb}
+
+\p{List available fonts:}
+
+\pre{\startverb
+ghostty +list-fonts
+\stopverb}
+
+\p{List keybinds:}
+
+\pre{\startverb
+ghostty +list-keybinds
+\stopverb}
+}
+
+\subtree{
+\title{Launch Options}
+\p{Start with specific config:}
+
+\pre{\startverb
+ghostty --config-file=/path/to/config
+\stopverb}
+
+\p{Start with command:}
+
+\pre{\startverb
+ghostty -e "htop"
+\stopverb}
+
+\p{Start in directory:}
+
+\pre{\startverb
+ghostty --working-directory=/path/to/dir
+\stopverb}
+}
+
+\subtree{
+\title{Debugging}
+\p{Check version:}
+
+\pre{\startverb
+ghostty --version
+\stopverb}
+
+\p{Validate config:}
+
+\pre{\startverb
+ghostty +validate-config
+\stopverb}
+}
+}

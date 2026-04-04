@@ -1,0 +1,341 @@
+\title{Performing Windows Artifact Analysis With Eric Zimmerman Tools}
+
+\taxon{skill}
+
+\tag{eric-zimmerman}
+
+\tag{ez-tools}
+
+\tag{kape}
+
+\tag{mftecmd}
+
+\tag{pecmd}
+
+\tag{lecmd}
+
+\tag{jlecmd}
+
+\tag{registry-forensics}
+
+\tag{windows-forensics}
+
+\tag{timeline-explorer}
+
+\tag{dfir}
+
+\tag{artifact-analysis}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Perform comprehensive Windows forensic artifact analysis using Eric Zimmerman's open-source EZ Tools suite including KAPE, MFTECmd, PECmd, LECmd, JLECmd, and Timeline Explorer for parsing registry hives, prefetch files, event logs, and file system metadata.}
+
+\subtree{
+\title{Performing Windows Artifact Analysis with Eric Zimmerman Tools}
+\subtree{
+\title{Overview}
+\p{Eric Zimmerman's EZ Tools suite is a collection of open-source forensic utilities that have become the global standard for Windows digital forensics investigations. Originally developed by a former FBI agent and current SANS instructor, these tools parse and analyze critical Windows artifacts including the Master File Table ($MFT), registry hives, prefetch files, event logs, shortcut (LNK) files, and jump lists. The suite integrates with KAPE (Kroll Artifact Parser and Extractor) for automated artifact collection and processing, producing structured CSV output that can be ingested into Timeline Explorer for visual analysis. EZ Tools are widely used by law enforcement, corporate incident responders, and forensic consultants worldwide.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing windows artifact analysis with eric zimmerman tools}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows 10/11 or Windows Server 2016+ analysis workstation}
+\li{.NET 6 Runtime installed (required for EZ Tools v2.x+)}
+\li{Administrative privileges on the analysis workstation}
+\li{Forensic disk image or triage collection from target system}
+\li{At least 8 GB RAM (16 GB recommended for large datasets)}
+\li{Familiarity with NTFS file system structures and Windows internals}
+}
+}
+
+\subtree{
+\title{Tool Suite Components}
+\subtree{
+\title{KAPE (Kroll Artifact Parser and Extractor)}
+\p{KAPE is the primary orchestration tool that automates artifact collection (Targets) and processing (Modules). It uses configuration files (.tkape and .mkape) to define what artifacts to collect and which EZ Tools to run against them.}
+
+\p{\strong{Installation and Setup:}}
+
+\pre{\startverb
+# Download KAPE from https://www.kroll.com/en/services/cyber-risk/incident-response-litigation-support/kroll-artifact-parser-extractor-kape
+# Extract to C:\Tools\KAPE
+
+# Update KAPE targets and modules
+C:\Tools\KAPE\gkape.exe  # GUI version
+C:\Tools\KAPE\kape.exe   # CLI version
+
+# Sync latest EZ Tools binaries
+C:\Tools\KAPE\Get-KAPEUpdate.ps1
+\stopverb}
+
+\p{\strong{Running KAPE Collection and Processing:}}
+
+\pre{\startverb
+# Collect artifacts from E: drive (mounted forensic image) and process with EZ Tools
+kape.exe --tsource E: --tdest C:\Cases\Case001\Collection --target KapeTriage --mdest C:\Cases\Case001\Processed --module !EZParser
+
+# Collect specific artifact categories
+kape.exe --tsource E: --tdest C:\Cases\Case001\Collection --target FileSystem,RegistryHives,EventLogs --mdest C:\Cases\Case001\Processed --module MFTECmd,RECmd,EvtxECmd
+
+# Live system triage collection (run as administrator)
+kape.exe --tsource C: --tdest D:\LiveTriage\Collection --target KapeTriage --mdest D:\LiveTriage\Processed --module !EZParser --vhdx LiveTriageImage
+\stopverb}
+}
+
+\subtree{
+\title{MFTECmd - Master File Table Parser}
+\p{MFTECmd parses the NTFS $MFT, $J (USN Journal), $Boot, $SDS, and $LogFile into human-readable CSV format.}
+
+\pre{\startverb
+# Parse the $MFT file
+MFTECmd.exe -f "C:\Cases\Evidence\$MFT" --csv C:\Cases\Output --csvf MFT_output.csv
+
+# Parse the USN Journal ($J)
+MFTECmd.exe -f "C:\Cases\Evidence\$J" --csv C:\Cases\Output --csvf USNJournal_output.csv
+
+# Parse $Boot for volume information
+MFTECmd.exe -f "C:\Cases\Evidence\$Boot" --csv C:\Cases\Output --csvf Boot_output.csv
+
+# Parse $SDS for security descriptors
+MFTECmd.exe -f "C:\Cases\Evidence\$SDS" --csv C:\Cases\Output --csvf SDS_output.csv
+\stopverb}
+
+\p{\strong{Key Fields in MFT Output:}}
+
+\pre{\startverb
+| Field | Description |
+|-------|-------------|
+| EntryNumber | MFT record number |
+| ParentEntryNumber | Parent directory MFT record |
+| InUse | Whether the record is active or deleted |
+| FileName | Name of the file or directory |
+| Created0x10 | $STANDARD_INFORMATION creation timestamp |
+| Created0x30 | $FILE_NAME creation timestamp |
+| LastModified0x10 | $STANDARD_INFORMATION modification timestamp |
+| IsDirectory | Boolean indicating directory or file |
+| FileSize | Logical file size in bytes |
+| Extension | File extension |
+\stopverb}
+}
+
+\subtree{
+\title{PECmd - Prefetch File Parser}
+\p{PECmd parses Windows Prefetch files (.pf) to provide evidence of program execution, including run counts and timestamps.}
+
+\pre{\startverb
+# Parse all prefetch files from a directory
+PECmd.exe -d "C:\Cases\Evidence\Windows\Prefetch" --csv C:\Cases\Output --csvf Prefetch_output.csv
+
+# Parse a single prefetch file with verbose output
+PECmd.exe -f "C:\Cases\Evidence\Windows\Prefetch\CMD.EXE-4A81B364.pf" --json C:\Cases\Output
+
+# Parse prefetch with keyword filtering
+PECmd.exe -d "C:\Cases\Evidence\Windows\Prefetch" -k "powershell,cmd,wscript,cscript,mshta" --csv C:\Cases\Output --csvf SuspiciousExec.csv
+\stopverb}
+}
+
+\subtree{
+\title{RECmd - Registry Explorer Command Line}
+\p{RECmd processes Windows registry hives using batch files that define which keys and values to extract.}
+
+\pre{\startverb
+# Process all registry hives with the default batch file
+RECmd.exe --bn C:\Tools\KAPE\Modules\bin\RECmd\BatchExamples\RECmd_Batch_MC.reb -d "C:\Cases\Evidence\Registry" --csv C:\Cases\Output --csvf Registry_output.csv
+
+# Process a single NTUSER.DAT hive
+RECmd.exe -f "C:\Cases\Evidence\Users\suspect\NTUSER.DAT" --bn C:\Tools\KAPE\Modules\bin\RECmd\BatchExamples\RECmd_Batch_MC.reb --csv C:\Cases\Output
+
+# Process SYSTEM hive for USB device history
+RECmd.exe -f "C:\Cases\Evidence\Registry\SYSTEM" --bn C:\Tools\KAPE\Modules\bin\RECmd\BatchExamples\RECmd_Batch_MC.reb --csv C:\Cases\Output
+\stopverb}
+}
+
+\subtree{
+\title{EvtxECmd - Windows Event Log Parser}
+\p{EvtxECmd parses Windows Event Log (.evtx) files into structured CSV format with customizable event ID maps.}
+
+\pre{\startverb
+# Parse all event logs from a directory
+EvtxECmd.exe -d "C:\Cases\Evidence\Windows\System32\winevt\Logs" --csv C:\Cases\Output --csvf EventLogs_output.csv
+
+# Parse a single event log
+EvtxECmd.exe -f "C:\Cases\Evidence\Security.evtx" --csv C:\Cases\Output --csvf Security_output.csv
+
+# Parse with custom maps for enhanced field extraction
+EvtxECmd.exe -d "C:\Cases\Evidence\Logs" --csv C:\Cases\Output --maps C:\Tools\KAPE\Modules\bin\EvtxECmd\Maps
+\stopverb}
+}
+
+\subtree{
+\title{LECmd and JLECmd - Shortcut and Jump List Parsers}
+\pre{\startverb
+# Parse LNK files from Recent directory
+LECmd.exe -d "C:\Cases\Evidence\Users\suspect\AppData\Roaming\Microsoft\Windows\Recent" --csv C:\Cases\Output --csvf LNK_output.csv
+
+# Parse Jump Lists (automatic destinations)
+JLECmd.exe -d "C:\Cases\Evidence\Users\suspect\AppData\Roaming\Microsoft\Windows\Recent\AutomaticDestinations" --csv C:\Cases\Output --csvf JumpLists_auto.csv
+
+# Parse Jump Lists (custom destinations)
+JLECmd.exe -d "C:\Cases\Evidence\Users\suspect\AppData\Roaming\Microsoft\Windows\Recent\CustomDestinations" --csv C:\Cases\Output --csvf JumpLists_custom.csv
+\stopverb}
+}
+
+\subtree{
+\title{SBECmd - Shellbag Explorer Command Line}
+\pre{\startverb
+# Parse shellbags from a directory of registry hives
+SBECmd.exe -d "C:\Cases\Evidence\Registry" --csv C:\Cases\Output --csvf Shellbags_output.csv
+
+# Parse shellbags from a live system (requires admin)
+SBECmd.exe --live --csv C:\Cases\Output --csvf LiveShellbags_output.csv
+\stopverb}
+}
+
+\subtree{
+\title{Timeline Explorer - Visual Analysis}
+\p{Timeline Explorer is the GUI tool for analyzing CSV output from all EZ Tools. It supports filtering, sorting, column grouping, and conditional formatting.}
+
+\pre{\startverb
+# Launch Timeline Explorer and open CSV output
+TimelineExplorer.exe "C:\Cases\Output\MFT_output.csv"
+\stopverb}
+
+\p{\strong{Key Timeline Explorer Features:}}
+
+\ul{
+\li{Column-level filtering with regular expressions}
+\li{Conditional formatting for timestamp anomalies}
+\li{Multi-column sorting for chronological analysis}
+\li{Export filtered results to new CSV files}
+\li{Bookmarking rows of interest}
+}
+}
+}
+
+\subtree{
+\title{Investigation Workflow}
+\subtree{
+\title{Step 1: Artifact Collection with KAPE}
+\pre{\startverb
+# Full triage collection from forensic image mounted at E:
+kape.exe --tsource E: --tdest C:\Cases\Case001\Collected --target KapeTriage --vhdx TriageImage --zv false
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Artifact Processing with EZ Tools}
+\pre{\startverb
+# Process all collected artifacts
+kape.exe --msource C:\Cases\Case001\Collected --mdest C:\Cases\Case001\Processed --module !EZParser
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Timeline Analysis}
+\ol{
+\li{Open processed CSV files in Timeline Explorer}
+\li{Sort by timestamp columns to establish chronological order}
+\li{Filter for specific file extensions, paths, or event IDs}
+\li{Cross-reference MFT timestamps with event log entries}
+\li{Identify timestomping by comparing $SI and $FN timestamps}
+\li{Document findings with bookmarks and exported filtered views}
+}
+}
+
+\subtree{
+\title{Step 4: Timestomping Detection}
+\pre{\startverb
+# In Timeline Explorer, compare these columns:
+# Created0x10 ($STANDARD_INFORMATION) vs Created0x30 ($FILE_NAME)
+# If Created0x10 < Created0x30, timestomping is indicated
+# $FILE_NAME timestamps are harder to manipulate than $STANDARD_INFORMATION
+\stopverb}
+}
+}
+
+\subtree{
+\title{Forensic Artifacts Reference}
+\pre{\startverb
+| Tool | Artifact | Location |
+|------|----------|----------|
+| MFTECmd | $MFT | Root of NTFS volume |
+| MFTECmd | $J (USN Journal) | $Extend\$UsnJrnl:$J |
+| PECmd | Prefetch files | C:\Windows\Prefetch\*.pf |
+| RECmd | NTUSER.DAT | C:\Users\{user}\NTUSER.DAT |
+| RECmd | SYSTEM hive | C:\Windows\System32\config\SYSTEM |
+| RECmd | SAM hive | C:\Windows\System32\config\SAM |
+| RECmd | SOFTWARE hive | C:\Windows\System32\config\SOFTWARE |
+| EvtxECmd | Event logs | C:\Windows\System32\winevt\Logs\*.evtx |
+| LECmd | LNK files | C:\Users\{user}\AppData\Roaming\Microsoft\Windows\Recent\ |
+| JLECmd | Jump lists | C:\Users\{user}\AppData\Roaming\Microsoft\Windows\Recent\AutomaticDestinations\ |
+| SBECmd | Shellbags | NTUSER.DAT and UsrClass.dat registry hives |
+\stopverb}
+}
+
+\subtree{
+\title{Common Investigation Scenarios}
+\subtree{
+\title{Malware Execution Evidence}
+\ol{
+\li{Parse Prefetch with PECmd to identify executed binaries}
+\li{Cross-reference with MFT for file creation timestamps}
+\li{Check Amcache.hve with RECmd for SHA1 hashes of executables}
+\li{Correlate with Event Log entries for process creation (Event ID 4688)}
+}
+}
+
+\subtree{
+\title{Data Exfiltration Investigation}
+\ol{
+\li{Parse USN Journal with MFTECmd for file rename/delete operations}
+\li{Analyze LNK files with LECmd for recently accessed documents}
+\li{Review Shellbags with SBECmd for directory browsing activity}
+\li{Check for USB device connections in SYSTEM registry with RECmd}
+}
+}
+
+\subtree{
+\title{Lateral Movement Detection}
+\ol{
+\li{Parse Security.evtx with EvtxECmd for logon events (4624, 4625)}
+\li{Analyze RDP-related event logs (Microsoft-Windows-TerminalServices)}
+\li{Cross-reference with network share access from SMB logs}
+\li{Review scheduled tasks and services for persistence mechanisms}
+}
+}
+}
+
+\subtree{
+\title{Output Format and Integration}
+\p{All EZ Tools produce CSV output that can be:}
+
+\ul{
+\li{Analyzed in Timeline Explorer for visual investigation}
+\li{Imported into Splunk, Elastic, or other SIEM platforms}
+\li{Processed by Python/PowerShell scripts for automated analysis}
+\li{Combined into super timelines using log2timeline/Plaso}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{Eric Zimmerman's Tools: https://ericzimmerman.github.io/}
+\li{KAPE Documentation: https://ericzimmerman.github.io/KapeDocs/}
+\li{SANS EZ Tools Training: https://www.sans.org/tools/ez-tools}
+\li{SANS FOR508: Advanced Incident Response and Threat Hunting}
+\li{SANS FOR498: Battlefield Forensics & Data Acquisition}
+}
+}
+}

@@ -1,0 +1,118 @@
+\title{Og}
+
+\taxon{skill}
+
+\meta{description}{'## Overview'}
+
+\subtree{
+\title{og - Observational Bridge Time Travel Skill}
+\subtree{
+\title{Overview}
+\p{The \code{\startverb og\stopverb} skill maintains plurigrid fork synchronization while cherry-picking from the original (og) remote. It implements time-travel exercises through an observational bridge pattern for DuckDB buffers tracking ersatz Emacs interactions.}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Observational Bridge Type}
+\pre{\startverb
+OG Remote ────[cherry-pick]────→ Plurigrid Fork
+     ↑                                  │
+     │                                  │
+  [time-travel]              [DuckDB buffer]
+     │                                  │
+     └──── CRDT.el sexp state ←────────┘
+\stopverb}
+}
+
+\subtree{
+\title{3-MATCH Chromatic Identity for Git Operations}
+\ul{
+\li{\strong{SEED-WORLD}: Git commit SHA}
+\li{\strong{COLOR-WORLD}: Gay.jl color from commit timestamp}
+\li{\strong{FINGERPRINT-WORLD}: DuckDB buffer hash}
+}
+}
+
+\subtree{
+\title{Tracked Interactions}
+\ol{
+\li{\strong{crdt.el sexp state} - Intermediate collaborative editing state}
+\li{\strong{Gay.jl invocations} - Color generation calls with seed/index}
+\li{\strong{GayMCP rewriting} - Self-modifying protocol operations}
+}
+}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Cherry-Pick with Time Travel}
+\pre{\startverb
+# Fetch from og remote with color tracking
+og fetch --track-colors
+
+# Cherry-pick specific commit with DuckDB buffer
+og cherry-pick <sha> --buffer-to-duckdb
+
+# Time travel to previous state
+og time-travel --to-round <drand_round>
+\stopverb}
+}
+
+\subtree{
+\title{DuckDB Buffer Operations}
+\pre{\startverb
+-- Query crdt.el interaction history
+SELECT * FROM crdt_sexp_buffer
+WHERE session_id = current_session()
+ORDER BY timestamp DESC;
+
+-- Gay.jl color tracking
+SELECT seed, index, hex_color, girard_polarity
+FROM gay_color_invocations
+WHERE timestamp > now() - interval '1 hour';
+\stopverb}
+}
+
+\subtree{
+\title{Self-Rewriting Protocol}
+\p{The skill tracks when GayMCP rewrites itself by monitoring:}
+
+\ul{
+\li{Seed state changes}
+\li{Color palette mutations}
+\li{3-MATCH triangle verification failures}
+}
+}
+}
+
+\subtree{
+\title{Configuration}
+\pre{\startverb
+{
+  "og": {
+    "remote": "og",
+    "branch": "asi-skillz",
+    "duckdb_path": "~/.og/time_travel.duckdb",
+    "track_gay_jl": true,
+    "track_crdt_el": true,
+    "drand_beacon": "quicknet"
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Integration with music-topos}
+\p{The skill connects to the Blume-Capel ergodic random walk:}
+
+\ul{
+\li{+1 cherry-pick: Accept commit (ferromagnetic)}
+\li{-1 cherry-pick: Reject commit (antiferromagnetic)}
+\li{0 cherry-pick: BEAVER - defer decision (vacancy)}
+}
+
+\p{Möbius inversion tracks the cumulative cherry-pick decisions.}
+}
+}

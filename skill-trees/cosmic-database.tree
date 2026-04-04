@@ -1,0 +1,433 @@
+\title{Cosmic Database}
+
+\taxon{skill}
+
+\meta{description}{"Access COSMIC cancer mutation database. Query somatic mutations, Cancer Gene Census, mutational signatures, gene fusions, for cancer research and precision oncology. Requires authentication."}
+
+\subtree{
+\title{COSMIC Database}
+\subtree{
+\title{Overview}
+\p{COSMIC (Catalogue of Somatic Mutations in Cancer) is the world's largest and most comprehensive database for exploring somatic mutations in human cancer. Access COSMIC's extensive collection of cancer genomics data, including millions of mutations across thousands of cancer types, curated gene lists, mutational signatures, and clinical annotations programmatically.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Downloading cancer mutation data from COSMIC}
+\li{Accessing the Cancer Gene Census for curated cancer gene lists}
+\li{Retrieving mutational signature profiles}
+\li{Querying structural variants, copy number alterations, or gene fusions}
+\li{Analyzing drug resistance mutations}
+\li{Working with cancer cell line genomics data}
+\li{Integrating cancer mutation data into bioinformatics pipelines}
+\li{Researching specific genes or mutations in cancer contexts}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\subtree{
+\title{Account Registration}
+\p{COSMIC requires authentication for data downloads:}
+
+\ul{
+\li{\strong{Academic users}: Free access with registration at https://cancer.sanger.ac.uk/cosmic/register}
+\li{\strong{Commercial users}: License required (contact QIAGEN)}
+}
+}
+
+\subtree{
+\title{Python Requirements}
+\pre{\startverb
+uv pip install requests pandas
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{1. Basic File Download}
+\p{Use the \code{\startverb scripts/download_cosmic.py\stopverb} script to download COSMIC data files:}
+
+\pre{\startverb
+from scripts.download_cosmic import download_cosmic_file
+
+# Download mutation data
+download_cosmic_file(
+    email="your_email@institution.edu",
+    password="your_password",
+    filepath="GRCh38/cosmic/latest/CosmicMutantExport.tsv.gz",
+    output_filename="cosmic_mutations.tsv.gz"
+)
+\stopverb}
+}
+
+\subtree{
+\title{2. Command-Line Usage}
+\pre{\startverb
+# Download using shorthand data type
+python scripts/download_cosmic.py user@email.com --data-type mutations
+
+# Download specific file
+python scripts/download_cosmic.py user@email.com \
+    --filepath GRCh38/cosmic/latest/cancer_gene_census.csv
+
+# Download for specific genome assembly
+python scripts/download_cosmic.py user@email.com \
+    --data-type gene_census --assembly GRCh37 -o cancer_genes.csv
+\stopverb}
+}
+
+\subtree{
+\title{3. Working with Downloaded Data}
+\pre{\startverb
+import pandas as pd
+
+# Read mutation data
+mutations = pd.read_csv('cosmic_mutations.tsv.gz', sep='\t', compression='gzip')
+
+# Read Cancer Gene Census
+gene_census = pd.read_csv('cancer_gene_census.csv')
+
+# Read VCF format
+import pysam
+vcf = pysam.VariantFile('CosmicCodingMuts.vcf.gz')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Available Data Types}
+\subtree{
+\title{Core Mutations}
+\p{Download comprehensive mutation data including point mutations, indels, and genomic annotations.}
+
+\p{\strong{Common data types}:}
+
+\ul{
+\li{\code{\startverb mutations\stopverb} - Complete coding mutations (TSV format)}
+\li{\code{\startverb mutations_vcf\stopverb} - Coding mutations in VCF format}
+\li{\code{\startverb sample_info\stopverb} - Sample metadata and tumor information}
+}
+
+\pre{\startverb
+# Download all coding mutations
+download_cosmic_file(
+    email="user@email.com",
+    password="password",
+    filepath="GRCh38/cosmic/latest/CosmicMutantExport.tsv.gz"
+)
+\stopverb}
+}
+
+\subtree{
+\title{Cancer Gene Census}
+\p{Access the expert-curated list of ~700+ cancer genes with substantial evidence of cancer involvement.}
+
+\pre{\startverb
+# Download Cancer Gene Census
+download_cosmic_file(
+    email="user@email.com",
+    password="password",
+    filepath="GRCh38/cosmic/latest/cancer_gene_census.csv"
+)
+\stopverb}
+
+\p{\strong{Use cases}:}
+
+\ul{
+\li{Identifying known cancer genes}
+\li{Filtering variants by cancer relevance}
+\li{Understanding gene roles (oncogene vs tumor suppressor)}
+\li{Target gene selection for research}
+}
+}
+
+\subtree{
+\title{Mutational Signatures}
+\p{Download signature profiles for mutational signature analysis.}
+
+\pre{\startverb
+# Download signature definitions
+download_cosmic_file(
+    email="user@email.com",
+    password="password",
+    filepath="signatures/signatures.tsv"
+)
+\stopverb}
+
+\p{\strong{Signature types}:}
+
+\ul{
+\li{Single Base Substitution (SBS) signatures}
+\li{Doublet Base Substitution (DBS) signatures}
+\li{Insertion/Deletion (ID) signatures}
+}
+}
+
+\subtree{
+\title{Structural Variants and Fusions}
+\p{Access gene fusion data and structural rearrangements.}
+
+\p{\strong{Available data types}:}
+
+\ul{
+\li{\code{\startverb structural_variants\stopverb} - Structural breakpoints}
+\li{\code{\startverb fusion_genes\stopverb} - Gene fusion events}
+}
+
+\pre{\startverb
+# Download gene fusions
+download_cosmic_file(
+    email="user@email.com",
+    password="password",
+    filepath="GRCh38/cosmic/latest/CosmicFusionExport.tsv.gz"
+)
+\stopverb}
+}
+
+\subtree{
+\title{Copy Number and Expression}
+\p{Retrieve copy number alterations and gene expression data.}
+
+\p{\strong{Available data types}:}
+
+\ul{
+\li{\code{\startverb copy_number\stopverb} - Copy number gains/losses}
+\li{\code{\startverb gene_expression\stopverb} - Over/under-expression data}
+}
+
+\pre{\startverb
+# Download copy number data
+download_cosmic_file(
+    email="user@email.com",
+    password="password",
+    filepath="GRCh38/cosmic/latest/CosmicCompleteCNA.tsv.gz"
+)
+\stopverb}
+}
+
+\subtree{
+\title{Resistance Mutations}
+\p{Access drug resistance mutation data with clinical annotations.}
+
+\pre{\startverb
+# Download resistance mutations
+download_cosmic_file(
+    email="user@email.com",
+    password="password",
+    filepath="GRCh38/cosmic/latest/CosmicResistanceMutations.tsv.gz"
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Working with COSMIC Data}
+\subtree{
+\title{Genome Assemblies}
+\p{COSMIC provides data for two reference genomes:}
+
+\ul{
+\li{\strong{GRCh38} (recommended, current standard)}
+\li{\strong{GRCh37} (legacy, for older pipelines)}
+}
+
+\p{Specify the assembly in file paths:}
+
+\pre{\startverb
+# GRCh38 (recommended)
+filepath="GRCh38/cosmic/latest/CosmicMutantExport.tsv.gz"
+
+# GRCh37 (legacy)
+filepath="GRCh37/cosmic/latest/CosmicMutantExport.tsv.gz"
+\stopverb}
+}
+
+\subtree{
+\title{Versioning}
+\ul{
+\li{Use \code{\startverb latest\stopverb} in file paths to always get the most recent release}
+\li{COSMIC is updated quarterly (current version: v102, May 2025)}
+\li{Specific versions can be used for reproducibility: \code{\startverb v102\stopverb}, \code{\startverb v101\stopverb}, etc.}
+}
+}
+
+\subtree{
+\title{File Formats}
+\ul{
+\li{\strong{TSV/CSV}: Tab/comma-separated, gzip compressed, read with pandas}
+\li{\strong{VCF}: Standard variant format, use with pysam, bcftools, or GATK}
+\li{All files include headers describing column contents}
+}
+}
+
+\subtree{
+\title{Common Analysis Patterns}
+\p{\strong{Filter mutations by gene}:}
+
+\pre{\startverb
+import pandas as pd
+
+mutations = pd.read_csv('cosmic_mutations.tsv.gz', sep='\t', compression='gzip')
+tp53_mutations = mutations[mutations['Gene name'] == 'TP53']
+\stopverb}
+
+\p{\strong{Identify cancer genes by role}:}
+
+\pre{\startverb
+gene_census = pd.read_csv('cancer_gene_census.csv')
+oncogenes = gene_census[gene_census['Role in Cancer'].str.contains('oncogene', na=False)]
+tumor_suppressors = gene_census[gene_census['Role in Cancer'].str.contains('TSG', na=False)]
+\stopverb}
+
+\p{\strong{Extract mutations by cancer type}:}
+
+\pre{\startverb
+mutations = pd.read_csv('cosmic_mutations.tsv.gz', sep='\t', compression='gzip')
+lung_mutations = mutations[mutations['Primary site'] == 'lung']
+\stopverb}
+
+\p{\strong{Work with VCF files}:}
+
+\pre{\startverb
+import pysam
+
+vcf = pysam.VariantFile('CosmicCodingMuts.vcf.gz')
+for record in vcf.fetch('17', 7577000, 7579000):  # TP53 region
+    print(record.id, record.ref, record.alts, record.info)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Data Reference}
+\p{For comprehensive information about COSMIC data structure, available files, and field descriptions, see \code{\startverb references/cosmic_data_reference.md\stopverb}. This reference includes:}
+
+\ul{
+\li{Complete list of available data types and files}
+\li{Detailed field descriptions for each file type}
+\li{File format specifications}
+\li{Common file paths and naming conventions}
+\li{Data update schedule and versioning}
+\li{Citation information}
+}
+
+\p{Use this reference when:}
+
+\ul{
+\li{Exploring what data is available in COSMIC}
+\li{Understanding specific field meanings}
+\li{Determining the correct file path for a data type}
+\li{Planning analysis workflows with COSMIC data}
+}
+}
+
+\subtree{
+\title{Helper Functions}
+\p{The download script includes helper functions for common operations:}
+
+\subtree{
+\title{Get Common File Paths}
+\pre{\startverb
+from scripts.download_cosmic import get_common_file_path
+
+# Get path for mutations file
+path = get_common_file_path('mutations', genome_assembly='GRCh38')
+# Returns: 'GRCh38/cosmic/latest/CosmicMutantExport.tsv.gz'
+
+# Get path for gene census
+path = get_common_file_path('gene_census')
+# Returns: 'GRCh38/cosmic/latest/cancer_gene_census.csv'
+\stopverb}
+
+\p{\strong{Available shortcuts}:}
+
+\ul{
+\li{\code{\startverb mutations\stopverb} - Core coding mutations}
+\li{\code{\startverb mutations_vcf\stopverb} - VCF format mutations}
+\li{\code{\startverb gene_census\stopverb} - Cancer Gene Census}
+\li{\code{\startverb resistance_mutations\stopverb} - Drug resistance data}
+\li{\code{\startverb structural_variants\stopverb} - Structural variants}
+\li{\code{\startverb gene_expression\stopverb} - Expression data}
+\li{\code{\startverb copy_number\stopverb} - Copy number alterations}
+\li{\code{\startverb fusion_genes\stopverb} - Gene fusions}
+\li{\code{\startverb signatures\stopverb} - Mutational signatures}
+\li{\code{\startverb sample_info\stopverb} - Sample metadata}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Authentication Errors}
+\ul{
+\li{Verify email and password are correct}
+\li{Ensure account is registered at cancer.sanger.ac.uk/cosmic}
+\li{Check if commercial license is required for your use case}
+}
+}
+
+\subtree{
+\title{File Not Found}
+\ul{
+\li{Verify the filepath is correct}
+\li{Check that the requested version exists}
+\li{Use \code{\startverb latest\stopverb} for the most recent version}
+\li{Confirm genome assembly (GRCh37 vs GRCh38) is correct}
+}
+}
+
+\subtree{
+\title{Large File Downloads}
+\ul{
+\li{COSMIC files can be several GB in size}
+\li{Ensure sufficient disk space}
+\li{Download may take several minutes depending on connection}
+\li{The script shows download progress for large files}
+}
+}
+
+\subtree{
+\title{Commercial Use}
+\ul{
+\li{Commercial users must license COSMIC through QIAGEN}
+\li{Contact: cosmic-translation@sanger.ac.uk}
+\li{Academic access is free but requires registration}
+}
+}
+}
+
+\subtree{
+\title{Integration with Other Tools}
+\p{COSMIC data integrates well with:}
+
+\ul{
+\li{\strong{Variant annotation}: VEP, ANNOVAR, SnpEff}
+\li{\strong{Signature analysis}: SigProfiler, deconstructSigs, MuSiCa}
+\li{\strong{Cancer genomics}: cBioPortal, OncoKB, CIViC}
+\li{\strong{Bioinformatics}: Bioconductor, TCGA analysis tools}
+\li{\strong{Data science}: pandas, scikit-learn, PyTorch}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{COSMIC Website}: https://cancer.sanger.ac.uk/cosmic}
+\li{\strong{Documentation}: https://cancer.sanger.ac.uk/cosmic/help}
+\li{\strong{Release Notes}: https://cancer.sanger.ac.uk/cosmic/release_notes}
+\li{\strong{Contact}: cosmic@sanger.ac.uk}
+}
+}
+
+\subtree{
+\title{Citation}
+\p{When using COSMIC data, cite: Tate JG, Bamford S, Jubb HC, et al. COSMIC: the Catalogue Of Somatic Mutations In Cancer. Nucleic Acids Research. 2019;47(D1):D941-D947.}
+}
+}

@@ -1,0 +1,156 @@
+\title{Ssh}
+
+\taxon{skill}
+
+\meta{description}{Establish and manage SSH connections to remote machines, including key generation, configuration, and file transfers. Use when connecting to remote servers, executing remote commands, or transferring files via SCP.}
+
+\subtree{
+\title{SSH Skill}
+\p{This skill provides capabilities for establishing and managing SSH connections to remote machines.}
+
+\subtree{
+\title{Capabilities}
+\ul{
+\li{Establish SSH connections using password or key-based authentication}
+\li{Generate and manage SSH key pairs}
+\li{Configure SSH for easier connections}
+\li{Execute commands on remote machines}
+\li{Transfer files between local and remote machines}
+\li{Manage SSH configurations and known hosts}
+}
+}
+
+\subtree{
+\title{Authentication Methods}
+\subtree{
+\title{Password Authentication}
+\pre{\startverb
+ssh username@hostname
+\stopverb}
+
+\p{When prompted, you should ask the user for their password or a private key.}
+}
+
+\subtree{
+\title{Key-Based Authentication}
+\p{Generate a new SSH key pair:}
+
+\pre{\startverb
+ssh-keygen -t ed25519 -f ~/.ssh/key_name -C "comment" -N ""
+\stopverb}
+
+\p{Copy the public key to the remote server:}
+
+\pre{\startverb
+ssh-copy-id -i ~/.ssh/key_name.pub username@hostname
+\stopverb}
+
+\p{Connect using the private key:}
+
+\pre{\startverb
+ssh -i ~/.ssh/key_name username@hostname
+\stopverb}
+}
+}
+
+\subtree{
+\title{SSH Configuration}
+\p{Create or edit the SSH config file for easier connections:}
+
+\pre{\startverb
+mkdir -p ~/.ssh
+cat > ~/.ssh/config << 'EOF'
+Host alias
+    HostName hostname_or_ip
+    User username
+    IdentityFile ~/.ssh/key_name
+    Port 22
+    ServerAliveInterval 60
+EOF
+chmod 600 ~/.ssh/config
+\stopverb}
+
+\p{Then connect using the alias:}
+
+\pre{\startverb
+ssh alias
+\stopverb}
+}
+
+\subtree{
+\title{Common SSH Options}
+\ul{
+\li{\code{\startverb -p PORT\stopverb}: Connect to a specific port}
+\li{\code{\startverb -X\stopverb}: Enable X11 forwarding}
+\li{\code{\startverb -L local_port:remote_host:remote_port\stopverb}: Set up local port forwarding}
+\li{\code{\startverb -R remote_port:local_host:local_port\stopverb}: Set up remote port forwarding}
+\li{\code{\startverb -N\stopverb}: Do not execute a remote command (useful for port forwarding)}
+\li{\code{\startverb -f\stopverb}: Run in background}
+\li{\code{\startverb -v\stopverb}: Verbose mode (add more v's for increased verbosity)}
+}
+}
+
+\subtree{
+\title{File Transfer with SCP}
+\p{Copy a file to the remote server:}
+
+\pre{\startverb
+scp /path/to/local/file username@hostname:/path/to/remote/directory/
+\stopverb}
+
+\p{Copy a file from the remote server:}
+
+\pre{\startverb
+scp username@hostname:/path/to/remote/file /path/to/local/directory/
+\stopverb}
+
+\p{Copy a directory recursively:}
+
+\pre{\startverb
+scp -r /path/to/local/directory username@hostname:/path/to/remote/directory/
+\stopverb}
+}
+
+\subtree{
+\title{SSH Agent}
+\p{Start the SSH agent:}
+
+\pre{\startverb
+eval "$(ssh-agent -s)"
+\stopverb}
+
+\p{Add a key to the agent:}
+
+\pre{\startverb
+ssh-add ~/.ssh/key_name
+\stopverb}
+}
+
+\subtree{
+\title{Troubleshooting}
+\ul{
+\li{Check SSH service status on remote: \code{\startverb systemctl status sshd\stopverb}}
+\li{Verify SSH port is open: \code{\startverb nc -zv hostname 22\stopverb}}
+\li{Debug connection issues: \code{\startverb ssh -vvv username@hostname\stopverb}}
+\li{Check permissions: SSH private keys should have 600 permissions (\code{\startverb chmod 600 ~/.ssh/key_name\stopverb})}
+\li{Verify known_hosts: If host key changed, remove the old entry with \code{\startverb ssh-keygen -R hostname\stopverb}}
+}
+}
+
+\subtree{
+\title{Secure SSH Key Management}
+\subtree{
+\title{Local Storage with Proper Permissions}
+\p{The most basic approach is to ensure proper file permissions:}
+
+\pre{\startverb
+# Set correct permissions for private keys
+chmod 600 ~/.ssh/id_ed25519
+# Set correct permissions for public keys
+chmod 644 ~/.ssh/id_ed25519.pub
+# Set correct permissions for SSH directory
+chmod 700 ~/.ssh
+\stopverb}
+}
+}
+}

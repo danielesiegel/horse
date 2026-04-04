@@ -1,0 +1,230 @@
+\title{Bmorphism Diagrams}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{bmorphism Diagrams}
+
+\subtree{
+\title{bmorphism Diagrams}
+\p{Interleave bmorphism's mermaid diagrams into interactions using GF(3) triadic selection.}
+
+\subtree{
+\title{Data Source}
+\pre{\startverb
+~/mermaid_diagrams.duckdb
+├── diagrams (251 rows)
+│   ├── id: UUID
+│   ├── content: VARCHAR (mermaid code)
+│   ├── diagram_type: VARCHAR (graph|flowchart|stateDiagram|...)
+│   ├── trit: INTEGER (-1, 0, +1)
+│   └── content_hash: VARCHAR
+\stopverb}
+}
+
+\subtree{
+\title{Diagram Types}
+\pre{\startverb
+| Type | Count | Use Case |
+|------|-------|----------|
+| graph | 126 | Dependency/skill relationships |
+| flowchart | 47 | Process flows, architectures |
+| stateDiagram | 8 | State machines, protocols |
+| sequenceDiagram | 6 | Message passing, APIs |
+| classDiagram | 6 | Type hierarchies |
+| pie | 2 | Distribution stats |
+| erDiagram | 1 | Data models |
+\stopverb}
+}
+
+\subtree{
+\title{Interleaving Protocol}
+\subtree{
+\title{1. Random Selection (Entropy-Seeded)}
+\pre{\startverb
+# Get random diagram by trit
+duckdb ~/mermaid_diagrams.duckdb "
+  SELECT content FROM diagrams 
+  WHERE trit = (SELECT (random() * 3 - 1)::int % 3)
+  ORDER BY random() LIMIT 1
+"
+\stopverb}
+}
+
+\subtree{
+\title{2. Type-Matched Selection}
+\pre{\startverb
+# Match diagram type to context
+duckdb ~/mermaid_diagrams.duckdb "
+  SELECT content FROM diagrams 
+  WHERE diagram_type = 'flowchart'
+  ORDER BY random() LIMIT 1
+"
+\stopverb}
+}
+
+\subtree{
+\title{3. GF(3) Balanced Triad}
+\pre{\startverb
+# Get one diagram per trit for balanced presentation
+duckdb ~/mermaid_diagrams.duckdb "
+  (SELECT content, trit FROM diagrams WHERE trit = -1 ORDER BY random() LIMIT 1)
+  UNION ALL
+  (SELECT content, trit FROM diagrams WHERE trit = 0 ORDER BY random() LIMIT 1)
+  UNION ALL
+  (SELECT content, trit FROM diagrams WHERE trit = 1 ORDER BY random() LIMIT 1)
+"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Usage Triggers}
+\p{Interleave a bmorphism diagram when:}
+
+\ol{
+\li{\strong{Architecture discussions} → flowchart/graph}
+\li{\strong{Protocol design} → sequenceDiagram/stateDiagram  }
+\li{\strong{Data modeling} → erDiagram/classDiagram}
+\li{\strong{Skill loading} → graph (skill dependencies)}
+\li{\strong{Random inspiration} → any type, entropy-seeded}
+}
+}
+
+\subtree{
+\title{Rendering}
+\p{Use the \code{\startverb mermaid\stopverb} tool to render selected diagrams:}
+
+\pre{\startverb
+mermaid(code=DIAGRAM_CONTENT, citations={})
+\stopverb}
+}
+
+\subtree{
+\title{Example Workflow}
+\pre{\startverb
+# 1. Query a contextual diagram
+DIAGRAM=$(duckdb ~/mermaid_diagrams.duckdb -noheader -list "
+  SELECT content FROM diagrams 
+  WHERE diagram_type = 'flowchart' 
+  AND content LIKE '%GF(3)%'
+  ORDER BY random() LIMIT 1
+")
+
+# 2. Render via mermaid tool
+# mermaid(code=$DIAGRAM, citations={})
+\stopverb}
+}
+
+\subtree{
+\title{Trit Assignment}
+\p{Diagrams inherit trits from content analysis:}
+
+\ul{
+\li{\strong{MINUS (-1)}: Validation, constraints, error states}
+\li{\strong{ERGODIC (0)}: Neutral flows, queries, observations  }
+\li{\strong{PLUS (+1)}: Generation, creation, composition}
+}
+}
+
+\subtree{
+\title{Stats Query}
+\pre{\startverb
+duckdb ~/mermaid_diagrams.duckdb "
+  SELECT 
+    diagram_type,
+    COUNT(*) as count,
+    SUM(CASE WHEN trit = -1 THEN 1 ELSE 0 END) as minus,
+    SUM(CASE WHEN trit = 0 THEN 1 ELSE 0 END) as ergodic,
+    SUM(CASE WHEN trit = 1 THEN 1 ELSE 0 END) as plus
+  FROM diagrams 
+  GROUP BY diagram_type 
+  ORDER BY count DESC
+"
+\stopverb}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Hub for all graph/network skills}
+}
+}
+
+\subtree{
+\title{Visualization}
+\ul{
+\li{\strong{matplotlib} [○] via bicomodule}
+\li{Scientific visualization}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 4. Pattern Matching}
+\p{\strong{Concepts}: unification, match, segment variables, pattern}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+bmorphism-diagrams (○) + SDF.Ch4 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch7: Propagators}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Pattern matching extracts structure. This skill recognizes and transforms patterns.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

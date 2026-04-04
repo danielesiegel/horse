@@ -1,0 +1,441 @@
+\title{Burpsuite Project Parser}
+
+\taxon{skill}
+
+\meta{description}{Searches and explores Burp Suite project files (.burp) from the command line. Use when searching response headers or bodies with regex patterns, extracting security audit findings, dumping proxy history or site map data, or analyzing HTTP traffic captured in a Burp project.}
+
+\subtree{
+\title{Burp Project Parser}
+\p{Search and extract data from Burp Suite project files using the burpsuite-project-file-parser extension.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Searching response headers or bodies with regex patterns}
+\li{Extracting security audit findings from Burp projects}
+\li{Dumping proxy history or site map data}
+\li{Analyzing HTTP traffic captured in a Burp project file}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\p{This skill \strong{delegates parsing to Burp Suite Professional} - it does not parse .burp files directly.}
+
+\p{\strong{Required:}}
+
+\ol{
+\li{\strong{Burp Suite Professional} - Must be installed ([portswigger.net](https://portswigger.net/burp/pro))}
+\li{\strong{burpsuite-project-file-parser extension} - Provides CLI functionality}
+}
+
+\p{\strong{Install the extension:}}
+
+\ol{
+\li{Download from [github.com/BuffaloWill/burpsuite-project-file-parser](https://github.com/BuffaloWill/burpsuite-project-file-parser)}
+\li{In Burp Suite: Extender → Extensions → Add}
+\li{Select the downloaded JAR file}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\p{Use the wrapper script:}
+
+\pre{\startverb
+{baseDir}/scripts/burp-search.sh /path/to/project.burp [FLAGS]
+\stopverb}
+
+\p{The script uses environment variables for platform compatibility:}
+
+\ul{
+\li{\code{\startverb BURP_JAVA\stopverb}: Path to Java executable}
+\li{\code{\startverb BURP_JAR\stopverb}: Path to burpsuite_pro.jar}
+}
+
+\p{See [Platform Configuration](#platform-configuration) for setup instructions.}
+}
+
+\subtree{
+\title{Sub-Component Filters (USE THESE)}
+\p{\strong{ALWAYS use sub-component filters instead of full dumps.} Full \code{\startverb proxyHistory\stopverb} or \code{\startverb siteMap\stopverb} can return gigabytes of data. Sub-component filters return only what you need.}
+
+\subtree{
+\title{Available Filters}
+\pre{\startverb
+| Filter | Returns | Typical Size |
+|--------|---------|--------------|
+| `proxyHistory.request.headers` | Request line + headers only | Small (< 1KB/record) |
+| `proxyHistory.request.body` | Request body only | Variable |
+| `proxyHistory.response.headers` | Status + headers only | Small (< 1KB/record) |
+| `proxyHistory.response.body` | Response body only | **LARGE - avoid** |
+| `siteMap.request.headers` | Same as above for site map | Small |
+| `siteMap.request.body` | | Variable |
+| `siteMap.response.headers` | | Small |
+| `siteMap.response.body` | | **LARGE - avoid** |
+\stopverb}
+}
+
+\subtree{
+\title{Default Approach}
+\p{\strong{Start with headers, not bodies:}}
+
+\pre{\startverb
+# GOOD - headers only, safe to retrieve
+{baseDir}/scripts/burp-search.sh project.burp proxyHistory.request.headers | head -c 50000
+{baseDir}/scripts/burp-search.sh project.burp proxyHistory.response.headers | head -c 50000
+
+# BAD - full records include bodies, can be gigabytes
+{baseDir}/scripts/burp-search.sh project.burp proxyHistory  # NEVER DO THIS
+\stopverb}
+
+\p{\strong{Only fetch bodies for specific URLs after reviewing headers, and ALWAYS truncate:}}
+
+\pre{\startverb
+# 1. First, find interesting URLs from headers
+{baseDir}/scripts/burp-search.sh project.burp proxyHistory.response.headers | \
+  jq -r 'select(.headers | test("text/html")) | .url' | head -n 20
+
+# 2. Then search bodies with targeted regex - MUST truncate body to 1000 chars
+{baseDir}/scripts/burp-search.sh project.burp "responseBody='.*specific-pattern.*'" | \
+  head -n 10 | jq -c '.body = (.body[:1000] + "...[TRUNCATED]")'
+\stopverb}
+
+\p{\strong{HARD RULE: Body content > 1000 chars must NEVER enter context.} If the user needs full body content, they must view it in Burp Suite's UI.}
+}
+}
+
+\subtree{
+\title{Regex Search Operations}
+\subtree{
+\title{Search Response Headers}
+\pre{\startverb
+responseHeader='.*regex.*'
+\stopverb}
+
+\p{Searches all response headers. Output: \code{\startverb {"url":"...", "header":"..."}\stopverb}}
+
+\p{Example - find server signatures:}
+
+\pre{\startverb
+responseHeader='.*(nginx|Apache|Servlet).*' | head -c 50000
+\stopverb}
+}
+
+\subtree{
+\title{Search Response Bodies}
+\pre{\startverb
+responseBody='.*regex.*'
+\stopverb}
+
+\p{\strong{MANDATORY: Always truncate body content to 1000 chars max.} Response bodies can be megabytes each.}
+
+\pre{\startverb
+# REQUIRED format - always truncate .body field
+{baseDir}/scripts/burp-search.sh project.burp "responseBody='.*<form.*action.*'" | \
+  head -n 10 | jq -c '.body = (.body[:1000] + "...[TRUNCATED]")'
+\stopverb}
+
+\p{\strong{Never retrieve full body content.} If you need to see more of a specific response, ask the user to open it in Burp Suite's UI.}
+}
+}
+
+\subtree{
+\title{Other Operations}
+\subtree{
+\title{Extract Audit Items}
+\pre{\startverb
+auditItems
+\stopverb}
+
+\p{Returns all security findings. Output includes: name, severity, confidence, host, port, protocol, url.}
+
+\p{\strong{Note:} Audit items are small (no bodies) - safe to retrieve with \code{\startverb head -n 100\stopverb}.}
+}
+
+\subtree{
+\title{Dump Proxy History (AVOID)}
+\pre{\startverb
+proxyHistory
+\stopverb}
+
+\p{\strong{NEVER use this directly.} Use sub-component filters instead:}
+
+\ul{
+\li{\code{\startverb proxyHistory.request.headers\stopverb}}
+\li{\code{\startverb proxyHistory.response.headers\stopverb}}
+}
+}
+
+\subtree{
+\title{Dump Site Map (AVOID)}
+\pre{\startverb
+siteMap
+\stopverb}
+
+\p{\strong{NEVER use this directly.} Use sub-component filters instead.}
+}
+}
+
+\subtree{
+\title{Output Limits (REQUIRED)}
+\p{\strong{CRITICAL: Always check result size BEFORE retrieving data.} A broad search can return thousands of records, each potentially megabytes. This will overflow the context window.}
+
+\subtree{
+\title{Step 1: Always Check Size First}
+\p{Before any search, check BOTH record count AND byte size:}
+
+\pre{\startverb
+# Check record count AND total bytes - never skip this step
+{baseDir}/scripts/burp-search.sh project.burp proxyHistory | wc -cl
+{baseDir}/scripts/burp-search.sh project.burp "responseHeader='.*Server.*'" | wc -cl
+{baseDir}/scripts/burp-search.sh project.burp auditItems | wc -cl
+\stopverb}
+
+\p{The \code{\startverb wc -cl\stopverb} output shows: \code{\startverb <bytes> <lines>\stopverb} (e.g., \code{\startverb 524288 42\stopverb} means 512KB across 42 records).}
+
+\p{\strong{Interpret the results - BOTH must pass:}}
+
+\pre{\startverb
+| Metric | Safe | Narrow search | Too broad | STOP |
+|--------|------|---------------|-----------|------|
+| **Lines** | < 50 | 50-200 | 200+ | 1000+ |
+| **Bytes** | < 50KB | 50-200KB | 200KB+ | 1MB+ |
+\stopverb}
+
+\p{\strong{A single 10MB response on one line will show high byte count but only 1 line - the byte check catches this.}}
+}
+
+\subtree{
+\title{Step 2: Refine Broad Searches}
+\p{If count/size is too high:}
+
+\ol{
+\li{\strong{Use sub-component filters} (see table above):}
+}
+
+\ol{
+\li{\strong{Narrow regex patterns:}}
+}
+
+\subtree{
+\title{Better - target specific headers:}
+\p{responseHeader='.*X-Frame-Options.*' responseHeader='.*Content-Security-Policy.*'}
+
+\pre{\startverb
+
+3. **Filter with jq before retrieving:**
+\stopverb}
+}
+
+\subtree{
+\title{Get only specific content types}
+\p{{baseDir}/scripts/burp-search.sh project.burp proxyHistory.response.headers | \ jq -c 'select(.url | test("/api/"))' | head -n 50}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 3: Always Truncate Output}
+\p{Even after narrowing, always pipe through truncation:}
+
+\pre{\startverb
+# ALWAYS use head -c to limit total bytes (max 50KB)
+{baseDir}/scripts/burp-search.sh project.burp proxyHistory.request.headers | head -c 50000
+
+# For body searches, truncate each JSON object's body field:
+{baseDir}/scripts/burp-search.sh project.burp "responseBody='pattern'" | \
+  head -n 20 | jq -c '.body = (.body | if length > 1000 then .[:1000] + "...[TRUNCATED]" else . end)'
+
+# Limit both record count AND byte size:
+{baseDir}/scripts/burp-search.sh project.burp auditItems | head -n 50 | head -c 50000
+\stopverb}
+
+\p{\strong{Hard limits to enforce:}}
+
+\ul{
+\li{\code{\startverb head -c 50000\stopverb} (50KB max) on ALL output}
+\li{\strong{Truncate \code{\startverb .body\stopverb} fields to 1000 chars - MANDATORY, no exceptions}}
+}
+
+\p{\strong{Never run these without counting first AND truncating:}}
+
+\ul{
+\li{\code{\startverb proxyHistory\stopverb} / \code{\startverb siteMap\stopverb} (full dumps - always use sub-component filters)}
+\li{\code{\startverb responseBody='...'\stopverb} searches (bodies can be megabytes each)}
+\li{Any broad regex like \code{\startverb .*\stopverb} or \code{\startverb .+\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Investigation Workflow}
+\ol{
+\li{\strong{Identify scope} - What are you looking for? (specific vuln type, endpoint, header pattern)}
+}
+
+\ol{
+\li{\strong{Search audit items first} - Start with Burp's findings:}
+}
+
+\ol{
+\li{\strong{Check confidence scores} - Filter for actionable findings:}
+}
+
+\ol{
+\li{\strong{Extract affected URLs} - Get the attack surface:}
+}
+
+\ol{
+\li{\strong{Search raw traffic for context} - Examine actual requests/responses:}
+}
+
+\ol{
+\li{\strong{Validate manually} - Burp findings are indicators, not proof. Verify each one.}
+}
+}
+
+\subtree{
+\title{Understanding Results}
+\subtree{
+\title{Severity vs Confidence}
+\p{Burp reports both \strong{severity} (High/Medium/Low) and \strong{confidence} (Certain/Firm/Tentative). Use both when triaging:}
+
+\pre{\startverb
+| Combination | Meaning |
+|-------------|---------|
+| High + Certain | Likely real vulnerability, prioritize investigation |
+| High + Tentative | Often a false positive, verify before reporting |
+| Medium + Firm | Worth investigating, may need manual validation |
+\stopverb}
+
+\p{A "High severity, Tentative confidence" finding is frequently a false positive. Don't report findings based on severity alone.}
+}
+
+\subtree{
+\title{When Proxy History is Incomplete}
+\p{Proxy history only contains what Burp captured. It may be missing traffic due to:}
+
+\ul{
+\li{\strong{Scope filters} excluding domains}
+\li{\strong{Intercept settings} dropping requests}
+\li{\strong{Browser traffic} not routed through Burp proxy}
+}
+
+\p{If you don't find expected traffic, check Burp's scope and proxy settings in the original project.}
+}
+
+\subtree{
+\title{HTTP Body Encoding}
+\p{Response bodies may be gzip compressed, chunked, or use non-UTF8 encoding. Regex patterns that work on plaintext may silently fail on encoded responses. If searches return fewer results than expected:}
+
+\ul{
+\li{Check if responses are compressed}
+\li{Try broader patterns or search headers first}
+\li{Use Burp's UI to inspect raw vs rendered response}
+}
+}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\p{Common shortcuts that lead to missed vulnerabilities or false reports:}
+
+\pre{\startverb
+| Shortcut | Why It's Wrong |
+|----------|----------------|
+| "This regex looks good" | Verify on sample data first—encoding and escaping cause silent failures |
+| "High severity = must fix" | Check confidence score too; Burp has false positives |
+| "All audit items are relevant" | Filter by actual threat model; not every finding matters for every app |
+| "Proxy history is complete" | May be filtered by Burp scope/intercept settings; you see only what Burp captured |
+| "Burp found it, so it's a vuln" | Burp findings require manual verification—they indicate potential issues, not proof |
+\stopverb}
+}
+
+\subtree{
+\title{Output Format}
+\p{All output is JSON, one object per line. Pipe to \code{\startverb jq\stopverb} for formatting:}
+
+\pre{\startverb
+{baseDir}/scripts/burp-search.sh project.burp auditItems | jq .
+\stopverb}
+
+\p{Filter with grep:}
+
+\pre{\startverb
+{baseDir}/scripts/burp-search.sh project.burp auditItems | grep -i "sql injection"
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\p{Search for CORS headers (with byte limit):}
+
+\pre{\startverb
+{baseDir}/scripts/burp-search.sh project.burp "responseHeader='.*Access-Control.*'" | head -c 50000
+\stopverb}
+
+\p{Get all high-severity findings (audit items are small, but still limit):}
+
+\pre{\startverb
+{baseDir}/scripts/burp-search.sh project.burp auditItems | jq -c 'select(.severity == "High")' | head -n 100
+\stopverb}
+
+\p{Extract just request URLs from proxy history:}
+
+\pre{\startverb
+{baseDir}/scripts/burp-search.sh project.burp proxyHistory.request.headers | jq -r '.request.url' | head -n 200
+\stopverb}
+
+\p{Search response bodies (MUST truncate body to 1000 chars):}
+
+\pre{\startverb
+{baseDir}/scripts/burp-search.sh project.burp "responseBody='.*password.*'" | \
+  head -n 10 | jq -c '.body = (.body[:1000] + "...[TRUNCATED]")'
+\stopverb}
+}
+
+\subtree{
+\title{Platform Configuration}
+\p{The wrapper script requires two environment variables to locate Burp Suite's bundled Java and JAR file.}
+
+\subtree{
+\title{macOS}
+\pre{\startverb
+export BURP_JAVA="/Applications/Burp Suite Professional.app/Contents/Resources/jre.bundle/Contents/Home/bin/java"
+export BURP_JAR="/Applications/Burp Suite Professional.app/Contents/Resources/app/burpsuite_pro.jar"
+\stopverb}
+}
+
+\subtree{
+\title{Windows}
+\pre{\startverb
+$env:BURP_JAVA = "C:\Program Files\BurpSuiteProfessional\jre\bin\java.exe"
+$env:BURP_JAR = "C:\Program Files\BurpSuiteProfessional\burpsuite_pro.jar"
+\stopverb}
+}
+
+\subtree{
+\title{Linux}
+\pre{\startverb
+export BURP_JAVA="/opt/BurpSuiteProfessional/jre/bin/java"
+export BURP_JAR="/opt/BurpSuiteProfessional/burpsuite_pro.jar"
+\stopverb}
+
+\p{Add these exports to your shell profile (\code{\startverb .bashrc\stopverb}, \code{\startverb .zshrc\stopverb}, etc.) for persistence.}
+}
+
+\subtree{
+\title{Manual Invocation}
+\p{If not using the wrapper script, invoke directly:}
+
+\pre{\startverb
+"$BURP_JAVA" -jar -Djava.awt.headless=true "$BURP_JAR" \
+  --project-file=/path/to/project.burp [FLAGS]
+\stopverb}
+}
+}
+}

@@ -1,0 +1,364 @@
+\title{Louisville Quantum Gravity}
+
+\taxon{skill}
+
+\meta{description}{"Louisville/Liouville quantum gravity measure for KPZ stationary measures. Open boundary conditions, phase diagrams, and analytic continuation for infinite-dimensional measures."}
+
+\subtree{
+\title{Louisville Quantum Gravity Skill}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: +1 (PLUS - generative/measures) \strong{Color}: #9370DB (Medium Purple) \strong{Principle}: Stationary measures for KPZ via quantum gravity \strong{Frame}: Derivative measures, open boundary conditions, phase diagrams}
+
+\subtree{
+\title{Overview}
+\p{\strong{Louisville/Liouville Quantum Gravity (LQG)} provides the \strong{stationary measures} for the KPZ equation. This skill covers:}
+
+\ol{
+\li{\strong{Stationary Measures}: Time-invariant distributions for KPZ}
+\li{\strong{Open Boundary Conditions}: U, V parameters and phase diagrams}
+\li{\strong{Two-Layer Gibbs Measures}: Matrix product ansatz structure}
+\li{\strong{Analytic Continuation}: Extending to infinite-dimensional spaces}
+}
+}
+
+\subtree{
+\title{The Problem: KPZ Stationary Measures}
+\p{The KPZ equation with open boundary conditions:}
+
+\pre{\startverb
+∂h/∂t = ν∂²h/∂x² + (λ/2)(∂h/∂x)² + √D ξ(x,t)
+
+Boundary conditions:
+  ∂h/∂x|_{x=0} = U  (left boundary slope)
+  ∂h/∂x|_{x=L} = V  (right boundary slope)
+\stopverb}
+
+\subtree{
+\title{Challenge: Roughness}
+\p{The height h(x,t) is \strong{too rough} for direct analysis:}
+
+\ul{
+\li{h is not differentiable}
+\li{∂h/∂x is a distribution}
+\li{(∂h/∂x)² is ill-defined}
+}
+
+\p{\strong{Solution}: Work with \strong{increments} or \strong{derivatives} where measures are well-defined.}
+}
+}
+
+\subtree{
+\title{Stationary Measure Form}
+\p{For increments ∂h/∂x, the stationary measure has the form:}
+
+\pre{\startverb
+μ_stationary ∝ exp(-∫ V(∂h/∂x) dx) × Louisville-QG-correction
+
+Where:
+  V = potential depending on slope
+  LQG correction = quantum gravity measure (Gaussian free field + exponential)
+\stopverb}
+
+\subtree{
+\title{Louisville Measure}
+\pre{\startverb
+# Louisville quantum gravity measure on the line
+struct LouisvilleMeasure
+    γ::Float64           # Coupling constant
+    Q::Float64           # Background charge (Q = 2/γ + γ/2)
+    gff::GaussianFreeField
+end
+
+function sample(lqg::LouisvilleMeasure, domain)
+    # Sample GFF
+    φ = sample(lqg.gff, domain)
+    
+    # Exponential to get LQG area measure
+    μ = exp(lqg.γ * φ - (lqg.γ^2/2) * 𝔼[φ²])
+    
+    return μ
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Open Boundary Phase Diagram}
+\p{The parameters U, V (boundary slopes) create a \strong{phase diagram}:}
+
+\pre{\startverb
+       V
+       ↑
+       │   MAXIMAL CURRENT
+       │   (fan phase)
+   ----┼---------→
+       │   
+       │   LOW DENSITY    HIGH DENSITY
+       │   (shock left)   (shock right)
+       └───────────────────────→ U
+\stopverb}
+
+\subtree{
+\title{Long-Time Limit}
+\pre{\startverb
+# Height function long-time limit depends on phase
+function long_time_limit(h, U, V)
+    if in_maximal_current_phase(U, V)
+        # Height grows linearly in t
+        return (:linear, slope = 1/4)
+    elseif in_low_density_phase(U, V)
+        return (:linear, slope = U^2/4)
+    else
+        return (:linear, slope = V^2/4)
+    end
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Two-Layer Gibbs Measure}
+\p{The stationary measure has a \strong{two-layer structure}:}
+
+\pre{\startverb
+Layer 1: Uncolored paths (non-crossing)
+Layer 2: Coloring (Pitman transform)
+
+Joint measure: μ = μ_uncolored × μ_color|uncolored
+\stopverb}
+
+\subtree{
+\title{Matrix Product Ansatz}
+\pre{\startverb
+# Matrix product representation of stationary measure
+function matrix_product_ansatz(n_sites)
+    # Boundary vectors
+    ⟨W| = left_boundary_vector(U)
+    |V⟩ = right_boundary_vector(V)
+    
+    # Transfer matrices
+    D = creation_operator()
+    E = annihilation_operator()
+    
+    # Stationary weight
+    weight(config) = ⟨W| * prod(D if c == 1 else E for c in config) * |V⟩
+    
+    return StatMeasure(weight)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Geometric Last Passage Percolation}
+\p{\strong{Geometric LPP} replicates KPZ stationary structure in discrete setting:}
+
+\pre{\startverb
+struct GeometricLPP
+    n::Int                    # Grid size
+    weights::Matrix{Float64}  # Exponential(1) weights
+end
+
+function passage_time(lpp::GeometricLPP, start, finish)
+    # G(m,n) = max over up-right paths of ∑ weights
+    return dynamic_programming_max_path(lpp.weights, start, finish)
+end
+
+# Stationary measure on LPP
+function stationary_lpp(n, boundary_params)
+    # Two-layer structure matches KPZ
+    lpp = GeometricLPP(n, rand(Exponential(1), n, n))
+    return sample_with_boundary(lpp, boundary_params)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Analytic Continuation Challenge}
+\p{\strong{Problem}: Extending finite-dimensional formulas to infinite dimensions.}
+
+\pre{\startverb
+# Finite dimensional: well-defined
+μ_n(h₁, ..., hₙ) = exp(-S(h)) / Z_n
+
+# Infinite dimensional: requires care
+μ_∞(h(x)) = "limit" of μ_n  # Needs regularization
+
+# Techniques:
+# 1. Cylinder set extension
+# 2. Prokhorov tightness
+# 3. Kolmogorov consistency
+\stopverb}
+
+\subtree{
+\title{Regularization Strategy}
+\pre{\startverb
+function analytic_continuation(finite_measure, regularization)
+    # Step 1: Verify Kolmogorov consistency
+    @assert kolmogorov_consistent(finite_measure)
+    
+    # Step 2: Check tightness
+    @assert prokhorov_tight(finite_measure)
+    
+    # Step 3: Extend via inverse limit
+    return inverse_limit(finite_measure)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Fokker-Planck}
+\p{The Fokker-Planck equation for KPZ has Louisville stationary measure:}
+
+\pre{\startverb
+using FokkerPlanck, LouisvilleQG
+
+# Fokker-Planck with Louisville stationary
+fp = FokkerPlanckKPZ(
+    boundary_U = U,
+    boundary_V = V,
+    temperature = T
+)
+
+# Verify Louisville is stationary
+lqg = LouisvilleMeasure(γ = sqrt(T))
+@test is_stationary(lqg, fp)
+
+# Convergence rate
+τ_mix = mixing_time(fp, lqg)
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Langevin}
+\p{Louisville measure is the equilibrium of KPZ Langevin dynamics:}
+
+\pre{\startverb
+using Langevin, LouisvilleQG
+
+# KPZ as Langevin SDE
+kpz_langevin = LangevinKPZ(
+    drift = kpz_drift,
+    diffusion = sqrt(2*T),
+    boundary = (U, V)
+)
+
+# Equilibrium = Louisville
+@test equilibrium(kpz_langevin) ≈ LouisvilleMeasure(sqrt(T))
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad Assignment}
+\pre{\startverb
+| Trit | Skill | Role |
+|------|-------|------|
+| -1 | yang-baxter-integrability | Structure |
+| 0 | kpz-universality | Dynamics |
+| +1 | **louisville-quantum-gravity** | Measures |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Sample Louisville measure
+just lqg-sample gamma=0.5 domain=circle
+
+# Compute stationary measure for KPZ
+just lqg-stationary U=0.3 V=0.5
+
+# Phase diagram
+just lqg-phase-diagram
+
+# Verify analytic continuation
+just lqg-verify-continuation n_max=100
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\pre{\startverb
+# louisville-quantum-gravity.yaml
+measure:
+  gamma: 0.5          # LQG coupling
+  Q: 2.5              # Background charge
+  
+boundary:
+  U: 0.3              # Left slope
+  V: 0.5              # Right slope
+
+regularization:
+  method: cylinder_sets
+  tightness_check: true
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{kpz-universality} (0): The dynamics}
+\li{\strong{yang-baxter-integrability} (-1): Structure}
+\li{\strong{fokker-planck-analyzer} (-1): Convergence}
+\li{\strong{langevin-dynamics} (0): SDE formulation}
+\li{\strong{last-passage-percolation} (0): Discrete version}
+\li{\strong{narya-proofs} (-1): Verification of measure-theoretic arguments}
+}
+}
+
+\subtree{
+\title{Research References}
+\ol{
+\li{Corwin-Knizel (2021): "Stationary measure for the open KPZ equation"}
+\li{Barraquand-Le Doussal (2023): "Steady state of KPZ"}
+\li{Sheffield (2016): "Conformal welding of quantum disks"}
+\li{Duplantier-Sheffield (2011): "Liouville quantum gravity and KPZ"}
+}
+
+\p{\strong{Skill Name}: louisville-quantum-gravity \strong{Type}: Probability Measures \strong{Trit}: +1 (PLUS) \strong{Key Property}: Stationary measures for KPZ \strong{Status}: ✅ Production Ready}
+}
+
+\subtree{
+\title{Cat# Integration}
+\pre{\startverb
+Trit: +1 (PLUS)
+Home: Measures
+Poly Op: ⊗
+Kan Role: Lan_K
+Color: #9370DB
+\stopverb}
+
+\subtree{
+\title{Measure as Functor}
+\pre{\startverb
+μ: Configurations → ℝ₊
+\stopverb}
+
+\p{Louisville measure is \strong{covariant} under conformal maps (quantum gravity).}
+}
+
+\subtree{
+\title{GF(3) Naturality}
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The measure settles. The boundary shapes the bulk. Quantum gravity meets KPZ.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record phase diagram locations}
+\li{\strong{REMEMBERING} (0): Connect to CFT and random geometry}
+\li{\strong{WORLDING} (+1): Extend to new boundary conditions}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

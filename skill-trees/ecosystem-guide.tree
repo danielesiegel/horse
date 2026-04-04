@@ -1,0 +1,100 @@
+\title{Ecosystem Guide}
+
+\taxon{skill}
+
+\meta{description}{Guide to spences10's Claude Code ecosystem. Use when user asks which tool to use, how tools relate, or needs help choosing between MCP servers, skills, or CLIs.}
+
+\subtree{
+\title{Claude Code Ecosystem Guide}
+\p{A curated set of tools for enhanced Claude Code workflows.}
+
+\subtree{
+\title{The Stack}
+\pre{\startverb
+| Tool                  | Type   | Purpose                                                      |
+| --------------------- | ------ | ------------------------------------------------------------ |
+| **toolkit-skills**    | Plugin | Forced-eval hook + core skills (pair with any skills plugin) |
+| **svelte-skills-kit** | Plugin | Svelte/SvelteKit skills (pair with toolkit-skills)           |
+| **ccrecall**          | CLI    | Sync transcripts → SQLite for analytics                      |
+| **mcp-omnisearch**    | MCP    | Unified search (Tavily, Kagi, GitHub, etc.)                  |
+| **mcp-sqlite-tools**  | MCP    | Safe SQLite operations                                       |
+| **mcpick**            | CLI    | Toggle MCP servers dynamically                               |
+| **research**          | Skill  | Verified source research patterns                            |
+| **skill-creator**     | Skill  | Create Claude skills with best practices                     |
+\stopverb}
+}
+
+\subtree{
+\title{Decision Tree}
+\subtree{
+\title{"I want skills to activate reliably"}
+\p{→ \strong{toolkit-skills} - Forced-eval hook evaluates every prompt against available skills. Install alongside any skills plugin.}
+
+\pre{\startverb
+claude plugin install toolkit-skills@claude-code-toolkit
+\stopverb}
+}
+
+\subtree{
+\title{"I need to search the web"}
+\p{→ \strong{mcp-omnisearch} - Web search, GitHub code search, AI answers}
+}
+
+\subtree{
+\title{"I need to query a database"}
+\p{→ \strong{mcp-sqlite-tools} - Read/write SQLite with safety guards}
+}
+
+\subtree{
+\title{"I have too many MCPs eating context"}
+\p{→ \strong{mcpick} - Enable/disable servers per-project}
+}
+
+\subtree{
+\title{"I want to track my Claude Code usage"}
+\p{→ \strong{ccrecall} - Sync transcripts, query with mcp-sqlite-tools}
+}
+
+\subtree{
+\title{"I'm building with Svelte/SvelteKit"}
+\p{→ \strong{svelte-skills-kit} - Runes, routing, data flow patterns (you're here!)}
+}
+
+\subtree{
+\title{"I need to research a topic or verify sources"}
+\p{→ \strong{research skill} - Verified source research, repo cloning patterns}
+}
+
+\subtree{
+\title{"I want to create a new Claude skill"}
+\p{→ \strong{skill-creator skill} - Progressive disclosure, writing guide, CLI reference}
+}
+}
+
+\subtree{
+\title{Recommended Setup}
+\pre{\startverb
+# Core: forced-eval hook + ecosystem skills
+claude plugin install toolkit-skills@claude-code-toolkit
+
+# Svelte/SvelteKit skills
+claude plugin install svelte-skills@svelte-skills-kit
+\stopverb}
+
+\p{toolkit-skills hook ensures skills from any plugin activate on relevant prompts.}
+}
+
+\subtree{
+\title{Links}
+\pre{\startverb
+| Tool                | GitHub                                           |
+| ------------------- | ------------------------------------------------ |
+| claude-code-toolkit | https://github.com/spences10/claude-code-toolkit |
+| svelte-skills-kit   | https://github.com/spences10/svelte-skills-kit   |
+| ccrecall            | https://github.com/spences10/ccrecall            |
+| mcp-omnisearch      | https://github.com/spences10/mcp-omnisearch      |
+| mcp-sqlite-tools    | https://github.com/spences10/mcp-sqlite-tools    |
+| mcpick              | https://github.com/spences10/mcpick              |
+\stopverb}
+}
+}

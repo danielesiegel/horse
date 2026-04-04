@@ -1,0 +1,136 @@
+\title{Bafishka}
+
+\taxon{skill}
+
+\meta{description}{🐟 Rust-native Fish shell-friendly file operations with Steel-backed SCI}
+
+\subtree{
+\title{Bafishka - Fish Shell + Clojure File Operations}
+\p{🐟 Rust-native Fish shell-friendly file operations with Steel-backed SCI Clojure evaluation.}
+
+\subtree{
+\title{Repository}
+\ul{
+\li{\strong{Source}: https://github.com/bmorphism/bafishka}
+\li{\strong{Language}: Clojure (SCI) + Rust}
+\li{\strong{Seed}: 1069 (deterministic)}
+}
+}
+
+\subtree{
+\title{Core Concept}
+\p{Bafishka bridges Fish shell ergonomics with Clojure's data processing power:}
+
+\pre{\startverb
+# Fish shell with Clojure evaluation
+baf '(map inc [1 2 3])'  # => [2 3 4]
+
+# File operations with Clojure
+baf '(fs/glob "**/*.clj" | count)'  # => 42
+\stopverb}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌────────────────────────────────────────────────────┐
+│                    Bafishka                        │
+├────────────────────────────────────────────────────┤
+│  ┌──────────┐   ┌──────────┐   ┌──────────────┐   │
+│  │  Fish    │   │  Steel   │   │  SCI         │   │
+│  │  Shell   │──▶│  (Rust)  │──▶│  (Clojure)   │   │
+│  └──────────┘   └──────────┘   └──────────────┘   │
+│       │              │               │             │
+│       ▼              ▼               ▼             │
+│   Readline       File I/O        Data Xform       │
+└────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Key Features}
+\subtree{
+\title{Steel Backend}
+\p{Steel is a Rust Scheme implementation providing:}
+
+\ul{
+\li{Fast native execution}
+\li{Seamless Rust FFI}
+\li{Async I/O support}
+}
+}
+
+\subtree{
+\title{SCI Clojure}
+\p{Small Clojure Interpreter for:}
+
+\ul{
+\li{Full Clojure core library}
+\li{REPL evaluation}
+\li{Babashka compatibility}
+}
+}
+}
+
+\subtree{
+\title{Usage Examples}
+\pre{\startverb
+# List files with Clojure processing
+baf '(->> (fs/list-dir ".")
+         (filter #(str/ends-with? % ".md"))
+         (map fs/file-name))'
+
+# JSON processing
+baf '(-> (slurp "data.json")
+         json/parse-string
+         :items
+         count)'
+
+# With deterministic seed (1069)
+baf '(gay/color 1069)'  # Deterministic color
+\stopverb}
+}
+
+\subtree{
+\title{Integration with plurigrid/asi}
+\subtree{
+\title{With gay-mcp}
+\pre{\startverb
+;; File operations with color coding
+(defn colored-ls [dir]
+  (->> (fs/list-dir dir)
+       (map (fn [f] 
+              {:file f 
+               :color (gay/color (hash f))}))))
+\stopverb}
+}
+
+\subtree{
+\title{With duckdb-ies}
+\pre{\startverb
+;; Query DuckDB from bafishka
+(baf '(duck/query "SELECT * FROM files WHERE mtime > now() - interval 1 hour"))
+\stopverb}
+}
+}
+
+\subtree{
+\title{Configuration}
+\pre{\startverb
+# ~/.config/fish/conf.d/bafishka.fish
+set -gx BAF_SEED 1069
+set -gx BAF_HISTORY ~/.baf_history
+alias baf 'bafishka eval'
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb gay-mcp\stopverb} - Deterministic colors}
+\li{\code{\startverb duckdb-ies\stopverb} - Database integration}
+\li{\code{\startverb polyglot-spi\stopverb} - Multi-language SPI}
+\li{\code{\startverb abductive-repl\stopverb} - REPL patterns}
+}
+}
+}

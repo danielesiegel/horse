@@ -1,0 +1,393 @@
+\title{Confighub Usage Guide}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{A comprehensive guide for using ConfigHub to manage Kubernetes configuration across multiple environments using Configuration as Data principles. This rulebook covers installation, configuration management, variant handling, and operational workflows.}
+
+\subtree{
+\title{ConfigHub Usage Guide}
+\subtree{
+\title{Goals}
+\p{This rulebook helps you:}
+
+\ul{
+\li{Adopt ConfigHub's Configuration as Data approach for managing Kubernetes deployments}
+\li{Manage configuration variants across multiple environments (dev, staging, prod)}
+\li{Implement safe change workflows with review, approval, and rollback capabilities}
+\li{Eliminate configuration drift between desired and live state}
+\li{Automate configuration validation, transformation, and deployment}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Configuration as Data vs Infrastructure as Code}
+\p{ConfigHub stores \strong{fully rendered, literal configuration} (WET - Write Every Time) instead of templates with variables. This means:}
+
+\ul{
+\li{No Helm templates, no variable interpolation, no conditionals}
+\li{Every environment's config is stored independently in standard YAML}
+\li{Changes are made via API/CLI, not git commits and CI/CD pipelines}
+\li{Configuration can be queried, validated, and transformed using composable tools}
+}
+}
+
+\subtree{
+\title{Core Entities}
+\ul{
+\li{\strong{Unit:} A collection of related Kubernetes resources (e.g., Deployment + Service + Ingress)}
+\li{\strong{Space:} Logical grouping for units, typically representing an environment or team}
+\li{\strong{Revision:} Immutable snapshot of a unit's configuration at a point in time}
+\li{\strong{Worker:} Process running in your infrastructure that executes apply/destroy/refresh operations}
+\li{\strong{Target:} Represents a deployment destination (Kubernetes cluster)}
+\li{\strong{Function:} Code that reads/writes configuration data (readonly, mutating, or validating)}
+\li{\strong{Trigger:} Automated function execution on configuration changes (validation, policy enforcement)}
+\li{\strong{Link:} Dependency relationship between units for value propagation and apply ordering}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Install the CLI}
+\p{Install the \code{\startverb cub\stopverb} CLI tool:}
+
+\pre{\startverb
+curl -fsSL https://hub.confighub.com/cub/install.sh | bash
+\stopverb}
+
+\p{Add to your PATH:}
+
+\pre{\startverb
+# Choose one method:
+sudo ln -sf ~/.confighub/bin/cub /usr/local/bin/cub
+# OR
+export PATH=~/.confighub/bin:$PATH
+\stopverb}
+
+\p{\strong{Reasoning:} The CLI is your primary interface for ConfigHub operations. It provides both interactive and scriptable access to all ConfigHub features.}
+}
+
+\subtree{
+\title{Step 2: Authenticate and Set Context}
+\p{Login and configure your default space:}
+
+\pre{\startverb
+# Authenticate via browser
+cub auth login
+
+# Set default space (replace with your space slug)
+cub context set --space <SPACE_SLUG>
+
+# Verify context
+cub context get
+\stopverb}
+
+\p{\strong{Reasoning:} Context configuration reduces repetitive flags in subsequent commands.}
+}
+
+\subtree{
+\title{Step 3: Create Space Hierarchy for Environments}
+\p{Organize your environments using spaces with labels:}
+
+\pre{\startverb
+# Create a home space for shared entities
+cub space create home
+
+# Create environment-specific spaces
+cub space create app-dev --label Environment=dev --label Application=myapp
+cub space create app-staging --label Environment=staging --label Application=myapp
+cub space create app-prod --label Environment=prod --label Application=myapp
+
+# Create platform spaces for shared infrastructure
+cub space create platform-dev --label Environment=dev
+cub space create platform-prod --label Environment=prod
+\stopverb}
+
+\p{\strong{Reasoning:} Spaces provide isolation boundaries. Labels enable bulk operations across related spaces using where filters.}
+}
+
+\subtree{
+\title{Step 4: Set Up Validation Triggers}
+\p{Install essential validation triggers in your home space:}
+
+\pre{\startverb
+# Schema validation (always recommended)
+cub trigger create --space home valid-k8s Mutation Kubernetes/YAML vet-schemas
+
+# Placeholder validation (prevents applying incomplete config)
+cub trigger create --space home complete-k8s Mutation Kubernetes/YAML vet-placeholders
+
+# Context enforcement (adds metadata to resources)
+cub trigger create --space home context-k8s Mutation Kubernetes/YAML ensure-context true
+\stopverb}
+
+\p{Apply triggers to other spaces:}
+
+\pre{\startverb
+homeSpaceID="$(cub space get home --jq '.Space.SpaceID')"
+cub space create app-dev --label Environment=dev --where-trigger "SpaceID = '$homeSpaceID'"
+\stopverb}
+
+\p{\strong{Reasoning:} Triggers enforce policies automatically. Installing them early prevents invalid configurations from being created or applied.}
+}
+
+\subtree{
+\title{Step 5: Deploy and Configure Workers}
+\p{Create and deploy a worker to enable apply/destroy/refresh operations:}
+
+\pre{\startverb
+# Create worker entity
+cub worker create --space platform-dev cluster-worker
+
+# Install worker in your cluster
+cub worker install cluster-worker \
+  --space platform-dev \
+  --env IN_CLUSTER_TARGET_NAME=dev-cluster \
+  --export --include-secret | kubectl apply -f -
+
+# Verify worker is connected
+cub worker list --space "*"
+\stopverb}
+
+\p{\strong{Reasoning:} Workers execute operations in your infrastructure with your credentials. They never send credentials to ConfigHub, maintaining security boundaries.}
+}
+
+\subtree{
+\title{Step 6: Import or Create Initial Configuration}
+\p{\strong{Option A: Import from existing cluster}}
+
+\pre{\startverb
+# Import specific resources
+cub unit import --space app-dev frontend \
+  --namespace myapp \
+  --resource-type apps/v1/Deployment \
+  --resource-name frontend
+
+# Import entire namespace
+cub unit import --space app-dev myapp-all \
+  --namespace myapp
+\stopverb}
+
+\p{\strong{Option B: Create from Helm chart}}
+
+\pre{\startverb
+# Add Helm repo
+helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
+
+# Install chart as ConfigHub unit
+cub helm install myapp bitnami/nginx \
+  --space app-dev \
+  --namespace myapp \
+  --values values.yaml
+\stopverb}
+
+\p{\strong{Option C: Create from YAML files}}
+
+\pre{\startverb
+# Validate locally first
+cub function local vet-schemas deployment.yaml
+
+# Create unit
+cub unit create --space app-dev frontend deployment.yaml
+\stopverb}
+
+\p{\strong{Reasoning:} ConfigHub works with existing infrastructure. Import captures current state, while Helm integration leverages the ecosystem. Direct YAML creation works for custom configurations.}
+}
+
+\subtree{
+\title{Step 7: Create Configuration Variants}
+\p{Clone units to create environment variants:}
+
+\pre{\startverb
+# Clone single unit to another space
+cub unit create --space app-staging \
+  --upstream-space app-dev \
+  --upstream-unit frontend
+
+# Clone all units from dev to multiple prod spaces
+cub unit create --space app-dev \
+  --where-space "Labels.Environment = 'prod'"
+\stopverb}
+
+\p{\strong{Reasoning:} Cloning maintains upstream/downstream relationships, enabling controlled propagation of changes while preserving environment-specific overrides.}
+}
+
+\subtree{
+\title{Step 8: Manage Dependencies with Links}
+\p{Create links to propagate values and control apply order:}
+
+\pre{\startverb
+# Link backend to namespace (propagates namespace value)
+cub link create --space app-dev - backend app-namespace
+
+# Link backend to database (establishes apply order)
+cub link create --space app-dev - backend database
+
+# Bulk link all units to namespace
+cub link create --space "*" \
+  --where-space "Slug = 'app-dev'" \
+  --where-from "Slug != 'app-namespace'" \
+  --where-to "Slug = 'app-namespace'"
+\stopverb}
+
+\p{\strong{Reasoning:} Links automate value substitution (replacing placeholders) and ensure correct apply/destroy ordering based on dependencies.}
+}
+
+\subtree{
+\title{Step 9: Attach Targets to Units}
+\p{Attach deployment targets to enable apply operations:}
+
+\pre{\startverb
+# Attach target to specific unit
+cub unit set-target --space app-dev frontend platform-dev/dev-cluster
+
+# Bulk attach to all units in environment
+cub unit set-target --space "*" \
+  --where "Space.Labels.Environment = 'dev'" \
+  platform-dev/dev-cluster
+\stopverb}
+
+\p{\strong{Reasoning:} Targets specify where configuration should be applied. Units without targets cannot be applied.}
+}
+
+\subtree{
+\title{Step 10: Make Configuration Changes}
+\p{Use functions to modify configuration:}
+
+\pre{\startverb
+# Update container image
+cub function do --space app-dev --unit frontend \
+  --change-desc "Update to v1.2.3" \
+  set-image-reference main ":v1.2.3"
+
+# Set resource limits
+cub function do --space app-dev --unit frontend \
+  set-container-resources main all 500m 512Mi 2
+
+# Set environment variable
+cub function do --space app-dev --unit frontend \
+  set-env-var main DATABASE_URL "postgres://db:5432/myapp"
+
+# Bulk update across environments
+cub function do --space "*" \
+  --where "Labels.Application = 'myapp' AND Space.Labels.Environment = 'prod'" \
+  --change-desc "Production image update" \
+  set-image-reference main ":v1.2.3"
+\stopverb}
+
+\p{\strong{Reasoning:} Functions provide type-safe, validated configuration changes. They're more reliable than manual YAML editing and support bulk operations.}
+}
+
+\subtree{
+\title{Step 11: Implement Change Management with ChangeSets}
+\p{Group related changes using ChangeSets:}
+
+\pre{\startverb
+# Create ChangeSet
+cub changeset create --space home release-v123 \
+  --description "Release v1.2.3: Bug fixes and new features"
+
+# Open ChangeSet (add units to it)
+cub unit update --patch --space app-prod \
+  --filter home/prod-app-filter \
+  --changeset home/release-v123 \
+  --change-desc "Starting release v1.2.3 rollout"
+
+# Make changes (they'll be part of the ChangeSet)
+cub function do --space app-prod \
+  --changeset home/release-v123 \
+  --filter home/prod-app-filter \
+  --change-desc "Update image to v1.2.3" \
+  set-image-reference main ":v1.2.3"
+
+# Close ChangeSet
+cub unit update --patch --space app-prod \
+  --filter home/prod-app-filter \
+  --changeset -
+\stopverb}
+
+\p{\strong{Reasoning:} ChangeSets provide atomic, trackable change groups. They enable coordinated rollouts and rollbacks across multiple units.}
+}
+
+\subtree{
+\title{Step 12: Review and Approve Changes}
+\p{If approval triggers are configured:}
+
+\pre{\startverb
+# Approve specific revision
+cub unit approve --space app-prod frontend --revision 5
+
+# Bulk approve ChangeSet
+cub unit approve --space app-prod \
+  --filter home/prod-app-filter \
+  --changeset home/release-v123
+\stopverb}
+}
+
+\subtree{
+\title{Step 13: Apply Configuration}
+\p{Apply changes to clusters:}
+
+\pre{\startverb
+# Apply single unit
+cub unit apply --space app-dev frontend
+
+# Apply all units in environment
+cub unit apply --space "*" \
+  --where "Space.Labels.Environment = 'dev'"
+
+# Apply with dry-run first
+cub unit apply --space app-prod frontend --dry-run
+\stopverb}
+}
+
+\subtree{
+\title{Step 14: Monitor and Refresh State}
+\p{Keep ConfigHub in sync with live state:}
+
+\pre{\startverb
+# Refresh single unit
+cub unit refresh --space app-dev frontend
+
+# Bulk refresh
+cub unit refresh --space "*" \
+  --where "Space.Labels.Environment = 'dev'"
+
+# Check drift
+cub unit get --space app-dev frontend --jq '.Unit.DriftStatus'
+\stopverb}
+}
+
+\subtree{
+\title{Step 15: Rollback When Needed}
+\p{Revert to previous configurations:}
+
+\pre{\startverb
+# View revision history
+cub unit get --space app-dev frontend --jq '.Unit.Revisions'
+
+# Rollback to specific revision
+cub unit rollback --space app-dev frontend --revision 3
+
+# Rollback entire ChangeSet
+cub unit rollback --space app-prod \
+  --filter home/prod-app-filter \
+  --changeset home/release-v123
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[ConfigHub Documentation](https://docs.confighub.com)}
+\li{[Configuration as Data Principles](https://docs.confighub.com/concepts/config-as-data)}
+\li{[CLI Reference](https://docs.confighub.com/cli)}
+}
+}
+}

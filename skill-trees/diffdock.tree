@@ -1,0 +1,617 @@
+\title{Diffdock}
+
+\taxon{skill}
+
+\meta{description}{"Diffusion-based molecular docking. Predict protein-ligand binding poses from PDB/SMILES, confidence scores, virtual screening, for structure-based drug design. Not for affinity prediction."}
+
+\subtree{
+\title{DiffDock: Molecular Docking with Diffusion Models}
+\subtree{
+\title{Overview}
+\p{DiffDock is a diffusion-based deep learning tool for molecular docking that predicts 3D binding poses of small molecule ligands to protein targets. It represents the state-of-the-art in computational docking, crucial for structure-based drug discovery and chemical biology.}
+
+\p{\strong{Core Capabilities:}}
+
+\ul{
+\li{Predict ligand binding poses with high accuracy using deep learning}
+\li{Support protein structures (PDB files) or sequences (via ESMFold)}
+\li{Process single complexes or batch virtual screening campaigns}
+\li{Generate confidence scores to assess prediction reliability}
+\li{Handle diverse ligand inputs (SMILES, SDF, MOL2)}
+}
+
+\p{\strong{Key Distinction:} DiffDock predicts \strong{binding poses} (3D structure) and \strong{confidence} (prediction certainty), NOT binding affinity (ΔG, Kd). Always combine with scoring functions (GNINA, MM/GBSA) for affinity assessment.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{"Dock this ligand to a protein" or "predict binding pose"}
+\li{"Run molecular docking" or "perform protein-ligand docking"}
+\li{"Virtual screening" or "screen compound library"}
+\li{"Where does this molecule bind?" or "predict binding site"}
+\li{Structure-based drug design or lead optimization tasks}
+\li{Tasks involving PDB files + SMILES strings or ligand structures}
+\li{Batch docking of multiple protein-ligand pairs}
+}
+}
+
+\subtree{
+\title{Installation and Environment Setup}
+\subtree{
+\title{Check Environment Status}
+\p{Before proceeding with DiffDock tasks, verify the environment setup:}
+
+\pre{\startverb
+# Use the provided setup checker
+python scripts/setup_check.py
+\stopverb}
+
+\p{This script validates Python version, PyTorch with CUDA, PyTorch Geometric, RDKit, ESM, and other dependencies.}
+}
+
+\subtree{
+\title{Installation Options}
+\p{\strong{Option 1: Conda (Recommended)}}
+
+\pre{\startverb
+git clone https://github.com/gcorso/DiffDock.git
+cd DiffDock
+conda env create --file environment.yml
+conda activate diffdock
+\stopverb}
+
+\p{\strong{Option 2: Docker}}
+
+\pre{\startverb
+docker pull rbgcsail/diffdock
+docker run -it --gpus all --entrypoint /bin/bash rbgcsail/diffdock
+micromamba activate diffdock
+\stopverb}
+
+\p{\strong{Important Notes:}}
+
+\ul{
+\li{GPU strongly recommended (10-100x speedup vs CPU)}
+\li{First run pre-computes SO(2)/SO(3) lookup tables (~2-5 minutes)}
+\li{Model checkpoints (~500MB) download automatically if not present}
+}
+}
+}
+
+\subtree{
+\title{Core Workflows}
+\subtree{
+\title{Workflow 1: Single Protein-Ligand Docking}
+\p{\strong{Use Case:} Dock one ligand to one protein target}
+
+\p{\strong{Input Requirements:}}
+
+\ul{
+\li{Protein: PDB file OR amino acid sequence}
+\li{Ligand: SMILES string OR structure file (SDF/MOL2)}
+}
+
+\p{\strong{Command:}}
+
+\pre{\startverb
+python -m inference \
+  --config default_inference_args.yaml \
+  --protein_path protein.pdb \
+  --ligand "CC(=O)Oc1ccccc1C(=O)O" \
+  --out_dir results/single_docking/
+\stopverb}
+
+\p{\strong{Alternative (protein sequence):}}
+
+\pre{\startverb
+python -m inference \
+  --config default_inference_args.yaml \
+  --protein_sequence "MSKGEELFTGVVPILVELDGDVNGHKF..." \
+  --ligand ligand.sdf \
+  --out_dir results/sequence_docking/
+\stopverb}
+
+\p{\strong{Output Structure:}}
+
+\pre{\startverb
+results/single_docking/
+├── rank_1.sdf          # Top-ranked pose
+├── rank_2.sdf          # Second-ranked pose
+├── ...
+├── rank_10.sdf         # 10th pose (default: 10 samples)
+└── confidence_scores.txt
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 2: Batch Processing Multiple Complexes}
+\p{\strong{Use Case:} Dock multiple ligands to proteins, virtual screening campaigns}
+
+\p{\strong{Step 1: Prepare Batch CSV}}
+
+\p{Use the provided script to create or validate batch input:}
+
+\pre{\startverb
+# Create template
+python scripts/prepare_batch_csv.py --create --output batch_input.csv
+
+# Validate existing CSV
+python scripts/prepare_batch_csv.py my_input.csv --validate
+\stopverb}
+
+\p{\strong{CSV Format:}}
+
+\pre{\startverb
+complex_name,protein_path,ligand_description,protein_sequence
+complex1,protein1.pdb,CC(=O)Oc1ccccc1C(=O)O,
+complex2,,COc1ccc(C#N)cc1,MSKGEELFT...
+complex3,protein3.pdb,ligand3.sdf,
+\stopverb}
+
+\p{\strong{Required Columns:}}
+
+\ul{
+\li{\code{\startverb complex_name\stopverb}: Unique identifier}
+\li{\code{\startverb protein_path\stopverb}: PDB file path (leave empty if using sequence)}
+\li{\code{\startverb ligand_description\stopverb}: SMILES string or ligand file path}
+\li{\code{\startverb protein_sequence\stopverb}: Amino acid sequence (leave empty if using PDB)}
+}
+
+\p{\strong{Step 2: Run Batch Docking}}
+
+\pre{\startverb
+python -m inference \
+  --config default_inference_args.yaml \
+  --protein_ligand_csv batch_input.csv \
+  --out_dir results/batch/ \
+  --batch_size 10
+\stopverb}
+
+\p{\strong{For Large Virtual Screening (>100 compounds):}}
+
+\p{Pre-compute protein embeddings for faster processing:}
+
+\pre{\startverb
+# Pre-compute embeddings
+python datasets/esm_embedding_preparation.py \
+  --protein_ligand_csv screening_input.csv \
+  --out_file protein_embeddings.pt
+
+# Run with pre-computed embeddings
+python -m inference \
+  --config default_inference_args.yaml \
+  --protein_ligand_csv screening_input.csv \
+  --esm_embeddings_path protein_embeddings.pt \
+  --out_dir results/screening/
+\stopverb}
+}
+
+\subtree{
+\title{Workflow 3: Analyzing Results}
+\p{After docking completes, analyze confidence scores and rank predictions:}
+
+\pre{\startverb
+# Analyze all results
+python scripts/analyze_results.py results/batch/
+
+# Show top 5 per complex
+python scripts/analyze_results.py results/batch/ --top 5
+
+# Filter by confidence threshold
+python scripts/analyze_results.py results/batch/ --threshold 0.0
+
+# Export to CSV
+python scripts/analyze_results.py results/batch/ --export summary.csv
+
+# Show top 20 predictions across all complexes
+python scripts/analyze_results.py results/batch/ --best 20
+\stopverb}
+
+\p{The analysis script:}
+
+\ul{
+\li{Parses confidence scores from all predictions}
+\li{Classifies as High (>0), Moderate (-1.5 to 0), or Low (<-1.5)}
+\li{Ranks predictions within and across complexes}
+\li{Generates statistical summaries}
+\li{Exports results to CSV for downstream analysis}
+}
+}
+}
+
+\subtree{
+\title{Confidence Score Interpretation}
+\p{\strong{Understanding Scores:}}
+
+\pre{\startverb
+| Score Range | Confidence Level | Interpretation |
+|------------|------------------|----------------|
+| **> 0** | High | Strong prediction, likely accurate |
+| **-1.5 to 0** | Moderate | Reasonable prediction, validate carefully |
+| **< -1.5** | Low | Uncertain prediction, requires validation |
+\stopverb}
+
+\p{\strong{Critical Notes:}}
+
+\ol{
+\li{\strong{Confidence ≠ Affinity}: High confidence means model certainty about structure, NOT strong binding}
+\li{\strong{Context Matters}: Adjust expectations for:}
+\li{Large ligands (>500 Da): Lower confidence expected}
+\li{Multiple protein chains: May decrease confidence}
+\li{Novel protein families: May underperform}
+\li{\strong{Multiple Samples}: Review top 3-5 predictions, look for consensus}
+}
+
+\p{\strong{For detailed guidance:} Read \code{\startverb references/confidence_and_limitations.md\stopverb} using the Read tool}
+}
+
+\subtree{
+\title{Parameter Customization}
+\subtree{
+\title{Using Custom Configuration}
+\p{Create custom configuration for specific use cases:}
+
+\pre{\startverb
+# Copy template
+cp assets/custom_inference_config.yaml my_config.yaml
+
+# Edit parameters (see template for presets)
+# Then run with custom config
+python -m inference \
+  --config my_config.yaml \
+  --protein_ligand_csv input.csv \
+  --out_dir results/
+\stopverb}
+}
+
+\subtree{
+\title{Key Parameters to Adjust}
+\p{\strong{Sampling Density:}}
+
+\ul{
+\li{\code{\startverb samples_per_complex: 10\stopverb} → Increase to 20-40 for difficult cases}
+\li{More samples = better coverage but longer runtime}
+}
+
+\p{\strong{Inference Steps:}}
+
+\ul{
+\li{\code{\startverb inference_steps: 20\stopverb} → Increase to 25-30 for higher accuracy}
+\li{More steps = potentially better quality but slower}
+}
+
+\p{\strong{Temperature Parameters (control diversity):}}
+
+\ul{
+\li{\code{\startverb temp_sampling_tor: 7.04\stopverb} → Increase for flexible ligands (8-10)}
+\li{\code{\startverb temp_sampling_tor: 7.04\stopverb} → Decrease for rigid ligands (5-6)}
+\li{Higher temperature = more diverse poses}
+}
+
+\p{\strong{Presets Available in Template:}}
+
+\ol{
+\li{High Accuracy: More samples + steps, lower temperature}
+\li{Fast Screening: Fewer samples, faster}
+\li{Flexible Ligands: Increased torsion temperature}
+\li{Rigid Ligands: Decreased torsion temperature}
+}
+
+\p{\strong{For complete parameter reference:} Read \code{\startverb references/parameters_reference.md\stopverb} using the Read tool}
+}
+}
+
+\subtree{
+\title{Advanced Techniques}
+\subtree{
+\title{Ensemble Docking (Protein Flexibility)}
+\p{For proteins with known flexibility, dock to multiple conformations:}
+
+\pre{\startverb
+# Create ensemble CSV
+import pandas as pd
+
+conformations = ["conf1.pdb", "conf2.pdb", "conf3.pdb"]
+ligand = "CC(=O)Oc1ccccc1C(=O)O"
+
+data = {
+    "complex_name": [f"ensemble_{i}" for i in range(len(conformations))],
+    "protein_path": conformations,
+    "ligand_description": [ligand] * len(conformations),
+    "protein_sequence": [""] * len(conformations)
+}
+
+pd.DataFrame(data).to_csv("ensemble_input.csv", index=False)
+\stopverb}
+
+\p{Run docking with increased sampling:}
+
+\pre{\startverb
+python -m inference \
+  --config default_inference_args.yaml \
+  --protein_ligand_csv ensemble_input.csv \
+  --samples_per_complex 20 \
+  --out_dir results/ensemble/
+\stopverb}
+}
+
+\subtree{
+\title{Integration with Scoring Functions}
+\p{DiffDock generates poses; combine with other tools for affinity:}
+
+\p{\strong{GNINA (Fast neural network scoring):}}
+
+\pre{\startverb
+for pose in results/*.sdf; do
+    gnina -r protein.pdb -l "$pose" --score_only
+done
+\stopverb}
+
+\p{\strong{MM/GBSA (More accurate, slower):} Use AmberTools MMPBSA.py or gmx_MMPBSA after energy minimization}
+
+\p{\strong{Free Energy Calculations (Most accurate):} Use OpenMM + OpenFE or GROMACS for FEP/TI calculations}
+
+\p{\strong{Recommended Workflow:}}
+
+\ol{
+\li{DiffDock → Generate poses with confidence scores}
+\li{Visual inspection → Check structural plausibility}
+\li{GNINA or MM/GBSA → Rescore and rank by affinity}
+\li{Experimental validation → Biochemical assays}
+}
+}
+}
+
+\subtree{
+\title{Limitations and Scope}
+\p{\strong{DiffDock IS Designed For:}}
+
+\ul{
+\li{Small molecule ligands (typically 100-1000 Da)}
+\li{Drug-like organic compounds}
+\li{Small peptides (<20 residues)}
+\li{Single or multi-chain proteins}
+}
+
+\p{\strong{DiffDock IS NOT Designed For:}}
+
+\ul{
+\li{Large biomolecules (protein-protein docking) → Use DiffDock-PP or AlphaFold-Multimer}
+\li{Large peptides (>20 residues) → Use alternative methods}
+\li{Covalent docking → Use specialized covalent docking tools}
+\li{Binding affinity prediction → Combine with scoring functions}
+\li{Membrane proteins → Not specifically trained, use with caution}
+}
+
+\p{\strong{For complete limitations:} Read \code{\startverb references/confidence_and_limitations.md\stopverb} using the Read tool}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{Issue: Low confidence scores across all predictions}}
+
+\ul{
+\li{Cause: Large/unusual ligands, unclear binding site, protein flexibility}
+\li{Solution: Increase \code{\startverb samples_per_complex\stopverb} (20-40), try ensemble docking, validate protein structure}
+}
+
+\p{\strong{Issue: Out of memory errors}}
+
+\ul{
+\li{Cause: GPU memory insufficient for batch size}
+\li{Solution: Reduce \code{\startverb --batch_size 2\stopverb} or process fewer complexes at once}
+}
+
+\p{\strong{Issue: Slow performance}}
+
+\ul{
+\li{Cause: Running on CPU instead of GPU}
+\li{Solution: Verify CUDA with \code{\startverb python -c "import torch; print(torch.cuda.is_available())"\stopverb}, use GPU}
+}
+
+\p{\strong{Issue: Unrealistic binding poses}}
+
+\ul{
+\li{Cause: Poor protein preparation, ligand too large, wrong binding site}
+\li{Solution: Check protein for missing residues, remove far waters, consider specifying binding site}
+}
+
+\p{\strong{Issue: "Module not found" errors}}
+
+\ul{
+\li{Cause: Missing dependencies or wrong environment}
+\li{Solution: Run \code{\startverb python scripts/setup_check.py\stopverb} to diagnose}
+}
+}
+
+\subtree{
+\title{Performance Optimization}
+\p{\strong{For Best Results:}}
+
+\ol{
+\li{Use GPU (essential for practical use)}
+\li{Pre-compute ESM embeddings for repeated protein use}
+\li{Batch process multiple complexes together}
+\li{Start with default parameters, then tune if needed}
+\li{Validate protein structures (resolve missing residues)}
+\li{Use canonical SMILES for ligands}
+}
+}
+}
+
+\subtree{
+\title{Graphical User Interface}
+\p{For interactive use, launch the web interface:}
+
+\pre{\startverb
+python app/main.py
+# Navigate to http://localhost:7860
+\stopverb}
+
+\p{Or use the online demo without installation:}
+
+\ul{
+\li{https://huggingface.co/spaces/reginabarzilaygroup/DiffDock-Web}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{Helper Scripts (\code{\startverb scripts/\stopverb})}
+\p{\strong{\code{\startverb prepare_batch_csv.py\stopverb}}: Create and validate batch input CSV files}
+
+\ul{
+\li{Create templates with example entries}
+\li{Validate file paths and SMILES strings}
+\li{Check for required columns and format issues}
+}
+
+\p{\strong{\code{\startverb analyze_results.py\stopverb}}: Analyze confidence scores and rank predictions}
+
+\ul{
+\li{Parse results from single or batch runs}
+\li{Generate statistical summaries}
+\li{Export to CSV for downstream analysis}
+\li{Identify top predictions across complexes}
+}
+
+\p{\strong{\code{\startverb setup_check.py\stopverb}}: Verify DiffDock environment setup}
+
+\ul{
+\li{Check Python version and dependencies}
+\li{Verify PyTorch and CUDA availability}
+\li{Test RDKit and PyTorch Geometric installation}
+\li{Provide installation instructions if needed}
+}
+}
+
+\subtree{
+\title{Reference Documentation (\code{\startverb references/\stopverb})}
+\p{\strong{\code{\startverb parameters_reference.md\stopverb}}: Complete parameter documentation}
+
+\ul{
+\li{All command-line options and configuration parameters}
+\li{Default values and acceptable ranges}
+\li{Temperature parameters for controlling diversity}
+\li{Model checkpoint locations and version flags}
+}
+
+\p{Read this file when users need:}
+
+\ul{
+\li{Detailed parameter explanations}
+\li{Fine-tuning guidance for specific systems}
+\li{Alternative sampling strategies}
+}
+
+\p{\strong{\code{\startverb confidence_and_limitations.md\stopverb}}: Confidence score interpretation and tool limitations}
+
+\ul{
+\li{Detailed confidence score interpretation}
+\li{When to trust predictions}
+\li{Scope and limitations of DiffDock}
+\li{Integration with complementary tools}
+\li{Troubleshooting prediction quality}
+}
+
+\p{Read this file when users need:}
+
+\ul{
+\li{Help interpreting confidence scores}
+\li{Understanding when NOT to use DiffDock}
+\li{Guidance on combining with other tools}
+\li{Validation strategies}
+}
+
+\p{\strong{\code{\startverb workflows_examples.md\stopverb}}: Comprehensive workflow examples}
+
+\ul{
+\li{Detailed installation instructions}
+\li{Step-by-step examples for all workflows}
+\li{Advanced integration patterns}
+\li{Troubleshooting common issues}
+\li{Best practices and optimization tips}
+}
+
+\p{Read this file when users need:}
+
+\ul{
+\li{Complete workflow examples with code}
+\li{Integration with GNINA, OpenMM, or other tools}
+\li{Virtual screening workflows}
+\li{Ensemble docking procedures}
+}
+}
+
+\subtree{
+\title{Assets (\code{\startverb assets/\stopverb})}
+\p{\strong{\code{\startverb batch_template.csv\stopverb}}: Template for batch processing}
+
+\ul{
+\li{Pre-formatted CSV with required columns}
+\li{Example entries showing different input types}
+\li{Ready to customize with actual data}
+}
+
+\p{\strong{\code{\startverb custom_inference_config.yaml\stopverb}}: Configuration template}
+
+\ul{
+\li{Annotated YAML with all parameters}
+\li{Four preset configurations for common use cases}
+\li{Detailed comments explaining each parameter}
+\li{Ready to customize and use}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\ol{
+\li{\strong{Always verify environment} with \code{\startverb setup_check.py\stopverb} before starting large jobs}
+\li{\strong{Validate batch CSVs} with \code{\startverb prepare_batch_csv.py\stopverb} to catch errors early}
+\li{\strong{Start with defaults} then tune parameters based on system-specific needs}
+\li{\strong{Generate multiple samples} (10-40) for robust predictions}
+\li{\strong{Visual inspection} of top poses before downstream analysis}
+\li{\strong{Combine with scoring} functions for affinity assessment}
+\li{\strong{Use confidence scores} for initial ranking, not final decisions}
+\li{\strong{Pre-compute embeddings} for virtual screening campaigns}
+\li{\strong{Document parameters} used for reproducibility}
+\li{\strong{Validate results} experimentally when possible}
+}
+}
+
+\subtree{
+\title{Citations}
+\p{When using DiffDock, cite the appropriate papers:}
+
+\p{\strong{DiffDock-L (current default model):}}
+
+\pre{\startverb
+Stärk et al. (2024) "DiffDock-L: Improving Molecular Docking with Diffusion Models"
+arXiv:2402.18396
+\stopverb}
+
+\p{\strong{Original DiffDock:}}
+
+\pre{\startverb
+Corso et al. (2023) "DiffDock: Diffusion Steps, Twists, and Turns for Molecular Docking"
+ICLR 2023, arXiv:2210.01776
+\stopverb}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{GitHub Repository}: https://github.com/gcorso/DiffDock}
+\li{\strong{Online Demo}: https://huggingface.co/spaces/reginabarzilaygroup/DiffDock-Web}
+\li{\strong{DiffDock-L Paper}: https://arxiv.org/abs/2402.18396}
+\li{\strong{Original Paper}: https://arxiv.org/abs/2210.01776}
+}
+}
+}

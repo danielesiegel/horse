@@ -1,0 +1,200 @@
+\title{Correlating Threat Campaigns}
+
+\taxon{skill}
+
+\tag{campaign-analysis}
+
+\tag{correlation}
+
+\tag{MISP}
+
+\tag{ATT&CK}
+
+\tag{threat-actor}
+
+\tag{intrusion-set}
+
+\tag{clustering}
+
+\tag{CTI}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Correlates disparate security incidents, IOCs, and adversary behaviors across time and organizations to identify unified threat campaigns, attribute them to common threat actors, and extract shared indicators for improved detection. Use when multiple incidents exhibit overlapping indicators, when sector-wide attack campaigns require cross-organizational analysis, or when building campaign-level intelligence products. Activates for requests involving campaign analysis, incident clustering, cross-organizational IOC correlation, or MISP correlation engine.}
+
+\subtree{
+\title{Correlating Threat Campaigns}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Multiple unrelated-appearing incidents share IOCs (same C2 IP, same malware hash, similar TTPs)}
+\li{An ISAC partner shares indicators from an incident that match your own historical events}
+\li{Building a campaign report linking adversary activity over weeks or months to a single operation}
+}
+
+\p{\strong{Do not use} this skill to force correlation based on weak signals — false campaign attribution misleads defenders and wastes resources on incorrect threat models.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{TIP or SIEM with historical indicator and event data (90+ days recommended)}
+\li{MISP correlation engine enabled with event sharing configured}
+\li{Graph analysis tool (Maltego, Neo4j, or OpenCTI) for relationship visualization}
+\li{Reference to MITRE ATT&CK intrusion set and campaign objects for structuring output}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Collect and Normalize Events}
+\p{Gather all candidate events for correlation from:}
+
+\ul{
+\li{Internal SIEM (raw events, alert history)}
+\li{TIP (historical indicators and events)}
+\li{ISAC sharing (partner-submitted events in MISP or TAXII)}
+\li{Commercial intelligence (Recorded Future, Mandiant, CrowdStrike reports)}
+}
+
+\p{Normalize all events to STIX 2.1 schema with consistent timestamp (UTC), indicator types, and confidence scores. Ensure all indicators have source attribution and collection date.}
+}
+
+\subtree{
+\title{Step 2: Identify Correlation Pivot Points}
+\p{Apply systematic pivot analysis across four dimensions:}
+
+\p{\strong{Infrastructure pivots}:}
+
+\ul{
+\li{Same IP address or /24 subnet across events}
+\li{Same domain registrant email or WHOIS organization}
+\li{Same ASN or hosting provider with same account fingerprint}
+\li{Same SSL certificate fingerprint or serial number across C2 domains}
+}
+
+\p{\strong{Capability pivots}:}
+
+\ul{
+\li{Same malware hash or YARA signature match}
+\li{Same C2 communication protocol (Cobalt Strike beacon config, Sliver implant parameters)}
+\li{Same exploit code or weaponized document template}
+\li{Same obfuscation method or packer fingerprint}
+}
+
+\p{\strong{Temporal pivots}:}
+
+\ul{
+\li{Events occurring within same time window (operational hours suggesting same timezone)}
+\li{Sequential events with logical kill chain progression}
+\li{Malware compilation timestamps clustering in same date range}
+}
+
+\p{\strong{Victimology pivots}:}
+
+\ul{
+\li{Same target sector (healthcare, energy, financial)}
+\li{Same target geography}
+\li{Same targeted technology (specific ERP vendor, VPN appliance brand)}
+}
+}
+
+\subtree{
+\title{Step 3: Calculate Correlation Confidence}
+\p{Apply weighted scoring for campaign attribution:}
+
+\pre{\startverb
+def calculate_campaign_confidence(events: list) -> float:
+    scores = []
+
+    # Infrastructure overlap (highest weight — most discriminating)
+    infra_overlap = count_shared_infra(events) / len(events)
+    scores.append(infra_overlap * 40)
+
+    # Capability overlap (high weight — TTPs are durable)
+    capability_overlap = count_shared_ttps(events) / len(events)
+    scores.append(capability_overlap * 35)
+
+    # Temporal proximity (moderate weight)
+    temporal_score = assess_temporal_clustering(events)
+    scores.append(temporal_score * 15)
+
+    # Victimology alignment (lower weight — many actors target same sector)
+    victim_score = assess_victim_pattern(events)
+    scores.append(victim_score * 10)
+
+    total = sum(scores)
+    if total >= 70: return "HIGH"
+    elif total >= 45: return "MEDIUM"
+    else: return "LOW"
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Build Campaign Graph}
+\p{In OpenCTI or Maltego, construct campaign graph:}
+
+\ul{
+\li{Campaign object (STIX) as central node}
+\li{Intrusion Set → uses → Malware objects}
+\li{Intrusion Set → uses → Infrastructure objects}
+\li{Intrusion Set → targets → Identity objects (victim organizations/sectors)}
+\li{Campaign → attributed-to → Threat Actor (if attribution achieved)}
+\li{Indicators → indicates → Malware (linking technical observables to capabilities)}
+}
+
+\p{Label each relationship with evidence reference and confidence.}
+}
+
+\subtree{
+\title{Step 5: Produce Campaign Intelligence Report}
+\p{Structure the campaign report:}
+
+\ol{
+\li{\strong{Campaign name}: Assign descriptive codename based on targeting theme or tooling}
+\li{\strong{Timeline}: First/last observed dates with activity phases}
+\li{\strong{Attribution}: Suspected threat actor with confidence level}
+\li{\strong{Target profile}: Industry verticals, geographies, organization sizes}
+\li{\strong{TTPs summary}: ATT&CK Navigator heatmap for campaign-specific techniques}
+\li{\strong{Shared indicators}: IOCs that span multiple incidents (highest confidence for blocking)}
+\li{\strong{Detection guidance}: Sigma/YARA rules specific to this campaign}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **Campaign** | STIX object representing a grouping of adversarial behaviors with common objectives over a defined time period |
+| **Intrusion Set** | STIX object grouping related intrusion activity by common objectives, even when actor identity is uncertain |
+| **Pivot** | Using a single data point (IOC, infrastructure, TTP) to discover related events or adversary artifacts |
+| **Clustering** | Machine learning or manual grouping of incidents based on feature similarity to identify campaign boundaries |
+| **False Correlation** | Incorrect linking of unrelated incidents due to shared infrastructure (CDNs, shared hosting) or common tools |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{MISP Correlation Engine}: Automatic correlation of events sharing attribute values across the MISP instance and federated instances}
+\li{\strong{OpenCTI Graph}: Interactive relationship graph for visualizing campaign linkages with STIX object types}
+\li{\strong{Maltego}: Link analysis for infrastructure and capability pivoting across multiple data sources}
+\li{\strong{Neo4j}: Graph database with Cypher queries for large-scale campaign correlation (millions of events)}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{CDN/Shared hosting false positives}: Cloudflare, AWS CloudFront, and bulletproof hosters serve multiple threat actors. Shared IP alone does not establish campaign linkage.}
+\li{\strong{Common malware conflation}: Multiple threat actors use Cobalt Strike. Shared capability does not indicate same actor without additional corroboration.}
+\li{\strong{Premature attribution}: Forcing campaign-to-actor attribution before evidence threshold is reached produces incorrect intelligence that persists in reports.}
+\li{\strong{Missing temporal analysis}: Events from different years may share infrastructure that was recycled by a different actor, not the same campaign.}
+}
+}
+}

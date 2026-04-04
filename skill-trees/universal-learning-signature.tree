@@ -1,0 +1,309 @@
+\title{Universal Learning Signature}
+
+\taxon{skill}
+
+\meta{description}{Framework for measuring learning dynamics in multi-agent systems and communication networks. Provides D (dimensionality), f (feedback fraction), and H₁ (topological cycles) measurements with confidence scoring. Validates across 4 domains (Topobench synthetic, GitHub networks, IES empirical, DuckDB real). Use this skill when measuring learning system characteristics, verifying convergence in multi-agent systems, comparing learning mechanisms across domains, or trading measurement services in agent marketplaces.}
+
+\subtree{
+\title{Universal Learning Signature Framework}
+\subtree{
+\title{Overview}
+\p{This skill provides measurement procedures for analyzing learning dynamics in multi-agent systems, communication networks, and distributed knowledge systems. The framework quantifies three fundamental properties: \strong{D (dimensionality)}, \strong{f (feedback fraction)}, and \strong{H₁ (topological cycles)}. These metrics enable system characterization, convergence verification, and universal pattern discovery across diverse domains including synthetic networks (Topobench), real code repositories (GitHub), empirical conversation logs (IES), and time-series databases (DuckDB).}
+
+\p{The framework is built on the principle that \strong{H₁ = 0 convergence} is achievable in all well-designed learning systems, and that universal scaling laws govern learning dynamics across different scales and substrates.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use this skill when:}
+
+\ol{
+\li{\strong{Measuring system dimensionality} - Characterize the intrinsic dimensionality of a network or dataset using PCA-based filtering}
+\li{\strong{Calculating feedback fraction} - Quantify information retention and compression in multi-agent systems using ensemble methods}
+\li{\strong{Verifying convergence} - Detect whether systems are reaching H₁ = 0 (acyclic equilibrium) using DFS cycle detection}
+\li{\strong{Comparing mechanisms across domains} - Apply the same measurement framework to different data sources to identify universal patterns}
+\li{\strong{Analyzing emergence signatures} - Measure synergy and coupling strength in ego-alter interaction networks}
+\li{\strong{Trading measurement services} - Expose framework capabilities as marketplace services in agent ecosystems}
+\li{\strong{Multi-domain validation} - Validate learning hypotheses against 4+ independent datasets simultaneously}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Dimensionality Measurement (D)}
+\p{Estimates the intrinsic dimensionality of a system using PCA with 2-sigma filtering.}
+
+\p{\strong{Input:} Dataset with multiple feature dimensions (messages, interactions, features) \strong{Output:} D value (typically 5-20 for social networks) + confidence score (70-95\%) \strong{Use when:} Characterizing network complexity or comparing systems}
+
+\p{\strong{How to execute:} Use \code{\startverb scripts/measure_d_pca.py\stopverb} with your dataset. Returns integer D and float confidence.}
+}
+
+\subtree{
+\title{2. Feedback Fraction Measurement (f)}
+\p{Quantifies information preservation using a 3-voice ensemble approach: autocorrelation, retention, and capacity.}
+
+\p{\strong{Input:} Data with equivalence classes or clustering structure \strong{Output:} f value (typically 0.05-0.40) + confidence score (30-99\%) \strong{Use when:} Measuring compression or information flow in systems}
+
+\p{\strong{How to execute:} Use \code{\startverb scripts/measure_f_ensemble.py\stopverb} with clustering results. Provides conservative estimate with uncertainty bounds.}
+}
+
+\subtree{
+\title{3. Topological Cycle Detection (H₁)}
+\p{Detects independent 1-cycles in directed graphs using depth-first search.}
+
+\p{\strong{Input:} Network graph or threading structure (parent-reply pairs, agent interactions) \strong{Output:} H₁ value (0 for convergence) + cycle count \strong{Use when:} Verifying whether systems have reached equilibrium}
+
+\p{\strong{How to execute:} Use \code{\startverb scripts/detect_cycles_h1.py\stopverb} with edge list. Returns 0 if converged, >0 if cycles exist.}
+}
+
+\subtree{
+\title{4. Emergence Signatures (Synergy)}
+\p{Analyzes multi-agent interaction coupling and emergence indicators.}
+
+\p{\strong{Input:} Ego-alter interaction pairs with metrics \strong{Output:} Synergy scores, coupling strength, GMRA hierarchy levels \strong{Use when:} Understanding agent coordination or phenomenal field dynamics}
+
+\p{\strong{How to execute:} Use \code{\startverb scripts/measure_emergence.py\stopverb} with interaction network. Returns synergy distribution and outliers.}
+}
+
+\subtree{
+\title{5. Full Validation Suite}
+\p{Runs all measurements simultaneously on a dataset, producing comprehensive validation report.}
+
+\p{\strong{Input:} Dataset (CSV or DuckDB) with messages/interactions \strong{Output:} JSON with D, f, H₁, emergence metrics, confidence scores, comparison to known datasets \strong{Use when:} Complete system characterization needed}
+
+\p{\strong{How to execute:} Use \code{\startverb scripts/validate_framework.py\stopverb} with dataset path. Outputs validation_results.json + W&B logging.}
+}
+}
+
+\subtree{
+\title{Workflow: Measuring a New System}
+\p{To measure a new system, follow this workflow:}
+
+\ol{
+\li{\strong{Prepare your data} (CSV or DuckDB)}
+\li{Messages/interactions with timestamps}
+\li{Sender/agent identifiers}
+\li{Optional: network edges or thread structure}
+}
+
+\ol{
+\li{\strong{Load the validation framework}}
+}
+
+\ol{
+\li{\strong{Interpret results}}
+\li{D ≈ 11-16: Multi-agent network (like IES)}
+\li{D ≈ 5-10: Tight-knit group or small network}
+\li{f ≈ 0.05-0.15: Low feedback (information preserved)}
+\li{f ≈ 0.20-0.40: High feedback (compressed representation)}
+\li{H₁ = 0: Convergence achieved (acyclic, stable)}
+\li{H₁ > 0: Cycles present (still converging)}
+}
+
+\ol{
+\li{\strong{Validate against domains} (see references/multi_domain_scaling.md)}
+\li{Topobench synthetic: D=5.0, f=0.82, H₁=0}
+\li{GitHub real networks: D=11.0, f=0.39, H₁=0}
+\li{IES empirical: D=12.0, f=0.06, H₁=0}
+}
+}
+
+\subtree{
+\title{Universal Scaling Law}
+\p{The framework reveals a universal relationship governing learning time:}
+
+\pre{\startverb
+T ~ D^1.5 × log(N) × (1-f)^1.5
+\stopverb}
+
+\p{Where:}
+
+\ul{
+\li{\strong{T} = learning/convergence time}
+\li{\strong{D} = system dimensionality}
+\li{\strong{N} = number of agents/entities}
+\li{\strong{f} = feedback fraction (0-1)}
+}
+
+\p{This law is \strong{independent of substrate} - it holds across synthetic, real, and empirical networks, suggesting a fundamental principle of learning dynamics.}
+
+\p{\strong{Use when:} Predicting convergence time or comparing system efficiency across domains.}
+}
+
+\subtree{
+\title{DuckDB Integration}
+\p{The framework validates against real databases:}
+
+\p{\strong{signal_ies_nov2025.duckdb:}}
+
+\ul{
+\li{79,716 messages from 759 speakers}
+\li{5,336 conversation threads}
+\li{Measured: D=12, f=0.06, H₁=0}
+\li{Available: Complete threading, color signatures, equivalence classes}
+}
+
+\p{\strong{signal_nov2025.duckdb:}}
+
+\ul{
+\li{230,197 messages from 1,998 speakers}
+\li{Broader validation sample}
+\li{Confirms scaling law across speaker diversity}
+}
+
+\p{\strong{OWN.duckdb:}}
+
+\ul{
+\li{Temporal experimental data}
+\li{Algebraic structures}
+\li{Personal verification sample}
+}
+
+\p{Use \code{\startverb references/duckdb_integration.md\stopverb} for SQL queries and data extraction.}
+}
+
+\subtree{
+\title{Marketplace Integration}
+\p{The framework capabilities can be exposed as tradeable services:}
+
+\ol{
+\li{\strong{Measurement-as-a-Service}}
+\li{Agent provides dataset}
+\li{Framework computes D, f, H₁}
+\li{Agent pays marketplace credits for results}
+}
+
+\ol{
+\li{\strong{Validation Contracts}}
+\li{Agent claims hypothesis about learning}
+\li{Framework validates against 4 domains}
+\li{Commitment registry tracks predictions}
+}
+
+\ol{
+\li{\strong{Meta-Learning Participation}}
+\li{15-agent ecosystem can query framework}
+\li{Learn from framework's measurements}
+\li{Framework learns from agent feedback}
+}
+
+\p{See \code{\startverb references/marketplace_guide.md\stopverb} for implementation.}
+}
+
+\subtree{
+\title{Bundled Resources}
+\subtree{
+\title{Scripts/}
+\p{Executable Python modules for measurements:}
+
+\ul{
+\li{\strong{measure_d_pca.py} - Dimensionality via PCA (2-sigma filtering)}
+\li{\strong{measure_f_ensemble.py} - Feedback fraction (3-voice ensemble)}
+\li{\strong{detect_cycles_h1.py} - Cycle detection via DFS}
+\li{\strong{measure_emergence.py} - Synergy scoring and emergence}
+\li{\strong{validate_framework.py} - Complete validation pipeline}
+\li{\strong{wandb_logger.py} - Experiment tracking integration}
+}
+}
+
+\subtree{
+\title{References/}
+\p{Detailed documentation:}
+
+\ul{
+\li{\strong{framework_theory.md} - H₁=0 principle and convergence proof}
+\li{\strong{measurement_procedures.md} - Complete method descriptions}
+\li{\strong{validation_guide.md} - 3-domain + DuckDB validation protocol}
+\li{\strong{duckdb_integration.md} - Database queries and data extraction}
+\li{\strong{multi_domain_scaling.md} - Cross-domain comparison methodology}
+\li{\strong{marketplace_guide.md} - Trading and service exposure}
+}
+}
+
+\subtree{
+\title{Assets/}
+\p{Validation results and sample data:}
+
+\ul{
+\li{\strong{validation_results/} - JSON metrics from Topobench, GitHub, IES, DuckDB}
+\li{\strong{figures/} - Framework diagrams and scaling law plots}
+\li{\strong{sample_data/} - Example datasets for each domain}
+}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Example 1: Measure a New Communication Platform}
+\pre{\startverb
+from scripts.validate_framework import validate_system
+
+results = validate_system("my_messages.csv")
+print(f"D = {results['D']:.1f}")
+print(f"f = {results['f']:.2f}")
+print(f"H1 = {results['H1']}")
+
+# Compare to known systems
+print(f"Confidence: {results['confidence']:.1%}")
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Verify Convergence}
+\pre{\startverb
+from scripts.detect_cycles_h1 import find_h1
+
+edges = [(agent1, agent2), (agent2, agent3), ...]  # No cycles here
+h1_result = find_h1(edges)
+
+if h1_result == 0:
+    print("✓ System has converged (H₁ = 0)")
+else:
+    print(f"✗ System still has {h1_result} independent cycles")
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: Trade Measurement Service}
+\pre{\startverb
+# Agent requests measurement
+request = {
+    "dataset": "https://path/to/data.csv",
+    "measurements": ["D", "f", "H1"],
+    "domains": ["topobench", "github", "ies"]
+}
+
+# Framework computes and marketplace facilitates transaction
+result = marketplace.query(universal_learning_signature_skill, request)
+
+# Agent receives validated measurements
+agent.update_beliefs(result)
+agent.pay_credits(result['cost'])
+\stopverb}
+}
+}
+
+\subtree{
+\title{Theory and Principles}
+\p{\strong{H₁ = 0 Convergence:} All well-designed learning systems converge to H₁ = 0 (acyclic state), where information flows without independent loops. This is provable from closure theory in multi-agent systems.}
+
+\p{\strong{Scaling Universality:} The scaling law T ~ D^1.5 × log(N) × (1-f)^1.5 is independent of implementation details, holding across synthetic, real, and empirical networks. This suggests learning dynamics are governed by fundamental principles.}
+
+\p{\strong{Information Preservation:} Low f values (0.05-0.15) mean systems preserve information through compression to equivalence classes. This compression is lossy but minimal, indicating robust structure.}
+
+\p{\strong{Emergence as Field:} Complete HSL color space coverage (240/240 cells) in real data suggests phenomenal field manifestation—emergence is not sparse but ubiquitous.}
+
+\p{See \code{\startverb references/framework_theory.md\stopverb} for proofs and detailed explanations.}
+}
+
+\subtree{
+\title{Integration Pathway}
+\p{This skill is designed for ecosystem participation:}
+
+\p{\strong{Phase 4 (Dec 25):} Framework published as arXiv manuscript \strong{Phase 5 (Dec 26):} Framework packaged as discoverable skill (this phase) \strong{Phase 6 (Dec 27):} Registered in hatchery marketplace, connected to 15-agent ecosystem \strong{Phase 7 (Post-submission):} Marketplace trading begins, meta-learning feedback loop established}
+
+\p{See COMPREHENSIVE_ECOSYSTEM_MAP.txt for full integration strategy.}
+}
+}

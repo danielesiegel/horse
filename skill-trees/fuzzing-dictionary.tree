@@ -1,0 +1,359 @@
+\title{Fuzzing Dictionary}
+
+\taxon{skill}
+
+\meta{description}{Fuzzing dictionaries guide fuzzers with domain-specific tokens. Use when fuzzing parsers, protocols, or format-specific code.}
+
+\subtree{
+\title{Fuzzing Dictionary}
+\p{A fuzzing dictionary provides domain-specific tokens to guide the fuzzer toward interesting inputs. Instead of purely random mutations, the fuzzer incorporates known keywords, magic numbers, protocol commands, and format-specific strings that are more likely to reach deeper code paths in parsers, protocol handlers, and file format processors.}
+
+\subtree{
+\title{Overview}
+\p{Dictionaries are text files containing quoted strings that represent meaningful tokens for your target. They help fuzzers bypass early validation checks and explore code paths that would be difficult to reach through blind mutation alone.}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| **Dictionary Entry** | A quoted string (e.g., `"keyword"`) or key-value pair (e.g., `kw="value"`) |
+| **Hex Escapes** | Byte sequences like `"\xF7\xF8"` for non-printable characters |
+| **Token Injection** | Fuzzer inserts dictionary entries into generated inputs |
+| **Cross-Fuzzer Format** | Dictionary files work with libFuzzer, AFL++, and cargo-fuzz |
+\stopverb}
+}
+}
+
+\subtree{
+\title{When to Apply}
+\p{\strong{Apply this technique when:}}
+
+\ul{
+\li{Fuzzing parsers (JSON, XML, config files)}
+\li{Fuzzing protocol implementations (HTTP, DNS, custom protocols)}
+\li{Fuzzing file format handlers (PNG, PDF, media codecs)}
+\li{Coverage plateaus early without reaching deeper logic}
+\li{Target code checks for specific keywords or magic values}
+}
+
+\p{\strong{Skip this technique when:}}
+
+\ul{
+\li{Fuzzing pure algorithms without format expectations}
+\li{Target has no keyword-based parsing}
+\li{Corpus already achieves high coverage}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Task | Command/Pattern |
+|------|-----------------|
+| Use with libFuzzer | `./fuzz -dict=./dictionary.dict ...` |
+| Use with AFL++ | `afl-fuzz -x ./dictionary.dict ...` |
+| Use with cargo-fuzz | `cargo fuzz run fuzz_target -- -dict=./dictionary.dict` |
+| Extract from header | `grep -o '".*"' header.h > header.dict` |
+| Generate from binary | `strings ./binary \| sed 's/^/"&/; s/$/&"/' > strings.dict` |
+\stopverb}
+}
+
+\subtree{
+\title{Step-by-Step}
+\subtree{
+\title{Step 1: Create Dictionary File}
+\p{Create a text file with quoted strings on each line. Use comments (\code{\startverb #\stopverb}) for documentation.}
+
+\p{\strong{Example dictionary format:}}
+
+\pre{\startverb
+# Lines starting with '#' and empty lines are ignored.
+
+# Adds "blah" (w/o quotes) to the dictionary.
+kw1="blah"
+# Use \\ for backslash and \" for quotes.
+kw2="\"ac\\dc\""
+# Use \xAB for hex values
+kw3="\xF7\xF8"
+# the name of the keyword followed by '=' may be omitted:
+"foo\x0Abar"
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Generate Dictionary Content}
+\p{Choose a generation method based on what's available:}
+
+\p{\strong{From LLM:} Prompt ChatGPT or Claude with:}
+
+\pre{\startverb
+A dictionary can be used to guide the fuzzer. Write me a dictionary file for fuzzing a <PNG parser>. Each line should be a quoted string or key-value pair like kw="value". Include magic bytes, chunk types, and common header values. Use hex escapes like "\xF7\xF8" for binary values.
+\stopverb}
+
+\p{\strong{From header files:}}
+
+\pre{\startverb
+grep -o '".*"' header.h > header.dict
+\stopverb}
+
+\p{\strong{From man pages (for CLI tools):}}
+
+\pre{\startverb
+man curl | grep -oP '^\s*(--|-)\K\S+' | sed 's/[,.]$//' | sed 's/^/"&/; s/$/&"/' | sort -u > man.dict
+\stopverb}
+
+\p{\strong{From binary strings:}}
+
+\pre{\startverb
+strings ./binary | sed 's/^/"&/; s/$/&"/' > strings.dict
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Pass Dictionary to Fuzzer}
+\p{Use the appropriate flag for your fuzzer (see Quick Reference above).}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Pattern: Protocol Keywords}
+\p{\strong{Use Case:} Fuzzing HTTP or custom protocol handlers}
+
+\p{\strong{Dictionary content:}}
+
+\pre{\startverb
+# HTTP methods
+"GET"
+"POST"
+"PUT"
+"DELETE"
+"HEAD"
+
+# Headers
+"Content-Type"
+"Authorization"
+"Host"
+
+# Protocol markers
+"HTTP/1.1"
+"HTTP/2.0"
+\stopverb}
+}
+
+\subtree{
+\title{Pattern: Magic Bytes and File Format Headers}
+\p{\strong{Use Case:} Fuzzing image parsers, media decoders, archive handlers}
+
+\p{\strong{Dictionary content:}}
+
+\pre{\startverb
+# PNG magic bytes and chunks
+png_magic="\x89PNG\r\n\x1a\n"
+ihdr="IHDR"
+plte="PLTE"
+idat="IDAT"
+iend="IEND"
+
+# JPEG markers
+jpeg_soi="\xFF\xD8"
+jpeg_eoi="\xFF\xD9"
+\stopverb}
+}
+
+\subtree{
+\title{Pattern: Configuration File Keywords}
+\p{\strong{Use Case:} Fuzzing config file parsers (YAML, TOML, INI)}
+
+\p{\strong{Dictionary content:}}
+
+\pre{\startverb
+# Common config keywords
+"true"
+"false"
+"null"
+"version"
+"enabled"
+"disabled"
+
+# Section headers
+"[general]"
+"[network]"
+"[security]"
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{Tips and Tricks}
+\pre{\startverb
+| Tip | Why It Helps |
+|-----|--------------|
+| Combine multiple generation methods | LLM-generated keywords + strings from binary covers broad surface |
+| Include boundary values | `"0"`, `"-1"`, `"2147483647"` trigger edge cases |
+| Add format delimiters | `:`, `=`, `{`, `}` help fuzzer construct valid structures |
+| Keep dictionaries focused | 50-200 entries perform better than thousands |
+| Test dictionary effectiveness | Run with and without dict, compare coverage |
+\stopverb}
+}
+
+\subtree{
+\title{Auto-Generated Dictionaries (AFL++)}
+\p{When using \code{\startverb afl-clang-lto\stopverb} compiler, AFL++ automatically extracts dictionary entries from string comparisons in the binary. This happens at compile time via the AUTODICTIONARY feature.}
+
+\p{\strong{Enable auto-dictionary:}}
+
+\pre{\startverb
+export AFL_LLVM_DICT2FILE=auto.dict
+afl-clang-lto++ target.cc -o target
+# Dictionary saved to auto.dict
+afl-fuzz -x auto.dict -i in -o out -- ./target
+\stopverb}
+}
+
+\subtree{
+\title{Combining Multiple Dictionaries}
+\p{Some fuzzers support multiple dictionary files:}
+
+\pre{\startverb
+# AFL++ with multiple dictionaries
+afl-fuzz -x keywords.dict -x formats.dict -i in -o out -- ./target
+\stopverb}
+}
+}
+
+\subtree{
+\title{Anti-Patterns}
+\pre{\startverb
+| Anti-Pattern | Problem | Correct Approach |
+|--------------|---------|------------------|
+| Including full sentences | Fuzzer needs atomic tokens, not prose | Break into individual keywords |
+| Duplicating entries | Wastes mutation budget | Use `sort -u` to deduplicate |
+| Over-sized dictionaries | Slows fuzzer, dilutes useful tokens | Keep focused: 50-200 most relevant entries |
+| Missing hex escapes | Non-printable bytes become mangled | Use `\xXX` for binary values |
+| No comments | Hard to maintain and audit | Document sections with `#` comments |
+\stopverb}
+}
+
+\subtree{
+\title{Tool-Specific Guidance}
+\subtree{
+\title{libFuzzer}
+\pre{\startverb
+clang++ -fsanitize=fuzzer,address harness.cc -o fuzz
+./fuzz -dict=./dictionary.dict corpus/
+\stopverb}
+
+\p{\strong{Integration tips:}}
+
+\ul{
+\li{Dictionary tokens are inserted/replaced during mutations}
+\li{Combine with \code{\startverb -max_len\stopverb} to control input size}
+\li{Use \code{\startverb -print_final_stats=1\stopverb} to see dictionary effectiveness metrics}
+\li{Dictionary entries longer than \code{\startverb -max_len\stopverb} are ignored}
+}
+}
+
+\subtree{
+\title{AFL++}
+\pre{\startverb
+afl-fuzz -x ./dictionary.dict -i input/ -o output/ -- ./target @@
+\stopverb}
+
+\p{\strong{Integration tips:}}
+
+\ul{
+\li{AFL++ supports multiple \code{\startverb -x\stopverb} flags for multiple dictionaries}
+\li{Use \code{\startverb AFL_LLVM_DICT2FILE\stopverb} with \code{\startverb afl-clang-lto\stopverb} for auto-generated dictionaries}
+\li{Dictionary effectiveness shown in fuzzer stats UI}
+\li{Tokens are used during deterministic and havoc stages}
+}
+}
+
+\subtree{
+\title{cargo-fuzz (Rust)}
+\pre{\startverb
+cargo fuzz run fuzz_target -- -dict=./dictionary.dict
+\stopverb}
+
+\p{\strong{Integration tips:}}
+
+\ul{
+\li{cargo-fuzz uses libFuzzer backend, so all libFuzzer dict flags work}
+\li{Place dictionary file in \code{\startverb fuzz/\stopverb} directory alongside harness}
+\li{Reference from harness directory: \code{\startverb cargo fuzz run target -- -dict=../dictionary.dict\stopverb}}
+}
+}
+
+\subtree{
+\title{go-fuzz (Go)}
+\p{go-fuzz does not have built-in dictionary support, but you can manually seed the corpus with dictionary entries:}
+
+\pre{\startverb
+# Convert dictionary to corpus files
+grep -o '".*"' dict.txt | while read line; do
+    echo -n "$line" | base64 > corpus/$(echo "$line" | md5sum | cut -d' ' -f1)
+done
+
+go-fuzz -bin=./target-fuzz.zip -workdir=.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\pre{\startverb
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Dictionary file not loaded | Wrong path or format error | Check fuzzer output for dict parsing errors; verify file format |
+| No coverage improvement | Dictionary tokens not relevant | Analyze target code for actual keywords; try different generation method |
+| Syntax errors in dict file | Unescaped quotes or invalid escapes | Use `\\` for backslash, `\"` for quotes; validate with test run |
+| Fuzzer ignores long entries | Entries exceed `-max_len` | Keep entries under max input length, or increase `-max_len` |
+| Too many entries slow fuzzer | Dictionary too large | Prune to 50-200 most relevant entries |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\subtree{
+\title{Tools That Use This Technique}
+\pre{\startverb
+| Skill | How It Applies |
+|-------|----------------|
+| **libfuzzer** | Native dictionary support via `-dict=` flag |
+| **aflpp** | Native dictionary support via `-x` flag; auto-generation with AUTODICTIONARIES |
+| **cargo-fuzz** | Uses libFuzzer backend, inherits `-dict=` support |
+\stopverb}
+}
+
+\subtree{
+\title{Related Techniques}
+\pre{\startverb
+| Skill | Relationship |
+|-------|--------------|
+| **fuzzing-corpus** | Dictionaries complement corpus: corpus provides structure, dictionary provides keywords |
+| **coverage-analysis** | Use coverage data to validate dictionary effectiveness |
+| **harness-writing** | Harness structure determines which dictionary tokens are useful |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{Key External Resources}
+\p{\strong{[AFL++ Dictionaries](https://github.com/AFLplusplus/AFLplusplus/tree/stable/dictionaries)} Pre-built dictionaries for common formats (HTML, XML, JSON, SQL, etc.). Good starting point for format-specific fuzzing.}
+
+\p{\strong{[libFuzzer Dictionary Documentation](https://llvm.org/docs/LibFuzzer.html#dictionaries)} Official libFuzzer documentation on dictionary format and usage. Explains token insertion strategy and performance implications.}
+}
+
+\subtree{
+\title{Additional Examples}
+\p{\strong{[OSS-Fuzz Dictionaries](https://github.com/google/oss-fuzz/tree/master/projects)} Real-world dictionaries from Google's continuous fuzzing service. Search project directories for \code{\startverb *.dict\stopverb} files to see production examples.}
+}
+}
+}

@@ -1,0 +1,269 @@
+\title{Ena Database}
+
+\taxon{skill}
+
+\meta{description}{"Access European Nucleotide Archive via API/FTP. Retrieve DNA/RNA sequences, raw reads (FASTQ), genome assemblies by accession, for genomics and bioinformatics pipelines. Supports multiple formats."}
+
+\subtree{
+\title{ENA Database}
+\subtree{
+\title{Overview}
+\p{The European Nucleotide Archive (ENA) is a comprehensive public repository for nucleotide sequence data and associated metadata. Access and query DNA/RNA sequences, raw reads, genome assemblies, and functional annotations through REST APIs and FTP for genomics and bioinformatics pipelines.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Retrieving nucleotide sequences or raw sequencing reads by accession}
+\li{Searching for samples, studies, or assemblies by metadata criteria}
+\li{Downloading FASTQ files or genome assemblies for analysis}
+\li{Querying taxonomic information for organisms}
+\li{Accessing sequence annotations and functional data}
+\li{Integrating ENA data into bioinformatics pipelines}
+\li{Performing cross-reference searches to related databases}
+\li{Bulk downloading datasets via FTP or Aspera}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Data Types and Structure}
+\p{ENA organizes data into hierarchical object types:}
+
+\p{\strong{Studies/Projects} - Group related data and control release dates. Studies are the primary unit for citing archived data.}
+
+\p{\strong{Samples} - Represent units of biomaterial from which sequencing libraries were produced. Samples must be registered before submitting most data types.}
+
+\p{\strong{Raw Reads} - Consist of:}
+
+\ul{
+\li{\strong{Experiments}: Metadata about sequencing methods, library preparation, and instrument details}
+\li{\strong{Runs}: References to data files containing raw sequencing reads from a single sequencing run}
+}
+
+\p{\strong{Assemblies} - Genome, transcriptome, metagenome, or metatranscriptome assemblies at various completion levels.}
+
+\p{\strong{Sequences} - Assembled and annotated sequences stored in the EMBL Nucleotide Sequence Database, including coding/non-coding regions and functional annotations.}
+
+\p{\strong{Analyses} - Results from computational analyses of sequence data.}
+
+\p{\strong{Taxonomy Records} - Taxonomic information including lineage and rank.}
+}
+
+\subtree{
+\title{2. Programmatic Access}
+\p{ENA provides multiple REST APIs for data access. Consult \code{\startverb references/api_reference.md\stopverb} for detailed endpoint documentation.}
+
+\p{\strong{Key APIs:}}
+
+\p{\strong{ENA Portal API} - Advanced search functionality across all ENA data types}
+
+\ul{
+\li{Documentation: https://www.ebi.ac.uk/ena/portal/api/doc}
+\li{Use for complex queries and metadata searches}
+}
+
+\p{\strong{ENA Browser API} - Direct retrieval of records and metadata}
+
+\ul{
+\li{Documentation: https://www.ebi.ac.uk/ena/browser/api/doc}
+\li{Use for downloading specific records by accession}
+\li{Returns data in XML format}
+}
+
+\p{\strong{ENA Taxonomy REST API} - Query taxonomic information}
+
+\ul{
+\li{Access lineage, rank, and related taxonomic data}
+}
+
+\p{\strong{ENA Cross Reference Service} - Access related records from external databases}
+
+\ul{
+\li{Endpoint: https://www.ebi.ac.uk/ena/xref/rest/}
+}
+
+\p{\strong{CRAM Reference Registry} - Retrieve reference sequences}
+
+\ul{
+\li{Endpoint: https://www.ebi.ac.uk/ena/cram/}
+\li{Query by MD5 or SHA1 checksums}
+}
+
+\p{\strong{Rate Limiting}: All APIs have a rate limit of 50 requests per second. Exceeding this returns HTTP 429 (Too Many Requests).}
+}
+
+\subtree{
+\title{3. Searching and Retrieving Data}
+\p{\strong{Browser-Based Search:}}
+
+\ul{
+\li{Free text search across all fields}
+\li{Sequence similarity search (BLAST integration)}
+\li{Cross-reference search to find related records}
+\li{Advanced search with Rulespace query builder}
+}
+
+\p{\strong{Programmatic Queries:}}
+
+\ul{
+\li{Use Portal API for advanced searches at scale}
+\li{Filter by data type, date range, taxonomy, or metadata fields}
+\li{Download results as tabulated metadata summaries or XML records}
+}
+
+\p{\strong{Example API Query Pattern:}}
+
+\pre{\startverb
+import requests
+
+# Search for samples from a specific study
+base_url = "https://www.ebi.ac.uk/ena/portal/api/search"
+params = {
+    "result": "sample",
+    "query": "study_accession=PRJEB1234",
+    "format": "json",
+    "limit": 100
+}
+
+response = requests.get(base_url, params=params)
+samples = response.json()
+\stopverb}
+}
+
+\subtree{
+\title{4. Data Retrieval Formats}
+\p{\strong{Metadata Formats:}}
+
+\ul{
+\li{XML (native ENA format)}
+\li{JSON (via Portal API)}
+\li{TSV/CSV (tabulated summaries)}
+}
+
+\p{\strong{Sequence Data:}}
+
+\ul{
+\li{FASTQ (raw reads)}
+\li{BAM/CRAM (aligned reads)}
+\li{FASTA (assembled sequences)}
+\li{EMBL flat file format (annotated sequences)}
+}
+
+\p{\strong{Download Methods:}}
+
+\ul{
+\li{Direct API download (small files)}
+\li{FTP for bulk data transfer}
+\li{Aspera for high-speed transfer of large datasets}
+\li{enaBrowserTools command-line utility for bulk downloads}
+}
+}
+
+\subtree{
+\title{5. Common Use Cases}
+\p{\strong{Retrieve raw sequencing reads by accession:}}
+
+\pre{\startverb
+# Download run files using Browser API
+accession = "ERR123456"
+url = f"https://www.ebi.ac.uk/ena/browser/api/xml/{accession}"
+\stopverb}
+
+\p{\strong{Search for all samples in a study:}}
+
+\pre{\startverb
+# Use Portal API to list samples
+study_id = "PRJNA123456"
+url = f"https://www.ebi.ac.uk/ena/portal/api/search?result=sample&query=study_accession={study_id}&format=tsv"
+\stopverb}
+
+\p{\strong{Find assemblies for a specific organism:}}
+
+\pre{\startverb
+# Search assemblies by taxonomy
+organism = "Escherichia coli"
+url = f"https://www.ebi.ac.uk/ena/portal/api/search?result=assembly&query=tax_tree({organism})&format=json"
+\stopverb}
+
+\p{\strong{Get taxonomic lineage:}}
+
+\pre{\startverb
+# Query taxonomy API
+taxon_id = "562"  # E. coli
+url = f"https://www.ebi.ac.uk/ena/taxonomy/rest/tax-id/{taxon_id}"
+\stopverb}
+}
+
+\subtree{
+\title{6. Integration with Analysis Pipelines}
+\p{\strong{Bulk Download Pattern:}}
+
+\ol{
+\li{Search for accessions matching criteria using Portal API}
+\li{Extract file URLs from search results}
+\li{Download files via FTP or using enaBrowserTools}
+\li{Process downloaded data in pipeline}
+}
+
+\p{\strong{BLAST Integration:} Integrate with EBI's NCBI BLAST service (REST/SOAP API) for sequence similarity searches against ENA sequences.}
+}
+
+\subtree{
+\title{7. Best Practices}
+\p{\strong{Rate Limiting:}}
+
+\ul{
+\li{Implement exponential backoff when receiving HTTP 429 responses}
+\li{Batch requests when possible to stay within 50 req/sec limit}
+\li{Use bulk download tools for large datasets instead of iterating API calls}
+}
+
+\p{\strong{Data Citation:}}
+
+\ul{
+\li{Always cite using Study/Project accessions when publishing}
+\li{Include accession numbers for specific samples, runs, or assemblies used}
+}
+
+\p{\strong{API Response Handling:}}
+
+\ul{
+\li{Check HTTP status codes before processing responses}
+\li{Parse XML responses using proper XML libraries (not regex)}
+\li{Handle pagination for large result sets}
+}
+
+\p{\strong{Performance:}}
+
+\ul{
+\li{Use FTP/Aspera for downloading large files (>100MB)}
+\li{Prefer TSV/JSON formats over XML when only metadata is needed}
+\li{Cache taxonomy lookups locally when processing many records}
+}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes detailed reference documentation for working with ENA:}
+
+\subtree{
+\title{references/}
+\p{\strong{api_reference.md} - Comprehensive API endpoint documentation including:}
+
+\ul{
+\li{Detailed parameters for Portal API and Browser API}
+\li{Response format specifications}
+\li{Advanced query syntax and operators}
+\li{Field names for filtering and searching}
+\li{Common API patterns and examples}
+}
+
+\p{Load this reference when constructing complex API queries, debugging API responses, or needing specific parameter details.}
+}
+}
+}

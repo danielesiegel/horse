@@ -1,0 +1,403 @@
+\title{Quarto Julia}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'Quarto + Julia Skill'}
+
+\subtree{
+\title{Quarto + Julia Skill}
+\p{\strong{Status}: Production Ready \strong{Trit}: 0 (ERGODIC - coordinator/synthesizer) \strong{Purpose}: Reproducible documents with Julia code blocks and GF(3) skill tracking}
+
+\subtree{
+\title{Overview}
+\p{Quarto is a scientific publishing system that renders \code{\startverb .qmd\stopverb} files to HTML, PDF, and more. Combined with Julia, it enables:}
+
+\ol{
+\li{\strong{Executable documents} - Julia code blocks run during render}
+\li{\strong{Skill activation logs} - Track GF(3) triads in rendered output}
+\li{\strong{Reproducible research} - Same seed = same colors = same results}
+}
+}
+
+\subtree{
+\title{Two Julia Engines}
+\pre{\startverb
+| Feature | `julia` Engine (NEW) | `jupyter` Engine |
+|---------|---------------------|------------------|
+| Execute Julia code | ✅ | ✅ |
+| Keep sessions alive | ✅ | ✅ |
+| No Python required | ✅ | ❌ |
+| No global pkg install | ✅ | ❌ |
+| juliaup integration | ✅ | ❌ |
+| Python/R via PythonCall/RCall | ✅ | ❌ |
+| QuartoTools.jl expandable cells | ✅ | ❌ |
+\stopverb}
+
+\p{\strong{Recommendation}: Use \code{\startverb engine: julia\stopverb} for new projects.}
+}
+
+\subtree{
+\title{Installation (No Homebrew)}
+\pre{\startverb
+# Download and extract
+cd /tmp
+curl -sL https://github.com/quarto-dev/quarto-cli/releases/download/v1.6.42/quarto-1.6.42-macos.tar.gz -o quarto.tar.gz
+tar -xzf quarto.tar.gz
+
+# Install to ~/bin with proper structure
+mkdir -p ~/bin/quarto-1.6.42
+cp -r bin share ~/bin/quarto-1.6.42/
+
+# Create wrapper script (critical for path resolution)
+cat > ~/bin/quarto << 'EOF'
+#!/bin/bash
+export QUARTO_SHARE_PATH="$HOME/bin/quarto-1.6.42/share"
+exec "$HOME/bin/quarto-1.6.42/bin/quarto" "$@"
+EOF
+chmod +x ~/bin/quarto
+
+# Add to PATH
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
+export PATH="$HOME/bin:$PATH"
+
+# Verify
+quarto --version  # Should show 1.6.42
+\stopverb}
+}
+
+\subtree{
+\title{Basic .qmd Document (Modern julia Engine)}
+\pre{\startverb
+---
+title: "GF(3) Skill Activation Log"
+author: "Plurigrid ASI"
+date: today
+format:
+  html:
+    code-fold: true
+    toc: true
+    theme: cosmo
+engine: julia
+execute:
+  echo: true
+  cache: true
+---
+
+## Skill Triad
+
+\stopverb}
+
+\p{#| label: gf3-triad #| code-summary: "Define GF(3) skill triad"}
+
+\p{struct SkillActivation name::String trit::Int  # -1, 0, or +1 hue::Float64 end}
+
+\p{triad = [ SkillActivation("acsets", -1, 220.0), SkillActivation("bisimulation", 0, 120.0), SkillActivation("artifacts-builder", 1, 30.0) ]}
+}
+}
+
+\subtree{
+\title{Verify conservation}
+\p{trit_sum = sum(s.trit for s in triad) println("GF(3) sum: $trit_sum ≡ $(mod(trit_sum, 3)) (mod 3)")}
+
+\pre{\startverb
+
+\stopverb}
+
+\subtree{
+\title{juliaup Version Selection}
+\pre{\startverb
+---
+title: "Julia 1.11 Notebook"
+engine: julia
+julia:
+  exeflags: ["+1.11"]  # Use juliaup channel specifier
+---
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Render single file
+quarto render document.qmd
+
+# Render to specific format
+quarto render document.qmd --to pdf
+quarto render document.qmd --to docx
+
+# Live preview (watches for changes)
+quarto preview document.qmd
+
+# Render entire project
+quarto render
+
+# Check installation
+quarto check
+
+# Install TinyTeX for PDF output
+quarto install tinytex
+\stopverb}
+}
+
+\subtree{
+\title{Project Structure}
+\pre{\startverb
+project/
+├── _quarto.yml          # Project configuration
+├── index.qmd            # Main document
+├── skills/
+│   ├── triad-1.qmd      # Skill triad documentation
+│   └── triad-2.qmd
+└── _output/             # Rendered files
+\stopverb}
+}
+
+\subtree{
+\title{_quarto.yml Configuration}
+\pre{\startverb
+project:
+  type: website
+  output-dir: _output
+
+website:
+  title: "Skill Activation Log"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: skills/triad-1.qmd
+        text: Triad 1
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+execute:
+  freeze: auto  # Cache computations
+\stopverb}
+}
+
+\subtree{
+\title{Julia Integration Patterns}
+\subtree{
+\title{Gay.jl Color Generation}
+\pre{\startverb
+using Gay
+
+seed = 0x42D
+palette = Gay.palette(seed, 9)  # 9 colors for 3 triads
+
+for (i, color) in enumerate(palette)
+    trit = mod(i - 1, 3) - 1  # Cycle: -1, 0, +1
+    println("Skill $i: $(color.hex) trit=$trit")
+end
+\stopverb}
+}
+
+\subtree{
+\title{ACSets Schema Visualization}
+\pre{\startverb
+using Catlab.CategoricalAlgebra
+using Catlab.Graphics
+
+@present SchSkillGraph(FreeSchema) begin
+    Skill::Ob
+    Triad::Ob
+    belongs_to::Hom(Skill, Triad)
+
+    Name::AttrType
+    Trit::AttrType
+    name::Attr(Skill, Name)
+    trit::Attr(Skill, Trit)
+end
+
+# Render as GraphViz
+to_graphviz(SchSkillGraph)
+\stopverb}
+}
+
+\subtree{
+\title{Spectral Gap Computation}
+\pre{\startverb
+using LinearAlgebra
+
+function spectral_gap(n::Int)
+    # Cycle graph adjacency (normalized)
+    A = zeros(n, n)
+    for i in 1:n
+        A[i, mod1(i+1, n)] = 0.5
+        A[i, mod1(i-1, n)] = 0.5
+    end
+    eigs = eigvals(A)
+    sorted = sort(real.(eigs), rev=true)
+    return 1.0 - sorted[2]
+end
+
+# Find n where gap ≈ 1/4
+for n in [4, 8, 9, 10, 16]
+    gap = spectral_gap(n)
+    marker = abs(gap - 0.25) < 0.02 ? " ← TARGET" : ""
+    println("n=$n: gap=$(round(gap, digits=4))$marker")
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Rendering from Julia}
+\pre{\startverb
+using Quarto
+
+# Single file
+Quarto.render("index.qmd")
+
+# With options
+Quarto.render("index.qmd", output_format="pdf")
+
+# Entire project
+Quarto.render(".")  # Current directory
+
+# Preview with live reload
+Quarto.preview("index.qmd")
+\stopverb}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{"Cannot determine Quarto source path"}
+\p{This error means \code{\startverb QUARTO_SHARE_PATH\stopverb} is not set. Use the wrapper script:}
+
+\pre{\startverb
+# Check current setup
+cat ~/bin/quarto
+
+# Should contain:
+# export QUARTO_SHARE_PATH="$HOME/bin/quarto-1.6.42/share"
+# exec "$HOME/bin/quarto-1.6.42/bin/quarto" "$@"
+\stopverb}
+}
+
+\subtree{
+\title{Julia kernel not found}
+\pre{\startverb
+# Install IJulia
+julia -e 'using Pkg; Pkg.add("IJulia")'
+
+# Register kernel
+julia -e 'using IJulia; IJulia.installkernel("Julia")'
+
+# List kernels
+jupyter kernelspec list
+\stopverb}
+}
+
+\subtree{
+\title{PDF rendering fails}
+\pre{\startverb
+# Install TinyTeX
+quarto install tinytex
+
+# Or use system LaTeX
+# macOS: install MacTeX
+# Linux: apt install texlive-full
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Skill Tracking Template}
+\pre{\startverb
+---
+title: "Skill Activation: {{< meta triad_name >}}"
+params:
+  triad_name: "Database & Verification"
+  skills:
+    - {name: "acsets", trit: -1, hue: 220}
+    - {name: "bisimulation", trit: 0, hue: 120}
+    - {name: "artifacts-builder", trit: 1, hue: 30}
+---
+
+\stopverb}
+
+\p{#| label: verify-conservation}
+
+\p{skills = params.skills trit_sum = sum(s["trit"] for s in skills) @assert mod(trit_sum, 3) == 0 "GF(3) violation!" println("✓ Conservation verified: Σ = $trit_sum ≡ 0 (mod 3)")}
+
+\pre{\startverb
+
+\stopverb}
+}
+
+\subtree{
+\title{Integration with ~/worlds/}
+\pre{\startverb
+# List available worlds
+readdir(expanduser("~/worlds"))
+
+# Load world-specific Julia project
+using Pkg
+Pkg.activate(expanduser("~/worlds/a"))  # AlgebraicJulia world
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\pre{\startverb
+| Skill | Trit | Integration |
+|-------|------|-------------|
+| `gay-mcp` | 0 | Deterministic colors in plots |
+| `acsets` | -1 | Schema visualization |
+| `triad-interleave` | +1 | Schedule documentation |
+| `algorithmic-art` | 0 | p5.js visualizations |
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Quarto Documentation](https://quarto.org/docs/)}
+\li{[Quarto.jl](https://github.com/quarto-dev/quarto-julia)}
+\li{[Julia for Quarto](https://quarto.org/docs/computations/julia.html)}
+}
+
+\p{\strong{Skill Name}: quarto-julia \strong{Type}: Documentation / Publishing \strong{Trit}: 0 (ERGODIC) \strong{Dependencies}: Julia 1.10+, IJulia, Quarto CLI 1.6+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 7. Propagators}
+\p{\strong{Concepts}: propagator, cell, constraint, bidirectional, TMS}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+quarto-julia (○) + SDF.Ch7 (○) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch3: Variations on an Arithmetic Theme}
+\li{Ch4: Pattern Matching}
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Propagators flow constraints bidirectionally. This skill propagates information.}
+}
+}
+}

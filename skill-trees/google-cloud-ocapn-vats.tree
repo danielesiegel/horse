@@ -1,0 +1,85 @@
+\title{Google Cloud Ocapn Vats}
+
+\taxon{skill}
+
+\meta{description}{"Google Cloud Platform project and API management for plurigrid.com org. Use when enabling GCP APIs, managing org policies, creating service accounts or API keys, or working with Google Cloud projects."}
+
+\subtree{
+\title{Google Cloud — plurigrid.com}
+\subtree{
+\title{Org & Project Structure}
+\pre{\startverb
+| Field | Value |
+|-------|-------|
+| Org | `plurigrid.com` -- ID `737292068572` |
+| Project | `native` -- ID `merovingians` (number `302712368086`) |
+| Old Project | `oldest` -- ID `midyear-glazing-487407-t2` (number `321807517301`) |
+| Account | `yuliya@plurigrid.com` |
+| gcloud via | `flox install google-cloud-sdk` (env `v`) |
+\stopverb}
+}
+
+\subtree{
+\title{Enabling APIs}
+\pre{\startverb
+# Enable one
+gcloud services enable secretmanager.googleapis.com \
+  --project=midyear-glazing-487407-t2
+
+# Enable many at once
+gcloud services enable \
+  secretmanager.googleapis.com \
+  iamcredentials.googleapis.com \
+  run.googleapis.com \
+  pubsub.googleapis.com \
+  generativelanguage.googleapis.com \
+  cloudfunctions.googleapis.com \
+  cloudkms.googleapis.com \
+  cloudbuild.googleapis.com \
+  --project=midyear-glazing-487407-t2
+
+# List enabled
+gcloud services list --enabled --project=midyear-glazing-487407-t2
+
+# Count all available (~10,621: 513 googleapis.com + marketplace)
+gcloud services list --available --project=midyear-glazing-487407-t2 --format="value(name)" | wc -l
+\stopverb}
+}
+
+\subtree{
+\title{Currently Enabled (34)}
+\p{\code{\startverb aiplatform\stopverb}, \code{\startverb analyticshub\stopverb}, \code{\startverb artifactregistry\stopverb}, \code{\startverb bigquery*\stopverb} (7), \code{\startverb cloudapiregistry\stopverb}, \code{\startverb cloudapis\stopverb}, \code{\startverb cloudresourcemanager\stopverb}, \code{\startverb cloudtrace\stopverb}, \code{\startverb compute\stopverb}, \code{\startverb dataflow\stopverb}, \code{\startverb dataform\stopverb}, \code{\startverb datalineage\stopverb}, \code{\startverb dataplex\stopverb}, \code{\startverb datastore\stopverb}, \code{\startverb deploymentmanager\stopverb}, \code{\startverb logging\stopverb}, \code{\startverb monitoring\stopverb}, \code{\startverb notebooks\stopverb}, \code{\startverb orgpolicy\stopverb}, \code{\startverb oslogin\stopverb}, \code{\startverb servicemanagement\stopverb}, \code{\startverb serviceusage\stopverb}, \code{\startverb sql-component\stopverb}, \code{\startverb storage*\stopverb} (3), \code{\startverb telemetry\stopverb}, \code{\startverb visionai\stopverb}}
+}
+
+\subtree{
+\title{Org Policy Notes}
+\ul{
+\li{\code{\startverb iam.managed.*\stopverb} constraints do NOT appear in \code{\startverb gcloud org-policies list\stopverb} -- they are Google-managed. Override at project level with \code{\startverb enforce: false\stopverb} via \code{\startverb gcloud org-policies set-policy\stopverb}.}
+\li{SA key creation was previously blocked by \code{\startverb iam.disableServiceAccountKeyCreation\stopverb} (deleted) and \code{\startverb iam.managed.disableServiceAccountApiKeyCreation\stopverb} (overridden at project level).}
+}
+}
+
+\subtree{
+\title{Diagnostics}
+\pre{\startverb
+# Check org policies (custom only -- managed ones won't appear)
+gcloud org-policies list --organization=737292068572
+
+# Describe specific policy
+gcloud org-policies describe CONSTRAINT --organization=737292068572
+gcloud org-policies describe CONSTRAINT --project=midyear-glazing-487407-t2
+
+# Check account roles at org level
+gcloud organizations get-iam-policy 737292068572 \
+  --filter="bindings.members:yuliya@plurigrid.com" \
+  --format="table(bindings.role)"
+# Current roles: billing.creator, resourcemanager.organizationAdmin,
+#                resourcemanager.projectCreator, orgpolicy.policyAdmin
+
+# Create API key (SA key creation now unblocked)
+gcloud services api-keys create --display-name="Vertex AI Key" \
+  --api-target=service=aiplatform.googleapis.com \
+  --project=midyear-glazing-487407-t2
+\stopverb}
+}
+}

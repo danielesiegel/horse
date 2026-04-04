@@ -1,0 +1,318 @@
+\title{Aws Architecture Design}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{description}{Purpose: Standardize how stakpak designs and optimizes AWS architectures. Scope: Greenfield: design new infrastructure. Brownfield: analyze existing architectures and propose improvements.}
+
+\subtree{
+\title{Designing & Optimizing AWS Architectures Rule Book}
+
+}
+
+\subtree{
+\title{Overview}
+\p{\strong{Purpose:} Standardize how the agent designs and optimizes AWS architectures.}
+
+\p{\strong{Scope:}}
+
+\ul{
+\li{\strong{Greenfield:} design new infrastructure.}
+\li{\strong{Brownfield:} analyze existing architectures and propose improvements.}
+}
+
+\p{\strong{Reference Frameworks:}}
+
+\ul{
+\li{AWS Well-Architected Framework (WAF)}
+\li{Well-Architected Lenses (Serverless, SaaS, ML, etc.)}
+}
+}
+
+\subtree{
+\title{Phases}
+\ol{
+\li{\strong{Discover}: gather requirements / current context.}
+\li{\strong{Design}: propose new architecture.}
+\li{\strong{Review}: map an existing system against Well-Architected.}
+\li{\strong{Optimize}: recommend improvements.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Context Gathering}
+\ul{
+\li{Start by clarifying whether the goal is to \strong{design a new infrastructure} or \strong{optimize an existing one}.}
+\li{If it's new, focus first on the \strong{core objective} (what the system needs to achieve). Other details like constraints and workloads can be explored gradually as the design unfolds.}
+\li{For existing environments, first locate the infrastructure (accounts, regions, IaC repositories). From there, review the supporting assets such as IaC definitions, diagrams, monitoring data, and cost reports.}
+}
+}
+
+\subtree{
+\title{Step 2: Requirements Definition}
+\ul{
+\li{Functional (APIs, batch jobs, analytics).}
+\li{Non-functional (availability, performance, security, compliance, cost).}
+}
+}
+
+\subtree{
+\title{Step 3: Architecture Mapping}
+\ul{
+\li{Match requirements to AWS services (compute, storage, networking, database).}
+}
+
+\ul{
+\li{Consider \strong{Serverless-first} designs when applicable:}
+}
+
+\ul{
+\li{Compute → Lambda, Step Functions, Fargate}
+}
+
+\ul{
+\li{API → API Gateway + AppSync}
+}
+
+\ul{
+\li{Storage → S3, DynamoDB}
+}
+
+\ul{
+\li{Messaging → SNS, SQS, EventBridge}
+}
+
+\ul{
+\li{Security → IAM, Cognito, WAF, KMS}
+}
+
+\subtree{
+\title{\strong{Step 4: Well-Architected Review}}
+\ul{
+\li{\strong{5 Pillars Checklist}}
+}
+
+\ul{
+\li{\strong{Operational Excellence}: monitoring, IaC, automation.}
+}
+
+\ul{
+\li{\strong{Security}: IAM least privilege, encryption, threat detection.}
+}
+
+\ul{
+\li{\strong{Reliability}: HA, backup/restore, fault isolation.}
+}
+
+\ul{
+\li{\strong{Performance Efficiency}: caching, scaling, right-sizing.}
+}
+
+\ul{
+\li{\strong{Cost Optimization}: Spot, RIs, lifecycle rules, serverless.}
+}
+
+\ul{
+\li{\strong{Serverless Lens Focus}:}
+}
+
+\ul{
+\li{Minimize undifferentiated ops.}
+}
+
+\ul{
+\li{Event-driven orchestration (Step Functions/EventBridge).}
+}
+
+\ul{
+\li{Use managed data stores (DynamoDB, Aurora Serverless).}
+}
+
+\ul{
+\li{Secure with IAM boundaries, managed identity (Cognito).}
+}
+}
+
+\subtree{
+\title{\strong{Step 5: Proposal / Optimization}}
+\ul{
+\li{Draft architecture diagram.}
+}
+
+\ul{
+\li{For existing → generate \strong{recommendations table}: Pillar, Current Gap, Recommendation, Expected Impact}
+}
+}
+
+\subtree{
+\title{\strong{Step 6: Validation}}
+\ul{
+\li{Risks & mitigations.}
+}
+
+\ul{
+\li{Cost estimates (before/after).}
+}
+
+\ul{
+\li{Load test strategy}
+}
+}
+
+\subtree{
+\title{\strong{Step 7: Report}}
+\ul{
+\li{Write everything into \strong{Markdown architecture file}.}
+}
+
+\ul{
+\li{Include: Overview, Requirements, Architecture, Diagrams, Well-Architected Review, Optimizations, Risks, Costs.}
+}
+}
+}
+}
+
+\subtree{
+\title{Security References}
+\subtree{
+\title{\strong{1. Identity & Access}}
+\ul{
+\li{Enforce \strong{least privilege} IAM policies.}
+}
+
+\ul{
+\li{Prefer \strong{IAM roles over static keys}.}
+}
+
+\ul{
+\li{Use \strong{ABAC or RBAC} (tags, groups, accounts) for scalable access control.}
+}
+
+\ul{
+\li{Require \strong{MFA} for privileged accounts.}
+}
+
+\ul{
+\li{Use \strong{AWS SSO / IAM Identity Center} for central identity management.}
+}
+}
+
+\subtree{
+\title{\strong{2. Data Protection}}
+\ul{
+\li{Encrypt \strong{all data at rest} (S3, EBS, RDS, DynamoDB, etc.) with KMS CMKs.}
+}
+
+\ul{
+\li{Encrypt \strong{all data in transit} (TLS 1.2+).}
+}
+
+\ul{
+\li{Enable \strong{S3 Block Public Access} and least privilege bucket policies.}
+}
+
+\ul{
+\li{Use \strong{Secrets Manager / Parameter Store} — no hardcoded credentials.}
+}
+}
+
+\subtree{
+\title{\strong{3. Network Security}}
+\ul{
+\li{Use \strong{VPC with private subnets} for workloads.}
+}
+
+\ul{
+\li{Restrict inbound/outbound traffic with \strong{Security Groups and NACLs}.}
+}
+
+\ul{
+\li{Use \strong{VPC Endpoints} for private service access (no public internet).}
+}
+
+\ul{
+\li{Add \strong{WAF/Shield} for public-facing endpoints.}
+}
+
+\ul{
+\li{Prefer \strong{ALB/NLB with TLS termination} over exposing EC2 directly.}
+}
+}
+
+\subtree{
+\title{\strong{4. Monitoring & Logging}}
+\ul{
+\li{Enable \strong{CloudTrail} in all regions and send logs to a centralized S3 bucket.}
+}
+
+\ul{
+\li{Enable \strong{Config Rules} for compliance enforcement.}
+}
+
+\ul{
+\li{Integrate \strong{GuardDuty, Security Hub, Inspector} for threat detection.}
+}
+
+\ul{
+\li{Centralize logs (CloudWatch Logs / OpenSearch) and set retention policies.}
+}
+
+\ul{
+\li{Use \strong{CloudWatch alarms} for anomalies, cost spikes, security events.}
+}
+}
+
+\subtree{
+\title{\strong{5. Resilience & Recovery}}
+\ul{
+\li{Apply \strong{multi-AZ deployments} for critical data stores.}
+}
+
+\ul{
+\li{Enforce \strong{automated backups} with retention policies.}
+}
+
+\ul{
+\li{Test \strong{disaster recovery scenarios} (RTO/RPO compliance).}
+}
+
+\ul{
+\li{Use \strong{infrastructure as code} (Terraform/CDK/CloudFormation) to rebuild environments securely.}
+}
+}
+
+\subtree{
+\title{\strong{6. Governance & Compliance}}
+\ul{
+\li{Apply \strong{service control policies (SCPs)} with AWS Organizations.}
+}
+
+\ul{
+\li{Enforce \strong{tagging standards} for resources (cost, owner, env).}
+}
+
+\ul{
+\li{Align with compliance frameworks (ISO, SOC2, HIPAA, GDPR) when required.}
+}
+
+\ul{
+\li{Use \strong{Trusted Advisor} and \strong{Well-Architected Tool} for regular reviews.}
+}
+}
+}
+
+\subtree{
+\title{Cost References}
+\ol{
+\li{\strong{Native Cost Tools First}: Use cloud provider billing tools as primary source}
+\li{\strong{Credits Excluded}: Always exclude credits unless analyzing discount impact}
+\li{\strong{Comprehensive Discovery}: Identify ALL infrastructure components}
+\li{\strong{Current Pricing}: Research real-time standard pricing only}
+\li{\strong{Python Calculations}: Use Python for ALL numeric operations}
+}
+
+\p{NOTE: Dont implement anything until you generate the report and ask for my permission}
+}

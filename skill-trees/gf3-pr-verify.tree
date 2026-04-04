@@ -1,0 +1,264 @@
+\title{Gf3 Pr Verify}
+
+\taxon{skill}
+
+\meta{description}{Verify GF(3) skill conservation on pull requests. Ensures every contribution}
+
+\subtree{
+\title{GF(3) PR Verification}
+\p{Enforces skill coloring requirements on all contributions. PRs without valid GF(3) manifests will be rejected.}
+
+\subtree{
+\title{Why GF(3) Conservation?}
+\p{Every contribution uses skills. Recording which skills were used:}
+
+\ol{
+\li{\strong{Provenance}: Track how code was created}
+\li{\strong{Balance}: Ensure generator/validator equilibrium}
+\li{\strong{Reproducibility}: Others can use same skill triads}
+\li{\strong{Attribution}: Credit skill authors}
+}
+}
+
+\subtree{
+\title{Required PR Format}
+\p{Every PR body or comment MUST include:}
+
+\pre{\startverb
+## GF(3) Skill Coloring
+
+| Skill | Trit | Color | Role |
+|-------|------|-------|------|
+| skill-name-1 | ⊕ (+1) | #RRGGBB | Generator |
+| skill-name-2 | ○ (0) | #RRGGBB | Coordinator |
+| skill-name-3 | ⊖ (-1) | #RRGGBB | Validator |
+
+**Conservation**: Σ = (+1) + (0) + (-1) = 0 ✓
+
+Thread: ⟨xxxx⟩
+\stopverb}
+}
+
+\subtree{
+\title{Trit Definitions}
+\pre{\startverb
+| Trit | Symbol | Value | Role | Hue Range | Examples |
+|------|--------|-------|------|-----------|----------|
+| PLUS | ⊕ | +1 | Generator/Executor | 0-60°, 300-360° (warm) | gay-mcp, gaymove, depth-search |
+| ERGODIC | ○ | 0 | Coordinator/Synthesizer | 60-180° (neutral) | acsets, aptos-agent, ducklake-walk |
+| MINUS | ⊖ | -1 | Validator/Constrainer | 180-300° (cold) | code-review, narya-proofs, three-match |
+\stopverb}
+}
+
+\subtree{
+\title{Conservation Rules}
+\subtree{
+\title{Rule 1: Single PR Conservation}
+\pre{\startverb
+Σ trits ≡ 0 (mod 3)
+\stopverb}
+
+\p{Valid combinations:}
+
+\ul{
+\li{\code{\startverb ⊕ ⊗ ○ ⊗ ⊖\stopverb} → 1 + 0 + (-1) = 0 ✓}
+\li{\code{\startverb ⊕ ⊗ ⊕ ⊗ ⊖ ⊗ ⊖\stopverb} → 1 + 1 + (-1) + (-1) = 0 ✓}
+\li{\code{\startverb ○ ⊗ ○ ⊗ ○\stopverb} → 0 + 0 + 0 = 0 ✓}
+}
+
+\p{Invalid:}
+
+\ul{
+\li{\code{\startverb ⊕ ⊗ ○\stopverb} → 1 + 0 = 1 ≠ 0 (mod 3) ✗}
+\li{\code{\startverb ⊕ ⊗ ⊕\stopverb} → 1 + 1 = 2 ≠ 0 (mod 3) ✗}
+}
+}
+
+\subtree{
+\title{Rule 2: Cross-PR Triads}
+\p{PRs can form balanced triads across the repository:}
+
+\pre{\startverb
+PR#23○ ⊗ PR#24⊕ ⊗ PR#25⊖ ⊢ Σ = 0 ✓
+\stopverb}
+
+\p{Document cross-PR links:}
+
+\pre{\startverb
+### Cross-PR Triad
+This PR (⊕) balances with:
+- PR#XX (○) - coordinator
+- PR#YY (⊖) - validator
+\stopverb}
+}
+
+\subtree{
+\title{Rule 3: Thread Linkage}
+\p{Include thread ID for provenance:}
+
+\pre{\startverb
+Thread: ⟨6d21⟩
+\stopverb}
+}
+}
+
+\subtree{
+\title{Verification Commands}
+\subtree{
+\title{Check PR Body}
+\pre{\startverb
+# Extract and verify GF(3) from PR
+gh pr view $PR --json body | jq -r '.body' | \
+  grep -oE '[⊕○⊖]' | \
+  awk 'BEGIN{s=0} {if($0=="⊕")s+=1; if($0=="⊖")s-=1}
+       END{m=(s%3+3)%3; print "Σ="s" mod3="m; exit(m!=0)}'
+\stopverb}
+}
+
+\subtree{
+\title{Check All Open PRs}
+\pre{\startverb
+# Verify all open PRs have GF(3) manifests
+for pr in $(gh pr list --json number -q '.[].number'); do
+  echo -n "PR#$pr: "
+  gh pr view $pr --json body | jq -r '.body' | \
+    grep -q 'GF(3)' && echo "✓" || echo "✗ MISSING"
+done
+\stopverb}
+}
+
+\subtree{
+\title{Generate Skill Manifest}
+\pre{\startverb
+# List skills used in this session
+cat << 'EOF'
+## GF(3) Skill Coloring
+
+| Skill | Trit | Color | Role |
+|-------|------|-------|------|
+| gf3-pr-verify | ⊖ (-1) | #3541C7 | Validator |
+| code-review | ⊖ (-1) | #3541C7 | Validator |
+| gay-mcp | ⊕ (+1) | #FFD700 | Generator |
+
+**Conservation**: Σ = (-1) + (-1) + (+1) = -1 ≡ 2 (mod 3) ⚠️
+Need 1 more ⊕ or 2 more ⊖ to balance
+EOF
+\stopverb}
+}
+}
+
+\subtree{
+\title{CI/CD Integration}
+\p{Add to \code{\startverb .github/workflows/validate.yml\stopverb}:}
+
+\pre{\startverb
+- name: Verify PR GF(3) Conservation
+  if: github.event_name == 'pull_request'
+  run: |
+    PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q '.body')
+
+    # Check for GF(3) section
+    if ! echo "$PR_BODY" | grep -q 'GF(3)'; then
+      echo "::error::PR missing GF(3) Skill Coloring section"
+      exit 1
+    fi
+
+    # Verify conservation
+    SUM=$(echo "$PR_BODY" | grep -oE '[⊕○⊖]' | \
+      awk 'BEGIN{s=0} {if($0=="⊕")s+=1; if($0=="⊖")s-=1} END{print s}')
+    MOD=$((($SUM % 3 + 3) % 3))
+
+    if [ "$MOD" -ne 0 ]; then
+      echo "::error::GF(3) not conserved: Σ=$SUM (mod 3)=$MOD"
+      exit 1
+    fi
+
+    echo "✓ GF(3) conserved: Σ=$SUM (mod 3)=0"
+\stopverb}
+}
+
+\subtree{
+\title{Common Triads}
+\subtree{
+\title{Development}
+\pre{\startverb
+code-review⊖ ⊗ aptos-agent○ ⊗ gaymove⊕ ⊢ 0
+\stopverb}
+}
+
+\subtree{
+\title{Research}
+\pre{\startverb
+narya-proofs⊖ ⊗ acsets○ ⊗ depth-search⊕ ⊢ 0
+\stopverb}
+}
+
+\subtree{
+\title{Infrastructure}
+\pre{\startverb
+three-match⊖ ⊗ ducklake-walk○ ⊗ gay-mcp⊕ ⊢ 0
+\stopverb}
+}
+
+\subtree{
+\title{This PR}
+\pre{\startverb
+gf3-pr-verify⊖ ⊗ code-review⊖ ⊗ autopoiesis⊕ ⊗ gay-mcp⊕ ⊢ 0
+  = (-1) + (-1) + (+1) + (+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Error Messages}
+\pre{\startverb
+| Error | Meaning | Fix |
+|-------|---------|-----|
+| `PR missing GF(3) section` | No skill manifest | Add `## GF(3) Skill Coloring` section |
+| `GF(3) not conserved` | Σ ≠ 0 (mod 3) | Add balancing skills |
+| `Invalid trit value` | Not in {-1, 0, +1} | Use ⊖/○/⊕ symbols |
+| `Missing thread ID` | No `⟨xxxx⟩` | Link to ampcode thread |
+\stopverb}
+}
+
+\subtree{
+\title{Operator Algebra}
+\p{Skills combine via tensor product (⊗):}
+
+\pre{\startverb
+⟦s₁ ⊗ s₂⟧ = (trit₁ + trit₂, mix(color₁, color₂), xor(seed₁, seed₂))
+\stopverb}
+
+\p{Conservation law:}
+
+\pre{\startverb
+∀ PR: Σᵢ tritᵢ ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures the skill lattice remains balanced across all contributions.}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

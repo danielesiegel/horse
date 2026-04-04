@@ -1,0 +1,1373 @@
+\title{Pair programming}
+
+\taxon{skill}
+
+\meta{description}{AI-assisted pair programming with multiple modes (driver/navigator/switch), real-time verification, quality monitoring, and comprehensive testing. Supports TDD, debugging, refactoring, and learning sessions. Features automatic role switching, continuous code review, security scanning, and performance optimization with truth-score verification.}
+
+\subtree{
+\title{Pair Programming}
+\p{Collaborative AI pair programming with intelligent role management, real-time quality monitoring, and comprehensive development workflows.}
+
+\subtree{
+\title{What This Skill Does}
+\p{This skill provides professional pair programming capabilities with AI assistance, supporting multiple collaboration modes, continuous verification, and integrated testing. It manages driver/navigator roles, performs real-time code review, tracks quality metrics, and ensures high standards through truth-score verification.}
+
+\p{\strong{Key Capabilities:}}
+
+\ul{
+\li{\strong{Multiple Modes}: Driver, Navigator, Switch, TDD, Review, Mentor, Debug}
+\li{\strong{Real-Time Verification}: Automatic quality scoring with rollback on failures}
+\li{\strong{Role Management}: Seamless switching between driver/navigator roles}
+\li{\strong{Testing Integration}: Auto-generate tests, track coverage, continuous testing}
+\li{\strong{Code Review}: Security scanning, performance analysis, best practice enforcement}
+\li{\strong{Session Persistence}: Auto-save, recovery, export, and sharing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\p{\strong{Required:}}
+
+\ul{
+\li{Claude Flow CLI installed (\code{\startverb npm install -g claude-flow@alpha\stopverb})}
+\li{Git repository (optional but recommended)}
+}
+
+\p{\strong{Recommended:}}
+
+\ul{
+\li{Testing framework (Jest, pytest, etc.)}
+\li{Linter configured (ESLint, pylint, etc.)}
+\li{Code formatter (Prettier, Black, etc.)}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Basic Session}
+\pre{\startverb
+# Start simple pair programming
+claude-flow pair --start
+\stopverb}
+}
+
+\subtree{
+\title{TDD Session}
+\pre{\startverb
+# Test-driven development
+claude-flow pair --start \
+  --mode tdd \
+  --test-first \
+  --coverage 90
+\stopverb}
+}
+}
+
+\subtree{
+\title{Complete Guide}
+\subtree{
+\title{Session Control Commands}
+\subtree{
+\title{Starting Sessions}
+\pre{\startverb
+# Basic start
+claude-flow pair --start
+
+# Expert refactoring session
+claude-flow pair --start \
+  --agent senior-dev \
+  --focus refactor \
+  --verify \
+  --threshold 0.98
+
+# Debugging session
+claude-flow pair --start \
+  --agent debugger-expert \
+  --focus debug \
+  --review
+
+# Learning session
+claude-flow pair --start \
+  --mode mentor \
+  --pace slow \
+  --examples
+\stopverb}
+}
+
+\subtree{
+\title{Session Management}
+\pre{\startverb
+# Check status
+claude-flow pair --status
+
+# View history
+claude-flow pair --history
+
+# Pause session
+/pause [--reason <reason>]
+
+# Resume session
+/resume
+
+# End session
+claude-flow pair --end [--save] [--report]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Available Modes}
+\subtree{
+\title{Driver Mode}
+\p{You write code while AI provides guidance.}
+
+\pre{\startverb
+claude-flow pair --start --mode driver
+\stopverb}
+
+\p{\strong{Your Responsibilities:}}
+
+\ul{
+\li{Write actual code}
+\li{Implement solutions}
+\li{Make immediate decisions}
+\li{Handle syntax and structure}
+}
+
+\p{\strong{AI Navigator:}}
+
+\ul{
+\li{Strategic guidance}
+\li{Spot potential issues}
+\li{Suggest improvements}
+\li{Real-time review}
+\li{Track overall direction}
+}
+
+\p{\strong{Best For:}}
+
+\ul{
+\li{Learning new patterns}
+\li{Implementing familiar features}
+\li{Quick iterations}
+\li{Hands-on debugging}
+}
+
+\p{\strong{Commands:}}
+
+\pre{\startverb
+/suggest     - Get implementation suggestions
+/review      - Request code review
+/explain     - Ask for explanations
+/optimize    - Request optimization ideas
+/patterns    - Get pattern recommendations
+\stopverb}
+}
+
+\subtree{
+\title{Navigator Mode}
+\p{AI writes code while you provide direction.}
+
+\pre{\startverb
+claude-flow pair --start --mode navigator
+\stopverb}
+
+\p{\strong{Your Responsibilities:}}
+
+\ul{
+\li{Provide high-level direction}
+\li{Review generated code}
+\li{Make architectural decisions}
+\li{Ensure business requirements}
+}
+
+\p{\strong{AI Driver:}}
+
+\ul{
+\li{Write implementation code}
+\li{Handle syntax details}
+\li{Implement your guidance}
+\li{Manage boilerplate}
+\li{Execute refactoring}
+}
+
+\p{\strong{Best For:}}
+
+\ul{
+\li{Rapid prototyping}
+\li{Boilerplate generation}
+\li{Learning from AI patterns}
+\li{Exploring solutions}
+}
+
+\p{\strong{Commands:}}
+
+\pre{\startverb
+/implement   - Direct implementation
+/refactor    - Request refactoring
+/test        - Generate tests
+/document    - Add documentation
+/alternate   - See alternative approaches
+\stopverb}
+}
+
+\subtree{
+\title{Switch Mode}
+\p{Automatically alternates roles at intervals.}
+
+\pre{\startverb
+# Default 10-minute intervals
+claude-flow pair --start --mode switch
+
+# 5-minute intervals (rapid)
+claude-flow pair --start --mode switch --interval 5m
+
+# 15-minute intervals (deep focus)
+claude-flow pair --start --mode switch --interval 15m
+\stopverb}
+
+\p{\strong{Handoff Process:}}
+
+\ol{
+\li{30-second warning before switch}
+\li{Current driver completes thought}
+\li{Context summary generated}
+\li{Roles swap smoothly}
+\li{New driver continues}
+}
+
+\p{\strong{Best For:}}
+
+\ul{
+\li{Balanced collaboration}
+\li{Knowledge sharing}
+\li{Complex features}
+\li{Extended sessions}
+}
+}
+
+\subtree{
+\title{Specialized Modes}
+\p{\strong{TDD Mode} - Test-Driven Development:}
+
+\pre{\startverb
+claude-flow pair --start \
+  --mode tdd \
+  --test-first \
+  --coverage 100
+\stopverb}
+
+\p{Workflow: Write failing test → Implement → Refactor → Repeat}
+
+\p{\strong{Review Mode} - Continuous code review:}
+
+\pre{\startverb
+claude-flow pair --start \
+  --mode review \
+  --strict \
+  --security
+\stopverb}
+
+\p{Features: Real-time feedback, security scanning, performance analysis}
+
+\p{\strong{Mentor Mode} - Learning-focused:}
+
+\pre{\startverb
+claude-flow pair --start \
+  --mode mentor \
+  --explain-all \
+  --pace slow
+\stopverb}
+
+\p{Features: Detailed explanations, step-by-step guidance, pattern teaching}
+
+\p{\strong{Debug Mode} - Problem-solving:}
+
+\pre{\startverb
+claude-flow pair --start \
+  --mode debug \
+  --verbose \
+  --trace
+\stopverb}
+
+\p{Features: Issue identification, root cause analysis, fix suggestions}
+}
+}
+
+\subtree{
+\title{In-Session Commands}
+\subtree{
+\title{Code Commands}
+\pre{\startverb
+/explain [--level basic|detailed|expert]
+  Explain the current code or selection
+
+/suggest [--type refactor|optimize|security|style]
+  Get improvement suggestions
+
+/implement <description>
+  Request implementation (navigator mode)
+
+/refactor [--pattern <pattern>] [--scope function|file|module]
+  Refactor selected code
+
+/optimize [--target speed|memory|both]
+  Optimize code for performance
+
+/document [--format jsdoc|markdown|inline]
+  Add documentation to code
+
+/comment [--verbose]
+  Add inline comments
+
+/pattern <pattern-name> [--example]
+  Apply a design pattern
+\stopverb}
+}
+
+\subtree{
+\title{Testing Commands}
+\pre{\startverb
+/test [--watch] [--coverage] [--only <pattern>]
+  Run test suite
+
+/test-gen [--type unit|integration|e2e]
+  Generate tests for current code
+
+/coverage [--report html|json|terminal]
+  Check test coverage
+
+/mock <target> [--realistic]
+  Generate mock data or functions
+
+/test-watch [--on-save]
+  Enable test watching
+
+/snapshot [--update]
+  Create test snapshots
+\stopverb}
+}
+
+\subtree{
+\title{Review Commands}
+\pre{\startverb
+/review [--scope current|file|changes] [--strict]
+  Perform code review
+
+/security [--deep] [--fix]
+  Security analysis
+
+/perf [--profile] [--suggestions]
+  Performance analysis
+
+/quality [--detailed]
+  Check code quality metrics
+
+/lint [--fix] [--config <config>]
+  Run linters
+
+/complexity [--threshold <value>]
+  Analyze code complexity
+\stopverb}
+}
+
+\subtree{
+\title{Navigation Commands}
+\pre{\startverb
+/goto <file>[:line[:column]]
+  Navigate to file or location
+
+/find <pattern> [--regex] [--case-sensitive]
+  Search in project
+
+/recent [--limit <n>]
+  Show recent files
+
+/bookmark [add|list|goto|remove] [<name>]
+  Manage bookmarks
+
+/history [--limit <n>] [--filter <pattern>]
+  Show command history
+
+/tree [--depth <n>] [--filter <pattern>]
+  Show project structure
+\stopverb}
+}
+
+\subtree{
+\title{Git Commands}
+\pre{\startverb
+/diff [--staged] [--file <file>]
+  Show git diff
+
+/commit [--message <msg>] [--amend]
+  Commit with verification
+
+/branch [create|switch|delete|list] [<name>]
+  Branch operations
+
+/stash [save|pop|list|apply] [<message>]
+  Stash operations
+
+/log [--oneline] [--limit <n>]
+  View git log
+
+/blame [<file>]
+  Show git blame
+\stopverb}
+}
+
+\subtree{
+\title{AI Partner Commands}
+\pre{\startverb
+/agent [switch|info|config] [<agent-name>]
+  Manage AI agent
+
+/teach <preference>
+  Teach the AI your preferences
+
+/feedback [positive|negative] <message>
+  Provide feedback to AI
+
+/personality [professional|friendly|concise|verbose]
+  Adjust AI personality
+
+/expertise [add|remove|list] [<domain>]
+  Set AI expertise focus
+\stopverb}
+}
+
+\subtree{
+\title{Metrics Commands}
+\pre{\startverb
+/metrics [--period today|session|week|all]
+  Show session metrics
+
+/score [--breakdown]
+  Show quality scores
+
+/productivity [--chart]
+  Show productivity metrics
+
+/leaderboard [--personal|team]
+  Show improvement leaderboard
+\stopverb}
+}
+
+\subtree{
+\title{Role & Mode Commands}
+\pre{\startverb
+/switch [--immediate]
+  Switch driver/navigator roles
+
+/mode <type>
+  Change mode (driver|navigator|switch|tdd|review|mentor|debug)
+
+/role
+  Show current role
+
+/handoff
+  Prepare role handoff
+\stopverb}
+}
+}
+
+\subtree{
+\title{Command Shortcuts}
+\pre{\startverb
+| Alias | Full Command |
+|-------|-------------|
+| `/s` | `/suggest` |
+| `/e` | `/explain` |
+| `/t` | `/test` |
+| `/r` | `/review` |
+| `/c` | `/commit` |
+| `/g` | `/goto` |
+| `/f` | `/find` |
+| `/h` | `/help` |
+| `/sw` | `/switch` |
+| `/st` | `/status` |
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Basic Configuration}
+\p{Create \code{\startverb .claude-flow/pair-config.json\stopverb}:}
+
+\pre{\startverb
+{
+  "pair": {
+    "enabled": true,
+    "defaultMode": "switch",
+    "defaultAgent": "auto",
+    "autoStart": false,
+    "theme": "professional"
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Complete Configuration}
+\pre{\startverb
+{
+  "pair": {
+    "general": {
+      "enabled": true,
+      "defaultMode": "switch",
+      "defaultAgent": "senior-dev",
+      "language": "javascript",
+      "timezone": "UTC"
+    },
+
+    "modes": {
+      "driver": {
+        "enabled": true,
+        "suggestions": true,
+        "realTimeReview": true,
+        "autoComplete": false
+      },
+      "navigator": {
+        "enabled": true,
+        "codeGeneration": true,
+        "explanations": true,
+        "alternatives": true
+      },
+      "switch": {
+        "enabled": true,
+        "interval": "10m",
+        "warning": "30s",
+        "autoSwitch": true,
+        "pauseOnIdle": true
+      }
+    },
+
+    "verification": {
+      "enabled": true,
+      "threshold": 0.95,
+      "autoRollback": true,
+      "preCommitCheck": true,
+      "continuousMonitoring": true,
+      "blockOnFailure": true
+    },
+
+    "testing": {
+      "enabled": true,
+      "autoRun": true,
+      "framework": "jest",
+      "onSave": true,
+      "coverage": {
+        "enabled": true,
+        "minimum": 80,
+        "enforce": true,
+        "reportFormat": "html"
+      }
+    },
+
+    "review": {
+      "enabled": true,
+      "continuous": true,
+      "preCommit": true,
+      "security": true,
+      "performance": true,
+      "style": true,
+      "complexity": {
+        "maxComplexity": 10,
+        "maxDepth": 4,
+        "maxLines": 100
+      }
+    },
+
+    "git": {
+      "enabled": true,
+      "autoCommit": false,
+      "commitTemplate": "feat: {message}",
+      "signCommits": false,
+      "pushOnEnd": false,
+      "branchProtection": true
+    },
+
+    "session": {
+      "autoSave": true,
+      "saveInterval": "5m",
+      "maxDuration": "4h",
+      "idleTimeout": "15m",
+      "breakReminder": "45m",
+      "metricsInterval": "1m"
+    },
+
+    "ai": {
+      "model": "advanced",
+      "temperature": 0.7,
+      "maxTokens": 4000,
+      "personality": "professional",
+      "expertise": ["backend", "testing", "security"],
+      "learningEnabled": true
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Built-in Agents}
+\pre{\startverb
+{
+  "agents": {
+    "senior-dev": {
+      "expertise": ["architecture", "patterns", "optimization"],
+      "style": "thorough",
+      "reviewLevel": "strict"
+    },
+    "tdd-specialist": {
+      "expertise": ["testing", "mocks", "coverage"],
+      "style": "test-first",
+      "reviewLevel": "comprehensive"
+    },
+    "debugger-expert": {
+      "expertise": ["debugging", "profiling", "tracing"],
+      "style": "analytical",
+      "reviewLevel": "focused"
+    },
+    "junior-dev": {
+      "expertise": ["learning", "basics", "documentation"],
+      "style": "questioning",
+      "reviewLevel": "educational"
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{CLI Configuration}
+\pre{\startverb
+# Set configuration
+claude-flow pair config set defaultMode switch
+claude-flow pair config set verification.threshold 0.98
+
+# Get configuration
+claude-flow pair config get
+claude-flow pair config get defaultMode
+
+# Export/Import
+claude-flow pair config export > config.json
+claude-flow pair config import config.json
+
+# Reset
+claude-flow pair config reset
+\stopverb}
+}
+
+\subtree{
+\title{Profile Management}
+\p{Create reusable profiles:}
+
+\pre{\startverb
+# Create profile
+claude-flow pair profile create refactoring \
+  --mode driver \
+  --verify true \
+  --threshold 0.98 \
+  --focus refactor
+
+# Use profile
+claude-flow pair --start --profile refactoring
+
+# List profiles
+claude-flow pair profile list
+\stopverb}
+
+\p{Profile configuration:}
+
+\pre{\startverb
+{
+  "profiles": {
+    "refactoring": {
+      "mode": "driver",
+      "verification": {
+        "enabled": true,
+        "threshold": 0.98
+      },
+      "focus": "refactor"
+    },
+    "debugging": {
+      "mode": "navigator",
+      "agent": "debugger-expert",
+      "trace": true,
+      "verbose": true
+    },
+    "learning": {
+      "mode": "mentor",
+      "pace": "slow",
+      "explanations": "detailed",
+      "examples": true
+    }
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Real-World Examples}
+\subtree{
+\title{Example 1: Feature Implementation}
+\p{Implementing user authentication with JWT tokens:}
+
+\pre{\startverb
+# Session setup
+claude-flow pair --start \
+  --mode switch \
+  --agent senior-dev \
+  --focus implement \
+  --verify \
+  --test
+\stopverb}
+
+\p{\strong{Session Flow:}}
+
+\pre{\startverb
+👥 Starting pair programming for authentication feature...
+
+[DRIVER: You - 10 minutes]
+/explain JWT authentication flow
+> AI explains JWT concepts and best practices
+
+/suggest implementation approach
+> AI suggests using middleware pattern with refresh tokens
+
+# You write the basic auth middleware structure
+
+[SWITCH TO NAVIGATOR]
+
+[NAVIGATOR: AI - 10 minutes]
+/implement JWT token generation with refresh tokens
+> AI generates secure token implementation
+
+/test-gen
+> AI creates comprehensive test suite
+
+[SWITCH TO DRIVER]
+
+[DRIVER: You - 10 minutes]
+# You refine the implementation
+/review --security
+> AI performs security review, suggests improvements
+
+/commit --message "feat: JWT authentication with refresh tokens"
+✅ Truth Score: 0.98 - Committed successfully
+\stopverb}
+}
+
+\subtree{
+\title{Example 2: Bug Fixing}
+\p{Debugging a memory leak in Node.js:}
+
+\pre{\startverb
+# Session setup
+claude-flow pair --start \
+  --mode navigator \
+  --agent debugger-expert \
+  --focus debug \
+  --trace
+\stopverb}
+
+\p{\strong{Session Flow:}}
+
+\pre{\startverb
+👥 Starting debugging session...
+
+/status
+> Analyzing application for memory issues...
+
+/perf --profile
+> Memory usage growing: 150MB → 450MB over 10 minutes
+
+/find "new EventEmitter" --regex
+> Found 3 instances of EventEmitter creation
+
+/inspect eventEmitters --deep
+> Discovering listeners not being removed
+
+/suggest fix for memory leak
+> AI suggests: "Add removeListener in cleanup functions"
+
+/implement cleanup functions for all event emitters
+> AI generates proper cleanup code
+
+/test
+> Memory stable at 150MB ✅
+
+/commit --message "fix: memory leak in event emitters"
+\stopverb}
+}
+
+\subtree{
+\title{Example 3: TDD Session}
+\p{Building shopping cart with test-driven development:}
+
+\pre{\startverb
+# Session setup
+claude-flow pair --start \
+  --mode tdd \
+  --agent tdd-specialist \
+  --test-first
+\stopverb}
+
+\p{\strong{Session Flow:}}
+
+\pre{\startverb
+👥 TDD Session: Shopping Cart Feature
+
+[RED PHASE]
+/test-gen "add item to cart"
+> AI writes failing test:
+  ✗ should add item to cart
+  ✗ should update quantity for existing item
+  ✗ should calculate total price
+
+[GREEN PHASE]
+/implement minimal cart functionality
+> You write just enough code to pass tests
+
+/test
+> Tests passing: 3/3 ✅
+
+[REFACTOR PHASE]
+/refactor --pattern repository
+> AI refactors to repository pattern
+
+/test
+> Tests still passing: 3/3 ✅
+
+[NEXT CYCLE]
+/test-gen "remove item from cart"
+> AI writes new failing tests...
+\stopverb}
+}
+
+\subtree{
+\title{Example 4: Code Refactoring}
+\p{Modernizing legacy code:}
+
+\pre{\startverb
+# Session setup
+claude-flow pair --start \
+  --mode driver \
+  --focus refactor \
+  --verify \
+  --threshold 0.98
+\stopverb}
+
+\p{\strong{Session Flow:}}
+
+\pre{\startverb
+👥 Refactoring Session: Modernizing UserService
+
+/analyze UserService.js
+> AI identifies:
+  - Callback hell (5 levels deep)
+  - No error handling
+  - Tight coupling
+  - No tests
+
+/suggest refactoring plan
+> AI suggests:
+  1. Convert callbacks to async/await
+  2. Add error boundaries
+  3. Extract dependencies
+  4. Add unit tests
+
+/test-gen --before-refactor
+> AI generates tests for current behavior
+
+/refactor callbacks to async/await
+# You refactor with AI guidance
+
+/test
+> All tests passing ✅
+
+/review --compare
+> AI shows before/after comparison
+> Code complexity: 35 → 12
+> Truth score: 0.99 ✅
+
+/commit --message "refactor: modernize UserService with async/await"
+\stopverb}
+}
+
+\subtree{
+\title{Example 5: Performance Optimization}
+\p{Optimizing slow React application:}
+
+\pre{\startverb
+# Session setup
+claude-flow pair --start \
+  --mode switch \
+  --agent performance-expert \
+  --focus optimize \
+  --profile
+\stopverb}
+
+\p{\strong{Session Flow:}}
+
+\pre{\startverb
+👥 Performance Optimization Session
+
+/perf --profile
+> React DevTools Profiler Results:
+  - ProductList: 450ms render
+  - CartSummary: 200ms render
+  - Unnecessary re-renders: 15
+
+/suggest optimizations for ProductList
+> AI suggests:
+  1. Add React.memo
+  2. Use useMemo for expensive calculations
+  3. Implement virtualization for long lists
+
+/implement React.memo and useMemo
+# You implement with AI guidance
+
+/perf --profile
+> ProductList: 45ms render (90% improvement!) ✅
+
+/implement virtualization with react-window
+> AI implements virtual scrolling
+
+/perf --profile
+> ProductList: 12ms render (97% improvement!) ✅
+> FPS: 60 stable ✅
+
+/commit --message "perf: optimize ProductList with memoization and virtualization"
+\stopverb}
+}
+
+\subtree{
+\title{Example 6: API Development}
+\p{Building RESTful API with Express:}
+
+\pre{\startverb
+# Session setup
+claude-flow pair --start \
+  --mode navigator \
+  --agent backend-expert \
+  --focus implement \
+  --test
+\stopverb}
+
+\p{\strong{Session Flow:}}
+
+\pre{\startverb
+👥 API Development Session
+
+/design REST API for blog platform
+> AI designs endpoints:
+  POST   /api/posts
+  GET    /api/posts
+  GET    /api/posts/:id
+  PUT    /api/posts/:id
+  DELETE /api/posts/:id
+
+/implement CRUD endpoints with validation
+> AI implements with Express + Joi validation
+
+/test-gen --integration
+> AI generates integration tests
+
+/security --api
+> AI adds:
+  - Rate limiting
+  - Input sanitization
+  - JWT authentication
+  - CORS configuration
+
+/document --openapi
+> AI generates OpenAPI documentation
+
+/test --integration
+> All endpoints tested: 15/15 ✅
+\stopverb}
+}
+}
+
+\subtree{
+\title{Session Templates}
+\subtree{
+\title{Quick Start Templates}
+\pre{\startverb
+# Refactoring template
+claude-flow pair --template refactor
+# Focus: Code improvement
+# Verification: High (0.98)
+# Testing: After each change
+# Review: Continuous
+
+# Feature template
+claude-flow pair --template feature
+# Focus: Implementation
+# Verification: Standard (0.95)
+# Testing: On completion
+# Review: Pre-commit
+
+# Debug template
+claude-flow pair --template debug
+# Focus: Problem solving
+# Verification: Moderate (0.90)
+# Testing: Regression tests
+# Review: Root cause
+
+# Learning template
+claude-flow pair --template learn
+# Mode: Mentor
+# Pace: Slow
+# Explanations: Detailed
+# Examples: Many
+\stopverb}
+}
+}
+
+\subtree{
+\title{Session Management}
+\subtree{
+\title{Session Status}
+\pre{\startverb
+claude-flow pair --status
+\stopverb}
+
+\p{\strong{Output:}}
+
+\pre{\startverb
+👥 Pair Programming Session
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Session ID: pair_1755021234567
+Duration: 45 minutes
+Status: Active
+
+Partner: senior-dev
+Current Role: DRIVER (you)
+Mode: Switch (10m intervals)
+Next Switch: in 3 minutes
+
+📊 Metrics:
+├── Truth Score: 0.982 ✅
+├── Lines Changed: 234
+├── Files Modified: 5
+├── Tests Added: 12
+├── Coverage: 87% ↑3%
+└── Commits: 3
+
+🎯 Focus: Implementation
+📝 Current File: src/auth/login.js
+\stopverb}
+}
+
+\subtree{
+\title{Session History}
+\pre{\startverb
+claude-flow pair --history
+\stopverb}
+
+\p{\strong{Output:}}
+
+\pre{\startverb
+📚 Session History
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 2024-01-15 14:30 - 16:45 (2h 15m)
+   Partner: expert-coder
+   Focus: Refactoring
+   Truth Score: 0.975
+   Changes: +340 -125 lines
+
+2. 2024-01-14 10:00 - 11:30 (1h 30m)
+   Partner: tdd-specialist
+   Focus: Testing
+   Truth Score: 0.991
+   Tests Added: 24
+
+3. 2024-01-13 15:00 - 17:00 (2h)
+   Partner: debugger-expert
+   Focus: Bug Fixing
+   Truth Score: 0.968
+   Issues Fixed: 5
+\stopverb}
+}
+
+\subtree{
+\title{Session Persistence}
+\pre{\startverb
+# Save session
+claude-flow pair --save [--name <name>]
+
+# Load session
+claude-flow pair --load <session-id>
+
+# Export session
+claude-flow pair --export <session-id> [--format json|md]
+
+# Generate report
+claude-flow pair --report <session-id>
+\stopverb}
+}
+
+\subtree{
+\title{Background Sessions}
+\pre{\startverb
+# Start in background
+claude-flow pair --start --background
+
+# Monitor background session
+claude-flow pair --monitor
+
+# Attach to background session
+claude-flow pair --attach <session-id>
+
+# End background session
+claude-flow pair --end <session-id>
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Features}
+\subtree{
+\title{Custom Commands}
+\p{Define in configuration:}
+
+\pre{\startverb
+{
+  "customCommands": {
+    "tdd": "/test-gen && /test --watch",
+    "full-review": "/lint --fix && /test && /review --strict",
+    "quick-fix": "/suggest --type fix && /implement && /test"
+  }
+}
+\stopverb}
+
+\p{Use custom commands:}
+
+\pre{\startverb
+/custom tdd
+/custom full-review
+\stopverb}
+}
+
+\subtree{
+\title{Command Chaining}
+\pre{\startverb
+/test && /commit && /push
+/lint --fix && /test && /review --strict
+\stopverb}
+}
+
+\subtree{
+\title{Session Recording}
+\pre{\startverb
+# Start with recording
+claude-flow pair --start --record
+
+# Replay session
+claude-flow pair --replay <session-id>
+
+# Session analytics
+claude-flow pair --analytics <session-id>
+\stopverb}
+}
+
+\subtree{
+\title{Integration Options}
+\p{\strong{With Git:}}
+
+\pre{\startverb
+claude-flow pair --start --git --auto-commit
+\stopverb}
+
+\p{\strong{With CI/CD:}}
+
+\pre{\startverb
+claude-flow pair --start --ci --non-interactive
+\stopverb}
+
+\p{\strong{With IDE:}}
+
+\pre{\startverb
+claude-flow pair --start --ide vscode
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Session Practices}
+\ol{
+\li{\strong{Clear Goals} - Define session objectives upfront}
+\li{\strong{Appropriate Mode} - Choose based on task type}
+\li{\strong{Enable Verification} - For critical code paths}
+\li{\strong{Regular Testing} - Maintain quality continuously}
+\li{\strong{Session Notes} - Document important decisions}
+\li{\strong{Regular Breaks} - Take breaks every 45-60 minutes}
+}
+}
+
+\subtree{
+\title{Code Practices}
+\ol{
+\li{\strong{Test Early} - Run tests after each change}
+\li{\strong{Verify Before Commit} - Check truth scores}
+\li{\strong{Review Security} - Always for sensitive code}
+\li{\strong{Profile Performance} - Use \code{\startverb /perf\stopverb} for optimization}
+\li{\strong{Save Sessions} - For complex work}
+\li{\strong{Learn from AI} - Ask questions frequently}
+}
+}
+
+\subtree{
+\title{Mode Selection}
+\ul{
+\li{\strong{Driver Mode}: When learning, controlling implementation}
+\li{\strong{Navigator Mode}: For rapid prototyping, generation}
+\li{\strong{Switch Mode}: Long sessions, balanced collaboration}
+\li{\strong{TDD Mode}: Building with tests}
+\li{\strong{Review Mode}: Quality focus}
+\li{\strong{Mentor Mode}: Learning priority}
+\li{\strong{Debug Mode}: Fixing issues}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Session Won't Start}
+\ul{
+\li{Check agent availability}
+\li{Verify configuration file syntax}
+\li{Ensure clean workspace}
+\li{Review log files}
+}
+}
+
+\subtree{
+\title{Session Disconnected}
+\ul{
+\li{Use \code{\startverb --recover\stopverb} to restore}
+\li{Check network connection}
+\li{Verify background processes}
+\li{Review auto-save files}
+}
+}
+
+\subtree{
+\title{Poor Performance}
+\ul{
+\li{Reduce verification threshold}
+\li{Disable continuous testing}
+\li{Check system resources}
+\li{Use lighter AI model}
+}
+}
+
+\subtree{
+\title{Configuration Issues}
+\ul{
+\li{Validate JSON syntax}
+\li{Check file permissions}
+\li{Review priority order (CLI > env > project > user > global)}
+\li{Run \code{\startverb claude-flow pair config validate\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Quality Metrics}
+\subtree{
+\title{Truth Score Thresholds}
+\pre{\startverb
+Error:   < 0.90 ❌
+Warning: 0.90 - 0.95 ⚠️
+Good:    0.95 - 0.98 ✅
+Excellent: > 0.98 🌟
+\stopverb}
+}
+
+\subtree{
+\title{Coverage Thresholds}
+\pre{\startverb
+Error:   < 70% ❌
+Warning: 70% - 80% ⚠️
+Good:    80% - 90% ✅
+Excellent: > 90% 🌟
+\stopverb}
+}
+
+\subtree{
+\title{Complexity Thresholds}
+\pre{\startverb
+Error:   > 15 ❌
+Warning: 10 - 15 ⚠️
+Good:    5 - 10 ✅
+Excellent: < 5 🌟
+\stopverb}
+}
+}
+
+\subtree{
+\title{Environment Variables}
+\p{Override configuration via environment:}
+
+\pre{\startverb
+export CLAUDE_PAIR_MODE=driver
+export CLAUDE_PAIR_VERIFY=true
+export CLAUDE_PAIR_THRESHOLD=0.98
+export CLAUDE_PAIR_AGENT=senior-dev
+export CLAUDE_PAIR_AUTO_TEST=true
+\stopverb}
+}
+
+\subtree{
+\title{Command History}
+\p{Navigate history:}
+
+\ul{
+\li{\code{\startverb ↑/↓\stopverb} - Navigate through command history}
+\li{\code{\startverb Ctrl+R\stopverb} - Search command history}
+\li{\code{\startverb !!\stopverb} - Repeat last command}
+\li{\code{\startverb !<n>\stopverb} - Run command n from history}
+}
+}
+
+\subtree{
+\title{Keyboard Shortcuts (Configurable)}
+\p{Default shortcuts:}
+
+\pre{\startverb
+{
+  "shortcuts": {
+    "switch": "ctrl+shift+s",
+    "suggest": "ctrl+space",
+    "review": "ctrl+r",
+    "test": "ctrl+t"
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Related Commands}
+\ul{
+\li{\code{\startverb claude-flow pair --help\stopverb} - Show help}
+\li{\code{\startverb claude-flow pair config\stopverb} - Manage configuration}
+\li{\code{\startverb claude-flow pair profile\stopverb} - Manage profiles}
+\li{\code{\startverb claude-flow pair templates\stopverb} - List templates}
+\li{\code{\startverb claude-flow pair agents\stopverb} - List available agents}
+}
+}
+}
+}

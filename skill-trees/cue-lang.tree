@@ -1,0 +1,269 @@
+\title{Cue Lang}
+
+\taxon{skill}
+
+\meta{trit}{1}
+
+\meta{description}{'CUE: Lattice-based configuration language with unification, constraint}
+
+\subtree{
+\title{CUE (+1)}
+\blockquote{Configuration, data validation, and code generation via lattice unification.}
+
+\p{\strong{Trit}: +1 (PLUS - generative type lattice) \strong{Language}: Go \strong{Branch}: \code{\startverb master\stopverb}}
+
+\subtree{
+\title{Core Insight: Values ARE Types}
+\pre{\startverb
+// In CUE, every value is also a type constraint
+name: string        // type constraint
+name: "alice"       // concrete value IS a subtype
+
+// Unification: greatest lower bound
+a: {x: int, y: string}
+b: {x: 1, z: bool}
+c: a & b  // → {x: 1, y: string, z: bool}
+\stopverb}
+}
+
+\subtree{
+\title{Lattice Type System}
+\pre{\startverb
+           ⊤ (any)
+          / | \
+       int str bool
+        |   |   |
+        1  "a" true
+          \ | /
+           ⊥ (error)
+
+Unification = Greatest Lower Bound (GLB)
+int & 1 → 1
+int & string → ⊥ (error)
+\stopverb}
+}
+
+\subtree{
+\title{Key Features}
+\pre{\startverb
+| Feature | CUE | JSON Schema | TypeScript |
+|---------|-----|-------------|------------|
+| Values = Types | ✓ | ✗ | ✗ |
+| Unification | ✓ | ✗ | ✗ |
+| Constraints | ✓ | Partial | Partial |
+| Code gen | ✓ | ✗ | ✗ |
+| Turing-complete | ✗ | ✗ | ✓ |
+\stopverb}
+
+\p{\strong{CUE is intentionally NOT Turing-complete} - guarantees termination.}
+}
+
+\subtree{
+\title{Syntax Essentials}
+\pre{\startverb
+package myconfig
+
+import "list"
+
+// Definitions (templates)
+#Person: {
+    name:  string
+    age:   int & >=0 & <=150
+    email: =~"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+}
+
+// Concrete values
+alice: #Person & {
+    name:  "Alice"
+    age:   30
+    email: "alice@example.com"
+}
+
+// List comprehensions
+numbers: [1, 2, 3, 4, 5]
+doubled: [for x in numbers {x * 2}]
+
+// Disjunction (sum types)
+Status: "pending" | "active" | "complete"
+\stopverb}
+}
+
+\subtree{
+\title{Schema Integration}
+\pre{\startverb
+# CUE → JSON Schema
+cue export --out jsonschema schema.cue
+
+# CUE → OpenAPI
+cue export --out openapi api.cue
+
+# Go types → CUE
+cue get go ./pkg/...
+
+# Validate YAML/JSON against CUE
+cue vet data.yaml schema.cue
+\stopverb}
+}
+
+\subtree{
+\title{Comparison with Nickel}
+\pre{\startverb
+| Aspect | CUE | Nickel |
+|--------|-----|--------|
+| Type system | Lattice unification | Gradual typing + contracts |
+| Evaluation | Lazy, no side effects | Lazy, pure |
+| Turing-complete | No (terminates) | Yes |
+| Error messages | Structural | Blame tracking |
+| Primary use | K8s/Cloud config | General config |
+\stopverb}
+}
+
+\subtree{
+\title{Sexp Bridge}
+\pre{\startverb
+// CUE can export to various formats
+output: json.Marshal(config)   // → JSON
+output: yaml.Marshal(config)   // → YAML
+
+// For sexp, use external tool:
+// cue export config.cue | json2sexp
+\stopverb}
+
+\p{Integration with lispsyntax-acset:}
+
+\pre{\startverb
+# Julia: parse CUE output, convert to sexp
+using JSON3, LispSyntax
+
+cue_json = read(`cue export config.cue`, String)
+data = JSON3.read(cue_json)
+sexp = json_to_sexp(data)  # Custom bridge
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Config Triad}
+\pre{\startverb
+CUE (+1)    + Nickel (0)  + Hof (-1)    = 0 ✓
+generative   ergodic       extractive
+schemas      contracts     code gen
+\stopverb}
+}
+
+\subtree{
+\title{Sexp Neighborhood}
+\pre{\startverb
+| Skill | Trit | Bridge to CUE |
+|-------|------|---------------|
+| **hof** | -1 | Consumes CUE, generates code |
+| **nickel** | 0 | Alternative with contracts |
+| **lispsyntax-acset** | 0 | CUE → JSON → sexp → ACSet |
+| **geb** | +1 | Both use algebraic types |
+| **gay-mcp** | +1 | Color CUE schema elements |
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Install
+go install cuelang.org/go/cmd/cue@latest
+
+# Evaluate
+cue eval config.cue
+
+# Export to JSON
+cue export config.cue
+
+# Validate
+cue vet data.yaml schema.cue
+
+# Format
+cue fmt *.cue
+
+# Get Go types
+cue get go ./...
+\stopverb}
+}
+
+\subtree{
+\title{Kubernetes Example}
+\pre{\startverb
+package k8s
+
+import "k8s.io/api/apps/v1"
+
+#Deployment: v1.#Deployment & {
+    apiVersion: "apps/v1"
+    kind:       "Deployment"
+    metadata: {
+        name:      string
+        namespace: string | *"default"
+    }
+    spec: {
+        replicas: int & >=1 & <=100 | *3
+        selector: matchLabels: app: metadata.name
+        template: {
+            metadata: labels: app: metadata.name
+            spec: containers: [...#Container]
+        }
+    }
+}
+
+#Container: {
+    name:  string
+    image: string
+    ports: [...{containerPort: int}]
+}
+\stopverb}
+}
+
+\subtree{
+\title{CLI Commands}
+\pre{\startverb
+# Core commands
+cue eval      # Evaluate and print
+cue export    # Export to JSON/YAML/etc
+cue vet       # Validate data
+cue def       # Print definitions
+cue fmt       # Format files
+cue get       # Import from Go/Proto
+cue mod       # Module management
+cue trim      # Remove redundant values
+\stopverb}
+}
+
+\subtree{
+\title{End-of-Skill Interface}
+
+}
+
+\subtree{
+\title{Related Skills}
+\pre{\startverb
+| Skill | Trit | Relationship |
+|-------|------|--------------|
+| hof | -1 | CUE consumer for codegen |
+| nickel | 0 | Alternative approach |
+| geb | +1 | Algebraic type sibling |
+| acsets | 0 | Schema → ACSet bridge |
+\stopverb}
+
+\p{\strong{Trit}: +1 (PLUS - generative lattice) \strong{Key Property}: Unification-based config with guaranteed termination \strong{Philosophy}: Values ARE types, constraints compose via GLB}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record what was learned}
+\li{\strong{REMEMBERING} (0): Connect patterns to other skills  }
+\li{\strong{WORLDING} (+1): Evolve the skill based on use}
+}
+
+\p{*Add Interaction Exemplars here as the skill is used.*}
+}
+}

@@ -1,0 +1,216 @@
+\title{Conducting Internal Reconnaissance With Bloodhound Ce}
+
+\taxon{skill}
+
+\tag{red-team}
+
+\tag{reconnaissance}
+
+\tag{bloodhound}
+
+\tag{active-directory}
+
+\tag{attack-paths}
+
+\tag{privilege-escalation}
+
+\tag{graph-analysis}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Conduct internal Active Directory reconnaissance using BloodHound Community Edition to map attack paths, identify privilege escalation chains, and discover misconfigurations in domain environments.}
+
+\subtree{
+\title{Conducting Internal Reconnaissance with BloodHound CE}
+\blockquote{\strong{Legal Notice:} This skill is for authorized security testing and educational purposes only. Unauthorized use against systems you do not own or have written permission to test is illegal and may violate computer fraud laws.}
+
+\subtree{
+\title{Overview}
+\p{BloodHound Community Edition (CE) is a modern, web-based Active Directory reconnaissance platform developed by SpecterOps that uses graph theory to reveal hidden relationships and attack paths within AD environments. Unlike the legacy BloodHound application, BloodHound CE uses a PostgreSQL backend with a dedicated graph database, providing improved performance, a modern web UI, and enhanced API capabilities. Red teams use BloodHound CE to collect AD objects, ACLs, sessions, group memberships, and trust relationships, then visualize attack paths from compromised low-privileged accounts to high-value targets like Domain Admins. The SharpHound collector (v2 for CE) gathers data from Active Directory, while AzureHound collects from Azure AD / Entra ID environments.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve conducting internal reconnaissance with bloodhound ce}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with red teaming concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Deploy BloodHound CE server using Docker Compose}
+\li{Collect AD data using SharpHound v2 or BloodHound.py}
+\li{Import collected data into BloodHound CE for graph analysis}
+\li{Identify shortest attack paths from owned principals to Domain Admins}
+\li{Discover ACL-based attack paths, Kerberoastable accounts, and delegation abuse}
+\li{Execute custom Cypher queries for advanced attack path analysis}
+\li{Generate attack path reports for engagement documentation}
+}
+}
+
+\subtree{
+\title{MITRE ATT&CK Mapping}
+\ul{
+\li{\strong{T1087.002} - Account Discovery: Domain Account}
+\li{\strong{T1069.002} - Permission Groups Discovery: Domain Groups}
+\li{\strong{T1482} - Domain Trust Discovery}
+\li{\strong{T1615} - Group Policy Discovery}
+\li{\strong{T1018} - Remote System Discovery}
+\li{\strong{T1033} - System Owner/User Discovery}
+\li{\strong{T1016} - System Network Configuration Discovery}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Phase 1: BloodHound CE Deployment}
+\ol{
+\li{Deploy BloodHound CE using Docker Compose:}
+\li{Access the web interface at https://localhost:8080}
+\li{Log in with the default admin credentials (displayed in Docker logs):}
+\li{Change the default admin password immediately}
+}
+}
+
+\subtree{
+\title{Phase 2: Data Collection with SharpHound v2}
+\ol{
+\li{Transfer SharpHound v2 to the compromised Windows host:}
+}
+
+\subtree{
+\title{DCOnly collection (LDAP only, stealthier)}
+\p{.\startverb \SharpHound\stopverb.exe -c DCOnly}
+}
+
+\subtree{
+\title{Session collection for logged-on user mapping}
+\p{.\startverb \SharpHound\stopverb.exe -c Session --loop --loopduration 02:00:00}
+}
+
+\subtree{
+\title{Collect from specific domain}
+\p{.\startverb \SharpHound\stopverb.exe -c All -d child.domain.local}
+
+\pre{\startverb
+2. Alternative: Use BloodHound.py from Linux:
+\stopverb}
+
+\p{bloodhound-python -u user -p 'Password123' -d domain.local -ns 10.10.10.1 -c All}
+
+\pre{\startverb
+3. Exfiltrate the generated ZIP file to the analysis workstation
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Phase 3: Data Import and Initial Analysis}
+\ol{
+\li{Upload collected data via the BloodHound CE web interface (File Ingest)}
+\li{Mark compromised accounts as "Owned" in the interface}
+\li{Run built-in analysis queries:}
+\li{Shortest Path to Domain Admin}
+\li{Kerberoastable Users with Path to DA}
+\li{AS-REP Roastable Users}
+\li{Users with DCSync Rights}
+\li{Computers with Unconstrained Delegation}
+}
+}
+
+\subtree{
+\title{Phase 4: Custom Cypher Queries}
+\ol{
+\li{Execute custom Cypher queries in the BloodHound CE search bar:}
+}
+
+\p{// Find Kerberoastable users with path to DA MATCH (u:User {hasspn:true}) MATCH p=shortestPath((u)-[*1..]->(g:Group {name:"DOMAIN ADMINS@DOMAIN.LOCAL"})) RETURN p}
+
+\p{// Find computers with sessions of DA members MATCH (c:Computer)-[:HasSession]->(u:User)-[:MemberOf*1..]->(g:Group {name:"DOMAIN ADMINS@DOMAIN.LOCAL"}) RETURN c.name, u.name}
+
+\p{// Find ACL-based attack paths (GenericAll, WriteDACL, GenericWrite) MATCH p=(u:User)-[:GenericAll|GenericWrite|WriteDacl|WriteOwner|ForceChangePassword*1..]->(t) WHERE u.owned = true RETURN p}
+
+\p{// Find users who can DCSync MATCH (u)-[:MemberOf*0..]->()-[:DCSync|GetChanges|GetChangesAll*1..]->(d:Domain) RETURN u.name, d.name}
+
+\p{// Find computers with LAPS but readable by non-admins MATCH (c:Computer {haslaps:true}) MATCH p=(u:User)-[:ReadLAPSPassword]->(c) RETURN p}
+
+\pre{\startverb
+
+\stopverb}
+}
+
+\subtree{
+\title{Phase 5: Attack Path Prioritization}
+\ol{
+\li{Score identified attack paths by:}
+\li{Number of hops (shorter = higher priority)}
+\li{Stealth requirements (avoid noisy techniques)}
+\li{Tool availability for each hop}
+\li{Likelihood of detection at each step}
+\li{Create an execution plan for the highest-priority paths}
+\li{Identify required tools for each step in the chain}
+\li{Plan OPSEC considerations for each technique}
+}
+}
+}
+
+\subtree{
+\title{Tools and Resources}
+\pre{\startverb
+| Tool | Purpose | Platform |
+|------|---------|----------|
+| BloodHound CE | Web-based graph analysis platform | Docker |
+| SharpHound v2 | AD data collection (.NET, for CE) | Windows |
+| BloodHound.py | AD data collection (Python) | Linux |
+| AzureHound | Azure AD / Entra ID data collection | Cross-platform |
+| PlumHound | Automated BloodHound reporting | Python |
+| BloodHound Query Library | Community Cypher query repository | Web |
+\stopverb}
+}
+
+\subtree{
+\title{Key Attack Path Types}
+\pre{\startverb
+| Path Type | Description | Example |
+|-----------|-------------|---------|
+| ACL Abuse | Exploit misconfigured ACLs | GenericAll on DA group |
+| Kerberoasting | Crack service account passwords | SPN account → DA |
+| AS-REP Roasting | Attack accounts without pre-auth | No-preauth user → password crack |
+| Delegation Abuse | Exploit unconstrained/constrained delegation | Computer → impersonate DA |
+| GPO Abuse | Modify GPOs applied to privileged OUs | GPO write → code execution on DA |
+| Session Hijack | Leverage DA sessions on compromised hosts | Admin session → token theft |
+\stopverb}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] BloodHound CE deployed and accessible}
+\li{[ ] SharpHound v2 data collected from all domains in scope}
+\li{[ ] Data successfully imported into BloodHound CE}
+\li{[ ] Owned principals marked in the interface}
+\li{[ ] Shortest paths to Domain Admin identified}
+\li{[ ] ACL-based attack paths documented}
+\li{[ ] Kerberoastable and AS-REP roastable accounts listed}
+\li{[ ] Custom Cypher queries executed for advanced analysis}
+\li{[ ] Attack paths prioritized by feasibility and stealth}
+\li{[ ] Report generated with all identified paths and evidence}
+}
+}
+}

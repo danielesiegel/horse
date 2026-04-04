@@ -1,0 +1,655 @@
+\title{Wycheproof}
+
+\taxon{skill}
+
+\meta{description}{Wycheproof provides test vectors for validating cryptographic implementations. Use when testing crypto code for known attacks and edge cases.}
+
+\subtree{
+\title{Wycheproof}
+\p{Wycheproof is an extensive collection of test vectors designed to verify the correctness of cryptographic implementations and test against known attacks. Originally developed by Google, it is now a community-managed project where contributors can add test vectors for specific cryptographic constructions.}
+
+\subtree{
+\title{Background}
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| Test vector | Input/output pair for validating crypto implementation correctness |
+| Test group | Collection of test vectors sharing attributes (key size, IV size, curve) |
+| Result flag | Indicates if test should pass (valid), fail (invalid), or is acceptable |
+| Edge case testing | Testing for known vulnerabilities and attack patterns |
+\stopverb}
+}
+
+\subtree{
+\title{Why This Matters}
+\p{Cryptographic implementations are notoriously difficult to get right. Even small bugs can:}
+
+\ul{
+\li{Expose private keys}
+\li{Allow signature forgery}
+\li{Enable message decryption}
+\li{Create consensus problems when different implementations accept/reject the same inputs}
+}
+
+\p{Wycheproof has found vulnerabilities in major libraries including OpenJDK's SHA1withDSA, Bouncy Castle's ECDHC, and the elliptic npm package.}
+}
+}
+
+\subtree{
+\title{When to Use}
+\p{\strong{Apply Wycheproof when:}}
+
+\ul{
+\li{Testing cryptographic implementations (AES-GCM, ECDSA, ECDH, RSA, etc.)}
+\li{Validating that crypto code handles edge cases correctly}
+\li{Verifying implementations against known attack vectors}
+\li{Setting up CI/CD for cryptographic libraries}
+\li{Auditing third-party crypto code for correctness}
+}
+
+\p{\strong{Consider alternatives when:}}
+
+\ul{
+\li{Testing for timing side-channels (use constant-time testing tools instead)}
+\li{Finding new unknown bugs (use fuzzing instead)}
+\li{Testing custom/experimental cryptographic algorithms (Wycheproof only covers established algorithms)}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Scenario | Recommended Approach | Notes |
+|----------|---------------------|-------|
+| AES-GCM implementation | Use `aes_gcm_test.json` | 316 test vectors across 44 test groups |
+| ECDSA verification | Use `ecdsa_*_test.json` for specific curves | Tests signature malleability, DER encoding |
+| ECDH key exchange | Use `ecdh_*_test.json` | Tests invalid curve attacks |
+| RSA signatures | Use `rsa_*_test.json` | Tests padding oracle attacks |
+| ChaCha20-Poly1305 | Use `chacha20_poly1305_test.json` | Tests AEAD implementation |
+\stopverb}
+}
+
+\subtree{
+\title{Testing Workflow}
+\pre{\startverb
+Phase 1: Setup                 Phase 2: Parse Test Vectors
+┌─────────────────┐          ┌─────────────────┐
+│ Add Wycheproof  │    →     │ Load JSON file  │
+│ as submodule    │          │ Filter by params│
+└─────────────────┘          └─────────────────┘
+         ↓                            ↓
+Phase 4: CI Integration        Phase 3: Write Harness
+┌─────────────────┐          ┌─────────────────┐
+│ Auto-update     │    ←     │ Test valid &    │
+│ test vectors    │          │ invalid cases   │
+└─────────────────┘          └─────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Repository Structure}
+\p{The Wycheproof repository is organized as follows:}
+
+\pre{\startverb
+┣ 📜 README.md       : Project overview
+┣ 📂 doc             : Documentation
+┣ 📂 java            : Java JCE interface testing harness
+┣ 📂 javascript      : JavaScript testing harness
+┣ 📂 schemas         : Test vector schemas
+┣ 📂 testvectors     : Test vectors
+┗ 📂 testvectors_v1  : Updated test vectors (more detailed)
+\stopverb}
+
+\p{The essential folders are \code{\startverb testvectors\stopverb} and \code{\startverb testvectors_v1\stopverb}. While both contain similar files, \code{\startverb testvectors_v1\stopverb} includes more detailed information and is recommended for new integrations.}
+}
+
+\subtree{
+\title{Supported Algorithms}
+\p{Wycheproof provides test vectors for a wide range of cryptographic algorithms:}
+
+\pre{\startverb
+| Category | Algorithms |
+|----------|------------|
+| **Symmetric Encryption** | AES-GCM, AES-EAX, ChaCha20-Poly1305 |
+| **Signatures** | ECDSA, EdDSA, RSA-PSS, RSA-PKCS1 |
+| **Key Exchange** | ECDH, X25519, X448 |
+| **Hashing** | HMAC, HKDF |
+| **Curves** | secp256k1, secp256r1, secp384r1, secp521r1, ed25519, ed448 |
+\stopverb}
+}
+
+\subtree{
+\title{Test File Structure}
+\p{Each JSON test file tests a specific cryptographic construction. All test files share common attributes:}
+
+\pre{\startverb
+"algorithm"         : The name of the algorithm tested
+"schema"            : The JSON schema (found in schemas folder)
+"generatorVersion"  : The version number
+"numberOfTests"     : The total number of test vectors in this file
+"header"            : Detailed description of test vectors
+"notes"             : In-depth explanation of flags in test vectors
+"testGroups"        : Array of one or multiple test groups
+\stopverb}
+
+\subtree{
+\title{Test Groups}
+\p{Test groups group sets of tests based on shared attributes such as:}
+
+\ul{
+\li{Key sizes}
+\li{IV sizes}
+\li{Public keys}
+\li{Curves}
+}
+
+\p{This classification allows extracting tests that meet specific criteria relevant to the construction being tested.}
+}
+
+\subtree{
+\title{Test Vector Attributes}
+\subtree{
+\title{Shared Attributes}
+\p{All test vectors contain four common fields:}
+
+\ul{
+\li{\strong{tcId}: Unique identifier for the test vector within a file}
+\li{\strong{comment}: Additional information about the test case}
+\li{\strong{flags}: Descriptions of specific test case types and potential dangers (referenced in \code{\startverb notes\stopverb} field)}
+\li{\strong{result}: Expected outcome of the test}
+}
+
+\p{The \code{\startverb result\stopverb} field can take three values:}
+
+\pre{\startverb
+| Result | Meaning |
+|--------|---------|
+| **valid** | Test case should succeed |
+| **acceptable** | Test case is allowed to succeed but contains non-ideal attributes |
+| **invalid** | Test case should fail |
+\stopverb}
+}
+
+\subtree{
+\title{Unique Attributes}
+\p{Unique attributes are specific to the algorithm being tested:}
+
+\pre{\startverb
+| Algorithm | Unique Attributes |
+|-----------|-------------------|
+| AES-GCM | `key`, `iv`, `aad`, `msg`, `ct`, `tag` |
+| ECDH secp256k1 | `public`, `private`, `shared` |
+| ECDSA | `msg`, `sig`, `result` |
+| EdDSA | `msg`, `sig`, `pk` |
+\stopverb}
+}
+}
+}
+
+\subtree{
+\title{Implementation Guide}
+\subtree{
+\title{Phase 1: Add Wycheproof to Your Project}
+\p{\strong{Option 1: Git Submodule (Recommended)}}
+
+\p{Adding Wycheproof as a git submodule ensures automatic updates:}
+
+\pre{\startverb
+git submodule add https://github.com/C2SP/wycheproof.git
+\stopverb}
+
+\p{\strong{Option 2: Fetch Specific Test Vectors}}
+
+\p{If submodules aren't possible, fetch specific JSON files:}
+
+\pre{\startverb
+#!/bin/bash
+
+TMP_WYCHEPROOF_FOLDER=".wycheproof/"
+TEST_VECTORS=('aes_gcm_test.json' 'aes_eax_test.json')
+BASE_URL="https://raw.githubusercontent.com/C2SP/wycheproof/master/testvectors_v1/"
+
+# Create wycheproof folder
+mkdir -p $TMP_WYCHEPROOF_FOLDER
+
+# Request all test vector files if they don't exist
+for i in "${TEST_VECTORS[@]}"; do
+  if [ ! -f "${TMP_WYCHEPROOF_FOLDER}${i}" ]; then
+    curl -o "${TMP_WYCHEPROOF_FOLDER}${i}" "${BASE_URL}${i}"
+    if [ $? -ne 0 ]; then
+      echo "Failed to download ${i}"
+      exit 1
+    fi
+  fi
+done
+\stopverb}
+}
+
+\subtree{
+\title{Phase 2: Parse Test Vectors}
+\p{Identify the test file for your algorithm and parse the JSON:}
+
+\p{\strong{Python Example:}}
+
+\pre{\startverb
+import json
+
+def load_wycheproof_test_vectors(path: str):
+    testVectors = []
+    try:
+        with open(path, "r") as f:
+            wycheproof_json = json.loads(f.read())
+    except FileNotFoundError:
+        print(f"No Wycheproof file found at: {path}")
+        return testVectors
+
+    # Attributes that need hex-to-bytes conversion
+    convert_attr = {"key", "aad", "iv", "msg", "ct", "tag"}
+
+    for testGroup in wycheproof_json["testGroups"]:
+        # Filter test groups based on implementation constraints
+        if testGroup["ivSize"] < 64 or testGroup["ivSize"] > 1024:
+            continue
+
+        for tv in testGroup["tests"]:
+            # Convert hex strings to bytes
+            for attr in convert_attr:
+                if attr in tv:
+                    tv[attr] = bytes.fromhex(tv[attr])
+            testVectors.append(tv)
+
+    return testVectors
+\stopverb}
+
+\p{\strong{JavaScript Example:}}
+
+\pre{\startverb
+const fs = require('fs').promises;
+
+async function loadWycheproofTestVectors(path) {
+  const tests = [];
+
+  try {
+    const fileContent = await fs.readFile(path);
+    const data = JSON.parse(fileContent.toString());
+
+    data.testGroups.forEach(testGroup => {
+      testGroup.tests.forEach(test => {
+        // Add shared test group properties to each test
+        test['pk'] = testGroup.publicKey.pk;
+        tests.push(test);
+      });
+    });
+  } catch (err) {
+    console.error('Error reading or parsing file:', err);
+    throw err;
+  }
+
+  return tests;
+}
+\stopverb}
+}
+
+\subtree{
+\title{Phase 3: Write Testing Harness}
+\p{Create test functions that handle both valid and invalid test cases.}
+
+\p{\strong{Python/pytest Example:}}
+
+\pre{\startverb
+import pytest
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+tvs = load_wycheproof_test_vectors("wycheproof/testvectors_v1/aes_gcm_test.json")
+
+@pytest.mark.parametrize("tv", tvs, ids=[str(tv['tcId']) for tv in tvs])
+def test_encryption(tv):
+    try:
+        aesgcm = AESGCM(tv['key'])
+        ct = aesgcm.encrypt(tv['iv'], tv['msg'], tv['aad'])
+    except ValueError as e:
+        # Implementation raised error - verify test was expected to fail
+        assert tv['result'] != 'valid', tv['comment']
+        return
+
+    if tv['result'] == 'valid':
+        assert ct[:-16] == tv['ct'], f"Ciphertext mismatch: {tv['comment']}"
+        assert ct[-16:] == tv['tag'], f"Tag mismatch: {tv['comment']}"
+    elif tv['result'] == 'invalid' or tv['result'] == 'acceptable':
+        assert ct[:-16] != tv['ct'] or ct[-16:] != tv['tag']
+
+@pytest.mark.parametrize("tv", tvs, ids=[str(tv['tcId']) for tv in tvs])
+def test_decryption(tv):
+    try:
+        aesgcm = AESGCM(tv['key'])
+        decrypted_msg = aesgcm.decrypt(tv['iv'], tv['ct'] + tv['tag'], tv['aad'])
+    except ValueError:
+        assert tv['result'] != 'valid', tv['comment']
+        return
+    except InvalidTag:
+        assert tv['result'] != 'valid', tv['comment']
+        assert 'ModifiedTag' in tv['flags'], f"Expected 'ModifiedTag' flag: {tv['comment']}"
+        return
+
+    assert tv['result'] == 'valid', f"No invalid test case should pass: {tv['comment']}"
+    assert decrypted_msg == tv['msg'], f"Decryption mismatch: {tv['comment']}"
+\stopverb}
+
+\p{\strong{JavaScript/Mocha Example:}}
+
+\pre{\startverb
+const assert = require('assert');
+
+function testFactory(tcId, tests) {
+  it(`[${tcId + 1}] ${tests[tcId].comment}`, function () {
+    const test = tests[tcId];
+    const ed25519 = new eddsa('ed25519');
+    const key = ed25519.keyFromPublic(toArray(test.pk, 'hex'));
+
+    let sig;
+    if (test.result === 'valid') {
+      sig = key.verify(test.msg, test.sig);
+      assert.equal(sig, true, `[${test.tcId}] ${test.comment}`);
+    } else if (test.result === 'invalid') {
+      try {
+        sig = key.verify(test.msg, test.sig);
+      } catch (err) {
+        // Point could not be decoded
+        sig = false;
+      }
+      assert.equal(sig, false, `[${test.tcId}] ${test.comment}`);
+    }
+  });
+}
+
+// Generate tests for all test vectors
+for (var tcId = 0; tcId < tests.length; tcId++) {
+  testFactory(tcId, tests);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Phase 4: CI Integration}
+\p{Ensure test vectors stay up to date by:}
+
+\ol{
+\li{\strong{Using git submodules}: Update submodule in CI before running tests}
+\li{\strong{Fetching latest vectors}: Run fetch script before test execution}
+\li{\strong{Scheduled updates}: Set up weekly/monthly updates to catch new test vectors}
+}
+}
+}
+
+\subtree{
+\title{Common Vulnerabilities Detected}
+\p{Wycheproof test vectors are designed to catch specific vulnerability patterns:}
+
+\pre{\startverb
+| Vulnerability | Description | Affected Algorithms | Example CVE |
+|---------------|-------------|---------------------|-------------|
+| Signature malleability | Multiple valid signatures for same message | ECDSA, EdDSA | CVE-2024-42459 |
+| Invalid DER encoding | Accepting non-canonical DER signatures | ECDSA | CVE-2024-42460, CVE-2024-42461 |
+| Invalid curve attacks | ECDH with invalid curve points | ECDH | Common in many libraries |
+| Padding oracle | Timing leaks in padding validation | RSA-PKCS1 | Historical OpenSSL issues |
+| Tag forgery | Accepting modified authentication tags | AES-GCM, ChaCha20-Poly1305 | Various implementations |
+\stopverb}
+
+\subtree{
+\title{Signature Malleability: Deep Dive}
+\p{\strong{Problem:} Implementations that don't validate signature encoding can accept multiple valid signatures for the same message.}
+
+\p{\strong{Example (EdDSA):} Appending or removing zeros from signature:}
+
+\pre{\startverb
+Valid signature:   ...6a5c51eb6f946b30d
+Invalid signature: ...6a5c51eb6f946b30d0000  (should be rejected)
+\stopverb}
+
+\p{\strong{How to detect:}}
+
+\pre{\startverb
+# Add signature length check
+if len(sig) != 128:  # EdDSA signatures must be exactly 64 bytes (128 hex chars)
+    return False
+\stopverb}
+
+\p{\strong{Impact:} Can lead to consensus problems when different implementations accept/reject the same signatures.}
+
+\p{\strong{Related Wycheproof tests:}}
+
+\ul{
+\li{EdDSA: tcId 37 - "removing 0 byte from signature"}
+\li{ECDSA: tcId 06 - "Legacy: ASN encoding of r misses leading 0"}
+}
+}
+}
+
+\subtree{
+\title{Case Study: Elliptic npm Package}
+\p{This case study demonstrates how Wycheproof found three CVEs in the popular elliptic npm package (3000+ dependents, millions of weekly downloads).}
+
+\subtree{
+\title{Overview}
+\p{The [elliptic](https://www.npmjs.com/package/elliptic) library is an elliptic-curve cryptography library written in JavaScript, supporting ECDH, ECDSA, and EdDSA. Using Wycheproof test vectors on version 6.5.6 revealed multiple vulnerabilities:}
+
+\ul{
+\li{\strong{CVE-2024-42459}: EdDSA signature malleability (appending/removing zeros)}
+\li{\strong{CVE-2024-42460}: ECDSA DER encoding - invalid bit placement}
+\li{\strong{CVE-2024-42461}: ECDSA DER encoding - leading zero in length field}
+}
+}
+
+\subtree{
+\title{Methodology}
+\ol{
+\li{\strong{Identify supported curves}: ed25519 for EdDSA}
+\li{\strong{Find test vectors}: \code{\startverb testvectors_v1/ed25519_test.json\stopverb}}
+\li{\strong{Parse test vectors}: Load JSON and extract tests}
+\li{\strong{Write test harness}: Create parameterized tests}
+\li{\strong{Run tests}: Identify failures}
+\li{\strong{Analyze root causes}: Examine implementation code}
+\li{\strong{Propose fixes}: Add validation checks}
+}
+}
+
+\subtree{
+\title{Key Findings}
+\p{\strong{EdDSA Issue (CVE-2024-42459):}}
+
+\ul{
+\li{Missing signature length validation}
+\li{Allowed trailing zeros in signatures}
+\li{Fix: Add \code{\startverb if(sig.length !== 128) return false;\stopverb}}
+}
+
+\p{\strong{ECDSA Issue 1 (CVE-2024-42460):}}
+
+\ul{
+\li{Missing check for first bit being zero in DER-encoded r and s values}
+\li{Fix: Add \code{\startverb if ((data[p.place] & 128) !== 0) return false;\stopverb}}
+}
+
+\p{\strong{ECDSA Issue 2 (CVE-2024-42461):}}
+
+\ul{
+\li{DER length field accepted leading zeros}
+\li{Fix: Add \code{\startverb if(buf[p.place] === 0x00) return false;\stopverb}}
+}
+}
+
+\subtree{
+\title{Impact}
+\p{All three vulnerabilities allowed multiple valid signatures for a single message, leading to consensus problems across implementations.}
+
+\p{\strong{Lessons learned:}}
+
+\ul{
+\li{Wycheproof catches subtle encoding bugs}
+\li{Reusable test harnesses pay dividends}
+\li{Test vector comments and flags help diagnose issues}
+\li{Even popular libraries benefit from systematic test vector validation}
+}
+}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{Tips and Tricks}
+\pre{\startverb
+| Tip | Why It Helps |
+|-----|--------------|
+| Filter test groups by parameters | Focus on test vectors relevant to your implementation constraints |
+| Use test vector flags | Understand specific vulnerability patterns being tested |
+| Check the `notes` field | Get detailed explanations of flag meanings |
+| Test both encrypt/decrypt and sign/verify | Ensure bidirectional correctness |
+| Run tests in CI | Catch regressions and benefit from new test vectors |
+| Use parameterized tests | Get clear failure messages with tcId and comment |
+\stopverb}
+}
+
+\subtree{
+\title{Common Mistakes}
+\pre{\startverb
+| Mistake | Why It's Wrong | Correct Approach |
+|---------|----------------|------------------|
+| Only testing valid cases | Misses vulnerabilities where invalid inputs are accepted | Test all result types: valid, invalid, acceptable |
+| Ignoring "acceptable" result | Implementation might have subtle bugs | Treat acceptable as warnings worth investigating |
+| Not filtering test groups | Wastes time on unsupported parameters | Filter by keySize, ivSize, etc. based on your implementation |
+| Not updating test vectors | Miss new vulnerability patterns | Use submodules or scheduled fetches |
+| Testing only one direction | Encrypt/sign might work but decrypt/verify fails | Test both operations |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\subtree{
+\title{Tool Skills}
+\pre{\startverb
+| Skill | Primary Use in Wycheproof Testing |
+|-------|-----------------------------------|
+| **pytest** | Python testing framework for parameterized tests |
+| **mocha** | JavaScript testing framework for test generation |
+| **constant-time-testing** | Complement Wycheproof with timing side-channel testing |
+| **cryptofuzz** | Fuzz-based crypto testing to find additional bugs |
+\stopverb}
+}
+
+\subtree{
+\title{Technique Skills}
+\pre{\startverb
+| Skill | When to Apply |
+|-------|---------------|
+| **coverage-analysis** | Ensure test vectors cover all code paths in crypto implementation |
+| **property-based-testing** | Test mathematical properties (e.g., encrypt/decrypt round-trip) |
+| **fuzz-harness-writing** | Create harnesses for crypto parsers (complements Wycheproof) |
+\stopverb}
+}
+
+\subtree{
+\title{Related Domain Skills}
+\pre{\startverb
+| Skill | Relationship |
+|-------|--------------|
+| **crypto-testing** | Wycheproof is a key tool in comprehensive crypto testing methodology |
+| **fuzzing** | Use fuzzing to find bugs Wycheproof doesn't cover (new edge cases) |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Skill Dependency Map}
+\pre{\startverb
+                    ┌─────────────────────┐
+                    │    wycheproof       │
+                    │   (this skill)      │
+                    └──────────┬──────────┘
+                               │
+           ┌───────────────────┼───────────────────┐
+           │                   │                   │
+           ▼                   ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  pytest/mocha   │ │ constant-time   │ │   cryptofuzz    │
+│ (test framework)│ │   testing       │ │   (fuzzing)     │
+└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
+         │                   │                   │
+         └───────────────────┼───────────────────┘
+                             │
+                             ▼
+              ┌──────────────────────────┐
+              │   Technique Skills       │
+              │ coverage, harness, PBT   │
+              └──────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{Official Repository}
+\p{\strong{[Wycheproof GitHub Repository](https://github.com/C2SP/wycheproof)}}
+
+\p{The official repository contains:}
+
+\ul{
+\li{All test vectors in \code{\startverb testvectors/\stopverb} and \code{\startverb testvectors_v1/\stopverb}}
+\li{JSON schemas in \code{\startverb schemas/\stopverb}}
+\li{Reference implementations in Java and JavaScript}
+\li{Documentation in \code{\startverb doc/\stopverb}}
+}
+}
+
+\subtree{
+\title{Real-World Examples}
+\p{\strong{[pycryptodome](https://pypi.org/project/pycryptodome/)}}
+
+\p{The pycryptodome library integrates Wycheproof test vectors in their test suite, demonstrating best practices for Python crypto implementations.}
+}
+
+\subtree{
+\title{Community Resources}
+\ul{
+\li{[C2SP Community](https://c2sp.org/) - Cryptographic specifications and standards community maintaining Wycheproof}
+\li{Wycheproof issues tracker - Report bugs in test vectors or suggest new constructions}
+}
+}
+}
+
+\subtree{
+\title{Summary}
+\p{Wycheproof is an essential tool for validating cryptographic implementations against known attack vectors and edge cases. By integrating Wycheproof test vectors into your testing workflow:}
+
+\ol{
+\li{Catch subtle encoding and validation bugs}
+\li{Prevent signature malleability issues}
+\li{Ensure consistent behavior across implementations}
+\li{Benefit from community-contributed test vectors}
+\li{Protect against known cryptographic vulnerabilities}
+}
+
+\p{The investment in writing a reusable testing harness pays dividends through continuous validation as new test vectors are added to the Wycheproof repository.}
+}
+
+\subtree{
+\title{IACR References}
+\pre{\startverb
+| Wycheproof Test Group | IACR Paper |
+|----------------------|------------|
+| ECDSA signature malleability | https://eprint.iacr.org/2020/1502 |
+| RSA PKCS#1 v1.5 padding oracle | https://eprint.iacr.org/2003/052 (Bleichenbacher) |
+| AES-GCM forbidden attack | https://eprint.iacr.org/2016/475 |
+| DSA bias/nonce reuse | https://eprint.iacr.org/2019/023 (Minerva) |
+| Curve25519 twist attacks | https://eprint.iacr.org/2017/806 |
+| HKDF edge cases | https://eprint.iacr.org/2010/264 |
+| ChaCha20-Poly1305 | https://eprint.iacr.org/2013/759 |
+| XSalsa20 extended nonce | https://eprint.iacr.org/2011/210 |
+| Ed25519 cofactor issues | https://eprint.iacr.org/2020/1244 |
+\stopverb}
+
+\p{Search IACR ePrint for any primitive: \code{\startverb https://eprint.iacr.org/search?q=<primitive>\stopverb}}
+}
+}

@@ -1,0 +1,54 @@
+\title{Phase Portrait Generator}
+
+\taxon{skill}
+
+\meta{description}{Generate phase portraits for 2D dynamical systems. Use when visualizing vector fields, nullclines, and trajectories.}
+
+\subtree{
+\title{Phase Portrait Generator}
+\p{Generates phase portraits showing vector fields and trajectories in 2D state space.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Visualizing 2D autonomous systems}
+\li{Plotting nullclines and equilibria}
+\li{Trajectory analysis in phase space}
+}
+}
+
+\subtree{
+\title{GF(3) Role}
+\p{PLUS (+1) Generator - creates visual outputs from differential equations.}
+}
+
+\subtree{
+\title{Quick Example}
+\pre{\startverb
+import numpy as np
+import matplotlib.pyplot as plt
+
+def phase_portrait(f, xlim=(-3,3), ylim=(-3,3), density=20):
+    x = np.linspace(*xlim, density)
+    y = np.linspace(*ylim, density)
+    X, Y = np.meshgrid(x, y)
+    U, V = f(X, Y)
+    plt.streamplot(X, Y, U, V, density=1.5)
+    plt.xlabel('x'); plt.ylabel('y')
+
+# Van der Pol oscillator
+phase_portrait(lambda x, y: (y, -x + (1 - x**2) * y))
+\stopverb}
+}
+
+\subtree{
+\title{Integration with bifurcation skills}
+\p{Forms triad with:}
+
+\ul{
+\li{\code{\startverb bifurcation\stopverb} (0): detects transitions}
+\li{\code{\startverb bifurcation-generator\stopverb} (+1): parameter space}
+\li{\code{\startverb phase-portrait-generator\stopverb} (+1): state space}
+}
+}
+}

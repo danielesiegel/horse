@@ -1,0 +1,187 @@
+\title{Mujoco Scenes}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Package for creating different scenes in MuJoCo. Compose environments with objects, terrains, and obstacles for robot training.}
+
+\subtree{
+\title{MuJoCo Scenes Skill}
+\p{\strong{Trit}: 0 (ERGODIC - coordination/infrastructure) \strong{Color}: #9FD875 (Soft Green) \strong{URI}: skill://mujoco-scenes#9FD875}
+
+\subtree{
+\title{Overview}
+\p{Package for composing MuJoCo scenes with objects, terrains, and obstacles. Enables diverse environment generation for robot training.}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+from mujoco_scenes import SceneBuilder, Terrain, Object
+
+# Build a training scene
+scene = SceneBuilder()
+
+# Add terrain
+scene.add_terrain(
+    Terrain.FLAT,
+    size=(10, 10),
+    friction=1.0,
+)
+
+# Add obstacles
+scene.add_object(
+    Object.BOX,
+    pos=(2, 0, 0.5),
+    size=(0.5, 0.5, 0.5),
+    color=(1, 0, 0, 1),
+)
+
+scene.add_object(
+    Object.SPHERE,
+    pos=(-1, 2, 0.3),
+    radius=0.3,
+    mass=0.5,
+)
+
+# Add terrain variations
+scene.add_terrain(
+    Terrain.STAIRS,
+    pos=(5, 0, 0),
+    step_height=0.15,
+    step_count=5,
+)
+
+# Export to MJCF
+mjcf = scene.to_mjcf()
+\stopverb}
+}
+
+\subtree{
+\title{Terrain Types}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────┐
+│                     TERRAIN TYPES                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  FLAT        ═══════════════════════════                    │
+│                                                              │
+│  STAIRS      ┌─┐                                            │
+│            ┌─┘ └─┐                                          │
+│          ┌─┘     └─┐                                        │
+│                                                              │
+│  RAMP        ╱╲                                             │
+│             ╱  ╲                                            │
+│                                                              │
+│  ROUGH      ∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿                                │
+│  (heightfield)                                               │
+│                                                              │
+│  GAPS       ═══   ═══   ═══   ═══                           │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Domain Randomization}
+\pre{\startverb
+from mujoco_scenes import DomainRandomizer
+
+randomizer = DomainRandomizer(
+    terrain_roughness=(0.0, 0.1),
+    friction_range=(0.5, 1.5),
+    object_position_noise=0.2,
+    lighting_variation=True,
+)
+
+# Generate randomized scenes
+for i in range(100):
+    scene = randomizer.generate()
+    scene.save(f"scene_{i}.mjcf")
+\stopverb}
+}
+
+\subtree{
+\title{Integration with KSIM}
+\pre{\startverb
+from ksim import RLTask
+from mujoco_scenes import SceneBuilder
+
+class WalkingWithObstacles(RLTask):
+    def build_scene(self):
+        scene = SceneBuilder()
+        scene.add_terrain(Terrain.FLAT)
+        scene.add_random_obstacles(count=10)
+        return scene.to_mjcf()
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\p{This skill acts as the \strong{ERGODIC (0)} coordinator:}
+
+\pre{\startverb
+ksim-rl (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+evla-vla (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+urdf2mjcf (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+kbot-humanoid (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+zeroth-bot (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb ksim-rl\stopverb} (-1): Uses scenes for training}
+\li{\code{\startverb kos-firmware\stopverb} (+1): Robot firmware}
+\li{\code{\startverb urdf2mjcf\stopverb} (-1): Model conversion}
+\li{\code{\startverb kbot-humanoid\stopverb} (-1): K-Bot robot}
+}
+}
+
+\subtree{
+\title{References}
+\pre{\startverb
+@misc{mujocoscenes2024,
+  title={MuJoCo Scenes: Environment Composition for Robot Training},
+  author={K-Scale Labs},
+  year={2024},
+  url={https://github.com/kscalelabs/mujoco-scenes}
+}
+\stopverb}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 1. Flexibility through Abstraction}
+\p{\strong{Concepts}: combinators, compose, parallel-combine, spread-combine, arity}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+mujoco-scenes (○) + SDF.Ch1 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch5: Evaluation}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Combinators compose operations. This skill provides composable abstractions.}
+}
+}
+}

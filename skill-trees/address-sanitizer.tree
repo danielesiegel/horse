@@ -1,0 +1,429 @@
+\title{Address Sanitizer}
+
+\taxon{skill}
+
+\meta{description}{AddressSanitizer detects memory errors during fuzzing. Use when fuzzing C/C++ code to find buffer overflows and use-after-free bugs.}
+
+\subtree{
+\title{AddressSanitizer (ASan)}
+\p{AddressSanitizer (ASan) is a widely adopted memory error detection tool used extensively during software testing, particularly fuzzing. It helps detect memory corruption bugs that might otherwise go unnoticed, such as buffer overflows, use-after-free errors, and other memory safety violations.}
+
+\subtree{
+\title{Overview}
+\p{ASan is a standard practice in fuzzing due to its effectiveness in identifying memory vulnerabilities. It instruments code at compile time to track memory allocations and accesses, detecting illegal operations at runtime.}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| Instrumentation | ASan adds runtime checks to memory operations during compilation |
+| Shadow Memory | Maps 20TB of virtual memory to track allocation state |
+| Performance Cost | Approximately 2-4x slowdown compared to non-instrumented code |
+| Detection Scope | Finds buffer overflows, use-after-free, double-free, and memory leaks |
+\stopverb}
+}
+}
+
+\subtree{
+\title{When to Apply}
+\p{\strong{Apply this technique when:}}
+
+\ul{
+\li{Fuzzing C/C++ code for memory safety vulnerabilities}
+\li{Testing Rust code with unsafe blocks}
+\li{Debugging crashes related to memory corruption}
+\li{Running unit tests where memory errors are suspected}
+}
+
+\p{\strong{Skip this technique when:}}
+
+\ul{
+\li{Running production code (ASan can reduce security)}
+\li{Platform is Windows or macOS (limited ASan support)}
+\li{Performance overhead is unacceptable for your use case}
+\li{Fuzzing pure safe languages without FFI (e.g., pure Go, pure Java)}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Task | Command/Pattern |
+|------|-----------------|
+| Enable ASan (Clang/GCC) | `-fsanitize=address` |
+| Enable verbosity | `ASAN_OPTIONS=verbosity=1` |
+| Disable leak detection | `ASAN_OPTIONS=detect_leaks=0` |
+| Force abort on error | `ASAN_OPTIONS=abort_on_error=1` |
+| Multiple options | `ASAN_OPTIONS=verbosity=1:abort_on_error=1` |
+\stopverb}
+}
+
+\subtree{
+\title{Step-by-Step}
+\subtree{
+\title{Step 1: Compile with ASan}
+\p{Compile and link your code with the \code{\startverb -fsanitize=address\stopverb} flag:}
+
+\pre{\startverb
+clang -fsanitize=address -g -o my_program my_program.c
+\stopverb}
+
+\p{The \code{\startverb -g\stopverb} flag is recommended to get better stack traces when ASan detects errors.}
+}
+
+\subtree{
+\title{Step 2: Configure ASan Options}
+\p{Set the \code{\startverb ASAN_OPTIONS\stopverb} environment variable to configure ASan behavior:}
+
+\pre{\startverb
+export ASAN_OPTIONS=verbosity=1:abort_on_error=1:detect_leaks=0
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Run Your Program}
+\p{Execute the ASan-instrumented binary. When memory errors are detected, ASan will print detailed reports:}
+
+\pre{\startverb
+./my_program
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Adjust Fuzzer Memory Limits}
+\p{ASan requires approximately 20TB of virtual memory. Disable fuzzer memory restrictions:}
+
+\ul{
+\li{libFuzzer: \code{\startverb -rss_limit_mb=0\stopverb}}
+\li{AFL++: \code{\startverb -m none\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{Common Patterns}
+\subtree{
+\title{Pattern: Basic ASan Integration}
+\p{\strong{Use Case:} Standard fuzzing setup with ASan}
+
+\p{\strong{Before:}}
+
+\pre{\startverb
+clang -o fuzz_target fuzz_target.c
+./fuzz_target
+\stopverb}
+
+\p{\strong{After:}}
+
+\pre{\startverb
+clang -fsanitize=address -g -o fuzz_target fuzz_target.c
+ASAN_OPTIONS=verbosity=1:abort_on_error=1 ./fuzz_target
+\stopverb}
+}
+
+\subtree{
+\title{Pattern: ASan with Unit Tests}
+\p{\strong{Use Case:} Enable ASan for unit test suite}
+
+\p{\strong{Before:}}
+
+\pre{\startverb
+gcc -o test_suite test_suite.c -lcheck
+./test_suite
+\stopverb}
+
+\p{\strong{After:}}
+
+\pre{\startverb
+gcc -fsanitize=address -g -o test_suite test_suite.c -lcheck
+ASAN_OPTIONS=detect_leaks=1 ./test_suite
+\stopverb}
+}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{Tips and Tricks}
+\pre{\startverb
+| Tip | Why It Helps |
+|-----|--------------|
+| Use `-g` flag | Provides detailed stack traces for debugging |
+| Set `verbosity=1` | Confirms ASan is enabled before program starts |
+| Disable leaks during fuzzing | Leak detection doesn't cause immediate crashes, clutters output |
+| Enable `abort_on_error=1` | Some fuzzers require `abort()` instead of `_exit()` |
+\stopverb}
+}
+
+\subtree{
+\title{Understanding ASan Reports}
+\p{When ASan detects a memory error, it prints a detailed report including:}
+
+\ul{
+\li{\strong{Error type}: Buffer overflow, use-after-free, etc.}
+\li{\strong{Stack trace}: Where the error occurred}
+\li{\strong{Allocation/deallocation traces}: Where memory was allocated/freed}
+\li{\strong{Memory map}: Shadow memory state around the error}
+}
+
+\p{Example ASan report:}
+
+\pre{\startverb
+==12345==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x60300000eff4 at pc 0x00000048e6a3
+READ of size 4 at 0x60300000eff4 thread T0
+    #0 0x48e6a2 in main /path/to/file.c:42
+\stopverb}
+}
+
+\subtree{
+\title{Combining Sanitizers}
+\p{ASan can be combined with other sanitizers for comprehensive detection:}
+
+\pre{\startverb
+clang -fsanitize=address,undefined -g -o fuzz_target fuzz_target.c
+\stopverb}
+}
+
+\subtree{
+\title{Platform-Specific Considerations}
+\p{\strong{Linux}: Full ASan support with best performance \strong{macOS}: Limited support, some features may not work \strong{Windows}: Experimental support, not recommended for production fuzzing}
+}
+}
+
+\subtree{
+\title{Anti-Patterns}
+\pre{\startverb
+| Anti-Pattern | Problem | Correct Approach |
+|--------------|---------|------------------|
+| Using ASan in production | Can make applications less secure | Use ASan only for testing |
+| Not disabling memory limits | Fuzzer may kill process due to 20TB virtual memory | Set `-rss_limit_mb=0` or `-m none` |
+| Ignoring leak reports | Memory leaks indicate resource management issues | Review leak reports at end of fuzzing campaign |
+\stopverb}
+}
+
+\subtree{
+\title{Tool-Specific Guidance}
+\subtree{
+\title{libFuzzer}
+\p{Compile with both fuzzer and address sanitizer:}
+
+\pre{\startverb
+clang++ -fsanitize=fuzzer,address -g harness.cc -o fuzz
+\stopverb}
+
+\p{Run with unlimited RSS:}
+
+\pre{\startverb
+./fuzz -rss_limit_mb=0
+\stopverb}
+
+\p{\strong{Integration tips:}}
+
+\ul{
+\li{Always combine \code{\startverb -fsanitize=fuzzer\stopverb} with \code{\startverb -fsanitize=address\stopverb}}
+\li{Use \code{\startverb -g\stopverb} for detailed stack traces in crash reports}
+\li{Consider \code{\startverb ASAN_OPTIONS=abort_on_error=1\stopverb} for better crash handling}
+}
+
+\p{See: [libFuzzer: AddressSanitizer](https://github.com/google/fuzzing/blob/master/docs/good-fuzz-target.md#memory-error-detection)}
+}
+
+\subtree{
+\title{AFL++}
+\p{Use the \code{\startverb AFL_USE_ASAN\stopverb} environment variable:}
+
+\pre{\startverb
+AFL_USE_ASAN=1 afl-clang-fast++ -g harness.cc -o fuzz
+\stopverb}
+
+\p{Run with unlimited memory:}
+
+\pre{\startverb
+afl-fuzz -m none -i input_dir -o output_dir ./fuzz
+\stopverb}
+
+\p{\strong{Integration tips:}}
+
+\ul{
+\li{\code{\startverb AFL_USE_ASAN=1\stopverb} automatically adds proper compilation flags}
+\li{Use \code{\startverb -m none\stopverb} to disable AFL++'s memory limit}
+\li{Consider \code{\startverb AFL_MAP_SIZE\stopverb} for programs with large coverage maps}
+}
+
+\p{See: [AFL++: AddressSanitizer](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/fuzzing_in_depth.md#a-using-sanitizers)}
+}
+
+\subtree{
+\title{cargo-fuzz (Rust)}
+\p{Use the \code{\startverb --sanitizer=address\stopverb} flag:}
+
+\pre{\startverb
+cargo fuzz run fuzz_target --sanitizer=address
+\stopverb}
+
+\p{Or configure in \code{\startverb fuzz/Cargo.toml\stopverb}:}
+
+\pre{\startverb
+[profile.release]
+opt-level = 3
+debug = true
+\stopverb}
+
+\p{\strong{Integration tips:}}
+
+\ul{
+\li{ASan is useful for fuzzing unsafe Rust code or FFI boundaries}
+\li{Safe Rust code may not benefit as much (compiler already prevents many errors)}
+\li{Focus on unsafe blocks, raw pointers, and C library bindings}
+}
+
+\p{See: [cargo-fuzz: AddressSanitizer](https://rust-fuzz.github.io/book/cargo-fuzz/tutorial.html#sanitizers)}
+}
+
+\subtree{
+\title{honggfuzz}
+\p{Compile with ASan and link with honggfuzz:}
+
+\pre{\startverb
+honggfuzz -i input_dir -o output_dir -- ./fuzz_target_asan
+\stopverb}
+
+\p{Compile the target:}
+
+\pre{\startverb
+hfuzz-clang -fsanitize=address -g target.c -o fuzz_target_asan
+\stopverb}
+
+\p{\strong{Integration tips:}}
+
+\ul{
+\li{honggfuzz works well with ASan out of the box}
+\li{Use feedback-driven mode for better coverage with sanitizers}
+\li{Monitor memory usage, as ASan increases memory footprint}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\pre{\startverb
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Fuzzer kills process immediately | Memory limit too low for ASan's 20TB virtual memory | Use `-rss_limit_mb=0` (libFuzzer) or `-m none` (AFL++) |
+| "ASan runtime not initialized" | Wrong linking order or missing runtime | Ensure `-fsanitize=address` used in both compile and link |
+| Leak reports clutter output | LeakSanitizer enabled by default | Set `ASAN_OPTIONS=detect_leaks=0` |
+| Poor performance (>4x slowdown) | Debug mode or unoptimized build | Compile with `-O2` or `-O3` alongside `-fsanitize=address` |
+| ASan not detecting obvious bugs | Binary not instrumented | Check with `ASAN_OPTIONS=verbosity=1` that ASan prints startup info |
+| False positives | Interceptor conflicts | Check ASan FAQ for known issues with specific libraries |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\subtree{
+\title{Tools That Use This Technique}
+\pre{\startverb
+| Skill | How It Applies |
+|-------|----------------|
+| **libfuzzer** | Compile with `-fsanitize=fuzzer,address` for integrated fuzzing with memory error detection |
+| **aflpp** | Use `AFL_USE_ASAN=1` environment variable during compilation |
+| **cargo-fuzz** | Use `--sanitizer=address` flag to enable ASan for Rust fuzz targets |
+| **honggfuzz** | Compile target with `-fsanitize=address` for ASan-instrumented fuzzing |
+\stopverb}
+}
+
+\subtree{
+\title{Related Techniques}
+\pre{\startverb
+| Skill | Relationship |
+|-------|--------------|
+| **undefined-behavior-sanitizer** | Often used together with ASan for comprehensive bug detection (undefined behavior + memory errors) |
+| **fuzz-harness-writing** | Harnesses must be designed to handle ASan-detected crashes and avoid false positives |
+| **coverage-analysis** | Coverage-guided fuzzing helps trigger code paths where ASan can detect memory errors |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{Key External Resources}
+\p{\strong{[AddressSanitizer on Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki/AddressSanitizer)}}
+
+\p{The official ASan documentation covers:}
+
+\ul{
+\li{Algorithm and implementation details}
+\li{Complete list of detected error types}
+\li{Performance characteristics and overhead}
+\li{Platform-specific behavior}
+\li{Known limitations and incompatibilities}
+}
+
+\p{\strong{[SanitizerCommonFlags](https://github.com/google/sanitizers/wiki/SanitizerCommonFlags)}}
+
+\p{Common configuration flags shared across all sanitizers:}
+
+\ul{
+\li{\code{\startverb verbosity\stopverb}: Control diagnostic output level}
+\li{\code{\startverb log_path\stopverb}: Redirect sanitizer output to files}
+\li{\code{\startverb symbolize\stopverb}: Enable/disable symbol resolution in reports}
+\li{\code{\startverb external_symbolizer_path\stopverb}: Use custom symbolizer}
+}
+
+\p{\strong{[AddressSanitizerFlags](https://github.com/google/sanitizers/wiki/AddressSanizerFlags)}}
+
+\p{ASan-specific configuration options:}
+
+\ul{
+\li{\code{\startverb detect_leaks\stopverb}: Control memory leak detection}
+\li{\code{\startverb abort_on_error\stopverb}: Call \code{\startverb abort()\stopverb} vs \code{\startverb _exit()\stopverb} on error}
+\li{\code{\startverb detect_stack_use_after_return\stopverb}: Detect stack use-after-return bugs}
+\li{\code{\startverb check_initialization_order\stopverb}: Find initialization order bugs}
+}
+
+\p{\strong{[AddressSanitizer FAQ](https://github.com/google/sanitizers/wiki/AddressSanitizer#faq)}}
+
+\p{Common pitfalls and solutions:}
+
+\ul{
+\li{Linking order issues}
+\li{Conflicts with other tools}
+\li{Platform-specific problems}
+\li{Performance tuning tips}
+}
+
+\p{\strong{[Clang AddressSanitizer Documentation](https://clang.llvm.org/docs/AddressSanitizer.html)}}
+
+\p{Clang-specific guidance:}
+
+\ul{
+\li{Compilation flags and options}
+\li{Interaction with other Clang features}
+\li{Supported platforms and architectures}
+}
+
+\p{\strong{[GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html#index-fsanitize_003daddress)}}
+
+\p{GCC-specific ASan documentation:}
+
+\ul{
+\li{GCC-specific flags and behavior}
+\li{Differences from Clang implementation}
+\li{Platform support in GCC}
+}
+
+\p{\strong{[AddressSanitizer: A Fast Address Sanity Checker (USENIX Paper)](https://www.usenix.org/sites/default/files/conference/protected-files/serebryany_atc12_slides.pdf)}}
+
+\p{Original research paper with technical details:}
+
+\ul{
+\li{Shadow memory algorithm}
+\li{Virtual memory requirements (historically 16TB, now ~20TB)}
+\li{Performance benchmarks}
+\li{Design decisions and tradeoffs}
+}
+}
+}
+}

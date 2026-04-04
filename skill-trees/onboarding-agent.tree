@@ -1,0 +1,143 @@
+\title{Onboarding Agent}
+
+\taxon{skill}
+
+\meta{description}{Interactive onboarding workflow that interviews users to understand their coding goals and generates PR-ready implementation plans. Use when starting a new development task to ensure clear requirements and structured execution.}
+
+\subtree{
+\title{First-time User Conversation with OpenHands}
+\subtree{
+\title{Skill purpose}
+\p{In \strong{<= 5 progressive questions}, interview the user to identify their coding goal and constraints, then generate a \strong{concrete, step-by-step plan} that maximizes the likelihood of a \strong{successful pull request (PR)}. Finish by asking: \strong{“Do you want me to execute the plan?”}}
+}
+
+\subtree{
+\title{Guardrails}
+\ul{
+\li{Ask \strong{no more than 5 questions total} (stop early if you have enough info).}
+\li{\strong{Progressive:} each next question builds on the previous answer.}
+\li{Keep questions concise (\strong{<= 2 sentences} each). Offer options when useful.}
+\li{If the user is uncertain, propose \strong{reasonable defaults} and continue.}
+\li{Stop once you have enough info to create a \strong{specific PR-ready plan}.}
+\li{NEVER push directly to the main or master branch. Do not automatically commit any changes to the repo.}
+}
+}
+
+\subtree{
+\title{Interview Flow}
+\subtree{
+\title{\strong{First question - always start here}}
+\blockquote{“Great — what are you trying to build or change, in one or two sentences? (e.g., add an endpoint, fix a bug, write a script, tweak UI)”}
+}
+
+\subtree{
+\title{\strong{Dynamic follow-up questions}}
+\p{Choose the next question based on what's most relevant from the last reply. Use one at a time - no more than 5 total.}
+
+\subtree{
+\title{1. Repo & Runtime Context}
+\ul{
+\li{“Where will this live? Repo/name or link, language/runtime, and framework (if any)?”}
+\li{“How do you run and test locally? (package manager, build tool, dev server, docker compose?)”}
+}
+}
+
+\subtree{
+\title{2. Scope & Acceptance Criteria}
+\ul{
+\li{“What's the smallest valuable change we can ship first? Describe the exact behavior or API/CLI/UI change and how we’ll verify it.”}
+\li{“Any non-negotiables? (performance, accessibility, security, backwards-compatibility)”}
+}
+}
+
+\subtree{
+\title{3. Interfaces & Data}
+\ul{
+\li{“Which interfaces are affected? (files, modules, routes, DB tables, events, components)”}
+\li{“Do we need new schema/DTOs, migrations, or mock data?”}
+}
+}
+
+\subtree{
+\title{4. Testing & Tooling}
+\ul{
+\li{“What tests should prove it works (unit/integration/e2e)? Which test framework, and any CI requirements?”}
+}
+}
+
+\subtree{
+\title{5. Final Clarifier}
+\p{If critical information is missing, ask \strong{one short, blocking question}. If not, skip directly to the plan.}
+}
+}
+}
+
+\subtree{
+\title{Plan Generation (After Questions)}
+\p{Produce a \strong{PR-ready plan} customized to the user’s answers, in this structure:}
+
+\subtree{
+\title{1. Goal & Success Criteria}
+\ul{
+\li{One-sentence goal.}
+\li{Bullet \strong{acceptance tests} (observable behaviors or API/CLI examples).}
+}
+}
+
+\subtree{
+\title{2. Scope of Change}
+\ul{
+\li{Files/modules to add or modify (with \strong{paths} and stubs if known).}
+\li{Public interfaces (function signatures, routes, migrations) with brief specs.}
+}
+}
+
+\subtree{
+\title{3. Implementation Steps}
+\ul{
+\li{Branch creation and environment setup commands.}
+\li{Code tasks broken into <= 8 bite-sized commits.}
+\li{Any scaffolding or codegen commands.}
+}
+}
+
+\subtree{
+\title{4. Testing Plan}
+\ul{
+\li{Tests to write, where they live, and example test names.}
+\li{How to run them locally and in CI (with exact commands).}
+\li{Sample fixtures/mocks or seed data.}
+}
+}
+
+\subtree{
+\title{5. Quality Gates & Tooling}
+\ul{
+\li{Lint/format/type-check commands.}
+\li{Security/performance checks if relevant.}
+\li{Accessibility checks for UI work.}
+}
+}
+
+\subtree{
+\title{6. Risks & Mitigations}
+\ul{
+\li{Top 3 risks + how to detect or rollback.}
+\li{Mention feature flag/env toggle if applicable.}
+}
+}
+
+\subtree{
+\title{7. Timeline & Next Steps}
+\ul{
+\li{Rough estimate (S/M/L) with ordered sequence.}
+\li{Call out anything \strong{explicitly out of scope}.}
+}
+}
+}
+
+\subtree{
+\title{Final Question}
+\p{\strong{“Do you want me to execute the plan?”}}
+}
+}

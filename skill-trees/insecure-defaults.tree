@@ -1,0 +1,127 @@
+\title{Insecure Defaults}
+
+\taxon{skill}
+
+\meta{description}{"Detects fail-open insecure defaults (hardcoded secrets, weak auth, permissive security) that allow apps to run insecurely in production. Use when auditing security, reviewing config management, or analyzing environment variable handling."}
+
+\subtree{
+\title{Insecure Defaults Detection}
+\p{Finds \strong{fail-open} vulnerabilities where apps run insecurely with missing configuration. Distinguishes exploitable defaults from fail-secure patterns that crash safely.}
+
+\ul{
+\li{\strong{Fail-open (CRITICAL):} \code{\startverb SECRET = env.get('KEY') or 'default'\stopverb} → App runs with weak secret}
+\li{\strong{Fail-secure (SAFE):} \code{\startverb SECRET = env['KEY']\stopverb} → App crashes if missing}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{\strong{Security audits} of production applications (auth, crypto, API security)}
+\li{\strong{Configuration review} of deployment files, IaC templates, Docker configs}
+\li{\strong{Code review} of environment variable handling and secrets management}
+\li{\strong{Pre-deployment checks} for hardcoded credentials or weak defaults}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\p{Do not use this skill for:}
+
+\ul{
+\li{\strong{Test fixtures} explicitly scoped to test environments (files in \code{\startverb test/\stopverb}, \code{\startverb spec/\stopverb}, \code{\startverb \strong{tests}/\stopverb})}
+\li{\strong{Example/template files} (\code{\startverb .example\stopverb}, \code{\startverb .template\stopverb}, \code{\startverb .sample\stopverb} suffixes)}
+\li{\strong{Development-only tools} (local Docker Compose for dev, debug scripts)}
+\li{\strong{Documentation examples} in README.md or docs/ directories}
+\li{\strong{Build-time configuration} that gets replaced during deployment}
+\li{\strong{Crash-on-missing behavior} where app won't start without proper config (fail-secure)}
+}
+
+\p{When in doubt: trace the code path to determine if the app runs with the default or crashes.}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\ul{
+\li{\strong{"It's just a development default"} → If it reaches production code, it's a finding}
+\li{\strong{"The production config overrides it"} → Verify prod config exists; code-level vulnerability remains if not}
+\li{\strong{"This would never run without proper config"} → Prove it with code trace; many apps fail silently}
+\li{\strong{"It's behind authentication"} → Defense in depth; compromised session still exploits weak defaults}
+\li{\strong{"We'll fix it before release"} → Document now; "later" rarely comes}
+}
+}
+
+\subtree{
+\title{Workflow}
+\p{Follow this workflow for every potential finding:}
+
+\subtree{
+\title{1. SEARCH: Perform Project Discovery and Find Insecure Defaults}
+\p{Determine language, framework, and project conventions. Use this information to further discover things like secret storage locations, secret usage patterns, credentialed third-party integrations, cryptography, and any other relevant configuration. Further use information to analyze insecure default configurations.}
+
+\p{\strong{Example} Search for patterns in \code{\startverb \strong{/config/\stopverb}, \code{\startverb }/auth/\stopverb}, \code{\startverb **/database/\stopverb}, and env files:}
+
+\ul{
+\li{\strong{Fallback secrets:} \code{\startverb getenv.*\) or ['"]\stopverb}, \code{\startverb process\.env\.[A-Z_]+ \|\| ['"]\stopverb}, \code{\startverb ENV\.fetch.*default:\stopverb}}
+\li{\strong{Hardcoded credentials:} \code{\startverb password.*=.*['"][^'"]{8,}['"]\stopverb}, \code{\startverb api[_-]?key.*=.*['"][^'"]+['"]\stopverb}}
+\li{\strong{Weak defaults:} \code{\startverb DEBUG.*=.*true\stopverb}, \code{\startverb AUTH.*=.*false\stopverb}, \code{\startverb CORS.*=.*\*\stopverb}}
+\li{\strong{Crypto algorithms:} \code{\startverb MD5|SHA1|DES|RC4|ECB\stopverb} in security contexts}
+}
+
+\p{Tailor search approach based on discovery results.}
+
+\p{Focus on production-reachable code, not test fixtures or example files.}
+}
+
+\subtree{
+\title{2. VERIFY: Actual Behavior}
+\p{For each match, trace the code path to understand runtime behavior.}
+
+\p{\strong{Questions to answer:}}
+
+\ul{
+\li{When is this code executed? (Startup vs. runtime)}
+\li{What happens if a configuration variable is missing?}
+\li{Is there validation that enforces secure configuration?}
+}
+}
+
+\subtree{
+\title{3. CONFIRM: Production Impact}
+\p{Determine if this issue reaches production:}
+
+\p{If production config provides the variable → Lower severity (but still a code-level vulnerability) If production config missing or uses default → CRITICAL}
+}
+
+\subtree{
+\title{4. REPORT: with Evidence}
+\p{\strong{Example report:}}
+
+\pre{\startverb
+Finding: Hardcoded JWT Secret Fallback
+Location: src/auth/jwt.ts:15
+Pattern: const secret = process.env.JWT_SECRET || 'default';
+
+Verification: App starts without JWT_SECRET; secret used in jwt.sign() at line 42
+Production Impact: Dockerfile missing JWT_SECRET
+Exploitation: Attacker forges JWTs using 'default', gains unauthorized access
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quick Verification Checklist}
+\p{\strong{Fallback Secrets:} \code{\startverb SECRET = env.get(X) or Y\stopverb} → Verify: App starts without env var? Secret used in crypto/auth? → Skip: Test fixtures, example files}
+
+\p{\strong{Default Credentials:} Hardcoded \code{\startverb username\stopverb}/\code{\startverb password\stopverb} pairs → Verify: Active in deployed config? No runtime override? → Skip: Disabled accounts, documentation examples}
+
+\p{\strong{Fail-Open Security:} \code{\startverb AUTH_REQUIRED = env.get(X, 'false')\stopverb} → Verify: Default is insecure (false/disabled/permissive)? → Safe: App crashes or default is secure (true/enabled/restricted)}
+
+\p{\strong{Weak Crypto:} MD5/SHA1/DES/RC4/ECB in security contexts → Verify: Used for passwords, encryption, or tokens? → Skip: Checksums, non-security hashing}
+
+\p{\strong{Permissive Access:} CORS \code{\startverb *\stopverb}, permissions \code{\startverb 0777\stopverb}, public-by-default → Verify: Default allows unauthorized access? → Skip: Explicitly configured permissiveness with justification}
+
+\p{\strong{Debug Features:} Stack traces, introspection, verbose errors → Verify: Enabled by default? Exposed in responses? → Skip: Logging-only, not user-facing}
+
+\p{For detailed examples and counter-examples, see [examples.md](references/examples.md).}
+}
+}

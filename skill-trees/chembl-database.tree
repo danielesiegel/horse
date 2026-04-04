@@ -1,0 +1,434 @@
+\title{Chembl Database}
+
+\taxon{skill}
+
+\meta{description}{"Query ChEMBL's bioactive molecules and drug discovery data. Search compounds by structure/properties, retrieve bioactivity data (IC50, Ki), find inhibitors, perform SAR studies, for medicinal chemistry."}
+
+\subtree{
+\title{ChEMBL Database}
+\subtree{
+\title{Overview}
+\p{ChEMBL is a manually curated database of bioactive molecules maintained by the European Bioinformatics Institute (EBI), containing over 2 million compounds, 19 million bioactivity measurements, 13,000+ drug targets, and data on approved drugs and clinical candidates. Access and query this data programmatically using the ChEMBL Python client for drug discovery and medicinal chemistry research.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{\strong{Compound searches}: Finding molecules by name, structure, or properties}
+\li{\strong{Target information}: Retrieving data about proteins, enzymes, or biological targets}
+\li{\strong{Bioactivity data}: Querying IC50, Ki, EC50, or other activity measurements}
+\li{\strong{Drug information}: Looking up approved drugs, mechanisms, or indications}
+\li{\strong{Structure searches}: Performing similarity or substructure searches}
+\li{\strong{Cheminformatics}: Analyzing molecular properties and drug-likeness}
+\li{\strong{Target-ligand relationships}: Exploring compound-target interactions}
+\li{\strong{Drug discovery}: Identifying inhibitors, agonists, or bioactive molecules}
+}
+}
+
+\subtree{
+\title{Installation and Setup}
+\subtree{
+\title{Python Client}
+\p{The ChEMBL Python client is required for programmatic access:}
+
+\pre{\startverb
+uv pip install chembl_webresource_client
+\stopverb}
+}
+
+\subtree{
+\title{Basic Usage Pattern}
+\pre{\startverb
+from chembl_webresource_client.new_client import new_client
+
+# Access different endpoints
+molecule = new_client.molecule
+target = new_client.target
+activity = new_client.activity
+drug = new_client.drug
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Molecule Queries}
+\p{\strong{Retrieve by ChEMBL ID:}}
+
+\pre{\startverb
+molecule = new_client.molecule
+aspirin = molecule.get('CHEMBL25')
+\stopverb}
+
+\p{\strong{Search by name:}}
+
+\pre{\startverb
+results = molecule.filter(pref_name__icontains='aspirin')
+\stopverb}
+
+\p{\strong{Filter by properties:}}
+
+\pre{\startverb
+# Find small molecules (MW <= 500) with favorable LogP
+results = molecule.filter(
+    molecule_properties__mw_freebase__lte=500,
+    molecule_properties__alogp__lte=5
+)
+\stopverb}
+}
+
+\subtree{
+\title{2. Target Queries}
+\p{\strong{Retrieve target information:}}
+
+\pre{\startverb
+target = new_client.target
+egfr = target.get('CHEMBL203')
+\stopverb}
+
+\p{\strong{Search for specific target types:}}
+
+\pre{\startverb
+# Find all kinase targets
+kinases = target.filter(
+    target_type='SINGLE PROTEIN',
+    pref_name__icontains='kinase'
+)
+\stopverb}
+}
+
+\subtree{
+\title{3. Bioactivity Data}
+\p{\strong{Query activities for a target:}}
+
+\pre{\startverb
+activity = new_client.activity
+# Find potent EGFR inhibitors
+results = activity.filter(
+    target_chembl_id='CHEMBL203',
+    standard_type='IC50',
+    standard_value__lte=100,
+    standard_units='nM'
+)
+\stopverb}
+
+\p{\strong{Get all activities for a compound:}}
+
+\pre{\startverb
+compound_activities = activity.filter(
+    molecule_chembl_id='CHEMBL25',
+    pchembl_value__isnull=False
+)
+\stopverb}
+}
+
+\subtree{
+\title{4. Structure-Based Searches}
+\p{\strong{Similarity search:}}
+
+\pre{\startverb
+similarity = new_client.similarity
+# Find compounds similar to aspirin
+similar = similarity.filter(
+    smiles='CC(=O)Oc1ccccc1C(=O)O',
+    similarity=85  # 85% similarity threshold
+)
+\stopverb}
+
+\p{\strong{Substructure search:}}
+
+\pre{\startverb
+substructure = new_client.substructure
+# Find compounds containing benzene ring
+results = substructure.filter(smiles='c1ccccc1')
+\stopverb}
+}
+
+\subtree{
+\title{5. Drug Information}
+\p{\strong{Retrieve drug data:}}
+
+\pre{\startverb
+drug = new_client.drug
+drug_info = drug.get('CHEMBL25')
+\stopverb}
+
+\p{\strong{Get mechanisms of action:}}
+
+\pre{\startverb
+mechanism = new_client.mechanism
+mechanisms = mechanism.filter(molecule_chembl_id='CHEMBL25')
+\stopverb}
+
+\p{\strong{Query drug indications:}}
+
+\pre{\startverb
+drug_indication = new_client.drug_indication
+indications = drug_indication.filter(molecule_chembl_id='CHEMBL25')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Query Workflow}
+\subtree{
+\title{Workflow 1: Finding Inhibitors for a Target}
+\ol{
+\li{\strong{Identify the target} by searching by name:}
+}
+
+\ol{
+\li{\strong{Query bioactivity data} for that target:}
+}
+
+\ol{
+\li{\strong{Extract compound IDs} and retrieve details:}
+}
+}
+
+\subtree{
+\title{Workflow 2: Analyzing a Known Drug}
+\ol{
+\li{\strong{Get drug information}:}
+}
+
+\ol{
+\li{\strong{Retrieve mechanisms}:}
+}
+
+\ol{
+\li{\strong{Find all bioactivities}:}
+}
+}
+
+\subtree{
+\title{Workflow 3: Structure-Activity Relationship (SAR) Study}
+\ol{
+\li{\strong{Find similar compounds}:}
+}
+
+\ol{
+\li{\strong{Get activities for each compound}:}
+}
+
+\ol{
+\li{\strong{Analyze property-activity relationships} using molecular properties from results.}
+}
+}
+}
+
+\subtree{
+\title{Filter Operators}
+\p{ChEMBL supports Django-style query filters:}
+
+\ul{
+\li{\code{\startverb __exact\stopverb} - Exact match}
+\li{\code{\startverb __iexact\stopverb} - Case-insensitive exact match}
+\li{\code{\startverb \strong{contains\stopverb} / \code{\startverb }icontains\stopverb} - Substring matching}
+\li{\code{\startverb \strong{startswith\stopverb} / \code{\startverb }endswith\stopverb} - Prefix/suffix matching}
+\li{\code{\startverb \strong{gt\stopverb}, \code{\startverb }gte\stopverb}, \code{\startverb \strong{lt\stopverb}, \code{\startverb }lte\stopverb} - Numeric comparisons}
+\li{\code{\startverb __range\stopverb} - Value in range}
+\li{\code{\startverb __in\stopverb} - Value in list}
+\li{\code{\startverb __isnull\stopverb} - Null/not null check}
+}
+}
+
+\subtree{
+\title{Data Export and Analysis}
+\p{Convert results to pandas DataFrame for analysis:}
+
+\pre{\startverb
+import pandas as pd
+
+activities = new_client.activity.filter(target_chembl_id='CHEMBL203')
+df = pd.DataFrame(list(activities))
+
+# Analyze results
+print(df['standard_value'].describe())
+print(df.groupby('standard_type').size())
+\stopverb}
+}
+
+\subtree{
+\title{Performance Optimization}
+\subtree{
+\title{Caching}
+\p{The client automatically caches results for 24 hours. Configure caching:}
+
+\pre{\startverb
+from chembl_webresource_client.settings import Settings
+
+# Disable caching
+Settings.Instance().CACHING = False
+
+# Adjust cache expiration (seconds)
+Settings.Instance().CACHE_EXPIRE = 86400
+\stopverb}
+}
+
+\subtree{
+\title{Lazy Evaluation}
+\p{Queries execute only when data is accessed. Convert to list to force execution:}
+
+\pre{\startverb
+# Query is not executed yet
+results = molecule.filter(pref_name__icontains='aspirin')
+
+# Force execution
+results_list = list(results)
+\stopverb}
+}
+
+\subtree{
+\title{Pagination}
+\p{Results are paginated automatically. Iterate through all results:}
+
+\pre{\startverb
+for activity in new_client.activity.filter(target_chembl_id='CHEMBL203'):
+    # Process each activity
+    print(activity['molecule_chembl_id'])
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Use Cases}
+\subtree{
+\title{Find Kinase Inhibitors}
+\pre{\startverb
+# Identify kinase targets
+kinases = new_client.target.filter(
+    target_type='SINGLE PROTEIN',
+    pref_name__icontains='kinase'
+)
+
+# Get potent inhibitors
+for kinase in kinases[:5]:  # First 5 kinases
+    activities = new_client.activity.filter(
+        target_chembl_id=kinase['target_chembl_id'],
+        standard_type='IC50',
+        standard_value__lte=50
+    )
+\stopverb}
+}
+
+\subtree{
+\title{Explore Drug Repurposing}
+\pre{\startverb
+# Get approved drugs
+drugs = new_client.drug.filter()
+
+# For each drug, find all targets
+for drug in drugs[:10]:
+    mechanisms = new_client.mechanism.filter(
+        molecule_chembl_id=drug['molecule_chembl_id']
+    )
+\stopverb}
+}
+
+\subtree{
+\title{Virtual Screening}
+\pre{\startverb
+# Find compounds with desired properties
+candidates = new_client.molecule.filter(
+    molecule_properties__mw_freebase__range=[300, 500],
+    molecule_properties__alogp__lte=5,
+    molecule_properties__hba__lte=10,
+    molecule_properties__hbd__lte=5
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{scripts/example_queries.py}
+\p{Ready-to-use Python functions demonstrating common ChEMBL query patterns:}
+
+\ul{
+\li{\code{\startverb get_molecule_info()\stopverb} - Retrieve molecule details by ID}
+\li{\code{\startverb search_molecules_by_name()\stopverb} - Name-based molecule search}
+\li{\code{\startverb find_molecules_by_properties()\stopverb} - Property-based filtering}
+\li{\code{\startverb get_bioactivity_data()\stopverb} - Query bioactivities for targets}
+\li{\code{\startverb find_similar_compounds()\stopverb} - Similarity searching}
+\li{\code{\startverb substructure_search()\stopverb} - Substructure matching}
+\li{\code{\startverb get_drug_info()\stopverb} - Retrieve drug information}
+\li{\code{\startverb find_kinase_inhibitors()\stopverb} - Specialized kinase inhibitor search}
+\li{\code{\startverb export_to_dataframe()\stopverb} - Convert results to pandas DataFrame}
+}
+
+\p{Consult this script for implementation details and usage examples.}
+}
+
+\subtree{
+\title{references/api_reference.md}
+\p{Comprehensive API documentation including:}
+
+\ul{
+\li{Complete endpoint listing (molecule, target, activity, assay, drug, etc.)}
+\li{All filter operators and query patterns}
+\li{Molecular properties and bioactivity fields}
+\li{Advanced query examples}
+\li{Configuration and performance tuning}
+\li{Error handling and rate limiting}
+}
+
+\p{Refer to this document when detailed API information is needed or when troubleshooting queries.}
+}
+}
+
+\subtree{
+\title{Important Notes}
+\subtree{
+\title{Data Reliability}
+\ul{
+\li{ChEMBL data is manually curated but may contain inconsistencies}
+\li{Always check \code{\startverb data_validity_comment\stopverb} field in activity records}
+\li{Be aware of \code{\startverb potential_duplicate\stopverb} flags}
+}
+}
+
+\subtree{
+\title{Units and Standards}
+\ul{
+\li{Bioactivity values use standard units (nM, uM, etc.)}
+\li{\code{\startverb pchembl_value\stopverb} provides normalized activity (-log scale)}
+\li{Check \code{\startverb standard_type\stopverb} to understand measurement type (IC50, Ki, EC50, etc.)}
+}
+}
+
+\subtree{
+\title{Rate Limiting}
+\ul{
+\li{Respect ChEMBL's fair usage policies}
+\li{Use caching to minimize repeated requests}
+\li{Consider bulk downloads for large datasets}
+\li{Avoid hammering the API with rapid consecutive requests}
+}
+}
+
+\subtree{
+\title{Chemical Structure Formats}
+\ul{
+\li{SMILES strings are the primary structure format}
+\li{InChI keys available for compounds}
+\li{SVG images can be generated via the image endpoint}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{ChEMBL website: https://www.ebi.ac.uk/chembl/}
+\li{API documentation: https://www.ebi.ac.uk/chembl/api/data/docs}
+\li{Python client GitHub: https://github.com/chembl/chembl_webresource_client}
+\li{Interface documentation: https://chembl.gitbook.io/chembl-interface-documentation/}
+\li{Example notebooks: https://github.com/chembl/notebooks}
+}
+}
+}

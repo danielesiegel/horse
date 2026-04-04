@@ -1,0 +1,253 @@
+\title{Accept No Substitutes}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when agents generate placeholder tokens like "pseudo-", "mock-", "temporary", "TODO", "demo-", or similar incompleteness markers. Detects substitution patterns in agent OUTPUT and triggers mandatory user interview instead of accepting incomplete work. Activates automatically on any output containing forbidden tokens.}
+
+\subtree{
+\title{Accept No Substitutes}
+\p{Zero tolerance for placeholder tokens \strong{in agent output}. Incompleteness triggers user interview.}
+
+\subtree{
+\title{Purpose}
+\p{Detect and reject incomplete work tokens \strong{generated in agent output}. When uncertainty exists, ask the user rather than substitute with placeholders.}
+}
+
+\subtree{
+\title{Scope: Agent Output Only}
+\p{This skill validates what agents \strong{produce}, not existing code:}
+
+\ul{
+\li{Code being written or modified}
+\li{Prose explanations}
+\li{Configuration being generated}
+\li{Any text output from parallel agents}
+}
+
+\p{\strong{NOT} for scanning existing codebases (use linters for that).}
+}
+
+\subtree{
+\title{Trit Assignment}
+\ul{
+\li{\strong{Trit}: -1 (MINUS/VALIDATOR)}
+\li{\strong{Hue}: 240° (cold blue - enforcement)}
+\li{\strong{Role}: Constraint enforcer, substitution detector}
+}
+}
+
+\subtree{
+\title{Forbidden Token Categories}
+\subtree{
+\title{Prefix Substitutions}
+\pre{\startverb
+| Pattern | Examples |
+|---------|----------|
+| `pseudo-*` | pseudo-code, pseudo-implementation |
+| `mock-*` | mock-data, mock-service |
+| `fake-*` | fake-response, fake-auth |
+| `stub-*` | stub-function, stub-api |
+| `dummy-*` | dummy-value, dummy-handler |
+\stopverb}
+}
+
+\subtree{
+\title{Completeness Evasions}
+\pre{\startverb
+| Token | Context |
+|-------|---------|
+| `temporary` | "temporary solution" |
+| `placeholder` | "placeholder for now" |
+| `TODO` | inline TODOs as output |
+| `FIXME` | deferred fixes |
+| `TBD`/`TBA` | undetermined items |
+| `WIP` | work-in-progress as deliverable |
+\stopverb}
+}
+
+\subtree{
+\title{Deferral Signals}
+\pre{\startverb
+| Pattern | Context |
+|---------|---------|
+| `later` | "we'll add this later" |
+| `eventually` | "eventually this will..." |
+| `for now` | "for now just use..." |
+| `skeleton` | incomplete implementation |
+\stopverb}
+}
+
+\subtree{
+\title{Example/Demo Evasions}
+\pre{\startverb
+| Pattern | Examples |
+|---------|----------|
+| `example_*` | example_config, example_key |
+| `demo_*` | demo_mode, demo_data |
+| `foo/bar/baz` | metasyntactic placeholders |
+| `xxx`/`yyy` | marker placeholders |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Enforcement Protocol}
+\subtree{
+\title{On Detection}
+\ol{
+\li{\strong{HALT} - Stop generation immediately}
+\li{\strong{ABANDON} - Discard substituted content with complete disgust}
+\li{\strong{INTERVIEW} - Ask user for clarification}
+}
+}
+
+\subtree{
+\title{Interview Template}
+\pre{\startverb
+Substitution detected that indicates incomplete work:
+  - Token: "[detected token]"
+  - Context: [what was being attempted]
+
+This requires input:
+1. What is the ACTUAL implementation needed?
+2. What specific details are missing?
+3. Should research be conducted before proceeding?
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\p{Operates as MINUS (-1) validator in any triad:}
+
+\pre{\startverb
+accept-no-substitutes(-1) + generator(+1) + coordinator(0) = 0
+\stopverb}
+
+\p{When generator produces substitution tokens:}
+
+\ul{
+\li{Validator REJECTS with -1}
+\li{Generator must RE-ATTEMPT with +1}
+\li{Coordinator mediates user interview at 0}
+}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Rejected Output (triggers interview)}
+\pre{\startverb
+def authenticate(user):
+    # TODO: implement actual auth
+    return True  # temporary bypass
+\stopverb}
+}
+
+\subtree{
+\title{Accepted Output (no substitution)}
+\pre{\startverb
+def authenticate(user: User) -> AuthResult:
+    credentials = vault.get_credentials(user.id)
+    return verify_signature(user.token, credentials.public_key)
+\stopverb}
+}
+
+\subtree{
+\title{Rejected Prose (triggers interview)}
+\pre{\startverb
+Here's a pseudo-implementation you can adapt...
+\stopverb}
+}
+
+\subtree{
+\title{Accepted Prose (no substitution)}
+\pre{\startverb
+Clarification needed before implementing:
+- Which authentication provider is used?
+- What is the expected token format?
+\stopverb}
+}
+}
+
+\subtree{
+\title{Rationale}
+\p{Placeholder tokens are \strong{technical debt laundering}:}
+
+\ol{
+\li{Create false sense of progress}
+\li{Defer decisions that need making NOW}
+\li{Accumulate into unmaintainable systems}
+\li{Signal uncertainty that should be surfaced}
+}
+
+\p{\strong{The correct response to uncertainty is asking, not substituting.}}
+}
+
+\subtree{
+\title{Integrated Detection Pipeline}
+\subtree{
+\title{Phase 1: Regex Scan}
+\pre{\startverb
+scripts/detect.py --stdin < output.txt
+\stopverb}
+}
+
+\subtree{
+\title{Phase 2: AST Check (if code)}
+\pre{\startverb
+# Invoke tree-sitter for structural detection
+tree-sitter query '(comment) @comment' | grep -iE 'TODO|FIXME|placeholder'
+\stopverb}
+}
+
+\subtree{
+\title{Phase 3: Compression Test}
+\pre{\startverb
+# High compression ratio = likely template/placeholder
+from zlib import compress
+ratio = len(compress(output.encode())) / len(output)
+if ratio < 0.3:  # Suspiciously compressible
+    flag_as_boilerplate()
+\stopverb}
+}
+
+\subtree{
+\title{Phase 4: GF(3) Emit}
+\pre{\startverb
+# On detection, emit MINUS signal
+emit_trit(-1, reason="substitution_detected", token=matched)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Hook Integration}
+\p{Add to \code{\startverb .claude/settings.json\stopverb}:}
+
+\pre{\startverb
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": {"toolName": "Write|Edit"},
+      "command": "~/.claude/skills/accept-no-substitutes/scripts/validate.sh"
+    }]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{MCP Bridge}
+\p{Call via babashka for fast validation:}
+
+\pre{\startverb
+(require '[babashka.process :refer [shell]])
+(defn validate-output [text]
+  (let [{:keys [exit]} (shell {:in text} "scripts/detect.py" "-")]
+    (zero? exit)))
+\stopverb}
+}
+}

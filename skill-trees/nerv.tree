@@ -1,0 +1,64 @@
+\title{Nerv}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{'NERV - Rapid LocalSend Test with Voice'}
+
+\subtree{
+\title{NERV - Rapid LocalSend Test with Voice}
+\p{Rapid peer discovery and LocalSend connectivity testing with Italian voice announcements.}
+
+\subtree{
+\title{State Machine}
+\pre{\startverb
+VOID → SEEKING → FOUND → READY
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Full test with voice announcements
+bb nerv.bb test
+
+# Silent peer discovery
+bb nerv.bb seek
+
+# Just announce status
+bb nerv.bb announce
+\stopverb}
+}
+
+\subtree{
+\title{Features}
+\ul{
+\li{\strong{Tailscale Integration}: Discovers online peers via Tailscale status}
+\li{\strong{LocalSend Check}: Tests port 53317 connectivity}
+\li{\strong{Voice Announcements}: Emma (Premium) at rate 180 for energetic Italian phrases}
+\li{\strong{State Machine}: Tracks discovery progress}
+}
+}
+
+\subtree{
+\title{Voice Phrases}
+\ul{
+\li{"NERV inizializzazione!" - startup}
+\li{"Cercando peers nella rete!" - seeking}
+\li{"Trovati N peers!" - found count}
+\li{"Peer X online!" - each peer}
+\li{"X pronto per trasporto!" - LocalSend ready}
+\li{"NERV online! Trasporto topologico pronto!" - final ready}
+}
+}
+
+\subtree{
+\title{Dependencies}
+\ul{
+\li{Babashka}
+\li{Tailscale.app}
+\li{macOS \code{\startverb say\stopverb} command}
+}
+}
+}

@@ -1,0 +1,197 @@
+\title{Kos Firmware}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{1}
+
+\meta{description}{K-Scale Operating System - Rust-based robot firmware with gRPC services for actuator control, IMU, and sim2real transfer. Platform abstraction layer for hardware/simulation backends.}
+
+\subtree{
+\title{KOS Firmware Skill}
+\p{\strong{Trit}: +1 (PLUS - generation/construction) \strong{Color}: #79ED91 (Bright Green) \strong{URI}: skill://kos-firmware#79ED91}
+
+\subtree{
+\title{Overview}
+\p{KOS (K-Scale Operating System) is a general-purpose, configurable framework for robot firmware. Written in Rust with gRPC services exposed to Python clients via pykos.}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌────────────────────────────────────────────────────────────────┐
+│                     KOS ARCHITECTURE                            │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                    Python Client (pykos)                  │  │
+│  │  KosClient.actuator.command_actuators(...)               │  │
+│  │  KosClient.imu.get_imu_values()                          │  │
+│  │  KosClient.sim.reset()                                   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                            │ gRPC                               │
+│                            ▼                                    │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                   KOS Runtime Daemon                      │  │
+│  │  ┌─────────────┬─────────────┬─────────────────────────┐ │  │
+│  │  │ Actuator    │ IMU         │ Simulation              │ │  │
+│  │  │ Service     │ Service     │ Service                 │ │  │
+│  │  └─────────────┴─────────────┴─────────────────────────┘ │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                            │ HAL Traits                         │
+│                            ▼                                    │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              Platform Abstraction Layer                   │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐   │  │
+│  │  │ KBot HAL    │  │ ZBot HAL    │  │ Stub (Testing)  │   │  │
+│  │  │ (Hardware)  │  │ (Hardware)  │  │ (Simulation)    │   │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────────┘   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{gRPC Services}
+\subtree{
+\title{ActuatorService}
+\pre{\startverb
+service ActuatorService {
+  rpc CommandActuators(CommandActuatorsRequest) returns (CommandActuatorsResponse);
+  rpc ConfigureActuator(ConfigureActuatorRequest) returns (ActionResponse);
+  rpc CalibrateActuator(CalibrateActuatorRequest) returns (ActionResponse);
+  rpc GetActuatorsState(GetActuatorsStateRequest) returns (ActuatorStateResponse);
+  rpc ParameterDump(ParameterDumpRequest) returns (ParameterDumpResponse);
+}
+\stopverb}
+}
+
+\subtree{
+\title{SimulationService (for sim2real)}
+\pre{\startverb
+service SimulationService {
+  rpc Reset(ResetRequest) returns (ResetResponse);
+  rpc SetPaused(SetPausedRequest) returns (ActionResponse);
+  rpc Step(StepRequest) returns (StepResponse);
+  rpc AddMarker(AddMarkerRequest) returns (ActionResponse);
+  rpc SetParameters(SetParametersRequest) returns (ActionResponse);
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Python Client Usage}
+\pre{\startverb
+from pykos import KosClient
+
+async def control_robot():
+    async with KosClient("localhost:50051") as client:
+        # Get actuator states
+        states = await client.actuator.get_actuators_state([1, 2, 3])
+        
+        # Command positions
+        await client.actuator.command_actuators([
+            {"actuator_id": 1, "position": 0.5},
+            {"actuator_id": 2, "position": -0.3},
+        ])
+        
+        # Configure actuator
+        await client.actuator.configure_actuator(
+            actuator_id=1,
+            kp=100.0,
+            kd=10.0,
+            torque_enabled=True,
+        )
+        
+        # Calibrate
+        await client.actuator.calibrate(1)
+
+# For simulation
+async def sim_control():
+    async with KosClient("localhost:50051") as client:
+        await client.sim.reset()
+        await client.sim.step(dt=0.002)
+        await client.sim.add_marker(
+            name="target",
+            position=[1.0, 0.0, 0.5],
+            color=[1.0, 0.0, 0.0],
+        )
+\stopverb}
+}
+
+\subtree{
+\title{Key Contributors}
+\ul{
+\li{\strong{codekansas} (Ben Bolte): Core architecture, async client}
+\li{\strong{nfreq}: PolicyService, calibration, parameter dump}
+\li{\strong{WT-MM}: Markers, visualization}
+\li{\strong{hatomist}: Acceleration, telemetry}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\p{This skill participates in balanced triads:}
+
+\pre{\startverb
+ksim-rl (-1) ⊗ kos-firmware (+1) ⊗ mujoco-scenes (0) = 0 ✓
+kos-firmware (+1) ⊗ evla-vla (-1) ⊗ ktune-sim2real (0) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb ksim-rl\stopverb} (-1): RL training library}
+\li{\code{\startverb evla-vla\stopverb} (-1): Vision-language-action models}
+\li{\code{\startverb kbot-humanoid\stopverb} (-1): K-Bot robot configuration}
+\li{\code{\startverb zeroth-bot\stopverb} (-1): Zeroth bot 3D-printed platform}
+\li{\code{\startverb mujoco-scenes\stopverb} (0): Scene composition}
+}
+}
+
+\subtree{
+\title{References}
+\pre{\startverb
+@misc{kos2024,
+  title={KOS: K-Scale Operating System for Robot Firmware},
+  author={K-Scale Labs},
+  year={2024},
+  url={https://github.com/kscalelabs/kos}
+}
+\stopverb}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 6. Layering}
+\p{\strong{Concepts}: layered data, metadata, provenance, units}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+kos-firmware (−) + SDF.Ch6 (+) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch2: Domain-Specific Languages}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Layering adds metadata. This skill tracks provenance or annotations.}
+}
+}
+}

@@ -1,0 +1,81 @@
+\title{Implementing Syslog Centralization With Rsyslog}
+
+\taxon{skill}
+
+\tag{implementing}
+
+\tag{syslog}
+
+\tag{centralization}
+
+\tag{with}
+
+\meta{version}{"1.0"}
+
+\meta{description}{>-}
+
+\subtree{
+\title{Implementing Syslog Centralization with Rsyslog}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing syslog centralization with rsyslog capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with security operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\ol{
+\li{Install dependencies: \code{\startverb pip install jinja2 paramiko\stopverb}}
+\li{Generate TLS certificates for rsyslog server and clients using OpenSSL.}
+\li{Run the agent to generate rsyslog server and client configurations:}
+\li{Server: TLS listener on port 6514, per-host directory output, JSON-format templates}
+\li{Client: TLS forwarding with disk-assisted queues for reliability}
+\li{Deploy configurations to servers via SSH (paramiko).}
+\li{Validate TLS connectivity and log delivery.}
+}
+
+\pre{\startverb
+python scripts/agent.py --server-ip 10.0.0.1 --clients 10.0.0.10,10.0.0.11 --ca-cert ca.pem --output syslog_report.json
+\stopverb}
+}
+
+\subtree{
+\title{Examples}
+\subtree{
+\title{Server Configuration (TLS)}
+\pre{\startverb
+module(load="imtcp" StreamDriver.Name="gtls" StreamDriver.Mode="1"
+       StreamDriver.Authmode="x509/name")
+input(type="imtcp" port="6514")
+template(name="PerHostLog" type="string" string="/var/log/remote/%HOSTNAME%/%PROGRAMNAME%.log")
+*.* ?PerHostLog
+\stopverb}
+}
+
+\subtree{
+\title{Client Configuration (Reliable Forwarding)}
+\pre{\startverb
+action(type="omfwd" target="10.0.0.1" port="6514" protocol="tcp"
+       StreamDriver="gtls" StreamDriverMode="1"
+       StreamDriverAuthMode="x509/name"
+       queue.type="LinkedList" queue.filename="fwdRule1"
+       queue.maxdiskspace="1g" queue.saveonshutdown="on"
+       action.resumeRetryCount="-1")
+\stopverb}
+}
+}
+}

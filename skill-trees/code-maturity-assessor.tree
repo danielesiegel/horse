@@ -1,0 +1,285 @@
+\title{Code Maturity Assessor}
+
+\taxon{skill}
+
+\meta{description}{Systematic code maturity assessment using Trail of Bits' 9-category framework. Analyzes codebase for arithmetic safety, auditing practices, access controls, complexity, decentralization, documentation, MEV risks, low-level code, and testing. Produces professional scorecard with evidence-based ratings and actionable recommendations.}
+
+\subtree{
+\title{Code Maturity Assessor}
+\subtree{
+\title{Purpose}
+\p{Systematically assesses codebase maturity using Trail of Bits' 9-category framework. Provides evidence-based ratings and actionable recommendations.}
+
+\p{\strong{Framework}: Building Secure Contracts - Code Maturity Evaluation v0.1.0}
+}
+
+\subtree{
+\title{How This Works}
+\subtree{
+\title{Phase 1: Discovery}
+\p{Explores the codebase to understand:}
+
+\ul{
+\li{Project structure and platform}
+\li{Contract/module files}
+\li{Test coverage}
+\li{Documentation availability}
+}
+}
+
+\subtree{
+\title{Phase 2: Analysis}
+\p{For each of 9 categories, I'll:}
+
+\ul{
+\li{\strong{Search the code} for relevant patterns}
+\li{\strong{Read key files} to assess implementation}
+\li{\strong{Present findings} with file references}
+\li{\strong{Ask clarifying questions} about processes I can't see in code}
+\li{\strong{Determine rating} based on criteria}
+}
+}
+
+\subtree{
+\title{Phase 3: Report}
+\p{Generates:}
+
+\ul{
+\li{Executive summary}
+\li{Maturity scorecard (ratings for all 9 categories)}
+\li{Detailed analysis with evidence}
+\li{Priority-ordered improvement roadmap}
+}
+}
+}
+
+\subtree{
+\title{Rating System}
+\ul{
+\li{\strong{Missing (0)}: Not present/not implemented}
+\li{\strong{Weak (1)}: Several significant improvements needed}
+\li{\strong{Moderate (2)}: Adequate, can be improved}
+\li{\strong{Satisfactory (3)}: Above average, minor improvements}
+\li{\strong{Strong (4)}: Exceptional, only small improvements possible}
+}
+
+\p{\strong{Rating Logic}:}
+
+\ul{
+\li{ANY "Weak" criteria → \strong{Weak}}
+\li{NO "Weak" + SOME "Moderate" unmet → \strong{Moderate}}
+\li{ALL "Moderate" + SOME "Satisfactory" met → \strong{Satisfactory}}
+\li{ALL "Satisfactory" + exceptional practices → \strong{Strong}}
+}
+}
+
+\subtree{
+\title{The 9 Categories}
+\p{I assess 9 comprehensive categories covering all aspects of code maturity. For detailed criteria, analysis approaches, and rating thresholds, see [ASSESSMENT_CRITERIA.md](resources/ASSESSMENT_CRITERIA.md).}
+
+\subtree{
+\title{Quick Reference:}
+\p{\strong{1. ARITHMETIC}}
+
+\ul{
+\li{Overflow protection mechanisms}
+\li{Precision handling and rounding}
+\li{Formula specifications}
+\li{Edge case testing}
+}
+
+\p{\strong{2. AUDITING}}
+
+\ul{
+\li{Event definitions and coverage}
+\li{Monitoring infrastructure}
+\li{Incident response planning}
+}
+
+\p{\strong{3. AUTHENTICATION / ACCESS CONTROLS}}
+
+\ul{
+\li{Privilege management}
+\li{Role separation}
+\li{Access control testing}
+\li{Key compromise scenarios}
+}
+
+\p{\strong{4. COMPLEXITY MANAGEMENT}}
+
+\ul{
+\li{Function scope and clarity}
+\li{Cyclomatic complexity}
+\li{Inheritance hierarchies}
+\li{Code duplication}
+}
+
+\p{\strong{5. DECENTRALIZATION}}
+
+\ul{
+\li{Centralization risks}
+\li{Upgrade control mechanisms}
+\li{User opt-out paths}
+\li{Timelock/multisig patterns}
+}
+
+\p{\strong{6. DOCUMENTATION}}
+
+\ul{
+\li{Specifications and architecture}
+\li{Inline code documentation}
+\li{User stories}
+\li{Domain glossaries}
+}
+
+\p{\strong{7. TRANSACTION ORDERING RISKS}}
+
+\ul{
+\li{MEV vulnerabilities}
+\li{Front-running protections}
+\li{Slippage controls}
+\li{Oracle security}
+}
+
+\p{\strong{8. LOW-LEVEL MANIPULATION}}
+
+\ul{
+\li{Assembly usage}
+\li{Unsafe code sections}
+\li{Low-level calls}
+\li{Justification and testing}
+}
+
+\p{\strong{9. TESTING & VERIFICATION}}
+
+\ul{
+\li{Test coverage}
+\li{Fuzzing and formal verification}
+\li{CI/CD integration}
+\li{Test quality}
+}
+
+\p{For complete assessment criteria including what I'll analyze, what I'll ask you, and detailed rating thresholds (WEAK/MODERATE/SATISFACTORY/STRONG), see [ASSESSMENT_CRITERIA.md](resources/ASSESSMENT_CRITERIA.md).}
+}
+}
+
+\subtree{
+\title{Example Output}
+\p{When the assessment is complete, you'll receive a comprehensive maturity report including:}
+
+\ul{
+\li{\strong{Executive Summary}: Overall score, top 3 strengths, top 3 gaps, priority recommendations}
+\li{\strong{Maturity Scorecard}: Table with all 9 categories rated with scores and notes}
+\li{\strong{Detailed Analysis}: Category-by-category breakdown with evidence (file:line references)}
+\li{\strong{Improvement Roadmap}: Priority-ordered recommendations (CRITICAL/HIGH/MEDIUM) with effort estimates}
+}
+
+\p{For a complete example assessment report, see [EXAMPLE_REPORT.md](resources/EXAMPLE_REPORT.md).}
+}
+
+\subtree{
+\title{Assessment Process}
+\p{When invoked, I will:}
+
+\ol{
+\li{\strong{Explore codebase}}
+\li{Find contract/module files}
+\li{Identify test files}
+\li{Locate documentation}
+}
+
+\ol{
+\li{\strong{Analyze each category}}
+\li{Search for relevant code patterns}
+\li{Read key implementations}
+\li{Assess against criteria}
+\li{Collect evidence}
+}
+
+\ol{
+\li{\strong{Interactive assessment}}
+\li{Present my findings with file references}
+\li{Ask about processes I can't see in code}
+\li{Discuss borderline cases}
+\li{Determine ratings together}
+}
+
+\ol{
+\li{\strong{Generate report}}
+\li{Executive summary}
+\li{Maturity scorecard table}
+\li{Detailed category analysis with evidence}
+\li{Priority-ordered improvement roadmap}
+}
+}
+
+\subtree{
+\title{Rationalizations (Do Not Skip)}
+\pre{\startverb
+| Rationalization | Why It's Wrong | Required Action |
+|-----------------|----------------|-----------------|
+| "Found some findings, assessment complete" | Assessment requires evaluating ALL 9 categories | Complete assessment of all 9 categories with evidence for each |
+| "I see events, auditing category looks good" | Events alone don't equal auditing maturity | Check logging comprehensiveness, testing, incident response processes |
+| "Code looks simple, complexity is low" | Visual simplicity masks composition complexity | Analyze cyclomatic complexity, dependency depth, state machine transitions |
+| "Not a DeFi protocol, MEV category doesn't apply" | MEV extends beyond DeFi (governance, NFTs, games) | Verify with transaction ordering analysis before declaring N/A |
+| "No assembly found, low-level category is N/A" | Low-level risks include external calls, delegatecall, inline assembly | Search for all low-level patterns before skipping category |
+| "This is taking too long" | Thorough assessment requires time per category | Complete all 9 categories, ask clarifying questions about off-chain processes |
+| "I can rate this without evidence" | Ratings without file:line references = unsubstantiated claims | Collect concrete code evidence for every category assessment |
+| "User will know what to improve" | Vague guidance = no action | Provide priority-ordered roadmap with specific improvements and effort estimates |
+\stopverb}
+}
+
+\subtree{
+\title{Report Format}
+\p{For detailed report structure and templates, see [REPORT_FORMAT.md](resources/REPORT_FORMAT.md).}
+
+\subtree{
+\title{Structure:}
+\ol{
+\li{\strong{Executive Summary}}
+\li{Project name and platform}
+\li{Overall maturity (average rating)}
+\li{Top 3 strengths}
+\li{Top 3 critical gaps}
+\li{Priority recommendations}
+}
+
+\ol{
+\li{\strong{Maturity Scorecard}}
+\li{Table with all 9 categories}
+\li{Ratings and scores}
+\li{Key findings notes}
+}
+
+\ol{
+\li{\strong{Detailed Analysis}}
+\li{Per-category breakdown}
+\li{Evidence with file:line references}
+\li{Gaps and improvement actions}
+}
+
+\ol{
+\li{\strong{Improvement Roadmap}}
+\li{CRITICAL (immediate)}
+\li{HIGH (1-2 months)}
+\li{MEDIUM (2-4 months)}
+\li{Effort estimates and impact}
+}
+}
+}
+
+\subtree{
+\title{Ready to Begin}
+\p{\strong{Estimated Time}: 30-40 minutes}
+
+\p{\strong{I'll need}:}
+
+\ul{
+\li{Access to full codebase}
+\li{Your knowledge of processes (monitoring, incident response, team practices)}
+\li{Context about the project (DeFi, NFT, infrastructure, etc.)}
+}
+
+\p{Let's assess this codebase!}
+}
+}

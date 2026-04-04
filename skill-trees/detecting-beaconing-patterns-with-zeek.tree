@@ -1,0 +1,80 @@
+\title{Detecting Beaconing Patterns With Zeek}
+
+\taxon{skill}
+
+\tag{detecting}
+
+\tag{beaconing}
+
+\tag{patterns}
+
+\tag{with}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Performs statistical analysis of Zeek conn.log connection intervals to detect C2 beaconing patterns. Uses the ZAT library to load Zeek logs into Pandas DataFrames, calculates inter-arrival time standard deviation, and flags periodic connections with low jitter. Use when hunting for command-and-control callbacks in network data.}
+
+\subtree{
+\title{Detecting Beaconing Patterns with Zeek}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require detecting beaconing patterns with zeek}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with security operations concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Instructions}
+\p{Load Zeek conn.log data using ZAT (Zeek Analysis Tools), group connections by source/destination pairs, and compute timing statistics to identify beaconing.}
+
+\pre{\startverb
+from zat.log_to_dataframe import LogToDataFrame
+import numpy as np
+
+log_to_df = LogToDataFrame()
+conn_df = log_to_df.create_dataframe('/path/to/conn.log')
+
+# Group by src/dst pair and calculate inter-arrival time
+for (src, dst), group in conn_df.groupby(['id.orig_h', 'id.resp_h']):
+    times = group['ts'].sort_values()
+    intervals = times.diff().dt.total_seconds().dropna()
+    if len(intervals) > 10:
+        std_dev = np.std(intervals)
+        mean_interval = np.mean(intervals)
+        # Low std_dev relative to mean = likely beaconing
+\stopverb}
+
+\p{Key analysis steps:}
+
+\ol{
+\li{Parse Zeek conn.log into DataFrame with ZAT LogToDataFrame}
+\li{Group connections by source IP and destination IP pairs}
+\li{Calculate inter-arrival time intervals between consecutive connections}
+\li{Compute standard deviation and coefficient of variation}
+\li{Flag pairs with low coefficient of variation as potential beacons}
+}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+from zat.log_to_dataframe import LogToDataFrame
+log_to_df = LogToDataFrame()
+df = log_to_df.create_dataframe('conn.log')
+print(df[['id.orig_h', 'id.resp_h', 'ts', 'duration']].head())
+\stopverb}
+}
+}

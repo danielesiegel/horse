@@ -1,0 +1,262 @@
+\title{Triaging Vulnerabilities With Ssvc Framework}
+
+\taxon{skill}
+
+\tag{ssvc}
+
+\tag{vulnerability-triage}
+
+\tag{cisa}
+
+\tag{vulnerability-prioritization}
+
+\tag{decision-tree}
+
+\tag{cvss}
+
+\tag{remediation}
+
+\tag{risk-management}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Triage and prioritize vulnerabilities using CISA's Stakeholder-Specific Vulnerability Categorization (SSVC) decision tree framework to produce actionable remediation priorities.}
+
+\subtree{
+\title{Triaging Vulnerabilities with SSVC Framework}
+\subtree{
+\title{Overview}
+\p{The Stakeholder-Specific Vulnerability Categorization (SSVC) framework, developed by Carnegie Mellon University's Software Engineering Institute (SEI) in collaboration with CISA, provides a structured decision-tree methodology for vulnerability prioritization. Unlike CVSS alone, SSVC accounts for exploitation status, technical impact, automatability, mission prevalence, and public well-being impact to produce one of four actionable outcomes: \strong{Track}, \strong{Track}*, \strong{Attend}, or \strong{Act}.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When managing security operations that require triaging vulnerabilities with ssvc framework}
+\li{When improving security program maturity and operational processes}
+\li{When establishing standardized procedures for security team workflows}
+\li{When integrating threat intelligence or vulnerability data into operations}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with \code{\startverb requests\stopverb}, \code{\startverb pandas\stopverb}, and \code{\startverb jinja2\stopverb} libraries}
+\li{Access to CISA KEV catalog API and EPSS API from FIRST}
+\li{NVD API key (optional, for higher rate limits)}
+\li{Vulnerability scan results from tools like OpenVAS, Nessus, or Qualys}
+}
+}
+
+\subtree{
+\title{SSVC Decision Points}
+\subtree{
+\title{1. Exploitation Status}
+\p{Assess current exploitation activity:}
+
+\ul{
+\li{\strong{None} - No evidence of active exploitation}
+\li{\strong{PoC} - Proof-of-concept exists publicly}
+\li{\strong{Active} - Active exploitation observed in the wild (check CISA KEV)}
+}
+
+\pre{\startverb
+# Check if a CVE is in CISA Known Exploited Vulnerabilities catalog
+curl -s "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json" | \
+  python3 -c "import sys,json; data=json.load(sys.stdin); cves=[v['cveID'] for v in data['vulnerabilities']]; print('Active' if 'CVE-2024-3400' in cves else 'Check PoC/None')"
+\stopverb}
+}
+
+\subtree{
+\title{2. Technical Impact}
+\p{Determine scope of compromise if exploited:}
+
+\ul{
+\li{\strong{Partial} - Limited to a subset of system functionality or data}
+\li{\strong{Total} - Full control of the affected system, complete data access}
+}
+}
+
+\subtree{
+\title{3. Automatability}
+\p{Evaluate if exploitation can be automated at scale:}
+
+\ul{
+\li{\strong{No} - Requires manual, targeted exploitation per victim}
+\li{\strong{Yes} - Can be scripted or worm-like propagation is possible}
+}
+}
+
+\subtree{
+\title{4. Mission Prevalence}
+\p{How widespread is the affected product in your environment:}
+
+\ul{
+\li{\strong{Minimal} - Limited deployment, non-critical systems}
+\li{\strong{Support} - Supports mission-critical functions indirectly}
+\li{\strong{Essential} - Directly enables core mission capabilities}
+}
+}
+
+\subtree{
+\title{5. Public Well-Being Impact}
+\p{Potential consequences for physical safety and public welfare:}
+
+\ul{
+\li{\strong{Minimal} - Negligible impact on safety or public services}
+\li{\strong{Material} - Noticeable degradation of public services}
+\li{\strong{Irreversible} - Loss of life, major property damage, or critical infrastructure failure}
+}
+}
+}
+
+\subtree{
+\title{SSVC Decision Outcomes}
+\pre{\startverb
+| Outcome | Action Required | SLA |
+|---------|----------------|-----|
+| **Track** | Monitor, remediate in normal patch cycle | 90 days |
+| **Track*** | Monitor closely, prioritize in next patch window | 60 days |
+| **Attend** | Escalate to senior management, accelerate remediation | 14 days |
+| **Act** | Apply mitigations immediately, executive-level awareness | 48 hours |
+\stopverb}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Ingest Vulnerability Data}
+\pre{\startverb
+import requests
+import json
+
+# Fetch CISA KEV catalog
+kev_url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+kev_data = requests.get(kev_url).json()
+kev_cves = {v['cveID'] for v in kev_data['vulnerabilities']}
+
+# Fetch EPSS scores for context
+epss_url = "https://api.first.org/data/v1/epss"
+epss_response = requests.get(epss_url, params={"cve": "CVE-2024-3400"}).json()
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Evaluate Each Decision Point}
+\pre{\startverb
+def evaluate_exploitation(cve_id, kev_set):
+    """Determine exploitation status from CISA KEV and EPSS data."""
+    if cve_id in kev_set:
+        return "active"
+    epss = requests.get(
+        "https://api.first.org/data/v1/epss",
+        params={"cve": cve_id}
+    ).json()
+    if epss.get("data"):
+        score = float(epss["data"][0].get("epss", 0))
+        if score > 0.5:
+            return "poc"
+    return "none"
+
+def evaluate_technical_impact(cvss_vector):
+    """Parse CVSS vector for scope and impact metrics."""
+    if "S:C" in cvss_vector or "C:H/I:H/A:H" in cvss_vector:
+        return "total"
+    return "partial"
+
+def evaluate_automatability(cvss_vector, cve_description):
+    """Check if attack vector is network-based with low complexity."""
+    if "AV:N" in cvss_vector and "AC:L" in cvss_vector and "UI:N" in cvss_vector:
+        return "yes"
+    return "no"
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Apply SSVC Decision Tree}
+\pre{\startverb
+def ssvc_decision(exploitation, tech_impact, automatability, mission_prevalence, public_wellbeing):
+    """CISA SSVC decision tree implementation."""
+    if exploitation == "active":
+        if tech_impact == "total" or automatability == "yes":
+            return "Act"
+        if mission_prevalence in ("essential", "support"):
+            return "Act"
+        return "Attend"
+    if exploitation == "poc":
+        if automatability == "yes" and tech_impact == "total":
+            return "Attend"
+        if mission_prevalence == "essential":
+            return "Attend"
+        return "Track*"
+    # exploitation == "none"
+    if tech_impact == "total" and mission_prevalence == "essential":
+        return "Track*"
+    return "Track"
+\stopverb}
+}
+
+\subtree{
+\title{Step 4: Generate Triage Report}
+\pre{\startverb
+# Run the SSVC triage script against scan results
+python3 scripts/process.py --input scan_results.csv --output ssvc_triage_report.json
+
+# View summary
+cat ssvc_triage_report.json | python3 -m json.tool | head -50
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Vulnerability Scanners}
+\subtree{
+\title{Import from Nessus CSV}
+\pre{\startverb
+# Export Nessus scan as CSV, then process
+python3 scripts/process.py \
+  --input nessus_export.csv \
+  --format nessus \
+  --output ssvc_results.json
+\stopverb}
+}
+
+\subtree{
+\title{Import from OpenVAS}
+\pre{\startverb
+# Export OpenVAS results as XML
+python3 scripts/process.py \
+  --input openvas_report.xml \
+  --format openvas \
+  --output ssvc_results.json
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation and Testing}
+\pre{\startverb
+# Test SSVC decision logic with known CVEs
+python3 -c "
+from scripts.process import ssvc_decision
+# CVE-2024-3400 - Palo Alto PAN-OS command injection (KEV listed)
+assert ssvc_decision('active', 'total', 'yes', 'essential', 'material') == 'Act'
+# CVE-2024-21887 - Ivanti Connect Secure (PoC available)
+assert ssvc_decision('poc', 'total', 'yes', 'support', 'minimal') == 'Attend'
+print('All SSVC decision tests passed')
+"
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[CISA SSVC Framework](https://www.cisa.gov/stakeholder-specific-vulnerability-categorization-ssvc)}
+\li{[CERT/CC SSVC Documentation](https://certcc.github.io/SSVC/)}
+\li{[CISA SSVC Guide PDF](https://www.cisa.gov/sites/default/files/publications/cisa-ssvc-guide\%20508c.pdf)}
+\li{[FIRST EPSS API](https://www.first.org/epss/)}
+\li{[CISA Known Exploited Vulnerabilities](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)}
+}
+}
+}

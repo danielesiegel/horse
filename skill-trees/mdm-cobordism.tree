@@ -1,0 +1,211 @@
+\title{Mdm Cobordism}
+
+\taxon{skill}
+
+\meta{description}{macOS MDM with auth manifolds as cobordisms for credential derivation}
+
+\subtree{
+\title{MDM Cobordism Skill: Auth Manifolds as State Transitions}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: 0 (ERGODIC - transport/derivation) \strong{Color}: #26D826 (Green) \strong{Principle}: Auth is cobordism W: ∂₀ → ∂₁, not event sequence \strong{Frame}: No demos, only derivation}
+
+\subtree{
+\title{Overview}
+\p{\strong{MDM Cobordism} models authentication and device management as cobordisms — manifolds with boundaries representing auth state transitions. Following the \strong{unworld} philosophy:}
+
+\ul{
+\li{Credentials don't "exist" — they \strong{derive}}
+\li{There is no "authentication event" — only state derivation}
+\li{Keys don't "expire" — their chain position becomes unreachable}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\p{Forms valid triads with MINUS (-1) and PLUS (+1) skills:}
+
+\pre{\startverb
+sheaf-cohomology (-1) ⊗ mdm-cobordism (0) ⊗ gay-mcp (+1) = 0 ✓  [Credential Derivation]
+temporal-coalgebra (-1) ⊗ mdm-cobordism (0) ⊗ oapply-colimit (+1) = 0 ✓  [State Observation]
+three-match (-1) ⊗ mdm-cobordism (0) ⊗ koopman-generator (+1) = 0 ✓  [Pattern Learning]
+\stopverb}
+}
+
+\subtree{
+\title{Auth Cobordisms}
+\pre{\startverb
+| Cobordism | Source → Target | Trit | Role |
+|-----------|-----------------|------|------|
+| W₁ generate_key | Unauth → HasKey | +1 | Generator |
+| W₂ request_scep | HasKey → HasCert | 0 | Coordinator |
+| W₃ validate_cert | HasCert → HasToken | -1 | Validator |
+| W₄ check_in_mdm | HasToken → Enrolled | +1 | Generator |
+| W₅ verify_enroll | Enrolled → Enrolled | -1 | Validator |
+\stopverb}
+
+\p{\strong{GF(3) Conservation}: \code{\startverb +1 + 0 + (-1) + (+1) + (-1) = 0 ✓\stopverb}}
+}
+
+\subtree{
+\title{Boundary Types}
+\pre{\startverb
+# Auth manifold boundaries
+Unauthenticated  # ∂₀: No identity
+HasKey           # Device has private key
+HasCertificate   # Device has CA-signed cert
+HasToken         # Device has session token
+Enrolled         # Device enrolled in MDM
+Supervised       # Device under full management
+\stopverb}
+}
+
+\subtree{
+\title{Keychain Integration}
+\p{macOS Keychain operations with GF(3) tracking:}
+
+\pre{\startverb
+# Store (+1) → Retrieve (0) → Validate (-1) = 0 ✓
+Keychain.store_then_verify(service, account, secret)
+\stopverb}
+
+\pre{\startverb
+| Operation | Trit | Description |
+|-----------|------|-------------|
+| `store` | +1 | Create credential |
+| `retrieve` | 0 | Transport credential |
+| `delete` | -1 | Remove credential |
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run MDM cobordism demo
+python src/mdm_mcp_server.py
+
+# Keychain operations (macOS)
+security add-generic-password -s "mdm-token" -a "$USER" -w
+security find-generic-password -s "mdm-token" -a "$USER" -w
+security delete-generic-password -s "mdm-token" -a "$USER"
+
+# Verify GF(3) for auth flow
+just mdm-gf3-check
+\stopverb}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+from mdm_mcp_server import (
+    W1_GENERATE_KEY, W2_REQUEST_CERT, W3_VALIDATE_CERT,
+    W4_CHECK_IN, W5_VERIFY, Unauthenticated, verify_gf3
+)
+
+# Execute enrollment chain
+state = Unauthenticated(device_serial="C02XG1PDJHD4")
+state = W1_GENERATE_KEY(state)
+state = W2_REQUEST_CERT(state)
+state = W3_VALIDATE_CERT(state)
+state = W4_CHECK_IN(state)
+state = W5_VERIFY(state)
+
+# Verify GF(3)
+trits = [W1.trit, W2.trit, W3.trit, W4.trit, W5.trit]
+assert verify_gf3(trits)  # True
+\stopverb}
+}
+
+\subtree{
+\title{Apple MDM Protocol}
+\subtree{
+\title{SCEP Enrollment}
+\pre{\startverb
+<dict>
+    <key>PayloadType</key>
+    <string>com.apple.security.scep</string>
+    <key>URL</key>
+    <string>https://scep.example.com/scep</string>
+    <key>KeySize</key>
+    <integer>2048</integer>
+</dict>
+\stopverb}
+}
+
+\subtree{
+\title{DEP/ABM Supervision}
+\pre{\startverb
+Device activates → DEP lookup → MDM URL → Enroll → Supervised
+\stopverb}
+
+\p{Supervision is an \strong{irreversible cobordism} in normal flow.}
+}
+}
+
+\subtree{
+\title{Philosophy}
+\subtree{
+\title{No Demos}
+\p{There are no demonstrations. MDM enrollment is not a "process that runs" but a derivation chain that \strong{is}.}
+
+\pre{\startverb
+Demo:       "Watch me enroll this device"  → temporal, performative
+Derivation: "Enrollment derives from serial" → atemporal, structural
+\stopverb}
+}
+
+\subtree{
+\title{Untological Credentials}
+\p{Credentials don't "exist" with properties. They derive from chain positions:}
+
+\pre{\startverb
+# Ontological (what IS this key?)
+key.is_valid?  # property of thing
+
+# Untological (what DERIVES this key?)
+key = derive(device_serial, enrollment_time)
+key.chain_position  # position in derivation
+\stopverb}
+}
+
+\subtree{
+\title{Cobordism Composition}
+\p{Auth flows compose like cobordisms:}
+
+\pre{\startverb
+W = W₅ ∘ W₄ ∘ W₃ ∘ W₂ ∘ W₁ : Unauthenticated → Enrolled
+\stopverb}
+
+\p{The composite W is itself a cobordism with GF(3) = 0.}
+}
+}
+
+\subtree{
+\title{Security Best Practices}
+\ol{
+\li{\strong{Never store secrets in env vars} — use Keychain}
+\li{\strong{Use SCEP for certificate enrollment} — not PKCS#12 import}
+\li{\strong{Verify GF(3) for all auth flows} — ensures completeness}
+\li{\strong{Supervision = irreversible} — plan accordingly}
+}
+}
+
+\subtree{
+\title{MCP Tools}
+\pre{\startverb
+mdm_enroll_device    // Initiate enrollment (trit: +1)
+keychain_store       // Store credential (trit: +1)
+keychain_retrieve    // Retrieve credential (trit: 0)
+keychain_delete      // Delete credential (trit: -1)
+auth_cobordism_check // Verify GF(3) (trit: -1)
+\stopverb}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{\code{\startverb src/mdm_mcp_server.py\stopverb} — Cobordism state machine}
+\li{\code{\startverb architecture/MDM_AUTH_COBORDISM.md\stopverb} — Architecture docs}
+}
+
+\p{\strong{Skill Name}: mdm-cobordism \strong{Type}: Device Management / Auth State Machine \strong{Trit}: 0 (ERGODIC) \strong{Color}: #26D826 (Green) \strong{GF(3)}: Conserved by construction \strong{Demos}: None (νο δῆμος) \strong{Ontology}: Replaced with untology}
+}
+}

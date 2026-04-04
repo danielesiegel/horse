@@ -1,0 +1,650 @@
+\title{Scikit Learn}
+
+\taxon{skill}
+
+\meta{description}{Machine learning in Python with scikit-learn. Use when working with supervised learning (classification, regression), unsupervised learning (clustering, dimensionality reduction), model evaluation, hyperparameter tuning, preprocessing, or building ML pipelines. Provides comprehensive reference documentation for algorithms, preprocessing techniques, pipelines, and best practices.}
+
+\subtree{
+\title{Scikit-learn}
+\subtree{
+\title{Overview}
+\p{This skill provides comprehensive guidance for machine learning tasks using scikit-learn, the industry-standard Python library for classical machine learning. Use this skill for classification, regression, clustering, dimensionality reduction, preprocessing, model evaluation, and building production-ready ML pipelines.}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Install scikit-learn using uv
+uv uv pip install scikit-learn
+
+# Optional: Install visualization dependencies
+uv uv pip install matplotlib seaborn
+
+# Commonly used with
+uv uv pip install pandas numpy
+\stopverb}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Use the scikit-learn skill when:}
+
+\ul{
+\li{Building classification or regression models}
+\li{Performing clustering or dimensionality reduction}
+\li{Preprocessing and transforming data for machine learning}
+\li{Evaluating model performance with cross-validation}
+\li{Tuning hyperparameters with grid or random search}
+\li{Creating ML pipelines for production workflows}
+\li{Comparing different algorithms for a task}
+\li{Working with both structured (tabular) and text data}
+\li{Need interpretable, classical machine learning approaches}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Classification Example}
+\pre{\startverb
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+# Preprocess
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train_scaled, y_train)
+
+# Evaluate
+y_pred = model.predict(X_test_scaled)
+print(classification_report(y_test, y_pred))
+\stopverb}
+}
+
+\subtree{
+\title{Complete Pipeline with Mixed Data}
+\pre{\startverb
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import GradientBoostingClassifier
+
+# Define feature types
+numeric_features = ['age', 'income']
+categorical_features = ['gender', 'occupation']
+
+# Create preprocessing pipelines
+numeric_transformer = Pipeline([
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
+
+categorical_transformer = Pipeline([
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# Combine transformers
+preprocessor = ColumnTransformer([
+    ('num', numeric_transformer, numeric_features),
+    ('cat', categorical_transformer, categorical_features)
+])
+
+# Full pipeline
+model = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', GradientBoostingClassifier(random_state=42))
+])
+
+# Fit and predict
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Supervised Learning}
+\p{Comprehensive algorithms for classification and regression tasks.}
+
+\p{\strong{Key algorithms:}}
+
+\ul{
+\li{\strong{Linear models}: Logistic Regression, Linear Regression, Ridge, Lasso, ElasticNet}
+\li{\strong{Tree-based}: Decision Trees, Random Forest, Gradient Boosting}
+\li{\strong{Support Vector Machines}: SVC, SVR with various kernels}
+\li{\strong{Ensemble methods}: AdaBoost, Voting, Stacking}
+\li{\strong{Neural Networks}: MLPClassifier, MLPRegressor}
+\li{\strong{Others}: Naive Bayes, K-Nearest Neighbors}
+}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Classification: Predicting discrete categories (spam detection, image classification, fraud detection)}
+\li{Regression: Predicting continuous values (price prediction, demand forecasting)}
+}
+
+\p{\strong{See:} \code{\startverb references/supervised_learning.md\stopverb} for detailed algorithm documentation, parameters, and usage examples.}
+}
+
+\subtree{
+\title{2. Unsupervised Learning}
+\p{Discover patterns in unlabeled data through clustering and dimensionality reduction.}
+
+\p{\strong{Clustering algorithms:}}
+
+\ul{
+\li{\strong{Partition-based}: K-Means, MiniBatchKMeans}
+\li{\strong{Density-based}: DBSCAN, HDBSCAN, OPTICS}
+\li{\strong{Hierarchical}: AgglomerativeClustering}
+\li{\strong{Probabilistic}: Gaussian Mixture Models}
+\li{\strong{Others}: MeanShift, SpectralClustering, BIRCH}
+}
+
+\p{\strong{Dimensionality reduction:}}
+
+\ul{
+\li{\strong{Linear}: PCA, TruncatedSVD, NMF}
+\li{\strong{Manifold learning}: t-SNE, UMAP, Isomap, LLE}
+\li{\strong{Feature extraction}: FastICA, LatentDirichletAllocation}
+}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Customer segmentation, anomaly detection, data visualization}
+\li{Reducing feature dimensions, exploratory data analysis}
+\li{Topic modeling, image compression}
+}
+
+\p{\strong{See:} \code{\startverb references/unsupervised_learning.md\stopverb} for detailed documentation.}
+}
+
+\subtree{
+\title{3. Model Evaluation and Selection}
+\p{Tools for robust model evaluation, cross-validation, and hyperparameter tuning.}
+
+\p{\strong{Cross-validation strategies:}}
+
+\ul{
+\li{KFold, StratifiedKFold (classification)}
+\li{TimeSeriesSplit (temporal data)}
+\li{GroupKFold (grouped samples)}
+}
+
+\p{\strong{Hyperparameter tuning:}}
+
+\ul{
+\li{GridSearchCV (exhaustive search)}
+\li{RandomizedSearchCV (random sampling)}
+\li{HalvingGridSearchCV (successive halving)}
+}
+
+\p{\strong{Metrics:}}
+
+\ul{
+\li{\strong{Classification}: accuracy, precision, recall, F1-score, ROC AUC, confusion matrix}
+\li{\strong{Regression}: MSE, RMSE, MAE, R², MAPE}
+\li{\strong{Clustering}: silhouette score, Calinski-Harabasz, Davies-Bouldin}
+}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Comparing model performance objectively}
+\li{Finding optimal hyperparameters}
+\li{Preventing overfitting through cross-validation}
+\li{Understanding model behavior with learning curves}
+}
+
+\p{\strong{See:} \code{\startverb references/model_evaluation.md\stopverb} for comprehensive metrics and tuning strategies.}
+}
+
+\subtree{
+\title{4. Data Preprocessing}
+\p{Transform raw data into formats suitable for machine learning.}
+
+\p{\strong{Scaling and normalization:}}
+
+\ul{
+\li{StandardScaler (zero mean, unit variance)}
+\li{MinMaxScaler (bounded range)}
+\li{RobustScaler (robust to outliers)}
+\li{Normalizer (sample-wise normalization)}
+}
+
+\p{\strong{Encoding categorical variables:}}
+
+\ul{
+\li{OneHotEncoder (nominal categories)}
+\li{OrdinalEncoder (ordered categories)}
+\li{LabelEncoder (target encoding)}
+}
+
+\p{\strong{Handling missing values:}}
+
+\ul{
+\li{SimpleImputer (mean, median, most frequent)}
+\li{KNNImputer (k-nearest neighbors)}
+\li{IterativeImputer (multivariate imputation)}
+}
+
+\p{\strong{Feature engineering:}}
+
+\ul{
+\li{PolynomialFeatures (interaction terms)}
+\li{KBinsDiscretizer (binning)}
+\li{Feature selection (RFE, SelectKBest, SelectFromModel)}
+}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Before training any algorithm that requires scaled features (SVM, KNN, Neural Networks)}
+\li{Converting categorical variables to numeric format}
+\li{Handling missing data systematically}
+\li{Creating non-linear features for linear models}
+}
+
+\p{\strong{See:} \code{\startverb references/preprocessing.md\stopverb} for detailed preprocessing techniques.}
+}
+
+\subtree{
+\title{5. Pipelines and Composition}
+\p{Build reproducible, production-ready ML workflows.}
+
+\p{\strong{Key components:}}
+
+\ul{
+\li{\strong{Pipeline}: Chain transformers and estimators sequentially}
+\li{\strong{ColumnTransformer}: Apply different preprocessing to different columns}
+\li{\strong{FeatureUnion}: Combine multiple transformers in parallel}
+\li{\strong{TransformedTargetRegressor}: Transform target variable}
+}
+
+\p{\strong{Benefits:}}
+
+\ul{
+\li{Prevents data leakage in cross-validation}
+\li{Simplifies code and improves maintainability}
+\li{Enables joint hyperparameter tuning}
+\li{Ensures consistency between training and prediction}
+}
+
+\p{\strong{When to use:}}
+
+\ul{
+\li{Always use Pipelines for production workflows}
+\li{When mixing numerical and categorical features (use ColumnTransformer)}
+\li{When performing cross-validation with preprocessing steps}
+\li{When hyperparameter tuning includes preprocessing parameters}
+}
+
+\p{\strong{See:} \code{\startverb references/pipelines_and_composition.md\stopverb} for comprehensive pipeline patterns.}
+}
+}
+
+\subtree{
+\title{Example Scripts}
+\subtree{
+\title{Classification Pipeline}
+\p{Run a complete classification workflow with preprocessing, model comparison, hyperparameter tuning, and evaluation:}
+
+\pre{\startverb
+python scripts/classification_pipeline.py
+\stopverb}
+
+\p{This script demonstrates:}
+
+\ul{
+\li{Handling mixed data types (numeric and categorical)}
+\li{Model comparison using cross-validation}
+\li{Hyperparameter tuning with GridSearchCV}
+\li{Comprehensive evaluation with multiple metrics}
+\li{Feature importance analysis}
+}
+}
+
+\subtree{
+\title{Clustering Analysis}
+\p{Perform clustering analysis with algorithm comparison and visualization:}
+
+\pre{\startverb
+python scripts/clustering_analysis.py
+\stopverb}
+
+\p{This script demonstrates:}
+
+\ul{
+\li{Finding optimal number of clusters (elbow method, silhouette analysis)}
+\li{Comparing multiple clustering algorithms (K-Means, DBSCAN, Agglomerative, Gaussian Mixture)}
+\li{Evaluating clustering quality without ground truth}
+\li{Visualizing results with PCA projection}
+}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{This skill includes comprehensive reference files for deep dives into specific topics:}
+
+\subtree{
+\title{Quick Reference}
+\p{\strong{File:} \code{\startverb references/quick_reference.md\stopverb}}
+
+\ul{
+\li{Common import patterns and installation instructions}
+\li{Quick workflow templates for common tasks}
+\li{Algorithm selection cheat sheets}
+\li{Common patterns and gotchas}
+\li{Performance optimization tips}
+}
+}
+
+\subtree{
+\title{Supervised Learning}
+\p{\strong{File:} \code{\startverb references/supervised_learning.md\stopverb}}
+
+\ul{
+\li{Linear models (regression and classification)}
+\li{Support Vector Machines}
+\li{Decision Trees and ensemble methods}
+\li{K-Nearest Neighbors, Naive Bayes, Neural Networks}
+\li{Algorithm selection guide}
+}
+}
+
+\subtree{
+\title{Unsupervised Learning}
+\p{\strong{File:} \code{\startverb references/unsupervised_learning.md\stopverb}}
+
+\ul{
+\li{All clustering algorithms with parameters and use cases}
+\li{Dimensionality reduction techniques}
+\li{Outlier and novelty detection}
+\li{Gaussian Mixture Models}
+\li{Method selection guide}
+}
+}
+
+\subtree{
+\title{Model Evaluation}
+\p{\strong{File:} \code{\startverb references/model_evaluation.md\stopverb}}
+
+\ul{
+\li{Cross-validation strategies}
+\li{Hyperparameter tuning methods}
+\li{Classification, regression, and clustering metrics}
+\li{Learning and validation curves}
+\li{Best practices for model selection}
+}
+}
+
+\subtree{
+\title{Preprocessing}
+\p{\strong{File:} \code{\startverb references/preprocessing.md\stopverb}}
+
+\ul{
+\li{Feature scaling and normalization}
+\li{Encoding categorical variables}
+\li{Missing value imputation}
+\li{Feature engineering techniques}
+\li{Custom transformers}
+}
+}
+
+\subtree{
+\title{Pipelines and Composition}
+\p{\strong{File:} \code{\startverb references/pipelines_and_composition.md\stopverb}}
+
+\ul{
+\li{Pipeline construction and usage}
+\li{ColumnTransformer for mixed data types}
+\li{FeatureUnion for parallel transformations}
+\li{Complete end-to-end examples}
+\li{Best practices}
+}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Building a Classification Model}
+\ol{
+\li{\strong{Load and explore data}}
+}
+
+\ol{
+\li{\strong{Split data with stratification}}
+}
+
+\ol{
+\li{\strong{Create preprocessing pipeline}}
+}
+
+\subtree{
+\title{Handle numeric and categorical features separately}
+\p{preprocessor = ColumnTransformer([ ('num', StandardScaler(), numeric_features), ('cat', OneHotEncoder(), categorical_features) ])}
+
+\pre{\startverb
+
+4. **Build complete pipeline**
+\stopverb}
+
+\p{model = Pipeline([ ('preprocessor', preprocessor), ('classifier', RandomForestClassifier(random_state=42)) ])}
+
+\pre{\startverb
+
+5. **Tune hyperparameters**
+\stopverb}
+
+\p{from sklearn.model_selection import GridSearchCV}
+
+\p{param_grid = { 'classifier\strong{n_estimators': [100, 200], 'classifier}max_depth': [10, 20, None] }}
+
+\p{grid_search = GridSearchCV(model, param_grid, cv=5) grid_search.fit(X_train, y_train)}
+
+\pre{\startverb
+
+6. **Evaluate on test set**
+\stopverb}
+
+\p{from sklearn.metrics import classification_report}
+
+\p{best_model = grid_search.best_estimator_ y_pred = best_model.predict(X_test) print(classification_report(y_test, y_pred))}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Performing Clustering Analysis}
+\ol{
+\li{\strong{Preprocess data}}
+}
+
+\p{scaler = StandardScaler() X_scaled = scaler.fit_transform(X)}
+
+\pre{\startverb
+
+2. **Find optimal number of clusters**
+\stopverb}
+
+\p{from sklearn.cluster import KMeans from sklearn.metrics import silhouette_score}
+
+\p{scores = [] for k in range(2, 11): kmeans = KMeans(n_clusters=k, random_state=42) labels = kmeans.fit_predict(X_scaled) scores.append(silhouette_score(X_scaled, labels))}
+
+\p{optimal_k = range(2, 11)[np.argmax(scores)]}
+
+\pre{\startverb
+
+3. **Apply clustering**
+\stopverb}
+
+\p{model = KMeans(n_clusters=optimal_k, random_state=42) labels = model.fit_predict(X_scaled)}
+
+\pre{\startverb
+
+4. **Visualize with dimensionality reduction**
+\stopverb}
+
+\p{from sklearn.decomposition import PCA}
+
+\p{pca = PCA(n_components=2) X_2d = pca.fit_transform(X_scaled)}
+
+\p{plt.scatter(X_2d[:, 0], X_2d[:, 1], c=labels, cmap='viridis')}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Always Use Pipelines}
+\p{Pipelines prevent data leakage and ensure consistency:}
+
+\pre{\startverb
+# Good: Preprocessing in pipeline
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', LogisticRegression())
+])
+
+# Bad: Preprocessing outside (can leak information)
+X_scaled = StandardScaler().fit_transform(X)
+\stopverb}
+}
+
+\subtree{
+\title{Fit on Training Data Only}
+\p{Never fit on test data:}
+
+\pre{\startverb
+# Good
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)  # Only transform
+
+# Bad
+scaler = StandardScaler()
+X_all_scaled = scaler.fit_transform(np.vstack([X_train, X_test]))
+\stopverb}
+}
+
+\subtree{
+\title{Use Stratified Splitting for Classification}
+\p{Preserve class distribution:}
+
+\pre{\startverb
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+\stopverb}
+}
+
+\subtree{
+\title{Set Random State for Reproducibility}
+\pre{\startverb
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+\stopverb}
+}
+
+\subtree{
+\title{Choose Appropriate Metrics}
+\ul{
+\li{Balanced data: Accuracy, F1-score}
+\li{Imbalanced data: Precision, Recall, ROC AUC, Balanced Accuracy}
+\li{Cost-sensitive: Define custom scorer}
+}
+}
+
+\subtree{
+\title{Scale Features When Required}
+\p{Algorithms requiring feature scaling:}
+
+\ul{
+\li{SVM, KNN, Neural Networks}
+\li{PCA, Linear/Logistic Regression with regularization}
+\li{K-Means clustering}
+}
+
+\p{Algorithms not requiring scaling:}
+
+\ul{
+\li{Tree-based models (Decision Trees, Random Forest, Gradient Boosting)}
+\li{Naive Bayes}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting Common Issues}
+\subtree{
+\title{ConvergenceWarning}
+\p{\strong{Issue:} Model didn't converge \strong{Solution:} Increase \code{\startverb max_iter\stopverb} or scale features}
+
+\pre{\startverb
+model = LogisticRegression(max_iter=1000)
+\stopverb}
+}
+
+\subtree{
+\title{Poor Performance on Test Set}
+\p{\strong{Issue:} Overfitting \strong{Solution:} Use regularization, cross-validation, or simpler model}
+
+\pre{\startverb
+# Add regularization
+model = Ridge(alpha=1.0)
+
+# Use cross-validation
+scores = cross_val_score(model, X, y, cv=5)
+\stopverb}
+}
+
+\subtree{
+\title{Memory Error with Large Datasets}
+\p{\strong{Solution:} Use algorithms designed for large data}
+
+\pre{\startverb
+# Use SGD for large datasets
+from sklearn.linear_model import SGDClassifier
+model = SGDClassifier()
+
+# Or MiniBatchKMeans for clustering
+from sklearn.cluster import MiniBatchKMeans
+model = MiniBatchKMeans(n_clusters=8, batch_size=100)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{Official Documentation: https://scikit-learn.org/stable/}
+\li{User Guide: https://scikit-learn.org/stable/user_guide.html}
+\li{API Reference: https://scikit-learn.org/stable/api/index.html}
+\li{Examples Gallery: https://scikit-learn.org/stable/auto_examples/index.html}
+}
+}
+}

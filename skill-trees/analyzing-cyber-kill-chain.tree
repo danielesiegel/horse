@@ -1,0 +1,187 @@
+\title{Analyzing Cyber Kill Chain}
+
+\taxon{skill}
+
+\tag{kill-chain}
+
+\tag{Lockheed-Martin}
+
+\tag{MITRE-ATT&CK}
+
+\tag{intrusion-analysis}
+
+\tag{defense-in-depth}
+
+\tag{NIST-CSF}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Analyzes intrusion activity against the Lockheed Martin Cyber Kill Chain framework to identify which phases an adversary has completed, where defenses succeeded or failed, and what controls would have interrupted the attack at earlier phases. Use when conducting post-incident analysis, building prevention-focused security controls, or mapping detection gaps to kill chain phases. Activates for requests involving kill chain analysis, intrusion kill chain, attack phase mapping, or Lockheed Martin kill chain framework.}
+
+\subtree{
+\title{Analyzing Cyber Kill Chain}
+\subtree{
+\title{When to Use}
+\p{Use this skill when:}
+
+\ul{
+\li{Conducting post-incident analysis to determine how far an adversary progressed through an attack sequence}
+\li{Designing layered defensive controls with the goal of interrupting attacks at the earliest possible phase}
+\li{Producing threat intelligence reports that communicate attack progression to non-technical stakeholders}
+}
+
+\p{\strong{Do not use} this skill as a standalone framework — combine with MITRE ATT&CK for technique-level granularity beyond what the 7-phase kill chain provides.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Complete incident timeline with forensic artifacts mapped to specific adversary actions}
+\li{MITRE ATT&CK Enterprise matrix for technique-level mapping within each kill chain phase}
+\li{Access to threat intelligence on the suspected adversary group's typical kill chain progression}
+\li{Post-incident report or IR timeline from responding team}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Map Observed Actions to Kill Chain Phases}
+\p{The Lockheed Martin Cyber Kill Chain consists of seven phases. Map all observed adversary actions:}
+
+\p{\strong{Phase 1 - Reconnaissance}: Adversary gathers target information before attack.}
+
+\ul{
+\li{Indicators: DNS queries from adversary IP, LinkedIn scraping, job posting analysis, Shodan scans of organization infrastructure}
+}
+
+\p{\strong{Phase 2 - Weaponization}: Adversary creates attack tool (malware + exploit).}
+
+\ul{
+\li{Indicators: Malware compilation timestamps, exploit document metadata, builder artifacts in malware samples}
+}
+
+\p{\strong{Phase 3 - Delivery}: Adversary transmits weapon to target.}
+
+\ul{
+\li{Indicators: Phishing emails, malicious attachments, drive-by downloads, USB drops, supply chain compromise}
+}
+
+\p{\strong{Phase 4 - Exploitation}: Adversary exploits vulnerability to execute code.}
+
+\ul{
+\li{Indicators: CVE exploitation events in application/OS logs, memory corruption artifacts, shellcode execution}
+}
+
+\p{\strong{Phase 5 - Installation}: Adversary establishes persistence on target.}
+
+\ul{
+\li{Indicators: New scheduled tasks, registry run keys, service installation, web shells, bootkits}
+}
+
+\p{\strong{Phase 6 - Command & Control (C2)}: Adversary communicates with compromised system.}
+
+\ul{
+\li{Indicators: Beaconing traffic (regular intervals), DNS tunneling, HTTPS to uncommon domains, C2 framework signatures (Cobalt Strike, Sliver)}
+}
+
+\p{\strong{Phase 7 - Actions on Objectives}: Adversary achieves goals.}
+
+\ul{
+\li{Indicators: Data staging/exfiltration, lateral movement, ransomware execution, destructive activity}
+}
+}
+
+\subtree{
+\title{Step 2: Identify Phase Completion and Detection Points}
+\p{Create a phase matrix for the incident:}
+
+\pre{\startverb
+Phase 1: Recon        → Completed (undetected)
+Phase 2: Weaponize    → Completed (undetected — pre-attack)
+Phase 3: Delivery     → Completed; phishing email bypassed SEG
+Phase 4: Exploit      → Completed; CVE-2023-23397 exploited
+Phase 5: Install      → DETECTED: EDR flagged scheduled task creation (attack stalled here)
+Phase 6: C2           → Not achieved (installation blocked)
+Phase 7: Objectives   → Not achieved
+\stopverb}
+
+\p{For each phase completed without detection, document the defensive control gap.}
+}
+
+\subtree{
+\title{Step 3: Map to MITRE ATT&CK for Technique Detail}
+\p{Each kill chain phase maps to multiple ATT&CK tactics:}
+
+\ul{
+\li{Delivery → Initial Access (TA0001)}
+\li{Exploitation → Execution (TA0002)}
+\li{Installation → Persistence (TA0003), Privilege Escalation (TA0004)}
+\li{C2 → Command and Control (TA0011)}
+\li{Actions on Objectives → Exfiltration (TA0010), Impact (TA0040)}
+}
+
+\p{Within each phase, enumerate specific ATT&CK techniques observed and map to existing detections.}
+}
+
+\subtree{
+\title{Step 4: Identify Courses of Action per Phase}
+\p{For each phase, document applicable defensive courses of action (COAs):}
+
+\ul{
+\li{\strong{Detect COA}: What detection would alert on adversary activity in this phase?}
+\li{\strong{Deny COA}: What control would prevent the adversary from completing this phase?}
+\li{\strong{Disrupt COA}: What control would interrupt the adversary mid-phase?}
+\li{\strong{Degrade COA}: What control would reduce the adversary's effectiveness in this phase?}
+\li{\strong{Deceive COA}: What deception (honeypots, canary tokens) would expose activity in this phase?}
+\li{\strong{Destroy COA}: What active defense capability would neutralize adversary infrastructure?}
+}
+}
+
+\subtree{
+\title{Step 5: Produce Kill Chain Analysis Report}
+\p{Structure findings as:}
+
+\ol{
+\li{Attack narrative (timeline of phases)}
+\li{Phase-by-phase analysis with evidence}
+\li{Detection point analysis (what worked, what failed)}
+\li{Defensive recommendation per phase prioritized by cost/effectiveness}
+\li{Control improvement roadmap}
+}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|-----------|
+| **Kill Chain** | Sequential model of adversary intrusion phases; breaking any link theoretically stops the attack |
+| **Courses of Action (COA)** | Defensive responses mapped to each kill chain phase: detect, deny, disrupt, degrade, deceive, destroy |
+| **Beaconing** | Regular, periodic C2 check-in pattern from compromised host to adversary server; detectable by frequency analysis |
+| **Phase Completion** | Adversary successfully finishes a kill chain phase and progresses to the next; defense-in-depth aims to prevent this |
+| **Intelligence Gain/Loss** | Analysis of whether detecting at Phase 5 (vs. Phase 3) reduced intelligence about adversary capabilities or intent |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{MITRE ATT&CK Navigator}: Overlay kill chain phases with ATT&CK technique coverage for integrated analysis}
+\li{\strong{Elastic Security EQL}: Event Query Language for querying multi-phase attack sequences in Elastic SIEM}
+\li{\strong{Splunk ES}: Timeline visualization and correlation searches for kill chain phase sequencing}
+\li{\strong{MISP}: Kill chain tagging via galaxy clusters for structured incident event documentation}
+}
+}
+
+\subtree{
+\title{Common Pitfalls}
+\ul{
+\li{\strong{Linear assumption}: Adversaries don't always progress linearly — they may skip phases (weaponization already complete from previous campaign) or loop back (re-establish C2 after detection).}
+\li{\strong{Ignoring Phases 1 and 2}: Reconnaissance and weaponization occur before the defender has visibility. Intelligence about these phases requires external sources (OSINT, threat intelligence).}
+\li{\strong{Missing insider threats}: The kill chain was designed for external adversaries. Insider threats may skip directly to Phase 7 without traversing earlier phases.}
+\li{\strong{Confusing with ATT&CK tactics}: The 7-phase kill chain and 14 ATT&CK tactics are complementary but not directly equivalent. Maintain distinction to prevent analytic confusion.}
+}
+}
+}

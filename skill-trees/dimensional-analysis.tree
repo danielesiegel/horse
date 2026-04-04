@@ -1,0 +1,310 @@
+\title{Dimensional Analysis}
+
+\taxon{skill}
+
+\meta{description}{"Annotates codebases with dimensional analysis comments documenting units, dimensions, and decimal scaling. Use when someone asks to annotate units in a codebase, perform a dimensional analysis, or find vulnerabilities in a DeFi protocol, offchain code, or other blockchain-related codebase with arithmetic. Prevents dimensional mismatches and catches formula bugs early."}
+
+\subtree{
+\title{Dimensional Analysis Skill}
+\p{This skill orchestrates a dimensional-analysis pipeline for codebases that perform numeric computations with mixed units, precisions, or scaling factors. The main skill context is a workflow controller only: it delegates scanning, vocabulary discovery, annotation, propagation, and validation to specialized subagents, then manages batching, persistence, retries, coverage gates, and final reporting.}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{Annotating a codebase with unit/dimension comments (e.g., \code{\startverb D18{tok}\stopverb}, \code{\startverb D27{UoA/tok}\stopverb})}
+\li{Performing dimensional analysis on DeFi protocols, financial code, or scientific computations}
+\li{Hunting for arithmetic bugs caused by unit mismatches, missing scaling, or precision loss}
+\li{Auditing codebases with mixed decimal precisions or fixed-point arithmetic}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Codebases with no numeric arithmetic or unit conversions — there is nothing to annotate}
+\li{Pure integer counting logic (loop indices, array lengths) with no physical or financial dimensions}
+\li{When you only need a quick spot-check of a single formula — read the code directly instead of running the full pipeline}
+}
+}
+
+\subtree{
+\title{Execution Mode}
+\p{This skill runs in one mode only: \code{\startverb full-auto\stopverb}. This is a workflow-based skill that delegates step-specific work to specialized agents via the \code{\startverb Task\stopverb} tool. You orchestrate the overall process, manage coverage and state persistence, and ensure that every in-scope file is processed through each step of the pipeline.}
+
+\ul{
+\li{Always run the full pipeline in this order: Step 1 -> Step 2 -> Step 3 -> Step 4.}
+\li{The main skill context must not perform repository-wide dimensional analysis, annotation, propagation, or bug validation itself when a dedicated subagent exists for that step.}
+\li{The main skill context may inspect artifacts, manifests, and subagent outputs only as needed to route work, build prompts, persist state, and determine completion.}
+\li{Any mode argument provided by the caller is ignored.}
+\li{Report all results at the end in a single summary.}
+}
+
+\p{When you start a step, report it:}
+
+\pre{\startverb
+Starting Step: Step {n}
+\stopverb}
+}
+
+\subtree{
+\title{Scope and Coverage Guarantees}
+\p{This skill must audit \strong{all in-scope arithmetic files}, including large repositories.}
+
+\ul{
+\li{In-scope files are defined by Step 1 scanner output (\code{\startverb files\stopverb} array), across \strong{all} priority tiers (CRITICAL, HIGH, MEDIUM, LOW).}
+\li{If Step 1 narrows inputs for vocabulary discovery (for example, CRITICAL/HIGH only), that narrowing applies to discovery only. It \strong{never} reduces annotation or validation scope.}
+\li{\code{\startverb arithmetic-scanner\stopverb} persists the in-scope file manifest to \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} in the project root, and that manifest is the source of truth for Steps 2-4.}
+\li{A file is considered fully covered only when all three statuses are present:}
+\li{\code{\startverb step2\stopverb}: anchor annotation completed (or explicit no-anchor result)}
+\li{\code{\startverb step3\stopverb}: propagation completed (or explicit no-propagation result)}
+\li{\code{\startverb step4\stopverb}: validation completed}
+\li{\code{\startverb dimension-discoverer\stopverb} persists the discovered dimensional vocabulary to \code{\startverb DIMENSIONAL_UNITS.md\stopverb} in the project root for reuse by later steps and future runs.}
+\li{When a file ends in a terminal \code{\startverb BLOCKED\stopverb} state, persist the blocking reason and retry count in \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} and reflect the same file in \code{\startverb coverage.unprocessed_files\stopverb}.}
+\li{Do not finish while any in-scope file remains unprocessed in any step.}
+}
+}
+
+\subtree{
+\title{Delegation Contract}
+\ul{
+\li{\code{\startverb arithmetic-scanner\stopverb} owns repository scanning, arithmetic-file prioritization, and writing \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}.}
+\li{\code{\startverb dimension-discoverer\stopverb} owns dimensional vocabulary discovery, unit inference, and writing \code{\startverb DIMENSIONAL_UNITS.md\stopverb}.}
+\li{\code{\startverb dimension-annotator\stopverb} owns annotation format decisions, anchor-point edits, and comment-writing behavior.}
+\li{\code{\startverb dimension-propagator\stopverb} owns propagation logic, inferred annotations, and mismatch reporting during tracing.}
+\li{\code{\startverb dimension-validator\stopverb} owns bug detection, red-flag evaluation, rationalization rejection, and confirmation or refutation of propagated mismatches.}
+\li{The main skill context must not substitute its own dimensional reasoning for skipped or unlaunched subagents. If a step requires specialized reasoning, launch the corresponding subagent.}
+\li{Use reference files as subagent support material. Pass them to the relevant step in prompts instead of treating them as instructions for the main skill context.}
+}
+}
+
+\subtree{
+\title{Workflow}
+\p{Follow these sections in order. Do not advance until the current step satisfies its completion gate.}
+
+\subtree{
+\title{Shared Orchestration Rules}
+\ul{
+\li{\code{\startverb DIMENSIONAL_SCOPE.json\stopverb} and \code{\startverb DIMENSIONAL_UNITS.md\stopverb} live in the project root.}
+\li{The main skill context verifies Step 1 artifacts but does not write either Step 1 artifact itself.}
+\li{\code{\startverb DIMENSIONAL_SCOPE.json.in_scope_files\stopverb} is the source of truth for Steps 2-4. Never derive later scope from discovery-only inputs.}
+\li{When a later step reaches terminal \code{\startverb BLOCKED\stopverb}, persist the matching \code{\startverb step*_reason\stopverb} and \code{\startverb step*_retry_count\stopverb} fields on the file entry in \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}.}
+\li{\code{\startverb coverage.unprocessed_files\stopverb} must be derived from terminal \code{\startverb BLOCKED\stopverb} entries in \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} using \code{\startverb { "path": "...", "blocked_step": "step2|step3|step4", "reason": "...", "retry_count": 1 }\stopverb}.}
+\li{A step may retry a \code{\startverb BLOCKED\stopverb} file once with a focused prompt. If it is still \code{\startverb BLOCKED\stopverb}, keep the documented reason and continue. Do not finalize while any file remains \code{\startverb PENDING\stopverb}.}
+}
+}
+
+\subtree{
+\title{Step 1: Vocabulary and Scope Discovery}
+\p{If cached artifacts cannot be reused, delegate repository scanning to \code{\startverb arithmetic-scanner\stopverb} and vocabulary discovery to \code{\startverb dimension-discoverer\stopverb}. Do not do that step-specific analysis directly in the main skill context.}
+
+\ol{
+\li{Check whether \code{\startverb DIMENSIONAL_UNITS.md\stopverb} and \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} already exist in the project root.}
+\li{If both exist, read them and confirm:}
+\li{\code{\startverb DIMENSIONAL_SCOPE.json.project_root\stopverb} matches the current repo root}
+\li{\code{\startverb DIMENSIONAL_SCOPE.json\stopverb} contains \code{\startverb in_scope_files\stopverb}, \code{\startverb discoverer_focus_files\stopverb}, \code{\startverb recommended_discovery_order\stopverb}, and per-file \code{\startverb step2\stopverb}, \code{\startverb step3\stopverb}, \code{\startverb step4\stopverb} fields}
+\li{\code{\startverb DIMENSIONAL_UNITS.md\stopverb} is a usable dimensional vocabulary for this repo}
+\li{If either artifact is stale, malformed, missing required structure, or clearly for another repo, discard reuse and rerun the rest of Step 1.}
+\li{If both artifacts are valid, reuse them directly. If \code{\startverb in_scope_files\stopverb} is empty, skip Steps 2-4 and produce final output with zero findings.}
+\li{Otherwise use the \code{\startverb Task\stopverb} tool to spawn the \code{\startverb arithmetic-scanner\stopverb} agent. Its prompt must include:}
+\li{project root path}
+\li{absolute output path for \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}}
+\li{instruction to write the Step 1 scope manifest to disk and return the same scope data in its report}
+\li{The scanner owns Step 1 scope persistence. It must:}
+\li{identify dimensional-arithmetic files and prioritize them as usual}
+\li{write \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} with \code{\startverb project_root\stopverb}, \code{\startverb in_scope_files\stopverb}, \code{\startverb discoverer_focus_files\stopverb}, and \code{\startverb recommended_discovery_order\stopverb}}
+\li{initialize every in-scope file with \code{\startverb step2: "PENDING"\stopverb}, \code{\startverb step3: "PENDING"\stopverb}, and \code{\startverb step4: "PENDING"\stopverb}}
+\li{still write an empty manifest when no arithmetic files are found}
+\li{still narrow \code{\startverb discoverer_focus_files\stopverb} to CRITICAL/HIGH when more than 50 arithmetic files are found, while keeping all priorities in \code{\startverb in_scope_files\stopverb}}
+\li{After the scanner completes, read \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} from disk and confirm it exists and contains the required Step 1 fields before continuing.}
+\li{Use the \code{\startverb Task\stopverb} tool to spawn the \code{\startverb dimension-discoverer\stopverb} agent. Its prompt must include:}
+\li{project root path}
+\li{absolute path to \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}}
+\li{absolute output path for \code{\startverb DIMENSIONAL_UNITS.md\stopverb}}
+\li{prioritized \code{\startverb discoverer_focus_files\stopverb} with each file's path, priority, score, and category}
+\li{\code{\startverb recommended_discovery_order\stopverb}}
+\li{The discoverer owns Step 1 vocabulary persistence. It must read \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} as the Step 1 source of truth and write \code{\startverb DIMENSIONAL_UNITS.md\stopverb} with \code{\startverb Base Units\stopverb}, \code{\startverb Derived Units\stopverb}, and \code{\startverb Precision Prefixes\stopverb} sections. If \code{\startverb in_scope_files\stopverb} is empty, it must still write the same headings with empty sections.}
+\li{Step 1 is complete only when both artifacts exist on disk, pass the reuse checks above, and correctly represent the zero-file case. If \code{\startverb in_scope_files\stopverb} is empty after the discoverer writes \code{\startverb DIMENSIONAL_UNITS.md\stopverb}, skip Steps 2-4 and produce final output with zero findings.}
+}
+}
+
+\subtree{
+\title{Step 2: Anchor Annotation}
+\p{The main skill context must not add annotations itself. Use the \code{\startverb Task\stopverb} tool to spawn \code{\startverb dimension-annotator\stopverb} agents for all anchor-point annotation work. For full examples and annotation format details, see \code{\startverb [{baseDir}/references/annotate.md]({baseDir}/references/annotate.md)\stopverb}.}
+
+\ul{
+\li{Read \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} and build batches from \code{\startverb in_scope_files\stopverb}. Every in-scope file, including MEDIUM and LOW priority files, must receive a Step 2 outcome.}
+\li{Batch files instead of spawning one agent per file:}
+\li{\code{\startverb <= 10\stopverb} files: one batch}
+\li{\code{\startverb 11-30\stopverb} files: one batch per category}
+\li{\code{\startverb > 30\stopverb} files: one batch per category, splitting categories larger than 10 files into sub-batches of about 8 files}
+\li{Launch categories in Step 1 recommended discovery order: math libraries, then oracles, then core logic, then peripheral. Batches inside the same category may run in parallel.}
+\li{Before launching annotators, set \code{\startverb step2 = "PENDING"\stopverb} for every in-scope file and persist the updated \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}.}
+\li{Each annotator prompt must include:}
+\li{absolute path to \code{\startverb DIMENSIONAL_UNITS.md\stopverb}}
+\li{absolute path to \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}}
+\li{assigned file paths in order}
+\li{each file's category and matched patterns from scanner output}
+\li{summary of previously annotated interfaces or types from earlier batches, when applicable}
+\li{required per-file status output: \code{\startverb ANNOTATED\stopverb}, \code{\startverb REVIEWED_NO_ANCHOR_CHANGES\stopverb}, or \code{\startverb BLOCKED\stopverb} plus a one-line justification}
+\li{After each batch, immediately persist each assigned file to exactly one Step 2 status:}
+\li{\code{\startverb ANNOTATED\stopverb}}
+\li{\code{\startverb REVIEWED_NO_ANCHOR_CHANGES\stopverb}}
+\li{\code{\startverb BLOCKED\stopverb}}
+\li{If a file is \code{\startverb BLOCKED\stopverb}, also persist \code{\startverb step2_reason\stopverb} and \code{\startverb step2_retry_count\stopverb}. Retry each \code{\startverb BLOCKED\stopverb} file once with a focused prompt.}
+\li{Do not continue to Step 3 while any file remains \code{\startverb PENDING\stopverb} in on-disk manifest state.}
+}
+}
+
+\subtree{
+\title{Step 3: Dimension Propagation}
+\p{The main skill context must not perform propagation reasoning itself. Use the \code{\startverb Task\stopverb} tool to spawn \code{\startverb dimension-propagator\stopverb} agents to extend annotations through arithmetic, function calls, and assignments. For algebra details, see \code{\startverb [{baseDir}/references/dimension-algebra.md]({baseDir}/references/dimension-algebra.md)\stopverb}.}
+
+\ul{
+\li{Read \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} and build propagation batches from \code{\startverb in_scope_files\stopverb}. Every in-scope file must receive a Step 3 outcome.}
+\li{Use the same batching rules and category ordering as Step 2.}
+\li{Before launching propagators, confirm every file already has a non-pending Step 2 status.}
+\li{Then set \code{\startverb step3 = "PENDING"\stopverb} for every in-scope file and persist the updated manifest.}
+\li{Each propagator prompt must include:}
+\li{absolute path to \code{\startverb DIMENSIONAL_UNITS.md\stopverb}}
+\li{absolute path to \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}}
+\li{assigned file paths in order}
+\li{each file's category and matched patterns}
+\li{summary of Step 2 anchor annotations for the assigned files and any upstream interfaces they depend on}
+\li{required per-file status output: \code{\startverb PROPAGATED\stopverb}, \code{\startverb REVIEWED_NO_PROPAGATION_CHANGES\stopverb}, or \code{\startverb BLOCKED\stopverb} plus a one-line justification}
+\li{After each batch, immediately persist each assigned file to exactly one Step 3 status:}
+\li{\code{\startverb PROPAGATED\stopverb}}
+\li{\code{\startverb REVIEWED_NO_PROPAGATION_CHANGES\stopverb}}
+\li{\code{\startverb BLOCKED\stopverb}}
+\li{If a file is \code{\startverb BLOCKED\stopverb}, also persist \code{\startverb step3_reason\stopverb} and \code{\startverb step3_retry_count\stopverb}. Retry each \code{\startverb BLOCKED\stopverb} file once with a focused prompt.}
+\li{After all propagators complete, aggregate:}
+\li{annotations added by confidence level (\code{\startverb CERTAIN\stopverb}, \code{\startverb INFERRED\stopverb}, \code{\startverb UNCERTAIN\stopverb})}
+\li{mismatches found, with severities for validator deduplication}
+\li{coverage gaps that could not be inferred}
+\li{Do not continue to Step 4 while any file remains \code{\startverb PENDING\stopverb} in on-disk manifest state.}
+}
+}
+
+\subtree{
+\title{Step 4: Bug Detection}
+\p{The main skill context must not perform bug detection itself. Use the \code{\startverb Task\stopverb} tool to spawn \code{\startverb dimension-validator\stopverb} agents to detect dimensional bugs in annotated code. For examples, red flags, rationalization checks, and standard vocabulary, see \code{\startverb [{baseDir}/references/bug-patterns.md]({baseDir}/references/bug-patterns.md)\stopverb}, \code{\startverb [{baseDir}/references/common-dimensions.md]({baseDir}/references/common-dimensions.md)\stopverb}, and \code{\startverb [{baseDir}/references/dimension-algebra.md]({baseDir}/references/dimension-algebra.md)\stopverb}. DO NOT DETECT BUGS IN ANY OTHER STEP.}
+
+\ul{
+\li{Validate every file in \code{\startverb DIMENSIONAL_SCOPE.json.in_scope_files\stopverb}.}
+\li{Use this priority order without skipping lower tiers:}
+\li{files with CRITICAL or HIGH Step 3 mismatches}
+\li{remaining CRITICAL and HIGH scanner-priority files}
+\li{remaining MEDIUM and LOW files}
+\li{Before launching validators, confirm every file already has a non-pending Step 3 status.}
+\li{Then set \code{\startverb step4 = "PENDING"\stopverb} for every in-scope file and persist the updated manifest.}
+\li{Spawn one \code{\startverb dimension-validator\stopverb} agent per file. For large repos, run them in waves of roughly 10-30 files to keep orchestration stable.}
+\li{Each validator prompt must include:}
+\li{absolute path to \code{\startverb DIMENSIONAL_UNITS.md\stopverb}}
+\li{absolute path to \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}}
+\li{the single file path to validate}
+\li{a summary of anchor and propagated annotations in the file}
+\li{Step 3 mismatch summaries for the file, including mismatch IDs}
+\li{cross-file function signatures or return dimensions needed for call-boundary checks}
+\li{required per-file status output: \code{\startverb VALIDATED\stopverb} or \code{\startverb BLOCKED\stopverb}}
+\li{After each wave, immediately persist each file to exactly one Step 4 status:}
+\li{\code{\startverb VALIDATED\stopverb}}
+\li{\code{\startverb BLOCKED\stopverb}}
+\li{If a file is \code{\startverb BLOCKED\stopverb}, also persist \code{\startverb step4_reason\stopverb} and \code{\startverb step4_retry_count\stopverb}. Retry each \code{\startverb BLOCKED\stopverb} file once with a focused prompt.}
+\li{Deduplicate findings:}
+\li{confirmed Step 3 mismatches keep their original IDs and severities}
+\li{refuted Step 3 mismatches are noted as false positives and excluded from final counts}
+\li{genuinely new findings receive new \code{\startverb DIM-XXX\stopverb} IDs}
+\li{Aggregate confirmed findings, new findings, refuted findings, coverage summary, and final \code{\startverb coverage.unprocessed_files\stopverb}.}
+\li{Step 4 is complete only when \code{\startverb DIMENSIONAL_SCOPE.json.in_scope_files\stopverb} contains no \code{\startverb step4: "PENDING"\stopverb} entries.}
+}
+}
+}
+
+\subtree{
+\title{Reference Documentation}
+\p{Pass these references to the relevant subagent when a step needs them:}
+
+\ul{
+\li{\code{\startverb [{baseDir}/references/dimension-algebra.md]({baseDir}/references/dimension-algebra.md)\stopverb} - Propagator and validator algebra rules}
+\li{\code{\startverb [{baseDir}/references/common-dimensions.md]({baseDir}/references/common-dimensions.md)\stopverb} - Validator vocabulary reference}
+\li{\code{\startverb [{baseDir}/references/bug-patterns.md]({baseDir}/references/bug-patterns.md)\stopverb} - Validator bug-pattern and red-flag reference}
+\li{\code{\startverb [{baseDir}/references/annotate.md]({baseDir}/references/annotate.md)\stopverb} - Annotator format and example reference}
+}
+}
+
+\subtree{
+\title{Final Output}
+\p{At the end of the analysis, provide a structured summary unless some other output format has been specified:}
+
+\pre{\startverb
+{
+  "mode": "full-auto",
+  "project_root": "<path>",
+  "vocabulary": {
+    "base_units": ["..."],
+    "derived_units": ["..."],
+    "precision_prefixes": ["..."]
+  },
+  "annotations": {
+    "total_added": 0,
+    "by_file": {}
+  },
+  "findings": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "details": []
+  },
+  "uncertainties_resolved": 0,
+  "coverage": {
+    "in_scope_files": 0,
+    "anchor_reviewed_files": "0/0",
+    "propagation_reviewed_files": "0/0",
+    "validation_reviewed_files": "0/0",
+    "annotated_functions": "0/0",
+    "annotated_variables": "0/0",
+    "unprocessed_files": [
+      {
+        "path": "/path/to/repo/contracts/LegacyMath.sol",
+        "blocked_step": "step3",
+        "reason": "Parser could not process generated source",
+        "retry_count": 1
+      }
+    ]
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Completion Checklist}
+\p{You are NOT done until all of these are true:}
+
+\subtree{
+\title{File Coverage Gates}
+\ul{
+\li{[ ] \code{\startverb DIMENSIONAL_UNITS.md\stopverb} exists in the project root}
+\li{[ ] \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} exists in the project root and is the source of truth for downstream coverage}
+\li{[ ] Every in-scope arithmetic file discovered in Step 1 appears in \code{\startverb DIMENSIONAL_SCOPE.json.in_scope_files\stopverb}}
+\li{[ ] Every in-scope file has a non-\code{\startverb PENDING\stopverb} Step 2 status (\code{\startverb ANNOTATED\stopverb}, \code{\startverb REVIEWED_NO_ANCHOR_CHANGES\stopverb}, or \code{\startverb BLOCKED\stopverb})}
+\li{[ ] Every in-scope file has a non-\code{\startverb PENDING\stopverb} Step 3 status (\code{\startverb PROPAGATED\stopverb}, \code{\startverb REVIEWED_NO_PROPAGATION_CHANGES\stopverb}, or \code{\startverb BLOCKED\stopverb})}
+\li{[ ] Every in-scope file has a non-\code{\startverb PENDING\stopverb} Step 4 status (\code{\startverb VALIDATED\stopverb} or \code{\startverb BLOCKED\stopverb})}
+\li{[ ] No in-scope file remains \code{\startverb PENDING\stopverb} in any step}
+\li{[ ] Any \code{\startverb BLOCKED\stopverb} file has a documented reason in the final output}
+\li{[ ] \code{\startverb coverage.unprocessed_files\stopverb} exactly matches the final set of terminal \code{\startverb BLOCKED\stopverb} files after retries, using \code{\startverb path\stopverb}, \code{\startverb blocked_step\stopverb}, \code{\startverb reason\stopverb}, and \code{\startverb retry_count\stopverb}}
+}
+}
+
+\subtree{
+\title{Summary Report}
+\ul{
+\li{[ ] Final summary JSON/report provided}
+\li{[ ] Final coverage counters match \code{\startverb DIMENSIONAL_SCOPE.json\stopverb}}
+\li{[ ] List of modified files provided when edits occurred}
+\li{[ ] Any dimensional mismatches or bugs found are summarized}
+\li{[ ] Any remaining blocked or unprocessed files are called out with reasons}
+}
+
+\p{\strong{If \code{\startverb DIMENSIONAL_SCOPE.json\stopverb} and the final report disagree, reconcile the report or continue processing until they match.} \strong{Do not claim completion from agent intent alone; completion is determined by manifest coverage and final reported statuses.}}
+}
+}
+}

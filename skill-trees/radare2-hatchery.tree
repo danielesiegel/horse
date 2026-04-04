@@ -1,0 +1,149 @@
+\title{Radare2 Hatchery}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Radare2 Hatchery}
+
+\subtree{
+\title{Radare2 Hatchery}
+\p{name: radare2-hatchery description: MCP server for radare2 binary analysis integration with AI assistants. Decompilation, disassembly, and reverse engineering via MCP protocol. trit: -1 color: "#D6DB4C"}
+
+\subtree{
+\title{Overview}
+\p{\strong{radare2-mcp} provides an MCP server enabling Claude and other AI assistants to perform binary analysis using radare2.}
+}
+
+\subtree{
+\title{Features}
+\ul{
+\li{\strong{Direct stdin/stdout communication} - Simple MCP transport}
+\li{\strong{Binary analysis tools} - Full radare2 capabilities}
+\li{\strong{AI assistant integration} - Seamless Claude Desktop support}
+\li{\strong{File exploration} - Inspect any binary format}
+\li{\strong{Decompilation} - Pseudocode generation via r2ghidra}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Via r2pm (radare2 package manager)
+r2pm -Uci r2mcp
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{Claude Desktop}
+\p{Edit \code{\startverb ~/Library/Application Support/Claude/claude_desktop_config.json\stopverb}:}
+
+\pre{\startverb
+{
+  "mcpServers": {
+    "radare2": {
+      "command": "r2pm",
+      "args": ["-r", "r2mcp"]
+    }
+  }
+}
+\stopverb}
+}
+
+\subtree{
+\title{Docker}
+\pre{\startverb
+docker build -t r2mcp .
+\stopverb}
+
+\pre{\startverb
+{
+  "mcpServers": {
+    "radare2": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "-v", "/tmp/data:/data", "r2mcp"]
+    }
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{MCP Tools Available}
+\p{The server exposes radare2 analysis via MCP:}
+
+\ul{
+\li{\code{\startverb open_file\stopverb} - Open binary for analysis}
+\li{\code{\startverb analyze\stopverb} - Run analysis at depth levels 0-4}
+\li{\code{\startverb decompile_function\stopverb} - Get C-like pseudocode}
+\li{\code{\startverb list_functions\stopverb} - Enumerate discovered functions}
+\li{\code{\startverb list_strings\stopverb} - Extract strings from binary}
+\li{\code{\startverb xrefs_to\stopverb} - Find cross-references}
+\li{\code{\startverb run_command\stopverb} - Execute raw r2 commands}
+}
+}
+
+\subtree{
+\title{Gay.jl Integration}
+\pre{\startverb
+# Rec2020 wide gamut learning
+gay_seed!(0xe72b09cb7aebe913)
+
+# Forward mode autodiff
+∂params = Enzyme.gradient(Forward, loss, params, seed)
+\stopverb}
+}
+
+\subtree{
+\title{Repository}
+\ul{
+\li{\strong{Source}: TeglonLabs/radare2-mcp}
+\li{\strong{Seed}: \code{\startverb 0xe72b09cb7aebe913\stopverb}}
+\li{\strong{Index}: 55/1055}
+\li{\strong{Color}: #b3a6b8}
+}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+radare2-hatchery (-1) ⊗ mcp-builder (0) ⊗ gay-mcp (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb mcp-builder\stopverb} - MCP server development}
+\li{\code{\startverb blackhat-go\stopverb} - Security techniques}
+\li{\code{\startverb tree-sitter\stopverb} - AST-based code analysis}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 7. Propagators}
+\p{\strong{Concepts}: propagator, cell, constraint, bidirectional, TMS}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+radare2-hatchery (○) + SDF.Ch7 (○) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Propagators flow constraints bidirectionally. This skill propagates information.}
+}
+}
+}

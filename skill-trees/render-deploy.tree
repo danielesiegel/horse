@@ -1,0 +1,601 @@
+\title{Render Deploy}
+
+\taxon{skill}
+
+\meta{description}{Deploy applications to Render by analyzing codebases, generating render.yaml Blueprints, and providing Dashboard deeplinks. Use when the user wants to deploy, host, publish, or set up their application on Render's cloud platform.}
+
+\subtree{
+\title{Deploy to Render}
+\p{Render supports \strong{Git-backed} services and \strong{prebuilt Docker image} services.}
+
+\p{This skill covers \strong{Git-backed} flows:}
+
+\ol{
+\li{\strong{Blueprint Method} - Generate render.yaml for Infrastructure-as-Code deployments}
+\li{\strong{Direct Creation} - Create services instantly via MCP tools}
+}
+
+\p{Blueprints can also run a \strong{prebuilt Docker image} by using \code{\startverb runtime: image\stopverb}, but the \code{\startverb render.yaml\stopverb} still must live in a Git repo.}
+
+\p{If there is no Git remote, stop and ask the user to either:}
+
+\ul{
+\li{Create/push a Git remote (can be minimal if only the Blueprint is needed), or}
+\li{Use the Render Dashboard/API to deploy a prebuilt Docker image (MCP cannot create image-backed services).}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{When sandboxing blocks the deployment network calls, rerun with \code{\startverb sandbox_permissions=require_escalated\stopverb}.}
+\li{The deployment might take a few minutes. Use appropriate timeout values.}
+}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{Activate this skill when users want to:}
+
+\ul{
+\li{Deploy an application to Render}
+\li{Create a render.yaml Blueprint file}
+\li{Set up Render deployment for their project}
+\li{Host or publish their application on Render's cloud platform}
+\li{Create databases, cron jobs, or other Render resources}
+}
+}
+
+\subtree{
+\title{Happy Path (New Users)}
+\p{Use this short prompt sequence before deep analysis to reduce friction:}
+
+\ol{
+\li{Ask whether they want to deploy from a Git repo or a prebuilt Docker image.}
+\li{Ask whether Render should provision everything the app needs (based on what seems likely from the user's description) or only the app while they bring their own infra. If dependencies are unclear, ask a short follow-up to confirm whether they need a database, workers, cron, or other services.}
+}
+
+\p{Then proceed with the appropriate method below.}
+}
+
+\subtree{
+\title{Choose Your Source Path}
+\p{\strong{Git Repo Path:} Required for both Blueprint and Direct Creation. The repo must be pushed to GitHub, GitLab, or Bitbucket.}
+
+\p{\strong{Prebuilt Docker Image Path:} Supported by Render via image-backed services. This is \strong{not} supported by MCP; use the Dashboard/API. Ask for:}
+
+\ul{
+\li{Image URL (registry + tag)}
+\li{Registry auth (if private)}
+\li{Service type (web/worker) and port}
+}
+
+\p{If the user chooses a Docker image, guide them to the Render Dashboard image deploy flow or ask them to add a Git remote (so you can use a Blueprint with \code{\startverb runtime: image\stopverb}).}
+}
+
+\subtree{
+\title{Choose Your Deployment Method (Git Repo)}
+\p{Both methods require a Git repository pushed to GitHub, GitLab, or Bitbucket. (If using \code{\startverb runtime: image\stopverb}, the repo can be minimal and only contain \code{\startverb render.yaml\stopverb}.)}
+
+\pre{\startverb
+| Method | Best For | Pros |
+|--------|----------|------|
+| **Blueprint** | Multi-service apps, IaC workflows | Version controlled, reproducible, supports complex setups |
+| **Direct Creation** | Single services, quick deployments | Instant creation, no render.yaml file needed |
+\stopverb}
+
+\subtree{
+\title{Method Selection Heuristic}
+\p{Use this decision rule by default unless the user requests a specific method. Analyze the codebase first; only ask if deployment intent is unclear (e.g., DB, workers, cron).}
+
+\p{\strong{Use Direct Creation (MCP) when ALL are true:}}
+
+\ul{
+\li{Single service (one web app or one static site)}
+\li{No separate worker/cron services}
+\li{No attached databases or Key Value}
+\li{Simple env vars only (no shared env groups)}
+}
+
+\p{If this path fits and MCP isn't configured yet, stop and guide MCP setup before proceeding.}
+
+\p{\strong{Use Blueprint when ANY are true:}}
+
+\ul{
+\li{Multiple services (web + worker, API + frontend, etc.)}
+\li{Databases, Redis/Key Value, or other datastores are required}
+\li{Cron jobs, background workers, or private services}
+\li{You want reproducible IaC or a render.yaml committed to the repo}
+\li{Monorepo or multi-env setup that needs consistent configuration}
+}
+
+\p{If unsure, ask a quick clarifying question, but default to Blueprint for safety. For a single service, strongly prefer Direct Creation via MCP and guide MCP setup if needed.}
+}
+}
+
+\subtree{
+\title{Prerequisites Check}
+\p{When starting a deployment, verify these requirements in order:}
+
+\p{\strong{1. Confirm Source Path (Git vs Docker)}}
+
+\p{If using Git-based methods (Blueprint or Direct Creation), the repo must be pushed to GitHub/GitLab/Bitbucket. Blueprints that reference a prebuilt image still require a Git repo with \code{\startverb render.yaml\stopverb}.}
+
+\pre{\startverb
+git remote -v
+\stopverb}
+
+\ul{
+\li{If no remote exists, stop and ask the user to create/push a remote \strong{or} switch to Docker image deploy.}
+}
+
+\p{\strong{2. Check MCP Tools Availability (Preferred for Single-Service)}}
+
+\p{MCP tools provide the best experience. Check if available by attempting:}
+
+\pre{\startverb
+list_services()
+\stopverb}
+
+\p{If MCP tools are available, you can skip CLI installation for most operations.}
+
+\p{\strong{3. Check Render CLI Installation (for Blueprint validation)}}
+
+\pre{\startverb
+render --version
+\stopverb}
+
+\p{If not installed, offer to install:}
+
+\ul{
+\li{macOS: \code{\startverb brew install render\stopverb}}
+\li{Linux/macOS: \code{\startverb curl -fsSL https://raw.githubusercontent.com/render-oss/cli/main/bin/install.sh | sh\stopverb}}
+}
+
+\p{\strong{4. MCP Setup (if MCP isn't configured)}}
+
+\p{If \code{\startverb list_services()\stopverb} fails because MCP isn't configured, ask whether they want to set up MCP (preferred) or continue with the CLI fallback. If they choose MCP, ask which AI tool they're using, then provide the matching instructions below. Always use their API key.}
+
+\subtree{
+\title{Cursor}
+\p{Walk the user through these steps:}
+
+\ol{
+\li{Get a Render API key:}
+}
+
+\pre{\startverb
+https://dashboard.render.com/u/*/settings#api-keys
+\stopverb}
+
+\ol{
+\li{Add this to \code{\startverb ~/.cursor/mcp.json\stopverb} (replace \code{\startverb <YOUR_API_KEY>\stopverb}):}
+}
+
+\pre{\startverb
+{
+  "mcpServers": {
+    "render": {
+      "url": "https://mcp.render.com/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_API_KEY>"
+      }
+    }
+  }
+}
+\stopverb}
+
+\ol{
+\li{Restart Cursor, then retry \code{\startverb list_services()\stopverb}.}
+}
+}
+
+\subtree{
+\title{Claude Code}
+\p{Walk the user through these steps:}
+
+\ol{
+\li{Get a Render API key:}
+}
+
+\pre{\startverb
+https://dashboard.render.com/u/*/settings#api-keys
+\stopverb}
+
+\ol{
+\li{Add the MCP server with Claude Code (replace \code{\startverb <YOUR_API_KEY>\stopverb}):}
+}
+
+\pre{\startverb
+claude mcp add --transport http render https://mcp.render.com/mcp --header "Authorization: Bearer <YOUR_API_KEY>"
+\stopverb}
+
+\ol{
+\li{Restart Claude Code, then retry \code{\startverb list_services()\stopverb}.}
+}
+}
+
+\subtree{
+\title{Codex}
+\p{Walk the user through these steps:}
+
+\ol{
+\li{Get a Render API key:}
+}
+
+\pre{\startverb
+https://dashboard.render.com/u/*/settings#api-keys
+\stopverb}
+
+\ol{
+\li{Set it in their shell:}
+}
+
+\pre{\startverb
+export RENDER_API_KEY="<YOUR_API_KEY>"
+\stopverb}
+
+\ol{
+\li{Add the MCP server with the Codex CLI:}
+}
+
+\pre{\startverb
+codex mcp add render --url https://mcp.render.com/mcp --bearer-token-env-var RENDER_API_KEY
+\stopverb}
+
+\ol{
+\li{Restart Codex, then retry \code{\startverb list_services()\stopverb}.}
+}
+}
+
+\subtree{
+\title{Other Tools}
+\p{If the user is on another AI app, direct them to the Render MCP docs for that tool's setup steps and install method.}
+}
+
+\subtree{
+\title{Workspace Selection}
+\p{After MCP is configured, have the user set the active Render workspace with a prompt like:}
+
+\pre{\startverb
+Set my Render workspace to [WORKSPACE_NAME]
+\stopverb}
+
+\p{\strong{5. Check Authentication (CLI fallback only)}}
+
+\p{If MCP isn't available, use the CLI instead and verify you can access your account:}
+
+\pre{\startverb
+# Check if user is logged in (use -o json for non-interactive mode)
+render whoami -o json
+\stopverb}
+
+\p{If \code{\startverb render whoami\stopverb} fails or returns empty data, the CLI is not authenticated. The CLI won't always prompt automatically, so explicitly prompt the user to authenticate:}
+
+\p{If neither is configured, ask user which method they prefer:}
+
+\ul{
+\li{\strong{API Key (CLI)}: \code{\startverb export RENDER_API_KEY="rnd_xxxxx"\stopverb} (Get from https://dashboard.render.com/u/*/settings#api-keys)}
+\li{\strong{Login}: \code{\startverb render login\stopverb} (Opens browser for OAuth)}
+}
+
+\p{\strong{6. Check Workspace Context}}
+
+\p{Verify the active workspace:}
+
+\pre{\startverb
+get_selected_workspace()
+\stopverb}
+
+\p{Or via CLI:}
+
+\pre{\startverb
+render workspace current -o json
+\stopverb}
+
+\p{To list available workspaces:}
+
+\pre{\startverb
+list_workspaces()
+\stopverb}
+
+\p{If user needs to switch workspaces, they must do so via Dashboard or CLI (\code{\startverb render workspace set\stopverb}).}
+
+\p{Once prerequisites are met, proceed with deployment workflow.}
+}
+}
+}
+
+\subtree{
+\title{Method 1: Blueprint Deployment (Recommended for Complex Apps)}
+\subtree{
+\title{Blueprint Workflow}
+\subtree{
+\title{Step 1: Analyze Codebase}
+\p{Analyze the codebase to determine framework/runtime, build and start commands, required env vars, datastores, and port binding. Use the detailed checklists in [references/codebase-analysis.md](references/codebase-analysis.md).}
+}
+
+\subtree{
+\title{Step 2: Generate render.yaml}
+\p{Create a \code{\startverb render.yaml\stopverb} Blueprint file following the Blueprint specification.}
+
+\p{Complete specification: [references/blueprint-spec.md](references/blueprint-spec.md)}
+
+\p{\strong{Key Points:}}
+
+\ul{
+\li{Always use \code{\startverb plan: free\stopverb} unless user specifies otherwise}
+\li{Include ALL environment variables the app needs}
+\li{Mark secrets with \code{\startverb sync: false\stopverb} (user fills these in Dashboard)}
+\li{Use appropriate service type: \code{\startverb web\stopverb}, \code{\startverb worker\stopverb}, \code{\startverb cron\stopverb}, \code{\startverb static\stopverb}, or \code{\startverb pserv\stopverb}}
+\li{Use appropriate runtime: [references/runtimes.md](references/runtimes.md)}
+}
+
+\p{\strong{Basic Structure:}}
+
+\pre{\startverb
+services:
+  - type: web
+    name: my-app
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: postgres
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false  # User fills in Dashboard
+
+databases:
+  - name: postgres
+    databaseName: myapp_db
+    plan: free
+\stopverb}
+
+\p{\strong{Service Types:}}
+
+\ul{
+\li{\code{\startverb web\stopverb}: HTTP services, APIs, web applications (publicly accessible)}
+\li{\code{\startverb worker\stopverb}: Background job processors (not publicly accessible)}
+\li{\code{\startverb cron\stopverb}: Scheduled tasks that run on a cron schedule}
+\li{\code{\startverb static\stopverb}: Static sites (HTML/CSS/JS served via CDN)}
+\li{\code{\startverb pserv\stopverb}: Private services (internal only, within same account)}
+}
+
+\p{Service type details: [references/service-types.md](references/service-types.md) Runtime options: [references/runtimes.md](references/runtimes.md) Template examples: [assets/](assets/)}
+}
+
+\subtree{
+\title{Step 2.5: Immediate Next Steps (Always Provide)}
+\p{After creating \code{\startverb render.yaml\stopverb}, always give the user a short, explicit checklist and run validation immediately when the CLI is available:}
+
+\ol{
+\li{\strong{Authenticate (CLI)}: run \code{\startverb render whoami -o json\stopverb} (if not logged in, run \code{\startverb render login\stopverb} or set \code{\startverb RENDER_API_KEY\stopverb})}
+\li{\strong{Validate (recommended)}: run \code{\startverb render blueprints validate\stopverb}}
+\li{If the CLI isn't installed, offer to install it and provide the command.}
+\li{\strong{Commit + push}: \code{\startverb git add render.yaml && git commit -m "Add Render deployment configuration" && git push origin main\stopverb}}
+\li{\strong{Open Dashboard}: Use the Blueprint deeplink and complete Git OAuth if prompted}
+\li{\strong{Fill secrets}: Set env vars marked \code{\startverb sync: false\stopverb}}
+\li{\strong{Deploy}: Click "Apply" and monitor the deploy}
+}
+}
+
+\subtree{
+\title{Step 3: Validate Configuration}
+\p{Validate the render.yaml file to catch errors before deployment. If the CLI is installed, run the commands directly; only prompt the user if the CLI is missing:}
+
+\pre{\startverb
+render whoami -o json  # Ensure CLI is authenticated (won't always prompt)
+render blueprints validate
+\stopverb}
+
+\p{Fix any validation errors before proceeding. Common issues:}
+
+\ul{
+\li{Missing required fields (\code{\startverb name\stopverb}, \code{\startverb type\stopverb}, \code{\startverb runtime\stopverb})}
+\li{Invalid runtime values}
+\li{Incorrect YAML syntax}
+\li{Invalid environment variable references}
+}
+
+\p{Configuration guide: [references/configuration-guide.md](references/configuration-guide.md)}
+}
+
+\subtree{
+\title{Step 4: Commit and Push}
+\p{\strong{IMPORTANT:} You must merge the \code{\startverb render.yaml\stopverb} file into your repository before deploying.}
+
+\p{Ensure the \code{\startverb render.yaml\stopverb} file is committed and pushed to your Git remote:}
+
+\pre{\startverb
+git add render.yaml
+git commit -m "Add Render deployment configuration"
+git push origin main
+\stopverb}
+
+\p{If there is no Git remote yet, stop here and guide the user to create a GitHub/GitLab/Bitbucket repo, add it as \code{\startverb origin\stopverb}, and push before continuing.}
+
+\p{\strong{Why this matters:} The Dashboard deeplink will read the render.yaml from your repository. If the file isn't merged and pushed, Render won't find the configuration and deployment will fail.}
+
+\p{Verify the file is in your remote repository before proceeding to the next step.}
+}
+
+\subtree{
+\title{Step 5: Generate Deeplink}
+\p{Get the Git repository URL:}
+
+\pre{\startverb
+git remote get-url origin
+\stopverb}
+
+\p{This will return a URL from your Git provider. \strong{If the URL is SSH format, convert it to HTTPS:}}
+
+\pre{\startverb
+| SSH Format | HTTPS Format |
+|------------|--------------|
+| `git@github.com:user/repo.git` | `https://github.com/user/repo` |
+| `git@gitlab.com:user/repo.git` | `https://gitlab.com/user/repo` |
+| `git@bitbucket.org:user/repo.git` | `https://bitbucket.org/user/repo` |
+\stopverb}
+
+\p{\strong{Conversion pattern:} Replace \code{\startverb git@<host>:\stopverb} with \code{\startverb https://<host>/\stopverb} and remove \code{\startverb .git\stopverb} suffix.}
+
+\p{Format the Dashboard deeplink using the HTTPS repository URL:}
+
+\pre{\startverb
+https://dashboard.render.com/blueprint/new?repo=<REPOSITORY_URL>
+\stopverb}
+
+\p{Example:}
+
+\pre{\startverb
+https://dashboard.render.com/blueprint/new?repo=https://github.com/username/repo-name
+\stopverb}
+}
+
+\subtree{
+\title{Step 6: Guide User}
+\p{\strong{CRITICAL:} Ensure the user has merged and pushed the render.yaml file to their repository before clicking the deeplink. If the file isn't in the repository, Render cannot read the Blueprint configuration and deployment will fail.}
+
+\p{Provide the deeplink to the user with these instructions:}
+
+\ol{
+\li{\strong{Verify render.yaml is merged} - Confirm the file exists in your repository on GitHub/GitLab/Bitbucket}
+\li{Click the deeplink to open Render Dashboard}
+\li{Complete Git provider OAuth if prompted}
+\li{Name the Blueprint (or use default from render.yaml)}
+\li{Fill in secret environment variables (marked with \code{\startverb sync: false\stopverb})}
+\li{Review services and databases configuration}
+\li{Click "Apply" to deploy}
+}
+
+\p{The deployment will begin automatically. Users can monitor progress in the Render Dashboard.}
+}
+
+\subtree{
+\title{Step 7: Verify Deployment}
+\p{After the user deploys via Dashboard, verify everything is working.}
+
+\p{\strong{Check deployment status via MCP:}}
+
+\pre{\startverb
+list_deploys(serviceId: "<service-id>", limit: 1)
+\stopverb}
+
+\p{Look for \code{\startverb status: "live"\stopverb} to confirm successful deployment.}
+
+\p{\strong{Check for runtime errors (wait 2-3 minutes after deploy):}}
+
+\pre{\startverb
+list_logs(resource: ["<service-id>"], level: ["error"], limit: 20)
+\stopverb}
+
+\p{\strong{Check service health metrics:}}
+
+\pre{\startverb
+get_metrics(
+  resourceId: "<service-id>",
+  metricTypes: ["http_request_count", "cpu_usage", "memory_usage"]
+)
+\stopverb}
+
+\p{If errors are found, proceed to the \strong{Post-deploy verification and basic triage} section below.}
+}
+}
+}
+
+\subtree{
+\title{Method 2: Direct Service Creation (Quick Single-Service Deployments)}
+\p{For simple deployments without Infrastructure-as-Code, create services directly via MCP tools.}
+
+\subtree{
+\title{When to Use Direct Creation}
+\ul{
+\li{Single web service or static site}
+\li{Quick prototypes or demos}
+\li{When you don't need a render.yaml file in your repo}
+\li{Adding databases or cron jobs to existing projects}
+}
+}
+
+\subtree{
+\title{Prerequisites for Direct Creation}
+\p{\strong{Repository must be pushed to a Git provider.} Render clones your repository to build and deploy services.}
+
+\pre{\startverb
+git remote -v  # Verify remote exists
+git push origin main  # Ensure code is pushed
+\stopverb}
+
+\p{Supported providers: GitHub, GitLab, Bitbucket}
+
+\p{If no remote exists, stop and ask the user to create/push a remote or switch to Docker image deploy.}
+
+\p{\strong{Note:} MCP does not support creating image-backed services. Use the Dashboard/API for prebuilt Docker image deploys.}
+}
+
+\subtree{
+\title{Direct Creation Workflow}
+\p{Use the concise steps below, and refer to [references/direct-creation.md](references/direct-creation.md) for full MCP command examples and follow-on configuration.}
+
+\subtree{
+\title{Step 1: Analyze Codebase}
+\p{Use [references/codebase-analysis.md](references/codebase-analysis.md) to determine runtime, build/start commands, env vars, and datastores.}
+}
+
+\subtree{
+\title{Step 2: Create Resources via MCP}
+\p{Create the service (web or static) and any required databases or key-value stores. See [references/direct-creation.md](references/direct-creation.md).}
+
+\p{If MCP returns an error about missing Git credentials or repo access, stop and guide the user to connect their Git provider in the Render Dashboard, then retry.}
+}
+
+\subtree{
+\title{Step 3: Configure Environment Variables}
+\p{Add required env vars via MCP after creation. See [references/direct-creation.md](references/direct-creation.md).}
+
+\p{Remind the user that secrets can be set in the Dashboard if they prefer not to pass them via MCP.}
+}
+
+\subtree{
+\title{Step 4: Verify Deployment}
+\p{Check deploy status, logs, and metrics. See [references/direct-creation.md](references/direct-creation.md).}
+
+\p{For service discovery, configuration details, quick commands, and common issues, see [references/deployment-details.md](references/deployment-details.md).}
+}
+}
+}
+
+\subtree{
+\title{Post-deploy verification and basic triage (All Methods)}
+\p{Keep this short and repeatable. If any check fails, fix it before redeploying.}
+
+\ol{
+\li{Confirm the latest deploy is \code{\startverb live\stopverb} and serving traffic}
+\li{Hit the health endpoint (or root) and verify a 200 response}
+\li{Scan recent error logs for a clear failure signature}
+\li{Verify required env vars and port binding (\code{\startverb 0.0.0.0:$PORT\stopverb})}
+}
+
+\p{Detailed checklist and commands: [references/post-deploy-checks.md](references/post-deploy-checks.md)}
+
+\p{If the service fails to start or health checks time out, use the basic triage guide: [references/troubleshooting-basics.md](references/troubleshooting-basics.md)}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Escalated Network Access}
+\p{If deployment fails due to network issues (timeouts, DNS errors, connection resets), rerun the deploy with escalated permissions (use \code{\startverb sandbox_permissions=require_escalated\stopverb}). The deploy requires escalated network access when sandbox networking blocks outbound requests.}
+
+\p{Example guidance to the user:}
+
+\pre{\startverb
+The deploy needs escalated network access to deploy to Render. I can rerun the command with escalated permissions—want me to proceed?
+\stopverb}
+
+\p{Optional: If you need deeper diagnostics (metrics/DB checks/error catalog), suggest installing the \code{\startverb render-debug\stopverb} skill. It is not required for the core deploy flow.}
+}
+}
+}

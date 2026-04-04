@@ -1,0 +1,174 @@
+\title{Hero Dispenser Mod}
+
+\taxon{skill}
+
+\tag{hero}
+
+\tag{dispenser}
+
+\tag{medication}
+
+\tag{reverse-engineering}
+
+\tag{aptos}
+
+\tag{hamming}
+
+\tag{iot}
+
+\meta{version}{0.1.0}
+
+\meta{trit}{-1}
+
+\meta{description}{Hero Health smart pill dispenser after-market firmware mod with scrambled medication indexing, Aptos Hamming swarm contract integration, and nurse approval email automation. Use when working on medication dispensing, Hero device hacking, supply chain tracking, or pill dispenser reverse engineering.}
+
+\subtree{
+\title{Hero Dispenser After-Market Firmware Mod}
+\subtree{
+\title{Hardware Profile (Model 100, v3.0 Dec 2024)}
+\p{Hero is a WiFi-connected smart pill dispenser:}
+
+\ul{
+\li{\strong{Connectivity}: 2.4GHz WiFi (802.11 b/g/n), cloud-dependent}
+\li{\strong{Actuators}: X/Z steppers, turntable stepper, vacuum pump with rubber tip}
+\li{\strong{Sensors}: Door sensor, carriage position}
+\li{\strong{Display}: LCD with directional arrows}
+\li{\strong{Capacity}: 10 medication cups, up to 90-day supply per cup}
+\li{\strong{Regulatory}: FDA Class I, HIPAA-compliant cloud}
+}
+}
+
+\subtree{
+\title{Reverse Engineering Entry Points}
+\p{\strong{FCC ID: 2AN4DM115} — Internal photos, RF test reports available.}
+
+\ul{
+\li{[Internal Photos PDF](https://fccid.io/2AN4DM115/Internal-Photos/Internal-Photos-3838798.pdf) — PCB layout, antenna, test points visible}
+\li{[RF Test Report](https://fcc.report/FCC-ID/2an4dm115/3838802.pdf) — 2402-2480 MHz confirmed}
+\li{MCU/WiFi module chip markings NOT annotated — need manual high-res inspection}
+\li{No public firmware dumps, debug pinouts, or teardowns exist}
+\li{Device firmware update path exists (OTA via Settings menu)}
+}
+
+\p{\strong{Community efforts} (Arduino Forum Dec 2024, Home Assistant Feb 2024):}
+
+\ul{
+\li{Device is \strong{cloud-locked} to Hero subscription ($44.99/mo or $449.90/yr)}
+\li{ESP8266 NodeMCU stepper control confirmed working (4-wire, D1-D4)}
+\li{Full board redesign stalled due to complexity}
+\li{No WiFi sniffing results published}
+}
+
+\p{\strong{Attack surface (3 tiers)}:}
+
+\ol{
+\li{\strong{Software}: mitmproxy on app↔cloud API, decompile Hero iOS app (id1352848484), build custom scheduling layer on top}
+\li{\strong{Hardware}: Inspect FCC internal photos for chip IDs, locate UART/SWD test points, attempt serial console}
+\li{\strong{Replacement}: ESP32 board replacement with direct stepper + vacuum control, custom web UI}
+}
+
+\p{\strong{Hero Public API}: https://developer.herohealth.net/apis/public-api/openapi (REST, x-api-key auth, webhooks) \strong{FDA MAUDE report}: https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=16276816}
+}
+
+\subtree{
+\title{Scramble Index Architecture}
+\p{Full derangement mapping (no medication uses its own initial letter):}
+
+\pre{\startverb
+| Slot | Medication | Natural | GF(3) | Schedule |
+|------|-----------|---------|-------|----------|
+| q | Vyvanse | v | -1 | morning |
+| x | Magnesium | m | 0 | evening |
+| y | Zinc | z | +1 | morning |
+| k | Ginkgo | g | -1 | morning |
+| u | Caffeine | c | 0 | morning |
+\stopverb}
+
+\p{\strong{Conservation}: Q(-1) + X(0) + Y(+1) + K(-1) + U(0) = \strong{-1} = H world trit}
+}
+
+\subtree{
+\title{Categorical Scales}
+\p{The dispenser operates as a dynamical system across 6 scales:}
+
+\ol{
+\li{\strong{Arena (Play/Coplay)}: Positions = slots, Directions = {dispense, refill, adjust, alert}}
+\li{\strong{Open Game}: Forward = predict supply depletion, Backward = nurse approval utility}
+\li{\strong{Polynomial Functor}: State-dependent interface (controlled slots restricted until approved)}
+\li{\strong{GF(3) Conservation}: Trit sum must equal world H trit (-1)}
+\li{\strong{Hamming(7,4)}: Chain 1 (Witness-Bridge: h,w,b), voice: Junior}
+\li{\strong{Concrete}: Slot configs, email automation, Aptos contract}
+}
+}
+
+\subtree{
+\title{Email Architecture}
+\ul{
+\li{\strong{Hero registration}: \code{\startverb mantissa+hero-h@plurigrid.com\stopverb}}
+\li{\strong{Nurse approval TO}: \code{\startverb mantissa@gmail.com\stopverb} (primary), \code{\startverb ies@plurigrid.com\stopverb} (backup)}
+\li{\strong{Automation FROM}: \code{\startverb mantissa@plurigrid.com\stopverb} (Gmail MCP)}
+\li{\strong{Monitoring}: Gmail MCP search queries for \code{\startverb to:mantissa+hero-h@plurigrid.com\stopverb}}
+}
+}
+
+\subtree{
+\title{Key Files}
+\p{All in \code{\startverb /Users/alice/worlds/h/\stopverb}:}
+
+\ul{
+\li{\code{\startverb hero_dispenser.json\stopverb} - Config with scramble index}
+\li{\code{\startverb hero_scramble.py\stopverb} - CLI: \code{\startverb table | lookup <letter> | set <letter> <mg> | add <name>\stopverb}}
+\li{\code{\startverb hero_arena.py\stopverb} - Categorical diagnostic across all 6 scales}
+\li{\code{\startverb hero_dispenser_service.py\stopverb} - Flox service daemon}
+\li{\code{\startverb hero_email_monitor.py\stopverb} - Gmail MCP integration}
+\li{\code{\startverb nurse_approval.py\stopverb} - Nurse approval workflow}
+\li{\code{\startverb nurse_config.json\stopverb} - Email routing config}
+\li{\code{\startverb nurse_requests.json\stopverb} - Pending approval queue}
+}
+}
+
+\subtree{
+\title{CLI Commands}
+\pre{\startverb
+# Show scramble table
+python3 hero_scramble.py table
+
+# Set dosage for a slot
+python3 hero_scramble.py set x 400
+
+# Add new medication (auto-picks deranged letter)
+python3 hero_scramble.py add "Melatonin"
+
+# Full categorical diagnostic
+python3 hero_arena.py
+
+# Check email integration status
+python3 hero_email_monitor.py status
+
+# Process nurse approvals
+python3 nurse_approval.py pending
+python3 nurse_approval.py approve 0
+\stopverb}
+}
+
+\subtree{
+\title{Aptos Integration}
+\ul{
+\li{Contract module: \code{\startverb hamming_swarm::hero_dispenser\stopverb}}
+\li{Network: testnet}
+\li{On-chain: scramble hash, dispense events, encrypted supply levels, nurse approvals}
+}
+}
+
+\subtree{
+\title{Adding New Medications}
+\p{When adding a medication, the system:}
+
+\ol{
+\li{Picks a letter maximally distant from both H and the med's natural initial}
+\li{Ensures full derangement (no med maps to own letter)}
+\li{Recomputes GF(3) conservation}
+\li{If controlled substance: queues nurse approval email automatically}
+}
+}
+}

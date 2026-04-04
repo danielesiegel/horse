@@ -1,0 +1,147 @@
+\title{Opencollective}
+
+\taxon{skill}
+
+\tag{opencollective}
+
+\tag{graphql}
+
+\tag{fundraising}
+
+\tag{open-source}
+
+\tag{fiscal-host}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Query and interact with Open Collective's GraphQL API v2. Browse collectives, view budgets/transactions/expenses, manage memberships, submit expenses, and explore the open-source funding ecosystem.}
+
+\subtree{
+\title{Open Collective}
+\p{Query and manage Open Collective accounts, finances, and community data via their public GraphQL API v2.}
+
+\subtree{
+\title{Endpoint & Auth}
+\ul{
+\li{\strong{Endpoint}: \code{\startverb https://api.opencollective.com/graphql/v2\stopverb}}
+\li{\strong{Unauthenticated}: 10 req/min, public read-only}
+\li{\strong{Authenticated}: 100 req/min — pass \code{\startverb Personal-Token: <token>\stopverb} header}
+\li{\strong{Token creation}: \code{\startverb https://opencollective.com/<your-slug>/admin/for-developers\stopverb}}
+\li{\strong{Not available via API}: Stripe/PayPal payment creation, captcha-protected operations}
+}
+}
+
+\subtree{
+\title{MCP Server Setup}
+\p{Use \code{\startverb mcp-graphql\stopverb} to expose the OC API as MCP tools. With fnox-backed auth:}
+
+\pre{\startverb
+claude mcp add opencollective-graphql -- /bin/sh -c \
+  'unset PYTHONPATH && \
+   ENDPOINT=https://api.opencollective.com/graphql/v2 \
+   HEADERS="{\"Personal-Token\":\"$(fnox get OPENCOLLECTIVE_TOKEN --age-key-file ~/.age/key.txt -c ~/v/instance-onboarding/fnox.toml)\"}" \
+   exec npx mcp-graphql'
+\stopverb}
+
+\p{Store your token: \code{\startverb fnox set OPENCOLLECTIVE_TOKEN <token> --age-key-file ~/.age/key.txt -c ~/v/instance-onboarding/fnox.toml\stopverb}}
+}
+
+\subtree{
+\title{Quick Start}
+\p{If \code{\startverb opencollective-graphql\stopverb} MCP server is available, use its \code{\startverb query-graphql\stopverb} tool. Otherwise use \code{\startverb curl\stopverb}.}
+
+\pre{\startverb
+query { account(slug: "webpack") { name stats { balance { valueInCents currency } } } }
+\stopverb}
+}
+
+\subtree{
+\title{Core Queries}
+\pre{\startverb
+| Query | Use When |
+|-------|----------|
+| `account(slug)` | Look up any account by slug |
+| `accounts(searchTerm, type, limit)` | Search/browse collectives |
+| `host(slug)` | Look up a fiscal host |
+| `hosts(limit)` | Browse fiscal hosts |
+| `expenses(account, status, limit)` | View submitted expenses |
+| `expense(id)` | Single expense detail |
+| `transactions(account, type, limit)` | View financial activity |
+| `orders(account, status, limit)` | View contributions/donations |
+| `search(searchTerm)` | General search (beta) |
+| `me` | Current authenticated user |
+| `tier(id)` | Sponsorship tier details |
+| `tagStats(searchTerm)` | Explore ecosystem categories |
+\stopverb}
+}
+
+\subtree{
+\title{Core Mutations (all require auth)}
+\pre{\startverb
+| Mutation | Use When |
+|----------|----------|
+| `createExpense` | Submit expense for reimbursement |
+| `editExpense` | Update existing expense |
+| `processExpense(action)` | Approve/reject/pay expense |
+| `createOrder` | Create contribution/donation |
+| `cancelOrder` | Cancel recurring contribution |
+| `createComment` | Comment on expense/update |
+| `createUpdate` / `publishUpdate` | Post update to collective |
+| `inviteMember` | Invite someone to join |
+| `followAccount` / `unfollowAccount` | Follow/unfollow collective |
+| `createWebhook` | Set up notifications |
+| `applyToHost` | Apply collective to fiscal host |
+| `createCollective` | Create new collective |
+| `createTier` / `editTier` | Manage sponsorship tiers |
+\stopverb}
+}
+
+\subtree{
+\title{Reference Guide}
+\pre{\startverb
+| Topic | File | Load When |
+|-------|------|-----------|
+| Query Templates | `references/queries.md` | Need ready-to-use GraphQL queries |
+| Mutation Templates | `references/mutations.md` | Need to write/modify data |
+| Schema Types | `references/types.md` | Need type details for building queries |
+| Weird Mutualism | `references/weird-mutualism.md` | Exploring OC's mutualist ecosystem patterns |
+\stopverb}
+}
+
+\subtree{
+\title{Key Patterns}
+\ul{
+\li{\strong{Pagination}: All collections use \code{\startverb limit\stopverb}/\code{\startverb offset\stopverb}, return \code{\startverb totalCount\stopverb} + \code{\startverb nodes\stopverb}}
+\li{\strong{Account refs}: \code{\startverb {slug: "x"}\stopverb}, \code{\startverb {id: "uuid"}\stopverb}, or \code{\startverb {legacyId: 123}\stopverb}}
+\li{\strong{Amounts}: Always \code{\startverb { valueInCents: Int, currency: String }\stopverb} — divide by 100 for display}
+\li{See \code{\startverb references/queries.md\stopverb} for full filtering examples}
+}
+}
+
+\subtree{
+\title{Account Types}
+\p{\code{\startverb COLLECTIVE\stopverb}, \code{\startverb ORGANIZATION\stopverb}, \code{\startverb INDIVIDUAL\stopverb}, \code{\startverb FUND\stopverb}, \code{\startverb EVENT\stopverb}, \code{\startverb PROJECT\stopverb}, \code{\startverb HOST\stopverb}, \code{\startverb VENDOR\stopverb}}
+}
+
+\subtree{
+\title{Status Enums}
+\ul{
+\li{\strong{Expense}: \code{\startverb DRAFT\stopverb} → \code{\startverb UNVERIFIED\stopverb} → \code{\startverb PENDING\stopverb} → \code{\startverb APPROVED\stopverb} → \code{\startverb PROCESSING\stopverb} → \code{\startverb PAID\stopverb} (also \code{\startverb REJECTED\stopverb}, \code{\startverb ERROR\stopverb}, \code{\startverb CANCELED\stopverb})}
+\li{\strong{Order}: \code{\startverb NEW\stopverb}, \code{\startverb PENDING\stopverb}, \code{\startverb ACTIVE\stopverb}, \code{\startverb CANCELLED\stopverb}, \code{\startverb REJECTED\stopverb}, \code{\startverb PAID\stopverb}, \code{\startverb ERROR\stopverb}, \code{\startverb EXPIRED\stopverb}}
+\li{\strong{Transaction type}: \code{\startverb CREDIT\stopverb} (in) / \code{\startverb DEBIT\stopverb} (out)}
+\li{\strong{Transaction kind}: \code{\startverb CONTRIBUTION\stopverb}, \code{\startverb EXPENSE\stopverb}, \code{\startverb ADDED_FUNDS\stopverb}, \code{\startverb HOST_FEE\stopverb}, \code{\startverb PAYMENT_PROCESSOR_FEE\stopverb}, \code{\startverb PLATFORM_FEE\stopverb}}
+}
+}
+
+\subtree{
+\title{Tips}
+\ul{
+\li{\code{\startverb stats\stopverb} subfields on accounts give quick financial summaries}
+\li{\code{\startverb members(role: [BACKER])\stopverb} lists financial contributors}
+\li{\code{\startverb tiers\stopverb} shows sponsorship levels; \code{\startverb updates\stopverb} shows blog posts}
+\li{\code{\startverb socialLinks\stopverb} has website, twitter, github URLs}
+}
+}
+}

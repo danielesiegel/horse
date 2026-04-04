@@ -1,0 +1,368 @@
+\title{Ordered Locale}
+
+\taxon{skill}
+
+\meta{trit}{0}
+
+\meta{description}{"Ordered Locales (Heunen-van der Schaaf 2024): Point-free topology with direction. Frame + compatible preorder with open cone conditions."}
+
+\subtree{
+\title{Ordered Locale Skill}
+\blockquote{*"We extend Stone duality between topological spaces and locales to include order."* — Heunen & van der Schaaf, 2024}
+
+\subtree{
+\title{Overview}
+\p{An \strong{ordered locale} is a locale (point-free topological space) equipped with a compatible preorder satisfying the \strong{open cone condition}.}
+
+\pre{\startverb
+Ordered Locale = Frame + Preorder + Open Cones
+\stopverb}
+}
+
+\subtree{
+\title{Key Definitions}
+\subtree{
+\title{Frame (Locale)}
+\p{A \strong{frame} is a complete lattice where finite meets distribute over arbitrary joins:}
+
+\pre{\startverb
+a ∧ (⋁ᵢ bᵢ) = ⋁ᵢ (a ∧ bᵢ)
+\stopverb}
+
+\p{Equivalently: a complete Heyting algebra.}
+}
+
+\subtree{
+\title{Open Cone Condition}
+\p{For a preorder ≤ on locale L, the \strong{open cone condition} requires:}
+
+\pre{\startverb
+↑x = {y ∈ L : x ≤ y}  is an open in L  (upper cone)
+↓x = {y ∈ L : y ≤ x}  is an open in L  (lower cone)
+\stopverb}
+
+\p{This ensures the order is "visible" to the topology.}
+}
+
+\subtree{
+\title{Ordered Locale (Definition 2.1, Heunen-van der Schaaf)}
+\p{An \strong{ordered locale} is a tuple (L, ≤) where:}
+
+\ol{
+\li{L is a locale (frame of opens)}
+\li{≤ is a preorder on O(L)}
+\li{The open cone condition holds}
+}
+}
+}
+
+\subtree{
+\title{Stone Duality Extended}
+\pre{\startverb
+┌────────────────────────┐     adjunction     ┌─────────────────────┐
+│ Preordered Topological │ ←───────────────→ │   Ordered Locales   │
+│ Spaces (open cones)    │                    │     (spatial)       │
+└────────────────────────┘                    └─────────────────────┘
+\stopverb}
+
+\p{Restricts to an \strong{equivalence}:}
+
+\ul{
+\li{Spatial ordered locales ≃ Sober T₀-ordered spaces with open cones}
+}
+}
+
+\subtree{
+\title{Julia Implementation (Catlab.jl)}
+\subtree{
+\title{Frame as Subobject Heyting Algebra}
+\p{From Catlab's \code{\startverb Subobjects.jl\stopverb}:}
+
+\pre{\startverb
+using Catlab, Catlab.Theories, Catlab.CategoricalAlgebra
+
+# Frame operations via ThSubobjectHeytingAlgebra
+@signature ThFrame <: ThSubobjectHeytingAlgebra begin
+  # Infinite joins (frame-specific)
+  Join(I::TYPE, f::(I → Sub(X)))::Sub(X) ⊣ [X::Ob]
+  
+  # Frame distributivity: a ∧ (⋁ᵢ bᵢ) = ⋁ᵢ (a ∧ bᵢ)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Ordered Locale Schema (ACSet)}
+\pre{\startverb
+using ACSets
+
+@present SchOrderedLocale(FreeSchema) begin
+  Open::Ob                    # Opens of the frame
+  Arrow::Ob                   # Order relation arrows
+  
+  src::Hom(Arrow, Open)       # Source of order arrow
+  tgt::Hom(Arrow, Open)       # Target of order arrow
+  
+  # Cone structure
+  Cone::Ob
+  apex::Hom(Cone, Open)       # Apex of cone
+  leg::Hom(Cone, Arrow)       # Legs of cone
+  
+  # Attributes
+  Index::AttrType
+  idx::Attr(Open, Index)      # Open index
+  is_upper::Attr(Cone, Bool)  # Upper vs lower cone
+end
+
+@acset_type OrderedLocale(SchOrderedLocale)
+\stopverb}
+}
+
+\subtree{
+\title{Open Cone Verification}
+\pre{\startverb
+function verify_open_cone_condition(L::OrderedLocale)
+  """
+  Verify that ↑x and ↓x are opens for all x.
+  """
+  opens = parts(L, :Open)
+  
+  for x in opens
+    # Upper cone: ↑x = {y : x ≤ y}
+    upper_cone = Set{Int}()
+    for arr in parts(L, :Arrow)
+      if L[arr, :src] == x
+        push!(upper_cone, L[arr, :tgt])
+      end
+    end
+    push!(upper_cone, x)  # Reflexive
+    
+    # Check upper cone is an open (exists in frame)
+    if !is_open(L, upper_cone)
+      return false, "↑$x is not an open"
+    end
+    
+    # Lower cone: ↓x = {y : y ≤ x}
+    lower_cone = Set{Int}()
+    for arr in parts(L, :Arrow)
+      if L[arr, :tgt] == x
+        push!(lower_cone, L[arr, :src])
+      end
+    end
+    push!(lower_cone, x)  # Reflexive
+    
+    if !is_open(L, lower_cone)
+      return false, "↓$x is not an open"
+    end
+  end
+  
+  return true, "Open cone condition satisfied"
+end
+\stopverb}
+}
+
+\subtree{
+\title{Cone and Cocone Operations}
+\p{From Catlab's \code{\startverb Limits.jl\stopverb}:}
+
+\pre{\startverb
+using Catlab.Theories: ThCompleteCategory, ThCocompleteCategory
+
+# Cone: A natural transformation Δ(X) → D
+# where Δ(X) is the constant diagram at X
+struct Cone{Ob, Hom}
+  apex::Ob
+  legs::Vector{Hom}  # One leg per object in diagram
+end
+
+# Cocone: Dual - natural transformation D → Δ(X)
+struct Cocone{Ob, Hom}
+  apex::Ob
+  legs::Vector{Hom}
+end
+
+# Limit = universal cone
+function limit_cone(diagram::FreeDiagram, model)
+  # Find apex and legs such that any other cone factors through
+  lim = limit[model](diagram)
+  Cone(ob(lim), collect(legs(lim)))
+end
+
+# Colimit = universal cocone  
+function colimit_cocone(diagram::FreeDiagram, model)
+  colim = colimit[model](diagram)
+  Cocone(ob(colim), collect(legs(colim)))
+end
+\stopverb}
+}
+
+\subtree{
+\title{Frame Operations via Limits/Colimits}
+\pre{\startverb
+# Meet (∧) = pullback = limit of cospan
+function frame_meet(L::OrderedLocale, a::Int, b::Int)
+  # Pullback in the locale category
+  diagram = FreeDiagram([a, b], [(a, top(L)), (b, top(L))])
+  lim = limit_cone(diagram, L)
+  return lim.apex
+end
+
+# Join (∨) = pushout = colimit of span
+function frame_join(L::OrderedLocale, a::Int, b::Int)
+  # Pushout in the locale category
+  bot = bottom(L)
+  diagram = FreeDiagram([a, b], [(bot, a), (bot, b)])
+  colim = colimit_cocone(diagram, L)
+  return colim.apex
+end
+
+# Infinite join (frame-specific)
+function frame_sup(L::OrderedLocale, opens::Vector{Int})
+  # Colimit of discrete diagram
+  diagram = FreeDiagram(opens, Pair{Int,Int}[])
+  colim = colimit_cocone(diagram, L)
+  return colim.apex
+end
+
+# Heyting implication: a ⇒ b = ⋁{c : a ∧ c ≤ b}
+function frame_implies(L::OrderedLocale, a::Int, b::Int)
+  candidates = [c for c in parts(L, :Open) 
+                if below_or_eq(L, frame_meet(L, a, c), b)]
+  return frame_sup(L, candidates)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+acsets (-1) ⊗ ordered-locale (0) ⊗ topos-generate (+1) = 0 ✓  [Schema]
+sheaf-cohomology (-1) ⊗ ordered-locale (0) ⊗ kan-extensions (+1) = 0 ✓  [Gluing]
+directed-interval (-1) ⊗ ordered-locale (0) ⊗ mlx-apple-silicon (+1) = 0 ✓  [Scale]
+\stopverb}
+}
+
+\subtree{
+\title{Example Locales}
+\subtree{
+\title{1. Sierpinski Locale (2-point)}
+\pre{\startverb
+function sierpinski_locale()
+  L = OrderedLocale{Bool}()
+  add_parts!(L, :Open, 2, idx=[false, true])  # ⊥, ⊤
+  add_part!(L, :Arrow, src=1, tgt=2)          # ⊥ < ⊤
+  
+  # Cones
+  add_part!(L, :Cone, apex=2, is_upper=true)  # ↑⊥ = {⊥,⊤} = ⊤
+  add_part!(L, :Cone, apex=1, is_upper=false) # ↓⊤ = {⊥,⊤} = ⊤
+  L
+end
+\stopverb}
+}
+
+\subtree{
+\title{2. Diamond Locale}
+\pre{\startverb
+function diamond_locale()
+  L = OrderedLocale{Int}()
+  add_parts!(L, :Open, 4, idx=[0, 1, 1, 2])  # ⊥, a, b, ⊤
+  add_part!(L, :Arrow, src=1, tgt=2)  # ⊥ < a
+  add_part!(L, :Arrow, src=1, tgt=3)  # ⊥ < b
+  add_part!(L, :Arrow, src=2, tgt=4)  # a < ⊤
+  add_part!(L, :Arrow, src=3, tgt=4)  # b < ⊤
+  L
+end
+\stopverb}
+}
+
+\subtree{
+\title{3. Scott Topology (Domain Theory)}
+\pre{\startverb
+function scott_locale(poset::OrderedLocale)
+  """
+  Scott topology: opens are upper sets closed under directed joins.
+  """
+  scott_opens = Vector{Set{Int}}()
+  
+  for u in parts(poset, :Open)
+    upset = upper_cone(poset, u)
+    if is_scott_open(poset, upset)
+      push!(scott_opens, upset)
+    end
+  end
+  
+  scott_opens
+end
+
+function is_scott_open(L, U::Set{Int})
+  # U is Scott-open iff:
+  # 1. U is upper-closed
+  # 2. For any directed D with ⋁D ∈ U, some d ∈ D is in U
+  is_upper_closed(L, U) && is_inaccessible_by_directed_joins(L, U)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Comparison with Implementation}
+\pre{\startverb
+| Aspect | ordered_locale_mlx.py | Proper Ordered Locale |
+|--------|----------------------|----------------------|
+| Structure | Adjacency matrix (poset) | Frame + ACSet schema |
+| Opens | Finite indices | Complete Heyting algebra |
+| Meets/Joins | Graph search | Pullback/Pushout (categorical) |
+| Cones | Not implemented | Cone/Cocone with legs |
+| Open Cone Condition | Not checked | `verify_open_cone_condition` |
+| Infinite joins | No | `frame_sup` |
+\stopverb}
+}
+
+\subtree{
+\title{Applications}
+\ol{
+\li{\strong{Spacetime Causality} — Order = causal influence, no points}
+\li{\strong{Domain Theory} — Way-below relation, compact elements}
+\li{\strong{Directed Homotopy} — Irreversible paths (directed-interval)}
+\li{\strong{Modal Logic} — Accessibility relations as order}
+\li{\strong{Concurrent Computing} — Partial order of events}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Run ordered locale demo
+just ordered-locale-demo
+
+# Verify open cone condition
+just ordered-locale-verify
+
+# Scale test with MLX
+just ordered-locale-mlx
+\stopverb}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{\code{\startverb ordered_locale.jl\stopverb} — Julia implementation with Catlab}
+\li{\code{\startverb ordered_locale_mlx.py\stopverb} — MLX-accelerated (finite approximation)}
+\li{\code{\startverb frame.jl\stopverb} — Frame operations via limits/colimits}
+\li{\code{\startverb cone_cocone.jl\stopverb} — Cone/cocone constructions}
+}
+}
+
+\subtree{
+\title{References}
+\ol{
+\li{Heunen, C. & van der Schaaf, N. (2024). "Ordered Locales." \em{J. Pure Appl. Algebra} 228(7), 107654.}
+\li{Heunen, C. & van der Schaaf, N. (2025). "Causal Coverage in Ordered Locales and Spacetimes." arXiv:2510.17417.}
+\li{Johnstone, P. (1982). \em{Stone Spaces}. Cambridge University Press.}
+\li{Catlab.jl — \code{\startverb src/theories/Limits.jl\stopverb}, \code{\startverb src/categorical_algebra/cats/Subobjects.jl\stopverb}}
+}
+
+\p{\strong{Skill Name}: ordered-locale \strong{Type}: Point-free Topology / Frame Theory / Directed Order \strong{Trit}: 0 (ERGODIC - coordinator) \strong{GF(3)}: Mediates between schema (-1) and generation (+1) \strong{Open Cones}: ↑x and ↓x must be opens \strong{Duality}: Spatial ordered locales ≃ Sober T₀-ordered spaces}
+}
+}

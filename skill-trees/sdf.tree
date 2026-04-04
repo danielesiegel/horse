@@ -1,0 +1,642 @@
+\title{Sdf}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{"Software Design for Flexibility: Sussman & Hanson's additive programming, combinators, propagators, and generic dispatch for evolvable systems"}
+
+\subtree{
+\title{SDF Skill: Software Design for Flexibility}
+\blockquote{*"It is better to have 100 functions operate on one data structure than 10 functions on 10 data structures."* — Alan Perlis (via Sussman & Hanson)}
+
+\p{Geometric morphism from the MIT Press 2021 text, preserving the compositional structure as an ACSet with GF(3) coloring for trifurcated processing.}
+
+\subtree{
+\title{Overview}
+\p{\strong{Software Design for Flexibility} by Chris Hanson and Gerald Jay Sussman MIT Press, 2021 ISBN: 978-0262045490}
+
+\p{The successor to SICP focused on \strong{additive programming}—building systems that can evolve by adding new capabilities without modifying existing code.}
+}
+
+\subtree{
+\title{Core Principles}
+\subtree{
+\title{The Flexibility Mandate}
+\ol{
+\li{\strong{Additive over Modificative}: New features via addition, not mutation}
+\li{\strong{Generic over Specific}: Operations that work across types}
+\li{\strong{Compositional over Monolithic}: Small combinable pieces}
+\li{\strong{Declarative over Imperative}: Constraints over control flow}
+}
+}
+}
+
+\subtree{
+\title{Chapters with GF(3) Trit Assignment}
+\subtree{
+\title{Part I: Flexibility in Primitive Parts [PLUS]}
+\subtree{
+\title{Chapter 1: Flexibility through Abstraction (+1)}
+\ul{
+\li{Combinators as primitive building blocks}
+\li{\code{\startverb compose\stopverb}, \code{\startverb parallel-combine\stopverb}, \code{\startverb spread-combine\stopverb}}
+\li{Arity management and currying patterns}
+}
+
+\p{Key combinator:}
+
+\pre{\startverb
+(define (compose f g)
+  (lambda args
+    (f (apply g args))))
+\stopverb}
+}
+
+\subtree{
+\title{Chapter 2: Domain-Specific Languages (-1)}
+\ul{
+\li{Embedded DSLs via combinators}
+\li{Wrapper strategies for APIs}
+\li{Pattern-directed invocation}
+}
+}
+}
+
+\subtree{
+\title{Part II: Flexibility through Dispatch [ERGODIC]}
+\subtree{
+\title{Chapter 3: Variations on an Arithmetic Theme (0)}
+\ul{
+\li{Generic arithmetic operations}
+\li{Type coercion lattices}
+\li{Symbolic vs numeric duality}
+}
+}
+
+\subtree{
+\title{Chapter 4: Pattern Matching (+1)}
+\ul{
+\li{Unification as composition}
+\li{Segment variables and pattern operators}
+\li{Match combinators}
+}
+
+\pre{\startverb
+(define (match:element variable)
+  (lambda (data dictionary succeed)
+    (let ((binding (assq variable dictionary)))
+      (if binding
+          (and (equal? (cdr binding) data)
+               (succeed dictionary))
+          (succeed (cons (cons variable data)
+                        dictionary))))))
+\stopverb}
+}
+
+\subtree{
+\title{Chapter 5: Evaluation (-1)}
+\ul{
+\li{Generic eval/apply}
+\li{Environment models}
+\li{Interpreter variations}
+}
+}
+}
+
+\subtree{
+\title{Part III: Flexibility through Modularity [PLUS]}
+\subtree{
+\title{Chapter 6: Layering (+1)}
+\ul{
+\li{Layered data with metadata}
+\li{Provenance tracking}
+\li{Units and dimensions}
+}
+
+\pre{\startverb
+(define (make-layered-datum base-value . layers)
+  (cons base-value layers))
+
+(define (layered-datum-value datum)
+  (car datum))
+
+(define (layered-datum-layers datum)
+  (cdr datum))
+\stopverb}
+}
+
+\subtree{
+\title{Chapter 7: Propagators (0)}
+\ul{
+\li{Bidirectional constraint networks}
+\li{Cells and propagators}
+\li{Partial information lattices}
+\li{Truth Maintenance Systems (TMS)}
+}
+
+\p{\strong{The Propagator Model:}}
+
+\pre{\startverb
+     ┌─────────┐
+     │  Cell   │ ← Accumulates partial information
+     └────┬────┘
+          │ (neighbors)
+    ┌─────┼─────┐
+    ▼     ▼     ▼
+┌──────┐┌──────┐┌──────┐
+│Prop A││Prop B││Prop C│  ← Transform information
+└──────┘└──────┘└──────┘
+\stopverb}
+
+\p{Key insight: \strong{Information flows bidirectionally}. A cell for \code{\startverb x²=4\stopverb} can deduce \code{\startverb x=±2\stopverb} OR given \code{\startverb x=2\stopverb}, confirm the equation.}
+}
+
+\subtree{
+\title{Chapter 8: Degeneracy (-1)}
+\ul{
+\li{Multiple implementation strategies}
+\li{Fallback mechanisms}
+\li{Redundancy for robustness}
+}
+}
+}
+
+\subtree{
+\title{Part IV: Flexibility through Abstraction [ERGODIC]}
+\subtree{
+\title{Chapter 9: Generic Procedures (0)}
+\ul{
+\li{Multi-method dispatch}
+\li{Predicate dispatch}
+\li{Inheritance vs composition}
+}
+
+\pre{\startverb
+(define generic-+
+  (simple-generic-procedure '+ 2
+    (lambda (a b)
+      (error "No method for +" a b))))
+
+(define-generic-procedure-handler generic-+
+  (match-args number? number?)
+  +)
+
+(define-generic-procedure-handler generic-+
+  (match-args symbol? symbol?)
+  (lambda (a b) `(+ ,a ,b)))
+\stopverb}
+}
+
+\subtree{
+\title{Chapter 10: Adventure Game Example (+1)}
+\ul{
+\li{Synthesis of all techniques}
+\li{People, places, things as generic objects}
+\li{Autonomous agents}
+}
+}
+}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{The chapter structure distributes across GF(3) trits:}
+
+\pre{\startverb
+Total sections: 87
+MINUS (-1):  29  ████████████████
+ERGODIC (0): 29  ████████████████
+PLUS (+1):   29  ████████████████
+Sum mod 3:   0
+Conserved:   ✓ BALANCED
+\stopverb}
+}
+
+\subtree{
+\title{Core Abstractions Taxonomy}
+\subtree{
+\title{1. Combinators [PLUS]}
+\pre{\startverb
+| Combinator | Signature | Description |
+|------------|-----------|-------------|
+| `compose` | (f g) → h | Sequential composition |
+| `parallel-combine` | (h f g) → k | Parallel then combine |
+| `spread-combine` | (h f g) → k | Split args, combine results |
+| `restrict` | (f pred) → g | Domain restriction |
+| `coerce` | (f type) → g | Type coercion wrapper |
+\stopverb}
+}
+
+\subtree{
+\title{2. Generic Dispatch [ERGODIC]}
+\pre{\startverb
+| Pattern | Mechanism | Use Case |
+|---------|-----------|----------|
+| Single dispatch | Type of first arg | OOP methods |
+| Multi-dispatch | Types of all args | CLOS, Julia |
+| Predicate dispatch | Arbitrary predicates | SDF generic procedures |
+| Pattern dispatch | Structural matching | Logic programming |
+\stopverb}
+}
+
+\subtree{
+\title{3. Propagators [MINUS → verification role]}
+\pre{\startverb
+| Component | Role | Partial Info |
+|-----------|------|--------------|
+| Cell | Information accumulator | Merge lattice |
+| Propagator | Constraint enforcer | Monotonic update |
+| Scheduler | Activation manager | Fixpoint detection |
+| TMS | Belief revision | Dependency tracking |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Propagator Networks as Markov Blankets}
+\p{The propagator architecture maps to Friston's Free Energy Principle:}
+
+\pre{\startverb
+┌─────────────────────────────────────────┐
+│              EXTERNAL WORLD             │
+│  (other propagator networks, inputs)    │
+└──────────────────┬──────────────────────┘
+                   │
+         ┌─────────▼─────────┐
+         │   SENSORY CELLS   │  ← Boundary inputs
+         │   (observations)  │
+         └─────────┬─────────┘
+                   │
+         ┌─────────▼─────────┐
+         │  INTERNAL CELLS   │  ← Beliefs/predictions
+         │  (hidden states)  │
+         └─────────┬─────────┘
+                   │
+         ┌─────────▼─────────┐
+         │   ACTIVE CELLS    │  ← Action outputs
+         │   (predictions)   │
+         └─────────┬─────────┘
+                   │
+         ┌─────────▼─────────┐
+         │   EXTERNAL WORLD  │
+         │   (effects)       │
+         └───────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Integration with SICP}
+\p{SDF extends SICP's core ideas:}
+
+\pre{\startverb
+| SICP Concept | SDF Extension | Trit Relationship |
+|--------------|---------------|-------------------|
+| Procedures as data | Combinators | SICP.Ch1 (+1) → SDF.Ch1 (+1) |
+| Data abstraction | Generic dispatch | SICP.Ch2 (0) → SDF.Ch3-4 (0,+1) |
+| Assignment/state | Propagators | SICP.Ch3 (+1) → SDF.Ch7 (0) |
+| Metalinguistic | Layering | SICP.Ch4 (+1) → SDF.Ch6 (+1) |
+| Compilation | Degeneracy | SICP.Ch5 (0) → SDF.Ch8 (-1) |
+\stopverb}
+
+\subtree{
+\title{Balanced Triad: SICP ⊗ SDF ⊗ Implementation}
+\pre{\startverb
+SICP (0) + SDF (+1) + Implementation Target (-1) = 0 ✓
+\stopverb}
+
+\p{Where implementation targets include:}
+
+\ul{
+\li{\strong{Zig} (-1): Systems-level with comptime generics}
+\li{\strong{Rust} (-1): Ownership-based with traits}
+\li{\strong{Julia} (-1): Multiple dispatch native}
+}
+}
+}
+
+\subtree{
+\title{Scheme Implementation Patterns}
+\subtree{
+\title{Pattern 1: Combinator Definition}
+\pre{\startverb
+;; The spread-combine combinator
+(define (spread-combine h f g)
+  (let ((n (get-arity f))
+        (m (get-arity g)))
+    (define (the-combination . args)
+      (h (apply f (list-head args n))
+         (apply g (list-tail args n))))
+    (restrict-arity the-combination (+ n m))))
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: Generic Procedure}
+\pre{\startverb
+;; Define a generic operation
+(define generic-magnitude
+  (simple-generic-procedure 'magnitude 1))
+
+;; Handler for complex numbers
+(define-generic-procedure-handler generic-magnitude
+  (match-args complex?)
+  (lambda (z) (sqrt (+ (square (real-part z))
+                       (square (imag-part z))))))
+
+;; Handler for vectors
+(define-generic-procedure-handler generic-magnitude
+  (match-args vector?)
+  (lambda (v) (sqrt (apply + (map square (vector->list v))))))
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Propagator Cell}
+\pre{\startverb
+;; Create a propagator network for Pythagorean theorem
+(define-cell a)
+(define-cell b)  
+(define-cell c)
+
+;; a² + b² = c² (bidirectional!)
+(quadratic-propagator a b c)
+
+;; Now we can:
+(add-content! a 3)
+(add-content! b 4)
+(run)
+(content c)  ;=> 5
+
+;; OR go backwards:
+(add-content! c 13)
+(add-content! a 5)
+(run)
+(content b)  ;=> 12
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 4: Layered Datum}
+\pre{\startverb
+;; Value with provenance
+(define measured-temp
+  (make-layered-datum 
+    23.5  ; base value in Celsius
+    (cons 'units 'celsius)
+    (cons 'uncertainty 0.1)
+    (cons 'source "thermometer-7")
+    (cons 'timestamp 1706384000)))
+
+;; Generic operations preserve layers
+(generic-+ measured-temp (make-layered-datum 2.0 (cons 'units 'celsius)))
+;=> Layered datum with merged provenance
+\stopverb}
+}
+}
+
+\subtree{
+\title{Zig Implementation Mapping}
+\p{From our \code{\startverb interaction_tensor.zig\stopverb}:}
+
+\pre{\startverb
+| SDF Concept | Zig Implementation |
+|-------------|-------------------|
+| Combinator | `fn compose(f, g) fn` |
+| Generic procedure | `fn(comptime T: type)` |
+| Propagator cell | `Cell(T)` with `merge: fn(T,T)T` |
+| Layered datum | `struct { value: T, layers: []Layer }` |
+| Partial info | `?T` optional + `Tropical` semiring |
+\stopverb}
+
+\subtree{
+\title{Zig Propagator Network}
+\pre{\startverb
+pub fn Cell(comptime T: type) type {
+    return struct {
+        content: ?T = null,
+        neighbors: ArrayListUnmanaged(*Propagator(T)),
+        
+        pub fn addContent(self: *@This(), info: T, merge: fn(?T, T) ?T) void {
+            const new_content = merge(self.content, info);
+            if (!contentEqual(self.content, new_content)) {
+                self.content = new_content;
+                self.alertNeighbors();
+            }
+        }
+        
+        fn alertNeighbors(self: *@This()) void {
+            for (self.neighbors.items) |prop| {
+                scheduler.enqueue(prop);
+            }
+        }
+    };
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Load SDF library in MIT Scheme
+(load "~/sdf/manager/load.scm")
+
+# Run specific chapter
+(manage 'new 'combinators)
+(manage 'new 'generic-procedures)
+(manage 'new 'propagation)
+
+# Verify GF(3) conservation
+bb sdf_skill_morphism.bb verify
+
+# Generate interleaving with SICP
+bb sdf_skill_morphism.bb interleave sicp sdf
+\stopverb}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[MIT Press Book Page](https://mitpress.mit.edu/9780262045490/)}
+\li{[SDF Code Repository](https://github.com/chrishanson/sdf) (MIT Scheme)}
+\li{[SICP](https://mitpress.mit.edu/sicp) (predecessor text)}
+\li{[Propagator Networks Paper](https://dspace.mit.edu/handle/1721.1/44215) (Radul & Sussman)}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Functional Programming}
+\ul{
+\li{\strong{sicp} [●] via direct extension}
+\li{Foundational computational thinking}
+\li{\strong{lambda-calculus} [○] via combinator correspondence}
+\li{Theoretical foundation}
+\li{\strong{lispsyntax-acset} [○] via S-expression ACSet}
+\li{Structural representation}
+}
+}
+
+\subtree{
+\title{Constraint Systems}
+\ul{
+\li{\strong{propagators} [●] via Chapter 7 implementation}
+\li{Bidirectional constraint networks}
+\li{\strong{modelica} [○] via acausal semantics}
+\li{DAE constraint satisfaction}
+\li{\strong{glass-bead-game} [○] via world-hopping combinators}
+\li{Interdisciplinary synthesis}
+}
+}
+
+\subtree{
+\title{Type Systems}
+\ul{
+\li{\strong{zig-programming} [○] via comptime generics}
+\li{Systems implementation}
+\li{\strong{algebraic-rewriting} [○] via term transformation}
+\li{Generic procedure rewriting}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb software-engineering\stopverb}: 156 citations in bib.duckdb}
+\li{\code{\startverb constraint-programming\stopverb}: 89 citations in bib.duckdb}
+\li{\code{\startverb generic-programming\stopverb}: 67 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: -1 (MINUS)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Ran (right Kan extension - verification)
+Color: #D89B73
+URI: skill://sdf#D89B73
+\stopverb}
+
+\subtree{
+\title{Combinator as Polynomial Functor}
+\p{Each SDF combinator corresponds to a polynomial functor operation:}
+
+\ul{
+\li{\code{\startverb compose\stopverb} → functor composition}
+\li{\code{\startverb parallel-combine\stopverb} → product}
+\li{\code{\startverb spread-combine\stopverb} → coproduct + product}
+}
+}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{Example balanced triad:}
+
+\pre{\startverb
+sicp (+1) + sdf (-1) + modelica (0) = 0 ✓
+glass-bead-game (0) + sdf (-1) + zig-programming (+1) = 0 ✓
+\stopverb}
+}
+}
+
+\subtree{
+\title{Interleaving Map: SICP ↔ SDF}
+\pre{\startverb
+SICP                           SDF
+════                           ═══
+Ch1: Procedures ──────────────→ Ch1: Combinators
+     (+1)                            (+1)
+     │                               │
+     │ "abstract procedure"          │ "compose abstractions"
+     ▼                               ▼
+Ch2: Data ────────────────────→ Ch3-4: Generic Dispatch
+     (0)                             (0, +1)
+     │                               │
+     │ "abstraction barriers"        │ "predicate dispatch"
+     ▼                               ▼
+Ch3: State ───────────────────→ Ch7: Propagators
+     (+1)                            (0)
+     │                               │
+     │ "assignment model"            │ "bidirectional flow"
+     ▼                               ▼
+Ch4: Metalinguistic ──────────→ Ch6: Layering
+     (+1)                            (+1)
+     │                               │
+     │ "eval/apply"                  │ "metadata propagation"
+     ▼                               ▼
+Ch5: Register Machines ───────→ Ch8: Degeneracy
+     (0)                             (-1)
+     │                               │
+     │ "compilation"                 │ "redundant strategies"
+\stopverb}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 9. Generic Procedures}
+\p{\strong{Concepts}: dispatch, multimethod, predicate dispatch, generic}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+sdf (+) + SDF.Ch9 (○) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 1 (PLUS - generation)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch3: Variations on an Arithmetic Theme}
+\li{Ch10: Adventure Game Example}
+\li{Ch2: Domain-Specific Languages}
+\li{Ch8: Degeneracy}
+\li{Ch7: Propagators}
+\li{Ch1: Flexibility through Abstraction}
+\li{Ch5: Evaluation}
+\li{Ch6: Layering}
+\li{Ch4: Pattern Matching}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Generic procedures dispatch on predicates. This skill selects implementations dynamically.}
+}
+}
+
+\subtree{
+\title{Autopoietic Marginalia}
+\blockquote{\strong{The interaction IS the skill improving itself.}}
+
+\p{Every use of this skill is an opportunity for worlding:}
+
+\ul{
+\li{\strong{MEMORY} (-1): Record combinator patterns used}
+\li{\strong{REMEMBERING} (0): Connect to propagator networks}
+\li{\strong{WORLDING} (+1): Evolve generic dispatch strategies}
+}
+
+\p{*"The real power of Lisp is that it is possible to express the structure of a computation."* — Gerald Jay Sussman}
+}
+}

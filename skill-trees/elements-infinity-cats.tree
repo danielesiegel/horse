@@ -1,0 +1,128 @@
+\title{Elements Infinity Cats}
+
+\taxon{skill}
+
+\meta{description}{Elements of ∞-Category Theory (Riehl-Verity) for foundational ∞-categorical}
+
+\subtree{
+\title{Elements of ∞-Categories Skill: Model-Independent Foundations}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: 0 (ERGODIC - coordinator) \strong{Color}: #26D826 (Green) \strong{Principle}: ∞-categories via model-independent axioms \strong{Frame}: Riehl-Verity ∞-cosmos formalism}
+
+\subtree{
+\title{Overview}
+\p{\strong{Elements of ∞-Category Theory} provides model-independent foundations for ∞-categories. Rather than committing to quasi-categories, complete Segal spaces, or another model, the ∞-cosmos framework captures the common structure.}
+
+\ol{
+\li{\strong{∞-cosmos}: Enriched category of ∞-categories}
+\li{\strong{Isofibrations}: Right class of factorization system}
+\li{\strong{Comma ∞-categories}: Slice constructions}
+\li{\strong{Adjunctions/equivalences}: Model-independent definitions}
+}
+}
+
+\subtree{
+\title{Core Framework}
+\pre{\startverb
+∞-cosmos K has:
+  - Objects: ∞-categories
+  - Mapping spaces: Kan complexes Map_K(A, B)
+  - Isofibrations: p : E ↠ B with lift property
+  - Comma objects: A/f for f : A → B
+\stopverb}
+
+\pre{\startverb
+class InfinityCosmos k where
+  type Ob k :: Type
+  mapping :: Ob k → Ob k → KanComplex
+  isofibration :: (e : Ob k) → (b : Ob k) → Prop
+  comma :: {a b : Ob k} → (f : Map a b) → Ob k
+\stopverb}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{1. ∞-Cosmos Structure}
+\pre{\startverb
+-- Core axioms of an ∞-cosmos
+record ∞-Cosmos : Type₁ where
+  field
+    Ob : Type
+    Hom : Ob → Ob → KanComplex
+    id : (A : Ob) → Hom A A
+    _∘_ : Hom B C → Hom A B → Hom A C
+    
+    -- Limits
+    terminal : Ob
+    product : Ob → Ob → Ob
+    pullback : {A B C : Ob} → Hom A C → Hom B C → Ob
+    
+    -- Isofibrations
+    isofib : {E B : Ob} → Hom E B → Prop
+    factorization : (f : Hom A B) → 
+      Σ E, Σ (p : Hom E B), isofib p × trivial-cofib(A → E)
+\stopverb}
+}
+
+\subtree{
+\title{2. Comma ∞-Categories}
+\pre{\startverb
+-- Comma construction
+comma : {K : ∞-Cosmos} {A B C : K.Ob} 
+      → K.Hom A C → K.Hom B C → K.Ob
+comma f g = pullback (mapping-isofib A C f) (ev₀ : C^𝟚 → C) 
+            ×_{C} pullback (mapping-isofib B C g) (ev₁ : C^𝟚 → C)
+
+-- Slice as comma
+slice : {K : ∞-Cosmos} (B : K.Ob) (b : pt → B) → K.Ob  
+slice B b = comma (id B) b
+\stopverb}
+}
+
+\subtree{
+\title{3. Adjunctions}
+\pre{\startverb
+-- Model-independent adjunction
+record Adjunction (L : Hom A B) (R : Hom B A) : Type where
+  field
+    unit : id A ⇒ R ∘ L
+    counit : L ∘ R ⇒ id B
+    triangle-L : (counit ∘ L) ∘ (L ∘ unit) ≡ id L
+    triangle-R : (R ∘ counit) ∘ (unit ∘ R) ≡ id R
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Verify ∞-cosmos axioms
+just infinity-cosmos-check structure.rzk
+
+# Compute comma construction
+just comma-category f.rzk g.rzk
+
+# Check adjunction conditions
+just adjunction-verify L.rzk R.rzk
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\pre{\startverb
+yoneda-directed (-1) ⊗ elements-infinity-cats (0) ⊗ synthetic-adjunctions (+1) = 0 ✓  [Yoneda-Adjunction]
+covariant-fibrations (-1) ⊗ elements-infinity-cats (0) ⊗ rezk-types (+1) = 0 ✓  [Model Transport]
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\strong{synthetic-adjunctions} (+1): Generate adjunction data}
+\li{\strong{covariant-fibrations} (-1): Validate fibration conditions}
+\li{\strong{segal-types} (-1): Concrete Segal space model}
+}
+
+\p{\strong{Skill Name}: elements-infinity-cats \strong{Type}: ∞-Cosmos Coordinator \strong{Trit}: 0 (ERGODIC) \strong{Color}: #26D826 (Green)}
+}
+}

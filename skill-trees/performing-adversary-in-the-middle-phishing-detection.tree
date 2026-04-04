@@ -1,0 +1,172 @@
+\title{Performing Adversary In The Middle Phishing Detection}
+
+\taxon{skill}
+
+\tag{aitm}
+
+\tag{evilproxy}
+
+\tag{evilginx}
+
+\tag{phishing}
+
+\tag{mfa-bypass}
+
+\tag{session-hijacking}
+
+\tag{reverse-proxy}
+
+\tag{credential-theft}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect and respond to Adversary-in-the-Middle (AiTM) phishing attacks that use reverse proxy kits like EvilProxy, Evilginx, and Tycoon 2FA to bypass MFA and steal session tokens.}
+
+\subtree{
+\title{Performing Adversary-in-the-Middle Phishing Detection}
+\subtree{
+\title{Overview}
+\p{Adversary-in-the-Middle (AiTM) phishing attacks use reverse-proxy infrastructure to sit between the victim and the legitimate authentication service, intercepting both credentials and session cookies in real time. This allows attackers to bypass multi-factor authentication (MFA). The most prevalent PhaaS kits in 2025 include Tycoon 2FA, Sneaky 2FA, EvilProxy, and Evilginx. Over 1 million PhaaS attacks were detected in January-February 2025 alone. These attacks have evolved from QR codes to HTML attachments and SVG files for link distribution.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When conducting security assessments that involve performing adversary in the middle phishing detection}
+\li{When following incident response procedures for related security events}
+\li{When performing scheduled security testing or auditing activities}
+\li{When validating security controls through hands-on testing}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Azure AD / Entra ID Conditional Access policies}
+\li{SIEM with authentication log ingestion (Azure AD sign-in logs)}
+\li{Web proxy with SSL inspection and URL categorization}
+\li{Endpoint Detection and Response (EDR) solution}
+\li{FIDO2/phishing-resistant MFA capability}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{How AiTM Works}
+\ol{
+\li{Victim receives phishing email with link to attacker-controlled domain}
+\li{Attacker domain runs reverse proxy that mirrors legitimate login page}
+\li{Victim enters credentials on proxied page; credentials captured in transit}
+\li{Reverse proxy forwards credentials to real authentication service}
+\li{MFA challenge sent to victim; victim completes MFA on proxied page}
+\li{Attacker captures session cookie returned by legitimate service}
+\li{Attacker replays session cookie to access victim's account without MFA}
+}
+}
+
+\subtree{
+\title{Major AiTM Kits (2025)}
+\pre{\startverb
+| Kit | Type | Primary Targets | Evasion |
+|---|---|---|---|
+| Tycoon 2FA | PhaaS | Microsoft 365, Google | CAPTCHA, Cloudflare turnstile |
+| EvilProxy | PhaaS | Microsoft 365, Google, Okta | Random URLs, IP rotation |
+| Evilginx | Open-source | Any web application | Custom phishlets |
+| Sneaky 2FA | PhaaS | Microsoft 365 | Anti-bot checks |
+| NakedPages | PhaaS | Multiple | Minimal infrastructure |
+\stopverb}
+}
+
+\subtree{
+\title{Detection Indicators}
+\ul{
+\li{Authentication from unusual IP not matching user profile}
+\li{Session cookie reuse from different IP/device than authentication}
+\li{Login page served from non-Microsoft/non-Google infrastructure}
+\li{CDN requests to legitimate auth providers from phishing domains}
+\li{Impossible travel between authentication and session usage}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Deploy Phishing-Resistant MFA}
+\ul{
+\li{Implement FIDO2 security keys or Windows Hello for Business for high-value accounts}
+\li{Configure Conditional Access to require phishing-resistant MFA for admins}
+\li{Enable certificate-based authentication where possible}
+\li{Disable SMS and voice MFA for privileged accounts}
+\li{AiTM cannot intercept FIDO2 because authentication is bound to origin domain}
+}
+}
+
+\subtree{
+\title{Step 2: Configure Conditional Access Policies}
+\ul{
+\li{Require compliant/managed device for sensitive application access}
+\li{Block authentication from anonymous proxies and Tor exit nodes}
+\li{Enforce token binding to limit session cookie replay}
+\li{Configure continuous access evaluation (CAE) for real-time token revocation}
+\li{Implement sign-in risk policies that require re-authentication for risky sign-ins}
+}
+}
+
+\subtree{
+\title{Step 3: Build AiTM Detection Rules}
+\ul{
+\li{Alert on sign-in followed by session from different IP within 10 minutes}
+\li{Detect authentication where proxy IP does not match user's expected location}
+\li{Monitor for impossible travel patterns in session usage}
+\li{Alert on inbox rules created immediately after authentication (common post-compromise)}
+\li{Detect new MFA method registration from suspicious sign-in}
+}
+}
+
+\subtree{
+\title{Step 4: Monitor Web Proxy for AiTM Infrastructure}
+\ul{
+\li{Log and analyze DNS queries to newly registered domains}
+\li{Detect connections to known PhaaS infrastructure IPs}
+\li{Alert on authentication page backgrounds loaded from legitimate CDNs through proxy domains}
+\li{Monitor for SSL certificates issued to domains mimicking corporate login pages}
+\li{Block access to known EvilProxy/Evilginx infrastructure via threat intelligence}
+}
+}
+
+\subtree{
+\title{Step 5: Implement Post-Compromise Detection}
+\ul{
+\li{Alert on mailbox forwarding rules created after suspicious authentication}
+\li{Detect OAuth app consent after AiTM sign-in}
+\li{Monitor for email sending patterns indicating BEC follow-up}
+\li{Alert on SharePoint/OneDrive mass download after session hijack}
+\li{Track lateral movement from compromised account}
+}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{Microsoft Entra ID Protection}: Risk-based Conditional Access}
+\li{\strong{Azure AD Sign-in Logs}: Authentication event analysis}
+\li{\strong{Okta ThreatInsight}: AiTM proxy detection at IdP level}
+\li{\strong{Sekoia TDR}: AiTM campaign tracking and intelligence}
+\li{\strong{Evilginx (defensive)}: Understanding attack mechanics for detection}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{Phishing-resistant MFA blocks AiTM session capture in test scenario}
+\li{Conditional Access denies session replay from different device/IP}
+\li{SIEM alerts fire on simulated AiTM sign-in patterns}
+\li{Web proxy blocks connections to known PhaaS infrastructure}
+\li{Post-compromise rules detect inbox rule creation after suspicious auth}
+}
+}
+}

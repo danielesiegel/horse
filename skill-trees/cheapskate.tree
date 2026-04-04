@@ -1,0 +1,311 @@
+\title{Cheapskate}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used to enforce token efficiency. Every token must pay rent - no preamble, hedging, restating, filler, or apologies. Evicts freeloading tokens from agent output.}
+
+\subtree{
+\title{Cheapskate Skill}
+\p{\strong{Trit}: -1 (MINUS - validator/constrainer) \strong{Purpose}: Every token must pay rent. No freeloaders.}
+
+\subtree{
+\title{Rent-Paying Tokens}
+\p{A token pays rent if it:}
+
+\ol{
+\li{\strong{Does work} - executes, builds, tests, deploys}
+\li{\strong{Answers directly} - no preamble, no hedging}
+\li{\strong{Moves forward} - no restating, no summarizing what was said}
+\li{\strong{Is necessary} - couldn't be cut without losing meaning}
+}
+}
+
+\subtree{
+\title{Freeloading Tokens (evict immediately)}
+\pre{\startverb
+| Freeloader | Example | Eviction |
+|------------|---------|----------|
+| Preamble | "I'll help you with..." | Delete |
+| Hedging | "It seems like maybe..." | State directly |
+| Restating | "You asked me to..." | Skip |
+| Filler | "Let me think about..." | Just do |
+| Over-explaining | 3 paragraphs for 1 line fix | Code only |
+| Permission-seeking | "Should I proceed?" | Proceed |
+| Apologies | "Sorry, I..." | Fix it |
+| Summaries | "To summarize..." | Stop |
+\stopverb}
+}
+
+\subtree{
+\title{Core Principles}
+\subtree{
+\title{1. Token Conservation}
+\ul{
+\li{\strong{Terse responses}: 1-3 sentences unless detail requested}
+\li{\strong{No preamble/postamble}: Skip "I'll help you with..." and summaries}
+\li{\strong{Code over prose}: Show code, not explanations}
+\li{\strong{Links over content}: Reference files, don't paste them}
+}
+}
+
+\subtree{
+\title{2. Tool Call Efficiency}
+\ul{
+\li{\strong{Parallel reads}: Batch independent Read/Grep calls}
+\li{\strong{Targeted searches}: Use glob patterns, not broad scans}
+\li{\strong{Single-pass edits}: Plan before editing, don't iterate}
+\li{\strong{Skip redundant checks}: Trust previous results}
+}
+}
+
+\subtree{
+\title{3. Subagent Economics}
+\ul{
+\li{\strong{Task tool for isolation}: Heavy work in subagents (tokens not returned)}
+\li{\strong{Bounded prompts}: Subagent prompts < 500 tokens}
+\li{\strong{No round-trips}: Give subagents full context upfront}
+\li{\strong{Kill early}: Cancel subagents if direction changes}
+}
+}
+
+\subtree{
+\title{4. Context Window Management}
+\ul{
+\li{\strong{Skill loading}: Only load skills when needed}
+\li{\strong{File excerpts}: Read ranges, not full files}
+\li{\strong{Summarize large outputs}: Truncate verbose tool results}
+\li{\strong{Avoid re-reading}: Cache file contents mentally}
+}
+}
+}
+
+\subtree{
+\title{Anti-Patterns (Token Wasters)}
+\pre{\startverb
+| Pattern | Cost | Fix |
+|---------|------|-----|
+| Reading entire files | High | Use line ranges `[1, 50]` |
+| Sequential tool calls | Medium | Parallelize independents |
+| Explaining before doing | Medium | Just do it |
+| Asking permission | Low-Medium | Act, don't ask |
+| Repeating user's question | Low | Skip acknowledgment |
+| Long error explanations | Medium | Terse: "Error: X. Fix: Y" |
+| Multiple edit iterations | High | Plan first, single edit |
+| Loading unused skills | Medium | Load on-demand |
+\stopverb}
+}
+
+\subtree{
+\title{Efficient Patterns}
+\subtree{
+\title{File Operations}
+\pre{\startverb
+# Bad: Read full 2000-line file
+Read("/path/to/big.py")
+
+# Good: Read relevant section
+Read("/path/to/big.py", [100, 150])
+
+# Better: Grep first, then targeted read
+Grep("def target_function", path="/path/to/big.py")
+Read("/path/to/big.py", [142, 165])
+\stopverb}
+}
+
+\subtree{
+\title{Parallel Execution}
+\pre{\startverb
+# Bad: Sequential
+Read(file1) → Read(file2) → Read(file3)
+
+# Good: Parallel (single message, 3 tool calls)
+Read(file1) | Read(file2) | Read(file3)
+\stopverb}
+}
+
+\subtree{
+\title{Subagent Dispatch}
+\pre{\startverb
+# Bad: Heavy work in main thread (tokens visible)
+[read 10 files, analyze, generate report]
+
+# Good: Subagent isolation (only summary returned)
+Task("Analyze 10 files, return 3-line summary")
+\stopverb}
+}
+
+\subtree{
+\title{Response Length}
+\pre{\startverb
+# Bad (47 tokens)
+"I'll help you implement that feature. Let me start by 
+examining the codebase to understand the current architecture,
+then I'll make the necessary changes..."
+
+# Good (3 tokens)
+[starts making changes]
+\stopverb}
+}
+}
+
+\subtree{
+\title{Cost Estimation Heuristics}
+\pre{\startverb
+| Operation | ~Tokens |
+|-----------|---------|
+| Read 100 lines code | 400-800 |
+| Grep results (10 matches) | 200-400 |
+| Edit file | 100-300 |
+| Skill load | 500-2000 |
+| Task subagent prompt | 200-500 |
+| Task subagent result | 100-500 |
+| Web search result | 500-1500 |
+| Mermaid diagram | 100-300 |
+\stopverb}
+}
+
+\subtree{
+\title{Cheapskate Checklist}
+\p{Before responding:}
+
+\ul{
+\li{[ ] Can I answer in < 3 sentences?}
+\li{[ ] Are all tool calls parallelized?}
+\li{[ ] Am I reading only what's needed?}
+\li{[ ] Should this be a subagent (isolated tokens)?}
+\li{[ ] Did I skip the preamble?}
+\li{[ ] Did I skip the summary?}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\p{As MINUS (-1) validator:}
+
+\ul{
+\li{Constrains token expenditure}
+\li{Validates efficiency of other skills}
+\li{Balances PLUS generators (which produce tokens)}
+}
+
+\pre{\startverb
+Σ(generator_tokens) + Σ(validator_savings) ≡ 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{Freeloader Detection Pipeline}
+\subtree{
+\title{Phase 1: Pattern Scan}
+\pre{\startverb
+scripts/evict.sh < output.txt
+\stopverb}
+}
+
+\subtree{
+\title{Phase 2: Compression Ratio}
+\pre{\startverb
+# Highly compressible = repetitive = freeloaders
+ratio = len(zlib.compress(text)) / len(text)
+if ratio < 0.3: EVICT
+\stopverb}
+}
+
+\subtree{
+\title{Phase 3: Work Ratio}
+\pre{\startverb
+# Count tool calls vs prose tokens
+work_tokens = count_code_blocks() + count_tool_calls()
+prose_tokens = total - work_tokens
+if prose_tokens / total > 0.7: EVICT
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with accept-no-substitutes}
+\pre{\startverb
+# Chain validators
+output | accept-no-substitutes/scripts/validate.sh | cheapskate/scripts/evict.sh
+\stopverb}
+
+\p{Both skills emit MINUS (-1) on rejection:}
+
+\ul{
+\li{\code{\startverb accept-no-substitutes\stopverb}: rejects incomplete work}
+\li{\code{\startverb cheapskate\stopverb}: rejects work that doesn't work}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Evict freeloaders from output
+scripts/evict.sh < output.txt
+
+# Analyze thread token efficiency
+just cheapskate-analyze <thread-id>
+
+# Estimate remaining budget
+just cheapskate-budget
+
+# Compress context
+just cheapskate-compress
+\stopverb}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{\code{\startverb parallel-fanout\stopverb} - Efficient parallel dispatch}
+\li{\code{\startverb triad-interleave\stopverb} - Balanced token streams}
+\li{\code{\startverb frustration-eradication\stopverb} - Don't waste tokens on frustration}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{\startverb general\stopverb}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\p{This skill maps to \strong{Cat# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat# equipment structure.}
+}
+}
+}

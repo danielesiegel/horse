@@ -1,0 +1,725 @@
+\title{Pymc Bayesian Modeling}
+
+\taxon{skill}
+
+\meta{description}{"Bayesian modeling with PyMC. Build hierarchical models, MCMC (NUTS), variational inference, LOO/WAIC comparison, posterior checks, for probabilistic programming and inference."}
+
+\subtree{
+\title{PyMC Bayesian Modeling}
+\subtree{
+\title{Overview}
+\p{PyMC is a Python library for Bayesian modeling and probabilistic programming. Build, fit, validate, and compare Bayesian models using PyMC's modern API (version 5.x+), including hierarchical models, MCMC sampling (NUTS), variational inference, and model comparison (LOO, WAIC).}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Building Bayesian models (linear/logistic regression, hierarchical models, time series, etc.)}
+\li{Performing MCMC sampling or variational inference}
+\li{Conducting prior/posterior predictive checks}
+\li{Diagnosing sampling issues (divergences, convergence, ESS)}
+\li{Comparing multiple models using information criteria (LOO, WAIC)}
+\li{Implementing uncertainty quantification through Bayesian methods}
+\li{Working with hierarchical/multilevel data structures}
+\li{Handling missing data or measurement error in a principled way}
+}
+}
+
+\subtree{
+\title{Standard Bayesian Workflow}
+\p{Follow this workflow for building and validating Bayesian models:}
+
+\subtree{
+\title{1. Data Preparation}
+\pre{\startverb
+import pymc as pm
+import arviz as az
+import numpy as np
+
+# Load and prepare data
+X = ...  # Predictors
+y = ...  # Outcomes
+
+# Standardize predictors for better sampling
+X_mean = X.mean(axis=0)
+X_std = X.std(axis=0)
+X_scaled = (X - X_mean) / X_std
+\stopverb}
+
+\p{\strong{Key practices:}}
+
+\ul{
+\li{Standardize continuous predictors (improves sampling efficiency)}
+\li{Center outcomes when possible}
+\li{Handle missing data explicitly (treat as parameters)}
+\li{Use named dimensions with \code{\startverb coords\stopverb} for clarity}
+}
+}
+
+\subtree{
+\title{2. Model Building}
+\pre{\startverb
+coords = {
+    'predictors': ['var1', 'var2', 'var3'],
+    'obs_id': np.arange(len(y))
+}
+
+with pm.Model(coords=coords) as model:
+    # Priors
+    alpha = pm.Normal('alpha', mu=0, sigma=1)
+    beta = pm.Normal('beta', mu=0, sigma=1, dims='predictors')
+    sigma = pm.HalfNormal('sigma', sigma=1)
+
+    # Linear predictor
+    mu = alpha + pm.math.dot(X_scaled, beta)
+
+    # Likelihood
+    y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y, dims='obs_id')
+\stopverb}
+
+\p{\strong{Key practices:}}
+
+\ul{
+\li{Use weakly informative priors (not flat priors)}
+\li{Use \code{\startverb HalfNormal\stopverb} or \code{\startverb Exponential\stopverb} for scale parameters}
+\li{Use named dimensions (\code{\startverb dims\stopverb}) instead of \code{\startverb shape\stopverb} when possible}
+\li{Use \code{\startverb pm.Data()\stopverb} for values that will be updated for predictions}
+}
+}
+
+\subtree{
+\title{3. Prior Predictive Check}
+\p{\strong{Always validate priors before fitting:}}
+
+\pre{\startverb
+with model:
+    prior_pred = pm.sample_prior_predictive(samples=1000, random_seed=42)
+
+# Visualize
+az.plot_ppc(prior_pred, group='prior')
+\stopverb}
+
+\p{\strong{Check:}}
+
+\ul{
+\li{Do prior predictions span reasonable values?}
+\li{Are extreme values plausible given domain knowledge?}
+\li{If priors generate implausible data, adjust and re-check}
+}
+}
+
+\subtree{
+\title{4. Fit Model}
+\pre{\startverb
+with model:
+    # Optional: Quick exploration with ADVI
+    # approx = pm.fit(n=20000)
+
+    # Full MCMC inference
+    idata = pm.sample(
+        draws=2000,
+        tune=1000,
+        chains=4,
+        target_accept=0.9,
+        random_seed=42,
+        idata_kwargs={'log_likelihood': True}  # For model comparison
+    )
+\stopverb}
+
+\p{\strong{Key parameters:}}
+
+\ul{
+\li{\code{\startverb draws=2000\stopverb}: Number of samples per chain}
+\li{\code{\startverb tune=1000\stopverb}: Warmup samples (discarded)}
+\li{\code{\startverb chains=4\stopverb}: Run 4 chains for convergence checking}
+\li{\code{\startverb target_accept=0.9\stopverb}: Higher for difficult posteriors (0.95-0.99)}
+\li{Include \code{\startverb log_likelihood=True\stopverb} for model comparison}
+}
+}
+
+\subtree{
+\title{5. Check Diagnostics}
+\p{\strong{Use the diagnostic script:}}
+
+\pre{\startverb
+from scripts.model_diagnostics import check_diagnostics
+
+results = check_diagnostics(idata, var_names=['alpha', 'beta', 'sigma'])
+\stopverb}
+
+\p{\strong{Check:}}
+
+\ul{
+\li{\strong{R-hat < 1.01}: Chains have converged}
+\li{\strong{ESS > 400}: Sufficient effective samples}
+\li{\strong{No divergences}: NUTS sampled successfully}
+\li{\strong{Trace plots}: Chains should mix well (fuzzy caterpillar)}
+}
+
+\p{\strong{If issues arise:}}
+
+\ul{
+\li{Divergences → Increase \code{\startverb target_accept=0.95\stopverb}, use non-centered parameterization}
+\li{Low ESS → Sample more draws, reparameterize to reduce correlation}
+\li{High R-hat → Run longer, check for multimodality}
+}
+}
+
+\subtree{
+\title{6. Posterior Predictive Check}
+\p{\strong{Validate model fit:}}
+
+\pre{\startverb
+with model:
+    pm.sample_posterior_predictive(idata, extend_inferencedata=True, random_seed=42)
+
+# Visualize
+az.plot_ppc(idata)
+\stopverb}
+
+\p{\strong{Check:}}
+
+\ul{
+\li{Do posterior predictions capture observed data patterns?}
+\li{Are systematic deviations evident (model misspecification)?}
+\li{Consider alternative models if fit is poor}
+}
+}
+
+\subtree{
+\title{7. Analyze Results}
+\pre{\startverb
+# Summary statistics
+print(az.summary(idata, var_names=['alpha', 'beta', 'sigma']))
+
+# Posterior distributions
+az.plot_posterior(idata, var_names=['alpha', 'beta', 'sigma'])
+
+# Coefficient estimates
+az.plot_forest(idata, var_names=['beta'], combined=True)
+\stopverb}
+}
+
+\subtree{
+\title{8. Make Predictions}
+\pre{\startverb
+X_new = ...  # New predictor values
+X_new_scaled = (X_new - X_mean) / X_std
+
+with model:
+    pm.set_data({'X_scaled': X_new_scaled})
+    post_pred = pm.sample_posterior_predictive(
+        idata.posterior,
+        var_names=['y_obs'],
+        random_seed=42
+    )
+
+# Extract prediction intervals
+y_pred_mean = post_pred.posterior_predictive['y_obs'].mean(dim=['chain', 'draw'])
+y_pred_hdi = az.hdi(post_pred.posterior_predictive, var_names=['y_obs'])
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Model Patterns}
+\subtree{
+\title{Linear Regression}
+\p{For continuous outcomes with linear relationships:}
+
+\pre{\startverb
+with pm.Model() as linear_model:
+    alpha = pm.Normal('alpha', mu=0, sigma=10)
+    beta = pm.Normal('beta', mu=0, sigma=10, shape=n_predictors)
+    sigma = pm.HalfNormal('sigma', sigma=1)
+
+    mu = alpha + pm.math.dot(X, beta)
+    y = pm.Normal('y', mu=mu, sigma=sigma, observed=y_obs)
+\stopverb}
+
+\p{\strong{Use template:} \code{\startverb assets/linear_regression_template.py\stopverb}}
+}
+
+\subtree{
+\title{Logistic Regression}
+\p{For binary outcomes:}
+
+\pre{\startverb
+with pm.Model() as logistic_model:
+    alpha = pm.Normal('alpha', mu=0, sigma=10)
+    beta = pm.Normal('beta', mu=0, sigma=10, shape=n_predictors)
+
+    logit_p = alpha + pm.math.dot(X, beta)
+    y = pm.Bernoulli('y', logit_p=logit_p, observed=y_obs)
+\stopverb}
+}
+
+\subtree{
+\title{Hierarchical Models}
+\p{For grouped data (use non-centered parameterization):}
+
+\pre{\startverb
+with pm.Model(coords={'groups': group_names}) as hierarchical_model:
+    # Hyperpriors
+    mu_alpha = pm.Normal('mu_alpha', mu=0, sigma=10)
+    sigma_alpha = pm.HalfNormal('sigma_alpha', sigma=1)
+
+    # Group-level (non-centered)
+    alpha_offset = pm.Normal('alpha_offset', mu=0, sigma=1, dims='groups')
+    alpha = pm.Deterministic('alpha', mu_alpha + sigma_alpha * alpha_offset, dims='groups')
+
+    # Observation-level
+    mu = alpha[group_idx]
+    sigma = pm.HalfNormal('sigma', sigma=1)
+    y = pm.Normal('y', mu=mu, sigma=sigma, observed=y_obs)
+\stopverb}
+
+\p{\strong{Use template:} \code{\startverb assets/hierarchical_model_template.py\stopverb}}
+
+\p{\strong{Critical:} Always use non-centered parameterization for hierarchical models to avoid divergences.}
+}
+
+\subtree{
+\title{Poisson Regression}
+\p{For count data:}
+
+\pre{\startverb
+with pm.Model() as poisson_model:
+    alpha = pm.Normal('alpha', mu=0, sigma=10)
+    beta = pm.Normal('beta', mu=0, sigma=10, shape=n_predictors)
+
+    log_lambda = alpha + pm.math.dot(X, beta)
+    y = pm.Poisson('y', mu=pm.math.exp(log_lambda), observed=y_obs)
+\stopverb}
+
+\p{For overdispersed counts, use \code{\startverb NegativeBinomial\stopverb} instead.}
+}
+
+\subtree{
+\title{Time Series}
+\p{For autoregressive processes:}
+
+\pre{\startverb
+with pm.Model() as ar_model:
+    sigma = pm.HalfNormal('sigma', sigma=1)
+    rho = pm.Normal('rho', mu=0, sigma=0.5, shape=ar_order)
+    init_dist = pm.Normal.dist(mu=0, sigma=sigma)
+
+    y = pm.AR('y', rho=rho, sigma=sigma, init_dist=init_dist, observed=y_obs)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Model Comparison}
+\subtree{
+\title{Comparing Models}
+\p{Use LOO or WAIC for model comparison:}
+
+\pre{\startverb
+from scripts.model_comparison import compare_models, check_loo_reliability
+
+# Fit models with log_likelihood
+models = {
+    'Model1': idata1,
+    'Model2': idata2,
+    'Model3': idata3
+}
+
+# Compare using LOO
+comparison = compare_models(models, ic='loo')
+
+# Check reliability
+check_loo_reliability(models)
+\stopverb}
+
+\p{\strong{Interpretation:}}
+
+\ul{
+\li{\strong{Δloo < 2}: Models are similar, choose simpler model}
+\li{\strong{2 < Δloo < 4}: Weak evidence for better model}
+\li{\strong{4 < Δloo < 10}: Moderate evidence}
+\li{\strong{Δloo > 10}: Strong evidence for better model}
+}
+
+\p{\strong{Check Pareto-k values:}}
+
+\ul{
+\li{k < 0.7: LOO reliable}
+\li{k > 0.7: Consider WAIC or k-fold CV}
+}
+}
+
+\subtree{
+\title{Model Averaging}
+\p{When models are similar, average predictions:}
+
+\pre{\startverb
+from scripts.model_comparison import model_averaging
+
+averaged_pred, weights = model_averaging(models, var_name='y_obs')
+\stopverb}
+}
+}
+
+\subtree{
+\title{Distribution Selection Guide}
+\subtree{
+\title{For Priors}
+\p{\strong{Scale parameters} (σ, τ):}
+
+\ul{
+\li{\code{\startverb pm.HalfNormal('sigma', sigma=1)\stopverb} - Default choice}
+\li{\code{\startverb pm.Exponential('sigma', lam=1)\stopverb} - Alternative}
+\li{\code{\startverb pm.Gamma('sigma', alpha=2, beta=1)\stopverb} - More informative}
+}
+
+\p{\strong{Unbounded parameters}:}
+
+\ul{
+\li{\code{\startverb pm.Normal('theta', mu=0, sigma=1)\stopverb} - For standardized data}
+\li{\code{\startverb pm.StudentT('theta', nu=3, mu=0, sigma=1)\stopverb} - Robust to outliers}
+}
+
+\p{\strong{Positive parameters}:}
+
+\ul{
+\li{\code{\startverb pm.LogNormal('theta', mu=0, sigma=1)\stopverb}}
+\li{\code{\startverb pm.Gamma('theta', alpha=2, beta=1)\stopverb}}
+}
+
+\p{\strong{Probabilities}:}
+
+\ul{
+\li{\code{\startverb pm.Beta('p', alpha=2, beta=2)\stopverb} - Weakly informative}
+\li{\code{\startverb pm.Uniform('p', lower=0, upper=1)\stopverb} - Non-informative (use sparingly)}
+}
+
+\p{\strong{Correlation matrices}:}
+
+\ul{
+\li{\code{\startverb pm.LKJCorr('corr', n=n_vars, eta=2)\stopverb} - eta=1 uniform, eta>1 prefers identity}
+}
+}
+
+\subtree{
+\title{For Likelihoods}
+\p{\strong{Continuous outcomes}:}
+
+\ul{
+\li{\code{\startverb pm.Normal('y', mu=mu, sigma=sigma)\stopverb} - Default for continuous data}
+\li{\code{\startverb pm.StudentT('y', nu=nu, mu=mu, sigma=sigma)\stopverb} - Robust to outliers}
+}
+
+\p{\strong{Count data}:}
+
+\ul{
+\li{\code{\startverb pm.Poisson('y', mu=lambda)\stopverb} - Equidispersed counts}
+\li{\code{\startverb pm.NegativeBinomial('y', mu=mu, alpha=alpha)\stopverb} - Overdispersed counts}
+\li{\code{\startverb pm.ZeroInflatedPoisson('y', psi=psi, mu=mu)\stopverb} - Excess zeros}
+}
+
+\p{\strong{Binary outcomes}:}
+
+\ul{
+\li{\code{\startverb pm.Bernoulli('y', p=p)\stopverb} or \code{\startverb pm.Bernoulli('y', logit_p=logit_p)\stopverb}}
+}
+
+\p{\strong{Categorical outcomes}:}
+
+\ul{
+\li{\code{\startverb pm.Categorical('y', p=probs)\stopverb}}
+}
+
+\p{\strong{See:} \code{\startverb references/distributions.md\stopverb} for comprehensive distribution reference}
+}
+}
+
+\subtree{
+\title{Sampling and Inference}
+\subtree{
+\title{MCMC with NUTS}
+\p{Default and recommended for most models:}
+
+\pre{\startverb
+idata = pm.sample(
+    draws=2000,
+    tune=1000,
+    chains=4,
+    target_accept=0.9,
+    random_seed=42
+)
+\stopverb}
+
+\p{\strong{Adjust when needed:}}
+
+\ul{
+\li{Divergences → \code{\startverb target_accept=0.95\stopverb} or higher}
+\li{Slow sampling → Use ADVI for initialization}
+\li{Discrete parameters → Use \code{\startverb pm.Metropolis()\stopverb} for discrete vars}
+}
+}
+
+\subtree{
+\title{Variational Inference}
+\p{Fast approximation for exploration or initialization:}
+
+\pre{\startverb
+with model:
+    approx = pm.fit(n=20000, method='advi')
+
+    # Use for initialization
+    start = approx.sample(return_inferencedata=False)[0]
+    idata = pm.sample(start=start)
+\stopverb}
+
+\p{\strong{Trade-offs:}}
+
+\ul{
+\li{Much faster than MCMC}
+\li{Approximate (may underestimate uncertainty)}
+\li{Good for large models or quick exploration}
+}
+
+\p{\strong{See:} \code{\startverb references/sampling_inference.md\stopverb} for detailed sampling guide}
+}
+}
+
+\subtree{
+\title{Diagnostic Scripts}
+\subtree{
+\title{Comprehensive Diagnostics}
+\pre{\startverb
+from scripts.model_diagnostics import create_diagnostic_report
+
+create_diagnostic_report(
+    idata,
+    var_names=['alpha', 'beta', 'sigma'],
+    output_dir='diagnostics/'
+)
+\stopverb}
+
+\p{Creates:}
+
+\ul{
+\li{Trace plots}
+\li{Rank plots (mixing check)}
+\li{Autocorrelation plots}
+\li{Energy plots}
+\li{ESS evolution}
+\li{Summary statistics CSV}
+}
+}
+
+\subtree{
+\title{Quick Diagnostic Check}
+\pre{\startverb
+from scripts.model_diagnostics import check_diagnostics
+
+results = check_diagnostics(idata)
+\stopverb}
+
+\p{Checks R-hat, ESS, divergences, and tree depth.}
+}
+}
+
+\subtree{
+\title{Common Issues and Solutions}
+\subtree{
+\title{Divergences}
+\p{\strong{Symptom:} \code{\startverb idata.sample_stats.diverging.sum() > 0\stopverb}}
+
+\p{\strong{Solutions:}}
+
+\ol{
+\li{Increase \code{\startverb target_accept=0.95\stopverb} or \code{\startverb 0.99\stopverb}}
+\li{Use non-centered parameterization (hierarchical models)}
+\li{Add stronger priors to constrain parameters}
+\li{Check for model misspecification}
+}
+}
+
+\subtree{
+\title{Low Effective Sample Size}
+\p{\strong{Symptom:} \code{\startverb ESS < 400\stopverb}}
+
+\p{\strong{Solutions:}}
+
+\ol{
+\li{Sample more draws: \code{\startverb draws=5000\stopverb}}
+\li{Reparameterize to reduce posterior correlation}
+\li{Use QR decomposition for regression with correlated predictors}
+}
+}
+
+\subtree{
+\title{High R-hat}
+\p{\strong{Symptom:} \code{\startverb R-hat > 1.01\stopverb}}
+
+\p{\strong{Solutions:}}
+
+\ol{
+\li{Run longer chains: \code{\startverb tune=2000, draws=5000\stopverb}}
+\li{Check for multimodality}
+\li{Improve initialization with ADVI}
+}
+}
+
+\subtree{
+\title{Slow Sampling}
+\p{\strong{Solutions:}}
+
+\ol{
+\li{Use ADVI initialization}
+\li{Reduce model complexity}
+\li{Increase parallelization: \code{\startverb cores=8, chains=8\stopverb}}
+\li{Use variational inference if appropriate}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Model Building}
+\ol{
+\li{\strong{Always standardize predictors} for better sampling}
+\li{\strong{Use weakly informative priors} (not flat)}
+\li{\strong{Use named dimensions} (\code{\startverb dims\stopverb}) for clarity}
+\li{\strong{Non-centered parameterization} for hierarchical models}
+\li{\strong{Check prior predictive} before fitting}
+}
+}
+
+\subtree{
+\title{Sampling}
+\ol{
+\li{\strong{Run multiple chains} (at least 4) for convergence}
+\li{\strong{Use \code{\startverb target_accept=0.9\stopverb}} as baseline (higher if needed)}
+\li{\strong{Include \code{\startverb log_likelihood=True\stopverb}} for model comparison}
+\li{\strong{Set random seed} for reproducibility}
+}
+}
+
+\subtree{
+\title{Validation}
+\ol{
+\li{\strong{Check diagnostics} before interpretation (R-hat, ESS, divergences)}
+\li{\strong{Posterior predictive check} for model validation}
+\li{\strong{Compare multiple models} when appropriate}
+\li{\strong{Report uncertainty} (HDI intervals, not just point estimates)}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Start simple, add complexity gradually}
+\li{Prior predictive check → Fit → Diagnostics → Posterior predictive check}
+\li{Iterate on model specification based on checks}
+\li{Document assumptions and prior choices}
+}
+}
+}
+
+\subtree{
+\title{Resources}
+\p{This skill includes:}
+
+\subtree{
+\title{References (\code{\startverb references/\stopverb})}
+\ul{
+\li{\strong{\code{\startverb distributions.md\stopverb}}: Comprehensive catalog of PyMC distributions organized by category (continuous, discrete, multivariate, mixture, time series). Use when selecting priors or likelihoods.}
+}
+
+\ul{
+\li{\strong{\code{\startverb sampling_inference.md\stopverb}}: Detailed guide to sampling algorithms (NUTS, Metropolis, SMC), variational inference (ADVI, SVGD), and handling sampling issues. Use when encountering convergence problems or choosing inference methods.}
+}
+
+\ul{
+\li{\strong{\code{\startverb workflows.md\stopverb}}: Complete workflow examples and code patterns for common model types, data preparation, prior selection, and model validation. Use as a cookbook for standard Bayesian analyses.}
+}
+}
+
+\subtree{
+\title{Scripts (\code{\startverb scripts/\stopverb})}
+\ul{
+\li{\strong{\code{\startverb model_diagnostics.py\stopverb}}: Automated diagnostic checking and report generation. Functions: \code{\startverb check_diagnostics()\stopverb} for quick checks, \code{\startverb create_diagnostic_report()\stopverb} for comprehensive analysis with plots.}
+}
+
+\ul{
+\li{\strong{\code{\startverb model_comparison.py\stopverb}}: Model comparison utilities using LOO/WAIC. Functions: \code{\startverb compare_models()\stopverb}, \code{\startverb check_loo_reliability()\stopverb}, \code{\startverb model_averaging()\stopverb}.}
+}
+}
+
+\subtree{
+\title{Templates (\code{\startverb assets/\stopverb})}
+\ul{
+\li{\strong{\code{\startverb linear_regression_template.py\stopverb}}: Complete template for Bayesian linear regression with full workflow (data prep, prior checks, fitting, diagnostics, predictions).}
+}
+
+\ul{
+\li{\strong{\code{\startverb hierarchical_model_template.py\stopverb}}: Complete template for hierarchical/multilevel models with non-centered parameterization and group-level analysis.}
+}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{Model Building}
+\pre{\startverb
+with pm.Model(coords={'var': names}) as model:
+    # Priors
+    param = pm.Normal('param', mu=0, sigma=1, dims='var')
+    # Likelihood
+    y = pm.Normal('y', mu=..., sigma=..., observed=data)
+\stopverb}
+}
+
+\subtree{
+\title{Sampling}
+\pre{\startverb
+idata = pm.sample(draws=2000, tune=1000, chains=4, target_accept=0.9)
+\stopverb}
+}
+
+\subtree{
+\title{Diagnostics}
+\pre{\startverb
+from scripts.model_diagnostics import check_diagnostics
+check_diagnostics(idata)
+\stopverb}
+}
+
+\subtree{
+\title{Model Comparison}
+\pre{\startverb
+from scripts.model_comparison import compare_models
+compare_models({'m1': idata1, 'm2': idata2}, ic='loo')
+\stopverb}
+}
+
+\subtree{
+\title{Predictions}
+\pre{\startverb
+with model:
+    pm.set_data({'X': X_new})
+    pred = pm.sample_posterior_predictive(idata.posterior)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Notes}
+\ul{
+\li{PyMC integrates with ArviZ for visualization and diagnostics}
+\li{Use \code{\startverb pm.model_to_graphviz(model)\stopverb} to visualize model structure}
+\li{Save results with \code{\startverb idata.to_netcdf('results.nc')\stopverb}}
+\li{Load with \code{\startverb az.from_netcdf('results.nc')\stopverb}}
+\li{For very large models, consider minibatch ADVI or data subsampling}
+}
+}
+}

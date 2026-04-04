@@ -1,0 +1,120 @@
+\title{Implementing Envelope Encryption With Aws Kms}
+
+\taxon{skill}
+
+\tag{cryptography}
+
+\tag{encryption}
+
+\tag{aws}
+
+\tag{kms}
+
+\tag{envelope-encryption}
+
+\tag{key-management}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Envelope encryption is a strategy where data is encrypted with a data encryption key (DEK), and the DEK itself is encrypted with a master key (KEK) managed by AWS KMS. This approach allows encrypting}
+
+\subtree{
+\title{Implementing Envelope Encryption with AWS KMS}
+\subtree{
+\title{Overview}
+\p{Envelope encryption is a strategy where data is encrypted with a data encryption key (DEK), and the DEK itself is encrypted with a master key (KEK) managed by AWS KMS. This approach allows encrypting large volumes of data locally while keeping the master key secure in a hardware security module (HSM) managed by AWS. This skill covers implementing envelope encryption using AWS KMS GenerateDataKey API.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing envelope encryption with aws kms capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Familiarity with cryptography concepts and tools}
+\li{Access to a test or lab environment for safe execution}
+\li{Python 3.8+ with required dependencies installed}
+\li{Appropriate authorization for any testing activities}
+}
+}
+
+\subtree{
+\title{Objectives}
+\ul{
+\li{Understand the envelope encryption pattern and its advantages}
+\li{Generate data encryption keys using AWS KMS GenerateDataKey}
+\li{Encrypt/decrypt data locally using DEKs}
+\li{Store encrypted DEK alongside ciphertext}
+\li{Implement key caching to reduce KMS API calls}
+\li{Handle key rotation with automatic re-encryption}
+\li{Implement multi-region encryption for disaster recovery}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Envelope Encryption Flow}
+\ol{
+\li{Call \code{\startverb kms:GenerateDataKey\stopverb} to get plaintext DEK + encrypted DEK}
+\li{Use plaintext DEK to encrypt data locally (AES-256-GCM)}
+\li{Store encrypted DEK alongside ciphertext}
+\li{Discard plaintext DEK from memory}
+\li{For decryption: call \code{\startverb kms:Decrypt\stopverb} on encrypted DEK, then decrypt data}
+}
+}
+
+\subtree{
+\title{Advantages Over Direct KMS Encryption}
+\pre{\startverb
+| Aspect | Direct KMS | Envelope Encryption |
+|--------|-----------|-------------------|
+| Max data size | 4 KB | Unlimited |
+| Latency | Network round-trip per operation | Local encryption |
+| Cost | $0.03/10,000 requests | Fewer KMS requests |
+| Offline | Not possible | Yes (with cached DEKs) |
+\stopverb}
+}
+
+\subtree{
+\title{KMS Key Types}
+\ul{
+\li{\strong{AWS Managed}: AWS creates and manages (\code{\startverb aws/s3\stopverb}, \code{\startverb aws/ebs\stopverb})}
+\li{\strong{Customer Managed}: You create and manage policies}
+\li{\strong{Custom Key Store}: Backed by CloudHSM cluster}
+}
+}
+}
+
+\subtree{
+\title{Security Considerations}
+\ul{
+\li{Never store plaintext DEK; only keep encrypted DEK}
+\li{Use key policies to restrict who can call GenerateDataKey and Decrypt}
+\li{Enable AWS CloudTrail logging for all KMS API calls}
+\li{Implement key rotation (automatic annual rotation for CMKs)}
+\li{Use encryption context for authenticated encryption metadata}
+\li{Handle KMS throttling with exponential backoff}
+}
+}
+
+\subtree{
+\title{Validation Criteria}
+\ul{
+\li{[ ] GenerateDataKey returns plaintext and encrypted DEK}
+\li{[ ] Data encrypts correctly with plaintext DEK using AES-256-GCM}
+\li{[ ] Encrypted DEK can be decrypted via KMS Decrypt API}
+\li{[ ] Decrypted DEK recovers the original data}
+\li{[ ] Plaintext DEK is wiped from memory after use}
+\li{[ ] Encryption context is validated during decryption}
+\li{[ ] Key rotation re-encrypts DEKs with new master key}
+}
+}
+}

@@ -1,0 +1,106 @@
+\title{Partiful}
+
+\taxon{skill}
+
+\meta{description}{Access Partiful events, invites, and RSVPs via reverse-engineered API. Use when user asks about party invites, event RSVPs, or social event data.}
+
+\subtree{
+\title{Partiful}
+\p{Programmatic access to Partiful event data via Babashka.}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# List all RSVPs/invites
+bb scripts/partiful.clj invites
+
+# Get event details
+bb scripts/partiful.clj event <event-id>
+
+# Authenticate (opens browser)
+bb scripts/partiful.clj auth
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+| Command | Description |
+|---------|-------------|
+| `invites` | List events you're invited to with RSVP status |
+| `events` | List events you're hosting |
+| `mutuals` | List mutual connections |
+| `event <id>` | Get full details for an event |
+| `auth` | Authenticate via Playwright browser |
+\stopverb}
+}
+
+\subtree{
+\title{Configuration}
+\p{Set environment variables or store in \code{\startverb ~/.partiful-config.edn\stopverb}:}
+
+\pre{\startverb
+export PARTIFUL_AUTH_TOKEN="..."
+export PARTIFUL_USER_ID="..."
+export PARTIFUL_REFRESH_TOKEN="..."
+export PARTIFUL_FIREBASE_API_KEY="..."  # Get from Partiful web app
+\stopverb}
+}
+
+\subtree{
+\title{ACSet Schema}
+\p{Category-theoretic event modeling with morphisms:}
+
+\pre{\startverb
+  Event <──host──── User
+    ^                 ^
+    │                 │
+ event_of          invitee
+    │                 │
+    └─── Invite ─────┘
+           ↓
+         RSVP
+\stopverb}
+
+\p{See \code{\startverb scripts/partiful-acset.clj\stopverb} for queries:}
+
+\ul{
+\li{\code{\startverb my-invited-events\stopverb} - Events user is invited to}
+\li{\code{\startverb event-guests\stopverb} - All guests for an event}
+\li{\code{\startverb event-rsvps\stopverb} - RSVP statuses for event}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 5. Evaluation}
+\p{\strong{Concepts}: eval, apply, interpreter, environment}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+partiful (○) + SDF.Ch5 (−) + [balancer] (+) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Evaluation interprets expressions. This skill processes or generates evaluable forms.}
+}
+}
+
+\subtree{
+\title{Cat# Integration}
+\pre{\startverb
+Trit: +1 (PLUS)
+Color: #FF6B35 (warm/executor)
+Triads: partiful(+1) + acsets(0) + calendar-acset(-1) = 0
+\stopverb}
+}
+}

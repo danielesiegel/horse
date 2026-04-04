@@ -1,0 +1,93 @@
+\title{Virustotal Reputation}
+
+\taxon{skill}
+
+\meta{description}{Use when users ask to check a file/hash/URL/IP/domain with VirusTotal, confirm malware reputation, investigate possible false positives, or compare AV detections. Prefer hash-based lookup first and use Exa to find public VirusTotal report links.}
+
+\subtree{
+\title{VirusTotal Reputation}
+\p{Perform structured VirusTotal-style reputation triage and report risk with explicit confidence.}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{Identify indicator type: \code{\startverb sha256\stopverb} (preferred), \code{\startverb sha1\stopverb}/\code{\startverb md5\stopverb}, filename+publisher, URL, domain, or IP.}
+\li{Perform hash-first discovery:}
+\li{Query exact file hash first: \code{\startverb site:virustotal.com/gui/file <hash>\stopverb}.}
+\li{If hash is unavailable, query filename and correlate with vendor, signature, and date context.}
+\li{Search with Exa using \code{\startverb mcp\strong{exa}web_search_exa\stopverb} and prioritize direct VirusTotal GUI result URLs over reposts.}
+\li{Grade confidence:}
+\li{High: exact hash match and consistent publisher context.}
+\li{Medium: filename/context match without exact hash confirmation.}
+\li{Low: no direct report match or conflicting context.}
+\li{Return verdict, confidence, evidence, and next verification action.}
+}
+}
+
+\subtree{
+\title{Query Patterns (Exa)}
+\ul{
+\li{\code{\startverb site:virustotal.com/gui/file <sha256>\stopverb}}
+\li{\code{\startverb "<filename>.exe" "virustotal.com/gui/file"\stopverb}}
+\li{\code{\startverb "<vendor>" "<filename>" "VirusTotal"\stopverb}}
+\li{\code{\startverb site:virustotal.com/gui/url <url>\stopverb}}
+\li{\code{\startverb site:virustotal.com/gui/domain <domain>\stopverb}}
+\li{\code{\startverb site:virustotal.com/gui/ip-address <ip>\stopverb}}
+}
+}
+
+\subtree{
+\title{Risk Interpretation}
+\ul{
+\li{Treat low detections on properly signed vendor updater/firmware binaries as possible false positives.}
+\li{Do not declare a sample "clean" based only on low or zero detections.}
+\li{Elevate risk when any of the following exists:}
+\li{signature is missing/invalid for expected publisher}
+\li{path and execution context are inconsistent with legitimate updater behavior}
+\li{parent process chain is unrelated or suspicious}
+\li{sandbox behavior indicates credential theft, persistence, injection, or network beaconing}
+}
+}
+
+\subtree{
+\title{Privacy/Safety}
+\ul{
+\li{Prefer hash lookups before file uploads.}
+\li{Do not upload sensitive/private binaries unless user explicitly asks.}
+\li{If uncertainty remains, recommend local hash/signature verification plus multi-source triage.}
+}
+}
+
+\subtree{
+\title{Quick Commands (User Device)}
+\subtree{
+\title{Windows PowerShell}
+\pre{\startverb
+Get-FileHash "C:\path\to\file.exe" -Algorithm SHA256
+Get-AuthenticodeSignature "C:\path\to\file.exe" | Format-List Status,SignerCertificate
+\stopverb}
+}
+
+\subtree{
+\title{Windows CMD}
+\pre{\startverb
+certutil -hashfile "C:\path\to\file.exe" SHA256
+\stopverb}
+}
+}
+
+\subtree{
+\title{Response Template}
+\pre{\startverb
+Verdict: <likely benign / suspicious / likely malicious> (confidence: <low|medium|high>)
+
+Evidence:
+1. <direct VT link or "no direct VT match">
+2. <hash/signature/vendor correlation>
+3. <detection context / recency / behavior notes>
+
+Next step:
+1. <specific command or verification action>
+\stopverb}
+}
+}

@@ -1,0 +1,328 @@
+\title{Omero Integration}
+
+\taxon{skill}
+
+\meta{description}{"Microscopy data management platform. Access images via Python, retrieve datasets, analyze pixels, manage ROIs/annotations, batch processing, for high-content screening and microscopy workflows."}
+
+\subtree{
+\title{OMERO Integration}
+\subtree{
+\title{Overview}
+\p{OMERO is an open-source platform for managing, visualizing, and analyzing microscopy images and metadata. Access images via Python API, retrieve datasets, analyze pixels, manage ROIs and annotations, for high-content screening and microscopy workflows.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Working with OMERO Python API (omero-py) to access microscopy data}
+\li{Retrieving images, datasets, projects, or screening data programmatically}
+\li{Analyzing pixel data and creating derived images}
+\li{Creating or managing ROIs (regions of interest) on microscopy images}
+\li{Adding annotations, tags, or metadata to OMERO objects}
+\li{Storing measurement results in OMERO tables}
+\li{Creating server-side scripts for batch processing}
+\li{Performing high-content screening analysis}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{This skill covers eight major capability areas. Each is documented in detail in the references/ directory:}
+
+\subtree{
+\title{1. Connection & Session Management}
+\p{\strong{File}: \code{\startverb references/connection.md\stopverb}}
+
+\p{Establish secure connections to OMERO servers, manage sessions, handle authentication, and work with group contexts. Use this for initial setup and connection patterns.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{Connect to OMERO server with credentials}
+\li{Use existing session IDs}
+\li{Switch between group contexts}
+\li{Manage connection lifecycle with context managers}
+}
+}
+
+\subtree{
+\title{2. Data Access & Retrieval}
+\p{\strong{File}: \code{\startverb references/data_access.md\stopverb}}
+
+\p{Navigate OMERO's hierarchical data structure (Projects → Datasets → Images) and screening data (Screens → Plates → Wells). Retrieve objects, query by attributes, and access metadata.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{List all projects and datasets for a user}
+\li{Retrieve images by ID or dataset}
+\li{Access screening plate data}
+\li{Query objects with filters}
+}
+}
+
+\subtree{
+\title{3. Metadata & Annotations}
+\p{\strong{File}: \code{\startverb references/metadata.md\stopverb}}
+
+\p{Create and manage annotations including tags, key-value pairs, file attachments, and comments. Link annotations to images, datasets, or other objects.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{Add tags to images}
+\li{Attach analysis results as files}
+\li{Create custom key-value metadata}
+\li{Query annotations by namespace}
+}
+}
+
+\subtree{
+\title{4. Image Processing & Rendering}
+\p{\strong{File}: \code{\startverb references/image_processing.md\stopverb}}
+
+\p{Access raw pixel data as NumPy arrays, manipulate rendering settings, create derived images, and manage physical dimensions.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{Extract pixel data for computational analysis}
+\li{Generate thumbnail images}
+\li{Create maximum intensity projections}
+\li{Modify channel rendering settings}
+}
+}
+
+\subtree{
+\title{5. Regions of Interest (ROIs)}
+\p{\strong{File}: \code{\startverb references/rois.md\stopverb}}
+
+\p{Create, retrieve, and analyze ROIs with various shapes (rectangles, ellipses, polygons, masks, points, lines). Extract intensity statistics from ROI regions.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{Draw rectangular ROIs on images}
+\li{Create polygon masks for segmentation}
+\li{Analyze pixel intensities within ROIs}
+\li{Export ROI coordinates}
+}
+}
+
+\subtree{
+\title{6. OMERO Tables}
+\p{\strong{File}: \code{\startverb references/tables.md\stopverb}}
+
+\p{Store and query structured tabular data associated with OMERO objects. Useful for analysis results, measurements, and metadata.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{Store quantitative measurements for images}
+\li{Create tables with multiple column types}
+\li{Query table data with conditions}
+\li{Link tables to specific images or datasets}
+}
+}
+
+\subtree{
+\title{7. Scripts & Batch Operations}
+\p{\strong{File}: \code{\startverb references/scripts.md\stopverb}}
+
+\p{Create OMERO.scripts that run server-side for batch processing, automated workflows, and integration with OMERO clients.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{Process multiple images in batch}
+\li{Create automated analysis pipelines}
+\li{Generate summary statistics across datasets}
+\li{Export data in custom formats}
+}
+}
+
+\subtree{
+\title{8. Advanced Features}
+\p{\strong{File}: \code{\startverb references/advanced.md\stopverb}}
+
+\p{Covers permissions, filesets, cross-group queries, delete operations, and other advanced functionality.}
+
+\p{\strong{Common scenarios:}}
+
+\ul{
+\li{Handle group permissions}
+\li{Access original imported files}
+\li{Perform cross-group queries}
+\li{Delete objects with callbacks}
+}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+uv pip install omero-py
+\stopverb}
+
+\p{\strong{Requirements:}}
+
+\ul{
+\li{Python 3.7+}
+\li{Zeroc Ice 3.6+}
+\li{Access to an OMERO server (host, port, credentials)}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\p{Basic connection pattern:}
+
+\pre{\startverb
+from omero.gateway import BlitzGateway
+
+# Connect to OMERO server
+conn = BlitzGateway(username, password, host=host, port=port)
+connected = conn.connect()
+
+if connected:
+    # Perform operations
+    for project in conn.listProjects():
+        print(project.getName())
+
+    # Always close connection
+    conn.close()
+else:
+    print("Connection failed")
+\stopverb}
+
+\p{\strong{Recommended pattern with context manager:}}
+
+\pre{\startverb
+from omero.gateway import BlitzGateway
+
+with BlitzGateway(username, password, host=host, port=port) as conn:
+    # Connection automatically managed
+    for project in conn.listProjects():
+        print(project.getName())
+    # Automatically closed on exit
+\stopverb}
+}
+
+\subtree{
+\title{Selecting the Right Capability}
+\p{\strong{For data exploration:}}
+
+\ul{
+\li{Start with \code{\startverb references/connection.md\stopverb} to establish connection}
+\li{Use \code{\startverb references/data_access.md\stopverb} to navigate hierarchy}
+\li{Check \code{\startverb references/metadata.md\stopverb} for annotation details}
+}
+
+\p{\strong{For image analysis:}}
+
+\ul{
+\li{Use \code{\startverb references/image_processing.md\stopverb} for pixel data access}
+\li{Use \code{\startverb references/rois.md\stopverb} for region-based analysis}
+\li{Use \code{\startverb references/tables.md\stopverb} to store results}
+}
+
+\p{\strong{For automation:}}
+
+\ul{
+\li{Use \code{\startverb references/scripts.md\stopverb} for server-side processing}
+\li{Use \code{\startverb references/data_access.md\stopverb} for batch data retrieval}
+}
+
+\p{\strong{For advanced operations:}}
+
+\ul{
+\li{Use \code{\startverb references/advanced.md\stopverb} for permissions and deletion}
+\li{Check \code{\startverb references/connection.md\stopverb} for cross-group queries}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Workflow 1: Retrieve and Analyze Images}
+\ol{
+\li{Connect to OMERO server (\code{\startverb references/connection.md\stopverb})}
+\li{Navigate to dataset (\code{\startverb references/data_access.md\stopverb})}
+\li{Retrieve images from dataset (\code{\startverb references/data_access.md\stopverb})}
+\li{Access pixel data as NumPy array (\code{\startverb references/image_processing.md\stopverb})}
+\li{Perform analysis}
+\li{Store results as table or file annotation (\code{\startverb references/tables.md\stopverb} or \code{\startverb references/metadata.md\stopverb})}
+}
+}
+
+\subtree{
+\title{Workflow 2: Batch ROI Analysis}
+\ol{
+\li{Connect to OMERO server}
+\li{Retrieve images with existing ROIs (\code{\startverb references/rois.md\stopverb})}
+\li{For each image, get ROI shapes}
+\li{Extract pixel intensities within ROIs (\code{\startverb references/rois.md\stopverb})}
+\li{Store measurements in OMERO table (\code{\startverb references/tables.md\stopverb})}
+}
+}
+
+\subtree{
+\title{Workflow 3: Create Analysis Script}
+\ol{
+\li{Design analysis workflow}
+\li{Use OMERO.scripts framework (\code{\startverb references/scripts.md\stopverb})}
+\li{Access data through script parameters}
+\li{Process images in batch}
+\li{Generate outputs (new images, tables, files)}
+}
+}
+}
+
+\subtree{
+\title{Error Handling}
+\p{Always wrap OMERO operations in try-except blocks and ensure connections are properly closed:}
+
+\pre{\startverb
+from omero.gateway import BlitzGateway
+import traceback
+
+try:
+    conn = BlitzGateway(username, password, host=host, port=port)
+    if not conn.connect():
+        raise Exception("Connection failed")
+
+    # Perform operations
+
+except Exception as e:
+    print(f"Error: {e}")
+    traceback.print_exc()
+finally:
+    if conn:
+        conn.close()
+\stopverb}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{Official Documentation}: https://omero.readthedocs.io/en/stable/developers/Python.html}
+\li{\strong{BlitzGateway API}: https://omero.readthedocs.io/en/stable/developers/Python.html#omero-blitzgateway}
+\li{\strong{OMERO Model}: https://omero.readthedocs.io/en/stable/developers/Model.html}
+\li{\strong{Community Forum}: https://forum.image.sc/tag/omero}
+}
+}
+
+\subtree{
+\title{Notes}
+\ul{
+\li{OMERO uses group-based permissions (READ-ONLY, READ-ANNOTATE, READ-WRITE)}
+\li{Images in OMERO are organized hierarchically: Project > Dataset > Image}
+\li{Screening data uses: Screen > Plate > Well > WellSample > Image}
+\li{Always close connections to free server resources}
+\li{Use context managers for automatic resource management}
+\li{Pixel data is returned as NumPy arrays for analysis}
+}
+}
+}

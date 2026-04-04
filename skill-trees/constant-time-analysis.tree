@@ -1,0 +1,266 @@
+\title{Constant Time Analysis}
+
+\taxon{skill}
+
+\meta{description}{Detects timing side-channel vulnerabilities in cryptographic code. Use when implementing or reviewing crypto code, encountering division on secrets, secret-dependent branches, or constant-time programming questions in C, C++, Go, Rust, Swift, Java, Kotlin, C#, PHP, JavaScript, TypeScript, Python, or Ruby.}
+
+\subtree{
+\title{Constant-Time Analysis}
+\p{Analyze cryptographic code to detect operations that leak secret data through execution timing variations.}
+
+\subtree{
+\title{When to Use}
+\pre{\startverb
+User writing crypto code? ──yes──> Use this skill
+         │
+         no
+         │
+         v
+User asking about timing attacks? ──yes──> Use this skill
+         │
+         no
+         │
+         v
+Code handles secret keys/tokens? ──yes──> Use this skill
+         │
+         no
+         │
+         v
+Skip this skill
+\stopverb}
+
+\p{\strong{Concrete triggers:}}
+
+\ul{
+\li{User implements signature, encryption, or key derivation}
+\li{Code contains \code{\startverb /\stopverb} or \code{\startverb \%\stopverb} operators on secret-derived values}
+\li{User mentions "constant-time", "timing attack", "side-channel", "KyberSlash"}
+\li{Reviewing functions named \code{\startverb sign\stopverb}, \code{\startverb verify\stopverb}, \code{\startverb encrypt\stopverb}, \code{\startverb decrypt\stopverb}, \code{\startverb derive_key\stopverb}}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{Non-cryptographic code (business logic, UI, etc.)}
+\li{Public data processing where timing leaks don't matter}
+\li{Code that doesn't handle secrets, keys, or authentication tokens}
+\li{High-level API usage where timing is handled by the library}
+}
+}
+
+\subtree{
+\title{Language Selection}
+\p{Based on the file extension or language context, refer to the appropriate guide:}
+
+\pre{\startverb
+| Language   | File Extensions                   | Guide                                                    |
+| ---------- | --------------------------------- | -------------------------------------------------------- |
+| C, C++     | `.c`, `.h`, `.cpp`, `.cc`, `.hpp` | [references/compiled.md](references/compiled.md)         |
+| Go         | `.go`                             | [references/compiled.md](references/compiled.md)         |
+| Rust       | `.rs`                             | [references/compiled.md](references/compiled.md)         |
+| Swift      | `.swift`                          | [references/swift.md](references/swift.md)               |
+| Java       | `.java`                           | [references/vm-compiled.md](references/vm-compiled.md)   |
+| Kotlin     | `.kt`, `.kts`                     | [references/kotlin.md](references/kotlin.md)             |
+| C#         | `.cs`                             | [references/vm-compiled.md](references/vm-compiled.md)   |
+| PHP        | `.php`                            | [references/php.md](references/php.md)                   |
+| JavaScript | `.js`, `.mjs`, `.cjs`             | [references/javascript.md](references/javascript.md)     |
+| TypeScript | `.ts`, `.tsx`                     | [references/javascript.md](references/javascript.md)     |
+| Python     | `.py`                             | [references/python.md](references/python.md)             |
+| Ruby       | `.rb`                             | [references/ruby.md](references/ruby.md)                 |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start}
+\pre{\startverb
+# Analyze any supported file type
+uv run {baseDir}/ct_analyzer/analyzer.py <source_file>
+
+# Include conditional branch warnings
+uv run {baseDir}/ct_analyzer/analyzer.py --warnings <source_file>
+
+# Filter to specific functions
+uv run {baseDir}/ct_analyzer/analyzer.py --func 'sign|verify' <source_file>
+
+# JSON output for CI
+uv run {baseDir}/ct_analyzer/analyzer.py --json <source_file>
+\stopverb}
+
+\subtree{
+\title{Native Compiled Languages Only (C, C++, Go, Rust)}
+\pre{\startverb
+# Cross-architecture testing (RECOMMENDED)
+uv run {baseDir}/ct_analyzer/analyzer.py --arch x86_64 crypto.c
+uv run {baseDir}/ct_analyzer/analyzer.py --arch arm64 crypto.c
+
+# Multiple optimization levels
+uv run {baseDir}/ct_analyzer/analyzer.py --opt-level O0 crypto.c
+uv run {baseDir}/ct_analyzer/analyzer.py --opt-level O3 crypto.c
+\stopverb}
+}
+
+\subtree{
+\title{VM-Compiled Languages (Java, Kotlin, C#)}
+\pre{\startverb
+# Analyze Java bytecode
+uv run {baseDir}/ct_analyzer/analyzer.py CryptoUtils.java
+
+# Analyze Kotlin bytecode (Android/JVM)
+uv run {baseDir}/ct_analyzer/analyzer.py CryptoUtils.kt
+
+# Analyze C# IL
+uv run {baseDir}/ct_analyzer/analyzer.py CryptoUtils.cs
+\stopverb}
+
+\p{Note: Java, Kotlin, and C# compile to bytecode (JVM/CIL) that runs on a virtual machine with JIT compilation. The analyzer examines the bytecode directly, not the JIT-compiled native code. The \code{\startverb --arch\stopverb} and \code{\startverb --opt-level\stopverb} flags do not apply to these languages.}
+}
+
+\subtree{
+\title{Swift (iOS/macOS)}
+\pre{\startverb
+# Analyze Swift for native architecture
+uv run {baseDir}/ct_analyzer/analyzer.py crypto.swift
+
+# Analyze for specific architecture (iOS devices)
+uv run {baseDir}/ct_analyzer/analyzer.py --arch arm64 crypto.swift
+
+# Analyze with different optimization levels
+uv run {baseDir}/ct_analyzer/analyzer.py --opt-level O0 crypto.swift
+\stopverb}
+
+\p{Note: Swift compiles to native code like C/C++/Go/Rust, so it uses assembly-level analysis and supports \code{\startverb --arch\stopverb} and \code{\startverb --opt-level\stopverb} flags.}
+}
+
+\subtree{
+\title{Prerequisites}
+\pre{\startverb
+| Language               | Requirements                                              |
+| ---------------------- | --------------------------------------------------------- |
+| C, C++, Go, Rust       | Compiler in PATH (`gcc`/`clang`, `go`, `rustc`)           |
+| Swift                  | Xcode or Swift toolchain (`swiftc` in PATH)               |
+| Java                   | JDK with `javac` and `javap` in PATH                      |
+| Kotlin                 | Kotlin compiler (`kotlinc`) + JDK (`javap`) in PATH       |
+| C#                     | .NET SDK + `ilspycmd` (`dotnet tool install -g ilspycmd`) |
+| PHP                    | PHP with VLD extension or OPcache                         |
+| JavaScript/TypeScript  | Node.js in PATH                                           |
+| Python                 | Python 3.x in PATH                                        |
+| Ruby                   | Ruby with `--dump=insns` support                          |
+\stopverb}
+
+\p{\strong{macOS users}: Homebrew installs Java and .NET as "keg-only". You must add them to your PATH:}
+
+\pre{\startverb
+# For Java (add to ~/.zshrc)
+export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
+
+# For .NET tools (add to ~/.zshrc)
+export PATH="$HOME/.dotnet/tools:$PATH"
+\stopverb}
+
+\p{See [references/vm-compiled.md](references/vm-compiled.md) for detailed setup instructions and troubleshooting.}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Problem                | Detection                       | Fix                                          |
+| ---------------------- | ------------------------------- | -------------------------------------------- |
+| Division on secrets    | DIV, IDIV, SDIV, UDIV           | Barrett reduction or multiply-by-inverse     |
+| Branch on secrets      | JE, JNE, BEQ, BNE               | Constant-time selection (cmov, bit masking)  |
+| Secret comparison      | Early-exit memcmp               | Use `crypto/subtle` or constant-time compare |
+| Weak RNG               | rand(), mt_rand, Math.random    | Use crypto-secure RNG                        |
+| Table lookup by secret | Array subscript on secret index | Bit-sliced lookups                           |
+\stopverb}
+}
+
+\subtree{
+\title{Interpreting Results}
+\p{\strong{PASSED} - No variable-time operations detected.}
+
+\p{\strong{FAILED} - Dangerous instructions found. Example:}
+
+\pre{\startverb
+[ERROR] SDIV
+  Function: decompose_vulnerable
+  Reason: SDIV has early termination optimization; execution time depends on operand values
+\stopverb}
+}
+
+\subtree{
+\title{Verifying Results (Avoiding False Positives)}
+\p{\strong{CRITICAL}: Not every flagged operation is a vulnerability. The tool has no data flow analysis - it flags ALL potentially dangerous operations regardless of whether they involve secrets.}
+
+\p{For each flagged violation, ask: \strong{Does this operation's input depend on secret data?}}
+
+\ol{
+\li{\strong{Identify the secret inputs} to the function (private keys, plaintext, signatures, tokens)}
+}
+
+\ol{
+\li{\strong{Trace data flow} from the flagged instruction back to inputs}
+}
+
+\ol{
+\li{\strong{Common false positive patterns}:}
+}
+
+\pre{\startverb
+   // FALSE POSITIVE: Division uses public constant, not secret
+   int num_blocks = data_len / 16;  // data_len is length, not content
+
+   // TRUE POSITIVE: Division involves secret-derived value
+   int32_t q = secret_coef / GAMMA2;  // secret_coef from private key
+\stopverb}
+
+\ol{
+\li{\strong{Document your analysis} for each flagged item}
+}
+
+\subtree{
+\title{Quick Triage Questions}
+\pre{\startverb
+| Question                                          | If Yes                | If No                 |
+| ------------------------------------------------- | --------------------- | --------------------- |
+| Is the operand a compile-time constant?           | Likely false positive | Continue              |
+| Is the operand a public parameter (length, count)?| Likely false positive | Continue              |
+| Is the operand derived from key/plaintext/secret? | **TRUE POSITIVE**     | Likely false positive |
+| Can an attacker influence the operand value?      | **TRUE POSITIVE**     | Likely false positive |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Limitations}
+\ol{
+\li{\strong{Static Analysis Only}: Analyzes assembly/bytecode, not runtime behavior. Cannot detect cache timing or microarchitectural side-channels.}
+}
+
+\ol{
+\li{\strong{No Data Flow Analysis}: Flags all dangerous operations regardless of whether they process secrets. Manual review required.}
+}
+
+\ol{
+\li{\strong{Compiler/Runtime Variations}: Different compilers, optimization levels, and runtime versions may produce different output.}
+}
+}
+
+\subtree{
+\title{Real-World Impact}
+\ul{
+\li{\strong{KyberSlash (2023)}: Division instructions in post-quantum ML-KEM implementations allowed key recovery}
+\li{\strong{Lucky Thirteen (2013)}: Timing differences in CBC padding validation enabled plaintext recovery}
+\li{\strong{RSA Timing Attacks}: Early implementations leaked private key bits through division timing}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Cryptocoding Guidelines](https://github.com/veorq/cryptocoding) - Defensive coding for crypto}
+\li{[KyberSlash](https://kyberslash.cr.yp.to/) - Division timing in post-quantum crypto}
+\li{[BearSSL Constant-Time](https://www.bearssl.org/constanttime.html) - Practical constant-time techniques}
+}
+}
+}

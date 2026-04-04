@@ -1,0 +1,792 @@
+\title{Skill development}
+
+\taxon{skill}
+
+\meta{version}{0.1.0}
+
+\meta{description}{This skill should be used when the user wants to "create a skill", "add a skill to plugin", "write a new skill", "improve skill description", "organize skill content", or needs guidance on skill structure, progressive disclosure, or skill development best practices for Claude Code plugins.}
+
+\subtree{
+\title{Skill Development for Claude Code Plugins}
+\p{This skill provides guidance for creating effective skills for Claude Code plugins.}
+
+\subtree{
+\title{About Skills}
+\p{Skills are modular, self-contained packages that extend Claude's capabilities by providing specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific domains or tasks—they transform Claude from a general-purpose agent into a specialized agent equipped with procedural knowledge that no model can fully possess.}
+
+\subtree{
+\title{What Skills Provide}
+\ol{
+\li{Specialized workflows - Multi-step procedures for specific domains}
+\li{Tool integrations - Instructions for working with specific file formats or APIs}
+\li{Domain expertise - Company-specific knowledge, schemas, business logic}
+\li{Bundled resources - Scripts, references, and assets for complex and repetitive tasks}
+}
+}
+
+\subtree{
+\title{Anatomy of a Skill}
+\p{Every skill consists of a required SKILL.md file and optional bundled resources:}
+
+\pre{\startverb
+skill-name/
+├── SKILL.md (required)
+│   ├── YAML frontmatter metadata (required)
+│   │   ├── name: (required)
+│   │   └── description: (required)
+│   └── Markdown instructions (required)
+└── Bundled Resources (optional)
+    ├── scripts/          - Executable code (Python/Bash/etc.)
+    ├── references/       - Documentation intended to be loaded into context as needed
+    └── assets/           - Files used in output (templates, icons, fonts, etc.)
+\stopverb}
+
+\subtree{
+\title{SKILL.md (required)}
+\p{\strong{Metadata Quality:} The \code{\startverb name\stopverb} and \code{\startverb description\stopverb} in YAML frontmatter determine when Claude will use the skill. Be specific about what the skill does and when to use it. Use the third-person (e.g. "This skill should be used when..." instead of "Use this skill when...").}
+}
+
+\subtree{
+\title{Bundled Resources (optional)}
+\subtree{
+\title{Scripts (\code{\startverb scripts/\stopverb})}
+\p{Executable code (Python/Bash/etc.) for tasks that require deterministic reliability or are repeatedly rewritten.}
+
+\ul{
+\li{\strong{When to include}: When the same code is being rewritten repeatedly or deterministic reliability is needed}
+\li{\strong{Example}: \code{\startverb scripts/rotate_pdf.py\stopverb} for PDF rotation tasks}
+\li{\strong{Benefits}: Token efficient, deterministic, may be executed without loading into context}
+\li{\strong{Note}: Scripts may still need to be read by Claude for patching or environment-specific adjustments}
+}
+}
+
+\subtree{
+\title{References (\code{\startverb references/\stopverb})}
+\p{Documentation and reference material intended to be loaded as needed into context to inform Claude's process and thinking.}
+
+\ul{
+\li{\strong{When to include}: For documentation that Claude should reference while working}
+\li{\strong{Examples}: \code{\startverb references/finance.md\stopverb} for financial schemas, \code{\startverb references/mnda.md\stopverb} for company NDA template, \code{\startverb references/policies.md\stopverb} for company policies, \code{\startverb references/api_docs.md\stopverb} for API specifications}
+\li{\strong{Use cases}: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides}
+\li{\strong{Benefits}: Keeps SKILL.md lean, loaded only when Claude determines it's needed}
+\li{\strong{Best practice}: If files are large (>10k words), include grep search patterns in SKILL.md}
+\li{\strong{Avoid duplication}: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.}
+}
+}
+
+\subtree{
+\title{Assets (\code{\startverb assets/\stopverb})}
+\p{Files not intended to be loaded into context, but rather used within the output Claude produces.}
+
+\ul{
+\li{\strong{When to include}: When the skill needs files that will be used in the final output}
+\li{\strong{Examples}: \code{\startverb assets/logo.png\stopverb} for brand assets, \code{\startverb assets/slides.pptx\stopverb} for PowerPoint templates, \code{\startverb assets/frontend-template/\stopverb} for HTML/React boilerplate, \code{\startverb assets/font.ttf\stopverb} for typography}
+\li{\strong{Use cases}: Templates, images, icons, boilerplate code, fonts, sample documents that get copied or modified}
+\li{\strong{Benefits}: Separates output resources from documentation, enables Claude to use files without loading them into context}
+}
+}
+}
+}
+
+\subtree{
+\title{Progressive Disclosure Design Principle}
+\p{Skills use a three-level loading system to manage context efficiently:}
+
+\ol{
+\li{\strong{Metadata (name + description)} - Always in context (~100 words)}
+\li{\strong{SKILL.md body} - When skill triggers (<5k words)}
+\li{\strong{Bundled resources} - As needed by Claude (Unlimited*)}
+}
+
+\p{*Unlimited because scripts can be executed without reading into context window.}
+}
+}
+
+\subtree{
+\title{Skill Creation Process}
+\p{To create a skill, follow the "Skill Creation Process" in order, skipping steps only if there is a clear reason why they are not applicable.}
+
+\subtree{
+\title{Step 1: Understanding the Skill with Concrete Examples}
+\p{Skip this step only when the skill's usage patterns are already clearly understood. It remains valuable even when working with an existing skill.}
+
+\p{To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from either direct user examples or generated examples that are validated with user feedback.}
+
+\p{For example, when building an image-editor skill, relevant questions include:}
+
+\ul{
+\li{"What functionality should the image-editor skill support? Editing, rotating, anything else?"}
+\li{"Can you give some examples of how this skill would be used?"}
+\li{"I can imagine users asking for things like 'Remove the red-eye from this image' or 'Rotate this image'. Are there other ways you imagine this skill being used?"}
+\li{"What would a user say that should trigger this skill?"}
+}
+
+\p{To avoid overwhelming users, avoid asking too many questions in a single message. Start with the most important questions and follow up as needed for better effectiveness.}
+
+\p{Conclude this step when there is a clear sense of the functionality the skill should support.}
+}
+
+\subtree{
+\title{Step 2: Planning the Reusable Skill Contents}
+\p{To turn concrete examples into an effective skill, analyze each example by:}
+
+\ol{
+\li{Considering how to execute on the example from scratch}
+\li{Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly}
+}
+
+\p{Example: When building a \code{\startverb pdf-editor\stopverb} skill to handle queries like "Help me rotate this PDF," the analysis shows:}
+
+\ol{
+\li{Rotating a PDF requires re-writing the same code each time}
+\li{A \code{\startverb scripts/rotate_pdf.py\stopverb} script would be helpful to store in the skill}
+}
+
+\p{Example: When designing a \code{\startverb frontend-webapp-builder\stopverb} skill for queries like "Build me a todo app" or "Build me a dashboard to track my steps," the analysis shows:}
+
+\ol{
+\li{Writing a frontend webapp requires the same boilerplate HTML/React each time}
+\li{An \code{\startverb assets/hello-world/\stopverb} template containing the boilerplate HTML/React project files would be helpful to store in the skill}
+}
+
+\p{Example: When building a \code{\startverb big-query\stopverb} skill to handle queries like "How many users have logged in today?" the analysis shows:}
+
+\ol{
+\li{Querying BigQuery requires re-discovering the table schemas and relationships each time}
+\li{A \code{\startverb references/schema.md\stopverb} file documenting the table schemas would be helpful to store in the skill}
+}
+
+\p{\strong{For Claude Code plugins:} When building a hooks skill, the analysis shows:}
+
+\ol{
+\li{Developers repeatedly need to validate hooks.json and test hook scripts}
+\li{\code{\startverb scripts/validate-hook-schema.sh\stopverb} and \code{\startverb scripts/test-hook.sh\stopverb} utilities would be helpful}
+\li{\code{\startverb references/patterns.md\stopverb} for detailed hook patterns to avoid bloating SKILL.md}
+}
+
+\p{To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.}
+}
+
+\subtree{
+\title{Step 3: Create Skill Structure}
+\p{For Claude Code plugins, create the skill directory structure:}
+
+\pre{\startverb
+mkdir -p plugin-name/skills/skill-name/{references,examples,scripts}
+touch plugin-name/skills/skill-name/SKILL.md
+\stopverb}
+
+\p{\strong{Note:} Unlike the generic skill-creator which uses \code{\startverb init_skill.py\stopverb}, plugin skills are created directly in the plugin's \code{\startverb skills/\stopverb} directory with a simpler manual structure.}
+}
+
+\subtree{
+\title{Step 4: Edit the Skill}
+\p{When editing the (newly-created or existing) skill, remember that the skill is being created for another instance of Claude to use. Focus on including information that would be beneficial and non-obvious to Claude. Consider what procedural knowledge, domain-specific details, or reusable assets would help another Claude instance execute these tasks more effectively.}
+
+\subtree{
+\title{Start with Reusable Skill Contents}
+\p{To begin implementation, start with the reusable resources identified above: \code{\startverb scripts/\stopverb}, \code{\startverb references/\stopverb}, and \code{\startverb assets/\stopverb} files. Note that this step may require user input. For example, when implementing a \code{\startverb brand-guidelines\stopverb} skill, the user may need to provide brand assets or templates to store in \code{\startverb assets/\stopverb}, or documentation to store in \code{\startverb references/\stopverb}.}
+
+\p{Also, delete any example files and directories not needed for the skill. Create only the directories you actually need (references/, examples/, scripts/).}
+}
+
+\subtree{
+\title{Update SKILL.md}
+\p{\strong{Writing Style:} Write the entire skill using \strong{imperative/infinitive form} (verb-first instructions), not second person. Use objective, instructional language (e.g., "To accomplish X, do Y" rather than "You should do X" or "If you need to do X"). This maintains consistency and clarity for AI consumption.}
+
+\p{\strong{Description (Frontmatter):} Use third-person format with specific trigger phrases:}
+
+\pre{\startverb
+---
+name: Skill Name
+description: This skill should be used when the user asks to "specific phrase 1", "specific phrase 2", "specific phrase 3". Include exact phrases users would say that should trigger this skill. Be concrete and specific.
+version: 0.1.0
+---
+\stopverb}
+
+\p{\strong{Good description examples:}}
+
+\pre{\startverb
+description: This skill should be used when the user asks to "create a hook", "add a PreToolUse hook", "validate tool use", "implement prompt-based hooks", or mentions hook events (PreToolUse, PostToolUse, Stop).
+\stopverb}
+
+\p{\strong{Bad description examples:}}
+
+\pre{\startverb
+description: Use this skill when working with hooks.  # Wrong person, vague
+description: Load when user needs hook help.  # Not third person
+description: Provides hook guidance.  # No trigger phrases
+\stopverb}
+
+\p{To complete SKILL.md body, answer the following questions:}
+
+\ol{
+\li{What is the purpose of the skill, in a few sentences?}
+\li{When should the skill be used? (Include this in frontmatter description with specific triggers)}
+\li{In practice, how should Claude use the skill? All reusable skill contents developed above should be referenced so that Claude knows how to use them.}
+}
+
+\p{\strong{Keep SKILL.md lean:} Target 1,500-2,000 words for the body. Move detailed content to references/:}
+
+\ul{
+\li{Detailed patterns → \code{\startverb references/patterns.md\stopverb}}
+\li{Advanced techniques → \code{\startverb references/advanced.md\stopverb}}
+\li{Migration guides → \code{\startverb references/migration.md\stopverb}}
+\li{API references → \code{\startverb references/api-reference.md\stopverb}}
+}
+
+\p{\strong{Reference resources in SKILL.md:}}
+
+\pre{\startverb
+## Additional Resources
+
+### Reference Files
+
+For detailed patterns and techniques, consult:
+- **`references/patterns.md`** - Common patterns
+- **`references/advanced.md`** - Advanced use cases
+
+### Example Files
+
+Working examples in `examples/`:
+- **`example-script.sh`** - Working example
+\stopverb}
+}
+}
+
+\subtree{
+\title{Step 5: Validate and Test}
+\p{\strong{For plugin skills, validation is different from generic skills:}}
+
+\ol{
+\li{\strong{Check structure}: Skill directory in \code{\startverb plugin-name/skills/skill-name/\stopverb}}
+\li{\strong{Validate SKILL.md}: Has frontmatter with name and description}
+\li{\strong{Check trigger phrases}: Description includes specific user queries}
+\li{\strong{Verify writing style}: Body uses imperative/infinitive form, not second person}
+\li{\strong{Test progressive disclosure}: SKILL.md is lean (~1,500-2,000 words), detailed content in references/}
+\li{\strong{Check references}: All referenced files exist}
+\li{\strong{Validate examples}: Examples are complete and correct}
+\li{\strong{Test scripts}: Scripts are executable and work correctly}
+}
+
+\p{\strong{Use the skill-reviewer agent:}}
+
+\pre{\startverb
+Ask: "Review my skill and check if it follows best practices"
+\stopverb}
+
+\p{The skill-reviewer agent will check description quality, content organization, and progressive disclosure.}
+}
+
+\subtree{
+\title{Step 6: Iterate}
+\p{After testing the skill, users may request improvements. Often this happens right after using the skill, with fresh context of how the skill performed.}
+
+\p{\strong{Iteration workflow:}}
+
+\ol{
+\li{Use the skill on real tasks}
+\li{Notice struggles or inefficiencies}
+\li{Identify how SKILL.md or bundled resources should be updated}
+\li{Implement changes and test again}
+}
+
+\p{\strong{Common improvements:}}
+
+\ul{
+\li{Strengthen trigger phrases in description}
+\li{Move long sections from SKILL.md to references/}
+\li{Add missing examples or scripts}
+\li{Clarify ambiguous instructions}
+\li{Add edge case handling}
+}
+}
+}
+
+\subtree{
+\title{Plugin-Specific Considerations}
+\subtree{
+\title{Skill Location in Plugins}
+\p{Plugin skills live in the plugin's \code{\startverb skills/\stopverb} directory:}
+
+\pre{\startverb
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json
+├── commands/
+├── agents/
+└── skills/
+    └── my-skill/
+        ├── SKILL.md
+        ├── references/
+        ├── examples/
+        └── scripts/
+\stopverb}
+}
+
+\subtree{
+\title{Auto-Discovery}
+\p{Claude Code automatically discovers skills:}
+
+\ul{
+\li{Scans \code{\startverb skills/\stopverb} directory}
+\li{Finds subdirectories containing \code{\startverb SKILL.md\stopverb}}
+\li{Loads skill metadata (name + description) always}
+\li{Loads SKILL.md body when skill triggers}
+\li{Loads references/examples when needed}
+}
+}
+
+\subtree{
+\title{No Packaging Needed}
+\p{Plugin skills are distributed as part of the plugin, not as separate ZIP files. Users get skills when they install the plugin.}
+}
+
+\subtree{
+\title{Testing in Plugins}
+\p{Test skills by installing plugin locally:}
+
+\pre{\startverb
+# Test with --plugin-dir
+cc --plugin-dir /path/to/plugin
+
+# Ask questions that should trigger the skill
+# Verify skill loads correctly
+\stopverb}
+}
+}
+
+\subtree{
+\title{Examples from Plugin-Dev}
+\p{Study the skills in this plugin as examples of best practices:}
+
+\p{\strong{hook-development skill:}}
+
+\ul{
+\li{Excellent trigger phrases: "create a hook", "add a PreToolUse hook", etc.}
+\li{Lean SKILL.md (1,651 words)}
+\li{3 references/ files for detailed content}
+\li{3 examples/ of working hooks}
+\li{3 scripts/ utilities}
+}
+
+\p{\strong{agent-development skill:}}
+
+\ul{
+\li{Strong triggers: "create an agent", "agent frontmatter", etc.}
+\li{Focused SKILL.md (1,438 words)}
+\li{References include the AI generation prompt from Claude Code}
+\li{Complete agent examples}
+}
+
+\p{\strong{plugin-settings skill:}}
+
+\ul{
+\li{Specific triggers: "plugin settings", ".local.md files", "YAML frontmatter"}
+\li{References show real implementations (multi-agent-swarm, ralph-wiggum)}
+\li{Working parsing scripts}
+}
+
+\p{Each demonstrates progressive disclosure and strong triggering.}
+}
+
+\subtree{
+\title{Progressive Disclosure in Practice}
+\subtree{
+\title{What Goes in SKILL.md}
+\p{\strong{Include (always loaded when skill triggers):}}
+
+\ul{
+\li{Core concepts and overview}
+\li{Essential procedures and workflows}
+\li{Quick reference tables}
+\li{Pointers to references/examples/scripts}
+\li{Most common use cases}
+}
+
+\p{\strong{Keep under 3,000 words, ideally 1,500-2,000 words}}
+}
+
+\subtree{
+\title{What Goes in references/}
+\p{\strong{Move to references/ (loaded as needed):}}
+
+\ul{
+\li{Detailed patterns and advanced techniques}
+\li{Comprehensive API documentation}
+\li{Migration guides}
+\li{Edge cases and troubleshooting}
+\li{Extensive examples and walkthroughs}
+}
+
+\p{\strong{Each reference file can be large (2,000-5,000+ words)}}
+}
+
+\subtree{
+\title{What Goes in examples/}
+\p{\strong{Working code examples:}}
+
+\ul{
+\li{Complete, runnable scripts}
+\li{Configuration files}
+\li{Template files}
+\li{Real-world usage examples}
+}
+
+\p{\strong{Users can copy and adapt these directly}}
+}
+
+\subtree{
+\title{What Goes in scripts/}
+\p{\strong{Utility scripts:}}
+
+\ul{
+\li{Validation tools}
+\li{Testing helpers}
+\li{Parsing utilities}
+\li{Automation scripts}
+}
+
+\p{\strong{Should be executable and documented}}
+}
+}
+
+\subtree{
+\title{Writing Style Requirements}
+\subtree{
+\title{Imperative/Infinitive Form}
+\p{Write using verb-first instructions, not second person:}
+
+\p{\strong{Correct (imperative):}}
+
+\pre{\startverb
+To create a hook, define the event type.
+Configure the MCP server with authentication.
+Validate settings before use.
+\stopverb}
+
+\p{\strong{Incorrect (second person):}}
+
+\pre{\startverb
+You should create a hook by defining the event type.
+You need to configure the MCP server.
+You must validate settings before use.
+\stopverb}
+}
+
+\subtree{
+\title{Third-Person in Description}
+\p{The frontmatter description must use third person:}
+
+\p{\strong{Correct:}}
+
+\pre{\startverb
+description: This skill should be used when the user asks to "create X", "configure Y"...
+\stopverb}
+
+\p{\strong{Incorrect:}}
+
+\pre{\startverb
+description: Use this skill when you want to create X...
+description: Load this skill when user asks...
+\stopverb}
+}
+
+\subtree{
+\title{Objective, Instructional Language}
+\p{Focus on what to do, not who should do it:}
+
+\p{\strong{Correct:}}
+
+\pre{\startverb
+Parse the frontmatter using sed.
+Extract fields with grep.
+Validate values before use.
+\stopverb}
+
+\p{\strong{Incorrect:}}
+
+\pre{\startverb
+You can parse the frontmatter...
+Claude should extract fields...
+The user might validate values...
+\stopverb}
+}
+}
+
+\subtree{
+\title{Validation Checklist}
+\p{Before finalizing a skill:}
+
+\p{\strong{Structure:}}
+
+\ul{
+\li{[ ] SKILL.md file exists with valid YAML frontmatter}
+\li{[ ] Frontmatter has \code{\startverb name\stopverb} and \code{\startverb description\stopverb} fields}
+\li{[ ] Markdown body is present and substantial}
+\li{[ ] Referenced files actually exist}
+}
+
+\p{\strong{Description Quality:}}
+
+\ul{
+\li{[ ] Uses third person ("This skill should be used when...")}
+\li{[ ] Includes specific trigger phrases users would say}
+\li{[ ] Lists concrete scenarios ("create X", "configure Y")}
+\li{[ ] Not vague or generic}
+}
+
+\p{\strong{Content Quality:}}
+
+\ul{
+\li{[ ] SKILL.md body uses imperative/infinitive form}
+\li{[ ] Body is focused and lean (1,500-2,000 words ideal, <5k max)}
+\li{[ ] Detailed content moved to references/}
+\li{[ ] Examples are complete and working}
+\li{[ ] Scripts are executable and documented}
+}
+
+\p{\strong{Progressive Disclosure:}}
+
+\ul{
+\li{[ ] Core concepts in SKILL.md}
+\li{[ ] Detailed docs in references/}
+\li{[ ] Working code in examples/}
+\li{[ ] Utilities in scripts/}
+\li{[ ] SKILL.md references these resources}
+}
+
+\p{\strong{Testing:}}
+
+\ul{
+\li{[ ] Skill triggers on expected user queries}
+\li{[ ] Content is helpful for intended tasks}
+\li{[ ] No duplicated information across files}
+\li{[ ] References load when needed}
+}
+}
+
+\subtree{
+\title{Common Mistakes to Avoid}
+\subtree{
+\title{Mistake 1: Weak Trigger Description}
+\p{❌ \strong{Bad:}}
+
+\pre{\startverb
+description: Provides guidance for working with hooks.
+\stopverb}
+
+\p{\strong{Why bad:} Vague, no specific trigger phrases, not third person}
+
+\p{✅ \strong{Good:}}
+
+\pre{\startverb
+description: This skill should be used when the user asks to "create a hook", "add a PreToolUse hook", "validate tool use", or mentions hook events. Provides comprehensive hooks API guidance.
+\stopverb}
+
+\p{\strong{Why good:} Third person, specific phrases, concrete scenarios}
+}
+
+\subtree{
+\title{Mistake 2: Too Much in SKILL.md}
+\p{❌ \strong{Bad:}}
+
+\pre{\startverb
+skill-name/
+└── SKILL.md  (8,000 words - everything in one file)
+\stopverb}
+
+\p{\strong{Why bad:} Bloats context when skill loads, detailed content always loaded}
+
+\p{✅ \strong{Good:}}
+
+\pre{\startverb
+skill-name/
+├── SKILL.md  (1,800 words - core essentials)
+└── references/
+    ├── patterns.md (2,500 words)
+    └── advanced.md (3,700 words)
+\stopverb}
+
+\p{\strong{Why good:} Progressive disclosure, detailed content loaded only when needed}
+}
+
+\subtree{
+\title{Mistake 3: Second Person Writing}
+\p{❌ \strong{Bad:}}
+
+\pre{\startverb
+You should start by reading the configuration file.
+You need to validate the input.
+You can use the grep tool to search.
+\stopverb}
+
+\p{\strong{Why bad:} Second person, not imperative form}
+
+\p{✅ \strong{Good:}}
+
+\pre{\startverb
+Start by reading the configuration file.
+Validate the input before processing.
+Use the grep tool to search for patterns.
+\stopverb}
+
+\p{\strong{Why good:} Imperative form, direct instructions}
+}
+
+\subtree{
+\title{Mistake 4: Missing Resource References}
+\p{❌ \strong{Bad:}}
+
+\pre{\startverb
+# SKILL.md
+
+[Core content]
+
+[No mention of references/ or examples/]
+\stopverb}
+
+\p{\strong{Why bad:} Claude doesn't know references exist}
+
+\p{✅ \strong{Good:}}
+
+\pre{\startverb
+# SKILL.md
+
+[Core content]
+
+## Additional Resources
+
+### Reference Files
+- **`references/patterns.md`** - Detailed patterns
+- **`references/advanced.md`** - Advanced techniques
+
+### Examples
+- **`examples/script.sh`** - Working example
+\stopverb}
+
+\p{\strong{Why good:} Claude knows where to find additional information}
+}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{Minimal Skill}
+\pre{\startverb
+skill-name/
+└── SKILL.md
+\stopverb}
+
+\p{Good for: Simple knowledge, no complex resources needed}
+}
+
+\subtree{
+\title{Standard Skill (Recommended)}
+\pre{\startverb
+skill-name/
+├── SKILL.md
+├── references/
+│   └── detailed-guide.md
+└── examples/
+    └── working-example.sh
+\stopverb}
+
+\p{Good for: Most plugin skills with detailed documentation}
+}
+
+\subtree{
+\title{Complete Skill}
+\pre{\startverb
+skill-name/
+├── SKILL.md
+├── references/
+│   ├── patterns.md
+│   └── advanced.md
+├── examples/
+│   ├── example1.sh
+│   └── example2.json
+└── scripts/
+    └── validate.sh
+\stopverb}
+
+\p{Good for: Complex domains with validation utilities}
+}
+}
+
+\subtree{
+\title{Best Practices Summary}
+\p{✅ \strong{DO:}}
+
+\ul{
+\li{Use third-person in description ("This skill should be used when...")}
+\li{Include specific trigger phrases ("create X", "configure Y")}
+\li{Keep SKILL.md lean (1,500-2,000 words)}
+\li{Use progressive disclosure (move details to references/)}
+\li{Write in imperative/infinitive form}
+\li{Reference supporting files clearly}
+\li{Provide working examples}
+\li{Create utility scripts for common operations}
+\li{Study plugin-dev's skills as templates}
+}
+
+\p{❌ \strong{DON'T:}}
+
+\ul{
+\li{Use second person anywhere}
+\li{Have vague trigger conditions}
+\li{Put everything in SKILL.md (>3,000 words without references/)}
+\li{Write in second person ("You should...")}
+\li{Leave resources unreferenced}
+\li{Include broken or incomplete examples}
+\li{Skip validation}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\subtree{
+\title{Study These Skills}
+\p{Plugin-dev's skills demonstrate best practices:}
+
+\ul{
+\li{\code{\startverb ../hook-development/\stopverb} - Progressive disclosure, utilities}
+\li{\code{\startverb ../agent-development/\stopverb} - AI-assisted creation, references}
+\li{\code{\startverb ../mcp-integration/\stopverb} - Comprehensive references}
+\li{\code{\startverb ../plugin-settings/\stopverb} - Real-world examples}
+\li{\code{\startverb ../command-development/\stopverb} - Clear critical concepts}
+\li{\code{\startverb ../plugin-structure/\stopverb} - Good organization}
+}
+}
+
+\subtree{
+\title{Reference Files}
+\p{For complete skill-creator methodology:}
+
+\ul{
+\li{\strong{\code{\startverb references/skill-creator-original.md\stopverb}} - Full original skill-creator content}
+}
+}
+}
+
+\subtree{
+\title{Implementation Workflow}
+\p{To create a skill for your plugin:}
+
+\ol{
+\li{\strong{Understand use cases}: Identify concrete examples of skill usage}
+\li{\strong{Plan resources}: Determine what scripts/references/examples needed}
+\li{\strong{Create structure}: \code{\startverb mkdir -p skills/skill-name/{references,examples,scripts}\stopverb}}
+\li{\strong{Write SKILL.md}:}
+\li{Frontmatter with third-person description and trigger phrases}
+\li{Lean body (1,500-2,000 words) in imperative form}
+\li{Reference supporting files}
+\li{\strong{Add resources}: Create references/, examples/, scripts/ as needed}
+\li{\strong{Validate}: Check description, writing style, organization}
+\li{\strong{Test}: Verify skill loads on expected triggers}
+\li{\strong{Iterate}: Improve based on usage}
+}
+
+\p{Focus on strong trigger descriptions, progressive disclosure, and imperative writing style for effective skills that load when needed and provide targeted guidance.}
+}
+}

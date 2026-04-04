@@ -1,0 +1,262 @@
+\title{Temporal Coalgebra}
+
+\taxon{skill}
+
+\meta{description}{Coalgebraic observation of derivation streams with final coalgebra bisimulation}
+
+\subtree{
+\title{Temporal Coalgebra Skill: Observation Duality}
+\p{\strong{Status}: ✅ Production Ready \strong{Trit}: -1 (MINUS - validator/observer) \strong{Color}: #2626D8 (Blue) \strong{Principle}: Observe behaviors → Verify equivalence \strong{Frame}: Final coalgebra with stream coalgebra traces}
+
+\subtree{
+\title{Overview}
+\p{\strong{Temporal Coalgebra} is the dual of algebra: where algebra constructs, coalgebra observes. Implements:}
+
+\ol{
+\li{\strong{Observation functor}: O: Derivation → Observation}
+\li{\strong{Final coalgebra}: νF for maximal bisimulation}
+\li{\strong{Stream coalgebra}: Infinite traces with head/tail}
+\li{\strong{three-match integration}: Game verification via bisimulation}
+}
+
+\p{\strong{Correct by construction}: Two systems are equivalent iff they are bisimilar (observationally indistinguishable).}
+}
+
+\subtree{
+\title{Core Formula}
+\pre{\startverb
+Coalgebra: (X, γ: X → F(X))   # State → Observable structure
+Final:     νF = lim F^n(1)     # Greatest fixpoint
+
+Bisimulation R ⊆ X × Y:
+  (x, y) ∈ R ⟹ F(R)(γ_X(x), γ_Y(y))
+\stopverb}
+
+\p{For derivation observation:}
+
+\pre{\startverb
+# Observe derivation stream
+observe(derivation) = { head: current_step, tail: rest_of_derivation }
+
+# Two derivations are equivalent iff:
+bisimilar?(d1, d2) == (observe(d1).head == observe(d2).head &&
+                       bisimilar?(observe(d1).tail, observe(d2).tail))
+\stopverb}
+}
+
+\subtree{
+\title{Why Coalgebra for Verification?}
+\ol{
+\li{\strong{Behavioral equivalence}: Same observations = same system}
+\li{\strong{Infinite structures}: Streams, trees, processes}
+\li{\strong{Game semantics}: Attacker/defender games are coalgebraic}
+\li{\strong{Lazy evaluation}: Observe only what's needed}
+}
+}
+
+\subtree{
+\title{Gadgets}
+\subtree{
+\title{1. ObservationFunctor}
+\p{Transform derivations into observations:}
+
+\pre{\startverb
+functor = TemporalCoalgebra::ObservationFunctor.new(
+  source: :derivation_chain,
+  target: :observation_stream
+)
+observation = functor.apply(derivation)
+observation.head      # => current observable state
+observation.tail      # => remaining stream (lazy)
+observation.finite?   # => false (potentially infinite)
+\stopverb}
+}
+
+\subtree{
+\title{2. FinalCoalgebra}
+\p{Construct the final coalgebra for type F:}
+
+\pre{\startverb
+final = TemporalCoalgebra::FinalCoalgebra.new(
+  functor: stream_functor,
+  approximation_depth: 100
+)
+final.carrier           # => νF (greatest fixpoint)
+final.universal?(coal)  # => check if coal maps uniquely
+final.unfold(seed)      # => generate infinite structure
+\stopverb}
+}
+
+\subtree{
+\title{3. BisimulationChecker}
+\p{Verify behavioral equivalence:}
+
+\pre{\startverb
+checker = TemporalCoalgebra::BisimulationChecker.new
+checker.add_system(:system_a, coalgebra_a)
+checker.add_system(:system_b, coalgebra_b)
+
+result = checker.check_bisimilar!
+result[:bisimilar]         # => true/false
+result[:distinguishing_trace]  # => if false, witness
+result[:depth_checked]     # => how deep we verified
+\stopverb}
+}
+
+\subtree{
+\title{4. StreamCoalgebra}
+\p{Work with infinite streams:}
+
+\pre{\startverb
+stream = TemporalCoalgebra::StreamCoalgebra.new(seed: 0x42D)
+stream.head              # => first element
+stream.tail              # => rest of stream
+stream.take(10)          # => first 10 elements
+stream.drop(5).head      # => 6th element
+stream.map { |x| x * 2 } # => transformed stream
+stream.zip(other_stream) # => paired stream
+\stopverb}
+}
+
+\subtree{
+\title{5. ThreeMatchBisimulation}
+\p{Integration with three-match for game verification:}
+
+\pre{\startverb
+game = TemporalCoalgebra::ThreeMatchBisimulation.new(
+  attacker: player_a,
+  defender: player_b,
+  three_match_gadget: gadget
+)
+game.play_round!
+game.defender_wins?      # => strategies are bisimilar
+game.attacker_wins?      # => found distinguishing move
+game.gf3_conserved?      # => trit sum = 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+# Observe derivation chain
+just coalgebra-observe
+
+# Check bisimulation
+just coalgebra-bisim system_a system_b
+
+# Generate stream from seed
+just coalgebra-stream 0x42D 20
+
+# Verify game equivalence
+just coalgebra-game
+\stopverb}
+}
+
+\subtree{
+\title{API}
+\pre{\startverb
+require 'temporal_coalgebra'
+
+# Create observation system
+obs = TemporalCoalgebra::Observer.new(
+  trit: -1,
+  functor: :stream
+)
+
+# Observe derivation
+stream = obs.observe(derivation_chain)
+
+# Check equivalence
+bisim = obs.bisimilar?(stream_a, stream_b)
+
+# Integrate with three-match
+game_result = obs.verify_game(three_match_gadget)
+\stopverb}
+}
+
+\subtree{
+\title{Integration with GF(3) Triads}
+\p{Forms valid triads with ERGODIC (0) and PLUS (+1) skills:}
+
+\pre{\startverb
+temporal-coalgebra (-1) ⊗ unworld (0) ⊗ gay-mcp (+1) = 0 ✓
+temporal-coalgebra (-1) ⊗ glass-bead-game (0) ⊗ cider-clojure (+1) = 0 ✓
+temporal-coalgebra (-1) ⊗ acsets (0) ⊗ rubato-composer (+1) = 0 ✓
+\stopverb}
+}
+
+\subtree{
+\title{Mathematical Foundation}
+\subtree{
+\title{Coalgebra Definition}
+\pre{\startverb
+Coalgebra for F: (X, γ: X → F(X))
+  - X is carrier (state space)
+  - γ is structure map (observation)
+  - F is endofunctor (observation type)
+\stopverb}
+}
+
+\subtree{
+\title{Stream Functor}
+\pre{\startverb
+F(X) = A × X    (head × tail)
+νF ≅ A^ω       (infinite sequences)
+\stopverb}
+}
+
+\subtree{
+\title{Bisimulation}
+\pre{\startverb
+R is bisimulation ⟺
+  ∀(x,y) ∈ R: (γ_X(x), γ_Y(y)) ∈ F(R)
+
+Behavioral equivalence: x ∼ y ⟺ ∃R bisimulation. (x,y) ∈ R
+\stopverb}
+}
+
+\subtree{
+\title{Coinduction Principle}
+\pre{\startverb
+To prove P(ν F), show:
+  P is F-consistent: P(x) ⟹ P(tail(x))
+  P(seed) holds
+\stopverb}
+}
+}
+
+\subtree{
+\title{Example Output}
+\pre{\startverb
+─── Temporal Coalgebra Observation ───
+Source: Derivation chain (length ∞)
+Functor: Stream (head × tail)
+
+Observation:
+  head: { seed: 0x42D, color: #2626D8, trit: -1 }
+  tail: <lazy stream>
+
+Bisimulation Check:
+  System A: derivation_chain_1
+  System B: derivation_chain_2
+  
+  Depth 0: heads match ✓
+  Depth 1: tails match ✓
+  Depth 2: tails match ✓
+  ...
+  Depth 100: tails match ✓
+
+Result: BISIMILAR (observationally equivalent)
+GF(3) Trit: -1 (MINUS/Observer)
+
+─── Three-Match Integration ───
+Game: Attacker vs Defender
+Rounds: 12
+Winner: Defender (strategies bisimilar)
+GF(3) conserved: true
+\stopverb}
+
+\p{\strong{Skill Name}: temporal-coalgebra \strong{Type}: Observation / Bisimulation Verification \strong{Trit}: -1 (MINUS) \strong{Color}: #2626D8 (Blue) \strong{GF(3)}: Forms valid triads with ERGODIC + PLUS skills \strong{Dual}: Algebra (construction) ↔ Coalgebra (observation)}
+}
+}

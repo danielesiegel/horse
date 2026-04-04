@@ -1,0 +1,589 @@
+\title{Dask}
+
+\taxon{skill}
+
+\meta{description}{"Parallel/distributed computing. Scale pandas/NumPy beyond memory, parallel DataFrames/Arrays, multi-file processing, task graphs, for larger-than-RAM datasets and parallel workflows."}
+
+\subtree{
+\title{Dask}
+\subtree{
+\title{Overview}
+\p{Dask is a Python library for parallel and distributed computing that enables three critical capabilities:}
+
+\ul{
+\li{\strong{Larger-than-memory execution} on single machines for data exceeding available RAM}
+\li{\strong{Parallel processing} for improved computational speed across multiple cores}
+\li{\strong{Distributed computation} supporting terabyte-scale datasets across multiple machines}
+}
+
+\p{Dask scales from laptops (processing ~100 GiB) to clusters (processing ~100 TiB) while maintaining familiar Python APIs.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{Process datasets that exceed available RAM}
+\li{Scale pandas or NumPy operations to larger datasets}
+\li{Parallelize computations for performance improvements}
+\li{Process multiple files efficiently (CSVs, Parquet, JSON, text logs)}
+\li{Build custom parallel workflows with task dependencies}
+\li{Distribute workloads across multiple cores or machines}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\p{Dask provides five main components, each suited to different use cases:}
+
+\subtree{
+\title{1. DataFrames - Parallel Pandas Operations}
+\p{\strong{Purpose}: Scale pandas operations to larger datasets through parallel processing.}
+
+\p{\strong{When to Use}:}
+
+\ul{
+\li{Tabular data exceeds available RAM}
+\li{Need to process multiple CSV/Parquet files together}
+\li{Pandas operations are slow and need parallelization}
+\li{Scaling from pandas prototype to production}
+}
+
+\p{\strong{Reference Documentation}: For comprehensive guidance on Dask DataFrames, refer to \code{\startverb references/dataframes.md\stopverb} which includes:}
+
+\ul{
+\li{Reading data (single files, multiple files, glob patterns)}
+\li{Common operations (filtering, groupby, joins, aggregations)}
+\li{Custom operations with \code{\startverb map_partitions\stopverb}}
+\li{Performance optimization tips}
+\li{Common patterns (ETL, time series, multi-file processing)}
+}
+
+\p{\strong{Quick Example}:}
+
+\pre{\startverb
+import dask.dataframe as dd
+
+# Read multiple files as single DataFrame
+ddf = dd.read_csv('data/2024-*.csv')
+
+# Operations are lazy until compute()
+filtered = ddf[ddf['value'] > 100]
+result = filtered.groupby('category').mean().compute()
+\stopverb}
+
+\p{\strong{Key Points}:}
+
+\ul{
+\li{Operations are lazy (build task graph) until \code{\startverb .compute()\stopverb} called}
+\li{Use \code{\startverb map_partitions\stopverb} for efficient custom operations}
+\li{Convert to DataFrame early when working with structured data from other sources}
+}
+}
+
+\subtree{
+\title{2. Arrays - Parallel NumPy Operations}
+\p{\strong{Purpose}: Extend NumPy capabilities to datasets larger than memory using blocked algorithms.}
+
+\p{\strong{When to Use}:}
+
+\ul{
+\li{Arrays exceed available RAM}
+\li{NumPy operations need parallelization}
+\li{Working with scientific datasets (HDF5, Zarr, NetCDF)}
+\li{Need parallel linear algebra or array operations}
+}
+
+\p{\strong{Reference Documentation}: For comprehensive guidance on Dask Arrays, refer to \code{\startverb references/arrays.md\stopverb} which includes:}
+
+\ul{
+\li{Creating arrays (from NumPy, random, from disk)}
+\li{Chunking strategies and optimization}
+\li{Common operations (arithmetic, reductions, linear algebra)}
+\li{Custom operations with \code{\startverb map_blocks\stopverb}}
+\li{Integration with HDF5, Zarr, and XArray}
+}
+
+\p{\strong{Quick Example}:}
+
+\pre{\startverb
+import dask.array as da
+
+# Create large array with chunks
+x = da.random.random((100000, 100000), chunks=(10000, 10000))
+
+# Operations are lazy
+y = x + 100
+z = y.mean(axis=0)
+
+# Compute result
+result = z.compute()
+\stopverb}
+
+\p{\strong{Key Points}:}
+
+\ul{
+\li{Chunk size is critical (aim for ~100 MB per chunk)}
+\li{Operations work on chunks in parallel}
+\li{Rechunk data when needed for efficient operations}
+\li{Use \code{\startverb map_blocks\stopverb} for operations not available in Dask}
+}
+}
+
+\subtree{
+\title{3. Bags - Parallel Processing of Unstructured Data}
+\p{\strong{Purpose}: Process unstructured or semi-structured data (text, JSON, logs) with functional operations.}
+
+\p{\strong{When to Use}:}
+
+\ul{
+\li{Processing text files, logs, or JSON records}
+\li{Data cleaning and ETL before structured analysis}
+\li{Working with Python objects that don't fit array/dataframe formats}
+\li{Need memory-efficient streaming processing}
+}
+
+\p{\strong{Reference Documentation}: For comprehensive guidance on Dask Bags, refer to \code{\startverb references/bags.md\stopverb} which includes:}
+
+\ul{
+\li{Reading text and JSON files}
+\li{Functional operations (map, filter, fold, groupby)}
+\li{Converting to DataFrames}
+\li{Common patterns (log analysis, JSON processing, text processing)}
+\li{Performance considerations}
+}
+
+\p{\strong{Quick Example}:}
+
+\pre{\startverb
+import dask.bag as db
+import json
+
+# Read and parse JSON files
+bag = db.read_text('logs/*.json').map(json.loads)
+
+# Filter and transform
+valid = bag.filter(lambda x: x['status'] == 'valid')
+processed = valid.map(lambda x: {'id': x['id'], 'value': x['value']})
+
+# Convert to DataFrame for analysis
+ddf = processed.to_dataframe()
+\stopverb}
+
+\p{\strong{Key Points}:}
+
+\ul{
+\li{Use for initial data cleaning, then convert to DataFrame/Array}
+\li{Use \code{\startverb foldby\stopverb} instead of \code{\startverb groupby\stopverb} for better performance}
+\li{Operations are streaming and memory-efficient}
+\li{Convert to structured formats (DataFrame) for complex operations}
+}
+}
+
+\subtree{
+\title{4. Futures - Task-Based Parallelization}
+\p{\strong{Purpose}: Build custom parallel workflows with fine-grained control over task execution and dependencies.}
+
+\p{\strong{When to Use}:}
+
+\ul{
+\li{Building dynamic, evolving workflows}
+\li{Need immediate task execution (not lazy)}
+\li{Computations depend on runtime conditions}
+\li{Implementing custom parallel algorithms}
+\li{Need stateful computations}
+}
+
+\p{\strong{Reference Documentation}: For comprehensive guidance on Dask Futures, refer to \code{\startverb references/futures.md\stopverb} which includes:}
+
+\ul{
+\li{Setting up distributed client}
+\li{Submitting tasks and working with futures}
+\li{Task dependencies and data movement}
+\li{Advanced coordination (queues, locks, events, actors)}
+\li{Common patterns (parameter sweeps, dynamic tasks, iterative algorithms)}
+}
+
+\p{\strong{Quick Example}:}
+
+\pre{\startverb
+from dask.distributed import Client
+
+client = Client()  # Create local cluster
+
+# Submit tasks (executes immediately)
+def process(x):
+    return x ** 2
+
+futures = client.map(process, range(100))
+
+# Gather results
+results = client.gather(futures)
+
+client.close()
+\stopverb}
+
+\p{\strong{Key Points}:}
+
+\ul{
+\li{Requires distributed client (even for single machine)}
+\li{Tasks execute immediately when submitted}
+\li{Pre-scatter large data to avoid repeated transfers}
+\li{~1ms overhead per task (not suitable for millions of tiny tasks)}
+\li{Use actors for stateful workflows}
+}
+}
+
+\subtree{
+\title{5. Schedulers - Execution Backends}
+\p{\strong{Purpose}: Control how and where Dask tasks execute (threads, processes, distributed).}
+
+\p{\strong{When to Choose Scheduler}:}
+
+\ul{
+\li{\strong{Threads} (default): NumPy/Pandas operations, GIL-releasing libraries, shared memory benefit}
+\li{\strong{Processes}: Pure Python code, text processing, GIL-bound operations}
+\li{\strong{Synchronous}: Debugging with pdb, profiling, understanding errors}
+\li{\strong{Distributed}: Need dashboard, multi-machine clusters, advanced features}
+}
+
+\p{\strong{Reference Documentation}: For comprehensive guidance on Dask Schedulers, refer to \code{\startverb references/schedulers.md\stopverb} which includes:}
+
+\ul{
+\li{Detailed scheduler descriptions and characteristics}
+\li{Configuration methods (global, context manager, per-compute)}
+\li{Performance considerations and overhead}
+\li{Common patterns and troubleshooting}
+\li{Thread configuration for optimal performance}
+}
+
+\p{\strong{Quick Example}:}
+
+\pre{\startverb
+import dask
+import dask.dataframe as dd
+
+# Use threads for DataFrame (default, good for numeric)
+ddf = dd.read_csv('data.csv')
+result1 = ddf.mean().compute()  # Uses threads
+
+# Use processes for Python-heavy work
+import dask.bag as db
+bag = db.read_text('logs/*.txt')
+result2 = bag.map(python_function).compute(scheduler='processes')
+
+# Use synchronous for debugging
+dask.config.set(scheduler='synchronous')
+result3 = problematic_computation.compute()  # Can use pdb
+
+# Use distributed for monitoring and scaling
+from dask.distributed import Client
+client = Client()
+result4 = computation.compute()  # Uses distributed with dashboard
+\stopverb}
+
+\p{\strong{Key Points}:}
+
+\ul{
+\li{Threads: Lowest overhead (~10 µs/task), best for numeric work}
+\li{Processes: Avoids GIL (~10 ms/task), best for Python work}
+\li{Distributed: Monitoring dashboard (~1 ms/task), scales to clusters}
+\li{Can switch schedulers per computation or globally}
+}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\p{For comprehensive performance optimization guidance, memory management strategies, and common pitfalls to avoid, refer to \code{\startverb references/best-practices.md\stopverb}. Key principles include:}
+
+\subtree{
+\title{Start with Simpler Solutions}
+\p{Before using Dask, explore:}
+
+\ul{
+\li{Better algorithms}
+\li{Efficient file formats (Parquet instead of CSV)}
+\li{Compiled code (Numba, Cython)}
+\li{Data sampling}
+}
+}
+
+\subtree{
+\title{Critical Performance Rules}
+\p{\strong{1. Don't Load Data Locally Then Hand to Dask}}
+
+\pre{\startverb
+# Wrong: Loads all data in memory first
+import pandas as pd
+df = pd.read_csv('large.csv')
+ddf = dd.from_pandas(df, npartitions=10)
+
+# Correct: Let Dask handle loading
+import dask.dataframe as dd
+ddf = dd.read_csv('large.csv')
+\stopverb}
+
+\p{\strong{2. Avoid Repeated compute() Calls}}
+
+\pre{\startverb
+# Wrong: Each compute is separate
+for item in items:
+    result = dask_computation(item).compute()
+
+# Correct: Single compute for all
+computations = [dask_computation(item) for item in items]
+results = dask.compute(*computations)
+\stopverb}
+
+\p{\strong{3. Don't Build Excessively Large Task Graphs}}
+
+\ul{
+\li{Increase chunk sizes if millions of tasks}
+\li{Use \code{\startverb map_partitions\stopverb}/\code{\startverb map_blocks\stopverb} to fuse operations}
+\li{Check task graph size: \code{\startverb len(ddf.\strong{dask_graph}())\stopverb}}
+}
+
+\p{\strong{4. Choose Appropriate Chunk Sizes}}
+
+\ul{
+\li{Target: ~100 MB per chunk (or 10 chunks per core in worker memory)}
+\li{Too large: Memory overflow}
+\li{Too small: Scheduling overhead}
+}
+
+\p{\strong{5. Use the Dashboard}}
+
+\pre{\startverb
+from dask.distributed import Client
+client = Client()
+print(client.dashboard_link)  # Monitor performance, identify bottlenecks
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Workflow Patterns}
+\subtree{
+\title{ETL Pipeline}
+\pre{\startverb
+import dask.dataframe as dd
+
+# Extract: Read data
+ddf = dd.read_csv('raw_data/*.csv')
+
+# Transform: Clean and process
+ddf = ddf[ddf['status'] == 'valid']
+ddf['amount'] = ddf['amount'].astype('float64')
+ddf = ddf.dropna(subset=['important_col'])
+
+# Load: Aggregate and save
+summary = ddf.groupby('category').agg({'amount': ['sum', 'mean']})
+summary.to_parquet('output/summary.parquet')
+\stopverb}
+}
+
+\subtree{
+\title{Unstructured to Structured Pipeline}
+\pre{\startverb
+import dask.bag as db
+import json
+
+# Start with Bag for unstructured data
+bag = db.read_text('logs/*.json').map(json.loads)
+bag = bag.filter(lambda x: x['status'] == 'valid')
+
+# Convert to DataFrame for structured analysis
+ddf = bag.to_dataframe()
+result = ddf.groupby('category').mean().compute()
+\stopverb}
+}
+
+\subtree{
+\title{Large-Scale Array Computation}
+\pre{\startverb
+import dask.array as da
+
+# Load or create large array
+x = da.from_zarr('large_dataset.zarr')
+
+# Process in chunks
+normalized = (x - x.mean()) / x.std()
+
+# Save result
+da.to_zarr(normalized, 'normalized.zarr')
+\stopverb}
+}
+
+\subtree{
+\title{Custom Parallel Workflow}
+\pre{\startverb
+from dask.distributed import Client
+
+client = Client()
+
+# Scatter large dataset once
+data = client.scatter(large_dataset)
+
+# Process in parallel with dependencies
+futures = []
+for param in parameters:
+    future = client.submit(process, data, param)
+    futures.append(future)
+
+# Gather results
+results = client.gather(futures)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Selecting the Right Component}
+\p{Use this decision guide to choose the appropriate Dask component:}
+
+\p{\strong{Data Type}:}
+
+\ul{
+\li{Tabular data → \strong{DataFrames}}
+\li{Numeric arrays → \strong{Arrays}}
+\li{Text/JSON/logs → \strong{Bags} (then convert to DataFrame)}
+\li{Custom Python objects → \strong{Bags} or \strong{Futures}}
+}
+
+\p{\strong{Operation Type}:}
+
+\ul{
+\li{Standard pandas operations → \strong{DataFrames}}
+\li{Standard NumPy operations → \strong{Arrays}}
+\li{Custom parallel tasks → \strong{Futures}}
+\li{Text processing/ETL → \strong{Bags}}
+}
+
+\p{\strong{Control Level}:}
+
+\ul{
+\li{High-level, automatic → \strong{DataFrames/Arrays}}
+\li{Low-level, manual → \strong{Futures}}
+}
+
+\p{\strong{Workflow Type}:}
+
+\ul{
+\li{Static computation graph → \strong{DataFrames/Arrays/Bags}}
+\li{Dynamic, evolving → \strong{Futures}}
+}
+}
+
+\subtree{
+\title{Integration Considerations}
+\subtree{
+\title{File Formats}
+\ul{
+\li{\strong{Efficient}: Parquet, HDF5, Zarr (columnar, compressed, parallel-friendly)}
+\li{\strong{Compatible but slower}: CSV (use for initial ingestion only)}
+\li{\strong{For Arrays}: HDF5, Zarr, NetCDF}
+}
+}
+
+\subtree{
+\title{Conversion Between Collections}
+\pre{\startverb
+# Bag → DataFrame
+ddf = bag.to_dataframe()
+
+# DataFrame → Array (for numeric data)
+arr = ddf.to_dask_array(lengths=True)
+
+# Array → DataFrame
+ddf = dd.from_dask_array(arr, columns=['col1', 'col2'])
+\stopverb}
+}
+
+\subtree{
+\title{With Other Libraries}
+\ul{
+\li{\strong{XArray}: Wraps Dask arrays with labeled dimensions (geospatial, imaging)}
+\li{\strong{Dask-ML}: Machine learning with scikit-learn compatible APIs}
+\li{\strong{Distributed}: Advanced cluster management and monitoring}
+}
+}
+}
+
+\subtree{
+\title{Debugging and Development}
+\subtree{
+\title{Iterative Development Workflow}
+\ol{
+\li{\strong{Test on small data with synchronous scheduler}:}
+}
+
+\pre{\startverb
+dask.config.set(scheduler='synchronous')
+result = computation.compute()  # Can use pdb, easy debugging
+\stopverb}
+
+\ol{
+\li{\strong{Validate with threads on sample}:}
+}
+
+\pre{\startverb
+sample = ddf.head(1000)  # Small sample
+# Test logic, then scale to full dataset
+\stopverb}
+
+\ol{
+\li{\strong{Scale with distributed for monitoring}:}
+}
+
+\pre{\startverb
+from dask.distributed import Client
+client = Client()
+print(client.dashboard_link)  # Monitor performance
+result = computation.compute()
+\stopverb}
+}
+
+\subtree{
+\title{Common Issues}
+\p{\strong{Memory Errors}:}
+
+\ul{
+\li{Decrease chunk sizes}
+\li{Use \code{\startverb persist()\stopverb} strategically and delete when done}
+\li{Check for memory leaks in custom functions}
+}
+
+\p{\strong{Slow Start}:}
+
+\ul{
+\li{Task graph too large (increase chunk sizes)}
+\li{Use \code{\startverb map_partitions\stopverb} or \code{\startverb map_blocks\stopverb} to reduce tasks}
+}
+
+\p{\strong{Poor Parallelization}:}
+
+\ul{
+\li{Chunks too large (increase number of partitions)}
+\li{Using threads with Python code (switch to processes)}
+\li{Data dependencies preventing parallelism}
+}
+}
+}
+
+\subtree{
+\title{Reference Files}
+\p{All reference documentation files can be read as needed for detailed information:}
+
+\ul{
+\li{\code{\startverb references/dataframes.md\stopverb} - Complete Dask DataFrame guide}
+\li{\code{\startverb references/arrays.md\stopverb} - Complete Dask Array guide}
+\li{\code{\startverb references/bags.md\stopverb} - Complete Dask Bag guide}
+\li{\code{\startverb references/futures.md\stopverb} - Complete Dask Futures and distributed computing guide}
+\li{\code{\startverb references/schedulers.md\stopverb} - Complete scheduler selection and configuration guide}
+\li{\code{\startverb references/best-practices.md\stopverb} - Comprehensive performance optimization and troubleshooting}
+}
+
+\p{Load these files when users need detailed information about specific Dask components, operations, or patterns beyond the quick guidance provided here.}
+}
+}

@@ -1,0 +1,141 @@
+\title{Ewig Editor}
+
+\taxon{skill}
+
+\meta{description}{The eternal text editor — Didactic Ersatz Emacs demonstrating immutable}
+
+\subtree{
+\title{Ewig - Eternal Didactic Text Editor}
+\p{The eternal text editor — Didactic Ersatz Emacs demonstrating immutable data-structures and the single-atom architecture.}
+
+\subtree{
+\title{Repository}
+\ul{
+\li{\strong{Source}: https://github.com/bmorphism/ewig (fork of arximboldi/ewig)}
+\li{\strong{Language}: C++ (immer library)}
+\li{\strong{Pattern}: Persistent data structures + single atom state}
+}
+}
+
+\subtree{
+\title{Core Concept}
+\p{Ewig demonstrates how to build a text editor using:}
+
+\ol{
+\li{\strong{Immutable data structures} - All state changes create new versions}
+\li{\strong{Single-atom architecture} - One atom holds the entire application state}
+\li{\strong{Structural sharing} - Efficient memory via shared structure}
+}
+
+\pre{\startverb
+// Single atom state
+atom<editor_state> state;
+
+// All mutations are pure transformations
+state.update([](editor_state s) {
+    return s.insert_char('x');  // Returns new state, doesn't mutate
+});
+\stopverb}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────┐
+│                      Ewig                           │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│   ┌─────────────────────────────────────────────┐   │
+│   │              Single Atom                    │   │
+│   │         (immutable editor_state)            │   │
+│   └─────────────────────────────────────────────┘   │
+│        │                              │             │
+│        ▼                              ▼             │
+│   ┌─────────┐                    ┌─────────┐       │
+│   │ immer   │   structural       │ lager   │       │
+│   │ vectors │   sharing          │ cursors │       │
+│   └─────────┘                    └─────────┘       │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Key Libraries}
+\subtree{
+\title{immer}
+\p{Persistent immutable data structures for C++:}
+
+\pre{\startverb
+#include <immer/vector.hpp>
+
+immer::vector<char> buffer = {'h', 'e', 'l', 'l', 'o'};
+auto new_buffer = buffer.push_back('!');  // O(log n), shares structure
+\stopverb}
+}
+
+\subtree{
+\title{lager}
+\p{Unidirectional data-flow architecture:}
+
+\pre{\startverb
+auto store = lager::make_store<action>(
+    model{},
+    lager::with_reducer(update),
+    lager::with_effect(effect)
+);
+\stopverb}
+}
+}
+
+\subtree{
+\title{Relevance to CRDT/Collaborative Editing}
+\p{Ewig's immutable architecture aligns with CRDT principles:}
+
+\pre{\startverb
+| Ewig Concept | CRDT Parallel |
+|--------------|---------------|
+| Immutable state | Operation-based CRDT |
+| Structural sharing | Delta-state CRDT |
+| Single atom | Causal consistency |
+| Pure transformations | Commutative operations |
+\stopverb}
+}
+
+\subtree{
+\title{Integration with crdt-vterm-bridge}
+\p{The single-atom pattern can be applied to terminal state:}
+
+\pre{\startverb
+// Terminal state as immutable atom
+struct terminal_state {
+    immer::flex_vector<line> lines;
+    cursor_pos cursor;
+    gf3_trit trit;  // GF(3) assignment
+};
+
+atom<terminal_state> term_state;
+\stopverb}
+}
+
+\subtree{
+\title{Building}
+\pre{\startverb
+git clone https://github.com/bmorphism/ewig
+cd ewig
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+./ewig
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb code-refactoring\stopverb} - Immutable refactoring patterns}
+\li{\code{\startverb bisimulation-game\stopverb} - State equivalence}
+\li{\code{\startverb gay-mcp\stopverb} - Deterministic UI coloring}
+}
+}
+}

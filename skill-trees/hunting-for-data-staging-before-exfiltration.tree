@@ -1,0 +1,72 @@
+\title{Hunting For Data Staging Before Exfiltration}
+
+\taxon{skill}
+
+\tag{data-staging}
+
+\tag{exfiltration}
+
+\tag{t1074}
+
+\tag{archive-detection}
+
+\tag{edr}
+
+\tag{threat-hunting}
+
+\tag{dlp}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect data staging activity before exfiltration by monitoring for archive creation with 7-Zip/RAR, unusual temp folder access, large file consolidation, and staging directory patterns via EDR and process telemetry}
+
+\subtree{
+\title{Hunting for Data Staging Before Exfiltration}
+\subtree{
+\title{Overview}
+\p{Before exfiltrating data, adversaries typically stage collected files in a central location (MITRE ATT&CK T1074). This involves creating archives with tools like 7-Zip, RAR, or tar, consolidating files from multiple directories, and using temporary or hidden staging directories. This skill detects staging behavior by analyzing process creation logs for archiver activity, monitoring file system events in common staging paths, and identifying anomalous file consolidation patterns.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require hunting for data staging before exfiltration}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{EDR or Sysmon telemetry with process creation and file system events}
+\li{Windows Event Logs (Event ID 4688) or Sysmon Event ID 1, 11}
+\li{Python 3.8+ with standard library}
+\li{Access to process creation logs in JSON/CSV format}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{\strong{Detect Archive Tool Execution} — Monitor for 7z.exe, rar.exe, tar, zip, and WinRAR process creation with compression arguments}
+\li{\strong{Identify Staging Directories} — Flag file writes to common staging locations (Recycle Bin, \%TEMP\%, ProgramData, hidden directories)}
+\li{\strong{Detect Large File Consolidation} — Identify patterns of multiple file reads followed by writes to a single directory}
+\li{\strong{Monitor Sensitive Path Access} — Track bulk reads from document directories, database paths, and network shares}
+\li{\strong{Analyze Archive Metadata} — Extract and analyze archive file sizes, creation times, and source paths}
+\li{\strong{Score Staging Risk} — Apply heuristic scoring based on archive size, source diversity, staging path suspicion, and timing}
+\li{\strong{Generate Hunt Report} — Produce a structured report with staging event timeline and MITRE ATT&CK mapping}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\ul{
+\li{JSON report of detected staging events with risk scores}
+\li{Archive creation timeline with source file analysis}
+\li{MITRE ATT&CK mapping (T1074.001, T1074.002, T1560)}
+\li{Staging directory heat map showing suspicious write activity}
+}
+}
+}

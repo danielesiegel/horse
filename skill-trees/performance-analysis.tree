@@ -1,0 +1,715 @@
+\title{Performance Analysis}
+
+\taxon{skill}
+
+\tag{performance}
+
+\tag{bottleneck}
+
+\tag{optimization}
+
+\tag{profiling}
+
+\tag{metrics}
+
+\tag{analysis}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Comprehensive performance analysis, bottleneck detection, and optimization recommendations for Claude Flow swarms}
+
+\subtree{
+\title{Performance Analysis Skill}
+\p{Comprehensive performance analysis suite for identifying bottlenecks, profiling swarm operations, generating detailed reports, and providing actionable optimization recommendations.}
+
+\subtree{
+\title{Overview}
+\p{This skill consolidates all performance analysis capabilities:}
+
+\ul{
+\li{\strong{Bottleneck Detection}: Identify performance bottlenecks across communication, processing, memory, and network}
+\li{\strong{Performance Profiling}: Real-time monitoring and historical analysis of swarm operations}
+\li{\strong{Report Generation}: Create comprehensive performance reports in multiple formats}
+\li{\strong{Optimization Recommendations}: AI-powered suggestions for improving performance}
+}
+}
+
+\subtree{
+\title{Quick Start}
+\subtree{
+\title{Basic Bottleneck Detection}
+\pre{\startverb
+npx claude-flow bottleneck detect
+\stopverb}
+}
+
+\subtree{
+\title{Generate Performance Report}
+\pre{\startverb
+npx claude-flow analysis performance-report --format html --include-metrics
+\stopverb}
+}
+
+\subtree{
+\title{Analyze and Auto-Fix}
+\pre{\startverb
+npx claude-flow bottleneck detect --fix --threshold 15
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Bottleneck Detection}
+\subtree{
+\title{Command Syntax}
+\pre{\startverb
+npx claude-flow bottleneck detect [options]
+\stopverb}
+}
+
+\subtree{
+\title{Options}
+\ul{
+\li{\code{\startverb --swarm-id, -s <id>\stopverb} - Analyze specific swarm (default: current)}
+\li{\code{\startverb --time-range, -t <range>\stopverb} - Analysis period: 1h, 24h, 7d, all (default: 1h)}
+\li{\code{\startverb --threshold <percent>\stopverb} - Bottleneck threshold percentage (default: 20)}
+\li{\code{\startverb --export, -e <file>\stopverb} - Export analysis to file}
+\li{\code{\startverb --fix\stopverb} - Apply automatic optimizations}
+}
+}
+
+\subtree{
+\title{Usage Examples}
+\pre{\startverb
+# Basic detection for current swarm
+npx claude-flow bottleneck detect
+
+# Analyze specific swarm over 24 hours
+npx claude-flow bottleneck detect --swarm-id swarm-123 -t 24h
+
+# Export detailed analysis
+npx claude-flow bottleneck detect -t 24h -e bottlenecks.json
+
+# Auto-fix detected issues
+npx claude-flow bottleneck detect --fix --threshold 15
+
+# Low threshold for sensitive detection
+npx claude-flow bottleneck detect --threshold 10 --export critical-issues.json
+\stopverb}
+}
+
+\subtree{
+\title{Metrics Analyzed}
+\p{\strong{Communication Bottlenecks:}}
+
+\ul{
+\li{Message queue delays}
+\li{Agent response times}
+\li{Coordination overhead}
+\li{Memory access patterns}
+\li{Inter-agent communication latency}
+}
+
+\p{\strong{Processing Bottlenecks:}}
+
+\ul{
+\li{Task completion times}
+\li{Agent utilization rates}
+\li{Parallel execution efficiency}
+\li{Resource contention}
+\li{CPU/memory usage patterns}
+}
+
+\p{\strong{Memory Bottlenecks:}}
+
+\ul{
+\li{Cache hit rates}
+\li{Memory access patterns}
+\li{Storage I/O performance}
+\li{Neural pattern loading times}
+\li{Memory allocation efficiency}
+}
+
+\p{\strong{Network Bottlenecks:}}
+
+\ul{
+\li{API call latency}
+\li{MCP communication delays}
+\li{External service timeouts}
+\li{Concurrent request limits}
+\li{Network throughput issues}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+🔍 Bottleneck Analysis Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Summary
+├── Time Range: Last 1 hour
+├── Agents Analyzed: 6
+├── Tasks Processed: 42
+└── Critical Issues: 2
+
+🚨 Critical Bottlenecks
+1. Agent Communication (35% impact)
+   └── coordinator → coder-1 messages delayed by 2.3s avg
+
+2. Memory Access (28% impact)
+   └── Neural pattern loading taking 1.8s per access
+
+⚠️ Warning Bottlenecks
+1. Task Queue (18% impact)
+   └── 5 tasks waiting > 10s for assignment
+
+💡 Recommendations
+1. Switch to hierarchical topology (est. 40% improvement)
+2. Enable memory caching (est. 25% improvement)
+3. Increase agent concurrency to 8 (est. 20% improvement)
+
+✅ Quick Fixes Available
+Run with --fix to apply:
+- Enable smart caching
+- Optimize message routing
+- Adjust agent priorities
+\stopverb}
+}
+}
+
+\subtree{
+\title{2. Performance Profiling}
+\subtree{
+\title{Real-time Detection}
+\p{Automatic analysis during task execution:}
+
+\ul{
+\li{Execution time vs. complexity}
+\li{Agent utilization rates}
+\li{Resource constraints}
+\li{Operation patterns}
+}
+}
+
+\subtree{
+\title{Common Bottleneck Patterns}
+\p{\strong{Time Bottlenecks:}}
+
+\ul{
+\li{Tasks taking > 5 minutes}
+\li{Sequential operations that could parallelize}
+\li{Redundant file operations}
+\li{Inefficient algorithm implementations}
+}
+
+\p{\strong{Coordination Bottlenecks:}}
+
+\ul{
+\li{Single agent for complex tasks}
+\li{Unbalanced agent workloads}
+\li{Poor topology selection}
+\li{Excessive synchronization points}
+}
+
+\p{\strong{Resource Bottlenecks:}}
+
+\ul{
+\li{High operation count (> 100)}
+\li{Memory constraints}
+\li{I/O limitations}
+\li{Thread pool saturation}
+}
+}
+
+\subtree{
+\title{MCP Integration}
+\pre{\startverb
+// Check for bottlenecks in Claude Code
+mcp__claude-flow__bottleneck_detect({
+  timeRange: "1h",
+  threshold: 20,
+  autoFix: false
+})
+
+// Get detailed task results with bottleneck analysis
+mcp__claude-flow__task_results({
+  taskId: "task-123",
+  format: "detailed"
+})
+\stopverb}
+
+\p{\strong{Result Format:}}
+
+\pre{\startverb
+{
+  "bottlenecks": [
+    {
+      "type": "coordination",
+      "severity": "high",
+      "description": "Single agent used for complex task",
+      "recommendation": "Spawn specialized agents for parallel work",
+      "impact": "35%",
+      "affectedComponents": ["coordinator", "coder-1"]
+    }
+  ],
+  "improvements": [
+    {
+      "area": "execution_time",
+      "suggestion": "Use parallel task execution",
+      "expectedImprovement": "30-50% time reduction",
+      "implementationSteps": [
+        "Split task into smaller units",
+        "Spawn 3-4 specialized agents",
+        "Use mesh topology for coordination"
+      ]
+    }
+  ],
+  "metrics": {
+    "avgExecutionTime": "142s",
+    "agentUtilization": "67%",
+    "cacheHitRate": "82%",
+    "parallelizationFactor": 1.2
+  }
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{3. Report Generation}
+\subtree{
+\title{Command Syntax}
+\pre{\startverb
+npx claude-flow analysis performance-report [options]
+\stopverb}
+}
+
+\subtree{
+\title{Options}
+\ul{
+\li{\code{\startverb --format <type>\stopverb} - Report format: json, html, markdown (default: markdown)}
+\li{\code{\startverb --include-metrics\stopverb} - Include detailed metrics and charts}
+\li{\code{\startverb --compare <id>\stopverb} - Compare with previous swarm}
+\li{\code{\startverb --time-range <range>\stopverb} - Analysis period: 1h, 24h, 7d, 30d, all}
+\li{\code{\startverb --output <file>\stopverb} - Output file path}
+\li{\code{\startverb --sections <list>\stopverb} - Comma-separated sections to include}
+}
+}
+
+\subtree{
+\title{Report Sections}
+\ol{
+\li{\strong{Executive Summary}}
+\li{Overall performance score}
+\li{Key metrics overview}
+\li{Critical findings}
+}
+
+\ol{
+\li{\strong{Swarm Overview}}
+\li{Topology configuration}
+\li{Agent distribution}
+\li{Task statistics}
+}
+
+\ol{
+\li{\strong{Performance Metrics}}
+\li{Execution times}
+\li{Throughput analysis}
+\li{Resource utilization}
+\li{Latency breakdown}
+}
+
+\ol{
+\li{\strong{Bottleneck Analysis}}
+\li{Identified bottlenecks}
+\li{Impact assessment}
+\li{Optimization priorities}
+}
+
+\ol{
+\li{\strong{Comparative Analysis} (when --compare used)}
+\li{Performance trends}
+\li{Improvement metrics}
+\li{Regression detection}
+}
+
+\ol{
+\li{\strong{Recommendations}}
+\li{Prioritized action items}
+\li{Expected improvements}
+\li{Implementation guidance}
+}
+}
+
+\subtree{
+\title{Usage Examples}
+\pre{\startverb
+# Generate HTML report with all metrics
+npx claude-flow analysis performance-report --format html --include-metrics
+
+# Compare current swarm with previous
+npx claude-flow analysis performance-report --compare swarm-123 --format markdown
+
+# Custom output with specific sections
+npx claude-flow analysis performance-report \
+  --sections summary,metrics,recommendations \
+  --output reports/perf-analysis.html \
+  --format html
+
+# Weekly performance report
+npx claude-flow analysis performance-report \
+  --time-range 7d \
+  --include-metrics \
+  --format markdown \
+  --output docs/weekly-performance.md
+
+# JSON format for CI/CD integration
+npx claude-flow analysis performance-report \
+  --format json \
+  --output build/performance.json
+\stopverb}
+}
+
+\subtree{
+\title{Sample Markdown Report}
+\pre{\startverb
+# Performance Analysis Report
+
+## Executive Summary
+- **Overall Score**: 87/100
+- **Analysis Period**: Last 24 hours
+- **Swarms Analyzed**: 3
+- **Critical Issues**: 1
+
+## Key Metrics
+| Metric | Value | Trend | Target |
+|--------|-------|-------|--------|
+| Avg Task Time | 42s | ↓ 12% | 35s |
+| Agent Utilization | 78% | ↑ 5% | 85% |
+| Cache Hit Rate | 91% | → | 90% |
+| Parallel Efficiency | 2.3x | ↑ 0.4x | 2.5x |
+
+## Bottleneck Analysis
+### Critical
+1. **Agent Communication Delay** (Impact: 35%)
+   - Coordinator → Coder messages delayed by 2.3s avg
+   - **Fix**: Switch to hierarchical topology
+
+### Warnings
+1. **Memory Access Pattern** (Impact: 18%)
+   - Neural pattern loading: 1.8s per access
+   - **Fix**: Enable memory caching
+
+## Recommendations
+1. **High Priority**: Switch to hierarchical topology (40% improvement)
+2. **Medium Priority**: Enable memory caching (25% improvement)
+3. **Low Priority**: Increase agent concurrency to 8 (20% improvement)
+\stopverb}
+}
+}
+
+\subtree{
+\title{4. Optimization Recommendations}
+\subtree{
+\title{Automatic Fixes}
+\p{When using \code{\startverb --fix\stopverb}, the following optimizations may be applied:}
+
+\p{\strong{1. Topology Optimization}}
+
+\ul{
+\li{Switch to more efficient topology (mesh → hierarchical)}
+\li{Adjust communication patterns}
+\li{Reduce coordination overhead}
+\li{Optimize message routing}
+}
+
+\p{\strong{2. Caching Enhancement}}
+
+\ul{
+\li{Enable memory caching}
+\li{Optimize cache strategies}
+\li{Preload common patterns}
+\li{Implement cache warming}
+}
+
+\p{\strong{3. Concurrency Tuning}}
+
+\ul{
+\li{Adjust agent counts}
+\li{Optimize parallel execution}
+\li{Balance workload distribution}
+\li{Implement load balancing}
+}
+
+\p{\strong{4. Priority Adjustment}}
+
+\ul{
+\li{Reorder task queues}
+\li{Prioritize critical paths}
+\li{Reduce wait times}
+\li{Implement fair scheduling}
+}
+
+\p{\strong{5. Resource Optimization}}
+
+\ul{
+\li{Optimize memory usage}
+\li{Reduce I/O operations}
+\li{Batch API calls}
+\li{Implement connection pooling}
+}
+}
+
+\subtree{
+\title{Performance Impact}
+\p{Typical improvements after bottleneck resolution:}
+
+\ul{
+\li{\strong{Communication}: 30-50\% faster message delivery}
+\li{\strong{Processing}: 20-40\% reduced task completion time}
+\li{\strong{Memory}: 40-60\% fewer cache misses}
+\li{\strong{Network}: 25-45\% reduced API latency}
+\li{\strong{Overall}: 25-45\% total performance improvement}
+}
+}
+}
+}
+
+\subtree{
+\title{Advanced Usage}
+\subtree{
+\title{Continuous Monitoring}
+\pre{\startverb
+# Monitor performance in real-time
+npx claude-flow swarm monitor --interval 5
+
+# Generate hourly reports
+while true; do
+  npx claude-flow analysis performance-report \
+    --format json \
+    --output logs/perf-$(date +%Y%m%d-%H%M).json
+  sleep 3600
+done
+\stopverb}
+}
+
+\subtree{
+\title{CI/CD Integration}
+\pre{\startverb
+# .github/workflows/performance.yml
+name: Performance Analysis
+on: [push, pull_request]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Performance Analysis
+        run: |
+          npx claude-flow analysis performance-report \
+            --format json \
+            --output performance.json
+      - name: Check Performance Thresholds
+        run: |
+          npx claude-flow bottleneck detect \
+            --threshold 15 \
+            --export bottlenecks.json
+      - name: Upload Reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: performance-reports
+          path: |
+            performance.json
+            bottlenecks.json
+\stopverb}
+}
+
+\subtree{
+\title{Custom Analysis Scripts}
+\pre{\startverb
+// scripts/analyze-performance.js
+const { exec } = require('child_process');
+const fs = require('fs');
+
+async function analyzePerformance() {
+  // Run bottleneck detection
+  const bottlenecks = await runCommand(
+    'npx claude-flow bottleneck detect --format json'
+  );
+
+  // Generate performance report
+  const report = await runCommand(
+    'npx claude-flow analysis performance-report --format json'
+  );
+
+  // Analyze results
+  const analysis = {
+    bottlenecks: JSON.parse(bottlenecks),
+    performance: JSON.parse(report),
+    timestamp: new Date().toISOString()
+  };
+
+  // Save combined analysis
+  fs.writeFileSync(
+    'analysis/combined-report.json',
+    JSON.stringify(analysis, null, 2)
+  );
+
+  // Generate alerts if needed
+  if (analysis.bottlenecks.critical.length > 0) {
+    console.error('CRITICAL: Performance bottlenecks detected!');
+    process.exit(1);
+  }
+}
+
+function runCommand(cmd) {
+  return new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) reject(error);
+      else resolve(stdout);
+    });
+  });
+}
+
+analyzePerformance().catch(console.error);
+\stopverb}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{1. Regular Analysis}
+\ul{
+\li{Run bottleneck detection after major changes}
+\li{Generate weekly performance reports}
+\li{Monitor trends over time}
+\li{Set up automated alerts}
+}
+}
+
+\subtree{
+\title{2. Threshold Tuning}
+\ul{
+\li{Start with default threshold (20\%)}
+\li{Lower for production systems (10-15\%)}
+\li{Higher for development (25-30\%)}
+\li{Adjust based on requirements}
+}
+}
+
+\subtree{
+\title{3. Fix Strategy}
+\ul{
+\li{Always review before applying --fix}
+\li{Test fixes in development first}
+\li{Apply fixes incrementally}
+\li{Monitor impact after changes}
+}
+}
+
+\subtree{
+\title{4. Report Integration}
+\ul{
+\li{Include in documentation}
+\li{Share with team regularly}
+\li{Track improvements over time}
+\li{Use for capacity planning}
+}
+}
+
+\subtree{
+\title{5. Continuous Optimization}
+\ul{
+\li{Learn from each analysis}
+\li{Build performance budgets}
+\li{Establish baselines}
+\li{Set improvement goals}
+}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{Common Issues}
+\p{\strong{High Memory Usage}}
+
+\pre{\startverb
+# Analyze memory bottlenecks
+npx claude-flow bottleneck detect --threshold 10
+
+# Check cache performance
+npx claude-flow cache manage --action stats
+
+# Review memory metrics
+npx claude-flow memory usage
+\stopverb}
+
+\p{\strong{Slow Task Execution}}
+
+\pre{\startverb
+# Identify slow tasks
+npx claude-flow task status --detailed
+
+# Analyze coordination overhead
+npx claude-flow bottleneck detect --time-range 1h
+
+# Check agent utilization
+npx claude-flow agent metrics
+\stopverb}
+
+\p{\strong{Poor Cache Performance}}
+
+\pre{\startverb
+# Analyze cache hit rates
+npx claude-flow analysis performance-report --sections metrics
+
+# Review cache strategy
+npx claude-flow cache manage --action analyze
+
+# Enable cache warming
+npx claude-flow bottleneck detect --fix
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Other Skills}
+\ul{
+\li{\strong{swarm-orchestration}: Use performance data to optimize topology}
+\li{\strong{memory-management}: Improve cache strategies based on analysis}
+\li{\strong{task-coordination}: Adjust scheduling based on bottlenecks}
+\li{\strong{neural-training}: Train patterns from performance data}
+}
+}
+
+\subtree{
+\title{Related Commands}
+\ul{
+\li{\code{\startverb npx claude-flow swarm monitor\stopverb} - Real-time monitoring}
+\li{\code{\startverb npx claude-flow token usage\stopverb} - Token optimization analysis}
+\li{\code{\startverb npx claude-flow cache manage\stopverb} - Cache optimization}
+\li{\code{\startverb npx claude-flow agent metrics\stopverb} - Agent performance metrics}
+\li{\code{\startverb npx claude-flow task status\stopverb} - Task execution analysis}
+}
+}
+
+\subtree{
+\title{See Also}
+\ul{
+\li{[Bottleneck Detection Guide](/workspaces/claude-code-flow/.claude/commands/analysis/bottleneck-detect.md)}
+\li{[Performance Report Guide](/workspaces/claude-code-flow/.claude/commands/analysis/performance-report.md)}
+\li{[Performance Bottlenecks Overview](/workspaces/claude-code-flow/.claude/commands/analysis/performance-bottlenecks.md)}
+\li{[Swarm Monitoring Documentation](../swarm-orchestration/SKILL.md)}
+\li{[Memory Management Documentation](../memory-management/SKILL.md)}
+}
+
+\p{\strong{Version}: 1.0.0 \strong{Last Updated}: 2025-10-19 \strong{Maintainer}: Claude Flow Team}
+}
+}

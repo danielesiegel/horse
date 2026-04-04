@@ -1,0 +1,55 @@
+\title{Analyzing Network Packets With Scapy}
+
+\taxon{skill}
+
+\tag{}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Craft, send, sniff, and dissect network packets using Scapy for protocol analysis, network reconnaissance, and traffic anomaly detection in authorized security testing}
+
+\subtree{
+\title{Analyzing Network Packets with Scapy}
+\subtree{
+\title{Overview}
+\p{Scapy is a Python packet manipulation library that enables crafting, sending, sniffing, and dissecting network packets at granular protocol layers. This skill covers using Scapy for security-relevant tasks including TCP/UDP/ICMP packet crafting, pcap file analysis, protocol field extraction, SYN scan implementation, DNS query analysis, and detecting anomalous traffic patterns such as unusually fragmented packets or malformed headers.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When investigating security incidents that require analyzing network packets with scapy}
+\li{When building detection rules or threat hunting queries for this domain}
+\li{When SOC analysts need structured procedures for this analysis type}
+\li{When validating security monitoring coverage for related attack techniques}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.8+ with \code{\startverb scapy\stopverb} library installed (\code{\startverb pip install scapy\stopverb})}
+\li{Root/administrator privileges for raw socket operations (sniffing, sending)}
+\li{Npcap (Windows) or libpcap (Linux) for packet capture}
+\li{Authorization to perform packet operations on target network}
+}
+}
+
+\subtree{
+\title{Steps}
+\ol{
+\li{Read and parse pcap/pcapng files with \code{\startverb rdpcap()\stopverb} for offline analysis}
+\li{Extract protocol layers (IP, TCP, UDP, DNS, HTTP) and field values}
+\li{Compute traffic statistics: top talkers, protocol distribution, port frequency}
+\li{Detect SYN flood patterns by analyzing TCP flag ratios}
+\li{Identify DNS exfiltration indicators via query length and entropy analysis}
+\li{Craft custom probe packets for authorized network testing}
+\li{Export findings as structured JSON report}
+}
+}
+
+\subtree{
+\title{Expected Output}
+\p{JSON report containing packet statistics, protocol distribution, top source/destination IPs, detected anomalies (SYN floods, DNS tunneling indicators, fragmentation attacks), and per-flow summaries.}
+}
+}

@@ -1,0 +1,157 @@
+\title{Let Fate Decide}
+
+\taxon{skill}
+
+\meta{description}{"Draws 4 Tarot cards using os.urandom() to inject entropy into planning when prompts are vague or underspecified. Interprets the spread to guide next steps. Use when the user is nonchalant, feeling lucky, says 'let fate decide', makes Yu-Gi-Oh references ('heart of the cards'), demonstrates indifference about approach, or says 'try again' on a system with no changes. Also triggers on sufficiently ambiguous prompts where multiple approaches are equally valid."}
+
+\subtree{
+\title{Let Fate Decide}
+\p{When the path forward is unclear, let the cards speak.}
+
+\subtree{
+\title{Quick Start}
+\ol{
+\li{Run the drawing script:}
+}
+
+\ol{
+\li{The script outputs JSON with 4 drawn cards, each with a \code{\startverb file\stopverb} path relative to \code{\startverb {baseDir}/\stopverb}}
+}
+
+\ol{
+\li{Read each card's meaning file to understand the draw}
+}
+
+\ol{
+\li{Interpret the spread using the guide at [{baseDir}/references/INTERPRETATION_GUIDE.md]({baseDir}/references/INTERPRETATION_GUIDE.md)}
+}
+
+\ol{
+\li{Apply the interpretation to the task at hand}
+}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{\strong{Vague prompts}: The user's request is ambiguous and multiple valid approaches exist}
+\li{\strong{Explicit invocations}: "I'm feeling lucky", "let fate decide", "dealer's choice", "surprise me", "whatever you think"}
+\li{\strong{Yu-Gi-Oh energy}: "Heart of the cards", "I believe in the heart of the cards", "you've activated my trap card", "it's time to duel"}
+\li{\strong{Nonchalant delegation}: The user expresses indifference about the approach}
+\li{\strong{Redraw requests}: "Try again" or "draw again" when no actual system changes occurred (this means draw new cards, not re-run the same approach)}
+\li{\strong{Tie-breaking}: When you genuinely cannot decide between equally valid approaches}
+}
+}
+
+\subtree{
+\title{When NOT to Use}
+\ul{
+\li{The user has given clear, specific instructions}
+\li{The task has a single obvious correct approach}
+\li{Safety-critical decisions (security, data integrity, production deployments)}
+\li{The user explicitly asks you NOT to use Tarot}
+\li{A more specific skill (like \code{\startverb ask-questions-if-underspecified\stopverb}) would better serve the user by gathering actual requirements}
+}
+}
+
+\subtree{
+\title{How It Works}
+\subtree{
+\title{The Draw}
+\p{The script uses \code{\startverb os.urandom()\stopverb} for cryptographic randomness:}
+
+\ol{
+\li{Builds a standard 78-card Tarot deck (22 Major Arcana + 56 Minor Arcana)}
+\li{Performs a Fisher-Yates shuffle using rejection sampling (no modulo bias)}
+\li{Draws 4 cards from the top}
+\li{Each card independently has a 50\% chance of being reversed}
+}
+}
+
+\subtree{
+\title{The Spread}
+\p{The 4 card positions represent:}
+
+\pre{\startverb
+| Position | Represents | Question It Answers |
+|----------|-----------|-------------------|
+| 1 | **The Context** | What is the situation really about? |
+| 2 | **The Challenge** | What obstacle or tension exists? |
+| 3 | **The Guidance** | What approach should be taken? |
+| 4 | **The Outcome** | Where does this path lead? |
+\stopverb}
+}
+
+\subtree{
+\title{Card Files}
+\p{Each card's meaning is in its own markdown file under \code{\startverb {baseDir}/cards/\stopverb}:}
+
+\ul{
+\li{\code{\startverb cards/major/\stopverb} - 22 Major Arcana (archetypal forces)}
+\li{\code{\startverb cards/wands/\stopverb} - 14 Wands (creativity, action, will)}
+\li{\code{\startverb cards/cups/\stopverb} - 14 Cups (emotion, intuition, relationships)}
+\li{\code{\startverb cards/swords/\stopverb} - 14 Swords (intellect, conflict, truth)}
+\li{\code{\startverb cards/pentacles/\stopverb} - 14 Pentacles (material, practical, craft)}
+}
+}
+
+\subtree{
+\title{Interpretation}
+\p{After drawing, read each card's file and synthesize meaning. See [{baseDir}/references/INTERPRETATION_GUIDE.md]({baseDir}/references/INTERPRETATION_GUIDE.md) for the full interpretation workflow.}
+
+\p{Key rules:}
+
+\ul{
+\li{Reversed cards invert or complicate the upright meaning}
+\li{Major Arcana cards carry more weight than Minor Arcana}
+\li{The spread tells a story across all 4 positions; don't interpret cards in isolation}
+\li{Map abstract meanings to concrete technical decisions}
+}
+}
+}
+
+\subtree{
+\title{Example Session}
+\pre{\startverb
+User: "I dunno, just make it work somehow"
+
+[Draw cards]
+1. The Magician (upright) - Context: All tools are available
+2. Five of Swords (reversed) - Challenge: Let go of a combative approach
+3. The Star (upright) - Guidance: Follow the aspirational path
+4. Ten of Pentacles (upright) - Outcome: Long-term stability
+
+Interpretation: The cards suggest you have everything you need (Magician).
+The challenge is avoiding overengineering or adversarial thinking about edge
+cases (Five of Swords reversed). Follow the clean, hopeful approach (Star)
+and build for lasting maintainability (Ten of Pentacles).
+
+Approach: Implement the simplest correct solution with clear structure,
+prioritizing long-term readability over clever optimizations.
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\p{If the drawing script fails:}
+
+\ul{
+\li{\strong{Script crashes with traceback}: Report the error to the user and skip the reading. Do not invent cards or simulate a draw — the whole point is real entropy.}
+\li{\strong{Card file not found}: Note the missing file, interpret the card from its name and suit alone, and continue with the reading.}
+\li{\strong{Never fake entropy}: If the script cannot run, do not simulate a draw using your own "randomness." Tell the user the draw failed.}
+}
+}
+
+\subtree{
+\title{Rationalizations to Reject}
+\pre{\startverb
+| Rationalization | Why Wrong |
+|----------------|-----------|
+| "The cards said to, so I must" | Cards inform direction, they don't override safety or correctness |
+| "This reading justifies my pre-existing preference" | Be honest if the reading challenges your instinct |
+| "The reversed card means do nothing" | Reversed means a different angle, not inaction |
+| "Major Arcana overrides user requirements" | User requirements always take priority over card readings |
+| "I'll keep drawing until I get what I want" | One draw per decision point; accept the reading |
+\stopverb}
+}
+}

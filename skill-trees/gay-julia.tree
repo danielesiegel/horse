@@ -1,0 +1,130 @@
+\title{Gay Julia}
+
+\taxon{skill}
+
+\meta{description}{Wide-gamut color sampling with splittable determinism using Pigeons.jl}
+
+\subtree{
+\title{Gay.jl - Wide-Gamut Deterministic Color Sampling}
+\p{Wide-gamut color sampling with splittable determinism using Pigeons.jl SPI pattern and LispSyntax integration.}
+
+\subtree{
+\title{Repository}
+\ul{
+\li{\strong{Source}: https://github.com/bmorphism/Gay.jl}
+\li{\strong{Language}: Julia}
+\li{\strong{Pattern}: SplitMix64 → GF(3) trits → LCH colors}
+}
+}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{SplitMix64 Determinism}
+\pre{\startverb
+# Deterministic color from seed
+using Gay
+
+seed = 0x598F318E2B9E884
+color = gay_color(seed)  # Returns LCH color
+trit = gf3_trit(seed)    # Returns :MINUS, :ERGODIC, or :PLUS
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Conservation}
+\p{Every color operation preserves the tripartite balance:}
+
+\ul{
+\li{\strong{MINUS} (-1): Contractive operations}
+\li{\strong{ERGODIC} (0): Neutral/balanced operations  }
+\li{\strong{PLUS} (+1): Expansive operations}
+}
+
+\p{Sum of trits across parallel streams must equal 0 (mod 3).}
+}
+
+\subtree{
+\title{LispSyntax Integration}
+\pre{\startverb
+using LispSyntax
+
+# S-expression colorization
+sexp = @lisp (defun factorial (n) (if (<= n 1) 1 (* n (factorial (- n 1)))))
+colored = colorize(sexp, seed=seed)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with plurigrid/asi}
+\subtree{
+\title{With gay-mcp skill}
+\pre{\startverb
+# MCP tool registration with deterministic colors
+using Gay, MCP
+
+tool = MCPTool("color-palette", seed=0x1069)
+palette = generate_palette(tool, n=5)
+\stopverb}
+}
+
+\subtree{
+\title{With spi-parallel-verify}
+\pre{\startverb
+# Verify GF(3) conservation across parallel execution
+using Gay, SPI
+
+streams = trifurcate(seed, [:task1, :task2, :task3])
+verify_conservation(streams)  # Asserts sum(trits) ≡ 0 (mod 3)
+\stopverb}
+}
+
+\subtree{
+\title{With triad-interleave}
+\pre{\startverb
+# Interleave three color streams
+using Gay, TriadInterleave
+
+schedule = interleave(
+    minus_stream(seed),
+    ergodic_stream(seed),
+    plus_stream(seed)
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Functions}
+\pre{\startverb
+| Function | Description |
+|----------|-------------|
+| `gay_color(seed)` | Generate LCH color from seed |
+| `gf3_trit(seed)` | Extract GF(3) trit assignment |
+| `splitmix64(state)` | Advance RNG state |
+| `colorize(sexp, seed)` | Color S-expression nodes |
+| `palette(seed, n)` | Generate n-color palette |
+\stopverb}
+}
+
+\subtree{
+\title{Use Cases}
+\ol{
+\li{\strong{Deterministic UI theming} - Same seed → same colors everywhere}
+\li{\strong{Parallel task coloring} - GF(3) ensures balanced distribution}
+\li{\strong{CRDT conflict resolution} - Trit-based merge ordering}
+\li{\strong{Terminal session coloring} - vterm integration via crdt-vterm-bridge}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb gay-mcp\stopverb} - MCP server with Gay.jl colors}
+\li{\code{\startverb spi-parallel-verify\stopverb} - Strong Parallelism Invariance verification}
+\li{\code{\startverb triad-interleave\stopverb} - Three-stream scheduling}
+\li{\code{\startverb bisimulation-game\stopverb} - GF(3) conservation in game semantics}
+}
+}
+}

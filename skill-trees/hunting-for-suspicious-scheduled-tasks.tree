@@ -1,0 +1,120 @@
+\title{Hunting For Suspicious Scheduled Tasks}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{scheduled-tasks}
+
+\tag{persistence}
+
+\tag{mitre-t1053-005}
+
+\tag{windows}
+
+\tag{endpoint-detection}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Hunt for adversary persistence and execution via Windows scheduled tasks by analyzing task creation events, suspicious task properties, and unusual execution patterns that indicate T1053.005 abuse.}
+
+\subtree{
+\title{Hunting for Suspicious Scheduled Tasks}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When proactively hunting for persistence mechanisms in Windows environments}
+\li{After detecting schtasks.exe or at.exe usage in process creation logs}
+\li{When investigating malware that survives reboots and user logoffs}
+\li{During incident response to enumerate all persistence on compromised systems}
+\li{When Windows Security Event ID 4698 (Scheduled Task Created) fires for unusual tasks}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows Security Event ID 4698/4699/4702 (Task Created/Deleted/Updated)}
+\li{Sysmon Event ID 1 for schtasks.exe process creation with command lines}
+\li{Windows Task Scheduler operational log (Microsoft-Windows-TaskScheduler/Operational)}
+\li{PowerShell logging for Register-ScheduledTask cmdlet usage}
+\li{Access to Task Scheduler XML definitions on endpoints}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Enumerate All Scheduled Tasks}: Collect complete task inventory from target systems using \code{\startverb schtasks /query /fo CSV /v\stopverb} or \code{\startverb Get-ScheduledTask\stopverb} PowerShell cmdlet.}
+\li{\strong{Monitor Task Creation Events}: Track Event ID 4698 for new task creation, correlating with the creating process and user account context.}
+\li{\strong{Analyze Task Actions}: Examine what each task executes. Flag tasks running scripts (PowerShell, cmd, wscript), binaries from user-writable paths (TEMP, AppData, Downloads), or encoded/obfuscated commands.}
+\li{\strong{Check Task Triggers}: Review trigger conditions. Tasks triggered by system startup, user logon, or short intervals (1-5 minutes) warrant investigation.}
+\li{\strong{Identify Hidden or Disguised Tasks}: Hunt for tasks with names mimicking legitimate Windows tasks, tasks with Security Descriptor modifications hiding them from standard enumeration, or tasks stored in non-standard registry locations.}
+\li{\strong{Correlate with Process Execution}: Match scheduled task execution events with process creation logs to confirm what actually runs.}
+\li{\strong{Baseline and Diff}: Compare current task inventory against known-good baselines to identify new, modified, or unexpected tasks.}
+}
+}
+
+\subtree{
+\title{Detection Queries}
+\subtree{
+\title{Splunk -- Scheduled Task Creation}
+\pre{\startverb
+index=wineventlog EventCode=4698
+| spath output=TaskName path=EventData.TaskName
+| spath output=TaskContent path=EventData.TaskContent
+| where NOT match(TaskName, "(?i)(\\\\Microsoft\\\\|\\\\Windows\\\\)")
+| table _time Computer SubjectUserName TaskName TaskContent
+\stopverb}
+}
+
+\subtree{
+\title{Splunk -- Schtasks.exe Suspicious Usage}
+\pre{\startverb
+index=sysmon EventCode=1 Image="*\\schtasks.exe"
+| where match(CommandLine, "(?i)/create")
+| where match(CommandLine, "(?i)(powershell|cmd|wscript|cscript|mshta|rundll32|regsvr32|http|https|\\\\temp\\\\|\\\\appdata\\\\)")
+| table _time Computer User CommandLine ParentImage
+\stopverb}
+}
+
+\subtree{
+\title{KQL -- Microsoft Sentinel}
+\pre{\startverb
+SecurityEvent
+| where EventID == 4698
+| extend TaskName = tostring(EventData.TaskName)
+| extend TaskContent = tostring(EventData.TaskContent)
+| where TaskContent has_any ("powershell", "cmd.exe", "wscript", "http://", "https://", "\\Temp\\", "\\AppData\\")
+| project TimeGenerated, Computer, Account, TaskName, TaskContent
+\stopverb}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\ol{
+\li{\strong{Cobalt Strike Persistence}: Creates scheduled tasks via schtasks.exe to execute PowerShell download cradles at user logon intervals.}
+\li{\strong{Ransomware Staging}: Task created to run encryption payload at a future time, often during off-hours for maximum impact.}
+\li{\strong{Hidden Task via SD Modification}: Attacker modifies Security Descriptor of scheduled task to hide it from normal enumeration while maintaining execution.}
+\li{\strong{COM Handler Abuse}: Task uses COM handler rather than direct executable path, making action inspection more complex.}
+\li{\strong{Lateral Movement via Tasks}: Remote scheduled task creation using \code{\startverb schtasks /create /s REMOTE_HOST\stopverb} for execution on other systems.}
+}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-SCHTASK-[DATE]-[SEQ]
+Host: [Hostname]
+Task Name: [Full task path]
+Action: [Command/Script executed]
+Trigger: [Startup/Logon/Timer/Event]
+Created By: [User account]
+Created From: [Local/Remote]
+Creation Time: [Timestamp]
+Run As: [Execution account]
+Risk Level: [Critical/High/Medium/Low]
+\stopverb}
+}
+}

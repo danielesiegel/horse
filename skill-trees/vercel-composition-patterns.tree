@@ -1,0 +1,94 @@
+\title{Vercel Composition Patterns}
+
+\taxon{skill}
+
+\subtree{
+\title{React Composition Patterns}
+\p{Composition patterns for building flexible, maintainable React components. Avoid boolean prop proliferation by using compound components, lifting state, and composing internals. These patterns make codebases easier for both humans and AI agents to work with as they scale.}
+
+\subtree{
+\title{When to Apply}
+\p{Reference these guidelines when:}
+
+\ul{
+\li{Refactoring components with many boolean props}
+\li{Building reusable component libraries}
+\li{Designing flexible component APIs}
+\li{Reviewing component architecture}
+\li{Working with compound components or context providers}
+}
+}
+
+\subtree{
+\title{Rule Categories by Priority}
+\pre{\startverb
+| Priority | Category                | Impact | Prefix          |
+| -------- | ----------------------- | ------ | --------------- |
+| 1        | Component Architecture  | HIGH   | `architecture-` |
+| 2        | State Management        | MEDIUM | `state-`        |
+| 3        | Implementation Patterns | MEDIUM | `patterns-`     |
+| 4        | React 19 APIs           | MEDIUM | `react19-`      |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Reference}
+\subtree{
+\title{1. Component Architecture (HIGH)}
+\ul{
+\li{\code{\startverb architecture-avoid-boolean-props\stopverb} - Don't add boolean props to customize}
+\li{\code{\startverb architecture-compound-components\stopverb} - Structure complex components with shared}
+}
+}
+
+\subtree{
+\title{2. State Management (MEDIUM)}
+\ul{
+\li{\code{\startverb state-decouple-implementation\stopverb} - Provider is the only place that knows how}
+\li{\code{\startverb state-context-interface\stopverb} - Define generic interface with state, actions, meta}
+\li{\code{\startverb state-lift-state\stopverb} - Move state into provider components for sibling access}
+}
+}
+
+\subtree{
+\title{3. Implementation Patterns (MEDIUM)}
+\ul{
+\li{\code{\startverb patterns-explicit-variants\stopverb} - Create explicit variant components instead of}
+\li{\code{\startverb patterns-children-over-render-props\stopverb} - Use children for composition instead}
+}
+}
+
+\subtree{
+\title{4. React 19 APIs (MEDIUM)}
+\blockquote{\strong{⚠️ React 19+ only.} Skip this section if using React 18 or earlier.}
+
+\ul{
+\li{\code{\startverb react19-no-forwardref\stopverb} - Don't use \code{\startverb forwardRef\stopverb}; use \code{\startverb use()\stopverb} instead of \code{\startverb useContext()\stopverb}}
+}
+}
+}
+
+\subtree{
+\title{How to Use}
+\p{Read individual rule files for detailed explanations and code examples:}
+
+\pre{\startverb
+rules/architecture-avoid-boolean-props.md
+rules/state-context-interface.md
+\stopverb}
+
+\p{Each rule file contains:}
+
+\ul{
+\li{Brief explanation of why it matters}
+\li{Incorrect code example with explanation}
+\li{Correct code example with explanation}
+\li{Additional context and references}
+}
+}
+
+\subtree{
+\title{Full Compiled Document}
+\p{For the complete guide with all rules expanded: \code{\startverb AGENTS.md\stopverb}}
+}
+}

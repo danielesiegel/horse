@@ -1,0 +1,115 @@
+\title{Crypto Fiat Bridge}
+
+\taxon{skill}
+
+\meta{description}{Automated APT-to-fiat payment pipeline via PYUSD stablecoin bridge. Load when converting APT holdings to OpenRouter API credits, bridging Aptos tokens to Ethereum, or executing crypto-to-fiat payments.}
+
+\subtree{
+\title{crypto-fiat-bridge}
+\subtree{
+\title{Overview}
+\p{Automated crypto-to-fiat payment pipeline for converting APT holdings to OpenRouter API credits via the PYUSD stablecoin bridge. All operations require explicit approval.}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+APT (Aptos) --[Liquidswap DEX]--> PYUSD0 (Aptos) --[Wormhole Bridge]--> PYUSD (Ethereum) --[Coinbase Commerce]--> OpenRouter
+\stopverb}
+}
+
+\subtree{
+\title{Workflow Steps}
+\subtree{
+\title{1. Check APT Balance}
+\pre{\startverb
+THRESHOLD = 0.5 APT (minimum for gas + fees)
+
+aptos_balance() -> current_apt
+IF current_apt < THRESHOLD:
+  ABORT "Insufficient APT balance"
+\stopverb}
+}
+
+\subtree{
+\title{2. Execute APT -> PYUSD0 Swap}
+\pre{\startverb
+aptos_swap(
+  fromCoin: "APT",
+  toCoin: "PYUSD0",
+  amount: swap_amount,
+  dex: "liquidswap",
+  slippage: 0.5
+)
+-> Returns decision_id for approval
+\stopverb}
+}
+
+\subtree{
+\title{3. Bridge PYUSD0 -> PYUSD}
+\pre{\startverb
+Wormhole bridge transaction:
+- Source: Aptos PYUSD0
+- Destination: Ethereum PYUSD
+- Finality: ~15 minutes
+\stopverb}
+}
+
+\subtree{
+\title{4. Pay OpenRouter via Coinbase Commerce}
+\pre{\startverb
+swapAndTransferUniswapV3Token(
+  recipient: OPENROUTER_MERCHANT_ADDRESS,
+  token: PYUSD_ADDRESS,
+  amount: payment_amount,
+  poolFee: 3000
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{MCP Tools Used}
+\ul{
+\li{\code{\startverb aptos_balance\stopverb} - Check APT/PYUSD0 holdings}
+\li{\code{\startverb aptos_swap\stopverb} - Execute APT -> PYUSD0 via Liquidswap}
+\li{\code{\startverb aptos_transfer\stopverb} - Send tokens to bridge address}
+\li{\code{\startverb aptos_approve\stopverb} - Confirm pending transactions}
+}
+}
+
+\subtree{
+\title{Security}
+\subtree{
+\title{Approval Requirements}
+\ul{
+\li{All transactions use \code{\startverb confirmation_mode\stopverb} approval}
+\li{No automatic execution of value transfers}
+\li{Each step requires explicit \code{\startverb aptos_approve(decision_id, approve: true)\stopverb}}
+}
+}
+
+\subtree{
+\title{Key Management}
+\pre{\startverb
+# Keys accessed ONLY via fnox/age encryption
+fnox get aptos-private-key | age -d -i ~/.age/key.txt
+\stopverb}
+
+\p{NEVER store raw private keys in environment variables, config files, skill definitions, or database tables.}
+}
+}
+
+\subtree{
+\title{Verification Queries}
+\pre{\startverb
+-- Validate pending transactions
+SELECT tx_hash, amount, timestamp
+FROM crypto_bridge_transactions
+WHERE status = 'pending'
+ORDER BY timestamp DESC;
+\stopverb}
+
+\p{Ledger location: \code{\startverb /Users/alice/worldnet/ledger.duckdb\stopverb}}
+}
+}

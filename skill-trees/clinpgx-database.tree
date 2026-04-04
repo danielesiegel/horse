@@ -1,0 +1,682 @@
+\title{Clinpgx Database}
+
+\taxon{skill}
+
+\meta{description}{"Access ClinPGx pharmacogenomics data (successor to PharmGKB). Query gene-drug interactions, CPIC guidelines, allele functions, for precision medicine and genotype-guided dosing decisions."}
+
+\subtree{
+\title{ClinPGx Database}
+\subtree{
+\title{Overview}
+\p{ClinPGx (Clinical Pharmacogenomics Database) is a comprehensive resource for clinical pharmacogenomics information, successor to PharmGKB. It consolidates data from PharmGKB, CPIC, and PharmCAT, providing curated information on how genetic variation affects medication response. Access gene-drug pairs, clinical guidelines, allele functions, and drug labels for precision medicine applications.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when:}
+
+\ul{
+\li{\strong{Gene-drug interactions}: Querying how genetic variants affect drug metabolism, efficacy, or toxicity}
+\li{\strong{CPIC guidelines}: Accessing evidence-based clinical practice guidelines for pharmacogenetics}
+\li{\strong{Allele information}: Retrieving allele function, frequency, and phenotype data}
+\li{\strong{Drug labels}: Exploring FDA and other regulatory pharmacogenomic drug labeling}
+\li{\strong{Pharmacogenomic annotations}: Accessing curated literature on gene-drug-disease relationships}
+\li{\strong{Clinical decision support}: Using PharmDOG tool for phenoconversion and custom genotype interpretation}
+\li{\strong{Precision medicine}: Implementing pharmacogenomic testing in clinical practice}
+\li{\strong{Drug metabolism}: Understanding CYP450 and other pharmacogene functions}
+\li{\strong{Personalized dosing}: Finding genotype-guided dosing recommendations}
+\li{\strong{Adverse drug reactions}: Identifying genetic risk factors for drug toxicity}
+}
+}
+
+\subtree{
+\title{Installation and Setup}
+\subtree{
+\title{Python API Access}
+\p{The ClinPGx REST API provides programmatic access to all database resources. Basic setup:}
+
+\pre{\startverb
+uv pip install requests
+\stopverb}
+}
+
+\subtree{
+\title{API Endpoint}
+\pre{\startverb
+BASE_URL = "https://api.clinpgx.org/v1/"
+\stopverb}
+
+\p{\strong{Rate Limits}:}
+
+\ul{
+\li{2 requests per second maximum}
+\li{Excessive requests will result in HTTP 429 (Too Many Requests) response}
+}
+
+\p{\strong{Authentication}: Not required for basic access}
+
+\p{\strong{Data License}: Creative Commons Attribution-ShareAlike 4.0 International License}
+
+\p{For substantial API use, notify the ClinPGx team at api@clinpgx.org}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Gene Queries}
+\p{\strong{Retrieve gene information} including function, clinical annotations, and pharmacogenomic significance:}
+
+\pre{\startverb
+import requests
+
+# Get gene details
+response = requests.get("https://api.clinpgx.org/v1/gene/CYP2D6")
+gene_data = response.json()
+
+# Search for genes by name
+response = requests.get("https://api.clinpgx.org/v1/gene",
+                       params={"q": "CYP"})
+genes = response.json()
+\stopverb}
+
+\p{\strong{Key pharmacogenes}:}
+
+\ul{
+\li{\strong{CYP450 enzymes}: CYP2D6, CYP2C19, CYP2C9, CYP3A4, CYP3A5}
+\li{\strong{Transporters}: SLCO1B1, ABCB1, ABCG2}
+\li{\strong{Other metabolizers}: TPMT, DPYD, NUDT15, UGT1A1}
+\li{\strong{Receptors}: OPRM1, HTR2A, ADRB1}
+\li{\strong{HLA genes}: HLA-B, HLA-A}
+}
+}
+
+\subtree{
+\title{2. Drug and Chemical Queries}
+\p{\strong{Retrieve drug information} including pharmacogenomic annotations and mechanisms:}
+
+\pre{\startverb
+# Get drug details
+response = requests.get("https://api.clinpgx.org/v1/chemical/PA448515")  # Warfarin
+drug_data = response.json()
+
+# Search drugs by name
+response = requests.get("https://api.clinpgx.org/v1/chemical",
+                       params={"name": "warfarin"})
+drugs = response.json()
+\stopverb}
+
+\p{\strong{Drug categories with pharmacogenomic significance}:}
+
+\ul{
+\li{Anticoagulants (warfarin, clopidogrel)}
+\li{Antidepressants (SSRIs, TCAs)}
+\li{Immunosuppressants (tacrolimus, azathioprine)}
+\li{Oncology drugs (5-fluorouracil, irinotecan, tamoxifen)}
+\li{Cardiovascular drugs (statins, beta-blockers)}
+\li{Pain medications (codeine, tramadol)}
+\li{Antivirals (abacavir)}
+}
+}
+
+\subtree{
+\title{3. Gene-Drug Pair Queries}
+\p{\strong{Access curated gene-drug relationships} with clinical annotations:}
+
+\pre{\startverb
+# Get gene-drug pair information
+response = requests.get("https://api.clinpgx.org/v1/geneDrugPair",
+                       params={"gene": "CYP2D6", "drug": "codeine"})
+pair_data = response.json()
+
+# Get all pairs for a gene
+response = requests.get("https://api.clinpgx.org/v1/geneDrugPair",
+                       params={"gene": "CYP2C19"})
+all_pairs = response.json()
+\stopverb}
+
+\p{\strong{Clinical annotation sources}:}
+
+\ul{
+\li{CPIC (Clinical Pharmacogenetics Implementation Consortium)}
+\li{DPWG (Dutch Pharmacogenetics Working Group)}
+\li{FDA (Food and Drug Administration) labels}
+\li{Peer-reviewed literature summary annotations}
+}
+}
+
+\subtree{
+\title{4. CPIC Guidelines}
+\p{\strong{Access evidence-based clinical practice guidelines}:}
+
+\pre{\startverb
+# Get CPIC guideline
+response = requests.get("https://api.clinpgx.org/v1/guideline/PA166104939")
+guideline = response.json()
+
+# List all CPIC guidelines
+response = requests.get("https://api.clinpgx.org/v1/guideline",
+                       params={"source": "CPIC"})
+guidelines = response.json()
+\stopverb}
+
+\p{\strong{CPIC guideline components}:}
+
+\ul{
+\li{Gene-drug pairs covered}
+\li{Clinical recommendations by phenotype}
+\li{Evidence levels and strength ratings}
+\li{Supporting literature}
+\li{Downloadable PDFs and supplementary materials}
+\li{Implementation considerations}
+}
+
+\p{\strong{Example guidelines}:}
+
+\ul{
+\li{CYP2D6-codeine (avoid in ultra-rapid metabolizers)}
+\li{CYP2C19-clopidogrel (alternative therapy for poor metabolizers)}
+\li{TPMT-azathioprine (dose reduction for intermediate/poor metabolizers)}
+\li{DPYD-fluoropyrimidines (dose adjustment based on activity)}
+\li{HLA-B*57:01-abacavir (avoid if positive)}
+}
+}
+
+\subtree{
+\title{5. Allele and Variant Information}
+\p{\strong{Query allele function and frequency data}:}
+
+\pre{\startverb
+# Get allele information
+response = requests.get("https://api.clinpgx.org/v1/allele/CYP2D6*4")
+allele_data = response.json()
+
+# Get all alleles for a gene
+response = requests.get("https://api.clinpgx.org/v1/allele",
+                       params={"gene": "CYP2D6"})
+alleles = response.json()
+\stopverb}
+
+\p{\strong{Allele information includes}:}
+
+\ul{
+\li{Functional status (normal, decreased, no function, increased, uncertain)}
+\li{Population frequencies across ethnic groups}
+\li{Defining variants (SNPs, indels, CNVs)}
+\li{Phenotype assignment}
+\li{References to PharmVar and other nomenclature systems}
+}
+
+\p{\strong{Phenotype categories}:}
+
+\ul{
+\li{\strong{Ultra-rapid metabolizer} (UM): Increased enzyme activity}
+\li{\strong{Normal metabolizer} (NM): Normal enzyme activity}
+\li{\strong{Intermediate metabolizer} (IM): Reduced enzyme activity}
+\li{\strong{Poor metabolizer} (PM): Little to no enzyme activity}
+}
+}
+
+\subtree{
+\title{6. Variant Annotations}
+\p{\strong{Access clinical annotations for specific genetic variants}:}
+
+\pre{\startverb
+# Get variant information
+response = requests.get("https://api.clinpgx.org/v1/variant/rs4244285")
+variant_data = response.json()
+
+# Search variants by position (if supported)
+response = requests.get("https://api.clinpgx.org/v1/variant",
+                       params={"chromosome": "10", "position": "94781859"})
+variants = response.json()
+\stopverb}
+
+\p{\strong{Variant data includes}:}
+
+\ul{
+\li{rsID and genomic coordinates}
+\li{Gene and functional consequence}
+\li{Allele associations}
+\li{Clinical significance}
+\li{Population frequencies}
+\li{Literature references}
+}
+}
+
+\subtree{
+\title{7. Clinical Annotations}
+\p{\strong{Retrieve curated literature annotations} (formerly PharmGKB clinical annotations):}
+
+\pre{\startverb
+# Get clinical annotations
+response = requests.get("https://api.clinpgx.org/v1/clinicalAnnotation",
+                       params={"gene": "CYP2D6"})
+annotations = response.json()
+
+# Filter by evidence level
+response = requests.get("https://api.clinpgx.org/v1/clinicalAnnotation",
+                       params={"evidenceLevel": "1A"})
+high_evidence = response.json()
+\stopverb}
+
+\p{\strong{Evidence levels} (from highest to lowest):}
+
+\ul{
+\li{\strong{Level 1A}: High-quality evidence, CPIC/FDA/DPWG guidelines}
+\li{\strong{Level 1B}: High-quality evidence, not yet guideline}
+\li{\strong{Level 2A}: Moderate evidence from well-designed studies}
+\li{\strong{Level 2B}: Moderate evidence with some limitations}
+\li{\strong{Level 3}: Limited or conflicting evidence}
+\li{\strong{Level 4}: Case reports or weak evidence}
+}
+}
+
+\subtree{
+\title{8. Drug Labels}
+\p{\strong{Access pharmacogenomic information from drug labels}:}
+
+\pre{\startverb
+# Get drug labels with PGx information
+response = requests.get("https://api.clinpgx.org/v1/drugLabel",
+                       params={"drug": "warfarin"})
+labels = response.json()
+
+# Filter by regulatory source
+response = requests.get("https://api.clinpgx.org/v1/drugLabel",
+                       params={"source": "FDA"})
+fda_labels = response.json()
+\stopverb}
+
+\p{\strong{Label information includes}:}
+
+\ul{
+\li{Testing recommendations}
+\li{Dosing guidance by genotype}
+\li{Warnings and precautions}
+\li{Biomarker information}
+\li{Regulatory source (FDA, EMA, PMDA, etc.)}
+}
+}
+
+\subtree{
+\title{9. Pathways}
+\p{\strong{Explore pharmacokinetic and pharmacodynamic pathways}:}
+
+\pre{\startverb
+# Get pathway information
+response = requests.get("https://api.clinpgx.org/v1/pathway/PA146123006")  # Warfarin pathway
+pathway_data = response.json()
+
+# Search pathways by drug
+response = requests.get("https://api.clinpgx.org/v1/pathway",
+                       params={"drug": "warfarin"})
+pathways = response.json()
+\stopverb}
+
+\p{\strong{Pathway diagrams} show:}
+
+\ul{
+\li{Drug metabolism steps}
+\li{Enzymes and transporters involved}
+\li{Gene variants affecting each step}
+\li{Downstream effects on efficacy/toxicity}
+\li{Interactions with other pathways}
+}
+}
+}
+
+\subtree{
+\title{Query Workflow}
+\subtree{
+\title{Workflow 1: Clinical Decision Support for Drug Prescription}
+\ol{
+\li{\strong{Identify patient genotype} for relevant pharmacogenes:}
+}
+
+\ol{
+\li{\strong{Query gene-drug pairs} for medication of interest:}
+}
+
+\ol{
+\li{\strong{Retrieve CPIC guideline} for dosing recommendations:}
+}
+
+\ol{
+\li{\strong{Check drug label} for regulatory guidance:}
+}
+}
+
+\subtree{
+\title{Workflow 2: Gene Panel Analysis}
+\ol{
+\li{\strong{Get list of pharmacogenes} in clinical panel:}
+}
+
+\ol{
+\li{\strong{For each gene, retrieve all drug interactions}:}
+}
+
+\ol{
+\li{\strong{Filter for CPIC guideline-level evidence}:}
+}
+
+\ol{
+\li{\strong{Generate patient report} with actionable pharmacogenomic findings.}
+}
+}
+
+\subtree{
+\title{Workflow 3: Drug Safety Assessment}
+\ol{
+\li{\strong{Query drug for PGx associations}:}
+}
+
+\ol{
+\li{\strong{Get clinical annotations}:}
+}
+
+\ol{
+\li{\strong{Check for HLA associations} and toxicity risk:}
+}
+
+\ol{
+\li{\strong{Retrieve screening recommendations} from guidelines and labels.}
+}
+}
+
+\subtree{
+\title{Workflow 4: Research Analysis - Population Pharmacogenomics}
+\ol{
+\li{\strong{Get allele frequencies} for population comparison:}
+}
+
+\ol{
+\li{\strong{Extract population-specific frequencies}:}
+}
+
+\ol{
+\li{\strong{Calculate phenotype distributions} by population:}
+}
+
+\ol{
+\li{\strong{Analyze implications} for drug dosing in diverse populations.}
+}
+}
+
+\subtree{
+\title{Workflow 5: Literature Evidence Review}
+\ol{
+\li{\strong{Search for gene-drug pair}:}
+}
+
+\ol{
+\li{\strong{Retrieve all clinical annotations}:}
+}
+
+\ol{
+\li{\strong{Filter by evidence level and publication date}:}
+}
+
+\ol{
+\li{\strong{Extract PMIDs} and retrieve full references:}
+}
+}
+}
+
+\subtree{
+\title{Rate Limiting and Best Practices}
+\subtree{
+\title{Rate Limit Compliance}
+\pre{\startverb
+import time
+
+def rate_limited_request(url, params=None, delay=0.5):
+    """Make API request with rate limiting (2 req/sec max)"""
+    response = requests.get(url, params=params)
+    time.sleep(delay)  # Wait 0.5 seconds between requests
+    return response
+
+# Use in loops
+genes = ["CYP2D6", "CYP2C19", "CYP2C9"]
+for gene in genes:
+    response = rate_limited_request(
+        "https://api.clinpgx.org/v1/gene/" + gene
+    )
+    data = response.json()
+\stopverb}
+}
+
+\subtree{
+\title{Error Handling}
+\pre{\startverb
+def safe_api_call(url, params=None, max_retries=3):
+    """API call with error handling and retries"""
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, params=params, timeout=10)
+
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 429:
+                # Rate limit exceeded
+                wait_time = 2 ** attempt  # Exponential backoff
+                print(f"Rate limit hit. Waiting {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                response.raise_for_status()
+
+        except requests.exceptions.RequestException as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(1)
+\stopverb}
+}
+
+\subtree{
+\title{Caching Results}
+\pre{\startverb
+import json
+from pathlib import Path
+
+def cached_query(cache_file, api_func, *args, **kwargs):
+    """Cache API results to avoid repeated queries"""
+    cache_path = Path(cache_file)
+
+    if cache_path.exists():
+        with open(cache_path) as f:
+            return json.load(f)
+
+    result = api_func(*args, **kwargs)
+
+    with open(cache_path, 'w') as f:
+        json.dump(result, f, indent=2)
+
+    return result
+
+# Usage
+gene_data = cached_query(
+    'cyp2d6_cache.json',
+    rate_limited_request,
+    "https://api.clinpgx.org/v1/gene/CYP2D6"
+)
+\stopverb}
+}
+}
+
+\subtree{
+\title{PharmDOG Tool}
+\p{PharmDOG (formerly DDRx) is ClinPGx's clinical decision support tool for interpreting pharmacogenomic test results:}
+
+\p{\strong{Key features}:}
+
+\ul{
+\li{\strong{Phenoconversion calculator}: Adjusts phenotype predictions for drug-drug interactions affecting CYP2D6}
+\li{\strong{Custom genotypes}: Input patient genotypes to get phenotype predictions}
+\li{\strong{QR code sharing}: Generate shareable patient reports}
+\li{\strong{Flexible guidance sources}: Select which guidelines to apply (CPIC, DPWG, FDA)}
+\li{\strong{Multi-drug analysis}: Assess multiple medications simultaneously}
+}
+
+\p{\strong{Access}: Available at https://www.clinpgx.org/pharmacogenomic-decision-support}
+
+\p{\strong{Use cases}:}
+
+\ul{
+\li{Clinical interpretation of PGx panel results}
+\li{Medication review for patients with known genotypes}
+\li{Patient education materials}
+\li{Point-of-care decision support}
+}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{scripts/query_clinpgx.py}
+\p{Python script with ready-to-use functions for common ClinPGx queries:}
+
+\ul{
+\li{\code{\startverb get_gene_info(gene_symbol)\stopverb} - Retrieve gene details}
+\li{\code{\startverb get_drug_info(drug_name)\stopverb} - Get drug information}
+\li{\code{\startverb get_gene_drug_pairs(gene, drug)\stopverb} - Query gene-drug interactions}
+\li{\code{\startverb get_cpic_guidelines(gene, drug)\stopverb} - Retrieve CPIC guidelines}
+\li{\code{\startverb get_alleles(gene)\stopverb} - Get all alleles for a gene}
+\li{\code{\startverb get_clinical_annotations(gene, drug, evidence_level)\stopverb} - Query literature annotations}
+\li{\code{\startverb get_drug_labels(drug)\stopverb} - Retrieve pharmacogenomic drug labels}
+\li{\code{\startverb search_variants(rsid)\stopverb} - Search by variant rsID}
+\li{\code{\startverb export_to_dataframe(data)\stopverb} - Convert results to pandas DataFrame}
+}
+
+\p{Consult this script for implementation examples with proper rate limiting and error handling.}
+}
+
+\subtree{
+\title{references/api_reference.md}
+\p{Comprehensive API documentation including:}
+
+\ul{
+\li{Complete endpoint listing with parameters}
+\li{Request/response format specifications}
+\li{Example queries for each endpoint}
+\li{Filter operators and search patterns}
+\li{Data schema definitions}
+\li{Rate limiting details}
+\li{Authentication requirements (if any)}
+\li{Troubleshooting common errors}
+}
+
+\p{Refer to this document when detailed API information is needed or when constructing complex queries.}
+}
+}
+
+\subtree{
+\title{Important Notes}
+\subtree{
+\title{Data Sources and Integration}
+\p{ClinPGx consolidates multiple authoritative sources:}
+
+\ul{
+\li{\strong{PharmGKB}: Curated pharmacogenomics knowledge base (now part of ClinPGx)}
+\li{\strong{CPIC}: Evidence-based clinical implementation guidelines}
+\li{\strong{PharmCAT}: Allele calling and phenotype interpretation tool}
+\li{\strong{DPWG}: Dutch pharmacogenetics guidelines}
+\li{\strong{FDA/EMA labels}: Regulatory pharmacogenomic information}
+}
+
+\p{As of July 2025, all PharmGKB URLs redirect to corresponding ClinPGx pages.}
+}
+
+\subtree{
+\title{Clinical Implementation Considerations}
+\ul{
+\li{\strong{Evidence levels}: Always check evidence strength before clinical application}
+\li{\strong{Population differences}: Allele frequencies vary significantly across populations}
+\li{\strong{Phenoconversion}: Consider drug-drug interactions that affect enzyme activity}
+\li{\strong{Multi-gene effects}: Some drugs affected by multiple pharmacogenes}
+\li{\strong{Non-genetic factors}: Age, organ function, drug interactions also affect response}
+\li{\strong{Testing limitations}: Not all clinically relevant alleles detected by all assays}
+}
+}
+
+\subtree{
+\title{Data Updates}
+\ul{
+\li{ClinPGx continuously updates with new evidence and guidelines}
+\li{Check publication dates for clinical annotations}
+\li{Monitor ClinPGx Blog (https://blog.clinpgx.org/) for announcements}
+\li{CPIC guidelines updated as new evidence emerges}
+\li{PharmVar provides nomenclature updates for allele definitions}
+}
+}
+
+\subtree{
+\title{API Stability}
+\ul{
+\li{API endpoints are relatively stable but may change during development}
+\li{Parameters and response formats subject to modification}
+\li{Monitor API changelog and ClinPGx blog for updates}
+\li{Consider version pinning for production applications}
+\li{Test API changes in development before production deployment}
+}
+}
+}
+
+\subtree{
+\title{Common Use Cases}
+\subtree{
+\title{Pre-emptive Pharmacogenomic Testing}
+\p{Query all clinically actionable gene-drug pairs to guide panel selection:}
+
+\pre{\startverb
+# Get all CPIC guideline pairs
+response = requests.get("https://api.clinpgx.org/v1/geneDrugPair",
+                       params={"cpicLevel": "A"})  # Level A recommendations
+actionable_pairs = response.json()
+\stopverb}
+}
+
+\subtree{
+\title{Medication Therapy Management}
+\p{Review patient medications against known genotypes:}
+
+\pre{\startverb
+patient_genes = {"CYP2C19": "*1/*2", "CYP2D6": "*1/*1", "SLCO1B1": "*1/*5"}
+medications = ["clopidogrel", "simvastatin", "escitalopram"]
+
+for med in medications:
+    for gene in patient_genes:
+        response = requests.get("https://api.clinpgx.org/v1/geneDrugPair",
+                               params={"gene": gene, "drug": med})
+        # Check for interactions and dosing guidance
+\stopverb}
+}
+
+\subtree{
+\title{Clinical Trial Eligibility}
+\p{Screen for pharmacogenomic contraindications:}
+
+\pre{\startverb
+# Check for HLA-B*57:01 before abacavir trial
+response = requests.get("https://api.clinpgx.org/v1/geneDrugPair",
+                       params={"gene": "HLA-B", "drug": "abacavir"})
+pair_info = response.json()
+# CPIC: Do not use if HLA-B*57:01 positive
+\stopverb}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{ClinPGx website}: https://www.clinpgx.org/}
+\li{\strong{ClinPGx Blog}: https://blog.clinpgx.org/}
+\li{\strong{API documentation}: https://api.clinpgx.org/}
+\li{\strong{CPIC website}: https://cpicpgx.org/}
+\li{\strong{PharmCAT}: https://pharmcat.clinpgx.org/}
+\li{\strong{ClinGen}: https://clinicalgenome.org/}
+\li{\strong{Contact}: api@clinpgx.org (for substantial API use)}
+}
+}
+}

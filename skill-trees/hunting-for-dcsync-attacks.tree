@@ -1,0 +1,103 @@
+\title{Hunting For Dcsync Attacks}
+
+\taxon{skill}
+
+\tag{threat-hunting}
+
+\tag{dcsync}
+
+\tag{active-directory}
+
+\tag{credential-access}
+
+\tag{t1003.006}
+
+\tag{mimikatz}
+
+\tag{windows}
+
+\tag{dfir}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Detect DCSync attacks by analyzing Windows Event ID 4662 for unauthorized DS-Replication-Get-Changes requests from non-domain-controller accounts.}
+
+\subtree{
+\title{Hunting for DCSync Attacks}
+\subtree{
+\title{When to Use}
+\ul{
+\li{When hunting for DCSync credential theft (MITRE ATT&CK T1003.006)}
+\li{After detecting Mimikatz or similar tools in the environment}
+\li{During incident response involving Active Directory compromise}
+\li{When monitoring for unauthorized domain replication requests}
+\li{During purple team exercises testing AD attack detection}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Windows Security Event Log forwarding enabled (Event ID 4662)}
+\li{Audit Directory Service Access enabled via Group Policy}
+\li{Domain Computers SACL configured on Domain Object for machine account detection}
+\li{SIEM with Windows event data ingested (Splunk, Elastic, Sentinel)}
+\li{Knowledge of legitimate domain controller accounts and replication partners}
+}
+}
+
+\subtree{
+\title{Workflow}
+\ol{
+\li{\strong{Enable Auditing}: Ensure Audit Directory Service Access is enabled on domain controllers.}
+\li{\strong{Collect Events}: Gather Windows Event ID 4662 with AccessMask 0x100 (Control Access).}
+\li{\strong{Filter Replication GUIDs}: Search for DS-Replication-Get-Changes and DS-Replication-Get-Changes-All.}
+\li{\strong{Identify Non-DC Sources}: Flag events where SubjectUserName is not a domain controller machine account.}
+\li{\strong{Correlate with Network}: Cross-reference source IPs against known DC addresses.}
+\li{\strong{Validate Findings}: Exclude legitimate replication tools (Azure AD Connect, SCCM).}
+\li{\strong{Respond}: Disable compromised accounts, reset krbtgt, investigate lateral movement.}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Concept | Description |
+|---------|-------------|
+| DCSync | Technique abusing AD replication protocol to extract password hashes |
+| Event ID 4662 | Directory Service Access audit event |
+| DS-Replication-Get-Changes | GUID 1131f6aa-9c07-11d1-f79f-00c04fc2dcd2 |
+| DS-Replication-Get-Changes-All | GUID 1131f6ad-9c07-11d1-f79f-00c04fc2dcd2 |
+| AccessMask 0x100 | Control Access right indicating extended rights verification |
+| T1003.006 | OS Credential Dumping: DCSync |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\pre{\startverb
+| Tool | Purpose |
+|------|---------|
+| Windows Event Viewer | Direct event log analysis |
+| Splunk | SIEM correlation of Event 4662 |
+| Elastic Security | Detection rules for DCSync patterns |
+| Mimikatz lsadump::dcsync | Attack tool used to perform DCSync |
+| Impacket secretsdump.py | Python-based DCSync implementation |
+| BloodHound | Identify accounts with replication rights |
+\stopverb}
+}
+
+\subtree{
+\title{Output Format}
+\pre{\startverb
+Hunt ID: TH-DCSYNC-[DATE]-[SEQ]
+Technique: T1003.006
+Domain Controller: [DC hostname]
+Subject Account: [Account performing replication]
+Source IP: [Non-DC IP address]
+GUID Accessed: [Replication GUID]
+Risk Level: [Critical/High/Medium/Low]
+Recommended Action: [Disable account, reset krbtgt, investigate]
+\stopverb}
+}
+}

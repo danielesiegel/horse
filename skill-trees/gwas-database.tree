@@ -1,0 +1,753 @@
+\title{Gwas Database}
+
+\taxon{skill}
+
+\meta{description}{"Query NHGRI-EBI GWAS Catalog for SNP-trait associations. Search variants by rs ID, disease/trait, gene, retrieve p-values and summary statistics, for genetic epidemiology and polygenic risk scores."}
+
+\subtree{
+\title{GWAS Catalog Database}
+\subtree{
+\title{Overview}
+\p{The GWAS Catalog is a comprehensive repository of published genome-wide association studies maintained by the National Human Genome Research Institute (NHGRI) and the European Bioinformatics Institute (EBI). The catalog contains curated SNP-trait associations from thousands of GWAS publications, including genetic variants, associated traits and diseases, p-values, effect sizes, and full summary statistics for many studies.}
+}
+
+\subtree{
+\title{When to Use This Skill}
+\p{This skill should be used when queries involve:}
+
+\ul{
+\li{\strong{Genetic variant associations}: Finding SNPs associated with diseases or traits}
+\li{\strong{SNP lookups}: Retrieving information about specific genetic variants (rs IDs)}
+\li{\strong{Trait/disease searches}: Discovering genetic associations for phenotypes}
+\li{\strong{Gene associations}: Finding variants in or near specific genes}
+\li{\strong{GWAS summary statistics}: Accessing complete genome-wide association data}
+\li{\strong{Study metadata}: Retrieving publication and cohort information}
+\li{\strong{Population genetics}: Exploring ancestry-specific associations}
+\li{\strong{Polygenic risk scores}: Identifying variants for risk prediction models}
+\li{\strong{Functional genomics}: Understanding variant effects and genomic context}
+\li{\strong{Systematic reviews}: Comprehensive literature synthesis of genetic associations}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Understanding GWAS Catalog Data Structure}
+\p{The GWAS Catalog is organized around four core entities:}
+
+\ul{
+\li{\strong{Studies}: GWAS publications with metadata (PMID, author, cohort details)}
+\li{\strong{Associations}: SNP-trait associations with statistical evidence (p ≤ 5×10⁻⁸)}
+\li{\strong{Variants}: Genetic markers (SNPs) with genomic coordinates and alleles}
+\li{\strong{Traits}: Phenotypes and diseases (mapped to EFO ontology terms)}
+}
+
+\p{\strong{Key Identifiers:}}
+
+\ul{
+\li{Study accessions: \code{\startverb GCST\stopverb} IDs (e.g., GCST001234)}
+\li{Variant IDs: \code{\startverb rs\stopverb} numbers (e.g., rs7903146) or \code{\startverb variant_id\stopverb} format}
+\li{Trait IDs: EFO terms (e.g., EFO_0001360 for type 2 diabetes)}
+\li{Gene symbols: HGNC approved names (e.g., TCF7L2)}
+}
+}
+
+\subtree{
+\title{2. Web Interface Searches}
+\p{The web interface at https://www.ebi.ac.uk/gwas/ supports multiple search modes:}
+
+\p{\strong{By Variant (rs ID):}}
+
+\pre{\startverb
+rs7903146
+\stopverb}
+
+\p{Returns all trait associations for this SNP.}
+
+\p{\strong{By Disease/Trait:}}
+
+\pre{\startverb
+type 2 diabetes
+Parkinson disease
+body mass index
+\stopverb}
+
+\p{Returns all associated genetic variants.}
+
+\p{\strong{By Gene:}}
+
+\pre{\startverb
+APOE
+TCF7L2
+\stopverb}
+
+\p{Returns variants in or near the gene region.}
+
+\p{\strong{By Chromosomal Region:}}
+
+\pre{\startverb
+10:114000000-115000000
+\stopverb}
+
+\p{Returns variants in the specified genomic interval.}
+
+\p{\strong{By Publication:}}
+
+\pre{\startverb
+PMID:20581827
+Author: McCarthy MI
+GCST001234
+\stopverb}
+
+\p{Returns study details and all reported associations.}
+}
+
+\subtree{
+\title{3. REST API Access}
+\p{The GWAS Catalog provides two REST APIs for programmatic access:}
+
+\p{\strong{Base URLs:}}
+
+\ul{
+\li{GWAS Catalog API: \code{\startverb https://www.ebi.ac.uk/gwas/rest/api\stopverb}}
+\li{Summary Statistics API: \code{\startverb https://www.ebi.ac.uk/gwas/summary-statistics/api\stopverb}}
+}
+
+\p{\strong{API Documentation:}}
+
+\ul{
+\li{Main API docs: https://www.ebi.ac.uk/gwas/rest/docs/api}
+\li{Summary stats docs: https://www.ebi.ac.uk/gwas/summary-statistics/docs/}
+}
+
+\p{\strong{Core Endpoints:}}
+
+\ol{
+\li{\strong{Studies endpoint} - \code{\startverb /studies/{accessionID}\stopverb}}
+}
+
+\subtree{
+\title{Get a specific study}
+\p{url = "https://www.ebi.ac.uk/gwas/rest/api/studies/GCST001795" response = requests.get(url, headers={"Content-Type": "application/json"}) study = response.json()}
+
+\pre{\startverb
+
+2. **Associations endpoint** - `/associations`
+\stopverb}
+}
+
+\subtree{
+\title{Find associations for a variant}
+\p{variant = "rs7903146" url = f"https://www.ebi.ac.uk/gwas/rest/api/singleNucleotidePolymorphisms/{variant}/associations" params = {"projection": "associationBySnp"} response = requests.get(url, params=params, headers={"Content-Type": "application/json"}) associations = response.json()}
+
+\pre{\startverb
+
+3. **Variants endpoint** - `/singleNucleotidePolymorphisms/{rsID}`
+\stopverb}
+}
+
+\subtree{
+\title{Get variant details}
+\p{url = "https://www.ebi.ac.uk/gwas/rest/api/singleNucleotidePolymorphisms/rs7903146" response = requests.get(url, headers={"Content-Type": "application/json"}) variant_info = response.json()}
+
+\pre{\startverb
+
+4. **Traits endpoint** - `/efoTraits/{efoID}`
+\stopverb}
+}
+
+\subtree{
+\title{Get trait information}
+\p{url = "https://www.ebi.ac.uk/gwas/rest/api/efoTraits/EFO_0001360" response = requests.get(url, headers={"Content-Type": "application/json"}) trait_info = response.json()}
+
+\pre{\startverb
+
+\stopverb}
+}
+}
+
+\subtree{
+\title{4. Query Examples and Patterns}
+\p{\strong{Example 1: Find all associations for a disease}}
+
+\pre{\startverb
+import requests
+
+trait = "EFO_0001360"  # Type 2 diabetes
+base_url = "https://www.ebi.ac.uk/gwas/rest/api"
+
+# Query associations for this trait
+url = f"{base_url}/efoTraits/{trait}/associations"
+response = requests.get(url, headers={"Content-Type": "application/json"})
+associations = response.json()
+
+# Process results
+for assoc in associations.get('_embedded', {}).get('associations', []):
+    variant = assoc.get('rsId')
+    pvalue = assoc.get('pvalue')
+    risk_allele = assoc.get('strongestAllele')
+    print(f"{variant}: p={pvalue}, risk allele={risk_allele}")
+\stopverb}
+
+\p{\strong{Example 2: Get variant information and all trait associations}}
+
+\pre{\startverb
+import requests
+
+variant = "rs7903146"
+base_url = "https://www.ebi.ac.uk/gwas/rest/api"
+
+# Get variant details
+url = f"{base_url}/singleNucleotidePolymorphisms/{variant}"
+response = requests.get(url, headers={"Content-Type": "application/json"})
+variant_data = response.json()
+
+# Get all associations for this variant
+url = f"{base_url}/singleNucleotidePolymorphisms/{variant}/associations"
+params = {"projection": "associationBySnp"}
+response = requests.get(url, params=params, headers={"Content-Type": "application/json"})
+associations = response.json()
+
+# Extract trait names and p-values
+for assoc in associations.get('_embedded', {}).get('associations', []):
+    trait = assoc.get('efoTrait')
+    pvalue = assoc.get('pvalue')
+    print(f"Trait: {trait}, p-value: {pvalue}")
+\stopverb}
+
+\p{\strong{Example 3: Access summary statistics}}
+
+\pre{\startverb
+import requests
+
+# Query summary statistics API
+base_url = "https://www.ebi.ac.uk/gwas/summary-statistics/api"
+
+# Find associations by trait with p-value threshold
+trait = "EFO_0001360"  # Type 2 diabetes
+p_upper = "0.000000001"  # p < 1e-9
+url = f"{base_url}/traits/{trait}/associations"
+params = {
+    "p_upper": p_upper,
+    "size": 100  # Number of results
+}
+response = requests.get(url, params=params)
+results = response.json()
+
+# Process genome-wide significant hits
+for hit in results.get('_embedded', {}).get('associations', []):
+    variant_id = hit.get('variant_id')
+    chromosome = hit.get('chromosome')
+    position = hit.get('base_pair_location')
+    pvalue = hit.get('p_value')
+    print(f"{chromosome}:{position} ({variant_id}): p={pvalue}")
+\stopverb}
+
+\p{\strong{Example 4: Query by chromosomal region}}
+
+\pre{\startverb
+import requests
+
+# Find variants in a specific genomic region
+chromosome = "10"
+start_pos = 114000000
+end_pos = 115000000
+
+base_url = "https://www.ebi.ac.uk/gwas/rest/api"
+url = f"{base_url}/singleNucleotidePolymorphisms/search/findByChromBpLocationRange"
+params = {
+    "chrom": chromosome,
+    "bpStart": start_pos,
+    "bpEnd": end_pos
+}
+response = requests.get(url, params=params, headers={"Content-Type": "application/json"})
+variants_in_region = response.json()
+\stopverb}
+}
+
+\subtree{
+\title{5. Working with Summary Statistics}
+\p{The GWAS Catalog hosts full summary statistics for many studies, providing access to all tested variants (not just genome-wide significant hits).}
+
+\p{\strong{Access Methods:}}
+
+\ol{
+\li{\strong{FTP download}: http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/}
+\li{\strong{REST API}: Query-based access to summary statistics}
+\li{\strong{Web interface}: Browse and download via the website}
+}
+
+\p{\strong{Summary Statistics API Features:}}
+
+\ul{
+\li{Filter by chromosome, position, p-value}
+\li{Query specific variants across studies}
+\li{Retrieve effect sizes and allele frequencies}
+\li{Access harmonized and standardized data}
+}
+
+\p{\strong{Example: Download summary statistics for a study}}
+
+\pre{\startverb
+import requests
+import gzip
+
+# Get available summary statistics
+base_url = "https://www.ebi.ac.uk/gwas/summary-statistics/api"
+url = f"{base_url}/studies/GCST001234"
+response = requests.get(url)
+study_info = response.json()
+
+# Download link is provided in the response
+# Alternatively, use FTP:
+# ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCSTXXXXXX/
+\stopverb}
+}
+
+\subtree{
+\title{6. Data Integration and Cross-referencing}
+\p{The GWAS Catalog provides links to external resources:}
+
+\p{\strong{Genomic Databases:}}
+
+\ul{
+\li{Ensembl: Gene annotations and variant consequences}
+\li{dbSNP: Variant identifiers and population frequencies}
+\li{gnomAD: Population allele frequencies}
+}
+
+\p{\strong{Functional Resources:}}
+
+\ul{
+\li{Open Targets: Target-disease associations}
+\li{PGS Catalog: Polygenic risk scores}
+\li{UCSC Genome Browser: Genomic context}
+}
+
+\p{\strong{Phenotype Resources:}}
+
+\ul{
+\li{EFO (Experimental Factor Ontology): Standardized trait terms}
+\li{OMIM: Disease gene relationships}
+\li{Disease Ontology: Disease hierarchies}
+}
+
+\p{\strong{Following Links in API Responses:}}
+
+\pre{\startverb
+import requests
+
+# API responses include _links for related resources
+response = requests.get("https://www.ebi.ac.uk/gwas/rest/api/studies/GCST001234")
+study = response.json()
+
+# Follow link to associations
+associations_url = study['_links']['associations']['href']
+associations_response = requests.get(associations_url)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Query Workflows}
+\subtree{
+\title{Workflow 1: Exploring Genetic Associations for a Disease}
+\ol{
+\li{\strong{Identify the trait} using EFO terms or free text:}
+\li{Search web interface for disease name}
+\li{Note the EFO ID (e.g., EFO_0001360 for type 2 diabetes)}
+}
+
+\ol{
+\li{\strong{Query associations via API:}}
+}
+
+\ol{
+\li{\strong{Filter by significance and population:}}
+\li{Check p-values (genome-wide significant: p ≤ 5×10⁻⁸)}
+\li{Review ancestry information in study metadata}
+\li{Filter by sample size or discovery/replication status}
+}
+
+\ol{
+\li{\strong{Extract variant details:}}
+\li{rs IDs for each association}
+\li{Effect alleles and directions}
+\li{Effect sizes (odds ratios, beta coefficients)}
+\li{Population allele frequencies}
+}
+
+\ol{
+\li{\strong{Cross-reference with other databases:}}
+\li{Look up variant consequences in Ensembl}
+\li{Check population frequencies in gnomAD}
+\li{Explore gene function and pathways}
+}
+}
+
+\subtree{
+\title{Workflow 2: Investigating a Specific Genetic Variant}
+\ol{
+\li{\strong{Query the variant:}}
+}
+
+\ol{
+\li{\strong{Retrieve all trait associations:}}
+}
+
+\ol{
+\li{\strong{Analyze pleiotropy:}}
+\li{Identify all traits associated with this variant}
+\li{Review effect directions across traits}
+\li{Look for shared biological pathways}
+}
+
+\ol{
+\li{\strong{Check genomic context:}}
+\li{Determine nearby genes}
+\li{Identify if variant is in coding/regulatory regions}
+\li{Review linkage disequilibrium with other variants}
+}
+}
+
+\subtree{
+\title{Workflow 3: Gene-Centric Association Analysis}
+\ol{
+\li{\strong{Search by gene symbol} in web interface or:}
+}
+
+\ol{
+\li{\strong{Retrieve variants in gene region:}}
+\li{Get chromosomal coordinates for gene}
+\li{Query variants in region}
+\li{Include promoter and regulatory regions (extend boundaries)}
+}
+
+\ol{
+\li{\strong{Analyze association patterns:}}
+\li{Identify traits associated with variants in this gene}
+\li{Look for consistent associations across studies}
+\li{Review effect sizes and directions}
+}
+
+\ol{
+\li{\strong{Functional interpretation:}}
+\li{Determine variant consequences (missense, regulatory, etc.)}
+\li{Check expression QTL (eQTL) data}
+\li{Review pathway and network context}
+}
+}
+
+\subtree{
+\title{Workflow 4: Systematic Review of Genetic Evidence}
+\ol{
+\li{\strong{Define research question:}}
+\li{Specific trait or disease of interest}
+\li{Population considerations}
+\li{Study design requirements}
+}
+
+\ol{
+\li{\strong{Comprehensive variant extraction:}}
+\li{Query all associations for trait}
+\li{Set significance threshold}
+\li{Note discovery and replication studies}
+}
+
+\ol{
+\li{\strong{Quality assessment:}}
+\li{Review study sample sizes}
+\li{Check for population diversity}
+\li{Assess heterogeneity across studies}
+\li{Identify potential biases}
+}
+
+\ol{
+\li{\strong{Data synthesis:}}
+\li{Aggregate associations across studies}
+\li{Perform meta-analysis if applicable}
+\li{Create summary tables}
+\li{Generate Manhattan or forest plots}
+}
+
+\ol{
+\li{\strong{Export and documentation:}}
+\li{Download full association data}
+\li{Export summary statistics if needed}
+\li{Document search strategy and date}
+\li{Create reproducible analysis scripts}
+}
+}
+
+\subtree{
+\title{Workflow 5: Accessing and Analyzing Summary Statistics}
+\ol{
+\li{\strong{Identify studies with summary statistics:}}
+\li{Browse summary statistics portal}
+\li{Check FTP directory listings}
+\li{Query API for available studies}
+}
+
+\ol{
+\li{\strong{Download summary statistics:}}
+}
+
+\ol{
+\li{\strong{Query via API for specific variants:}}
+}
+
+\ol{
+\li{\strong{Process and analyze:}}
+\li{Filter by p-value thresholds}
+\li{Extract effect sizes and confidence intervals}
+\li{Perform downstream analyses (fine-mapping, colocalization, etc.)}
+}
+}
+}
+
+\subtree{
+\title{Response Formats and Data Fields}
+\p{\strong{Key Fields in Association Records:}}
+
+\ul{
+\li{\code{\startverb rsId\stopverb}: Variant identifier (rs number)}
+\li{\code{\startverb strongestAllele\stopverb}: Risk allele for the association}
+\li{\code{\startverb pvalue\stopverb}: Association p-value}
+\li{\code{\startverb pvalueText\stopverb}: P-value as text (may include inequality)}
+\li{\code{\startverb orPerCopyNum\stopverb}: Odds ratio or beta coefficient}
+\li{\code{\startverb betaNum\stopverb}: Effect size (for quantitative traits)}
+\li{\code{\startverb betaUnit\stopverb}: Unit of measurement for beta}
+\li{\code{\startverb range\stopverb}: Confidence interval}
+\li{\code{\startverb efoTrait\stopverb}: Associated trait name}
+\li{\code{\startverb mappedLabel\stopverb}: EFO-mapped trait term}
+}
+
+\p{\strong{Study Metadata Fields:}}
+
+\ul{
+\li{\code{\startverb accessionId\stopverb}: GCST study identifier}
+\li{\code{\startverb pubmedId\stopverb}: PubMed ID}
+\li{\code{\startverb author\stopverb}: First author}
+\li{\code{\startverb publicationDate\stopverb}: Publication date}
+\li{\code{\startverb ancestryInitial\stopverb}: Discovery population ancestry}
+\li{\code{\startverb ancestryReplication\stopverb}: Replication population ancestry}
+\li{\code{\startverb sampleSize\stopverb}: Total sample size}
+}
+
+\p{\strong{Pagination:} Results are paginated (default 20 items per page). Navigate using:}
+
+\ul{
+\li{\code{\startverb size\stopverb} parameter: Number of results per page}
+\li{\code{\startverb page\stopverb} parameter: Page number (0-indexed)}
+\li{\code{\startverb _links\stopverb} in response: URLs for next/previous pages}
+}
+}
+
+\subtree{
+\title{Best Practices}
+\subtree{
+\title{Query Strategy}
+\ul{
+\li{Start with web interface to identify relevant EFO terms and study accessions}
+\li{Use API for bulk data extraction and automated analyses}
+\li{Implement pagination handling for large result sets}
+\li{Cache API responses to minimize redundant requests}
+}
+}
+
+\subtree{
+\title{Data Interpretation}
+\ul{
+\li{Always check p-value thresholds (genome-wide: 5×10⁻⁸)}
+\li{Review ancestry information for population applicability}
+\li{Consider sample size when assessing evidence strength}
+\li{Check for replication across independent studies}
+\li{Be aware of winner's curse in effect size estimates}
+}
+}
+
+\subtree{
+\title{Rate Limiting and Ethics}
+\ul{
+\li{Respect API usage guidelines (no excessive requests)}
+\li{Use summary statistics downloads for genome-wide analyses}
+\li{Implement appropriate delays between API calls}
+\li{Cache results locally when performing iterative analyses}
+\li{Cite the GWAS Catalog in publications}
+}
+}
+
+\subtree{
+\title{Data Quality Considerations}
+\ul{
+\li{GWAS Catalog curates published associations (may contain inconsistencies)}
+\li{Effect sizes reported as published (may need harmonization)}
+\li{Some studies report conditional or joint associations}
+\li{Check for study overlap when combining results}
+\li{Be aware of ascertainment and selection biases}
+}
+}
+}
+
+\subtree{
+\title{Python Integration Example}
+\p{Complete workflow for querying and analyzing GWAS data:}
+
+\pre{\startverb
+import requests
+import pandas as pd
+from time import sleep
+
+def query_gwas_catalog(trait_id, p_threshold=5e-8):
+    """
+    Query GWAS Catalog for trait associations
+
+    Args:
+        trait_id: EFO trait identifier (e.g., 'EFO_0001360')
+        p_threshold: P-value threshold for filtering
+
+    Returns:
+        pandas DataFrame with association results
+    """
+    base_url = "https://www.ebi.ac.uk/gwas/rest/api"
+    url = f"{base_url}/efoTraits/{trait_id}/associations"
+
+    headers = {"Content-Type": "application/json"}
+    results = []
+    page = 0
+
+    while True:
+        params = {"page": page, "size": 100}
+        response = requests.get(url, params=params, headers=headers)
+
+        if response.status_code != 200:
+            break
+
+        data = response.json()
+        associations = data.get('_embedded', {}).get('associations', [])
+
+        if not associations:
+            break
+
+        for assoc in associations:
+            pvalue = assoc.get('pvalue')
+            if pvalue and float(pvalue) <= p_threshold:
+                results.append({
+                    'variant': assoc.get('rsId'),
+                    'pvalue': pvalue,
+                    'risk_allele': assoc.get('strongestAllele'),
+                    'or_beta': assoc.get('orPerCopyNum') or assoc.get('betaNum'),
+                    'trait': assoc.get('efoTrait'),
+                    'pubmed_id': assoc.get('pubmedId')
+                })
+
+        page += 1
+        sleep(0.1)  # Rate limiting
+
+    return pd.DataFrame(results)
+
+# Example usage
+df = query_gwas_catalog('EFO_0001360')  # Type 2 diabetes
+print(df.head())
+print(f"\nTotal associations: {len(df)}")
+print(f"Unique variants: {df['variant'].nunique()}")
+\stopverb}
+}
+
+\subtree{
+\title{Resources}
+\subtree{
+\title{references/api_reference.md}
+\p{Comprehensive API documentation including:}
+
+\ul{
+\li{Detailed endpoint specifications for both APIs}
+\li{Complete list of query parameters and filters}
+\li{Response format specifications and field descriptions}
+\li{Advanced query examples and patterns}
+\li{Error handling and troubleshooting}
+\li{Integration with external databases}
+}
+
+\p{Consult this reference when:}
+
+\ul{
+\li{Constructing complex API queries}
+\li{Understanding response structures}
+\li{Implementing pagination or batch operations}
+\li{Troubleshooting API errors}
+\li{Exploring advanced filtering options}
+}
+}
+
+\subtree{
+\title{Training Materials}
+\p{The GWAS Catalog team provides workshop materials:}
+
+\ul{
+\li{GitHub repository: https://github.com/EBISPOT/GWAS_Catalog-workshop}
+\li{Jupyter notebooks with example queries}
+\li{Google Colab integration for cloud execution}
+}
+}
+}
+
+\subtree{
+\title{Important Notes}
+\subtree{
+\title{Data Updates}
+\ul{
+\li{The GWAS Catalog is updated regularly with new publications}
+\li{Re-run queries periodically for comprehensive coverage}
+\li{Summary statistics are added as studies release data}
+\li{EFO mappings may be updated over time}
+}
+}
+
+\subtree{
+\title{Citation Requirements}
+\p{When using GWAS Catalog data, cite:}
+
+\ul{
+\li{Sollis E, et al. (2023) The NHGRI-EBI GWAS Catalog: knowledgebase and deposition resource. Nucleic Acids Research. PMID: 37953337}
+\li{Include access date and version when available}
+\li{Cite original studies when discussing specific findings}
+}
+}
+
+\subtree{
+\title{Limitations}
+\ul{
+\li{Not all GWAS publications are included (curation criteria apply)}
+\li{Full summary statistics available for subset of studies}
+\li{Effect sizes may require harmonization across studies}
+\li{Population diversity is growing but historically limited}
+\li{Some associations represent conditional or joint effects}
+}
+}
+
+\subtree{
+\title{Data Access}
+\ul{
+\li{Web interface: Free, no registration required}
+\li{REST APIs: Free, no API key needed}
+\li{FTP downloads: Open access}
+\li{Rate limiting applies to API (be respectful)}
+}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{\strong{GWAS Catalog website}: https://www.ebi.ac.uk/gwas/}
+\li{\strong{Documentation}: https://www.ebi.ac.uk/gwas/docs}
+\li{\strong{API documentation}: https://www.ebi.ac.uk/gwas/rest/docs/api}
+\li{\strong{Summary Statistics API}: https://www.ebi.ac.uk/gwas/summary-statistics/docs/}
+\li{\strong{FTP site}: http://ftp.ebi.ac.uk/pub/databases/gwas/}
+\li{\strong{Training materials}: https://github.com/EBISPOT/GWAS_Catalog-workshop}
+\li{\strong{PGS Catalog} (polygenic scores): https://www.pgscatalog.org/}
+\li{\strong{Help and support}: gwas-info@ebi.ac.uk}
+}
+}
+}

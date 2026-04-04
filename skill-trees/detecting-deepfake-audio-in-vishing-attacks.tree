@@ -1,0 +1,257 @@
+\title{Detecting Deepfake Audio In Vishing Attacks}
+
+\taxon{skill}
+
+\tag{deepfake-detection}
+
+\tag{vishing}
+
+\tag{audio-forensics}
+
+\tag{MFCC}
+
+\tag{spectral-analysis}
+
+\tag{voice-cloning}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Detects AI-generated deepfake audio used in voice phishing (vishing) attacks by extracting spectral features (MFCC, spectral centroid, spectral contrast, zero-crossing rate) and classifying samples with machine learning models. Supports batch analysis of audio files, generates confidence scores, and produces forensic reports. Activates for requests involving deepfake voice detection, vishing investigation, AI-generated speech analysis, voice cloning detection, or audio authenticity verification.}
+
+\subtree{
+\title{Detecting Deepfake Audio in Vishing Attacks}
+\subtree{
+\title{When to Use}
+\ul{
+\li{A suspected vishing call used an AI-cloned executive voice to authorize a wire transfer}
+\li{Security operations received a voicemail that sounds like the CEO but the tone seems off}
+\li{Incident response needs to determine whether a recorded phone call contains synthetic speech}
+\li{Fraud investigation requires forensic proof that audio was AI-generated}
+\li{Red team exercises use voice cloning and blue team needs detection capability}
+}
+
+\p{\strong{Do not use} for text-based phishing (email/SMS); use email header analysis or URL detonation tools instead.}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Python 3.9+ with librosa, numpy, scikit-learn, and scipy installed}
+\li{Audio samples in WAV, MP3, or FLAC format (mono or stereo, any sample rate)}
+\li{Reference corpus of known genuine voice samples for the targeted individual (optional but improves accuracy)}
+\li{FFmpeg installed for audio format conversion (librosa dependency)}
+\li{Minimum 3 seconds of audio for reliable feature extraction}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Audio Preprocessing}
+\p{Normalize and prepare audio samples for feature extraction:}
+
+\pre{\startverb
+import librosa
+import numpy as np
+
+# Load audio, resample to 16kHz mono
+y, sr = librosa.load("suspect_call.wav", sr=16000, mono=True)
+
+# Trim silence from beginning and end
+y_trimmed, _ = librosa.effects.trim(y, top_db=25)
+
+# Normalize amplitude to [-1, 1]
+y_norm = y_trimmed / np.max(np.abs(y_trimmed))
+\stopverb}
+
+\p{Audio preprocessing ensures consistent feature extraction across different recording conditions, microphones, and codec artifacts.}
+}
+
+\subtree{
+\title{Step 2: Extract Spectral Features}
+\p{Extract the feature set that distinguishes real from synthetic speech:}
+
+\p{\strong{Mel-Frequency Cepstral Coefficients (MFCCs):}}
+
+\pre{\startverb
+# Extract 20 MFCCs + delta and delta-delta
+mfccs = librosa.feature.mfcc(y=y_norm, sr=sr, n_mfcc=20)
+mfcc_delta = librosa.feature.delta(mfccs)
+mfcc_delta2 = librosa.feature.delta(mfccs, order=2)
+\stopverb}
+
+\p{MFCCs capture the spectral envelope of speech, representing how the vocal tract shapes sound. Deepfake audio often shows unnatural smoothness in higher-order MFCCs because neural vocoders approximate but do not perfectly replicate the acoustic resonance of a physical vocal tract.}
+
+\p{\strong{Spectral Features:}}
+
+\pre{\startverb
+spectral_centroid = librosa.feature.spectral_centroid(y=y_norm, sr=sr)
+spectral_bandwidth = librosa.feature.spectral_bandwidth(y=y_norm, sr=sr)
+spectral_contrast = librosa.feature.spectral_contrast(y=y_norm, sr=sr)
+spectral_rolloff = librosa.feature.spectral_rolloff(y=y_norm, sr=sr)
+zero_crossing_rate = librosa.feature.zero_crossing_rate(y_norm)
+\stopverb}
+
+\p{\strong{Key indicators of deepfake audio:}}
+
+\ul{
+\li{Reduced spectral contrast in the 4-8 kHz range (vocoders compress high-frequency detail)}
+\li{Abnormally consistent spectral centroid over time (real speech has natural variation)}
+\li{Lower zero-crossing rate variance (synthetic speech lacks micro-perturbations)}
+\li{Missing or attenuated formant transitions during consonant-vowel boundaries}
+}
+}
+
+\subtree{
+\title{Step 3: Build Feature Vector and Classify}
+\p{Aggregate frame-level features into a fixed-length vector and classify:}
+
+\pre{\startverb
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.model_selection import cross_val_score
+
+def build_feature_vector(y, sr):
+    features = []
+    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)
+    for coeff in mfccs:
+        features.extend([np.mean(coeff), np.std(coeff), np.min(coeff), np.max(coeff)])
+    for feat_fn in [librosa.feature.spectral_centroid,
+                    librosa.feature.spectral_bandwidth,
+                    librosa.feature.spectral_rolloff,
+                    librosa.feature.zero_crossing_rate]:
+        feat = feat_fn(y=y, sr=sr) if feat_fn != librosa.feature.zero_crossing_rate else feat_fn(y)
+        features.extend([np.mean(feat), np.std(feat), np.min(feat), np.max(feat)])
+    contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
+    for band in contrast:
+        features.extend([np.mean(band), np.std(band)])
+    return np.array(features)
+\stopverb}
+
+\p{Classification uses an ensemble approach: Random Forest for robustness and Gradient Boosting for accuracy, with a voting mechanism to reduce false positives.}
+}
+
+\subtree{
+\title{Step 4: Temporal Artifact Analysis}
+\p{Examine time-domain artifacts that neural vocoders leave behind:}
+
+\pre{\startverb
+# Pitch stability analysis - deepfakes often have unnaturally stable F0
+f0, voiced_flag, voiced_probs = librosa.pyin(y_norm, fmin=50, fmax=500, sr=sr)
+f0_clean = f0[~np.isnan(f0)]
+pitch_std = np.std(f0_clean) if len(f0_clean) > 0 else 0
+pitch_jitter = np.mean(np.abs(np.diff(f0_clean))) if len(f0_clean) > 1 else 0
+\stopverb}
+
+\p{Real human speech exhibits natural pitch jitter (micro-variations in fundamental frequency) and shimmer (amplitude perturbations). Deepfake audio generated by Tacotron 2, VALL-E, or ElevenLabs typically shows reduced jitter and shimmer compared to genuine speech.}
+}
+
+\subtree{
+\title{Step 5: Spectrogram Visual Inspection}
+\p{Generate spectrograms for manual forensic review:}
+
+\pre{\startverb
+import librosa.display
+import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+librosa.display.specshow(librosa.power_to_db(librosa.feature.melspectrogram(y=y_norm, sr=sr)),
+                         sr=sr, ax=axes[0, 0], x_axis='time', y_axis='mel')
+axes[0, 0].set_title('Mel Spectrogram')
+librosa.display.specshow(mfccs, sr=sr, ax=axes[0, 1], x_axis='time')
+axes[0, 1].set_title('MFCCs')
+\stopverb}
+
+\p{Visual inspection reveals banding artifacts in mel spectrograms, unnatural energy cutoffs above the vocoder's frequency ceiling, and periodic noise patterns in the high-frequency range that are characteristic of neural speech synthesis.}
+}
+
+\subtree{
+\title{Step 6: Generate Forensic Report}
+\p{Compile findings into an actionable report:}
+
+\pre{\startverb
+DEEPFAKE AUDIO ANALYSIS REPORT
+================================
+File:              suspect_executive_call.wav
+Duration:          47.3 seconds
+Sample Rate:       16000 Hz
+Analysis Date:     2026-03-19
+
+CLASSIFICATION RESULT
+Verdict:           LIKELY DEEPFAKE (confidence: 94.2%)
+Ensemble Score:    RF=0.91, GBT=0.97, Avg=0.94
+
+FEATURE ANOMALIES DETECTED
+- MFCC variance in coefficients 13-20: 62% below genuine baseline
+- Spectral contrast (4-8 kHz): 0.23 (genuine avg: 0.41)
+- Pitch jitter: 0.8 Hz (genuine avg: 2.4 Hz)
+- Zero-crossing rate std: 0.003 (genuine avg: 0.011)
+
+SPECTROGRAM ARTIFACTS
+- Energy cutoff above 7.8 kHz (consistent with neural vocoder ceiling)
+- Banding pattern at 50ms intervals in mel spectrogram
+- Missing formant transitions at 12.4s, 23.1s, 35.7s timestamps
+
+RECOMMENDATION
+High confidence of AI-generated audio. Recommend out-of-band
+verification with the purported speaker. Preserve original audio
+file with chain of custody documentation for potential legal action.
+\stopverb}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\pre{\startverb
+| Term | Definition |
+|------|------------|
+| **MFCC** | Mel-Frequency Cepstral Coefficients; representation of the short-term power spectrum on a mel (perceptual) frequency scale |
+| **Spectral Centroid** | Weighted mean of frequencies present in the signal; indicates perceived brightness of a sound |
+| **Spectral Contrast** | Difference in amplitude between peaks and valleys in the spectrum across frequency sub-bands |
+| **Vocoder** | Signal processing component that synthesizes audio waveforms from acoustic features; used in TTS and voice cloning |
+| **Pitch Jitter** | Cycle-to-cycle variation in fundamental frequency; natural in human speech, reduced in synthetic speech |
+| **Vishing** | Voice phishing; social engineering attack conducted via phone calls, increasingly using AI-cloned voices |
+| **Formant** | Resonant frequencies of the vocal tract that define vowel sounds; transitions between formants are difficult for AI to replicate perfectly |
+\stopverb}
+}
+
+\subtree{
+\title{Tools & Systems}
+\ul{
+\li{\strong{librosa}: Python library for audio analysis providing MFCC, spectral feature extraction, and spectrogram generation}
+\li{\strong{scikit-learn}: Machine learning library used for Random Forest and Gradient Boosting classification}
+\li{\strong{Resemblyzer}: Speaker embedding library for comparing voice identity between known genuine and suspect samples}
+\li{\strong{Speechbrain}: Deep learning toolkit for speech processing with pretrained deepfake detection models}
+\li{\strong{Praat}: Phonetics software for detailed pitch, jitter, and shimmer analysis of speech samples}
+\li{\strong{FFmpeg}: Audio format conversion and preprocessing utility required by librosa}
+}
+}
+
+\subtree{
+\title{Common Scenarios}
+\subtree{
+\title{Scenario: Executive Impersonation Wire Transfer Fraud}
+\p{\strong{Context}: CFO receives a phone call appearing to be from the CEO requesting an urgent wire transfer of $2.3M. The call came from an unknown number but the voice sounded identical to the CEO. IT security was able to obtain a recording of the call from the phone system.}
+
+\p{\strong{Approach}:}
+
+\ol{
+\li{Extract the audio from the phone system recording and convert to WAV at 16kHz}
+\li{Run MFCC and spectral feature extraction on the suspect audio}
+\li{Compare against known genuine CEO voice samples from recorded meetings}
+\li{Analyze pitch jitter and shimmer against human speech baselines}
+\li{Classify using the trained ensemble model and generate confidence score}
+\li{Produce forensic report with spectrogram evidence for legal/compliance}
+}
+
+\p{\strong{Pitfalls}:}
+
+\ul{
+\li{Phone codec compression (G.711, AMR) degrades audio quality and can mask deepfake artifacts}
+\li{Short audio clips (under 3 seconds) produce unreliable feature statistics}
+\li{Background noise from the call environment can reduce classification accuracy}
+\li{Highly sophisticated voice cloning (e.g., fine-tuned VALL-E with 30+ minutes of training data) may evade basic feature analysis}
+\li{Genuine speech transmitted through VoIP may exhibit spectral artifacts similar to deepfakes}
+}
+}
+}
+}

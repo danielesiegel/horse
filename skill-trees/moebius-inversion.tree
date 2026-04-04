@@ -1,0 +1,494 @@
+\title{Moebius Inversion}
+
+\taxon{skill}
+
+\meta{description}{"Möbius inversion on posets and lattices: alternating sums, chromatic polynomials, incidence algebras, and centrality predicates."}
+
+\subtree{
+\title{Möbius Inversion Skill}
+\blockquote{*"The Möbius function inverts summation over divisors - the fundamental tool connecting local constraints to global structure."*}
+
+\subtree{
+\title{Overview}
+\p{Möbius inversion provides:}
+
+\ol{
+\li{\strong{Alternating sums} - Invert cumulative sums to get point values}
+\li{\strong{Chromatic polynomials} - Count colorings via bond lattice}
+\li{\strong{Incidence algebras} - Algebraic structure on posets}
+\li{\strong{Centrality predicates} - Validate node importance via inversion}
+}
+}
+
+\subtree{
+\title{Classical Möbius Function}
+\subtree{
+\title{Definition}
+\p{For positive integers:}
+
+\pre{\startverb
+μ(n) = { 1      if n = 1
+       { (-1)^k if n = p₁p₂...pₖ (k distinct primes)
+       { 0      if n has squared prime factor
+\stopverb}
+}
+
+\subtree{
+\title{Key Values}
+\pre{\startverb
+| n | μ(n) | Meaning |
+|---|------|---------|
+| 1 | 1 | Identity |
+| 2 | -1 | Prime |
+| **3** | **-1** | **Prime - key for GF(3)** |
+| 4 | 0 | Squared (2²) |
+| 5 | -1 | Prime |
+| 6 | 1 | Two primes (2·3) |
+| 12 | 0 | Has 2² |
+| 30 | -1 | Three primes (2·3·5) |
+\stopverb}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+function moebius(n)
+    if n == 1
+        return 1
+    end
+    
+    # Factor n
+    factors = factor(n)
+    
+    # Check for squared factors
+    for (p, e) in factors
+        if e > 1
+            return 0
+        end
+    end
+    
+    # (-1)^(number of prime factors)
+    return (-1)^length(factors)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Möbius Inversion Formula}
+\subtree{
+\title{For Divisors}
+\p{If \code{\startverb f(n) = Σ_{d|n} g(d)\stopverb} then:}
+
+\pre{\startverb
+g(n) = Σ_{d|n} μ(n/d) × f(d)
+     = Σ_{d|n} μ(d) × f(n/d)
+\stopverb}
+}
+
+\subtree{
+\title{Example: Euler's Totient}
+\pre{\startverb
+# φ(n) counts integers 1 ≤ k ≤ n with gcd(k,n) = 1
+# We have: n = Σ_{d|n} φ(d)
+# By Möbius inversion: φ(n) = Σ_{d|n} μ(n/d) × d
+
+function euler_totient(n)
+    result = 0
+    for d in divisors(n)
+        result += moebius(n ÷ d) * d
+    end
+    return result
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Möbius on Posets}
+\subtree{
+\title{General Definition}
+\p{For a locally finite poset (P, ≤), the \strong{Möbius function} μ: P × P → ℤ is:}
+
+\pre{\startverb
+μ(x, x) = 1
+μ(x, y) = -Σ_{x ≤ z < y} μ(x, z)  if x < y
+μ(x, y) = 0                        if x ≰ y
+\stopverb}
+}
+
+\subtree{
+\title{Inversion on Posets}
+\p{If \code{\startverb f(x) = Σ_{y ≤ x} g(y)\stopverb} then:}
+
+\pre{\startverb
+g(x) = Σ_{y ≤ x} μ(y, x) × f(y)
+\stopverb}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+struct Poset
+    elements::Vector
+    leq::Function  # (x, y) -> Bool
+end
+
+function moebius_poset(P::Poset, x, y)
+    if x == y
+        return 1
+    end
+    if !P.leq(x, y)
+        return 0
+    end
+    
+    # Sum over interval [x, y)
+    result = 0
+    for z in P.elements
+        if P.leq(x, z) && P.leq(z, y) && z != y
+            result -= moebius_poset(P, x, z)
+        end
+    end
+    return result
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Chromatic Polynomial}
+\subtree{
+\title{Bond Lattice}
+\p{For a graph G, the \strong{bond lattice} L(G) consists of partitions of V(G) induced by edge subsets.}
+}
+
+\subtree{
+\title{Whitney's Formula}
+\p{The chromatic polynomial P(G, k) counts proper k-colorings:}
+
+\pre{\startverb
+P(G, k) = Σ_{π ∈ L(G)} μ(0̂, π) × k^{|π|}
+\stopverb}
+
+\p{where |π| is the number of parts in partition π.}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+function chromatic_polynomial(G, k)
+    """
+    Compute P(G, k) via Möbius inversion on bond lattice.
+    """
+    partitions = bond_lattice(G)
+    
+    result = 0
+    for π in partitions
+        μ_val = moebius_bond_lattice(G, partition_0, π)
+        result += μ_val * k^(num_parts(π))
+    end
+    
+    return result
+end
+\stopverb}
+}
+
+\subtree{
+\title{Deletion-Contraction}
+\p{Alternative recursive formula:}
+
+\pre{\startverb
+function chromatic_deletion_contraction(G, k)
+    if ne(G) == 0
+        return k^nv(G)
+    end
+    
+    e = first(edges(G))
+    G_delete = delete_edge(G, e)
+    G_contract = contract_edge(G, e)
+    
+    return chromatic_deletion_contraction(G_delete, k) - 
+           chromatic_deletion_contraction(G_contract, k)
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Alternating Möbius for GF(3)}
+\subtree{
+\title{Sign Inversion Symmetry}
+\p{For GF(3) = {-1, 0, +1}:}
+
+\pre{\startverb
+Action:     {-, 0, +}
+Perception: {+, 0, -}  (Möbius-inverted)
+
+μ × μ = identity (applying twice returns original)
+\stopverb}
+}
+
+\subtree{
+\title{Perception-Action Duality}
+\pre{\startverb
+function moebius_duality(state::GF3)
+    """
+    Möbius inversion creates observer/observed duality.
+    Action and perception are inverted images.
+    """
+    # μ(3) = -1 for our tritwise system
+    μ_3 = -1
+    
+    return state * μ_3
+end
+
+# Verify involution: μ ∘ μ = id
+@assert moebius_duality(moebius_duality(1)) == 1
+@assert moebius_duality(moebius_duality(-1)) == -1
+@assert moebius_duality(moebius_duality(0)) == 0
+\stopverb}
+}
+}
+
+\subtree{
+\title{Centrality Validity via Inversion}
+\subtree{
+\title{Local-Global Inversion}
+\pre{\startverb
+function centrality_moebius_valid(G, centrality::Vector)
+    """
+    Validate centrality using Möbius inversion.
+    
+    Local constraint: c(v) = Σ_{u ∈ N(v)} contribution(u)
+    Global invariant: Σ_v c(v) = 1
+    
+    Möbius inversion recovers individual contributions from sums.
+    """
+    n = nv(G)
+    
+    # Build divisibility-like structure on graph
+    # Each node "divides" its neighbors
+    contributions = zeros(n)
+    
+    for v in 1:n
+        local_sum = 0.0
+        for u in neighbors(G, v)
+            # Möbius contribution from u
+            dist = shortest_path_length(G, 1, u)  # Use node 1 as reference
+            μ_val = moebius(dist + 1)  # +1 to avoid μ(0)
+            local_sum += μ_val * centrality[u]
+        end
+        contributions[v] = local_sum
+    end
+    
+    # Validity: contributions should be consistent
+    return all(abs.(contributions .- mean(contributions)) .< 0.1)
+end
+\stopverb}
+}
+
+\subtree{
+\title{Alternating Harmonic Centrality}
+\pre{\startverb
+function alternating_harmonic_centrality(G)
+    """
+    Centrality via alternating sums (Möbius-weighted paths).
+    
+    c(v) = Σ_{k≥1} μ(k) × (paths of length k from v) / k
+    """
+    n = nv(G)
+    centrality = zeros(n)
+    
+    A = adjacency_matrix(G)
+    max_k = diameter(G)
+    
+    for v in 1:n
+        for k in 1:max_k
+            μ_k = moebius(k)
+            if μ_k != 0
+                # Count paths of length k from v
+                paths_k = A^k[v, :]
+                centrality[v] += μ_k * sum(paths_k) / k
+            end
+        end
+    end
+    
+    # Normalize
+    return centrality ./ sum(abs.(centrality))
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{Incidence Algebra}
+\subtree{
+\title{Definition}
+\p{The \strong{incidence algebra} I(P) of a poset P consists of functions f: P × P → ℂ where f(x, y) = 0 if x ≰ y.}
+}
+
+\subtree{
+\title{Convolution Product}
+\pre{\startverb
+(f * g)(x, y) = Σ_{x ≤ z ≤ y} f(x, z) × g(z, y)
+\stopverb}
+}
+
+\subtree{
+\title{Key Elements}
+\pre{\startverb
+| Element | Definition | Role |
+|---------|------------|------|
+| δ (delta) | δ(x,y) = [x = y] | Identity |
+| ζ (zeta) | ζ(x,y) = [x ≤ y] | Summation |
+| μ (Möbius) | ζ * μ = μ * ζ = δ | Inversion |
+\stopverb}
+}
+
+\subtree{
+\title{Implementation}
+\pre{\startverb
+struct IncidenceAlgebra
+    poset::Poset
+end
+
+function convolve(I::IncidenceAlgebra, f, g)
+    P = I.poset
+    result = Dict{Tuple, Number}()
+    
+    for x in P.elements, y in P.elements
+        if !P.leq(x, y)
+            result[(x, y)] = 0
+            continue
+        end
+        
+        sum = 0
+        for z in P.elements
+            if P.leq(x, z) && P.leq(z, y)
+                sum += f(x, z) * g(z, y)
+            end
+        end
+        result[(x, y)] = sum
+    end
+    
+    return (x, y) -> result[(x, y)]
+end
+
+# Verify: ζ * μ = δ
+function verify_inversion(I::IncidenceAlgebra)
+    ζ = (x, y) -> I.poset.leq(x, y) ? 1 : 0
+    μ = (x, y) -> moebius_poset(I.poset, x, y)
+    δ = (x, y) -> x == y ? 1 : 0
+    
+    ζμ = convolve(I, ζ, μ)
+    
+    for x in I.poset.elements, y in I.poset.elements
+        @assert ζμ(x, y) == δ(x, y)
+    end
+    return true
+end
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Triad Integration}
+\subtree{
+\title{Trit Assignment}
+\pre{\startverb
+| Component | Trit | Role |
+|-----------|------|------|
+| ramanujan-expander | -1 | Validator - spectral bounds |
+| ihara-zeta | 0 | Coordinator - non-backtracking |
+| **moebius-inversion** | **+1** | **Generator** - produces alternating sums |
+\stopverb}
+
+\p{\strong{Conservation}: (-1) + (0) + (+1) = 0 ✓}
+}
+
+\subtree{
+\title{μ(3) = -1 is Central}
+\p{For GF(3), the key Möbius value is:}
+
+\pre{\startverb
+μ(3) = -1  (3 is prime)
+
+This means:
+- Tritwise inversion flips sign
+- Three iterations: μ³ = -μ (mod 3 behavior)
+- Connects to spectral gap via λ₂ ≥ 2√2
+\stopverb}
+}
+}
+
+\subtree{
+\title{DuckDB Schema}
+\pre{\startverb
+CREATE TABLE moebius_values (
+    n INT PRIMARY KEY,
+    mu INT,  -- -1, 0, or 1
+    is_squarefree BOOLEAN,
+    prime_factors INT[],
+    computed_at TIMESTAMP
+);
+
+CREATE TABLE poset_moebius (
+    poset_id VARCHAR,
+    x VARCHAR,
+    y VARCHAR,
+    mu_xy INT,
+    PRIMARY KEY (poset_id, x, y)
+);
+
+CREATE TABLE chromatic_coefficients (
+    graph_id VARCHAR,
+    k INT,
+    p_g_k BIGINT,  -- P(G, k)
+    bond_lattice_size INT,
+    computed_at TIMESTAMP,
+    PRIMARY KEY (graph_id, k)
+);
+
+CREATE TABLE centrality_alternating (
+    graph_id VARCHAR,
+    vertex_id INT,
+    harmonic_centrality FLOAT,
+    moebius_valid BOOLEAN,
+    PRIMARY KEY (graph_id, vertex_id)
+);
+\stopverb}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+just moebius-table 100           # Print μ(n) for n ≤ 100
+just moebius-invert data.json    # Apply inversion to sums
+just moebius-chromatic graph.json 5  # P(G, 5)
+just moebius-centrality graph.json   # Alternating harmonic centrality
+just moebius-verify graph.json       # Validate centrality predicates
+\stopverb}
+}
+
+\subtree{
+\title{Literature}
+\ol{
+\li{\strong{Möbius (1831)} - Original number-theoretic definition}
+\li{\strong{Rota (1964)} - "On the Foundations of Combinatorial Theory I: Theory of Möbius Functions"}
+\li{\strong{Stanley (1986)} - "Enumerative Combinatorics" (comprehensive treatment)}
+\li{\strong{Cioabă & Murty} - Chromatic polynomial via Möbius}
+\li{\strong{Music Topos (2024)} - GF(3) integration and alternating centrality}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb ramanujan-expander\stopverb} - Spectral validation}
+\li{\code{\startverb ihara-zeta\stopverb} - Prime cycle extraction}
+\li{\code{\startverb three-match\stopverb} - 3-coloring constraints}
+\li{\code{\startverb acsets\stopverb} - Bond lattice as C-set}
+\li{\code{\startverb influence-propagation\stopverb} - Centrality validation}
+}
+}
+}

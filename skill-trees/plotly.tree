@@ -1,0 +1,305 @@
+\title{Plotly}
+
+\taxon{skill}
+
+\meta{description}{Interactive scientific and statistical data visualization library for Python. Use when creating charts, plots, or visualizations including scatter plots, line charts, bar charts, heatmaps, 3D plots, geographic maps, statistical distributions, financial charts, and dashboards. Supports both quick visualizations (Plotly Express) and fine-grained customization (graph objects). Outputs interactive HTML or static images (PNG, PDF, SVG).}
+
+\subtree{
+\title{Plotly}
+\p{Python graphing library for creating interactive, publication-quality visualizations with 40+ chart types.}
+
+\subtree{
+\title{Quick Start}
+\p{Install Plotly:}
+
+\pre{\startverb
+uv pip install plotly
+\stopverb}
+
+\p{Basic usage with Plotly Express (high-level API):}
+
+\pre{\startverb
+import plotly.express as px
+import pandas as pd
+
+df = pd.DataFrame({
+    'x': [1, 2, 3, 4],
+    'y': [10, 11, 12, 13]
+})
+
+fig = px.scatter(df, x='x', y='y', title='My First Plot')
+fig.show()
+\stopverb}
+}
+
+\subtree{
+\title{Choosing Between APIs}
+\subtree{
+\title{Use Plotly Express (px)}
+\p{For quick, standard visualizations with sensible defaults:}
+
+\ul{
+\li{Working with pandas DataFrames}
+\li{Creating common chart types (scatter, line, bar, histogram, etc.)}
+\li{Need automatic color encoding and legends}
+\li{Want minimal code (1-5 lines)}
+}
+
+\p{See [reference/plotly-express.md](reference/plotly-express.md) for complete guide.}
+}
+
+\subtree{
+\title{Use Graph Objects (go)}
+\p{For fine-grained control and custom visualizations:}
+
+\ul{
+\li{Chart types not in Plotly Express (3D mesh, isosurface, complex financial charts)}
+\li{Building complex multi-trace figures from scratch}
+\li{Need precise control over individual components}
+\li{Creating specialized visualizations with custom shapes and annotations}
+}
+
+\p{See [reference/graph-objects.md](reference/graph-objects.md) for complete guide.}
+
+\p{\strong{Note:} Plotly Express returns graph objects Figure, so you can combine approaches:}
+
+\pre{\startverb
+fig = px.scatter(df, x='x', y='y')
+fig.update_layout(title='Custom Title')  # Use go methods on px figure
+fig.add_hline(y=10)                     # Add shapes
+\stopverb}
+}
+}
+
+\subtree{
+\title{Core Capabilities}
+\subtree{
+\title{1. Chart Types}
+\p{Plotly supports 40+ chart types organized into categories:}
+
+\p{\strong{Basic Charts:} scatter, line, bar, pie, area, bubble}
+
+\p{\strong{Statistical Charts:} histogram, box plot, violin, distribution, error bars}
+
+\p{\strong{Scientific Charts:} heatmap, contour, ternary, image display}
+
+\p{\strong{Financial Charts:} candlestick, OHLC, waterfall, funnel, time series}
+
+\p{\strong{Maps:} scatter maps, choropleth, density maps (geographic visualization)}
+
+\p{\strong{3D Charts:} scatter3d, surface, mesh, cone, volume}
+
+\p{\strong{Specialized:} sunburst, treemap, sankey, parallel coordinates, gauge}
+
+\p{For detailed examples and usage of all chart types, see [reference/chart-types.md](reference/chart-types.md).}
+}
+
+\subtree{
+\title{2. Layouts and Styling}
+\p{\strong{Subplots:} Create multi-plot figures with shared axes:}
+
+\pre{\startverb
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+fig = make_subplots(rows=2, cols=2, subplot_titles=('A', 'B', 'C', 'D'))
+fig.add_trace(go.Scatter(x=[1, 2], y=[3, 4]), row=1, col=1)
+\stopverb}
+
+\p{\strong{Templates:} Apply coordinated styling:}
+
+\pre{\startverb
+fig = px.scatter(df, x='x', y='y', template='plotly_dark')
+# Built-in: plotly_white, plotly_dark, ggplot2, seaborn, simple_white
+\stopverb}
+
+\p{\strong{Customization:} Control every aspect of appearance:}
+
+\ul{
+\li{Colors (discrete sequences, continuous scales)}
+\li{Fonts and text}
+\li{Axes (ranges, ticks, grids)}
+\li{Legends}
+\li{Margins and sizing}
+\li{Annotations and shapes}
+}
+
+\p{For complete layout and styling options, see [reference/layouts-styling.md](reference/layouts-styling.md).}
+}
+
+\subtree{
+\title{3. Interactivity}
+\p{Built-in interactive features:}
+
+\ul{
+\li{Hover tooltips with customizable data}
+\li{Pan and zoom}
+\li{Legend toggling}
+\li{Box/lasso selection}
+\li{Rangesliders for time series}
+\li{Buttons and dropdowns}
+\li{Animations}
+}
+
+\pre{\startverb
+# Custom hover template
+fig.update_traces(
+    hovertemplate='<b>%{x}</b><br>Value: %{y:.2f}<extra></extra>'
+)
+
+# Add rangeslider
+fig.update_xaxes(rangeslider_visible=True)
+
+# Animations
+fig = px.scatter(df, x='x', y='y', animation_frame='year')
+\stopverb}
+
+\p{For complete interactivity guide, see [reference/export-interactivity.md](reference/export-interactivity.md).}
+}
+
+\subtree{
+\title{4. Export Options}
+\p{\strong{Interactive HTML:}}
+
+\pre{\startverb
+fig.write_html('chart.html')                       # Full standalone
+fig.write_html('chart.html', include_plotlyjs='cdn')  # Smaller file
+\stopverb}
+
+\p{\strong{Static Images (requires kaleido):}}
+
+\pre{\startverb
+uv pip install kaleido
+\stopverb}
+
+\pre{\startverb
+fig.write_image('chart.png')   # PNG
+fig.write_image('chart.pdf')   # PDF
+fig.write_image('chart.svg')   # SVG
+\stopverb}
+
+\p{For complete export options, see [reference/export-interactivity.md](reference/export-interactivity.md).}
+}
+}
+
+\subtree{
+\title{Common Workflows}
+\subtree{
+\title{Scientific Data Visualization}
+\pre{\startverb
+import plotly.express as px
+
+# Scatter plot with trendline
+fig = px.scatter(df, x='temperature', y='yield', trendline='ols')
+
+# Heatmap from matrix
+fig = px.imshow(correlation_matrix, text_auto=True, color_continuous_scale='RdBu')
+
+# 3D surface plot
+import plotly.graph_objects as go
+fig = go.Figure(data=[go.Surface(z=z_data, x=x_data, y=y_data)])
+\stopverb}
+}
+
+\subtree{
+\title{Statistical Analysis}
+\pre{\startverb
+# Distribution comparison
+fig = px.histogram(df, x='values', color='group', marginal='box', nbins=30)
+
+# Box plot with all points
+fig = px.box(df, x='category', y='value', points='all')
+
+# Violin plot
+fig = px.violin(df, x='group', y='measurement', box=True)
+\stopverb}
+}
+
+\subtree{
+\title{Time Series and Financial}
+\pre{\startverb
+# Time series with rangeslider
+fig = px.line(df, x='date', y='price')
+fig.update_xaxes(rangeslider_visible=True)
+
+# Candlestick chart
+import plotly.graph_objects as go
+fig = go.Figure(data=[go.Candlestick(
+    x=df['date'],
+    open=df['open'],
+    high=df['high'],
+    low=df['low'],
+    close=df['close']
+)])
+\stopverb}
+}
+
+\subtree{
+\title{Multi-Plot Dashboards}
+\pre{\startverb
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+fig = make_subplots(
+    rows=2, cols=2,
+    subplot_titles=('Scatter', 'Bar', 'Histogram', 'Box'),
+    specs=[[{'type': 'scatter'}, {'type': 'bar'}],
+           [{'type': 'histogram'}, {'type': 'box'}]]
+)
+
+fig.add_trace(go.Scatter(x=[1, 2, 3], y=[4, 5, 6]), row=1, col=1)
+fig.add_trace(go.Bar(x=['A', 'B'], y=[1, 2]), row=1, col=2)
+fig.add_trace(go.Histogram(x=data), row=2, col=1)
+fig.add_trace(go.Box(y=data), row=2, col=2)
+
+fig.update_layout(height=800, showlegend=False)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Integration with Dash}
+\p{For interactive web applications, use Dash (Plotly's web app framework):}
+
+\pre{\startverb
+uv pip install dash
+\stopverb}
+
+\pre{\startverb
+import dash
+from dash import dcc, html
+import plotly.express as px
+
+app = dash.Dash(__name__)
+
+fig = px.scatter(df, x='x', y='y')
+
+app.layout = html.Div([
+    html.H1('Dashboard'),
+    dcc.Graph(figure=fig)
+])
+
+app.run_server(debug=True)
+\stopverb}
+}
+
+\subtree{
+\title{Reference Files}
+\ul{
+\li{\strong{[plotly-express.md](reference/plotly-express.md)} - High-level API for quick visualizations}
+\li{\strong{[graph-objects.md](reference/graph-objects.md)} - Low-level API for fine-grained control}
+\li{\strong{[chart-types.md](reference/chart-types.md)} - Complete catalog of 40+ chart types with examples}
+\li{\strong{[layouts-styling.md](reference/layouts-styling.md)} - Subplots, templates, colors, customization}
+\li{\strong{[export-interactivity.md](reference/export-interactivity.md)} - Export options and interactive features}
+}
+}
+
+\subtree{
+\title{Additional Resources}
+\ul{
+\li{Official documentation: https://plotly.com/python/}
+\li{API reference: https://plotly.com/python-api-reference/}
+\li{Community forum: https://community.plotly.com/}
+}
+}
+}

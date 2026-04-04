@@ -1,0 +1,150 @@
+\title{Implementing Email Sandboxing With Proofpoint}
+
+\taxon{skill}
+
+\tag{phishing}
+
+\tag{email-security}
+
+\tag{social-engineering}
+
+\tag{dmarc}
+
+\tag{awareness}
+
+\tag{sandboxing}
+
+\tag{proofpoint}
+
+\meta{version}{"1.0"}
+
+\meta{description}{Email sandboxing detonates suspicious attachments and URLs in isolated environments to detect zero-day malware and evasive phishing payloads. Proofpoint Targeted Attack Protection (TAP) is an industry}
+
+\subtree{
+\title{Implementing Email Sandboxing with Proofpoint}
+\subtree{
+\title{Overview}
+\p{Email sandboxing detonates suspicious attachments and URLs in isolated environments to detect zero-day malware and evasive phishing payloads. Proofpoint Targeted Attack Protection (TAP) is an industry-leading solution that uses multi-stage sandboxing, URL rewriting, and predictive analysis. This skill covers configuring Proofpoint TAP, integrating with email flow, analyzing sandbox reports, and tuning detection policies.}
+}
+
+\subtree{
+\title{When to Use}
+\ul{
+\li{When deploying or configuring implementing email sandboxing with proofpoint capabilities in your environment}
+\li{When establishing security controls aligned to compliance requirements}
+\li{When building or improving security architecture for this domain}
+\li{When conducting security assessments that require this implementation}
+}
+}
+
+\subtree{
+\title{Prerequisites}
+\ul{
+\li{Proofpoint Email Protection license with TAP add-on}
+\li{Admin access to Proofpoint admin console}
+\li{Understanding of email delivery architecture (MX records, mail flow rules)}
+\li{SIEM integration capability}
+}
+}
+
+\subtree{
+\title{Key Concepts}
+\subtree{
+\title{Proofpoint TAP Capabilities}
+\ol{
+\li{\strong{Attachment sandboxing}: Detonates files in virtual machines (Windows, macOS, Android)}
+\li{\strong{URL Defense}: Rewrites URLs, detonates at time-of-click}
+\li{\strong{Threat Intelligence}: Proofpoint's NexusAI threat intelligence integration}
+\li{\strong{TAP Dashboard}: Real-time visibility into threats targeting the organization}
+\li{\strong{Campaign correlation}: Groups related attacks into campaigns}
+\li{\strong{Very Attacked People (VAP)}: Identifies most-targeted individuals}
+}
+}
+
+\subtree{
+\title{Sandbox Evasion Techniques Detected}
+\ul{
+\li{Delayed execution (time-bomb malware)}
+\li{VM detection bypass}
+\li{User interaction requirements (click-to-enable macros)}
+\li{Sandbox-aware malware that checks for analysis environment}
+\li{Encrypted/password-protected attachments}
+\li{Multi-stage payloads with delayed C2 retrieval}
+}
+}
+}
+
+\subtree{
+\title{Workflow}
+\subtree{
+\title{Step 1: Configure TAP in Proofpoint}
+\ul{
+\li{Enable TAP for inbound email policy}
+\li{Configure sandbox profiles (attachment types to detonate)}
+\li{Set URL Defense rewriting policy}
+\li{Configure quarantine actions for malicious verdicts}
+}
+}
+
+\subtree{
+\title{Step 2: Tune Attachment Policies}
+\pre{\startverb
+Recommended attachment policy:
+- Detonate: .exe, .dll, .scr, .doc(m), .xls(m), .ppt(m), .pdf, .zip, .rar, .7z, .iso
+- Block without detonation: .bat, .cmd, .ps1, .vbs, .js, .wsf, .hta
+- Password-protected archives: Attempt common passwords, then quarantine
+- Dynamic delivery: Deliver email body, hold attachment until verdict
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Configure URL Defense}
+\ul{
+\li{Enable URL rewriting for all inbound email}
+\li{Set time-of-click detonation}
+\li{Block access to malicious URLs}
+\li{Show warning page for suspicious (not confirmed malicious) URLs}
+\li{Configure allowed domains bypass list}
+}
+}
+
+\subtree{
+\title{Step 4: Set Up TAP Dashboard Monitoring}
+\ul{
+\li{Configure daily threat digest emails to security team}
+\li{Set up real-time alerts for targeted attacks}
+\li{Monitor VAP report for high-risk users}
+\li{Review campaign clusters for coordinated attacks}
+}
+}
+
+\subtree{
+\title{Step 5: Integrate with SIEM}
+\ul{
+\li{Configure syslog/API export to SIEM}
+\li{Create correlation rules for TAP alerts}
+\li{Set up automated response workflows}
+}
+}
+}
+
+\subtree{
+\title{Tools & Resources}
+\ul{
+\li{\strong{Proofpoint TAP}: https://www.proofpoint.com/us/products/advanced-threat-protection}
+\li{\strong{Proofpoint TAP Dashboard}: https://threatinsight.proofpoint.com/}
+\li{\strong{Proofpoint API}: https://help.proofpoint.com/Threat_Insight_Dashboard/API_Documentation}
+\li{\strong{Proofpoint Community}: https://community.proofpoint.com/}
+}
+}
+
+\subtree{
+\title{Validation}
+\ul{
+\li{Attachment detonation catches EICAR test file and macro-enabled document}
+\li{URL Defense rewrites and blocks known phishing URLs}
+\li{TAP Dashboard displays threat summary}
+\li{SIEM receives and alerts on TAP events}
+}
+}
+}
