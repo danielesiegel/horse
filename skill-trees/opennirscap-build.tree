@@ -213,4 +213,73 @@
 \li{KiCad Forum thread on CLI import: https://forum.kicad.info/t/how-to-import-altium-pcbdoc-via-commandline-tools/50893}
 }
 }
+
+\subtree{
+\title{Why This Build}
+\subtree{
+\title{The problem}
+\pre{\startverb
+Research-grade fNIRS (NIRx NIRSport 2) costs $50k-150k. PLUX biosignalsplux fNIRS sensor is $789 for 1 channel with short source-detector separation — measures superficial scalp hemodynamics, not cortical activity.
+\stopverb}
+}
+
+\subtree{
+\title{Source-detector separation is everything}
+\p{Light follows a banana-shaped path through tissue. Separation controls measurement depth:}
+
+\ul{
+\li{<10mm: scalp blood flow (artifact)}
+\li{30mm: gray matter (cortical hemodynamics — what we want)}
+\li{>50mm: too much attenuation}
+}
+
+\pre{\startverb
+Per Strangman et al. (PLOS ONE 2013): every 10mm increase up to ~45mm adds ~4% gray matter sensitivity. Depth sensitivity decays as S = 0.75 * 0.85^depth.
+\stopverb}
+
+\pre{\startverb
+PLUX has emitter+detector in one housing = short path = scalp oximetry. NIRSport 2 uses separate optodes at 30mm = cortical imaging = $50k+. OpenNIRScap uses separate optodes at 35mm = cortical imaging = $419.
+\stopverb}
+}
+
+\subtree{
+\title{Why OpenNIRScap specifically}
+\ul{
+\li{24 channels (vs PLUX 1ch, vs DIY-fNIRS headband 4ch)}
+\li{35mm separation (proper cortical depth)}
+\li{52.3 dB SNR, 1 kHz sampling}
+\li{Validated hemodynamic response during cognitive tasks (paper Fig. 10)}
+\li{\startverb $419 total BOM from off-the-shelf parts\stopverb}
+\li{Fully open source (BSD-3, hardware + firmware + software)}
+\li{Published May 2025, repo active March 2026}
+\li{\startverb Comparison from paper (Table II): 24ch/$419/open vs 4ch/$215/open vs 1ch/$789/proprietary\stopverb}
+}
+}
+
+\subtree{
+\title{The strategy for bci.horse}
+\pre{\startverb
+Build 3x OpenNIRScap ($1,257) as the walk-up fNIRS fleet. If/when a commercial reference is acquired (Artinis Brite Lite ~$6k or Cortivision Spectrum C23), use it to validate OpenNIRScap signal quality. The AFE4404 in the earlier DIY spec (bcf-0012) uses the same modified Beer-Lambert deconvolution as NIRx's proprietary pipeline — the physics is identical, only the engineering precision differs.
+\stopverb}
+}
+
+\subtree{
+\title{Key references}
+\ul{
+\li{OpenNIRScap paper: https://arxiv.org/abs/2505.20509}
+\li{OpenNIRScap repo: https://github.com/tonykim07/fNIRS}
+\li{ninjaNIRS (200 optodes, openfnirs.org): https://openfnirs.org/hardware/ninjanirs/}
+\li{Strangman depth sensitivity: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0066319}
+\li{NIRDuino (Arduino fNIRS): https://www.medrxiv.org/content/10.1101/2024.12.20.24318425v1}
+\li{FlexNIRS (open-source): https://www.sciencedirect.com/science/article/pii/S1053811922003408}
+\li{DIY-fNIRS headband: https://www.hardware-x.com/article/S2468-0672(21)00033-X/fulltext}
+\li{Lieberman Lab UCLA (NIRx NIRSport 2 user): Miao, Lieberman, Pluta 2025 hyperscanning review}
+\li{Artinis Brite Lite: https://www.artinis.com/brite-lite}
+\li{Cortivision Spectrum C23: https://www.cortivision.com/spectrum-23/}
+\li{PLUX fNIRS sensor datasheet: https://support.pluxbiosignals.com/wp-content/uploads/2021/10/biosignalsplux-FNIRS-Datasheet.pdf}
+\li{bci.horse source-detector physics tree: bcf-0034 in plurigrid/horse}
+\li{bci.horse fNIRS comparison: bcf-0032 (NIRSport), bcf-0035 (Brite Lite), bcf-0036 (OpenNIRScap)}
+}
+}
+}
 }
