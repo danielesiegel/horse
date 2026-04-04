@@ -1,0 +1,127 @@
+\title{Untitled}
+
+\taxon{skill}
+
+\subtree{
+\title{Color Mining Skill}
+\p{Split-mix ternary parallel color mining using GF(3) conservation. Achieves 3^d parallelism with perfect triadic balance.}
+
+\subtree{
+\title{Core Concept}
+\p{\strong{Split-Mix Ternary}: A maximally parallel color operation where:}
+
+\ul{
+\li{Each split creates 3 sibling streams with trits {-1, 0, +1}}
+\li{Siblings always sum to 0 mod 3 (GF(3) conservation)}
+\li{At depth d, we achieve 3^d parallel mining streams}
+\li{Each stream has a deterministic color assignment}
+}
+}
+
+\subtree{
+\title{GF(3) Color Mapping}
+\pre{\startverb
+| Trit | Name | Hue Range | Role | Mining Function |
+|------|------|-----------|------|-----------------|
+| -1 | MINUS | 180-300° (cold) | Validator | Verify mined results |
+| 0 | ERGODIC | 60-180° (neutral) | Coordinator | Aggregate & balance |
+| +1 | PLUS | 0-60°, 300-360° (warm) | Generator | Execute mining ops |
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+/color-mining [depth] [operation]
+\stopverb}
+
+\subtree{
+\title{Parameters}
+\ul{
+\li{\code{depth}: Mining depth (1-10), determines parallelism as 3^d}
+\li{\code{operation}: One of \code{mine}, \code{verify}, \code{balance}, \code{status}}
+}
+}
+
+\subtree{
+\title{Examples}
+\pre{\startverb
+# Mine with 27 parallel streams (depth 3)
+/color-mining 3 mine
+
+# Verify conservation across all streams
+/color-mining 4 verify
+
+# Show mining status
+/color-mining status
+\stopverb}
+}
+}
+
+\subtree{
+\title{Implementation}
+\p{The skill spawns 3^d parallel Task agents, each assigned a unique path through the ternary tree. Conservation is verified at every level.}
+
+\pre{\startverb
+;; Core split-mix algorithm
+(defn split-mix-mine [depth seed]
+  (let [streams (generate-ternary-paths depth)
+        colors (map path->color streams)]
+    (pmap mine-with-color (zip streams colors))))
+\stopverb}
+}
+
+\subtree{
+\title{Parallel Mining Architecture}
+\pre{\startverb
+                    [Coordinator: ERGODIC]
+                          / | \
+        [MINUS]        [ERGODIC]        [PLUS]
+        validate       coordinate       generate
+         / | \          / | \          / | \
+       ...  ...       ...  ...       ...  ...
+
+       ← 3^d parallel mining streams →
+\stopverb}
+}
+
+\subtree{
+\title{Conservation Invariant}
+\p{At every node in the mining tree:}
+
+\pre{\startverb
+Σ(sibling_trits) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures:}
+
+\ol{
+\li{Perfect load balance (equal MINUS/ERGODIC/PLUS distribution)}
+\li{No accumulation of bias in mining results}
+\li{Self-correcting parallel structure}
+}
+}
+
+\subtree{
+\title{Integration Points}
+\ul{
+\li{\strong{Gay.jl}: Color assignments use Gay.jl HSL space}
+\li{\strong{DuckDB}: Mining results stored in temporal tables}
+\li{\strong{Aptos}: On-chain verification of mined color proofs}
+\li{\strong{Task agents}: Parallel execution via Claude Code Task tool}
+}
+}
+
+\subtree{
+\title{Mining Rewards}
+\p{Colors mined satisfy:}
+
+\ul{
+\li{Unique path hash (no collisions)}
+\li{GF(3) balanced neighborhoods}
+\li{Deterministic reproducibility from seed}
+}
+
+\p{\strong{Author}: Split-Mix Ternary Protocol \strong{GF(3) Conservation}: Guaranteed \strong{Max Parallelism}: 3^10 = 59,049 streams}
+}
+}

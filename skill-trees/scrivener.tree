@@ -1,0 +1,365 @@
+\title{Scrivener}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{description}{Scrivener project format internals, data model, and programmatic access. Use when parsing .scriv bundles, querying DuckDB exports, extracting manuscript text, or building AI-assisted novel tools from Scrivener data. Covers Windows-origin projects, cross-platform migration, and RTF content.}
+
+\subtree{
+\title{Scrivener: Project Format, Data Model & Programmatic Access}
+\p{\strong{Trit}: -1 (MINUS - validator/extractor) \strong{Color}: \#E91A2F (Character Notes red)}
+
+\subtree{
+\title{When to use this skill}
+\ul{
+\li{Parsing or inspecting \code{.scriv} project bundles (XML, RTF, metadata)}
+\li{Querying a DuckDB export of Scrivener data (documents, content, labels)}
+\li{Extracting manuscript text, character info, or synopses programmatically}
+\li{Migrating projects across Scrivener versions or platforms (Windows ↔ macOS)}
+\li{Building tools that read/write Scrivener project structures}
+}
+}
+
+\subtree{
+\title{File Format: .scriv Bundle}
+\p{A \code{.scriv} project is a directory. On macOS it displays as a single file (document package); on Windows it's a regular folder.}
+
+\pre{\startverb
+MyProject.scriv/
+├── Files/
+│   ├── Data/
+│   │   ├── <UUID>/
+│   │   │   ├── content.rtf       # Document body (RTF format)
+│   │   │   ├── notes.rtf         # Inspector notes (RTF)
+│   │   │   ├── synopsis.txt      # Synopsis text
+│   │   │   └── snapshot-*.rtf    # Version snapshots
+│   │   └── docs.checksum         # Integrity checksums
+│   ├── binder.autosave           # Auto-saved binder state
+│   ├── binder.backup             # Binder backup
+│   ├── search.indexes            # Full-text search index
+│   ├── styles.xml                # Document styles
+│   ├── version.txt               # Format version
+│   └── writing.history           # Session word counts
+├── <ProjectName>.scrivx           # Master XML: binder tree + metadata
+├── Settings/
+│   ├── recents.txt               # Recent documents
+│   ├── ui-common.xml             # Cross-platform UI state
+│   └── ui.ini                    # Platform-specific UI state
+└── QuickLook/
+    └── Preview.html              # Finder preview (macOS only)
+\stopverb}
+}
+
+\subtree{
+\title{Version History & Cross-Platform Migration}
+\p{The ☼ project was \strong{created on Windows} and has been migrated through multiple Scrivener versions:}
+
+\pre{\startverb
+| Version | Platform | Format | Notes |
+|---------|----------|--------|-------|
+| Scrivener 1 (Win) | Windows | XML `.scrivx` v1 + RTF | Original Windows port. `.scriv` is a visible folder. |
+| Scrivener 1 (Mac) | macOS | Binary plist `.scrivproj` + RTF | macOS only, different format entirely. |
+| Scrivener 2 (Mac) | macOS | Binary plist → XML | Transitional. No Windows v2 existed. |
+| Scrivener 3 (Win) | Windows | XML `.scrivx` v2 + RTF | **Current**. Creator tag: `SCRWIN-3.x.x.x` |
+| Scrivener 3 (Mac) | macOS | XML `.scrivx` v2 + RTF | **Current**. Creator tag: `SCRMAC-3.x.x` |
+\stopverb}
+
+\subtree{
+\title{Windows → macOS migration}
+\ul{
+\li{\code{.scriv} folder on Windows is a regular directory; on macOS it becomes a document package (UTI: \code{com.literatureandlatte.scrivener3.scriv})}
+\li{Copy the entire \code{.scriv} folder to macOS and open with Scrivener 3 — it auto-upgrades}
+\li{The \code{Creator} attribute in \code{.scrivx} preserves origin: \code{SCRWIN-3.1.5.1} means Windows Scrivener 3.1.5.1}
+\li{\code{ui.ini} stores platform-specific UI state; \code{ui-common.xml} stores cross-platform state}
+\li{QuickLook/ only generated on macOS}
+\li{Line endings in RTF may differ (CRLF from Windows, LF on macOS) — both parse correctly}
+}
+}
+
+\subtree{
+\title{Version upgrade path}
+\p{Windows v1 → Windows v3: Scrivener auto-converts on open. Creates backup of v1 project first. Binder structure, labels, statuses, and content preserved. Custom metadata fields may need manual re-setup.}
+}
+}
+
+\subtree{
+\title{.scrivx XML Schema}
+\p{The \code{.scrivx} file is the master index:}
+
+\pre{\startverb
+<?xml version="1.0" encoding="UTF-8"?>
+<ScrivenerProject Template="No" Version="2.0"
+    Identifier="UUID" Creator="SCRWIN-3.1.5.1"
+    Device="HOSTNAME" Modified="2025-03-14 22:15:28 -0600"
+    ModID="UUID">
+  <Binder>
+    <BinderItem UUID="..." Type="DraftFolder" Created="..." Modified="...">
+      <Title>Draft</Title>
+      <MetaData>
+        <IncludeInCompile>Yes</IncludeInCompile>
+      </MetaData>
+      <Children>
+        <BinderItem UUID="..." Type="Text" Created="..." Modified="...">
+          <Title>Chapter 1</Title>
+          <MetaData>
+            <LabelID>2</LabelID>
+            <StatusID>-1</StatusID>
+            <IncludeInCompile>Yes</IncludeInCompile>
+            <SectionType>-1</SectionType>
+          </MetaData>
+        </BinderItem>
+      </Children>
+    </BinderItem>
+  </Binder>
+  <LabelSettings>
+    <Labels>
+      <Label ID="0" Color="0.993 0.227 0.172">Red</Label>
+    </Labels>
+  </LabelSettings>
+  <StatusSettings>
+    <StatusItems>
+      <Status ID="1">To Do</Status>
+      <Status ID="2">In Progress</Status>
+      <Status ID="3">First Draft</Status>
+    </StatusItems>
+  </StatusSettings>
+  <ProjectProperties>
+    <ProjectTitle>My Novel</ProjectTitle>
+    <FullName>Author Name</FullName>
+  </ProjectProperties>
+</ScrivenerProject>
+\stopverb}
+
+\subtree{
+\title{BinderItem Types}
+\pre{\startverb
+| Type | Description |
+|------|-------------|
+| `DraftFolder` | Manuscript root (compile target) |
+| `ResearchFolder` | Research materials container |
+| `TrashFolder` | Deleted items |
+| `Folder` | User-created folder |
+| `Text` | Document (main content unit) |
+| `PDF` | Imported PDF |
+| `Image` | Imported image |
+| `WebArchive` | Saved web page |
+\stopverb}
+}
+
+\subtree{
+\title{Document Content Storage}
+\p{Each document's UUID maps to \code{Files/Data/<UUID>/}:}
+
+\ul{
+\li{\strong{content.rtf}: Body text. Contains inline annotations via \code{\{\Scrv_fn=...\}} custom tags.}
+\li{\strong{notes.rtf}: Inspector notes pane.}
+\li{\strong{synopsis.txt}: Plain text synopsis (corkboard cards).}
+\li{\strong{snapshot-YYYY-MM-DD-HH-MM-SS.rtf}: Version snapshots.}
+}
+}
+
+\subtree{
+\title{Color Values}
+\p{Colors in \code{.scrivx} are space-separated RGB floats (0.0–1.0):}
+
+\pre{\startverb
+# "0.952941 0.917647 0.329412" → #F3EB54
+hex_color = f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
+\stopverb}
+}
+}
+
+\subtree{
+\title{DuckDB Export Schema}
+\p{When exported to DuckDB (via \code{build_sun_org.py} or similar):}
+
+\subtree{
+\title{\code{documents}}
+\pre{\startverb
+CREATE TABLE documents (
+    project VARCHAR,          -- e.g. '☼'
+    uuid VARCHAR PRIMARY KEY,
+    title VARCHAR,
+    parent_uuid VARCHAR,
+    depth_int INT,            -- Nesting depth in binder
+    item_type VARCHAR,        -- 'Text', 'Folder', etc.
+    label_id INT,
+    status_id INT,
+    include_in_compile VARCHAR,
+    binder_id VARCHAR,        -- Binder sort order
+    section_type INT
+);
+\stopverb}
+}
+
+\subtree{
+\title{\code{content}}
+\pre{\startverb
+CREATE TABLE content (
+    project VARCHAR,
+    uuid VARCHAR,             -- FK to documents
+    body TEXT,                -- Full RTF body
+    synopsis TEXT,
+    notes TEXT,
+    body_length INT,
+    content_file_type VARCHAR
+);
+\stopverb}
+}
+
+\subtree{
+\title{\code{labels}, \code{statuses}, \code{comments}}
+\pre{\startverb
+CREATE TABLE labels (project VARCHAR, label_id INT, name VARCHAR, color VARCHAR);
+CREATE TABLE statuses (project VARCHAR, status_id INT, name VARCHAR);
+CREATE TABLE comments (project VARCHAR, uuid VARCHAR, comment_text TEXT, position INT);
+\stopverb}
+
+\p{Additional tables: \code{collections}, \code{bookmarks}, \code{styles}, \code{section_types}, \code{projects}.}
+}
+}
+
+\subtree{
+\title{Common Queries}
+\subtree{
+\title{Manuscript text in binder order}
+\pre{\startverb
+SELECT d.uuid, d.title, c.body, c.synopsis
+FROM documents d
+JOIN content c ON d.uuid = c.uuid AND d.project = c.project
+WHERE d.project = '☼'
+  AND d.item_type = 'Text'
+  AND d.include_in_compile = 'Yes'
+  AND c.body IS NOT NULL
+ORDER BY d.binder_id;
+\stopverb}
+}
+
+\subtree{
+\title{Find documents mentioning a character}
+\pre{\startverb
+SELECT d.uuid, d.title, d.binder_id, length(c.body) AS bodylen
+FROM documents d
+JOIN content c ON d.uuid = c.uuid AND d.project = c.project
+WHERE d.project = '☼' AND c.body ILIKE '%edith%'
+ORDER BY d.binder_id;
+\stopverb}
+}
+
+\subtree{
+\title{Strip Scrivener RTF tags}
+\pre{\startverb
+import re
+clean = re.sub(r'\{\\Scrv_fn=.*?\\end_Scrv_fn\}', '', body)
+\stopverb}
+}
+}
+
+\subtree{
+\title{RTF Content Notes}
+\ul{
+\li{\strong{Inline annotations}: \code{\{\Scrv_fn=footnote ...text... \end_Scrv_fn\}}}
+\li{\strong{Comments}: Stored in \code{comments} table with position offsets}
+\li{\strong{Styles}: Referenced by name from \code{styles.xml}}
+\li{\strong{Images}: Embedded as RTF \code{\pict} objects or referenced externally}
+\li{\strong{Links}: Internal links use \code{scrivener://} protocol with UUID targets}
+}
+}
+
+\subtree{
+\title{Character Data Extraction}
+\p{Scrivener fiction templates include a Characters folder with sketch documents (Role, Occupation, Physical Description, etc.) — but these are \strong{plain RTF}, not structured data. In the ☼ project, the Characters folder contains only a blank template.}
+
+\p{Characters must be detected from prose:}
+
+\pre{\startverb
+import duckdb
+
+con = duckdb.connect('scrivener.duckdb', read_only=True)
+
+def character_chunks(char_name: str) -> list:
+    return con.execute("""
+        SELECT d.title, left(c.body, 500) as preview, d.binder_id
+        FROM documents d
+        JOIN content c ON d.uuid = c.uuid AND d.project = c.project
+        WHERE d.project = '☼'
+          AND c.body ILIKE ?
+          AND length(c.body) > 50
+        ORDER BY d.binder_id
+    """, [f'%{char_name}%']).fetchall()
+
+# ☼ characters: she, narrator, ack, edith, deb, rad, glen, will, hub
+\stopverb}
+}
+
+\subtree{
+\title{macOS vs Windows Differences}
+\pre{\startverb
+| Aspect | macOS | Windows |
+|--------|-------|---------|
+| `.scriv` appearance | Document package (single file) | Regular folder |
+| Browse internals | Right-click → Show Package Contents | Open folder normally |
+| UTI | `com.literatureandlatte.scrivener3.scriv` | N/A |
+| QuickLook preview | Generated automatically | Not available |
+| Spotlight indexing | Via `mdls` metadata | Windows Search indexes RTF |
+| Line endings in RTF | LF | CRLF |
+| Creator tag | `SCRMAC-3.x.x` | `SCRWIN-3.x.x.x` |
+\stopverb}
+}
+
+\subtree{
+\title{Verify it worked}
+\p{After parsing a \code{.scriv} project:}
+
+\ol{
+\li{Check that the \code{.scrivx} XML parses and contains \code{<Binder>} with at least one \code{<BinderItem>}}
+\li{Verify UUID directories exist under \code{Files/Data/} for documents listed in the binder}
+\li{Confirm \code{content.rtf} files are valid RTF (start with \code{\{\rtf1})}
+\li{If using DuckDB export: \code{SELECT count(*) FROM documents} should match binder item count}
+}
+}
+
+\subtree{
+\title{What not to do}
+\ul{
+\li{Don't modify \code{.scriv} files while Scrivener has the project open — it uses file locks}
+\li{Don't assume synopsis or notes fields are populated — many projects leave them empty}
+\li{Don't parse RTF with regex for anything beyond stripping Scrivener tags — use a real RTF parser for styled content}
+\li{Don't assume macOS package structure on Windows — \code{.scriv} is just a folder there}
+\li{Don't delete \code{docs.checksum} — Scrivener uses it for integrity verification on open}
+}
+}
+
+\subtree{
+\title{☼ Project Specifics}
+\ul{
+\li{\strong{949 documents}: 900 Text, 42 Folders, 2 PDF, 2 Image}
+\li{\strong{432 manuscript chunks} with body > 50 chars}
+\li{\strong{Labels}: Idea (\#F3EB54), Chapter (\#48B300), Scene (\#468EFF), Notes (\#E48738), Character Notes (\#E91A2F)}
+\li{\strong{Characters folder}: Only a blank template (unfilled)}
+\li{\strong{No synopsis metadata} (1 boilerplate entry on Title Page)}
+\li{\strong{2 inline comments}: Both authorial reminders}
+\li{\strong{Origin}: Created on Windows Scrivener, migrated through version updates}
+}
+}
+
+\subtree{
+\title{References}
+\ul{
+\li{[Literature & Latte](https://www.literatureandlatte.com/)}
+\li{[Scrivener 3 User Manual (macOS PDF)](https://www.literatureandlatte.com/docs/Scrivener_Manual-Mac.pdf)}
+\li{[File format analysis (Obsolete Thor)](https://preservation.tylerthorsted.com/2025/03/21/scrivener/)}
+\li{[Archive Team: Scrivener](http://justsolve.archiveteam.org/wiki/Scrivener)}
+\li{[Character management blog](https://www.literatureandlatte.com/blog/how-to-manage-your-characters-in-scrivener)}
+}
+}
+
+\subtree{
+\title{GF(3) Triads}
+\pre{\startverb
+scrivener (-1) + catcolab-schemas (+1) + database-design (0) = 0
+scrivener (-1) + build-sun-org (+1) + duckdb-ies (0) = 0
+\stopverb}
+}
+}

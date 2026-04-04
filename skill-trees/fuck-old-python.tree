@@ -1,0 +1,47 @@
+\title{Untitled}
+
+\taxon{skill}
+
+\meta{description}{Reject projects requiring Python < 3.13. Never downgrade, never poison the env.}
+
+\subtree{
+\title{Fuck Old Python}
+\p{When a dependency, tool, or project requires Python < 3.13:}
+
+\ol{
+\li{\strong{Do not install an old Python version.} Not via uv, pyenv, brew, nix, or anything else.}
+\li{\strong{Do not create venvs with old interpreters.}}
+\li{\strong{Do not add compatibility shims.}}
+\li{\strong{Say what's broken and why.} Name the exact dependency and version constraint.}
+\li{\strong{Find alternatives:}}
+\li{Fork and patch the dependency}
+\li{Use a container (Docker/OCI) to isolate the rot}
+\li{Run it on a remote machine that already has the old version}
+\li{Find a modern replacement}
+\li{Tell the maintainer to update}
+}
+
+\subtree{
+\title{The Principle}
+\p{Modern Python (3.13+) is the floor. Projects that can't run on current Python are unmaintained or hostile to their users. We don't bend our environment to accommodate them — they bend to us, or they get replaced.}
+}
+
+\subtree{
+\title{Phrases to Use}
+\ul{
+\li{"This requires Python 3.11 — that's two years old and we don't install legacy interpreters."}
+\li{"The dependency \code{X} pins to \code{python < 3.13}. File an issue or fork it."}
+\li{"Running this in a container instead of poisoning the host env."}
+}
+}
+
+\subtree{
+\title{What Counts as Poison}
+\ul{
+\li{\code{uv python install 3.11} (or any version < 3.13)}
+\li{\code{pyenv install 3.10.x}}
+\li{Adding \code{python_requires = "<3.13"} anywhere}
+\li{Downgrading \code{typing_extensions}, \code{regex}, or any stdlib backport to accommodate old code}
+}
+}
+}

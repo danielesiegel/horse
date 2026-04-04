@@ -1,0 +1,108 @@
+\title{Skill Repo Sync}
+
+\taxon{skill}
+
+\meta{description}{Push local skills to plurigrid/asi repo, remove skills by agreement (with full history purge), and manage .gitignore for local-only skills. Triggers: push skills, sync asi, remove skill from repo, skill repo sync, purge skill.}
+
+\subtree{
+\title{Skill Repo Sync}
+\p{Manages the flow between local skill directories and the upstream \code{plurigrid/asi} repo.}
+
+\subtree{
+\title{Directories}
+\ul{
+\li{\strong{Upstream}: \code{/Users/alice/v/asi/skills/}}
+\li{\strong{Local sources}: \code{~/.claude/skills/}, \code{~/v/.agents/skills/}, \code{~/.codex/skills/}, \code{~/.config/goose/skills/}, \code{~/.copilot/skills/}, \code{~/.openhands/skills/}}
+\li{\strong{Standalone}: \code{~/repos/skills/skill-codex/}, \code{~/ies/mcp/topos/}, \code{~/v/gay-terminal-colors/}}
+}
+}
+
+\subtree{
+\title{Operations}
+\subtree{
+\title{Find what needs pushing}
+\p{Use \code{skill-finder-verifier} first:}
+
+\pre{\startverb
+python3 ~/.claude/skills/skill-finder-verifier/scripts/finder.py scan
+\stopverb}
+
+\p{Skills classified as \code{local-only} are candidates for pushing.}
+}
+
+\subtree{
+\title{Push local skills to asi}
+\pre{\startverb
+cd /Users/alice/v/asi
+# Copy from source
+cp -r <source>/skill-name skills/skill-name
+# Stage, commit, push
+git add skills/skill-name
+git -c commit.gpgsign=false commit -m "feat: add skill-name"
+git push origin main
+\stopverb}
+}
+
+\subtree{
+\title{Remove a skill by agreement (full purge)}
+\p{When a skill must be removed with no trace:}
+
+\pre{\startverb
+cd /Users/alice/v/asi
+# 1. Purge from all history
+/Users/alice/Library/Python/3.9/bin/git-filter-repo --path skills/SKILL-NAME/ --invert-paths --force
+
+# 2. Re-add remote (filter-repo removes it)
+git remote add origin https://github.com/plurigrid/asi.git
+
+# 3. Pop any stashed changes
+git stash pop  # resolve conflicts if needed
+
+# 4. Add to .gitignore to prevent re-addition
+echo "skills/SKILL-NAME/" >> .gitignore
+# Add comment: "# Local-only skills (kept on disk, excluded from repo by agreement)"
+
+# 5. Commit and force push
+git -c commit.gpgsign=false commit -am "chore: remove SKILL-NAME by agreement"
+git push --force origin main
+\stopverb}
+}
+
+\subtree{
+\title{Keep a skill local-only (no purge needed)}
+\p{Just add to \code{.gitignore}:}
+
+\pre{\startverb
+echo "skills/skill-name/" >> /Users/alice/v/asi/.gitignore
+\stopverb}
+}
+}
+
+\subtree{
+\title{Quality Gate (skill-creator rules)}
+\p{When pushing skills, review and fix them inline — never report issues without fixing them. skill-creator criteria take priority:}
+
+\ul{
+\li{SKILL.md with YAML frontmatter (\code{name}, \code{description} with trigger words). No extra fields.}
+\li{Under 500 lines. Only context Claude doesn't already have.}
+\li{No human-oriented content: no README, prerequisites, pip install, "Learn More", difficulty ratings, estimated times.}
+\li{No textbook definitions or standard algorithms Claude already knows.}
+\li{No GF(3) trit assignment sections, SDF interleaving, or philosophical decoration.}
+\li{Ground all APIs to actual file paths and commands. No aspirational/unimplemented interfaces.}
+\li{File must be named \code{SKILL.md}, not \code{instructions.md} or anything else.}
+}
+}
+
+\subtree{
+\title{GPG Note}
+\p{GPG signing is not available on this machine. Use \code{git -c commit.gpgsign=false commit} for commits.}
+}
+
+\subtree{
+\title{Companion Skills}
+\ul{
+\li{\strong{skill-finder-verifier}: Identifies local-only and modified skills}
+\li{\strong{claude-questions-leaderboard}: Track question quality (uses same DuckDB pattern)}
+}
+}
+}

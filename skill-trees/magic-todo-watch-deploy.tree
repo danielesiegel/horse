@@ -1,0 +1,207 @@
+\title{Magic Todo Watch Deploy}
+
+\taxon{skill}
+
+\meta{description}{Build, deploy, and manage the MagicTodoWatch iOS/watchOS voice-to-task pipeline app. Use when building for device or simulator, fixing Xcode project issues, or running the 7-world backend pipeline.}
+
+\subtree{
+\title{MagicTodoWatch Deploy}
+\subtree{
+\title{Project Location}
+\ul{
+\li{\strong{Source}: \code{/Users/alice/worlds/w/MagicTodoWatch/}}
+\li{\strong{jj repo}: \code{/Users/alice/worlds/magic-todo-watch/}}
+\li{\strong{GitHub}: \code{monaduck1069/magic-todo-watch} (private)}
+\li{\strong{Bundle ID}: \code{com.monaduck1069.MagicTodoWatch}}
+\li{\strong{Watch Bundle}: \code{com.monaduck1069.MagicTodoWatch.watchkitapp}}
+\li{\strong{Team}: \code{FLLV2L2D4K}}
+\li{\strong{Device (\#ee2b49)}: \code{00008150-00123D3E0C46401C}}
+}
+}
+
+\subtree{
+\title{Xcode Setup}
+\p{Xcode is at \code{/Users/alice/Downloads/Xcode.app}. xcode-select points at CommandLineTools, so ALL xcodebuild/xcrun commands need:}
+
+\pre{\startverb
+DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer
+\stopverb}
+
+\p{For xcrun (simctl, devicectl):}
+
+\pre{\startverb
+DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /usr/bin/xcrun simctl ...
+\stopverb}
+
+\p{For xcodebuild:}
+
+\pre{\startverb
+DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /Users/alice/Downloads/Xcode.app/Contents/Developer/usr/bin/xcodebuild ...
+\stopverb}
+}
+
+\subtree{
+\title{Build & Deploy to Physical Device}
+\pre{\startverb
+XC="DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /Users/alice/Downloads/Xcode.app/Contents/Developer/usr/bin/xcodebuild"
+DC="DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /Users/alice/Downloads/Xcode.app/Contents/Developer/usr/bin/devicectl"
+PROJ="-project /Users/alice/worlds/w/MagicTodoWatch/MagicTodoWatch.xcodeproj"
+DEVICE="id=00008150-00123D3E0C46401C"
+
+# Build (includes embedded watch app)
+$XC $PROJ -scheme MagicTodoWatch -configuration Debug -destination "$DEVICE" -allowProvisioningUpdates clean build
+
+# Install
+APP_PATH=$(ls -d ~/Library/Developer/Xcode/DerivedData/MagicTodoWatch-*/Build/Products/Debug-iphoneos/MagicTodoWatch.app | head -1)
+$DC device install app --device 00008150-00123D3E0C46401C "$APP_PATH"
+
+# Launch (phone must be unlocked)
+$DC device process launch --device 00008150-00123D3E0C46401C com.monaduck1069.MagicTodoWatch
+\stopverb}
+}
+
+\subtree{
+\title{Build & Deploy to Simulators}
+\pre{\startverb
+SIMCTL="DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /usr/bin/xcrun simctl"
+IPHONE_SIM=E7F1ADC6-21F1-4BA4-944A-B99D693571B3   # iPhone 17
+WATCH_SIM=FE8B667A-A976-4F71-9CE6-F1C7414F5C25     # Apple Watch Series 10 46mm
+
+# Boot
+$SIMCTL boot $IPHONE_SIM
+$SIMCTL boot $WATCH_SIM
+
+# Build for sim
+$XC $PROJ -scheme MagicTodoWatch -destination "id=$IPHONE_SIM" -allowProvisioningUpdates build
+
+# Install
+$SIMCTL install $IPHONE_SIM ~/Library/Developer/Xcode/DerivedData/MagicTodoWatch-*/Build/Products/Debug-iphonesimulator/MagicTodoWatch.app
+$SIMCTL install $WATCH_SIM ~/Library/Developer/Xcode/DerivedData/MagicTodoWatch-*/Build/Products/Debug-watchsimulator/MagicTodoWatchWatch.app
+
+# Launch
+$SIMCTL launch $IPHONE_SIM com.monaduck1069.MagicTodoWatch
+$SIMCTL launch $WATCH_SIM com.monaduck1069.MagicTodoWatch.watchkitapp
+
+# Open Simulator.app
+open /Users/alice/Downloads/Xcode.app/Contents/Developer/Applications/Simulator.app
+\stopverb}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+Watch (watchOS 10+)                    Phone (iOS 17+)
+┌──────────────────┐                   ┌──────────────────────────┐
+│ AudioCaptureMgr  │─── PCM chunks ──→│ PhoneSessionManager      │
+│ LiveTranscriber   │   (WCSession)    │   ├─ SFSpeechRecognizer  │
+│ WatchSessionMgr  │←── transcripts ──│   ├─ TodoProcessor        │
+│ WatchContentView │    + todos        │   │   ├─ LocalModelService│
+└──────────────────┘                   │   │   └─ regex fallback   │
+                                       │   └─ CaptureBufferBridge  │
+                                       │       └─ JSON → Files app │
+                                       └──────────────────────────┘
+                                                    │
+                                           ~/Documents/capture-buffer/
+                                                    │
+                                       ┌────────────▼─────────────┐
+                                       │   Desktop Pipeline       │
+                                       │   p/orchestrate.py       │
+                                       │   W→T→A→M→P→E↔C         │
+                                       └──────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{Key Files (iOS Target)}
+\pre{\startverb
+| File | Role |
+|------|------|
+| `App/Services/PhoneSessionManager.swift` | WCSessionDelegate, SFSpeech, main coordinator |
+| `App/Services/TodoProcessor.swift` | 3-stage extraction chain (NLP → regex → MLX) |
+| `App/Services/LocalModelService.swift` | NLTagger POS/NER on-device extraction |
+| `App/Services/CaptureBufferBridge.swift` | JSON export to App Group + Files app |
+| `App/Services/VoiceMemoBridge.swift` | Voice memo audio bridge |
+\stopverb}
+}
+
+\subtree{
+\title{Key Files (watchOS Target)}
+\pre{\startverb
+| File | Role |
+|------|------|
+| `Watch/Services/AudioCaptureManager.swift` | AVAudioEngine mic capture |
+| `Watch/Services/LiveTranscriber.swift` | Float32→Int16 conversion, chunked send |
+| `Watch/Services/WatchSessionManager.swift` | WCSession send/receive |
+\stopverb}
+}
+
+\subtree{
+\title{Common Issues & Fixes}
+\subtree{
+\title{"cannot find 'X' in scope"}
+\p{File exists but isn't in \code{project.pbxproj}. Add three entries:}
+
+\ol{
+\li{PBXBuildFile (Sources reference)}
+\li{PBXFileReference (file declaration)}
+\li{PBXGroup children (directory listing)}
+\li{PBXSourcesBuildPhase files (compile list)}
+}
+}
+
+\subtree{
+\title{Python 3.9 compat}
+\p{Pipeline scripts must work on system Python 3.9.6. Use \code{from \strong{future} import annotations} instead of \code{X | None} union syntax.}
+}
+
+\subtree{
+\title{Empty entitlements}
+\p{Both \code{App.entitlements} and \code{Watch.entitlements} MUST contain \code{group.com.magictodo.capture} App Group for CaptureBufferBridge to work.}
+}
+
+\subtree{
+\title{Phone locked during launch}
+\p{\code{devicectl device process launch} fails with "Locked" — phone must be unlocked first. Install still works while locked.}
+}
+}
+
+\subtree{
+\title{7-World Pipeline}
+\pre{\startverb
+# Dry-run the orchestrator
+python3 /Users/alice/worlds/p/orchestrate.py --dry-run --verbose
+
+# Run arena forge conversion
+python3 /Users/alice/worlds/p/task_to_arena.py /Users/alice/worlds/p/capture-buffer-canonical.org --dry-run
+
+# Regenerate olog from arena
+python3 /Users/alice/worlds/p/task-olog-export.py --input /Users/alice/worlds/p/arena_forge.json --output /Users/alice/worlds/p/task-olog.json --pretty
+\stopverb}
+}
+
+\subtree{
+\title{jj Workflow}
+\pre{\startverb
+JJ=/nix/store/jjyhca8bymk8zvgc65q5cy19wm9pqkmd-jujutsu-0.38.0/bin/jj
+cd /Users/alice/worlds/magic-todo-watch
+
+$JJ status
+$JJ log
+$JJ describe -m "description"
+$JJ new
+$JJ bookmark set main -r @-
+$JJ git push --bookmark main
+\stopverb}
+}
+
+\subtree{
+\title{App Icon}
+\p{Generate with Swift (renders emoji to 1024x1024 PNG):}
+
+\pre{\startverb
+# See /tmp/gen_icon.swift — renders emoji onto rounded-rect background
+# Output: App/Assets.xcassets/AppIcon.appiconset/icon_1024.png
+/usr/bin/swift /tmp/gen_icon.swift
+\stopverb}
+}
+}

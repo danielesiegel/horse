@@ -1,0 +1,167 @@
+\title{Untitled}
+
+\taxon{skill}
+
+\subtree{
+\title{Emacspeak Binaural Beat Theme}
+\p{Replace emacspeak's auditory icons with binaural beats using the \strong{intended} sound theme system.}
+
+\subtree{
+\title{Architecture}
+\p{Emacspeak has three separate sound systems:}
+
+\pre{\startverb
+| System | Mechanism | What you hear |
+|--------|-----------|---------------|
+| **Auditory icons** | OGG files from theme dir, served to TTS server via `p <filename>` | Chimes on navigation, actions |
+| **Pure tones** | `dtk-tone` → `t <pitch> <dur>` to TTS server → `tonePlayer.playPureTone` | Beeps on empty lines, case changes |
+| **Soundscapes** | Boodler ambient audio mapped to major modes via UNIX socket | Continuous background audio |
+\stopverb}
+
+\p{On macOS with SwiftMac, \code{swiftmac-configure-tts} forces \code{emacspeak-play-program} to \code{nil}, routing ALL auditory icons through SwiftMac's OGG player. This is the sound you hear during normal editing.}
+}
+
+\subtree{
+\title{The Intended Customization Path}
+\p{Emacspeak's designed mechanism for changing sounds:}
+
+\ol{
+\li{Create a directory under \code{~/emacspeak/sounds/<theme-name>/}}
+\li{Populate with \code{.ogg} files named after the 56 standard icons}
+\li{Call \code{(emacspeak-sounds-select-theme (expand-file-name "<theme-name>" emacspeak-sounds-dir))}}
+}
+
+\p{The cache rebuilds automatically. All playback paths (\code{emacspeak-icon}, \code{emacspeak-serve-icon}, \code{emacspeak-play-icon}, \code{emacspeak-queue-icon}) use the same cache.}
+}
+
+\subtree{
+\title{Current Installation}
+\p{Theme directory: \code{~/emacspeak/sounds/binaural/} Generated: 56 OGG files via SoX, each a distinct binaural beat.}
+
+\p{init.el config (after emacspeak loads):}
+
+\pre{\startverb
+(emacspeak-sounds-select-theme
+ (expand-file-name "binaural" emacspeak-sounds-dir))
+\stopverb}
+}
+
+\subtree{
+\title{Generating the Theme}
+\p{Each icon gets a unique carrier frequency (100-320 Hz) and beat frequency (2-10 Hz):}
+
+\pre{\startverb
+cd ~/emacspeak/sounds/binaural
+SOX=/Users/alice/.local/bin/sox
+i=0
+for icon in alarm alert-user ask-question ask-short-question button center \
+  char close-object complete delete-object deselect-object doc ellipses \
+  fill-object help item key large-movement left mark-object modified-object \
+  more n-answer network-down network-up new-mail news no-answer off on \
+  open-object paragraph process-active progress repeat-active repeat-end \
+  repeat-start right save-object scroll search-hit search-miss section \
+  select-object shutdown task-done tick-tick time tock-tock unmodified-object \
+  voice-mail warn-user window-resize y-answer yank-object yes-answer; do
+  carrier=$((100 + i * 4))
+  beat_tenth=$((20 + (i * 7 % 80)))
+  beat=$(echo "scale=1; $beat_tenth / 10" | bc)
+  freq_r=$(echo "scale=1; $carrier + $beat" | bc)
+  "$SOX" -n "${icon}.ogg" synth 0.15 sine "$carrier" sine "$freq_r" \
+    gain -18 channels 2 fade q 0.01 0.15 0.02
+  i=$((i + 1))
+done
+\stopverb}
+}
+
+\subtree{
+\title{56 Standard Icon Names}
+\pre{\startverb
+alarm alert-user ask-question ask-short-question button center
+char close-object complete delete-object deselect-object doc ellipses
+fill-object help item key large-movement left mark-object modified-object
+more n-answer network-down network-up new-mail news no-answer off on
+open-object paragraph process-active progress repeat-active repeat-end
+repeat-start right save-object scroll search-hit search-miss section
+select-object shutdown task-done tick-tick time tock-tock unmodified-object
+voice-mail warn-user window-resize y-answer yank-object yes-answer
+\stopverb}
+
+\p{Missing icons fall back to \code{button.ogg} (via \code{emacspeak-sounds-cache-get} default).}
+}
+
+\subtree{
+\title{Key Pitfalls (Learned the Hard Way)}
+\subtree{
+\title{DO NOT override \code{dtk-tone} or \code{emacspeak-icon}}
+\p{Function overrides fail silently on macOS because:}
+
+\ul{
+\li{\code{sox-gen-p} / \code{sox-play} are nil if \code{/Users/alice/.local/bin/} isn't in \code{exec-path} at \code{emacspeak-preamble.el} load time}
+\li{\code{start-process} with SoX \code{play} may not route audio correctly from within Emacs subprocesses}
+\li{The sound you hear is auditory icons (OGGs), NOT tones — overriding \code{dtk-tone} changes nothing audible}
+}
+}
+
+\subtree{
+\title{DO NOT set \code{SWIFTMAC_TONE_VOLUME=0.0}}
+\p{This env var silences more than just pure tones. Remove it.}
+}
+
+\subtree{
+\title{DO NOT set \code{emacspeak-play-program} manually on macOS}
+\p{\code{swiftmac-configure-tts} sets it to \code{nil} during emacspeak startup. Fighting this breaks icon playback.}
+}
+
+\subtree{
+\title{The icon playback dispatch}
+\pre{\startverb
+emacspeak-icon(icon)
+  └→ emacspeak-play-program is nil? (macOS: always yes)
+       └→ emacspeak-serve-icon(icon)
+            └→ sends "p <filename>\n" to dtk-speaker-process (SwiftMac)
+                 └→ SwiftMac plays the OGG file via AVAudioEngine
+\stopverb}
+}
+}
+
+\subtree{
+\title{Customization Ideas}
+\subtree{
+\title{Brainwave bands per icon category}
+\pre{\startverb
+Action icons (delete, yank, fill)  → beta beats 13-40 Hz (alertness)
+Navigation icons (left, right, scroll) → alpha beats 8-12 Hz (relaxed focus)
+Status icons (complete, task-done) → theta beats 4-8 Hz (satisfaction)
+Warning icons (alarm, warn-user) → gamma beats 40+ Hz (attention)
+\stopverb}
+}
+
+\subtree{
+\title{Longer/shorter durations}
+\p{Adjust \code{synth 0.15} — current is 150ms. Chimes default is ~100ms.}
+}
+
+\subtree{
+\title{Volume}
+\p{Adjust \code{gain -18} — lower values are quieter. Chimes use various gains.}
+}
+}
+
+\subtree{
+\title{Related Emacspeak Systems}
+\ul{
+\li{\strong{sox-gen.el}: T.V. Raman's binaural beat module (\code{sox-tone-binaural}, \code{sox-binaural}). Standalone — NOT wired into the icon system. Use \code{M-x sox-binaural} for on-demand effects (sleep, dream, think, act, focus).}
+\li{\strong{soundscape.el}: Continuous ambient audio per major mode via Boodler. Separate from icons. Toggle with \code{M-x soundscape-toggle}.}
+\li{\strong{Sound themes}: \code{chimes/} (default), \code{3d/} (spatial). Switch interactively: \code{M-x emacspeak-sounds-select-theme}.}
+}
+}
+
+\subtree{
+\title{Dependencies}
+\ul{
+\li{SoX (\code{sox} and \code{play} at \code{/Users/alice/.local/bin/})}
+\li{Emacspeak with SwiftMac TTS server}
+\li{macOS (SwiftMac is macOS-only via AVSpeechSynthesizer)}
+}
+}
+}

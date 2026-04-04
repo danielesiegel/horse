@@ -1,0 +1,248 @@
+\title{2600 Magazine}
+
+\taxon{skill}
+
+\meta{description}{Query and explore the 2600: The Hacker Quarterly magazine archive (1984-present) via DuckDB. Provides structured access to 168+ issues covering hacker culture, security, privacy, telephony, and digital rights without loading full content into context.}
+
+\subtree{
+\title{2600: The Hacker Quarterly - Archive Skill}
+\subtree{
+\title{What is 2600 Magazine?}
+\p{\strong{2600: The Hacker Quarterly} (ISSN 0749-3851) is the longest-running hacker publication, founded in 1984 by Emmanuel Goldstein (Eric Corley) in Middle Island, New York. Named after the 2600Hz tone that phone phreakers used to control AT&T's long-distance switching systems, it has published continuously for 40+ years as a quarterly magazine.}
+
+\subtree{
+\title{Cultural Significance}
+\ul{
+\li{\strong{The hacker community's primary publication} — sometimes called "the hacker's bible"}
+\li{Advocates the \strong{hacker ethic}: information freedom, opposition to corporate control, exposing vulnerabilities as consumer advocacy}
+\li{Founded partly in response to Corley's 1983 arrest for alleged hacking (charges dropped)}
+\li{The pen name "Emmanuel Goldstein" references the resistance leader in Orwell's \em{1984}}
+}
+}
+
+\subtree{
+\title{Key Legal Case}
+\p{The MPAA sued 2600 in 2000 (\em{Universal City Studios v. Reimerdes}) for publishing/linking to DeCSS (DVD decryption software). Landmark DMCA/free speech case.}
+}
+
+\subtree{
+\title{Associated Projects}
+\ul{
+\li{\strong{Off the Hook}: Weekly radio show on WBAI (NYC), running since 1988}
+\li{\strong{HOPE (Hackers on Planet Earth)}: Biennial hacker convention since 1994}
+\li{\strong{2600 Meetings}: Monthly gatherings in 100+ cities (first Friday of each month)}
+}
+}
+}
+
+\subtree{
+\title{What This Skill Is For}
+\p{Use this skill when you need to:}
+
+\ol{
+\li{\strong{Research hacker culture history} — find which volumes/issues covered specific topics}
+\li{\strong{Trace technology evolution} — phone phreaking to IoT security across 40 years}
+\li{\strong{Find security techniques by era} — what was cutting-edge in any given year}
+\li{\strong{Access archive.org PDFs} — get direct download URLs for available issues}
+\li{\strong{Understand hacker ethics debates} — free speech, surveillance, whistleblowing coverage}
+\li{\strong{Reference HOPE conference topics} — biennial conference coverage since 1994}
+\li{\strong{Build reading lists} — curated paths through the archive by topic}
+}
+}
+
+\subtree{
+\title{Database Location}
+\pre{\startverb
+/Users/alice/.claude/skills/2600-magazine/2600.duckdb
+\stopverb}
+}
+
+\subtree{
+\title{Schema (ACSet-Inspired)}
+\p{The database models the magazine as a categorical structure:}
+
+\pre{\startverb
+issues ←── notable_articles ──→ topic_index
+  │                                  │
+  │ (archive_url)          (category, frequency)
+  │
+  └──→ access_methods
+\stopverb}
+
+\subtree{
+\title{Tables}
+\pre{\startverb
+| Table | Description |
+|-------|-------------|
+| `issues` | All 168+ quarterly issues (Vol 1-42, 1984-2025) |
+| `topic_index` | 20 major recurring topics with category and volume range |
+| `notable_articles` | Curated index of significant articles |
+| `access_methods` | How to access issues (archive.org, store, API) |
+\stopverb}
+}
+
+\subtree{
+\title{Views}
+\pre{\startverb
+| View | Description |
+|------|-------------|
+| `available_on_archive` | Issues with archive.org download URLs |
+| `issues_by_decade` | Issue counts grouped by decade |
+| `topic_coverage` | Topic spans across volumes |
+\stopverb}
+}
+}
+
+\subtree{
+\title{Entry Points (Query Without Loading Content)}
+\subtree{
+\title{By Era}
+\pre{\startverb
+-- What was being hacked in the 90s?
+SELECT volume, issue, year, season FROM issues WHERE year BETWEEN 1990 AND 1999;
+\stopverb}
+}
+
+\subtree{
+\title{By Topic}
+\pre{\startverb
+-- All security-related topics
+SELECT topic, first_volume, last_volume, frequency
+FROM topic_index WHERE category = 'security';
+\stopverb}
+}
+
+\subtree{
+\title{By Availability}
+\pre{\startverb
+-- Get downloadable PDF URLs
+SELECT year, season, archive_url FROM available_on_archive ORDER BY year;
+\stopverb}
+}
+
+\subtree{
+\title{By Decade Summary}
+\pre{\startverb
+SELECT * FROM issues_by_decade;
+\stopverb}
+}
+
+\subtree{
+\title{Notable Articles}
+\pre{\startverb
+-- Famous articles with context
+SELECT na.title, na.author, na.summary, i.year, t.topic
+FROM notable_articles na
+JOIN topic_index t ON na.topic_id = t.id
+LEFT JOIN issues i ON na.volume = i.volume AND na.issue = i.issue;
+\stopverb}
+}
+
+\subtree{
+\title{Direct Archive Access}
+\pre{\startverb
+-- How to bulk download
+SELECT method, url_template, format, notes FROM access_methods;
+\stopverb}
+}
+}
+
+\subtree{
+\title{Topic Categories}
+\pre{\startverb
+| Category | Topics |
+|----------|--------|
+| **security** | Computer Security, Social Engineering, Network Security, Web Security, Lock Picking, IoT Security, AI/ML Security |
+| **telephony** | Phone Phreaking, Cell Phone Security |
+| **privacy** | Encryption & Cryptography, Government Surveillance |
+| **politics** | Digital Rights & Free Speech, Whistleblowing & Leaks |
+| **technical** | Reverse Engineering, Linux & Open Source, Wireless & RF Hacking |
+| **community** | Reader Letters, Marketplace, HOPE Conference Coverage |
+| **culture** | Pay Phone Photography |
+\stopverb}
+}
+
+\subtree{
+\title{Volume-to-Year Mapping}
+\p{\code{year = 1984 + (volume - 1)}}
+
+\pre{\startverb
+| Decade | Volumes | Years | Era |
+|--------|---------|-------|-----|
+| Early | 1-6 | 1984-1989 | Phone phreaking, early BBS |
+| 1990s | 7-16 | 1990-1999 | Internet explosion, crypto wars |
+| 2000s | 17-26 | 2000-2009 | Web security, DeCSS, post-9/11 surveillance |
+| 2010s | 27-36 | 2010-2019 | Snowden, IoT, mobile security |
+| 2020s | 37-42+ | 2020-2025 | AI security, pandemic hacking, cloud |
+\stopverb}
+}
+
+\subtree{
+\title{Archive Access}
+\subtree{
+\title{Internet Archive (Volumes 1-18 confirmed)}
+\pre{\startverb
+# Single issue PDF
+curl -O "https://archive.org/download/2600magazine/2600_1-1.pdf"
+
+# Bulk download via ia CLI
+pip install internetarchive
+ia download 2600magazine --glob='*.pdf'
+
+# Metadata
+curl "https://archive.org/metadata/2600magazine"
+\stopverb}
+}
+
+\subtree{
+\title{Later Volumes (Individual Items)}
+\p{Some later volumes exist as separate archive.org items (e.g., \code{2600-volume-36-issue-3}).}
+}
+
+\subtree{
+\title{Official Store}
+\p{Current and back issues: https://store.2600.com (PDF/EPUB, $18.99/year for early issues)}
+}
+}
+
+\subtree{
+\title{CLI Recipes}
+\pre{\startverb
+# Quick query
+duckdb /Users/alice/.claude/skills/2600-magazine/2600.duckdb -c "
+SELECT year, season, archive_url IS NOT NULL as available
+FROM issues WHERE year = 1995;"
+
+# Topic overview
+duckdb /Users/alice/.claude/skills/2600-magazine/2600.duckdb -c "
+SELECT topic, category, first_volume, last_volume FROM topic_index ORDER BY category;"
+
+# Available PDFs count
+duckdb /Users/alice/.claude/skills/2600-magazine/2600.duckdb -c "
+SELECT COUNT(*) as available, COUNT(*) * 100.0 / (SELECT COUNT(*) FROM issues) as pct
+FROM available_on_archive;"
+\stopverb}
+}
+
+\subtree{
+\title{GF(3) Triad}
+\pre{\startverb
+acsets (-1)  +  duckdb-ies (0)  +  entry-point-analyzer (+1)  =  0
+ schema         storage/query       navigating without
+ definition     engine              loading content
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination between archive structure and query access)}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{acsets} — Schema definition as C-set functor}
+\li{\code{duckdb-ies} — DuckDB analytics patterns}
+\li{\code{entry-point-analyzer} — Strategic access points into large datasets}
+\li{\code{reverse-engineering} — Core 2600 topic area}
+\li{\code{webapp-testing} — Web security techniques covered in later volumes}
+}
+}
+}

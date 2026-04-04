@@ -1,0 +1,77 @@
+\title{Onesec Wda}
+
+\taxon{skill}
+
+\meta{description}{Automate "one sec" app-blocking setup on iOS via Shortcuts automations using WebDriverAgent (WDA). Use when the user wants to bulk-configure one sec for multiple apps on a connected iPhone.}
+
+\subtree{
+\title{one sec WDA Automation}
+\p{Bulk-create iOS Shortcuts automations that trigger "one sec" when apps are opened, driven by WebDriverAgent.}
+
+\subtree{
+\title{Prerequisites}
+\ol{
+\li{\strong{iPhone connected via USB} with developer mode enabled}
+\li{\strong{WebDriverAgent running} via xcodebuild:}
+\li{\strong{WDA accessible} at \code{http://localhost:8100} (use \code{pymobiledevice3 remote start-tunnel} + port forward if needed)}
+\li{\strong{one sec app installed} on the device with Shortcuts integration enabled}
+}
+}
+
+\subtree{
+\title{Usage}
+\pre{\startverb
+# Test with one app first
+python3 /path/to/onesec_setup.py --test
+
+# Run for all apps
+python3 /path/to/onesec_setup.py
+\stopverb}
+
+\p{The script is at: \code{<skill-dir>/scripts/onesec_setup.py}}
+}
+
+\subtree{
+\title{Workflow per App}
+\ol{
+\li{Tap "+" on Shortcuts Automation tab}
+\li{Select "App" trigger}
+\li{Search for and select the target app}
+\li{Confirm "Is Opened" trigger, tap Done}
+\li{Search for "one sec" action}
+\li{Select "Activate one sec (when app opens)"}
+\li{Tap Done to save}
+}
+
+\p{Screenshots are saved to \code{/tmp/onesec_step*} and \code{/tmp/onesec_fail*} for debugging.}
+}
+
+\subtree{
+\title{Customization}
+\p{Edit \code{APPS_TO_PROTECT} list in the script. Move completed apps to \code{ALREADY_DONE} to skip them on re-runs.}
+}
+
+\subtree{
+\title{WDA Helpers}
+\p{The script provides reusable WDA functions (no pip dependencies):}
+
+\ul{
+\li{\code{wda(method, path, data)} — raw HTTP to WDA}
+\li{\code{find(using, value)} / \code{find_one(using, value)} — element lookup}
+\li{\code{tap(element_id)} / \code{tap_name(name)} / \code{tap_label(label)} — tap elements}
+\li{\code{type_text(text)} — type into active element}
+\li{\code{swipe(x1, y1, x2, y2)} — drag gesture}
+\li{\code{screenshot(path)} — save screenshot as PNG}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\ul{
+\li{\strong{WDA connection refused}: Ensure xcodebuild test is running and port 8100 is reachable}
+\li{\strong{pymobiledevice3 tunnel timeout}: Restart tunnel with \code{sudo pymobiledevice3 remote start-tunnel}}
+\li{\strong{Element not found}: Check screenshots in \code{/tmp/onesec_fail_*} to see actual UI state}
+\li{\strong{App not in picker}: App name must match exactly as shown on device home screen}
+}
+}
+}

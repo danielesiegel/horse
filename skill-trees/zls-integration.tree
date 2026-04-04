@@ -1,0 +1,338 @@
+\title{Zls Integration}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{"zls-integration skill"}
+
+\subtree{
+\title{ZLS Integration Skill}
+\p{Zig Language Server (ZLS) provides IDE features for Zig development. This skill covers installation, configuration, build-on-save diagnostics, and troubleshooting.}
+
+\subtree{
+\title{Quick Reference}
+\pre{\startverb
+| Feature | ZLS Support | Notes |
+|---------|-------------|-------|
+| Autocomplete | ✓ Full | Includes comptime-aware completion |
+| Goto Definition | ✓ Full | Cross-file navigation |
+| Find References | ✓ Full | All usages in workspace |
+| Hover Documentation | ✓ Full | Inline docs from source |
+| Diagnostics | ⚡ Parser-level | Semantic via build-on-save |
+| Rename Symbol | ✓ Full | Safe refactoring |
+| Code Actions | ✓ Partial | Fix imports, remove unused |
+| Formatting | ✓ Full | Uses `zig fmt` |
+\stopverb}
+}
+
+\subtree{
+\title{Installation}
+\subtree{
+\title{Via Package Manager (Recommended)}
+\pre{\startverb
+# macOS (Homebrew)
+brew install zls
+
+# Nix/Flox
+flox install zls
+
+# Arch Linux
+pacman -S zls
+
+# From source (any platform)
+git clone https://github.com/zigtools/zls
+cd zls
+zig build -Doptimize=ReleaseSafe
+\stopverb}
+}
+
+\subtree{
+\title{Version Compatibility}
+\pre{\startverb
+| Zig Version | ZLS Version | Notes |
+|-------------|-------------|-------|
+| 0.15.x | 0.15.x | Current stable |
+| 0.14.x | 0.14.x | Previous stable |
+| 0.13.x | 0.13.x | Legacy |
+| master | master | Build from source |
+\stopverb}
+
+\p{\strong{Always match ZLS version to Zig version.}}
+}
+}
+
+\subtree{
+\title{Configuration}
+\subtree{
+\title{zls.json Location}
+\pre{\startverb
+~/.config/zls.json           # Linux/macOS
+%APPDATA%\zls.json           # Windows
+<project>/.zls.json          # Project-specific
+\stopverb}
+}
+
+\subtree{
+\title{Essential Configuration}
+\pre{\startverb
+{
+  "zig_exe_path": "/path/to/zig",
+  "enable_autofix": true,
+  "enable_import_access": true,
+  "highlight_global_var_declarations": true,
+  "warn_style": true,
+  "enable_build_on_save": true,
+  "build_on_save_step": "check"
+}
+\stopverb}
+}
+}
+
+\subtree{
+\title{Build-On-Save Diagnostics}
+\p{ZLS can run your build script on save to catch semantic errors (type mismatches, wrong argument counts) that parser-level analysis misses.}
+
+\subtree{
+\title{Step 1: Add Check Step to build.zig}
+\pre{\startverb
+// build.zig
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
+    const exe = b.addExecutable(.{
+        .name = "myapp",
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    b.installArtifact(exe);
+
+    // ZLS check step - runs on save
+    const check = b.addExecutable(.{
+        .name = "myapp",
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    
+    const check_step = b.step("check", "Check compilation (for ZLS)");
+    check_step.dependOn(&check.step);
+}
+\stopverb}
+}
+
+\subtree{
+\title{Step 2: Configure ZLS}
+\pre{\startverb
+{
+  "enable_build_on_save": true,
+  "build_on_save_step": "check"
+}
+\stopverb}
+}
+
+\subtree{
+\title{Step 3: Editor Setup}
+\p{\strong{VS Code (zls extension):}}
+
+\pre{\startverb
+// settings.json
+{
+  "zig.zls.path": "/path/to/zls",
+  "zig.zls.enableBuildOnSave": true
+}
+\stopverb}
+
+\p{\strong{Neovim (nvim-lspconfig):}}
+
+\pre{\startverb
+require('lspconfig').zls.setup({
+  settings = {
+    zls = {
+      enable_build_on_save = true,
+      build_on_save_step = "check"
+    }
+  }
+})
+\stopverb}
+
+\p{\strong{Emacs (lsp-mode):}}
+
+\pre{\startverb
+(setq lsp-zig-zls-executable "/path/to/zls")
+(setq lsp-zig-enable-build-on-save t)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{No Diagnostics Appearing}
+\ol{
+\li{Verify ZLS is running: \code{pgrep -l zls}}
+\li{Check ZLS log: \code{~/.cache/zls/zls.log}}
+\li{Ensure Zig version matches: \code{zig version} vs \code{zls --version}}
+\li{Test build manually: \code{zig build check}}
+}
+}
+
+\subtree{
+\title{Slow Completions}
+\pre{\startverb
+{
+  "skip_std_references": true,
+  "prefer_ast_check_as_child_process": true
+}
+\stopverb}
+}
+
+\subtree{
+\title{Import Resolution Failures}
+\pre{\startverb
+{
+  "enable_import_access": true,
+  "additional_module_paths": ["deps/", "vendor/"]
+}
+\stopverb}
+}
+
+\subtree{
+\title{Build-On-Save Not Working}
+\ol{
+\li{Verify \code{check} step exists in build.zig}
+\li{Run \code{zig build check} manually}
+\li{Check ZLS config: \code{enable_build_on_save: true}}
+\li{Restart language server}
+}
+}
+}
+
+\subtree{
+\title{GF(3) Integration}
+\p{ZLS diagnostics map to triadic workflow:}
+
+\pre{\startverb
+| Diagnostic Type | Trit | Action |
+|-----------------|------|--------|
+| Error (red) | -1 | Must fix before build |
+| Warning (yellow) | 0 | Review, may ignore |
+| Hint (blue) | +1 | Optimization opportunity |
+\stopverb}
+
+\p{Conservation: \code{errors + warnings + hints → 0} as code improves.}
+}
+
+\subtree{
+\title{Editor Integration Matrix}
+\pre{\startverb
+| Editor | Plugin | Config Path |
+|--------|--------|-------------|
+| VS Code | zls (extension) | `.vscode/settings.json` |
+| Neovim | nvim-lspconfig | `init.lua` or `lsp.lua` |
+| Helix | Built-in | `languages.toml` |
+| Emacs | lsp-mode + lsp-zig | `init.el` |
+| Sublime | LSP-zig | `*.sublime-settings` |
+| Vim | vim-lsp or coc.nvim | `.vimrc` or `coc-settings.json` |
+\stopverb}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{zig-programming} - Core Zig language and stdlib}
+\li{\code{zig-async-io} - Async/concurrent patterns (0.16.0+)}
+\li{\code{tree-sitter} - AST-based code analysis}
+}
+}
+
+\subtree{
+\title{Resources}
+\ul{
+\li{[ZLS GitHub](https://github.com/zigtools/zls)}
+\li{[ZLS Configuration Guide](https://zigtools.org/zls/configure/)}
+\li{[Build-On-Save Guide](https://zigtools.org/zls/guides/build-on-save/)}
+\li{[Zig BBQ Cookbook](https://cookbook.ziglang.cc/)}
+}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{general}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 4. Pattern Matching}
+\p{\strong{Concepts}: unification, match, segment variables, pattern}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+zls-integration (−) + SDF.Ch4 (+) + [balancer] (○) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: -1 (MINUS - verification)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch6: Layering}
+\li{Ch2: Domain-Specific Languages}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Pattern matching extracts structure. This skill recognizes and transforms patterns.}
+}
+}
+
+\subtree{
+\title{Cat\# Integration}
+\p{This skill maps to \strong{Cat\# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat\# equipment structure.}
+}
+}
+}

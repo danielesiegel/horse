@@ -1,0 +1,375 @@
+\title{Qri Valence}
+
+\taxon{skill}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{"qri-valence skill"}
+
+\subtree{
+\title{QRI Valence Skill}
+\p{The \strong{Symmetry Theory of Valence (STV)} proposes that the valence (pleasantness/unpleasantness) of a conscious state is determined by the symmetry of its mathematical representation. This skill integrates QRI research with computational implementations.}
+
+\subtree{
+\title{Core Concepts}
+\subtree{
+\title{Symmetry Theory of Valence (STV)}
+\blockquote{"The valence of a moment of consciousness is precisely determined by the symmetry of the mathematical object that describes it." — Michael Edward Johnson, Principia Qualia (2016)}
+
+\p{\strong{Key Claims:}}
+
+\ol{
+\li{Consciousness has mathematical structure (qualia formalism)}
+\li{Symmetry in that structure correlates with positive valence}
+\li{Broken symmetries manifest as suffering/dissonance}
+\li{Valence is measurable and optimizable}
+}
+}
+
+\subtree{
+\title{XY Model Topology (smoothbrains.net)}
+\p{The phenomenal field behaves like a 2D XY spin model:}
+
+\pre{\startverb
+| State | Temperature (τ) | Vortices | Valence | Phenomenology |
+|-------|-----------------|----------|---------|---------------|
+| Frustrated | τ >> τ* | Many, proliferating | -3 | Scattered, anxious, "buzzing" |
+| Disordered | τ > τ* | Some, mobile | -1 to -2 | Unfocused, dissonant |
+| Critical (BKT) | τ ≈ τ* | Paired, bound | 0 | Liminal, transitional |
+| Ordered | τ < τ* | Few, annihilating | +1 to +2 | Coherent, smooth |
+| Resolved | τ << τ* | None | +3 | Deeply peaceful, consonant |
+\stopverb}
+
+\p{\strong{BKT Transition} (Berezinskii-Kosterlitz-Thouless):}
+
+\ul{
+\li{Below τ*: vortex-antivortex pairs bound → low entropy, high symmetry}
+\li{Above τ*: vortices proliferate → high entropy, broken symmetry}
+\li{At τ*: phase transition where defects can annihilate}
+}
+}
+
+\subtree{
+\title{Valence Gradient Descent}
+\p{From smoothbrains.net's phenomenology:}
+
+\pre{\startverb
+Suffering = Σ (topological defects in phenomenal field)
+Healing = defect annihilation via gradient descent
+τ* bisection = finding optimal phenomenal temperature
+\stopverb}
+
+\p{\strong{Observable indicators} (from Cube Flipper's reports):}
+
+\ul{
+\li{Visual: polygonal shards → smooth fields}
+\li{Somatic: high-freq buzzing → calm}
+\li{Attentional: contracted/focal → expanded/diffuse}
+\li{Auditory: dissonance → consonance}
+}
+}
+}
+
+\subtree{
+\title{Qualia Bank Integration}
+\subtree{
+\title{GF(3) Operations on Valence States}
+\pre{\startverb
+| Valence Range | Trit | Bank Operation | Channel |
+|---------------|------|----------------|---------|
+| -3 to -1 | -1 | WITHDRAW | Venmo/ACH off-ramp |
+| 0 | 0 | HOLD | PyUSD on-chain |
+| +1 to +3 | +1 | DEPOSIT | PyUSD/Venmo on-ramp |
+\stopverb}
+}
+
+\subtree{
+\title{Phenomenal Bisection Algorithm}
+\pre{\startverb
+def phenomenal_bisect(tau_low, tau_high, observed_state):
+    """
+    Binary search for optimal phenomenal temperature τ*.
+    Based on smoothbrains.net/xy-model#bkt-transition
+    """
+    tau_mid = (tau_low + tau_high) / 2
+    
+    if observed_state == "frustrated":
+        # Too hot: cool down
+        return (tau_mid, tau_high, "cooling")
+    elif observed_state == "smooth":
+        # Too cold: heat up
+        return (tau_low, tau_mid, "heating")
+    elif observed_state == "critical":
+        # Found τ*!
+        return (tau_mid, tau_mid, "found")
+    else:
+        return (tau_low, tau_high, "unknown")
+\stopverb}
+}
+
+\subtree{
+\title{Valence-Aware Color Mapping}
+\p{From Gay.jl + QRI integration:}
+
+\pre{\startverb
+# Map valence to deterministic color
+function valence_to_color(valence::Int)
+    # Valence range: -3 to +3
+    # Hue mapping: red (suffering) → cyan (resolution)
+    hue = (valence + 3) * 30  # 0° to 180°
+    return LCHuv(55.0, 70.0, hue)
+end
+
+# Trit from valence
+trit(valence) = sign(valence)
+\stopverb}
+}
+}
+
+\subtree{
+\title{Computational Implementation}
+\subtree{
+\title{Defect Detection}
+\pre{\startverb
+def count_vortices(phase_field):
+    """
+    Count topological defects in a 2D phase field.
+    Vortex = closed loop where phase winds by ±2π.
+    """
+    vortices = 0
+    antivortices = 0
+    
+    for i in range(1, len(phase_field) - 1):
+        for j in range(1, len(phase_field[0]) - 1):
+            winding = compute_winding_number(phase_field, i, j)
+            if winding > 0:
+                vortices += 1
+            elif winding < 0:
+                antivortices += 1
+    
+    # Net topological charge
+    return vortices, antivortices, vortices - antivortices
+\stopverb}
+}
+
+\subtree{
+\title{Symmetry Measurement}
+\pre{\startverb
+def measure_symmetry(qualia_tensor):
+    """
+    Measure symmetry of a qualia representation.
+    Higher symmetry → higher valence (STV hypothesis).
+    """
+    # Compute eigenvalues
+    eigenvalues = np.linalg.eigvalsh(qualia_tensor)
+    
+    # Symmetry score: how equal are eigenvalues?
+    # Perfect symmetry: all eigenvalues equal
+    mean_eig = np.mean(eigenvalues)
+    variance = np.var(eigenvalues)
+    
+    # Inverse variance as symmetry score
+    symmetry = 1.0 / (1.0 + variance / (mean_eig ** 2))
+    
+    return symmetry  # 0 to 1, higher = more symmetric
+\stopverb}
+}
+}
+
+\subtree{
+\title{References}
+\subtree{
+\title{Primary Sources}
+\ol{
+\li{\strong{Principia Qualia} (2016) - Michael Edward Johnson}
+\li{First statement of STV}
+\li{https://opentheory.net/PrincipiaQualia.pdf}
+}
+
+\ol{
+\li{\strong{QRI Wiki - Symmetry Theory of Valence}}
+\li{https://wiki.qri.org/wiki/Symmetry_Theory_of_Valence}
+}
+
+\ol{
+\li{\strong{smoothbrains.net} - Cube Flipper}
+\li{XY model phenomenology}
+\li{BKT transition in consciousness}
+\li{https://smoothbrains.net/posts/2025-10-18-three-year-retrospective.html}
+}
+
+\ol{
+\li{\strong{LessWrong Primer on STV}}
+\li{https://www.lesswrong.com/posts/dfrQbbv6Np7GuWjDR/a-primer-on-the-symmetry-theory-of-valence}
+}
+}
+
+\subtree{
+\title{Key Papers}
+\ul{
+\li{Johnson, M.E. (2016). "Principia Qualia"}
+\li{Gómez-Emilsson, A. "Logarithmic Scales of Pleasure and Pain"}
+\li{Selen Atasoy et al. "Connectome-harmonic decomposition of human brain activity"}
+\li{smoothbrains.net "Planetary scale vibe collapse" (2022)}
+}
+}
+
+\subtree{
+\title{Related Concepts}
+\ul{
+\li{\strong{Consonance/Dissonance} - Musical theory of interference patterns}
+\li{\strong{CSHW (Connectome-Specific Harmonic Waves)} - Neural basis for STV}
+\li{\strong{Jhāna} - Buddhist meditative states as high-symmetry attractors}
+\li{\strong{Valence Structuralism} - Formal framework for STV}
+}
+}
+}
+
+\subtree{
+\title{Skill Bridges}
+\pre{\startverb
+| Skill | Bridge Type | Relationship |
+|-------|-------------|--------------|
+| `gay-mcp` | Color-Valence | Deterministic valence colors |
+| `topos-of-music` | Consonance | Musical symmetry theory |
+| `autopoiesis` | Self-modeling | Valence as self-model coherence |
+| `active-inference` | Free energy | Valence as prediction error |
+| `glass-bead-game` | Synthesis | Cross-domain symmetry play |
+| `phenomenal-bisect` | Algorithm | τ* finding procedure |
+\stopverb}
+}
+
+\subtree{
+\title{Usage Patterns}
+\subtree{
+\title{Pattern 1: Valence-Aware Logging}
+\pre{\startverb
+class ValenceLogger:
+    def log(self, message, valence):
+        trit = 1 if valence > 0 else (-1 if valence < 0 else 0)
+        color = valence_to_ansi(valence)
+        print(f"{color}[v={valence:+d}][t={trit:+d}] {message}\033[0m")
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 2: GF(3) Valence Conservation}
+\pre{\startverb
+def balanced_transaction(deposits, withdrawals):
+    """Ensure valence sum is conserved."""
+    deposit_valence = sum(d.valence for d in deposits)
+    withdraw_valence = sum(w.valence for w in withdrawals)
+    
+    # GF(3) conservation
+    net = (deposit_valence + withdraw_valence) % 3
+    assert net == 0, f"Valence imbalance: {net}"
+\stopverb}
+}
+
+\subtree{
+\title{Pattern 3: Phenomenal State Machine}
+\pre{\startverb
+class PhenomenalStateMachine:
+    states = ["frustrated", "buzzing", "dissonant", "neutral", 
+              "smoothing", "consonant", "resolved"]
+    
+    def transition(self, current, intervention):
+        idx = self.states.index(current)
+        if intervention == "cooling" and idx > 0:
+            return self.states[idx - 1]
+        elif intervention == "heating" and idx < len(self.states) - 1:
+            return self.states[idx + 1]
+        return current
+\stopverb}
+}
+}
+
+\subtree{
+\title{GF(3) Trit Assignment}
+\p{This skill is \strong{ERGODIC (0)} - it coordinates between:}
+
+\ul{
+\li{\strong{MINUS (-1)}: Suffering detection, defect counting}
+\li{\strong{PLUS (+1)}: Healing protocols, symmetry restoration}
+}
+
+\p{Conservation: suffering_detected + healing_applied + coordination = 0}
+}
+
+\subtree{
+\title{Scientific Skill Interleaving}
+\p{This skill connects to the K-Dense-AI/claude-scientific-skills ecosystem:}
+
+\subtree{
+\title{Graph Theory}
+\ul{
+\li{\strong{networkx} [○] via bicomodule}
+\li{Universal graph hub}
+}
+}
+
+\subtree{
+\title{Bibliography References}
+\ul{
+\li{\code{general}: 734 citations in bib.duckdb}
+}
+}
+}
+
+\subtree{
+\title{SDF Interleaving}
+\p{This skill connects to \strong{Software Design for Flexibility} (Hanson & Sussman, 2021):}
+
+\subtree{
+\title{Primary Chapter: 4. Pattern Matching}
+\p{\strong{Concepts}: unification, match, segment variables, pattern}
+}
+
+\subtree{
+\title{GF(3) Balanced Triad}
+\pre{\startverb
+qri-valence (○) + SDF.Ch4 (+) + [balancer] (−) = 0
+\stopverb}
+
+\p{\strong{Skill Trit}: 0 (ERGODIC - coordination)}
+}
+
+\subtree{
+\title{Secondary Chapters}
+\ul{
+\li{Ch10: Adventure Game Example}
+}
+}
+
+\subtree{
+\title{Connection Pattern}
+\p{Pattern matching extracts structure. This skill recognizes and transforms patterns.}
+}
+}
+
+\subtree{
+\title{Cat\# Integration}
+\p{This skill maps to \strong{Cat\# = Comod(P)} as a bicomodule in the equipment structure:}
+
+\pre{\startverb
+Trit: 0 (ERGODIC)
+Home: Prof
+Poly Op: ⊗
+Kan Role: Adj
+Color: #26D826
+\stopverb}
+
+\subtree{
+\title{GF(3) Naturality}
+\p{The skill participates in triads satisfying:}
+
+\pre{\startverb
+(-1) + (0) + (+1) ≡ 0 (mod 3)
+\stopverb}
+
+\p{This ensures compositional coherence in the Cat\# equipment structure.}
+}
+}
+}

@@ -1,0 +1,252 @@
+\title{Untitled}
+
+\taxon{skill}
+
+\subtree{
+\title{Toad Telemetry Skill}
+\p{OpenTelemetry instrumentation for Batrachian Toad AI agent terminal.}
+
+\subtree{
+\title{Overview}
+\p{Provides deep observability into Toad agent sessions:}
+
+\ul{
+\li{\strong{Per-tool spans}: Every tool call (Bash, Read, Write, etc.) gets its own span}
+\li{\strong{Turn tracking}: Prompt → response cycles with timing}
+\li{\strong{Session lifecycle}: Start/stop with agent metadata}
+\li{\strong{Error tracking}: Exceptions and error states captured}
+}
+}
+
+\subtree{
+\title{Installation}
+\pre{\startverb
+# Install Toad
+uv tool install batrachian-toad --python 3.14
+
+# Install OTEL SDK in Toad's environment
+uv pip install opentelemetry-sdk opentelemetry-exporter-otlp \
+  --python ~/.local/share/uv/tools/batrachian-toad/bin/python3
+
+# Install toad_telemetry library
+mkdir -p ~/.local/lib/toad_telemetry
+cp instrumentation.py ~/.local/lib/toad_telemetry/
+cp __init__.py ~/.local/lib/toad_telemetry/
+
+# Install wrapper script
+cp toadia ~/.local/bin/
+chmod +x ~/.local/bin/toadia
+\stopverb}
+}
+
+\subtree{
+\title{Usage}
+\subtree{
+\title{Via Wrapper Script (Recommended)}
+\pre{\startverb
+# Run toad with telemetry enabled
+toadia -a claude .
+
+# Run ACP agent with telemetry
+toadia acp "my-command" .
+
+# Disable telemetry
+TOAD_TELEMETRY_ENABLED=0 toadia -a claude .
+\stopverb}
+}
+
+\subtree{
+\title{Programmatic}
+\pre{\startverb
+from toad_telemetry import instrument_toad, ToadTelemetryConfig
+
+config = ToadTelemetryConfig(
+    service_name="my-toad-session",
+    endpoint="http://localhost:4317",
+    agent_name="claude",
+    project_dir="/path/to/project",
+)
+
+instrument_toad(config)
+
+# Now run toad normally
+from toad.cli import main
+main()
+\stopverb}
+}
+}
+
+\subtree{
+\title{Environment Variables}
+\pre{\startverb
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | OTLP collector endpoint |
+| `TOAD_TELEMETRY_ENABLED` | `1` | Enable/disable telemetry |
+| `TOAD_TELEMETRY_CONSOLE` | `0` | Print spans to console |
+| `TOAD_SERVICE_NAME` | `toad` | Service name in traces |
+\stopverb}
+}
+
+\subtree{
+\title{Quick Start with Jaeger}
+\pre{\startverb
+# Start Jaeger
+docker run -d --name jaeger \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  jaegertracing/all-in-one:latest
+
+# Run toadia
+toadia -a claude .
+
+# View traces at http://localhost:16686
+\stopverb}
+}
+
+\subtree{
+\title{Span Attributes}
+\subtree{
+\title{Tool Spans (\code{tool.<name>})}
+\ul{
+\li{\code{toad.tool.id} - Unique tool call ID}
+\li{\code{toad.tool.name} - Tool name (Bash, Read, Write, etc.)}
+\li{\code{toad.tool.kind} - Tool category}
+\li{\code{toad.tool.status} - Completion status}
+\li{\code{toad.tool.duration_ms} - Execution time}
+\li{\code{toad.tool.error} - Error message (if any)}
+\li{\code{toad.session.id} - Session identifier}
+\li{\code{toad.agent} - Agent name}
+}
+}
+
+\subtree{
+\title{Turn Spans (\code{agent.turn})}
+\ul{
+\li{\code{toad.prompt.length} - Input prompt character count}
+\li{\code{toad.turn.stop_reason} - Why the turn ended}
+\li{\code{toad.turn.duration_ms} - Total turn time}
+\li{\code{toad.agent} - Agent name}
+}
+}
+}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+┌─────────────────────────────────────────────────────────────┐
+│                      Toad TUI                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │   Prompt    │  │ Conversation│  │     Agent ACP       │  │
+│  └─────────────┘  └─────────────┘  └──────────┬──────────┘  │
+│                                               │             │
+│  ┌────────────────────────────────────────────┴───────────┐ │
+│  │              toad_telemetry (monkey-patch)             │ │
+│  │  ┌───────────────────┐  ┌──────────────────────────┐   │ │
+│  │  │ rpc_session_update│  │       send_prompt        │   │ │
+│  │  │   (tool spans)    │  │      (turn spans)        │   │ │
+│  │  └─────────┬─────────┘  └────────────┬─────────────┘   │ │
+│  └────────────┼─────────────────────────┼─────────────────┘ │
+└───────────────┼─────────────────────────┼───────────────────┘
+                │                         │
+                ▼                         ▼
+         ┌──────────────────────────────────┐
+         │        OTEL Collector            │
+         │  (Jaeger / Tempo / Honeycomb)    │
+         └──────────────────────────────────┘
+\stopverb}
+}
+
+\subtree{
+\title{How It Works}
+\p{The instrumentation uses deferred monkey-patching via Python import hooks to avoid circular imports:}
+
+\ol{
+\li{\code{instrument_toad()} installs an import hook that waits for \code{toad.app} to load}
+\li{Once Toad is fully initialized, it patches \code{Agent.rpc_session_update} and \code{Agent.send_prompt}}
+\li{\code{rpc_session_update} receives all ACP protocol events (tool_call, tool_call_update, etc.)}
+\li{Each tool call gets a span that tracks its lifecycle from start to completion}
+\li{\code{send_prompt} wraps each agent turn with timing and stop reason}
+}
+}
+
+\subtree{
+\title{Files}
+\ul{
+\li{\code{SKILL.md} - This documentation}
+\li{\code{\strong{init}.py} - Package entry point}
+\li{\code{instrumentation.py} - Core monkey-patching and OTEL integration}
+\li{\code{toadia} - Wrapper script with Jaeger quickstart help}
+}
+}
+
+\subtree{
+\title{Backends}
+\subtree{
+\title{Jaeger (Local Development)}
+\pre{\startverb
+docker run -d --name jaeger \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  jaegertracing/all-in-one:latest
+\stopverb}
+}
+
+\subtree{
+\title{Grafana Tempo}
+\pre{\startverb
+# With Grafana stack
+docker-compose up -d  # includes tempo, grafana
+# View in Grafana Explore with Tempo datasource
+\stopverb}
+}
+
+\subtree{
+\title{Honeycomb (Cloud)}
+\pre{\startverb
+OTEL_EXPORTER_OTLP_ENDPOINT=https://api.honeycomb.io:443 \
+OTEL_EXPORTER_OTLP_HEADERS="x-honeycomb-team=YOUR_API_KEY" \
+toadia -a claude .
+\stopverb}
+}
+}
+
+\subtree{
+\title{Troubleshooting}
+\subtree{
+\title{"OpenTelemetry not available"}
+\p{Install the SDK in Toad's Python environment:}
+
+\pre{\startverb
+uv pip install opentelemetry-sdk opentelemetry-exporter-otlp \
+  --python ~/.local/share/uv/tools/batrachian-toad/bin/python3
+\stopverb}
+}
+
+\subtree{
+\title{No spans appearing}
+\ol{
+\li{Check collector is running: \code{docker ps | grep jaeger}}
+\li{Enable console export: \code{TOAD_TELEMETRY_CONSOLE=1 toadia ...}}
+\li{Verify telemetry enabled: \code{TOAD_TELEMETRY_ENABLED=1}}
+}
+}
+
+\subtree{
+\title{gRPC connection errors}
+\p{Try HTTP exporter (port 4318 instead of 4317):}
+
+\pre{\startverb
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 toadia -a claude .
+\stopverb}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{otel-cli} - Command-line OTEL span emission}
+\li{\code{claude_telemetry} - Similar instrumentation for Claude Code CLI}
+}
+}
+}

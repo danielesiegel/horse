@@ -1,0 +1,96 @@
+\title{Ukraine}
+
+\taxon{skill}
+
+\meta{description}{Mullvad VPN + jurisdiction routing for DeFi access. Use when planning trading setups that need specific geo-IP, checking DEX restricted countries, or configuring Mullvad exits.}
+
+\subtree{
+\title{MuVault — Mullvad + Jurisdiction Routing}
+\p{Route trading access through Mullvad VPN exits to non-restricted jurisdictions.}
+
+\subtree{
+\title{Mullvad Ukraine Servers}
+\pre{\startverb
+| IP | Location | Provider | Network |
+|----|----------|----------|---------|
+| 149.102.240.66 | Kyiv | DataCamp | AS212238 |
+\stopverb}
+
+\p{Mullvad runs WireGuard and OpenVPN servers in Kyiv. All rented dedicated (not virtual), physically located where listed.}
+
+\p{Check current server list: \code{https://mullvad.net/en/help/server-list} (filter by country: Ukraine)}
+}
+
+\subtree{
+\title{Ostium DEX Jurisdiction Map}
+\p{\strong{Restricted (BLOCKED):}}
+
+\ul{
+\li{United States}
+\li{Iran, Syria, Cuba, North Korea}
+\li{Crimea, Donetsk, Luhansk (Ukraine occupied territories)}
+\li{Any jurisdiction under comprehensive US economic sanctions}
+}
+
+\p{\strong{Allowed:} Everything else. No whitelist — just the blacklist above.}
+
+\p{\strong{Key facts:}}
+
+\ul{
+\li{No KYC, connect via Web3 wallet or email}
+\li{Built on Arbitrum, 31+ markets, up to 200x leverage}
+\li{VPN circumvention explicitly prohibited in ToS for restricted persons}
+\li{Chernivtsi, Kyiv, Lviv, Odesa — all clean Ukrainian cities (not restricted regions)}
+}
+}
+
+\subtree{
+\title{Setup Checklist}
+\pre{\startverb
+- [ ] Mullvad account (anonymous, pay with crypto)
+- [ ] WireGuard config for ua-kyv exit
+- [ ] Verify IP: curl -s https://am.i.mullvad.net/json | jq '.ip, .country'
+- [ ] Arbitrum wallet funded (bridge from L1 or CEX withdraw to Arbitrum)
+- [ ] Connect to app.ostium.com, verify no geo-block
+\stopverb}
+}
+
+\subtree{
+\title{iMac IES Setup (Tailscale)}
+\pre{\startverb
+| Field | Value |
+|-------|-------|
+| Hostname | iess-imac |
+| Tailscale IP | 100.107.8.33 |
+| User | ies |
+| Status | Check: `tailscale status \| grep imac` |
+\stopverb}
+
+\p{SSH: \code{ssh ies@100.107.8.33}}
+}
+
+\subtree{
+\title{XBOW Resilience Notes}
+\p{When caching macOS security updates on trading infrastructure:}
+
+\ul{
+\li{\strong{Tier 1} (no web surface): Apple Content Caching, Reposado}
+\li{\strong{Tier 2} (managed surface): Jamf DDM Blueprints}
+\li{\strong{Tier 3} (large surface): JFrog Artifactory}
+}
+
+\p{Principle: dumb caches + Apple crypto signatures beat smart dashboards against autonomous AI pentesters.}
+}
+
+\subtree{
+\title{Other DEX Jurisdiction Patterns}
+\p{When checking any DEX, look for:}
+
+\ol{
+\li{Terms of Use → "Restricted Person" definition}
+\li{Usually: US + OFAC sanctioned countries + specific conflict zones}
+\li{Most Arbitrum/Base DEXs follow similar patterns to Ostium}
+\li{DeFiLlama for volume/TVL comparison: \code{https://defillama.com/protocol/ostium}}
+}
+}
+}

@@ -1,0 +1,215 @@
+\title{Worlding Calendar}
+
+\taxon{skill}
+
+\tag{calendar}
+
+\tag{org-mode}
+
+\tag{caldav}
+
+\tag{beeper}
+
+\tag{goblins}
+
+\tag{worlds}
+
+\tag{emacs}
+
+\meta{version}{1.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Calendar events tied to 26 letter-worlds via org-mode. Links events to beeper messages, voice notes, and Goblins capabilities. Replaces 13K-token Google Calendar MCP with CalDAV + DuckDB interactome.}
+
+\subtree{
+\title{Worlding Calendar}
+\p{Every calendar event contributes to a world. This skill manages that mapping.}
+
+\subtree{
+\title{Architecture}
+\pre{\startverb
+                CalDAV (Google)
+                     │
+   voice notes ──→ org-worlding-calendar.el ←── beeper messages
+                     │
+              ~/worlds/p/calendar.org
+                     │
+        ┌────────────┼────────────┐
+        ▼            ▼            ▼
+   :WORLD: a    :WORLD: b    :WORLD: g ...
+   ~/worlds/a/  ~/worlds/b/  ~/worlds/g/
+\stopverb}
+}
+
+\subtree{
+\title{Three Layers}
+\pre{\startverb
+| Layer | Source | Function |
+|-------|--------|----------|
+| **Org** | `~/worlds/p/calendar.org` | Canonical event store with world tags |
+| **DuckDB** | `~/worlds/beeper_interactome.duckdb` | Contact→world inference from messaging history |
+| **Emacs** | `~/.emacs.d/lisp/org-worlding-calendar.el` | UI, transient menus, agenda views |
+\stopverb}
+}
+
+\subtree{
+\title{World Inference}
+\p{Events are auto-tagged with \code{:WORLD:} letter based on content:}
+
+\pre{\startverb
+"barton bci meeting" → :WORLD: b
+"goblins ocapn sync" → :WORLD: g
+"vivarium hackathon" → :WORLD: v
+"plurigrid standup"  → :WORLD: p
+\stopverb}
+
+\p{Inference uses regex patterns + DuckDB interactome queries on beeper contact names.}
+}
+
+\subtree{
+\title{Properties Per Event}
+\pre{\startverb
+* RISING Yoyo hackathon prep
+:PROPERTIES:
+:WORLD: y
+:WORLD_PATH: ~/worlds/y/
+:BEEPER_CHAT: !0xZ1HWPM91hEOzuwxzBR:beeper.local
+:VOICE_NOTE: ~/Library/Application Support/BeeperTexts/media/...
+:OCAPN_REF: ocapn://...
+:CREATED: [2026-03-26 Thu]
+:END:
+<2026-03-26 Thu 14:00>--<2026-03-26 Thu 16:00>
+\stopverb}
+}
+
+\subtree{
+\title{Worlding States (from org-worlding.el)}
+\p{Events use worlding states instead of TODO/DONE:}
+
+\pre{\startverb
+| State | Meaning | Calendar use |
+|-------|---------|-------------|
+| SEEDING | Sub-threshold | Tentative, not confirmed |
+| RISING | Gaining amplitude | Confirmed, approaching |
+| RESONANT | Phase-locked | Happening NOW |
+| WAVE | Self-sustaining | Recurring/habit |
+| ERGODIC | Full exploration | Open-ended session |
+| ACTIVE | Self-sustaining | Ongoing project event |
+| BEATING | Interference | Conflict/double-booked |
+| DRIVEN | Externally forced | Obligation/external |
+| STABLE | Fixed point | Completed, archived |
+| FADED | Below threshold | Cancelled/no-showed |
+\stopverb}
+}
+
+\subtree{
+\title{Emacs Keybindings}
+\pre{\startverb
+C-c w c e  → Create world-tagged event
+C-c w c v  → Link voice note to event
+C-c w c b  → Link beeper message to event
+C-c w c c  → Set OCapN capability ref
+C-c w c C  → Agenda grouped by world
+C-c w W    → Worlding dashboard
+\stopverb}
+}
+
+\subtree{
+\title{Querying from Claude Code}
+\subtree{
+\title{List events by world}
+\pre{\startverb
+grep -A5 ":WORLD: b" ~/worlds/p/calendar.org
+\stopverb}
+}
+
+\subtree{
+\title{Query interactome for contact→world mapping}
+\pre{\startverb
+duckdb ~/worlds/beeper_interactome.duckdb -c "
+SELECT name, protocol, sent, total
+FROM interactome
+WHERE lower(name) LIKE '%barton%'
+"
+\stopverb}
+}
+
+\subtree{
+\title{Create event from CLI}
+\pre{\startverb
+emacsclient -e '(org-worlding-calendar-new-event "Boris sync" "2026-03-27" "2026-03-27" "b")'
+\stopverb}
+}
+
+\subtree{
+\title{View calendar agenda}
+\pre{\startverb
+emacsclient -e '(org-agenda nil "C")'
+\stopverb}
+}
+}
+
+\subtree{
+\title{CalDAV Sync (Planned)}
+\p{Google Calendar CalDAV endpoint: \code{https://apidata.googleusercontent.com/caldav/v2/}}
+
+\p{Auth via OAuth2 token from \code{fnox get GOOGLE_CLIENT_SECRET_PATH}. Bidirectional sync:}
+
+\ul{
+\li{Google → org: pull events, auto-tag with :WORLD:}
+\li{org → Google: push world-tagged events to specific sub-calendars per letter}
+}
+
+\p{Replaces Anthropic's \code{claude_ai_Google_Calendar} MCP (13,566 tokens) with ~0 tokens (local org files + emacsclient calls).}
+}
+
+\subtree{
+\title{Goblins Integration}
+\p{Each event source is modeled as a Goblins capability:}
+
+\pre{\startverb
+;; CalDAV server as actor
+(define caldav-cap
+  (vat-spawn vat
+    (lambda (bcom)
+      (methods
+        ((list-events start end) ...)
+        ((create-event title start end world) ...)))))
+
+;; Beeper chat as capability reference
+(define beeper-cap
+  (vat-spawn vat
+    (lambda (bcom)
+      (methods
+        ((search query) ...)
+        ((send chat-id text) ...)))))
+\stopverb}
+
+\p{Events store their source capability as \code{:OCAPN_REF:} — a sturdyref URI that can be resolved at runtime to interact with the originating system.}
+}
+
+\subtree{
+\title{Files}
+\pre{\startverb
+| File | Purpose |
+|------|---------|
+| `~/.emacs.d/lisp/org-worlding-calendar.el` | Emacs integration |
+| `~/worlds/p/calendar.org` | Event store |
+| `~/worlds/beeper_interactome.duckdb` | Contact intelligence |
+| `~/.claude/skills/worlding-calendar/SKILL.md` | This skill |
+\stopverb}
+}
+
+\subtree{
+\title{Relation to Other Skills}
+\ul{
+\li{\strong{beeper} — message source, contact→world inference}
+\li{\strong{calendar-acset} — predecessor (GF(3) theoretical framework)}
+\li{\strong{goblins} — capability model for event sources}
+\li{\strong{emacs} / \strong{org} — UI layer}
+\li{\strong{sdf} — if events need spatial world coordinates}
+\li{\strong{tree-sitter} — if parsing structured event descriptions}
+}
+}
+}
