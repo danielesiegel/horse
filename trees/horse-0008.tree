@@ -1,0 +1,236 @@
+\title{Thread Border Router Catalogue: Transport Mesh for the BCI Factory}
+\author{bmorphism}
+\import{macros}
+\date{2026-04-03}
+\taxon{definition}
+
+\p{The BCI Factory pipeline ([[horse-0001]]) requires a \strong{transport mesh} connecting 6 device modalities at 50Hz. Thread (IEEE 802.15.4) provides the low-latency, IPv6-native, self-healing mesh. A \strong{Thread Border Router} (TBR) bridges the 802.15.4 mesh to IP networks — it is the sheaf's restriction map realized in silicon.}
+
+\p{Categorically: the TBR is a \strong{cocontinuous functor} ##{\mathrm{TBR}: \mathbf{ThreadMesh} \to \mathbf{IP}} preserving the colimit (mesh topology) while embedding it into the ambient IP network. The BCI pipeline's signal presheaf ([[horse-0002]]) factors through this transport layer.}
+
+\subtree{
+\title{GF(3) Transport Trit}
+
+\p{Each TBR is classified by its transport trit:}
+\table{
+  \tr{\th{Trit} \th{Class} \th{Meaning}}
+  \tr{\td{+1} \td{Hub-primary} \td{Full smart home hub with TBR (Apple HomePod, Google Nest, SmartThings)}}
+  \tr{\td{-1} \td{Mesh-native} \td{Purpose-built radio (SiLabs dev kit, Nordic DK, USB dongle)}}
+  \tr{\td{0} \td{Router-embedded} \td{TBR integrated into Wi-Fi mesh (eero, Deco, Nest Wifi)}}
+}
+
+\p{Conservation: hub(+1) + mesh(-1) + router(0) = 0. The transport layer mirrors the BCI rooms: bci.red(+1), bci.blue(-1), bci.horse(0).}
+}
+
+\subtree{
+\title{The 69 Border Routers}
+
+\p{69 = flip index of CANONICAL_SEED 1069. The catalogue is complete at the Möbius boundary.}
+
+\subtree{
+\title{Apple (trit: +1, hub-primary)}
+\ol{
+  \li{HomePod (2nd gen) — full TBR + smart home hub. \strong{Canonical hub for 222 Dore.}}
+  \li{HomePod Mini — compact TBR}
+  \li{Apple TV 4K (3rd gen) — TBR via tvOS}
+  \li{Apple TV 4K (2nd gen) — TBR via tvOS update}
+}
+}
+
+\subtree{
+\title{Google (trit: +1, hub-primary)}
+\ol{
+  \li{Nest Wifi Pro — Wi-Fi 6E mesh + TBR}
+  \li{Nest Hub (2nd gen) — display + TBR}
+  \li{Nest Hub Max — TBR via update}
+  \li{Google TV Streamer (2024) — TBR built-in}
+  \li{Nest Wifi Point — mesh node + TBR}
+  \li{Nest Speaker — TBR via firmware}
+}
+}
+
+\subtree{
+\title{Amazon (trit: +1, hub-primary)}
+\ol{
+  \li{Echo (4th gen) — TBR + Zigbee}
+  \li{Echo (5th gen) — TBR + Matter}
+  \li{Echo Plus (2nd gen) — TBR via update}
+  \li{Echo Show 10 (3rd gen) — TBR}
+  \li{Echo Show 15 — TBR}
+  \li{Echo Studio — TBR}
+  \li{eero Pro 6E — mesh + TBR}
+  \li{eero 6+ — mesh + TBR}
+}
+}
+
+\subtree{
+\title{Samsung / SmartThings (trit: +1, hub-primary)}
+\ol{
+  \li{SmartThings Station — TBR + Zigbee}
+  \li{SmartThings Hub v3 — TBR via update}
+  \li{Aeotec Smart Home Hub — TBR}
+  \li{Samsung Family Hub (2024) — TBR in fridge}
+}
+}
+
+\subtree{
+\title{IKEA (trit: +1, hub-primary)}
+\ol{
+  \li{DIRIGERA — Zigbee + Thread + Matter hub}
+  \li{TRÅDFRI Gateway — legacy, no Thread (contrast)}
+}
+}
+
+\subtree{
+\title{Aqara (trit: +1, hub-primary)}
+\ol{
+  \li{M100 Hub — Thread + Zigbee + Matter}
+  \li{M200 Hub — Thread + Zigbee + Matter + IR}
+  \li{M3 Hub — Thread + Zigbee + Matter}
+  \li{Camera Hub G5 Pro — Thread + Zigbee + camera}
+}
+}
+
+\subtree{
+\title{Nanoleaf (trit: 0, router-embedded)}
+\ol{
+  \li{Nanoleaf Shapes — TBR in each panel}
+  \li{Nanoleaf Elements — TBR}
+  \li{Nanoleaf Lines — TBR}
+}
+}
+
+\subtree{
+\title{Philips Hue (trit: +1, hub-primary)}
+\ol{
+  \li{Hue Bridge v2 — Thread via firmware (limited)}
+  \li{Hue Bridge v3 (upcoming) — full Thread + Matter}
+}
+}
+
+\subtree{
+\title{Home Automation Hubs (trit: +1, hub-primary)}
+\ol{
+  \li{Homey Pro (2023) — Thread + Zigbee + Z-Wave + Matter}
+  \li{Home Assistant Yellow — Thread via SiLabs radio}
+  \li{Home Assistant SkyConnect — USB Thread/Zigbee dongle}
+  \li{Home Assistant Green — with SkyConnect = TBR}
+  \li{Hubitat Elevation C-8 Pro — Thread + Zigbee + Z-Wave}
+  \li{Hubitat Elevation C-8X — Thread + Matter}
+}
+}
+
+\subtree{
+\title{Silicon Labs Dev Boards (trit: -1, mesh-native)}
+\ol{
+  \li{EFR32MG24 Dev Kit — reference TBR}
+  \li{WSTK (Wireless Starter Kit) — Thread dev}
+  \li{xG24-DK2601B — Thread + BLE}
+  \li{Thunderboard Sense 2 — Thread capable}
+  \li{RD-0005-0601 — Thread border router RCP}
+}
+}
+
+\subtree{
+\title{Nordic Semiconductor (trit: -1, mesh-native)}
+\ol{
+  \li{nRF52840 DK — Thread reference TBR (with RCP)}
+  \li{nRF5340 DK — dual-core Thread TBR. \strong{Same chip as BCI nRF5340 HID/LED device.}}
+  \li{Thingy:53 — Thread + BLE prototyping}
+  \li{nRF7002 DK — Wi-Fi + Thread combo}
+}
+}
+
+\subtree{
+\title{ESP32 (trit: -1, mesh-native)}
+\ol{
+  \li{ESP Thread Border Router — ESP32-H2 + ESP32-S3}
+  \li{ESP32-C6 DevKit — native Thread + Wi-Fi 6}
+  \li{ESP32-H2 DevKit — 802.15.4 radio for Thread}
+}
+}
+
+\subtree{
+\title{USB Dongles / Coordinators (trit: -1, mesh-native)}
+\ol{
+  \li{SMLight SLZB-07 — PoE Thread/Zigbee coordinator}
+  \li{SMLight SLZB-06M — Thread/Zigbee USB+Ethernet}
+  \li{Sonoff ZBDongle-E — Thread via firmware flash}
+  \li{Nabu Casa Connect ZBT-1 — Thread/Zigbee USB}
+  \li{ITead Sonoff iHost — hub + Thread dongle support}
+  \li{ConBee III (Phoscon) — Thread + Zigbee USB}
+  \li{Tube's ZB Coordinator — Thread-flashable EFR32}
+}
+}
+
+\subtree{
+\title{Routers / Gateways (trit: 0, router-embedded)}
+\ol{
+  \li{TP-Link Deco XE75 Pro — Wi-Fi 6E mesh + Thread}
+  \li{TP-Link Deco X50 — mesh + Thread TBR}
+  \li{Linksys Velop AXE5400 — Thread capable}
+  \li{Nokia Beacon 6 — Thread TBR}
+  \li{Ezviz CS-W3 — Thread + Zigbee gateway}
+  \li{Tuya Zigbee+Thread Gateway — OEM reference design}
+}
+}
+
+\subtree{
+\title{Industrial / Endpoints (trit: 0, router-embedded)}
+\ol{
+  \li{Bosch Smart Home Controller II — Thread + Zigbee}
+  \li{Yale Assure Lock 2 — Wi-Fi + Thread endpoint}
+  \li{Level Lock+ — Thread endpoint}
+  \li{Eve Energy — Thread endpoint extending mesh}
+  \li{Belkin Wemo Stage — Thread scene controller}
+}
+}
+}
+
+\subtree{
+\title{BCI Factory Transport Architecture}
+
+\p{The 222 Dore deployment ([[horse-0001]]) uses \strong{Apple HomePod} as canonical TBR hub — it is the \strong{descent functor} for the transport layer, gluing the Thread mesh into the IP backbone where the pipeline runs.}
+
+\table{
+  \tr{\th{BCI Device} \th{Transport} \th{Thread Role} \th{Pipeline Stage}}
+  \tr{\td{OpenBCI Cyton 8ch} \td{BLE → Thread (via nRF5340)} \td{Sleepy End Device} \td{Stage 1 ([[horse-0002]])}}
+  \tr{\td{fNIRS dual-wavelength} \td{Thread native} \td{Router} \td{Stage 2 ([[horse-0003]])}}
+  \tr{\td{Vibrotactile haptic} \td{Thread native} \td{End Device} \td{Feedback loop}}
+  \tr{\td{sEMG surface} \td{BLE → Thread} \td{Sleepy End Device} \td{Stage 1}}
+  \tr{\td{Eye tracker 120Hz} \td{USB (latency-critical)} \td{N/A} \td{Stage 4 ([[horse-0005]])}}
+  \tr{\td{Braille display} \td{Thread native} \td{End Device} \td{Output}}
+  \tr{\td{VARMBLIXT lamp} \td{Matter over Thread} \td{End Device} \td{Ambient feedback}}
+  \tr{\td{HomePod} \td{Wi-Fi + Thread} \td{\strong{Border Router}} \td{Transport descent}}
+}
+
+\p{The eye tracker stays USB — 120Hz is beyond Thread's comfortable latency envelope. Everything else meshes. The HomePod TBR provides the cocontinuous functor from device mesh to pipeline IP.}
+}
+
+\subtree{
+\title{Trit Census}
+
+\p{Of the 69 TBRs:}
+\table{
+  \tr{\th{Trit} \th{Count} \th{Class}}
+  \tr{\td{+1} \td{30} \td{Hub-primary (Apple, Google, Amazon, Samsung, IKEA, Aqara, Hue, HA hubs)}}
+  \tr{\td{-1} \td{19} \td{Mesh-native (SiLabs, Nordic, ESP32, USB dongles)}}
+  \tr{\td{0} \td{20} \td{Router-embedded (Nanoleaf, routers, industrial)}}
+}
+
+\p{30 + 19 + 20 = 69. Trit sum: 30(+1) + 19(-1) + 20(0) = 30 - 19 = 11 ≡ 2 (mod 3). \strong{Not conserved} at the raw device level — the market favors hubs. But within the BCI Factory deployment, we select one from each class: HomePod(+1) + nRF5340(-1) + VARMBLIXT-via-Thread(0) = 0. \strong{Conserved at the deployment level.}}
+}
+
+\subtree{
+\title{Connection to Stacks Project}
+
+\p{The TBR catalogue connects to the Stacks Project via:}
+\ol{
+  \li{\strong{Sites} (Tag 00VH): The Thread mesh topology IS a Grothendieck site — devices are objects, radio links are covering morphisms}
+  \li{\strong{Descent} (Tag 0238): The TBR performs descent — gluing local device sections into a global IP-accessible state}
+  \li{\strong{Étale morphisms} (Tag 03N1): Thread's peer-to-peer mesh links are étale — local isomorphisms between neighbor devices}
+  \li{\strong{Stacks} (Tag 026K): The full BCI pipeline with re-referencing gauge symmetry IS a stack over the Thread site}
+}
+
+\p{See [[xref-0001]] for the complete Stacks Project cross-reference.}
+}

@@ -1,0 +1,29 @@
+\title{Thread Mesh as Grothendieck Topology}
+\author{bmorphism}
+\import{macros}
+\date{2026-04-03}
+\taxon{definition}
+
+\p{The Thread mesh formed by the 69 TBRs ([[horse-0008]]) is a \strong{Grothendieck site} #{(\mathcal{C}, J)} where:}
+
+\ul{
+  \li{Objects of #{\mathcal{C}} are Thread devices (end devices, routers, border routers)}
+  \li{Morphisms are radio links (MLE — Mesh Link Establishment)}
+  \li{The coverage #{J} assigns to each device the set of its mesh neighbors that can reconstruct its state}
+}
+
+\p{A \strong{sheaf} on this site is a sensor fusion rule: given compatible readings from neighboring devices, there exists a unique global state. This is exactly the BCI pipeline's descent condition ([[horse-0004]]).}
+
+\subtree{
+\title{Border Router as Cocontinuous Functor}
+
+\p{The TBR defines a geometric morphism ##{\mathrm{Sh}(\mathbf{Thread}) \rightleftarrows \mathrm{Sh}(\mathbf{IP})} The direct image (restriction to IP) loses mesh topology. The inverse image (pull back from IP to Thread) gains it. The BCI pipeline lives in #{\mathrm{Sh}(\mathbf{Thread})} — the TBR projects decoded intent into #{\mathrm{Sh}(\mathbf{IP})} for display, storage, and GAY accrual ([[horse-0006]]).}
+}
+
+\subtree{
+\title{OCapN over Thread}
+
+\p{Thread is IPv6-native. OCapN CapTP ([[horse-0005]]) runs directly over Thread's IPv6 mesh — no bridge needed beyond the TBR for IP egress. Each BCI device holds a \strong{SturdyRef} to its pipeline stage. The capability graph IS the Thread mesh graph, restricted to authorized links.}
+
+\p{This connects to the goblins-adapter: CapTP messages flow over Thread IPv6 multicast, with the TBR providing NAT64 for external witnesses.}
+}
