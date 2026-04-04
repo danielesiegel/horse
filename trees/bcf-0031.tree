@@ -1,0 +1,92 @@
+\title{NV Diamond Magnetometer: Uncut Gem}
+\taxon{device}
+\author{monaduck1069}
+\date{2026-04-03}
+\tag{quantum}
+\tag{hardware}
+\tag{magnetometer}
+\meta{modality}{magnetic}
+\meta{upstream}{https://github.com/QuantumVillage/UncutGem}
+\meta{build-route}{full-pcb}
+
+\p{Nitrogen-vacancy center diamond magnetometer based on the \strong{Quantum Village Uncut Gem} open-source design. Detects optically detected magnetic resonance (ODMR) at the NV zero-field splitting frequency of 2.87 GHz. The full PCB route integrates the ADF4351 PLL synthesizer and cascaded MMG3014NT1 RF amplifiers on a single board, replacing the module-based build.}
+
+\subtree{\title{Sensing principle}
+\taxon{remark}
+\p{A 520 nm laser excites NV centers in an HPHT diamond plate. Under 2.87 GHz microwave drive, the NV fluorescence (637 nm) dips — this is the ODMR signal. External magnetic fields Zeeman-split the resonance, so the dip frequency encodes the local field vector. The ESP32 sweeps the ADF4351 across the resonance and records fluorescence via a BPW34 photodiode through a TL082 transimpedance amplifier.}}
+
+\subtree{\title{Bill of materials}
+\taxon{reference}
+
+\subtree{\title{JLCPCB assembly (SMD)}
+\p{5× PCB + SMT assembly from JLCPCB. Gerbers from \code{hardware/PCB/ProdFiles/}. BOM and CPL generated from KiCad project with verified LCSC part numbers.}
+\ul{
+\li{U1: ADF4351BCPZ — PLL frequency synthesizer, LFCSP-32 (C654681, $75.89/board)}
+\li{U7: ESP32-WROOM-32E — WiFi+BT MCU module (C701341)}
+\li{U8: CP2102N-A02-GQFN28R — USB-UART bridge (C964632)}
+\li{U5: TL082 — dual JFET op-amp, SOIC-8 (C6961)}
+\li{U6: LM1117MP-3.3 — 3.3V LDO, SOT-223 (C6186)}
+\li{X1: 10 MHz oscillator, 7050 (C241309)}
+\li{P1: USB-C 16-pin receptacle (C393939)}
+\li{44 capacitors, 24 resistors, 2 inductors, diodes, LEDs, NPN transistors — all 0603 SMD}
+}
+\p{Estimated JLCPCB cost: $130 for 5 assembled boards.}}
+
+\subtree{\title{Hand-solder (RF amplifiers)}
+\p{U2, U3: \strong{NXP MMG3014NT1} — InGaP HBT broadband RF amplifier, 19.5 dB gain, 40 MHz–4 GHz, SOT-89-3. Two per board in cascade for ~39 dB total gain driving the microwave antenna. Order 8 (2/board × 3 + 2 spare).}
+\ul{
+\li{\strong{Source:} Mouser (5,894 in stock, ships same day, ~$3.50/ea)}
+}}
+
+\subtree{\title{Hand-solder (through-hole connectors)}
+\ul{
+\li{J1: SMA female PCB edge-mount 50Ω — BOOBRIE 10-pack}
+\li{5V_SUPP1: 2×3 pin header 2.54mm — uxcell 20-pack}
+\li{OLED1, SPI1: 1×4 female pin socket 2.54mm}
+\li{PHOTODIODE1: 1×3 female pin socket 2.54mm}
+\li{TP1, TP2: test points (wire loop or skip)}
+}}
+
+\subtree{\title{Off-board components (per unit)}
+\ul{
+\li{520 nm laser module (Class 2, <1 mW, D10.5×19 mm) — $35.99}
+\li{1.3" OLED I2C SH1106/SSD1306 128×64 — pin order \strong{VDD/GND/SCK/SDA} required}
+\li{BPW34 silicon PIN photodiode}
+\li{24 AWG enameled magnet wire (antenna coil)}
+\li{Red gel filter (637 nm fluorescence pass)}
+\li{USB battery pack (5V)}
+\li{UV resin + silicone mold (enclosure)}
+\li{OD4+ laser safety goggles (520 nm)}
+}}
+
+\subtree{\title{NV diamond}
+\p{\strong{Adámas Nanotechnologies} HPHT 1b plate, 3×3×0.3 mm, {100} face, ≈2 ppm NV concentration. SKU: 1bDPNVB. $601/ea. One polished side (<30 nm Ra) for optical coupling. Buy 1 first, verify ODMR, then order remaining 2.}
+\p{Alternative: Element Six EL SC Plate 2.0×2.0 mm (145-500-0385, $735) or email their sales team referencing Dr. Matthew Markham and the Quantum Village project for research pricing.}
+}}
+
+\subtree{\title{Build plan}
+\taxon{protocol}
+\ol{
+\li{Order JLCPCB: upload gerber zip + JLCPCB-BOM.csv + JLCPCB-CPL.csv. Top-side assembly, economic PCBA, confirm parts placement = yes. Lead time ~2 weeks.}
+\li{Order Mouser: 8× MMG3014NT1. Ships same day.}
+\li{Order Amazon: connectors, laser, OLED, photodiode, wire, safety gear, charger.}
+\li{Order Adámas: 1× HPHT 1b diamond plate.}
+\li{Receive PCBs: hand-solder U2/U3 (MMG3014NT1, SOT-89), SMA connectors, pin headers/sockets.}
+\li{Wind microwave antenna coil (24 AWG, ~5 turns around diamond).}
+\li{Mount diamond on antenna, align laser, attach photodiode + red filter.}
+\li{Flash ESP32 firmware from UncutGem repo.}
+\li{Verify ODMR: sweep 2.87 GHz ± 50 MHz, observe fluorescence dip on OLED.}
+}
+}
+
+\subtree{\title{Cost summary}
+\taxon{remark}
+\p{Per-unit cost for 3 builds:}
+\ul{
+\li{JLCPCB (5× PCB + assembly): $130}
+\li{Amazon (connectors + off-board): $251}
+\li{Mouser (8× MMG3014NT1): $28}
+\li{Adámas (1× diamond): $601}
+\li{\strong{Total (first build): ~$1,010}}
+\li{\strong{Total (all 3 builds, 3 diamonds): ~$2,212}}
+}}
