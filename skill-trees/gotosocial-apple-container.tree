@@ -18,21 +18,21 @@
 \subtree{
 \title{Setup}
 \subtree{
-\title{1\startverb )\stopverb Prepare directories}
+\title{\startverb 1) Prepare directories\stopverb}
 \pre{\startverb
 mkdir -p ~/gotosocial/data ~/gotosocial/.cache
 \stopverb}
 }
 
 \subtree{
-\title{2\startverb )\stopverb Start container services}
+\title{\startverb 2) Start container services\stopverb}
 \pre{\startverb
 container system start
 \stopverb}
 }
 
 \subtree{
-\title{3\startverb )\stopverb Run GoToSocial \startverb (\stopverbLAN HTTP\startverb )\stopverb}
+\title{\startverb 3) Run GoToSocial (LAN HTTP)\stopverb}
 \p{Replace \code{\startverb ap-wyvern.local\stopverb} with your chosen host. Ensure it resolves for all VMs.}
 
 \pre{\startverb
@@ -51,7 +51,7 @@ container run -d --name gotosocial \
 }
 
 \subtree{
-\title{4\startverb )\stopverb Verify server}
+\title{\startverb 4) Verify server\stopverb}
 \pre{\startverb
 curl -i http://127.0.0.1:8080/
 curl -i http://<LAN_IP>:8080/
@@ -59,7 +59,7 @@ curl -i http://<LAN_IP>:8080/
 }
 
 \subtree{
-\title{5\startverb )\stopverb Hostname resolution \startverb (\stopverbVMs\startverb )\stopverb}
+\title{\startverb 5) Hostname resolution (VMs)\stopverb}
 \p{Add to \code{\startverb /etc/hosts\stopverb} on macOS + each VM:}
 
 \pre{\startverb
@@ -68,7 +68,7 @@ curl -i http://<LAN_IP>:8080/
 }
 
 \subtree{
-\title{6\startverb )\stopverb Create users}
+\title{\startverb 6) Create users\stopverb}
 \pre{\startverb
 container exec gotosocial /gotosocial/gotosocial admin account create \
   --username green --email green@ap-wyvern.local --password '<PASSWORD>'
@@ -82,7 +82,7 @@ container exec gotosocial /gotosocial/gotosocial admin account create \
 }
 
 \subtree{
-\title{7\startverb )\stopverb Login URL}
+\title{\startverb 7) Login URL\stopverb}
 \pre{\startverb
 http://ap-wyvern.local:8080/login
 \stopverb}

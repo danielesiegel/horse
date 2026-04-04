@@ -1,0 +1,216 @@
+\title{Opennirscap Build}
+
+\taxon{skill}
+
+\meta{description}{Build an OpenNIRScap 24-channel fNIRS brain cap from open-source hardware — Altium conversion, BOM sourcing, PCB fab, assembly, firmware flash}
+
+\subtree{
+\title{OpenNIRScap Build}
+\p{Open-source 24-channel fNIRS wearable brain cap. Kim et al. 2025, University of Toronto.}
+
+\subtree{
+\title{Source}
+\ul{
+\li{Repo: https://github.com/tonykim07/fNIRS}
+\li{Paper: https://arxiv.org/abs/2505.20509}
+\li{License: BSD-3-Clause}
+\li{Hardware: Altium Designer files (PcbDoc, SchDoc)}
+\li{Firmware: STM32 C (STM32L476RET6)}
+\li{Software: Python Flask-SocketIO GUI}
+}
+}
+
+\subtree{
+\title{Architecture}
+\ul{
+\li{24 detector modules (VBPW34S photodiode + AD8618 TIA, 25mm circular PCB)}
+\li{8 dual-wavelength source emitters (VSMD66694: 660nm + 940nm)}
+\li{1 ECU (STM32L476 + 8x TMUX1104 analog MUX + PCA9685 PWM, 112x112mm PCB)}
+\li{35mm source-detector separation (cortical depth sensitivity)}
+\li{1 kHz effective sampling, 52.3 dB SNR, 12-bit ADC}
+\li{USB isolated (ADUM4160), LiPo powered (1100mAh, >5hr)}
+}
+}
+
+\subtree{
+\title{Blocker: Altium to Gerber Conversion}
+\p{Repo has Altium .PcbDoc source files, no exported gerbers or CSV BOMs.}
+
+\subtree{
+\title{PCBs to convert}
+\pre{\startverb
+| Project | File | Description |
+|---------|------|-------------|
+| fNIRS_sensor_module | SensorModulePCB.PcbDoc | 25mm circular, combined emitter+detector |
+| fNIRS_ECU | fNIRS_PCB.PcbDoc | 112x112mm main control board |
+| DetectorOptode | DetectorOptode.PcbDoc | Detector-only variant |
+| SourceOptode | SourceOptode.PcbDoc | Source-only variant |
+| STLINK_Breakout | STLINK_Breakout.PcbDoc | Programming adapter |
+\stopverb}
+}
+
+\subtree{
+\title{Conversion approaches (in order of preference)}
+\ol{
+\li{\strong{KiCad 8 built-in importer} — File > Import > Altium .PcbDoc. Best fidelity. Needs KiCad installed.}
+\li{\strong{altium2kicad} (Perl, 933 stars) — \code{\startverb perl convertpcb.pl file.PcbDoc\stopverb}. Repo: thesourcerer8/altium2kicad. Needs \code{\startverb unpack.pl\stopverb} first.}
+\li{\strong{Altium 365 Viewer} (free web) — View online, manual export. No CLI.}
+\li{\strong{GitHub Issue} — Ask authors to export gerbers. Repo is active (last push 2026-03).}
+}
+}
+
+\subtree{
+\title{Attempted and failed}
+\ul{
+\li{\code{\startverb altium-cli\stopverb} (Rust, akiselev) — broken workspace deps, won't build}
+\li{\code{\startverb pyaltium\stopverb} — crashes on Python 3.14 (missing dateutil dep)}
+\li{\code{\startverb altium2kicad\stopverb} unpack.pl worked but convertpcb.pl couldn't find unpacked files}
+}
+}
+
+\subtree{
+\title{Next step}
+\p{Install KiCad 8 (\code{\startverb brew install --cask kicad\stopverb} or \code{\startverb nix shell nixpkgs#kicad\stopverb}), import PcbDoc, export gerbers + BOM + CPL from KiCad.}
+}
+}
+
+\subtree{
+\title{BOM — Semiconductors (DigiKey)}
+\pre{\startverb
+| Part | MPN | Qty | DigiKey URL |
+|------|-----|-----|-------------|
+| Photodiode | VBPW34S | 24 | https://www.digikey.com/en/products/detail/vishay-semiconductor-opto-division/VBPW34S/4073399 |
+| Quad op-amp | AD8618ARUZ | 12 | https://www.digikey.com/en/products/detail/analog-devices-inc/AD8618ARUZ/1993937 |
+| Dual LED 660/940nm | VSMD66694 | 8 | https://www.digikey.com/en/products/detail/vishay-semiconductor-opto-division/VSMD66694/7681025 |
+| N-ch MOSFET | BSD840NH6327XTSA1 | 16 | https://www.digikey.com/en/products/detail/infineon-technologies/BSD840NH6327XTSA1/5409567 |
+| MCU | STM32L476RET6 | 1 | https://www.digikey.com/en/products/detail/stmicroelectronics/STM32L476RET6/5177041 |
+| Analog MUX | TMUX1104DBVR | 8 | https://www.digikey.com/en/products/detail/texas-instruments/TMUX1104DBVR/9685876 |
+| PWM/IO | PCA9685PW,118 | 3 | https://www.digikey.com/en/products/detail/nxp-usa-inc/PCA9685PW-118/2034325 |
+| USB isolator | ADUM4160BRWZ | 1 | https://www.digikey.com/en/products/detail/analog-devices-inc/ADUM4160BRWZ/1861340 |
+\stopverb}
+}
+
+\subtree{
+\title{BOM — Passives (0603 SMD, from schematic)}
+\p{Core known values (exact values need Altium schematic export):}
+
+\ul{
+\li{\startverb 60.4k 1% x24 (TIA feedback)\stopverb}
+\li{200pF x24 (TIA bandwidth, fc~13kHz)}
+\li{100nF x60 (bypass, 2 per board + ECU)}
+\li{4.7k x4 (I2C pullups)}
+\li{LED current limit resistors x16}
+}
+}
+
+\subtree{
+\title{BOM — Amazon}
+\pre{\startverb
+| Item | URL |
+|------|-----|
+| 3.7V 1100mAh LiPo JST | https://www.amazon.com/Qimoo-Battery-Rechargeable-Connector-Electronic/dp/B0CNLNGBT4 |
+| ST-LINK V2 programmer | https://www.amazon.com/ST-Link-Programming-Emulator-Downloader-Random/dp/B08YZ4K3Z5 |
+| 8-pin ribbon cable IDC | https://www.amazon.com/DMiotech-Ribbon-Digital-Cameras-Computers/dp/B0CJYV768J |
+| PLA filament 1.75mm | https://www.amazon.com/ELEGOO-PLA-Filament-1-75mm-Printers/dp/B0C14PXRZH |
+| Velcro strips | https://www.amazon.com/VELCRO-Brand-Sticky-Fasteners-Perfect/dp/B00006IC2L |
+| 3M Micropore tape | https://www.amazon.com/Micropore-Medical-Dispenser-Friendly-NonSterile/dp/B00PZ2F1Q6 |
+| Neoprene headband | https://www.amazon.com/Headband-Neoprene-Hairband-Non-Slip-Snorkeling/dp/B0FB8Y968R |
+\stopverb}
+}
+
+\subtree{
+\title{BOM — PCBs (JLCPCB, after gerber export)}
+\ul{
+\li{24x sensor module (25mm circular)}
+\li{1x ECU (112x112mm, 4-layer)}
+\li{1x STLINK breakout}
+}
+}
+
+\subtree{
+\title{Cost Summary}
+\pre{\startverb
+| Category | Cost |
+|----------|------|
+| Semiconductors | ~$130 |
+| Passives | ~$15 |
+| PCBs | ~$13 |
+| Amazon | ~$150 |
+| **Total** | **~$310-420** |
+\stopverb}
+}
+
+\subtree{
+\title{Assembly}
+\ol{
+\li{Export gerbers from KiCad (after Altium import)}
+\li{Order PCBs from JLCPCB}
+\li{Order DigiKey + Amazon parts}
+\li{Solder sensor modules (24x, SMD 0603 + photodiode + LED)}
+\li{Solder ECU (QFP-64 MCU, SOT-23 MUXes, TSSOP PWM)}
+\li{Wire cable harnesses (8 groups of 3 sensors)}
+\li{3D print sensor capsules (STL from repo or design in OpenSCAD)}
+\li{Flash firmware via SWD (ST-LINK)}
+\li{Connect USB, run Python GUI}
+\li{Calibrate on forehead, verify heart rate waveform first}
+}
+}
+
+\subtree{
+\title{bci.horse Integration}
+\ul{
+\li{Tree: bcf-0036 in plurigrid/horse}
+\li{Inventory ID: planned, not yet ordered}
+\li{\startverb Role: walk-up fNIRS fleet ($419/unit vs $50k NIRSport 2)\stopverb}
+\li{Calibrate against Artinis Brite Lite (if purchased)}
+}
+}
+
+\subtree{
+\title{Firmware}
+\p{Located in \code{\startverb firmware/STM32/fNIRS/\stopverb}. STM32CubeIDE project.}
+
+\ul{
+\li{MCU: STM32L476RET6, ARM Cortex-M4 80MHz}
+\li{ADC: 12-bit, DMA, 5kHz raw sampling, multiplexed to 1kHz effective}
+\li{USB: CDC serial via ADUM4160 isolator}
+\li{PWM: PCA9685 drives LED sources, alternating 660/940nm}
+\li{SD: SDMMC logging}
+}
+}
+
+\subtree{
+\title{Software}
+\p{Located in \code{\startverb software/\stopverb}. Python 3.}
+
+\ul{
+\li{Flask-SocketIO backend for real-time streaming}
+\li{Web GUI: Plotly.js + BrainNet Viewer 3D brain mesh}
+\li{Modified Beer-Lambert Law processing (NIRSimple library)}
+\li{Bandpass 0.01-0.5 Hz for cortical hemodynamics}
+\li{Correlation-based signal improvement for HbO/HbR}
+}
+}
+
+\subtree{
+\title{Related Skills}
+\ul{
+\li{\code{\startverb forester\stopverb} — bci.horse forest publishing (bcf-0036 is this device's tree)}
+\li{\code{\startverb reverse-engineering\stopverb} — MCP servers for Ghidra/radare2/IDA if binary analysis needed}
+\li{\code{\startverb binary-triage\stopverb} — systematic binary survey workflow}
+\li{\code{\startverb performing-firmware-extraction-with-binwalk\stopverb} — firmware extraction from embedded devices}
+\li{\code{\startverb protocol-reverse-engineering\stopverb} — reverse engineering communication protocols}
+\li{\code{\startverb radare2-hatchery\stopverb} — radare2 ecosystem tools}
+}
+}
+
+\subtree{
+\title{Altium Conversion Tools}
+\ul{
+\li{\code{\startverb altium2kicad\stopverb} (Perl, 933 stars): https://github.com/thesourcerer8/altium2kicad}
+\li{KiCad 8 built-in Altium importer: https://www.kicad.org/blog/2020/04/Development-Highlight-Altium-Pcb-Importer/}
+\li{\code{\startverb altium-cli\stopverb} (Rust, broken): https://github.com/akiselev/altium-cli}
+\li{KiCad Forum thread on CLI import: https://forum.kicad.info/t/how-to-import-altium-pcbdoc-via-commandline-tools/50893}
+}
+}
+}
