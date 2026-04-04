@@ -4,7 +4,7 @@
 
 \meta{version}{0.1.0}
 
-\meta{description}{This skill should be used when the user asks to "create a plugin", "scaffold a plugin", "understand plugin structure", "organize plugin components", "set up plugin.json", "use ${CLAUDE_PLUGIN_ROOT}", "add commands/agents/skills/hooks", "configure auto-discovery", or needs guidance on plugin directory layout, manifest configuration, component organization, file naming conventions, or Claude Code plugin architecture best practices.}
+\meta{description}{\startverb This skill should be used when the user asks to "create a plugin", "scaffold a plugin", "understand plugin structure", "organize plugin components", "set up plugin.json", "use ${CLAUDE_PLUGIN_ROOT}", "add commands/agents/skills/hooks", "configure auto-discovery", or needs guidance on plugin directory layout, manifest configuration, component organization, file naming conventions, or Claude Code plugin architecture best practices.\stopverb}
 
 \subtree{
 \title{Plugin Structure for Claude Code}
@@ -18,7 +18,7 @@
 \li{Conventional directory layout for automatic discovery}
 \li{Manifest-driven configuration in \code{\startverb .claude-plugin/plugin.json\stopverb}}
 \li{Component-based organization (commands, agents, skills, hooks)}
-\li{Portable path references using \code{\startverb ${CLAUDE_PLUGIN_ROOT}\stopverb}}
+\li{\startverb Portable path references using `${CLAUDE_PLUGIN_ROOT}`\stopverb}
 \li{Explicit vs. auto-discovered component loading}
 }
 }
@@ -280,7 +280,9 @@ hooks/
 \title{Portable Path References}
 \subtree{
 \title{${CLAUDE_PLUGIN_ROOT}}
-\p{Use \code{\startverb ${CLAUDE_PLUGIN_ROOT}\stopverb} environment variable for all intra-plugin path references:}
+\pre{\startverb
+Use `${CLAUDE_PLUGIN_ROOT}` environment variable for all intra-plugin path references:
+\stopverb}
 
 \pre{\startverb
 {
@@ -469,7 +471,7 @@ source "${CLAUDE_PLUGIN_ROOT}/lib/common.sh"
 \subtree{
 \title{Portability}
 \ol{
-\li{\strong{Always use ${CLAUDE_PLUGIN_ROOT}}: Never hardcode paths}
+\li{\startverb **Always use ${CLAUDE_PLUGIN_ROOT}**: Never hardcode paths\stopverb}
 \li{\strong{Test on multiple systems}: Verify on macOS, Linux, Windows}
 \li{\strong{Document dependencies}: List required tools and versions}
 \li{\strong{Avoid system-specific features}: Use portable bash/Python constructs}
@@ -552,10 +554,10 @@ my-plugin/
 \p{\strong{Path resolution errors}:}
 
 \ul{
-\li{Replace all hardcoded paths with \code{\startverb ${CLAUDE_PLUGIN_ROOT}\stopverb}}
+\li{\startverb Replace all hardcoded paths with `${CLAUDE_PLUGIN_ROOT}`\stopverb}
 \li{Verify paths are relative and start with \code{\startverb ./\stopverb} in manifest}
 \li{Check that referenced files exist at specified paths}
-\li{Test with \code{\startverb echo $CLAUDE_PLUGIN_ROOT\stopverb} in hook scripts}
+\li{\startverb Test with `echo $CLAUDE_PLUGIN_ROOT` in hook scripts\stopverb}
 }
 
 \p{\strong{Auto-discovery not working}:}

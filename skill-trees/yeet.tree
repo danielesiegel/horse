@@ -29,10 +29,10 @@
 \li{Confirm status, then stage everything: \code{\startverb git status -sb\stopverb} then \code{\startverb git add -A\stopverb}.}
 \li{Commit tersely with the description: \code{\startverb git commit -m "{description}"\stopverb}}
 \li{Run checks if not already. If checks fail due to missing deps/tools, install dependencies and rerun once.}
-\li{Push with tracking: \code{\startverb git push -u origin $(git branch --show-current)\stopverb}}
+\li{\startverb Push with tracking: `git push -u origin $(git branch --show-current)`\stopverb}
 \li{If git push fails due to workflow auth errors, pull from master and retry the push.}
-\li{Open a PR and edit title/body to reflect the description and the deltas: \code{\startverb GH_PROMPT_DISABLED=1 GIT_TERMINAL_PROMPT=0 gh pr create --draft --fill --head $(git branch --show-current)\stopverb}}
-\li{Write the PR description to a temp file with real newlines (e.g. pr-body.md ... EOF) and run pr-body.md to avoid \\startverb \n\stopverb-escaped markdown.}
+\li{\startverb Open a PR and edit title/body to reflect the description and the deltas: `GH_PROMPT_DISABLED=1 GIT_TERMINAL_PROMPT=0 gh pr create --draft --fill --head $(git branch --show-current)`\stopverb}
+\li{\startverb Write the PR description to a temp file with real newlines (e.g. pr-body.md ... EOF) and run pr-body.md to avoid \\n-escaped markdown.\stopverb}
 \li{PR description (markdown) must be detailed prose covering the issue, the cause and effect on users, the root cause, the fix, and any tests or checks used to validate.}
 }
 }

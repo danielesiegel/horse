@@ -24,13 +24,15 @@
 
 \meta{version}{"1.0"}
 
-\meta{description}{Analyze the NTFS Master File Table ($MFT) to recover metadata and content of deleted files by examining MFT record entries, $LogFile, $UsnJrnl, and MFT slack space using MFTECmd, analyzeMFT, and X-Ways Forensics.}
+\meta{description}{\startverb Analyze the NTFS Master File Table ($MFT) to recover metadata and content of deleted files by examining MFT record entries, $LogFile, $UsnJrnl, and MFT slack space using MFTECmd, analyzeMFT, and X-Ways Forensics.\stopverb}
 
 \subtree{
 \title{Analyzing MFT for Deleted File Recovery}
 \subtree{
 \title{Overview}
-\p{The NTFS Master File Table ($MFT) is the central metadata repository for every file and directory on an NTFS volume. Each file is represented by at least one 1024-byte MFT record containing attributes such as $STANDARD_INFORMATION (timestamps, permissions), $FILE_NAME (name, parent directory, timestamps), and $DATA (file content or cluster run pointers). When a file is deleted, its MFT record is marked as inactive (InUse flag cleared) but the metadata remains until the entry is reallocated by a new file. This persistence makes MFT analysis a primary technique for recovering deleted file evidence, reconstructing file system timelines, and detecting anti-forensic activity such as timestomping.}
+\pre{\startverb
+The NTFS Master File Table ($MFT) is the central metadata repository for every file and directory on an NTFS volume. Each file is represented by at least one 1024-byte MFT record containing attributes such as $STANDARD_INFORMATION (timestamps, permissions), $FILE_NAME (name, parent directory, timestamps), and $DATA (file content or cluster run pointers). When a file is deleted, its MFT record is marked as inactive (InUse flag cleared) but the metadata remains until the entry is reallocated by a new file. This persistence makes MFT analysis a primary technique for recovering deleted file evidence, reconstructing file system timelines, and detecting anti-forensic activity such as timestomping.
+\stopverb}
 }
 
 \subtree{
@@ -116,7 +118,7 @@ MFTECmd.exe -f "C:\Evidence\$MFT" --csv C:\Output --csvf mft_full.csv
 \li{\code{\startverb InUse\stopverb} = False indicates a deleted or reallocated record}
 \li{\code{\startverb ParentPath\stopverb} shows original file location before deletion}
 \li{\code{\startverb FileSize\stopverb} shows the original size (may still be recoverable)}
-\li{Timestamps in \code{\startverb $STANDARD_INFORMATION\stopverb} and \code{\startverb $FILE_NAME\stopverb} attributes persist}
+\li{\startverb Timestamps in `$STANDARD_INFORMATION` and `$FILE_NAME` attributes persist\stopverb}
 }
 }
 
@@ -138,7 +140,9 @@ MFTECmd.exe -f "C:\Evidence\$J" --csv C:\Output --csvf usn_journal.csv
 
 \subtree{
 \title{Technique 3: $LogFile Transaction Analysis}
-\p{The $LogFile stores NTFS transaction records that can reveal file operations even after the USN Journal has been cycled.}
+\pre{\startverb
+The $LogFile stores NTFS transaction records that can reveal file operations even after the USN Journal has been cycled.
+\stopverb}
 
 \pre{\startverb
 # Parse $LogFile with LogFileParser
@@ -226,7 +230,7 @@ vssadmin list shadows
 \ul{
 \li{\strong{Deleted file metadata recovery}: Original filename, path, size, and timestamps}
 \li{\strong{Timeline reconstruction}: File creation, modification, access, and deletion events}
-\li{\strong{Timestomping detection}: Comparing $SI vs $FN timestamps}
+\li{\startverb **Timestomping detection**: Comparing $SI vs $FN timestamps\stopverb}
 \li{\strong{Data carving guidance}: MFT cluster runs point to file content on disk}
 \li{\strong{Anti-forensic detection}: Identifying wiped or manipulated MFT records}
 }

@@ -40,7 +40,7 @@
 \li{The Sleuth Kit (TSK) tools: istat, icat, fls, blkls, blkstat}
 \li{MFTECmd (Eric Zimmerman) for MFT parsing}
 \li{MFTExplorer for interactive MFT analysis}
-\li{Understanding of NTFS structures (MFT, $UsnJrnl, $LogFile, ADS)}
+\li{\startverb Understanding of NTFS structures (MFT, $UsnJrnl, $LogFile, ADS)\stopverb}
 \li{Python with analyzeMFT or mft library for automated parsing}
 }
 }
@@ -361,7 +361,9 @@ fls -r -o 2048 /cases/case-2024-001/images/evidence.dd | grep "Zone.Identifier" 
 
 \subtree{
 \title{Common Scenarios}
-\p{\strong{Scenario 1: Anti-Forensics Detection via Timestomping} Compare $STANDARD_INFORMATION timestamps with $FILE_NAME timestamps in MFT entries, flag files where $SI timestamps predate $FN timestamps (impossible in normal operation), identify timestomped files as evidence of deliberate manipulation, correlate with other timeline evidence.}
+\pre{\startverb
+**Scenario 1: Anti-Forensics Detection via Timestomping** Compare $STANDARD_INFORMATION timestamps with $FILE_NAME timestamps in MFT entries, flag files where $SI timestamps predate $FN timestamps (impossible in normal operation), identify timestomped files as evidence of deliberate manipulation, correlate with other timeline evidence.
+\stopverb}
 
 \p{\strong{Scenario 2: Hidden Data in Alternate Data Streams} Scan for ADS attached to files beyond the standard Zone.Identifier, extract ADS content for analysis, check for hidden executables or documents stored in ADS, correlate ADS creation with user activity timeline, document findings for evidence.}
 

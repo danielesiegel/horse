@@ -17,7 +17,9 @@ tmux new-session -d -s capture \
   'while true; do bash ~/v/scripts/always-on-capture.sh; echo "[restart] $(date)"; sleep 2; done'
 \stopverb}
 
-\p{The auto-restart loop ensures crash resilience. The script records 6s WAV chunks via ffmpeg avfoundation device \code{\startverb :1\stopverb}, silence-detects via sox RMS (\code{\startverb < 0.005\stopverb}), transcribes non-silent chunks with \code{\startverb whisper-cli --model ~/v/ggml-base.en.bin\stopverb}, and appends \code{\startverb ** [timestamp]\startverb \ntext\stopverb\startverb \n\stopverb\stopverb} entries to \code{\startverb ~/v/audio-capture.org\stopverb}.}
+\pre{\startverb
+The auto-restart loop ensures crash resilience. The script records 6s WAV chunks via ffmpeg avfoundation device `:1`, silence-detects via sox RMS (`< 0.005`), transcribes non-silent chunks with `whisper-cli --model ~/v/ggml-base.en.bin`, and appends `** [timestamp]\ntext\n` entries to `~/v/audio-capture.org`.
+\stopverb}
 }
 
 \subtree{

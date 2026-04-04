@@ -44,7 +44,9 @@ APP_PORT = "8080"
 
 \subtree{
 \title{Service Logging Pattern}
-\p{Always pipe to \code{\startverb $FLOX_ENV_CACHE/logs/\stopverb} for debugging:}
+\pre{\startverb
+Always pipe to `$FLOX_ENV_CACHE/logs/` for debugging:
+\stopverb}
 
 \pre{\startverb
 [services.myapp]
@@ -266,7 +268,7 @@ command = '''
 \subtree{
 \title{Best Practices}
 \ul{
-\li{Log service output to \code{\startverb $FLOX_ENV_CACHE/logs/\stopverb}}
+\li{\startverb Log service output to `$FLOX_ENV_CACHE/logs/`\stopverb}
 \li{Test activation with \code{\startverb flox activate -- <command>\stopverb} before adding to services}
 \li{When debugging services, run the exact command from manifest manually first}
 \li{Always make host/port configurable via vars for network services}
@@ -318,7 +320,9 @@ nc -zv localhost 8000
 \title{Common Pitfalls}
 \subtree{
 \title{Services Don't Preserve State}
-\p{Services see fresh environment (no preserved state between restarts). Store persistent data in \code{\startverb $FLOX_ENV_CACHE\stopverb}.}
+\pre{\startverb
+Services see fresh environment (no preserved state between restarts). Store persistent data in `$FLOX_ENV_CACHE`.
+\stopverb}
 }
 
 \subtree{

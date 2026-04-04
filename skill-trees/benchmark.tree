@@ -92,12 +92,14 @@ ycsb-redb --batched --batch-size 1000 --workload a --records 50000 --ops 200000 
 \p{\strong{Implemented} (see \code{\startverb docs/STEEL_OPTIMIZATIONS.md\stopverb}):}
 
 \ul{
-\li{\code{\startverb get_ref()\stopverb} +8.4\% - zero-copy reads (KEY WIN)}
-\li{\code{\startverb get_cached_epoch()\stopverb} +1\% - thread-local epoch}
+\li{\startverb `get_ref()` +8.4% - zero-copy reads (KEY WIN)\stopverb}
+\li{\startverb `get_cached_epoch()` +1% - thread-local epoch\stopverb}
 \li{\code{\startverb get_fast()\stopverb} - seqlock skip (no gain, kept for API)}
 }
 
-\p{\strong{Gap closed!} Previous 43\% gap on Workload B eliminated via zero-copy optimization.}
+\pre{\startverb
+**Gap closed!** Previous 43% gap on Workload B eliminated via zero-copy optimization.
+\stopverb}
 }
 
 \subtree{

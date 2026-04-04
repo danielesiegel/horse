@@ -113,15 +113,17 @@ flox push  # Share runtime environment without source code
 
 \subtree{
 \title{Manifest Builds}
-\p{Flox treats a \strong{manifest build} as a short, deterministic Bash script that runs inside an activated environment and copies its deliverables into \code{\startverb $out\stopverb}. Anything copied there becomes a first-class, versioned package that can later be published and installed like any other catalog artifact.}
+\pre{\startverb
+Flox treats a **manifest build** as a short, deterministic Bash script that runs inside an activated environment and copies its deliverables into `$out`. Anything copied there becomes a first-class, versioned package that can later be published and installed like any other catalog artifact.
+\stopverb}
 
 \subtree{
 \title{Critical insights from real-world packaging:}
 \ul{
 \li{\strong{Build hooks don't run}: \code{\startverb [hook]\stopverb} scripts DO NOT execute during \code{\startverb flox build\stopverb} - only during interactive \code{\startverb flox activate\stopverb}}
-\li{\strong{Guard env vars}: Always use \code{\startverb ${FLOX_ENV_CACHE:-}\stopverb} with default fallback in hooks to avoid build failures}
-\li{\strong{Wrapper scripts pattern}: Create launcher scripts in \code{\startverb $out/bin/\stopverb} that set up runtime environment:}
-\li{\strong{User config pattern}: Default to \code{\startverb ~/.myapp/\stopverb} for user configs, not \code{\startverb $FLOX_ENV_CACHE\stopverb} (packages are immutable)}
+\li{\startverb **Guard env vars**: Always use `${FLOX_ENV_CACHE:-}` with default fallback in hooks to avoid build failures\stopverb}
+\li{\startverb **Wrapper scripts pattern**: Create launcher scripts in `$out/bin/` that set up runtime environment:\stopverb}
+\li{\startverb **User config pattern**: Default to `~/.myapp/` for user configs, not `$FLOX_ENV_CACHE` (packages are immutable)\stopverb}
 \li{\strong{Model/data directories}: Create user directories at runtime, not build time:}
 \li{\strong{Python package strategy}: Don't bundle Python deps - include \code{\startverb requirements.txt\stopverb} and setup script:}
 \li{\strong{Dual-environment workflow}: Use one environment for building (\code{\startverb project-dev/\stopverb}), another for consuming (\code{\startverb project-runtime/\stopverb}). See "Development vs Runtime: The Two-Environment Pattern" section above for details.}
@@ -151,7 +153,9 @@ runtime-packages = [ "id1", "id2" ]  # optional
 
 \p{\strong{Package groups and builds.} Only packages in the \code{\startverb toplevel\stopverb} group (default) are available during builds. Packages with explicit \code{\startverb pkg-group\stopverb} settings won't be accessible in build commands unless also installed to \code{\startverb toplevel\stopverb}.}
 
-\p{\strong{Referencing other builds.} \code{\startverb ${other}\stopverb} expands to the \code{\startverb $out\stopverb} of \code{\startverb [build.other]\stopverb} and forces that build to run first, enabling multi-stage flows (e.g. vendoring → compilation).}
+\pre{\startverb
+**Referencing other builds.** `${other}` expands to the `$out` of `[build.other]` and forces that build to run first, enabling multi-stage flows (e.g. vendoring → compilation).
+\stopverb}
 }
 }
 
@@ -184,7 +188,9 @@ sandbox  = "pure"
 
 \subtree{
 \title{$out Layout and Filesystem Hierarchy}
-\p{Only files placed under \code{\startverb $out\stopverb} survive. Follow FHS conventions:}
+\pre{\startverb
+Only files placed under `$out` survive. Follow FHS conventions:
+\stopverb}
 
 \pre{\startverb
 | Path | Purpose |
@@ -236,7 +242,9 @@ command = '''
 sandbox = "pure"
 \stopverb}
 
-\p{\code{\startverb ${bin.version}\stopverb} resolves because both builds share the same manifest.}
+\pre{\startverb
+`${bin.version}` resolves because both builds share the same manifest.
+\stopverb}
 }
 
 \subtree{
@@ -314,7 +322,9 @@ darwin-aarch64 → build → publish
 
 \subtree{
 \title{Beyond Code — Packaging Assets}
-\p{Any artifact that can be copied into \code{\startverb $out\stopverb} can be versioned and installed:}
+\pre{\startverb
+Any artifact that can be copied into `$out` can be versioned and installed:
+\stopverb}
 
 \subtree{
 \title{Nginx baseline config}
@@ -334,7 +344,9 @@ command = '''
 '''
 \stopverb}
 
-\p{Teams install these packages and reference them via \code{\startverb $FLOX_ENV/etc/nginx.conf\stopverb} or \code{\startverb $FLOX_ENV/share/proto\stopverb}.}
+\pre{\startverb
+Teams install these packages and reference them via `$FLOX_ENV/etc/nginx.conf` or `$FLOX_ENV/share/proto`.
+\stopverb}
 }
 }
 

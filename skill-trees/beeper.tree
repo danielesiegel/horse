@@ -335,7 +335,9 @@ stream_order INT, event_ts INT, created_ts INT
 \li{\code{\startverb m.room.name\stopverb} — room name changes}
 }
 
-\p{Content BLOB quirk: uses \code{\startverb \startverb \x\stopverb22\stopverb} instead of \code{\startverb "\stopverb} — use \code{\startverb regexp_extract\stopverb} not \code{\startverb json_extract_string\stopverb}.}
+\pre{\startverb
+Content BLOB quirk: uses `\x22` instead of `"` — use `regexp_extract` not `json_extract_string`.
+\stopverb}
 
 \p{\strong{imessage.chat}:}
 
@@ -553,7 +555,7 @@ Prefer DuckDB queries over fetching raw messages.
 \title{Known Issues}
 \ul{
 \li{\strong{beeper-cli pagination cycles}: cursor-based pagination can return duplicates; always deduplicate on chat ID}
-\li{\strong{Beeper BLOB encoding}: content column uses \code{\startverb \startverb \x\stopverb22\stopverb} escapes — use \code{\startverb regexp_extract\stopverb}, not \code{\startverb json_extract_string\stopverb}}
+\li{\startverb **Beeper BLOB encoding**: content column uses `\x22` escapes — use `regexp_extract`, not `json_extract_string`\stopverb}
 \li{\strong{iMessage chat.db SQL}: use \code{\startverb <>\stopverb} not \code{\startverb !=\stopverb} (shell escaping issue)}
 \li{\strong{WhatsApp in account.db}: WhatsApp bridge stores data differently; not present in account.db \code{\startverb local_events\stopverb} — use beeper-cli for WhatsApp}
 }

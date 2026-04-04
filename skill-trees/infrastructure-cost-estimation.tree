@@ -137,7 +137,7 @@ ORDER BY gross_cost_no_credits DESC;'
 \p{\strong{Key Filter Parameters by Provider}:}
 
 \ul{
-\li{\strong{AWS}: Exclude RECORD\_TYPE values: "Credit", "Refund", "SavingsPlanNegation", "DiscountedUsage"}
+\li{\startverb **AWS**: Exclude RECORD\_TYPE values: "Credit", "Refund", "SavingsPlanNegation", "DiscountedUsage"\stopverb}
 \li{\strong{Azure}: Exclude ChargeType values: "Credit", "Refund", "RoundingAdjustment"}
 \li{\strong{Google Cloud}: Use BigQuery on billing export tables, no promotional credits included}
 }
@@ -146,7 +146,9 @@ ORDER BY gross_cost_no_credits DESC;'
 
 \subtree{
 \title{Native Tools}
-\p{\strong{AWS}: Cost Explorer, Pricing Calculator, Budgets, Cost & Usage Reports, Billing Dashboard \strong{Azure}: Cost Management + Billing, Pricing Calculator, Advisor, Resource Graph\ \strong{Google Cloud}: Cloud Billing, Pricing Calculator, Asset Inventory, Recommender}
+\pre{\startverb
+**AWS**: Cost Explorer, Pricing Calculator, Budgets, Cost & Usage Reports, Billing Dashboard **Azure**: Cost Management + Billing, Pricing Calculator, Advisor, Resource Graph\ **Google Cloud**: Cloud Billing, Pricing Calculator, Asset Inventory, Recommender
+\stopverb}
 }
 }
 
@@ -274,7 +276,7 @@ def calculate_monthly_costs(resources, pricing_data):
 \title{Analysis Steps}
 \ul{
 \li{[ ] Used native cost tools or CLI commands with credits excluded for \strong{recent 3 complete months}}
-\li{[ ] Applied correct CLI filters for each provider (AWS: RECORD\_TYPE, Azure: ChargeType, GCP: BigQuery)}
+\li{\startverb [ ] Applied correct CLI filters for each provider (AWS: RECORD\_TYPE, Azure: ChargeType, GCP: BigQuery)\stopverb}
 \li{[ ] Specified exact date range in analysis}
 \li{[ ] Discovered all resources across all environments}
 \li{[ ] Researched current standard pricing rates}
@@ -289,10 +291,10 @@ def calculate_monthly_costs(resources, pricing_data):
 \subtree{
 \title{1. Credit Impact Analysis}
 \ul{
-\li{\strong{Analysis Period}: \[Specify actual 3 months analyzed]}
-\li{\strong{Gross Monthly Cost} (without credits): $X,XXX - \strong{PRIMARY NUMBER}}
-\li{\strong{Net Monthly Cost} (with credits): $X,XXX}
-\li{\strong{Credits Applied}: $XXX/month}
+\li{\startverb **Analysis Period**: \[Specify actual 3 months analyzed]\stopverb}
+\li{\startverb **Gross Monthly Cost** (without credits): $X,XXX - **PRIMARY NUMBER**\stopverb}
+\li{\startverb **Net Monthly Cost** (with credits): $X,XXX\stopverb}
+\li{\startverb **Credits Applied**: $XXX/month\stopverb}
 \li{\strong{Credit Expiration Risk}: Timeline assessment}
 }
 }
@@ -321,7 +323,7 @@ def calculate_monthly_costs(resources, pricing_data):
 \ul{
 \li{\strong{ALWAYS EXCLUDE CREDITS FIRST} - Use specific CLI commands for each provider}
 \li{\strong{USE RECENT 3 COMPLETE MONTHS} - Calculate current date, then use last 3 complete months}
-\li{\strong{Correct CLI Filters}: AWS (RECORD\_TYPE), Azure (ChargeType + REST API), Google Cloud (BigQuery only)}
+\li{\startverb **Correct CLI Filters**: AWS (RECORD\_TYPE), Azure (ChargeType + REST API), Google Cloud (BigQuery only)\stopverb}
 \li{\strong{Use native tools} - Most accurate real-time data}
 \li{\strong{Standard pricing only} - No promotional rates}
 \li{\strong{Python for all math} - Prevent calculation errors}

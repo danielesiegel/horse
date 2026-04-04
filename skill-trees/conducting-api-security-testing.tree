@@ -97,7 +97,7 @@
 
 \ul{
 \li{\strong{SQL injection in API parameters}: Test all parameters (path, query, body, headers) with SQL injection payloads. JSON APIs are often overlooked: \code{\startverb {"username": "admin' OR 1=1--", "password": "test"}\stopverb}}
-\li{\strong{NoSQL injection}: For MongoDB backends, test with operator injection: \code{\startverb {"username": {"$gt": ""}, "password": {"$gt": ""}}\stopverb}}
+\li{\startverb **NoSQL injection**: For MongoDB backends, test with operator injection: `{"username": {"$gt": ""}, "password": {"$gt": ""}}`\stopverb}
 \li{\strong{SSRF via API}: Test any parameter that accepts URLs (webhook URLs, avatar URLs, import endpoints) with internal addresses and cloud metadata endpoints}
 \li{\strong{GraphQL-specific injection}: Test for query depth attacks, alias-based batching for brute force, and field suggestion enumeration}
 \li{\strong{XXE in XML APIs}: Submit XML content with external entity declarations to API endpoints that accept XML}

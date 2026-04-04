@@ -61,7 +61,9 @@
 
 \subtree{
 \title{YARA-X Overview}
-\p{YARA-X is the Rust-based successor to legacy YARA: 5-10x faster regex, better errors, built-in formatter, stricter validation, new modules (crx, dex), 99\% rule compatibility.}
+\pre{\startverb
+YARA-X is the Rust-based successor to legacy YARA: 5-10x faster regex, better errors, built-in formatter, stricter validation, new modules (crx, dex), 99% rule compatibility.
+\stopverb}
 
 \p{\strong{Install:} \code{\startverb brew install yara-x\stopverb} (macOS) or \code{\startverb cargo install yara-x\stopverb}}
 
@@ -247,7 +249,9 @@ Should I require all strings or allow any?
    └─ Tighten: switch any → all, add more required strings
 \stopverb}
 
-\p{\strong{Lesson from production:} Rules using \code{\startverb any of ($network_*)\stopverb} where strings included "fetch", "axios", "http" matched virtually all web applications. Switching to require credential path AND network call AND exfil destination eliminated FPs.}
+\pre{\startverb
+**Lesson from production:** Rules using `any of ($network_*)` where strings included "fetch", "axios", "http" matched virtually all web applications. Switching to require credential path AND network call AND exfil destination eliminated FPs.
+\stopverb}
 }
 
 \subtree{
@@ -366,7 +370,9 @@ String extraction failed — what now?
 
 \p{\strong{Condition design:} Start with \code{\startverb filesize <\stopverb}, then magic bytes, then strings, then modules. If >5 lines, split into multiple rules.}
 
-\p{\strong{Quality signals:} yarGen output needs 80\% filtering. Rules matching <50\% of variants are too narrow; matching goodware are too broad.}
+\pre{\startverb
+**Quality signals:** yarGen output needs 80% filtering. Rules matching <50% of variants are too narrow; matching goodware are too broad.
+\stopverb}
 
 \p{\strong{Modifier discipline:}}
 
@@ -380,7 +386,7 @@ String extraction failed — what now?
 
 \ul{
 \li{Regex without a 4+ byte literal substring \strong{evaluates at every file offset} — catastrophic performance}
-\li{Always anchor regex to a distinctive literal: \code{\startverb /mshta\.exe http:\/\/.../\stopverb} not \code{\startverb /http:\/\/.../\stopverb}}
+\li{\startverb Always anchor regex to a distinctive literal: `/mshta\.exe http:\/\/.../` not `/http:\/\/.../`\stopverb}
 \li{If you can't anchor, consider hex pattern with wildcards instead}
 }
 
@@ -391,7 +397,9 @@ String extraction failed — what now?
 \li{Unbounded \code{\startverb #a\stopverb} can be thousands in large files — exponential slowdown}
 }
 
-\p{\strong{YARA-X tips:} \code{\startverb $_unused\stopverb} to suppress warnings; \code{\startverb private $s\stopverb} to hide from output; \code{\startverb yr check\stopverb} + \code{\startverb yr fmt\stopverb} before every commit.}
+\pre{\startverb
+**YARA-X tips:** `$_unused` to suppress warnings; `private $s` to hide from output; `yr check` + `yr fmt` before every commit.
+\stopverb}
 
 \subtree{
 \title{When to Use Modules vs. Byte Checks}
@@ -418,7 +426,7 @@ Should I use a module or raw bytes?
 \p{Key additions from recent releases:}
 
 \ul{
-\li{\strong{Private patterns} (v1.3.0+): \code{\startverb private $helper = "pattern"\stopverb} — matches but hidden from output}
+\li{\startverb **Private patterns** (v1.3.0+): `private $helper = "pattern"` — matches but hidden from output\stopverb}
 \li{\strong{Warning suppression} (v1.4.0+): \code{\startverb // suppress: slow_pattern\stopverb} inline comments}
 \li{\strong{Numeric underscores} (v1.5.0+): \code{\startverb filesize < 10_000_000\stopverb} for readability}
 \li{\strong{Built-in formatter}: \code{\startverb yr fmt rules/\stopverb} to standardize formatting}
@@ -502,7 +510,9 @@ rule SUSP_DEX_DynamicLoading {
 
 \subtree{
 \title{Migrating from Legacy YARA}
-\p{YARA-X has 99\% rule compatibility, but enforces stricter validation.}
+\pre{\startverb
+YARA-X has 99% rule compatibility, but enforces stricter validation.
+\stopverb}
 
 \p{\strong{Quick migration:}}
 
@@ -584,7 +594,7 @@ meta:
 \ol{
 \li{\strong{Gather samples} — Multiple samples; single-sample rules are brittle}
 \li{\strong{Extract candidates} — \code{\startverb yarGen -m samples/ --excludegood\stopverb}}
-\li{\strong{Validate quality} — Use decision tree; yarGen needs 80\% filtering}
+\li{\startverb **Validate quality** — Use decision tree; yarGen needs 80% filtering\stopverb}
 \li{\strong{Write initial rule} — Follow template with proper metadata}
 \li{\strong{Lint and test} — \code{\startverb yr check\stopverb}, \code{\startverb yr fmt\stopverb}, linter script}
 \li{\strong{Goodware validation} — VirusTotal corpus or local clean files}
@@ -677,7 +687,7 @@ uv run {baseDir}/scripts/atom_analyzer.py rule.yar  # Check string quality
 \li{[ ] Strings are unique (not API names, common paths, or format strings)}
 \li{[ ] All strings have 4+ bytes with good atom potential}
 \li{[ ] Base64 modifier only on strings with 3+ characters}
-\li{[ ] Regex patterns have escaped \code{\startverb {\stopverb} and valid escape sequences}
+\li{\startverb [ ] Regex patterns have escaped `{` and valid escape sequences\stopverb}
 \li{[ ] Condition starts with cheap checks (filesize, magic bytes)}
 \li{[ ] Rule matches all target samples}
 \li{[ ] Rule produces zero matches on goodware corpus}
@@ -761,7 +771,9 @@ condition:
     any of ($a*) and any of ($b*)  // Require evidence from BOTH categories
 \stopverb}
 
-\p{\strong{Why this works:} Different indicator types have different confidence levels. A single C2 domain might be definitive, while you need multiple library imports to be confident. Grouping by \code{\startverb $a*\stopverb}, \code{\startverb $b*\stopverb}, \code{\startverb $c*\stopverb} lets you express graduated requirements.}
+\pre{\startverb
+**Why this works:** Different indicator types have different confidence levels. A single C2 domain might be definitive, while you need multiple library imports to be confident. Grouping by `$a*`, `$b*`, `$c*` lets you express graduated requirements.
+\stopverb}
 }
 }
 }

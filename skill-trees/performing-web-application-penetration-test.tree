@@ -96,7 +96,7 @@
 \li{\strong{Server-Side Request Forgery (SSRF)}: Supply internal URLs (\code{\startverb http://169.254.169.254/latest/meta-data/\stopverb}, \code{\startverb http://127.0.0.1:6379/\stopverb}) in parameters that fetch external resources (webhooks, image URLs, import functions)}
 \li{\strong{Command injection}: Insert OS command separators (\code{\startverb ;\stopverb}, \code{\startverb |\stopverb}, \code{\startverb &&\stopverb}, `\code{\startverb  \stopverb} `\code{\startverb ) followed by commands (\stopverb}id\code{\startverb , \stopverb}whoami\code{\startverb , \stopverb}ping -c 3 collaborator.net`) in parameters processed by the server}
 \li{\strong{XML External Entity (XXE)}: Submit XML payloads with external entity declarations (\code{\startverb <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>\stopverb}) in XML upload or API endpoints}
-\li{\strong{Server-Side Template Injection (SSTI)}: Test with \code{\startverb {{7*7}}\stopverb}, \code{\startverb ${7*7}\stopverb}, \code{\startverb <\%= 7*7 \%>\stopverb} in parameters rendered by template engines}
+\li{\startverb **Server-Side Template Injection (SSTI)**: Test with `{{7*7}}`, `${7*7}`, `<%= 7*7 %>` in parameters rendered by template engines\stopverb}
 }
 }
 
@@ -121,7 +121,7 @@
 \li{\strong{Race conditions}: Send multiple simultaneous requests to exploit time-of-check-to-time-of-use (TOCTOU) vulnerabilities (double-spending, coupon reuse, voting multiple times) using Burp Turbo Intruder}
 \li{\strong{Workflow bypass}: Attempt to skip steps in multi-step processes (checkout, registration, approval) by directly requesting later-stage endpoints}
 \li{\strong{Numeric manipulation}: Modify prices, quantities, or amounts to negative values, zero, or extremely large numbers to test for integer overflow or logic errors}
-\li{\strong{File upload bypass}: Test file upload restrictions by modifying MIME types, double extensions (file.php.jpg), null bytes (file.php\%00.jpg), and content-type manipulation}
+\li{\startverb **File upload bypass**: Test file upload restrictions by modifying MIME types, double extensions (file.php.jpg), null bytes (file.php%00.jpg), and content-type manipulation\stopverb}
 }
 }
 

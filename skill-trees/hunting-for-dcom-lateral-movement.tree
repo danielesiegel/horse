@@ -634,7 +634,7 @@ Write-Host "[*] Default Launch Permission: $(if ($remoteLaunch) { 'Custom' } els
 \p{\strong{Approach}:}
 
 \ol{
-\li{Query Sysmon Event ID 1 on 10.10.20.50: confirm mmc.exe (parent: svchost.exe -k DcomLaunch) spawned cmd.exe with command line \code{\startverb /c net user /domain > C:\startverb \temp\stopverb\startverb \users\stopverb.txt\stopverb}}
+\li{\startverb Query Sysmon Event ID 1 on 10.10.20.50: confirm mmc.exe (parent: svchost.exe -k DcomLaunch) spawned cmd.exe with command line `/c net user /domain > C:\temp\users.txt`\stopverb}
 \li{Query Sysmon Event ID 3 on 10.10.20.50: identify inbound TCP connection on port 135 from 10.10.5.30 at 03:22:01, followed by a high-port connection at 03:22:02}
 \li{Correlate Event ID 4624 on 10.10.20.50: find LogonType 3 from 10.10.5.30 at 03:22:00 with admin credentials}
 \li{Investigate 10.10.5.30: check for compromise indicators -- find Mimikatz artifacts in memory, evidence of credential dumping at 03:15}

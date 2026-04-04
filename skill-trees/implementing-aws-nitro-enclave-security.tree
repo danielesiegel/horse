@@ -68,7 +68,9 @@
 \li{\strong{Create the application Dockerfile}: The enclave runs a minimal Linux environment. The application communicates exclusively through vsock:}
 }
 
-\p{RUN yum install -y python3 python3-pip && \ pip3 install boto3 cbor2 cryptography requests}
+\pre{\startverb
+RUN yum install -y python3 python3-pip && \ pip3 install boto3 cbor2 cryptography requests
+\stopverb}
 
 \p{COPY enclave_app.py /app/enclave_app.py}
 
@@ -78,7 +80,9 @@
 - **Build the EIF with nitro-cli**: Convert the Docker image into an enclave image file, capturing the PCR measurements:
 \stopverb}
 
-\p{docker build -t enclave-app:latest . nitro-cli build-enclave \ --docker-uri enclave-app:latest \ --output-file enclave-app.eif}
+\pre{\startverb
+docker build -t enclave-app:latest . nitro-cli build-enclave \ --docker-uri enclave-app:latest \ --output-file enclave-app.eif
+\stopverb}
 
 \pre{\startverb
   The output contains three critical PCR values:
@@ -90,9 +94,13 @@
 - **Build a signed EIF** (recommended for production): Generate a signing certificate and use it to produce PCR8:
 \stopverb}
 
-\p{openssl ecparam -name secp384r1 -genkey -noout -out enclave_key.pem openssl req -new -key enclave_key.pem -sha384 \ -nodes -subj "/CN=Enclave Signer" -out enclave_csr.pem openssl x509 -req -days 365 -in enclave_csr.pem \ -signkey enclave_key.pem -sha384 -out enclave_cert.pem}
+\pre{\startverb
+openssl ecparam -name secp384r1 -genkey -noout -out enclave_key.pem openssl req -new -key enclave_key.pem -sha384 \ -nodes -subj "/CN=Enclave Signer" -out enclave_csr.pem openssl x509 -req -days 365 -in enclave_csr.pem \ -signkey enclave_key.pem -sha384 -out enclave_cert.pem
+\stopverb}
 
-\p{nitro-cli build-enclave \ --docker-uri enclave-app:latest \ --output-file enclave-app.eif \ --private-key enclave_key.pem \ --signing-certificate enclave_cert.pem}
+\pre{\startverb
+nitro-cli build-enclave \ --docker-uri enclave-app:latest \ --output-file enclave-app.eif \ --private-key enclave_key.pem \ --signing-certificate enclave_cert.pem
+\stopverb}
 
 \pre{\startverb
   PCR8 (the signing certificate hash) enables KMS policies that trust any image signed by a specific certificate, allowing image updates without changing the policy.

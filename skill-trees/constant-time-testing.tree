@@ -75,19 +75,33 @@ data = a << secret;
 \title{Example: Modular Exponentiation Timing Attacks}
 \p{Modular exponentiation (used in RSA and Diffie-Hellman) is susceptible to timing attacks. RSA decryption computes:}
 
-\p{$$ct^{d} \startverb \mod\stopverb{N}$$}
+\pre{\startverb
+$$ct^{d} \mod{N}$$
+\stopverb}
 
-\p{where $d$ is the secret exponent. The \em{exponentiation by squaring} optimization reduces multiplications to $\startverb \log\stopverb{d}$:}
+\pre{\startverb
+where $d$ is the secret exponent. The *exponentiation by squaring* optimization reduces multiplications to $\log{d}$:
+\stopverb}
 
-\p{$$ \startverb \begin\stopverb{align*} & \startverb \textbf\stopverb{Input: } \startverb \text\stopverb{base }y,\startverb \text\stopverb{exponent } d=\{d_n,\startverb \cdots\stopverb,d_0\}_2,\startverb \text\stopverb{modulus } N \\ & r = 1 \\ & \startverb \textbf\stopverb{for } i=|n| \startverb \text\stopverb{ downto } 0: \\ & \startverb \quad\stopverb\startverb \textbf\stopverb{if } d_i == 1: \\ & \startverb \quad\stopverb\startverb \quad\stopverb r = r * y \startverb \mod\stopverb{N} \\ & \startverb \quad\stopverb y = y * y \startverb \mod\stopverb{N} \\ & \startverb \textbf\stopverb{return }r \startverb \end\stopverb{align*} $$}
+\pre{\startverb
+$$ \begin{align*} & \textbf{Input: } \text{base }y,\text{exponent } d=\{d_n,\cdots,d_0\}_2,\text{modulus } N \\ & r = 1 \\ & \textbf{for } i=|n| \text{ downto } 0: \\ & \quad\textbf{if } d_i == 1: \\ & \quad\quad r = r * y \mod{N} \\ & \quad y = y * y \mod{N} \\ & \textbf{return }r \end{align*} $$
+\stopverb}
 
-\p{The code branches on exponent bit $d_i$, violating constant-time principles. When $d_i = 1$, an additional multiplication occurs, increasing execution time and leaking bit information.}
+\pre{\startverb
+The code branches on exponent bit $d_i$, violating constant-time principles. When $d_i = 1$, an additional multiplication occurs, increasing execution time and leaking bit information.
+\stopverb}
 
-\p{Montgomery multiplication (commonly used for modular arithmetic) also leaks timing: when intermediate values exceed modulus $N$, an additional reduction step is required. An attacker constructs inputs $y$ and $y'$ such that:}
+\pre{\startverb
+Montgomery multiplication (commonly used for modular arithmetic) also leaks timing: when intermediate values exceed modulus $N$, an additional reduction step is required. An attacker constructs inputs $y$ and $y'$ such that:
+\stopverb}
 
-\p{$$ \startverb \begin\stopverb{align*} y^2 < y^3 < N \\ y'^2 < N \startverb \leq\stopverb y'^3 \startverb \end\stopverb{align*} $$}
+\pre{\startverb
+$$ \begin{align*} y^2 < y^3 < N \\ y'^2 < N \leq y'^3 \end{align*} $$
+\stopverb}
 
-\p{For $y$, both multiplications take time $t_1+t_1$. For $y'$, the second multiplication requires reduction, taking time $t_1+t_2$. This timing difference reveals whether $d_i$ is 0 or 1.}
+\pre{\startverb
+For $y$, both multiplications take time $t_1+t_1$. For $y'$, the second multiplication requires reduction, taking time $t_1+t_2$. This timing difference reveals whether $d_i$ is 0 or 1.
+\stopverb}
 }
 }
 

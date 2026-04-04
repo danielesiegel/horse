@@ -149,7 +149,7 @@
 
 \ol{
 \li{Add \code{\startverb sigstore/cosign-installer@v3\stopverb} to the GitHub Actions workflow and enable OIDC token permissions with \code{\startverb id-token: write\stopverb}}
-\li{After building and pushing the image, sign it with \code{\startverb cosign sign $IMAGE_DIGEST\stopverb} using the GitHub Actions OIDC identity automatically}
+\li{\startverb After building and pushing the image, sign it with `cosign sign $IMAGE_DIGEST` using the GitHub Actions OIDC identity automatically\stopverb}
 \li{Deploy Sigstore Policy Controller to the Kubernetes cluster with a ClusterImagePolicy requiring signatures from \code{\startverb --certificate-identity-regexp=https://github.com/myorg/myrepo/.*\stopverb} and \code{\startverb --certificate-oidc-issuer=https://token.actions.githubusercontent.com\stopverb}}
 \li{Verify the signing entry appears in Rekor by querying with the image digest hash to confirm the transparency log recorded the event}
 \li{Test the admission controller by attempting to deploy an unsigned image and confirming it is rejected with a policy violation error}

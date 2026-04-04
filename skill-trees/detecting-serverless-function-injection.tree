@@ -174,7 +174,9 @@
 \li{\strong{Input validation at handler entry}: Validate and sanitize all event data before processing:}
 }
 
-\p{SAFE_PATTERNS = { 'userId': re.compile(r'^[a-zA-Z0-9\-]{1,64}$'), 'email': re.compile(r'^[a-zA-Z0-9._\%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'), 'action': re.compile(r'^(get|list|create|update|delete)$'), }}
+\pre{\startverb
+SAFE_PATTERNS = { 'userId': re.compile(r'^[a-zA-Z0-9\-]{1,64}$'), 'email': re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'), 'action': re.compile(r'^(get|list|create|update|delete)$'), }
+\stopverb}
 
 \p{def validate_event(schema): """Decorator that validates Lambda event against a whitelist schema.""" def decorator(func): @wraps(func) def wrapper(event, context): for field, pattern in schema.items(): value = event.get(field, '') if isinstance(value, str) and not pattern.match(value): return { 'statusCode': 400, 'body': json.dumps({'error': f'Invalid {field}'}) } return func(event, context) return wrapper return decorator}
 
@@ -194,7 +196,9 @@
 - **Lambda function URL authorization**: Ensure functions exposed via URLs require IAM auth:
 \stopverb}
 
-\p{aws lambda get-function-url-config --function-name <name> \ --query 'AuthType' --output text}
+\pre{\startverb
+aws lambda get-function-url-config --function-name <name> \ --query 'AuthType' --output text
+\stopverb}
 }
 
 \subtree{

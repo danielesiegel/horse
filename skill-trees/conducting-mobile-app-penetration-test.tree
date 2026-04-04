@@ -55,7 +55,7 @@
 \ul{
 \li{Decompile the APK: \code{\startverb jadx -d output/ target.apk\stopverb} to obtain Java/Kotlin source code}
 \li{Review \code{\startverb AndroidManifest.xml\stopverb} for exported components (activities, services, receivers, content providers), permissions, and debuggable flag}
-\li{Search for hardcoded secrets: \code{\startverb grep -rn "api_key\|password\|secret\|token\|aws_" output/\stopverb}}
+\li{\startverb Search for hardcoded secrets: `grep -rn "api_key\|password\|secret\|token\|aws_" output/`\stopverb}
 \li{Identify insecure data storage patterns: SharedPreferences with sensitive data, SQLite databases without encryption, files in external storage}
 \li{Check for WebView vulnerabilities: \code{\startverb setJavaScriptEnabled(true)\stopverb}, \code{\startverb addJavascriptInterface()\stopverb}, and loading untrusted content}
 \li{Run MobSF automated scan: \code{\startverb python manage.py runserver\stopverb} and upload the APK for automated static analysis}
@@ -102,7 +102,7 @@
 \li{Access app data directory: \code{\startverb /data/data/com.target.app/\stopverb}}
 \li{Check SharedPreferences XML files for stored credentials, tokens, and PII}
 \li{Examine SQLite databases: \code{\startverb sqlite3 /data/data/com.target.app/databases/*.db ".dump"\stopverb}}
-\li{Check for sensitive data in application logs: \code{\startverb logcat -d | grep -i "password\|token\|key"\stopverb}}
+\li{\startverb Check for sensitive data in application logs: `logcat -d | grep -i "password\|token\|key"`\stopverb}
 \li{Verify that application data is excluded from backups: \code{\startverb android:allowBackup="false"\stopverb} in AndroidManifest.xml}
 \li{Check clipboard for sensitive data leakage}
 }
@@ -111,7 +111,7 @@
 
 \ul{
 \li{Examine the Keychain for stored credentials: \code{\startverb objection -g "Target App" explore\stopverb} then \code{\startverb ios keychain dump\stopverb}}
-\li{Check NSUserDefaults/plist files: \code{\startverb find /var/mobile/Containers/Data/Application/ -name "*.plist" -exec plutil -p {} \;\stopverb}}
+\li{\startverb Check NSUserDefaults/plist files: `find /var/mobile/Containers/Data/Application/ -name "*.plist" -exec plutil -p {} \;`\stopverb}
 \li{Inspect SQLite databases and Core Data stores for unencrypted sensitive data}
 \li{Check for data leaking through screenshots (iOS captures screenshots during app backgrounding)}
 \li{Verify data protection class: sensitive files should use NSFileProtectionComplete}

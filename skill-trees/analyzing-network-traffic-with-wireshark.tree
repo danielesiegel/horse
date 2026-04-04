@@ -204,7 +204,7 @@ sha256sum capture.pcapng > capture_hash.txt
 
 \ol{
 \li{Capture traffic from the workstation's subnet using \code{\startverb tshark -i eth2 -f "host 10.10.3.45 and port 53" -w dns_exfil_investigation.pcapng\stopverb}}
-\li{Analyze DNS query patterns: \code{\startverb tshark -r dns_exfil_investigation.pcapng -Y "dns.qry.name contains \"suspect-domain.xyz\"" -T fields -e frame.time -e dns.qry.name\stopverb}}
+\li{\startverb Analyze DNS query patterns: `tshark -r dns_exfil_investigation.pcapng -Y "dns.qry.name contains \"suspect-domain.xyz\"" -T fields -e frame.time -e dns.qry.name`\stopverb}
 \li{Examine subdomain labels for encoded data (long base64-like subdomains indicate tunneling): \code{\startverb tshark -r dns_exfil_investigation.pcapng -Y "dns.qry.type == 16" -T fields -e dns.qry.name -e dns.txt\stopverb}}
 \li{Calculate data volume by summing query name lengths to estimate exfiltration bandwidth}
 \li{Extract unique query names and decode base64 subdomains to recover exfiltrated content}

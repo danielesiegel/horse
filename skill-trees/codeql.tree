@@ -63,7 +63,9 @@ fi
 mkdir -p "$OUTPUT_DIR"
 \stopverb}
 
-\p{The output directory is resolved \strong{once} at the start before any workflow executes. All workflows receive \code{\startverb $OUTPUT_DIR\stopverb} and store their artifacts there:}
+\pre{\startverb
+The output directory is resolved **once** at the start before any workflow executes. All workflows receive `$OUTPUT_DIR` and store their artifacts there:
+\stopverb}
 
 \pre{\startverb
 $OUTPUT_DIR/
@@ -93,7 +95,7 @@ find . -maxdepth 3 -name "codeql-database.yml" -not -path "*/\.*" 2>/dev/null \
 \stopverb}
 
 \ul{
-\li{\strong{Inside \code{\startverb $OUTPUT_DIR\stopverb}:} \code{\startverb find "$OUTPUT_DIR" -maxdepth 2 -name "codeql-database.yml"\stopverb}}
+\li{\startverb **Inside `$OUTPUT_DIR`:** `find "$OUTPUT_DIR" -maxdepth 2 -name "codeql-database.yml"`\stopverb}
 \li{\strong{Project-wide (for auto-detection):} \code{\startverb find . -maxdepth 3 -name "codeql-database.yml"\stopverb} — covers databases at the project top level (\code{\startverb ./db-name/\stopverb}) and one subdirectory deep (\code{\startverb ./subdir/db-name/\stopverb}). Does not search deeper.}
 }
 
@@ -170,7 +172,7 @@ OUTPUT_DIR="${BASE}_${N}"; mkdir -p "$OUTPUT_DIR"
 \li{\strong{"The build fails on macOS, just use build-mode=none"} - Exit code 137 is caused by \code{\startverb arm64e\stopverb}/\code{\startverb arm64\stopverb} mismatch, not a fundamental build failure. See [macos-arm64e-workaround.md](references/macos-arm64e-workaround.md).}
 \li{\strong{"No findings means the code is secure"} - Zero findings can indicate poor database quality, missing models, or wrong query packs. Investigate before reporting clean results.}
 \li{\strong{"I'll just run the default suite"} / \strong{"I'll just pass the pack names directly"} - Each pack's \code{\startverb defaultSuiteFile\stopverb} applies hidden filters and can produce zero results. Always use an explicit suite reference.}
-\li{\strong{"I'll put files in the current directory"} - All generated files must go in \code{\startverb $OUTPUT_DIR\stopverb}. Scattering files in the working directory makes cleanup impossible and risks overwriting previous runs.}
+\li{\startverb **"I'll put files in the current directory"** - All generated files must go in `$OUTPUT_DIR`. Scattering files in the working directory makes cleanup impossible and risks overwriting previous runs.\stopverb}
 \li{\strong{"Just use the first database I find"} - Multiple databases may exist for different languages or from previous runs. When more than one is found, present all options to the user. Only skip the prompt when the user already specified which database to use.}
 \li{\strong{"The user said 'scan', that means they want me to pick a database"} - "Scan" is not database selection. If multiple databases exist and the user didn't name one, ask.}
 }
@@ -235,8 +237,8 @@ options:
 \p{After selection:}
 
 \ul{
-\li{\strong{If user picks an existing database:} Set \code{\startverb $OUTPUT_DIR\stopverb} to its parent directory (or the directory containing it), set \code{\startverb $DB_NAME\stopverb} to the selected path, then proceed to extensions → analysis.}
-\li{\strong{If user picks "Build new":} Resolve a new \code{\startverb $OUTPUT_DIR\stopverb}, execute build → extensions → analysis.}
+\li{\startverb **If user picks an existing database:** Set `$OUTPUT_DIR` to its parent directory (or the directory containing it), set `$DB_NAME` to the selected path, then proceed to extensions → analysis.\stopverb}
+\li{\startverb **If user picks "Build new":** Resolve a new `$OUTPUT_DIR`, execute build → extensions → analysis.\stopverb}
 }
 }
 
@@ -289,16 +291,16 @@ I can help with CodeQL analysis. What would you like to do?
 
 \ul{
 \li{[ ] Output directory resolved (user-specified or auto-incremented default)}
-\li{[ ] All generated files stored inside \code{\startverb $OUTPUT_DIR\stopverb}}
-\li{[ ] Database built (discovered via \code{\startverb codeql-database.yml\stopverb} marker) with quality assessment passed (baseline LoC > 0, errors < 5\%)}
-\li{[ ] Data extensions evaluated — either created in \code{\startverb $OUTPUT_DIR/extensions/\stopverb} or explicitly skipped with justification}
+\li{\startverb [ ] All generated files stored inside `$OUTPUT_DIR`\stopverb}
+\li{\startverb [ ] Database built (discovered via `codeql-database.yml` marker) with quality assessment passed (baseline LoC > 0, errors < 5%)\stopverb}
+\li{\startverb [ ] Data extensions evaluated — either created in `$OUTPUT_DIR/extensions/` or explicitly skipped with justification\stopverb}
 \li{[ ] Analysis run with explicit suite reference (not default pack suite)}
 \li{[ ] All installed query packs (official + Trail of Bits + Community) used or explicitly excluded}
-\li{[ ] Selected query packs logged to \code{\startverb $OUTPUT_DIR/rulesets.txt\stopverb}}
-\li{[ ] Unfiltered results preserved in \code{\startverb $OUTPUT_DIR/raw/results.sarif\stopverb}}
-\li{[ ] Final results in \code{\startverb $OUTPUT_DIR/results/results.sarif\stopverb} (filtered for important-only, copied for run-all)}
+\li{\startverb [ ] Selected query packs logged to `$OUTPUT_DIR/rulesets.txt`\stopverb}
+\li{\startverb [ ] Unfiltered results preserved in `$OUTPUT_DIR/raw/results.sarif`\stopverb}
+\li{\startverb [ ] Final results in `$OUTPUT_DIR/results/results.sarif` (filtered for important-only, copied for run-all)\stopverb}
 \li{[ ] Zero-finding results investigated (database quality, model coverage, suite selection)}
-\li{[ ] Build log preserved at \code{\startverb $OUTPUT_DIR/build.log\stopverb} with all commands, fixes, and quality assessments}
+\li{\startverb [ ] Build log preserved at `$OUTPUT_DIR/build.log` with all commands, fixes, and quality assessments\stopverb}
 }
 }
 }

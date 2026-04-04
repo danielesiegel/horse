@@ -12,50 +12,68 @@
 \title{1. Polynomial Functors (Spivak)}
 \subtree{
 \title{Core Definition}
-\p{A polynomial functor $p: \startverb \text\stopverb{Set} \startverb \to\stopverb \startverb \text\stopverb{Set}$ is a sum of representables:}
+\pre{\startverb
+A polynomial functor $p: \text{Set} \to \text{Set}$ is a sum of representables:
+\stopverb}
 
-\p{$$p \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} y^{p[i]}$$}
+\pre{\startverb
+$$p \cong \sum_{i \in p(1)} y^{p[i]}$$
+\stopverb}
 
 \p{Where:}
 
 \ul{
-\li{$p(1)$ = set of \strong{positions} (questions, observations)}
-\li{$p[i]$ = set of \strong{directions} at position $i$ (answers, actions)}
+\li{\startverb $p(1)$ = set of **positions** (questions, observations)\stopverb}
+\li{\startverb $p[i]$ = set of **directions** at position $i$ (answers, actions)\stopverb}
 }
 }
 
 \subtree{
 \title{Morphisms (Dependent Lenses)}
-\p{A lens $f: p \startverb \to\stopverb q$ is a pair $(f_1, f^\startverb \sharp\stopverb)$:}
+\pre{\startverb
+A lens $f: p \to q$ is a pair $(f_1, f^\sharp)$:
+\stopverb}
 
-\p{$$f_1: p(1) \startverb \to\stopverb q(1) \startverb \quad\stopverb \startverb \text\stopverb{(on-positions)}$$ $$f^\startverb \sharp\stopverb_i: q[f_1(i)] \startverb \to\stopverb p[i] \startverb \quad\stopverb \startverb \text\stopverb{(on-directions, contravariant)}$$}
+\pre{\startverb
+$$f_1: p(1) \to q(1) \quad \text{(on-positions)}$$ $$f^\sharp_i: q[f_1(i)] \to p[i] \quad \text{(on-directions, contravariant)}$$
+\stopverb}
 }
 
 \subtree{
 \title{Hom-set Formula}
-\p{$$\startverb \text\stopverb{Poly}(p, q) \startverb \cong\stopverb \startverb \prod\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{j \startverb \in\stopverb q(1)} p[i]^{q[j]}$$}
+\pre{\startverb
+$$\text{Poly}(p, q) \cong \prod_{i \in p(1)} \sum_{j \in q(1)} p[i]^{q[j]}$$
+\stopverb}
 }
 }
 
 \subtree{
 \title{2. Composition Products}
 \subtree{
-\title{Substitution ($\startverb \triangleleft\stopverb$) — The Module Action}
-\p{$$p \startverb \triangleleft\stopverb q \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{\startverb \bar\stopverb{j}: p[i] \startverb \to\stopverb q(1)} y^{\startverb \sum\stopverb_{a \startverb \in\stopverb p[i]} q[\startverb \bar\stopverb{j}(a)]}$$}
+\title{Substitution ($\triangleleft$) — The Module Action}
+\pre{\startverb
+$$p \triangleleft q \cong \sum_{i \in p(1)} \sum_{\bar{j}: p[i] \to q(1)} y^{\sum_{a \in p[i]} q[\bar{j}(a)]}$$
+\stopverb}
 
-\p{\strong{Interpretation:} Substitute $q$ into each "hole" of $p$.}
+\pre{\startverb
+**Interpretation:** Substitute $q$ into each "hole" of $p$.
+\stopverb}
 }
 
 \subtree{
-\title{Parallel/Dirichlet ($\startverb \otimes\stopverb$)}
-\p{$$p \startverb \otimes\stopverb q \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{j \startverb \in\stopverb q(1)} y^{p[i] \startverb \times\stopverb q[j]}$$}
+\title{Parallel/Dirichlet ($\otimes$)}
+\pre{\startverb
+$$p \otimes q \cong \sum_{i \in p(1)} \sum_{j \in q(1)} y^{p[i] \times q[j]}$$
+\stopverb}
 
 \p{\strong{Interpretation:} Independent parallel execution.}
 }
 
 \subtree{
-\title{Categorical Product ($\startverb \times\stopverb$)}
-\p{$$p \startverb \times\stopverb q \startverb \cong\stopverb \startverb \sum\stopverb_{i \startverb \in\stopverb p(1)} \startverb \sum\stopverb_{j \startverb \in\stopverb q(1)} y^{p[i] + q[j]}$$}
+\title{Categorical Product ($\times$)}
+\pre{\startverb
+$$p \times q \cong \sum_{i \in p(1)} \sum_{j \in q(1)} y^{p[i] + q[j]}$$
+\stopverb}
 }
 }
 
@@ -63,38 +81,46 @@
 \title{3. Free Monad & Cofree Comonad}
 \subtree{
 \title{Cofree Comonad as Limit}
-\p{The carrier $t_p$ of the cofree comonoid on $p$:}
+\pre{\startverb
+The carrier $t_p$ of the cofree comonoid on $p$:
+\stopverb}
 
-\p{$$t_p = \startverb \lim\stopverb \startverb \left\stopverb( 1 \startverb \xleftarrow\stopverb{!} p \startverb \triangleleft\stopverb 1 \startverb \xleftarrow\stopverb{p \startverb \triangleleft\stopverb !} p^{\startverb \triangleleft\stopverb 2} \startverb \triangleleft\stopverb 1 \startverb \leftarrow\stopverb \startverb \cdots\stopverb \startverb \right\stopverb)$$}
+\pre{\startverb
+$$t_p = \lim \left( 1 \xleftarrow{!} p \triangleleft 1 \xleftarrow{p \triangleleft !} p^{\triangleleft 2} \triangleleft 1 \leftarrow \cdots \right)$$
+\stopverb}
 }
 
 \subtree{
 \title{Trees as Positions}
-\p{$$t_p \startverb \cong\stopverb \startverb \sum\stopverb_{T \startverb \in\stopverb \startverb \text\stopverb{tree}_p} y^{\startverb \text\stopverb{vtx}(T)}$$}
+\pre{\startverb
+$$t_p \cong \sum_{T \in \text{tree}_p} y^{\text{vtx}(T)}$$
+\stopverb}
 
 \ul{
-\li{$\startverb \text\stopverb{tree}_p$ = set of $p$-trees (possibly infinite)}
-\li{$\startverb \text\stopverb{vtx}(T)$ = vertices (rooted paths) of tree $T$}
+\li{\startverb $\text{tree}_p$ = set of $p$-trees (possibly infinite)\stopverb}
+\li{\startverb $\text{vtx}(T)$ = vertices (rooted paths) of tree $T$\stopverb}
 }
 }
 
 \subtree{
 \title{Comonoid Structure}
 \ul{
-\li{\strong{Counit (Extract):} $\startverb \epsilon\stopverb_p: t_p \startverb \to\stopverb y$ — picks the root}
-\li{\strong{Comultiplication (Duplicate):} $\startverb \delta\stopverb_p: t_p \startverb \to\stopverb t_p \startverb \triangleleft\stopverb t_p$ — path concatenation}
+\li{\startverb **Counit (Extract):** $\epsilon_p: t_p \to y$ — picks the root\stopverb}
+\li{\startverb **Comultiplication (Duplicate):** $\delta_p: t_p \to t_p \triangleleft t_p$ — path concatenation\stopverb}
 }
 }
 
 \subtree{
 \title{Module Action: Pattern Runs On Matter}
-\p{$$\startverb \Xi\stopverb_{p,q} : \startverb \mathfrak\stopverb{m}p \startverb \otimes\stopverb \startverb \mathfrak\stopverb{c}q \startverb \to\stopverb \startverb \mathfrak\stopverb{m}(p \startverb \otimes\stopverb q)$$}
+\pre{\startverb
+$$\Xi_{p,q} : \mathfrak{m}p \otimes \mathfrak{c}q \to \mathfrak{m}(p \otimes q)$$
+\stopverb}
 
 \p{Where:}
 
 \ul{
-\li{$\startverb \mathfrak\stopverb{m}p$ = free monad (Pattern, decision trees, wellfounded)}
-\li{$\startverb \mathfrak\stopverb{c}q$ = cofree comonad (Matter, behavior trees, non-wellfounded)}
+\li{\startverb $\mathfrak{m}p$ = free monad (Pattern, decision trees, wellfounded)\stopverb}
+\li{\startverb $\mathfrak{c}q$ = cofree comonad (Matter, behavior trees, non-wellfounded)\stopverb}
 }
 
 \p{\strong{Examples:}}
@@ -115,22 +141,30 @@
 \title{4. Dynamical Systems (Libkind-Spivak)}
 \subtree{
 \title{Discrete Dynamical System}
-\p{$$f^{upd}: A \startverb \times\stopverb S \startverb \to\stopverb S \startverb \quad\stopverb \startverb \text\stopverb{(update)}$$ $$f^{rdt}: S \startverb \to\stopverb B \startverb \quad\stopverb \startverb \text\stopverb{(readout)}$$}
+\pre{\startverb
+$$f^{upd}: A \times S \to S \quad \text{(update)}$$ $$f^{rdt}: S \to B \quad \text{(readout)}$$
+\stopverb}
 }
 
 \subtree{
 \title{Continuous Dynamical System}
-\p{$$f^{dyn}: A \startverb \times\stopverb S \startverb \to\stopverb TS \startverb \quad\stopverb \startverb \text\stopverb{(dynamics: } \startverb \dot\stopverb{s} = f^{dyn}(a, s) \startverb \text\stopverb{)}$$ $$f^{rdt}: S \startverb \to\stopverb B \startverb \quad\stopverb \startverb \text\stopverb{(readout)}$$}
+\pre{\startverb
+$$f^{dyn}: A \times S \to TS \quad \text{(dynamics: } \dot{s} = f^{dyn}(a, s) \text{)}$$ $$f^{rdt}: S \to B \quad \text{(readout)}$$
+\stopverb}
 }
 
 \subtree{
 \title{Wiring Diagram Composition}
-\p{For $\startverb \phi\stopverb: X \startverb \to\stopverb Y$: $$\startverb \phi\stopverb^{in}: X^{in} \startverb \to\stopverb X^{out} + Y^{in}$$ $$\startverb \phi\stopverb^{out}: Y^{out} \startverb \to\stopverb X^{out}$$}
+\pre{\startverb
+For $\phi: X \to Y$: $$\phi^{in}: X^{in} \to X^{out} + Y^{in}$$ $$\phi^{out}: Y^{out} \to X^{out}$$
+\stopverb}
 }
 
 \subtree{
 \title{Composed Update}
-\p{$$\startverb \bar\stopverb{f}^{upd}(y, s) := f^{upd}(\startverb \phi\stopverb^{in}(y, f^{rdt}(s)), s)$$ $$\startverb \bar\stopverb{f}^{rdt}(s) := \startverb \phi\stopverb^{out}(f^{rdt}(s))$$}
+\pre{\startverb
+$$\bar{f}^{upd}(y, s) := f^{upd}(\phi^{in}(y, f^{rdt}(s)), s)$$ $$\bar{f}^{rdt}(s) := \phi^{out}(f^{rdt}(s))$$
+\stopverb}
 }
 }
 
@@ -138,28 +172,36 @@
 \title{5. Compositional Algorithms (Bumpus)}
 \subtree{
 \title{Structured Decomposition}
-\p{$$d: \startverb \int\stopverb G \startverb \to\stopverb \startverb \mathbf\stopverb{K}$$}
+\pre{\startverb
+$$d: \int G \to \mathbf{K}$$
+\stopverb}
 
-\p{Where $\startverb \int\stopverb G$ is the Grothendieck construction.}
+\pre{\startverb
+Where $\int G$ is the Grothendieck construction.
+\stopverb}
 }
 
 \subtree{
 \title{Complexity Bound}
-\p{$$O\startverb \left\stopverb(\startverb \max\stopverb_{x \startverb \in\stopverb VG} \startverb \alpha\stopverb(dx) + \startverb \kappa\stopverb^{|S|} \startverb \kappa\stopverb^2\startverb \right\stopverb) |EG|$$}
+\pre{\startverb
+$$O\left(\max_{x \in VG} \alpha(dx) + \kappa^{|S|} \kappa^2\right) |EG|$$
+\stopverb}
 
 \p{Where:}
 
 \ul{
-\li{$G$ = shape graph of decomposition}
-\li{$S$ = feedback vertex set}
-\li{$\startverb \kappa\stopverb$ = max local solution space size}
-\li{$\startverb \alpha\stopverb(c)$ = time to compute sheaf on object $c$}
+\li{\startverb $G$ = shape graph of decomposition\stopverb}
+\li{\startverb $S$ = feedback vertex set\stopverb}
+\li{\startverb $\kappa$ = max local solution space size\stopverb}
+\li{\startverb $\alpha(c)$ = time to compute sheaf on object $c$\stopverb}
 }
 }
 
 \subtree{
 \title{Tree-Shaped Bound}
-\p{For tree-shaped decompositions ($|S| = 0$): $$O(\startverb \kappa\stopverb^2) |EG|$$}
+\pre{\startverb
+For tree-shaped decompositions ($|S| = 0$): $$O(\kappa^2) |EG|$$
+\stopverb}
 }
 }
 
@@ -167,22 +209,28 @@
 \title{6. Cohomological Obstructions (Bumpus)}
 \subtree{
 \title{Čech Cohomology}
-\p{$$H^n(X, \startverb \mathcal\stopverb{U}, F) := \startverb \ker\stopverb(\startverb \delta\stopverb^n) / \startverb \text\stopverb{im}(\startverb \delta\stopverb^{n-1})$$}
+\pre{\startverb
+$$H^n(X, \mathcal{U}, F) := \ker(\delta^n) / \text{im}(\delta^{n-1})$$
+\stopverb}
 }
 
 \subtree{
 \title{Global Existence Constraint}
-\p{$$FX \startverb \neq\stopverb \startverb \emptyset\stopverb \startverb \iff\stopverb H^0(X, \startverb \mathfrak\stopverb{M}F) = 0$$}
+\pre{\startverb
+$$FX \neq \emptyset \iff H^0(X, \mathfrak{M}F) = 0$$
+\stopverb}
 
 \p{\strong{Interpretation:} A problem has a solution iff the zeroth cohomology of its model-collecting presheaf is trivial.}
 }
 
 \subtree{
 \title{GF(3) Connection}
-\p{While Bumpus uses $\startverb \mathbb\stopverb{Z}[S]$ (free Abelianization), the methods generalize to:}
+\pre{\startverb
+While Bumpus uses $\mathbb{Z}[S]$ (free Abelianization), the methods generalize to:
+\stopverb}
 
 \ul{
-\li{$\startverb \text\stopverb{Vect}(\startverb \mathbb\stopverb{F}_3)$ — vector spaces over GF(3)}
+\li{\startverb $\text{Vect}(\mathbb{F}_3)$ — vector spaces over GF(3)\stopverb}
 \li{Balanced ternary conservation = cohomological constraint}
 }
 }
@@ -192,32 +240,40 @@
 \title{7. Spined Categories (Bumpus)}
 \subtree{
 \title{Definition}
-\p{A spined category $(\startverb \mathcal\stopverb{C}, \startverb \Omega\stopverb, \startverb \mathfrak\stopverb{P})$:}
+\pre{\startverb
+A spined category $(\mathcal{C}, \Omega, \mathfrak{P})$:
+\stopverb}
 
 \ul{
-\li{$\startverb \Omega\stopverb: \startverb \mathbb\stopverb{N}_{=} \startverb \to\stopverb \startverb \mathcal\stopverb{C}$ — the spine functor}
-\li{$\startverb \mathfrak\stopverb{P}$ — proxy pushout operation}
+\li{\startverb $\Omega: \mathbb{N}_{=} \to \mathcal{C}$ — the spine functor\stopverb}
+\li{\startverb $\mathfrak{P}$ — proxy pushout operation\stopverb}
 }
 }
 
 \subtree{
 \title{Proxy Pushout}
-\p{For span $G \startverb \xleftarrow\stopverb{g} \startverb \Omega\stopverb_n \startverb \xrightarrow\stopverb{h} H$: $$G \startverb \xrightarrow\stopverb{\startverb \mathfrak\stopverb{P}(g,h)_g} \startverb \mathfrak\stopverb{P}(g,h) \startverb \xleftarrow\stopverb{\startverb \mathfrak\stopverb{P}(g,h)_h} H$$}
+\pre{\startverb
+For span $G \xleftarrow{g} \Omega_n \xrightarrow{h} H$: $$G \xrightarrow{\mathfrak{P}(g,h)_g} \mathfrak{P}(g,h) \xleftarrow{\mathfrak{P}(g,h)_h} H$$
+\stopverb}
 }
 
 \subtree{
 \title{Chordal Objects (Recursive)}
-\p{Smallest set $S$ where:}
+\pre{\startverb
+Smallest set $S$ where:
+\stopverb}
 
 \ol{
-\li{$\startverb \Omega\stopverb_n \startverb \in\stopverb S$ for all $n$}
-\li{$\startverb \mathfrak\stopverb{P}(a,b) \startverb \in\stopverb S$ for $A, B \startverb \in\stopverb S$ and arrows to $\startverb \Omega\stopverb_n$}
+\li{\startverb $\Omega_n \in S$ for all $n$\stopverb}
+\li{\startverb $\mathfrak{P}(a,b) \in S$ for $A, B \in S$ and arrows to $\Omega_n$\stopverb}
 }
 }
 
 \subtree{
 \title{Width/Triangulation}
-\p{$$\startverb \Delta\stopverb[X] = \startverb \min\stopverb \{ \startverb \text\stopverb{width}(\startverb \delta\stopverb) \startverb \mid\stopverb \startverb \delta\stopverb: X \startverb \hookrightarrow\stopverb H \startverb \text\stopverb{ pseudo-chordal}\}$$}
+\pre{\startverb
+$$\Delta[X] = \min \{ \text{width}(\delta) \mid \delta: X \hookrightarrow H \text{ pseudo-chordal}\}$$
+\stopverb}
 }
 }
 
@@ -260,9 +316,13 @@ ParaLens p q x s y r = (get, put)
 
 \subtree{
 \title{Equilibrium}
-\p{$$E_G(x, k) := \startverb \varepsilon\stopverb_G(x; A_G; k)$$}
+\pre{\startverb
+$$E_G(x, k) := \varepsilon_G(x; A_G; k)$$
+\stopverb}
 
-\p{Where $\startverb \varepsilon\stopverb = \startverb \bigotimes\stopverb_{p \startverb \in\stopverb P} \startverb \varepsilon\stopverb_p$ is the joint selection function.}
+\pre{\startverb
+Where $\varepsilon = \bigotimes_{p \in P} \varepsilon_p$ is the joint selection function.
+\stopverb}
 }
 }
 
@@ -282,7 +342,9 @@ ParaLens p q x s y r = (get, put)
 | Swiss-Cheese | +1 | Open/closed for forward-only learning |
 \stopverb}
 
-\p{\strong{GF(3) Total:} $(+1) + (-1) + (-1) + (0) + (-1) + (+1) + (+1) = 0$ ✓}
+\pre{\startverb
+**GF(3) Total:** $(+1) + (-1) + (-1) + (0) + (-1) + (+1) + (+1) = 0$ ✓
+\stopverb}
 }
 
 \subtree{
@@ -316,13 +378,15 @@ ParaLens p q x s y r = (get, put)
 
 \subtree{
 \title{Structural Causal Model}
-\p{$$X_i = f_i(\startverb \text\stopverb{PA}_i, U_i), \startverb \quad\stopverb i = 1, \startverb \ldots\stopverb, n$$}
+\pre{\startverb
+$$X_i = f_i(\text{PA}_i, U_i), \quad i = 1, \ldots, n$$
+\stopverb}
 
 \p{Where:}
 
 \ul{
-\li{$\startverb \text\stopverb{PA}_i$ = parent nodes}
-\li{$U_i$ = exogenous noise (jointly independent)}
+\li{\startverb $\text{PA}_i$ = parent nodes\stopverb}
+\li{\startverb $U_i$ = exogenous noise (jointly independent)\stopverb}
 }
 }
 

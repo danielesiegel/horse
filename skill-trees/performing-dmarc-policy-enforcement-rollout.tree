@@ -26,7 +26,9 @@
 \title{Performing DMARC Policy Enforcement Rollout}
 \subtree{
 \title{Overview}
-\p{Domain-based Message Authentication, Reporting and Conformance (DMARC) is the cornerstone of email anti-spoofing protection. A DMARC rollout progresses through three phases: monitoring (p=none), quarantine (p=quarantine), and full enforcement (p=reject). When configured at p=reject, any email that fails both SPF and DKIM checks is outright rejected. Google and Yahoo now require DMARC for bulk senders (5,000+ emails), driving a 65\% reduction in unauthenticated messages. The rollout typically takes 3-6 months for safe deployment.}
+\pre{\startverb
+Domain-based Message Authentication, Reporting and Conformance (DMARC) is the cornerstone of email anti-spoofing protection. A DMARC rollout progresses through three phases: monitoring (p=none), quarantine (p=quarantine), and full enforcement (p=reject). When configured at p=reject, any email that fails both SPF and DKIM checks is outright rejected. Google and Yahoo now require DMARC for bulk senders (5,000+ emails), driving a 65% reduction in unauthenticated messages. The rollout typically takes 3-6 months for safe deployment.
+\stopverb}
 }
 
 \subtree{
@@ -129,9 +131,9 @@ v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc-agg@company.com; ruf=mailto:dma
 \subtree{
 \title{Step 4: Move to Quarantine with pct Tag (Week 6-12)}
 \ul{
-\li{Update to quarantine at 10\%: \code{\startverb v=DMARC1; p=quarantine; pct=10; rua=...\stopverb}}
+\li{\startverb Update to quarantine at 10%: `v=DMARC1; p=quarantine; pct=10; rua=...`\stopverb}
 \li{Monitor for false positives (legitimate mail being quarantined)}
-\li{Increase pct gradually: 10\% -> 25\% -> 50\% -> 75\% -> 100\%}
+\li{\startverb Increase pct gradually: 10% -> 25% -> 50% -> 75% -> 100%\stopverb}
 \li{Each increase: wait 1-2 weeks and review reports before advancing}
 \li{Fix any remaining alignment issues discovered at each stage}
 }
@@ -140,8 +142,8 @@ v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc-agg@company.com; ruf=mailto:dma
 \subtree{
 \title{Step 5: Advance to Reject Policy (Week 12-20)}
 \ul{
-\li{After stable quarantine at 100\%, move to reject at 10\%: \code{\startverb v=DMARC1; p=reject; pct=10; rua=...\stopverb}}
-\li{Gradually increase pct: 10\% -> 25\% -> 50\% -> 100\%}
+\li{\startverb After stable quarantine at 100%, move to reject at 10%: `v=DMARC1; p=reject; pct=10; rua=...`\stopverb}
+\li{\startverb Gradually increase pct: 10% -> 25% -> 50% -> 100%\stopverb}
 \li{Monitor closely for legitimate mail being rejected}
 \li{Establish emergency rollback procedure (revert to quarantine)}
 \li{Apply subdomain policy: \code{\startverb sp=reject\stopverb} for subdomains}
@@ -177,7 +179,7 @@ v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc-agg@company.com; ruf=mailto:dma
 \ul{
 \li{DMARC record published and resolving correctly at _dmarc.domain.com}
 \li{All legitimate sending sources pass SPF and/or DKIM alignment}
-\li{Aggregate reports show >99\% legitimate mail passing DMARC}
+\li{\startverb Aggregate reports show >99% legitimate mail passing DMARC\stopverb}
 \li{Spoofed messages from unauthorized senders are rejected}
 \li{No legitimate mail blocked after full p=reject enforcement}
 \li{Subdomain policy (sp=) also set to reject}

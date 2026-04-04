@@ -63,13 +63,17 @@
 
 \subtree{
 \title{Create sub-label with encryption}
-\p{New-Label -DisplayName "Confidential - Finance" \code{\startverb  -Name "Confidential-Finance" \stopverb} -ParentId (Get-Label -Identity "Confidential").Guid \code{\startverb  -Tooltip "Financial data restricted to Finance department" \stopverb} -EncryptionEnabled $true \code{\startverb  -EncryptionProtectionType "Template" \stopverb} -EncryptionRightsDefinitions "finance-group@contoso.com:VIEW,VIEWRIGHTSDATA,DOCEDIT,EDIT,PRINT,EXTRACT,OBJMODEL" ` -ContentType "File, Email"}
+\pre{\startverb
+New-Label -DisplayName "Confidential - Finance" ` -Name "Confidential-Finance" ` -ParentId (Get-Label -Identity "Confidential").Guid ` -Tooltip "Financial data restricted to Finance department" ` -EncryptionEnabled $true ` -EncryptionProtectionType "Template" ` -EncryptionRightsDefinitions "finance-group@contoso.com:VIEW,VIEWRIGHTSDATA,DOCEDIT,EDIT,PRINT,EXTRACT,OBJMODEL" ` -ContentType "File, Email"
+\stopverb}
 
 \pre{\startverb
 - **Configure content marking**: Apply visual indicators that persist with the document:
 \stopverb}
 
-\p{Set-Label -Identity "Confidential-Finance" \code{\startverb  -HeaderEnabled $true \stopverb} -HeaderText "CONFIDENTIAL - FINANCE" \code{\startverb  -HeaderFontSize 10 \stopverb} -HeaderFontColor "#FF0000" \code{\startverb  -HeaderAlignment "Center" \stopverb} -FooterEnabled $true \code{\startverb  -FooterText "This document contains confidential financial information" \stopverb} -WatermarkEnabled $true \code{\startverb  -WatermarkText "CONFIDENTIAL" \stopverb} -WatermarkFontSize 36}
+\pre{\startverb
+Set-Label -Identity "Confidential-Finance" ` -HeaderEnabled $true ` -HeaderText "CONFIDENTIAL - FINANCE" ` -HeaderFontSize 10 ` -HeaderFontColor "#FF0000" ` -HeaderAlignment "Center" ` -FooterEnabled $true ` -FooterText "This document contains confidential financial information" ` -WatermarkEnabled $true ` -WatermarkText "CONFIDENTIAL" ` -WatermarkFontSize 36
+\stopverb}
 
 \pre{\startverb
 - **Publish labels via label policy**: Labels must be published to users through a label policy that defines which users see the labels and whether a default label or mandatory labeling is enforced:
@@ -98,7 +102,9 @@
 
 \subtree{
 \title{Create rule for high-volume credit card detection}
-\p{New-DlpComplianceRule -Name "Block Bulk Credit Card Sharing" \code{\startverb  -Policy "Financial Data Protection" \stopverb} -ContentContainsSensitiveInformation @{ Name = "Credit Card Number"; MinCount = 5; MinConfidence = 85 } \code{\startverb  -BlockAccess $true \stopverb} -BlockAccessScope "All" \code{\startverb  -NotifyUser "SiteAdmin","LastModifier" \stopverb} -NotifyUserType "NotSet" \code{\startverb  -GenerateIncidentReport "SiteAdmin" \stopverb} -IncidentReportContent "All" ` -ReportSeverityLevel "High"}
+\pre{\startverb
+New-DlpComplianceRule -Name "Block Bulk Credit Card Sharing" ` -Policy "Financial Data Protection" ` -ContentContainsSensitiveInformation @{ Name = "Credit Card Number"; MinCount = 5; MinConfidence = 85 } ` -BlockAccess $true ` -BlockAccessScope "All" ` -NotifyUser "SiteAdmin","LastModifier" ` -NotifyUserType "NotSet" ` -GenerateIncidentReport "SiteAdmin" ` -IncidentReportContent "All" ` -ReportSeverityLevel "High"
+\stopverb}
 }
 
 \subtree{
@@ -112,12 +118,16 @@
 
 \subtree{
 \title{Create custom SIT for employee ID format (EMP-XXXXXX)}
-\p{$rulePackXml = @" <RulePackage xmlns="http://schemas.microsoft.com/office/2011/mce"> <RulePack id="$(New-Guid)"> <Version major="1" minor="0" build="0" revision="0"/> <Publisher id="$(New-Guid)"/> </RulePack> <Rules> <Entity id="$(New-Guid)" patternsProximity="300" recommendedConfidence="85"> <Pattern confidenceLevel="85"> <IdMatch idRef="EmployeeId_Regex"/> </Pattern> <Pattern confidenceLevel="95"> <IdMatch idRef="EmployeeId_Regex"/> <Match idRef="EmployeeId_Keyword"/> </Pattern> </Entity> <Regex id="EmployeeId_Regex">EMP-[0-9]{6}</Regex> <Keyword id="EmployeeId_Keyword"> <Group matchStyle="word"> <Term>employee</Term> <Term>employee id</Term> <Term>emp id</Term> <Term>staff number</Term> </Group> </Keyword> <LocalizedStrings> <Resource idRef="EmployeeId_Regex"> <Name default="true" langcode="en-us">Contoso Employee ID</Name> <Description default="true" langcode="en-us"> Detects Contoso employee IDs in format EMP-XXXXXX </Description> </Resource> </LocalizedStrings> </Rules> </RulePackage> "@}
+\pre{\startverb
+$rulePackXml = @" <RulePackage xmlns="http://schemas.microsoft.com/office/2011/mce"> <RulePack id="$(New-Guid)"> <Version major="1" minor="0" build="0" revision="0"/> <Publisher id="$(New-Guid)"/> </RulePack> <Rules> <Entity id="$(New-Guid)" patternsProximity="300" recommendedConfidence="85"> <Pattern confidenceLevel="85"> <IdMatch idRef="EmployeeId_Regex"/> </Pattern> <Pattern confidenceLevel="95"> <IdMatch idRef="EmployeeId_Regex"/> <Match idRef="EmployeeId_Keyword"/> </Pattern> </Entity> <Regex id="EmployeeId_Regex">EMP-[0-9]{6}</Regex> <Keyword id="EmployeeId_Keyword"> <Group matchStyle="word"> <Term>employee</Term> <Term>employee id</Term> <Term>emp id</Term> <Term>staff number</Term> </Group> </Keyword> <LocalizedStrings> <Resource idRef="EmployeeId_Regex"> <Name default="true" langcode="en-us">Contoso Employee ID</Name> <Description default="true" langcode="en-us"> Detects Contoso employee IDs in format EMP-XXXXXX </Description> </Resource> </LocalizedStrings> </Rules> </RulePackage> "@
+\stopverb}
 }
 
 \subtree{
 \title{Save and import the rule package}
-\p{$rulePackXml | Out-File -FilePath "EmployeeID_SIT.xml" -Encoding utf8 New-DlpSensitiveInformationTypeRulePackage -FileData ( [System.IO.File]::ReadAllBytes("EmployeeID_SIT.xml") )}
+\pre{\startverb
+$rulePackXml | Out-File -FilePath "EmployeeID_SIT.xml" -Encoding utf8 New-DlpSensitiveInformationTypeRulePackage -FileData ( [System.IO.File]::ReadAllBytes("EmployeeID_SIT.xml") )
+\stopverb}
 
 \pre{\startverb
 - **Use sensitivity labels as DLP conditions**: Create policies that apply different restrictions based on the label applied to the content:
@@ -125,7 +135,9 @@
 
 \p{New-DlpCompliancePolicy -Name "Highly Confidential Sharing Control" \code{\startverb  -ExchangeLocation "All" \stopverb} -SharePointLocation "All" \code{\startverb  -OneDriveLocation "All" \stopverb} -Mode "Enable"}
 
-\p{New-DlpComplianceRule -Name "Block External Sharing of HC Content" \code{\startverb  -Policy "Highly Confidential Sharing Control" \stopverb} -ContentContainsSensitiveInformation $null \code{\startverb  -ContentPropertyContainsWords "MSIP_Label_$( (Get-Label -Identity 'HighlyConfidential').Guid )_Enabled=True" \stopverb} -BlockAccess $true \code{\startverb  -BlockAccessScope "NotInOrganization" \stopverb} -NotifyUser "LastModifier" \code{\startverb  -GenerateIncidentReport "SiteAdmin" \stopverb} -ReportSeverityLevel "High"}
+\pre{\startverb
+New-DlpComplianceRule -Name "Block External Sharing of HC Content" ` -Policy "Highly Confidential Sharing Control" ` -ContentContainsSensitiveInformation $null ` -ContentPropertyContainsWords "MSIP_Label_$( (Get-Label -Identity 'HighlyConfidential').Guid )_Enabled=True" ` -BlockAccess $true ` -BlockAccessScope "NotInOrganization" ` -NotifyUser "LastModifier" ` -GenerateIncidentReport "SiteAdmin" ` -ReportSeverityLevel "High"
+\stopverb}
 
 \pre{\startverb
 
@@ -152,7 +164,7 @@
 }
 
 \subtree{
-\title{HKLM\startverb \SOFTWARE\stopverb\startverb \Microsoft\stopverb\startverb \Windows\stopverb Advanced Threat Protection\startverb \Status\stopverb}
+\title{HKLM\SOFTWARE\Microsoft\Windows Advanced Threat Protection\Status}
 
 }
 
@@ -175,7 +187,9 @@
 
 \subtree{
 \title{Configure network share groups}
-\p{Set-PolicyConfig -EndpointDlpGlobalSettings ` -NetworkShareGroups @( @{ Name = "Authorized Shares"; NetworkPaths = @("\\startverb \server\stopverb01\startverb \approved\stopverb$", "\\startverb \server\stopverb02\startverb \secure\stopverb$") } )}
+\pre{\startverb
+Set-PolicyConfig -EndpointDlpGlobalSettings ` -NetworkShareGroups @( @{ Name = "Authorized Shares"; NetworkPaths = @("\\server01\approved$", "\\server02\secure$") } )
+\stopverb}
 }
 
 \subtree{
@@ -265,7 +279,7 @@
 \li{Action taken (Audit, Block, Warn with Override)}
 \li{Location (Exchange, SharePoint, OneDrive, Endpoint)}
 \li{File name and site URL}
-\li{\strong{Analyze false positive rates}: Export Activity Explorer data filtered by "Override" actions with justification text to identify rules that users frequently override. A high override rate (>20\%) indicates the rule may be too aggressive or matching non-sensitive content:}
+\li{\startverb **Analyze false positive rates**: Export Activity Explorer data filtered by "Override" actions with justification text to identify rules that users frequently override. A high override rate (>20%) indicates the rule may be too aggressive or matching non-sensitive content:\stopverb}
 }
 
 \p{Export to CSV for analysis of override justifications and affected file types to refine SIT confidence thresholds.}
@@ -299,7 +313,9 @@
 
 \subtree{
 \title{Retrieve DLP alerts}
-\p{alerts_url = "https://graph.microsoft.com/v1.0/security/alerts_v2" params = { "$filter": "serviceSource eq 'microsoftDataLossPrevention'", "$top": 50, "$orderby": "createdDateTime desc" } response = requests.get(alerts_url, headers=headers, params=params) alerts = response.json().get("value", [])}
+\pre{\startverb
+alerts_url = "https://graph.microsoft.com/v1.0/security/alerts_v2" params = { "$filter": "serviceSource eq 'microsoftDataLossPrevention'", "$top": 50, "$orderby": "createdDateTime desc" } response = requests.get(alerts_url, headers=headers, params=params) alerts = response.json().get("value", [])
+\stopverb}
 
 \p{for alert in alerts: print(f"Alert: {alert['title']}") print(f"  Severity: {alert['severity']}") print(f"  Status: {alert['status']}") print(f"  Created: {alert['createdDateTime']}") print(f"  User: {alert.get('userStates', [{}])[0].get('userPrincipalName', 'N/A')}")}
 
@@ -310,7 +326,9 @@
 
 \subtree{
 \title{Search unified audit log for DLP policy matches}
-\p{Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-7) \code{\startverb  -EndDate (Get-Date) \stopverb} -RecordType "DLP" ` -ResultSize 1000 | Select-Object CreationDate, UserIds, Operations, @{N='PolicyName';E={($_.AuditData | ConvertFrom-Json).PolicyDetails.PolicyName}}, @{N='RuleName';E={($_.AuditData | ConvertFrom-Json).PolicyDetails.Rules.RuleName}}, @{N='SITMatched';E={($_.AuditData | ConvertFrom-Json).SensitiveInfoDetections.SensitiveType}} | Export-Csv -Path "DLP_Audit_Report.csv" -NoTypeInformation}
+\pre{\startverb
+Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-7) ` -EndDate (Get-Date) ` -RecordType "DLP" ` -ResultSize 1000 | Select-Object CreationDate, UserIds, Operations, @{N='PolicyName';E={($_.AuditData | ConvertFrom-Json).PolicyDetails.PolicyName}}, @{N='RuleName';E={($_.AuditData | ConvertFrom-Json).PolicyDetails.Rules.RuleName}}, @{N='SITMatched';E={($_.AuditData | ConvertFrom-Json).SensitiveInfoDetections.SensitiveType}} | Export-Csv -Path "DLP_Audit_Report.csv" -NoTypeInformation
+\stopverb}
 
 \pre{\startverb
 
@@ -382,18 +400,18 @@
 \p{\strong{Approach}:}
 
 \ol{
-\li{Create a custom sensitive information type using regex \code{\startverb RX-20[2-3][0-9]-[0-9]{4}\stopverb} with corroborating keywords ("compound", "trial", "formulation", "assay", "efficacy") within 300-character proximity. Set primary pattern at 85\% confidence and keyword-corroborated pattern at 95\%.}
+\li{\startverb Create a custom sensitive information type using regex `RX-20[2-3][0-9]-[0-9]{4}` with corroborating keywords ("compound", "trial", "formulation", "assay", "efficacy") within 300-character proximity. Set primary pattern at 85% confidence and keyword-corroborated pattern at 95%.\stopverb}
 \li{Create a second custom SIT for compound identifiers using regex \code{\startverb CPD-[A-Z]{3}-[0-9]{5}\stopverb} with keywords ("molecule", "synthesis", "pharmacokinetics") for higher confidence matching.}
 \li{Deploy a DLP policy scoped to the Research department's Exchange distribution list, SharePoint research site collection, and research team OneDrive accounts. Block external sharing, block forwarding to non-research internal users, and generate alerts for the research compliance officer.}
 \li{Configure endpoint DLP to prevent copy-to-USB and screen capture of documents containing the custom SITs on research department laptops. Allow printing only to approved secure printers in the research facility.}
 \li{Create a sensitivity label "Highly Confidential - Research" with encryption restricting access to the Research security group. Configure auto-labeling to apply this label to documents matching either custom SIT.}
-\li{Monitor Activity Explorer weekly for 30 days post-deployment. The compliance team identifies that the RX-YYYY-NNNN regex matches historical project codes in archived documents. Refine the regex to \code{\startverb RX-202[4-6]-[0-9]{4}\stopverb} to target only active project codes and reduce false positives by 60\%.}
+\li{\startverb Monitor Activity Explorer weekly for 30 days post-deployment. The compliance team identifies that the RX-YYYY-NNNN regex matches historical project codes in archived documents. Refine the regex to `RX-202[4-6]-[0-9]{4}` to target only active project codes and reduce false positives by 60%.\stopverb}
 }
 
 \p{\strong{Pitfalls}:}
 
 \ul{
-\li{Using positional regex anchors (^ and $) in custom SITs, which do not work as expected in Microsoft Purview regex evaluation and cause pattern match failures}
+\li{\startverb Using positional regex anchors (^ and $) in custom SITs, which do not work as expected in Microsoft Purview regex evaluation and cause pattern match failures\stopverb}
 \li{Setting MinCount too low (1) for the project code SIT without keyword corroboration, matching isolated instances in general business correspondence that happen to follow the same format}
 \li{Not testing the custom SIT against a representative sample corpus before deploying the DLP policy, missing edge cases in the regex pattern}
 \li{Scoping the policy too broadly (entire organization) instead of targeting the research department, causing alerts on legitimate references to project codes in executive summaries}

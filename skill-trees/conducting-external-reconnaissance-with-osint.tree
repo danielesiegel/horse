@@ -53,7 +53,7 @@
 \li{\strong{Subdomain enumeration}: Run multiple tools for comprehensive coverage:}
 \li{\code{\startverb amass enum -passive -d target.com -o amass_subs.txt\stopverb} for passive subdomain discovery from 40+ data sources}
 \li{\code{\startverb subfinder -d target.com -all -o subfinder_subs.txt\stopverb} for fast passive enumeration}
-\li{\code{\startverb crt.sh\stopverb} certificate transparency log queries: \code{\startverb curl -s "https://crt.sh/?q=\%25.target.com&output=json" | jq -r '.[].name_value' | sort -u\stopverb}}
+\li{\startverb `crt.sh` certificate transparency log queries: `curl -s "https://crt.sh/?q=%25.target.com&output=json" | jq -r '.[].name_value' | sort -u`\stopverb}
 \li{\strong{DNS record analysis}: Query for all record types: \code{\startverb dig target.com ANY\stopverb}, check for SPF, DKIM, DMARC records that reveal email infrastructure, and enumerate MX records to identify email providers}
 \li{\strong{Zone transfer attempt}: \code{\startverb dig axfr @ns1.target.com target.com\stopverb} to check for misconfigured DNS servers}
 \li{\strong{Consolidate results}: Merge, deduplicate, and resolve all discovered subdomains to IP addresses. Map IP addresses to ASN and hosting providers.}

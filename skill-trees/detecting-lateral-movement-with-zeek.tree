@@ -27,7 +27,7 @@
 \ul{
 \li{Hunting for lateral movement after an initial compromise indicator is found on one endpoint}
 \li{Investigating suspected NTLM account spray or Pass-the-Ticket attacks across the internal network}
-\li{Monitoring SMB traffic for unauthorized file transfers to admin shares (C$, ADMIN$, IPC$)}
+\li{\startverb Monitoring SMB traffic for unauthorized file transfers to admin shares (C$, ADMIN$, IPC$)\stopverb}
 \li{Detecting remote service execution via DCE/RPC (PsExec, schtasks, WMI lateral patterns)}
 \li{Building alerting rules for internal network anomalies in a Zeek-based NSMP deployment}
 \li{Performing post-incident timeline reconstruction using Zeek logs as a network-level evidence source}
@@ -45,7 +45,7 @@
 \li{Zeek Kerberos analyzer enabled (\code{\startverb @load base/protocols/krb\stopverb})}
 \li{Python 3.8+ (standard library only)}
 \li{Access to Zeek log directory (default: \code{\startverb /opt/zeek/logs/current/\stopverb})}
-\li{Familiarity with Zeek TSV log format (fields separated by \code{\startverb \startverb \t\stopverb\stopverb}, header lines prefixed with \code{\startverb #\stopverb})}
+\li{\startverb Familiarity with Zeek TSV log format (fields separated by `\t`, header lines prefixed with `#`)\stopverb}
 }
 }
 
@@ -93,7 +93,9 @@ zeek-cut ts id.orig_h id.resp_h id.resp_p service \
 
 \subtree{
 \title{Step 3: Analyze SMB Admin Share Access}
-\p{Detect access to administrative shares (C$, ADMIN$, IPC$) which is the primary vector for tools like PsExec:}
+\pre{\startverb
+Detect access to administrative shares (C$, ADMIN$, IPC$) which is the primary vector for tools like PsExec:
+\stopverb}
 
 \pre{\startverb
 # Check smb_mapping.log for admin share access
@@ -201,7 +203,7 @@ python3 agent.py /opt/zeek/logs/2026-03-18/  # Analyze a specific date
 \title{Verification}
 \ul{
 \li{Confirm conn.log captures internal SMB (port 445) and DCE/RPC (port 135) connections with correct field parsing}
-\li{Verify smb_mapping.log correctly logs admin share paths (C$, ADMIN$, IPC$)}
+\li{\startverb Verify smb_mapping.log correctly logs admin share paths (C$, ADMIN$, IPC$)\stopverb}
 \li{Test with a known PsExec execution in a lab: expect to see SMB FILE_WRITE of the service binary followed by DCE/RPC svcctl CreateService}
 \li{Validate NTLM log parsing by performing a test authentication and confirming username, domain, and success fields are captured; verify the NTLM Account Spray Zeek script generates a \code{\startverb notice.log\stopverb} entry when the spray threshold is exceeded}
 \li{Cross-reference Zeek alerts with Sysmon Event ID 1 (Process Creation) on the target host to confirm end-to-end detection}

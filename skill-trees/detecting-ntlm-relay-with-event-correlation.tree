@@ -722,15 +722,17 @@ index=wineventlog EventCode=4624 LogonType=3 AuthenticationPackageName="NTLM"
 
 \subtree{
 \title{Scenario 2: PetitPotam Relay to AD Certificate Services}
-\p{\strong{Context}: During a threat hunt, an analyst finds Event 4624 LogonType 3 on the AD CS server (ADCS01) showing the domain controller machine account (DC01$) authenticating via NTLM from IP 10.10.5.50, which is not the DC's IP address (10.10.1.10).}
+\pre{\startverb
+**Context**: During a threat hunt, an analyst finds Event 4624 LogonType 3 on the AD CS server (ADCS01) showing the domain controller machine account (DC01$) authenticating via NTLM from IP 10.10.5.50, which is not the DC's IP address (10.10.1.10).
+\stopverb}
 
 \p{\strong{Approach}:}
 
 \ol{
-\li{Confirm the anomaly: DC01$ should only authenticate from 10.10.1.10, but Event 4624 shows authentication from 10.10.5.50 via NTLM (not Kerberos)}
-\li{Check for certificate enrollment: query AD CS logs for certificate requests from DC01$ around the same timestamp -- find a certificate issued for DC01$}
-\li{Identify the attack: PetitPotam coerced DC01 to authenticate to 10.10.5.50, which relayed the authentication to ADCS01 to request a certificate for DC01$}
-\li{Assess impact: with a DC certificate, the attacker can authenticate as DC01$ and perform DCSync to extract all domain credentials}
+\li{\startverb Confirm the anomaly: DC01$ should only authenticate from 10.10.1.10, but Event 4624 shows authentication from 10.10.5.50 via NTLM (not Kerberos)\stopverb}
+\li{\startverb Check for certificate enrollment: query AD CS logs for certificate requests from DC01$ around the same timestamp -- find a certificate issued for DC01$\stopverb}
+\li{\startverb Identify the attack: PetitPotam coerced DC01 to authenticate to 10.10.5.50, which relayed the authentication to ADCS01 to request a certificate for DC01$\stopverb}
+\li{\startverb Assess impact: with a DC certificate, the attacker can authenticate as DC01$ and perform DCSync to extract all domain credentials\stopverb}
 \li{Revoke the fraudulently issued certificate immediately}
 \li{Check for DCSync activity: query Event 4662 for directory replication from non-DC sources}
 \li{Contain: isolate 10.10.5.50, revoke certificate, patch EFS (MS-EFSRPC), enforce EPA on AD CS, require LDAP signing on all DCs}

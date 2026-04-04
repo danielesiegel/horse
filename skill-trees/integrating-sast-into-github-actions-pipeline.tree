@@ -304,7 +304,9 @@ gh api repos/{owner}/{repo}/code-scanning/alerts \
 
 \subtree{
 \title{Scenario: Reducing Alert Fatigue from High False Positive Rate}
-\p{\strong{Context}: After enabling SAST, developers ignore findings because 40\% are false positives, undermining the security program.}
+\pre{\startverb
+**Context**: After enabling SAST, developers ignore findings because 40% are false positives, undermining the security program.
+\stopverb}
 
 \p{\strong{Approach}:}
 
@@ -313,7 +315,7 @@ gh api repos/{owner}/{repo}/code-scanning/alerts \
 \li{Create a custom CodeQL config excluding noisy query IDs that produce the most false positives}
 \li{Write \code{\startverb .semgrepignore\stopverb} patterns for test files, generated code, and vendored dependencies}
 \li{Establish a weekly triage meeting where security and development leads review new rule additions}
-\li{Track false positive rate as a metric and target below 15\% for developer trust}
+\li{\startverb Track false positive rate as a metric and target below 15% for developer trust\stopverb}
 }
 
 \p{\strong{Pitfalls}: Over-suppressing rules to reduce noise can create blind spots. Always validate suppressions against the OWASP Top 10 and CWE Top 25 to ensure critical vulnerability classes remain covered.}

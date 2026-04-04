@@ -4,7 +4,7 @@
 
 \meta{version}{0.1.0}
 
-\meta{description}{This skill should be used when the user asks to "create a hook", "add a PreToolUse/PostToolUse/Stop hook", "validate tool use", "implement prompt-based hooks", "use ${CLAUDE_PLUGIN_ROOT}", "set up event-driven automation", "block dangerous commands", or mentions hook events (PreToolUse, PostToolUse, Stop, SubagentStop, SessionStart, SessionEnd, UserPromptSubmit, PreCompact, Notification). Provides comprehensive guidance for creating and implementing Claude Code plugin hooks with focus on advanced prompt-based hooks API.}
+\meta{description}{\startverb This skill should be used when the user asks to "create a hook", "add a PreToolUse/PostToolUse/Stop hook", "validate tool use", "implement prompt-based hooks", "use ${CLAUDE_PLUGIN_ROOT}", "set up event-driven automation", "block dangerous commands", or mentions hook events (PreToolUse, PostToolUse, Stop, SubagentStop, SessionStart, SessionEnd, UserPromptSubmit, PreCompact, Notification). Provides comprehensive guidance for creating and implementing Claude Code plugin hooks with focus on advanced prompt-based hooks API.\stopverb}
 
 \subtree{
 \title{Hook Development for Claude Code Plugins}
@@ -296,7 +296,9 @@
 }
 \stopverb}
 
-\p{\strong{Special capability:} Persist environment variables using \code{\startverb $CLAUDE_ENV_FILE\stopverb}:}
+\pre{\startverb
+**Special capability:** Persist environment variables using `$CLAUDE_ENV_FILE`:
+\stopverb}
 
 \pre{\startverb
 echo "export PROJECT_TYPE=nodejs" >> "$CLAUDE_ENV_FILE"
@@ -372,7 +374,9 @@ echo "export PROJECT_TYPE=nodejs" >> "$CLAUDE_ENV_FILE"
 \li{\strong{Stop/SubagentStop:} \code{\startverb reason\stopverb}}
 }
 
-\p{Access fields in prompts using \code{\startverb $TOOL_INPUT\stopverb}, \code{\startverb $TOOL_RESULT\stopverb}, \code{\startverb $USER_PROMPT\stopverb}, etc.}
+\pre{\startverb
+Access fields in prompts using `$TOOL_INPUT`, `$TOOL_RESULT`, `$USER_PROMPT`, etc.
+\stopverb}
 }
 
 \subtree{
@@ -380,13 +384,15 @@ echo "export PROJECT_TYPE=nodejs" >> "$CLAUDE_ENV_FILE"
 \p{Available in all command hooks:}
 
 \ul{
-\li{\code{\startverb $CLAUDE_PROJECT_DIR\stopverb} - Project root path}
-\li{\code{\startverb $CLAUDE_PLUGIN_ROOT\stopverb} - Plugin directory (use for portable paths)}
-\li{\code{\startverb $CLAUDE_ENV_FILE\stopverb} - SessionStart only: persist env vars here}
-\li{\code{\startverb $CLAUDE_CODE_REMOTE\stopverb} - Set if running in remote context}
+\li{\startverb `$CLAUDE_PROJECT_DIR` - Project root path\stopverb}
+\li{\startverb `$CLAUDE_PLUGIN_ROOT` - Plugin directory (use for portable paths)\stopverb}
+\li{\startverb `$CLAUDE_ENV_FILE` - SessionStart only: persist env vars here\stopverb}
+\li{\startverb `$CLAUDE_CODE_REMOTE` - Set if running in remote context\stopverb}
 }
 
-\p{\strong{Always use ${CLAUDE_PLUGIN_ROOT} in hook commands for portability:}}
+\pre{\startverb
+**Always use ${CLAUDE_PLUGIN_ROOT} in hook commands for portability:**
+\stopverb}
 
 \pre{\startverb
 {
@@ -754,7 +760,7 @@ echo "$output" | jq .
 
 \ul{
 \li{✅ Use prompt-based hooks for complex logic}
-\li{✅ Use ${CLAUDE_PLUGIN_ROOT} for portability}
+\li{\startverb ✅ Use ${CLAUDE_PLUGIN_ROOT} for portability\stopverb}
 \li{✅ Validate all inputs in command hooks}
 \li{✅ Quote all bash variables}
 \li{✅ Set appropriate timeouts}
@@ -830,7 +836,7 @@ echo "$output" | jq .
 \li{Decide between prompt-based (flexible) or command (deterministic) hooks}
 \li{Write hook configuration in \code{\startverb hooks/hooks.json\stopverb}}
 \li{For command hooks, create hook scripts}
-\li{Use ${CLAUDE_PLUGIN_ROOT} for all file references}
+\li{\startverb Use ${CLAUDE_PLUGIN_ROOT} for all file references\stopverb}
 \li{Validate configuration with \code{\startverb scripts/validate-hook-schema.sh hooks/hooks.json\stopverb}}
 \li{Test hooks with \code{\startverb scripts/test-hook.sh\stopverb} before deployment}
 \li{Test in Claude Code with \code{\startverb claude --debug\stopverb}}

@@ -51,8 +51,8 @@
 \title{Rendering and visual checks}
 \ul{
 \li{If LibreOffice (\code{\startverb soffice\stopverb}) and Poppler (\code{\startverb pdftoppm\stopverb}) are available, render sheets for visual review:}
-\li{\code{\startverb soffice --headless --convert-to pdf --outdir $OUTDIR $INPUT_XLSX\stopverb}}
-\li{\code{\startverb pdftoppm -png $OUTDIR/$BASENAME.pdf $OUTDIR/$BASENAME\stopverb}}
+\li{\startverb `soffice --headless --convert-to pdf --outdir $OUTDIR $INPUT_XLSX`\stopverb}
+\li{\startverb `pdftoppm -png $OUTDIR/$BASENAME.pdf $OUTDIR/$BASENAME`\stopverb}
 \li{If rendering tools are unavailable, ask the user to review the output locally for layout accuracy.}
 }
 }
@@ -116,7 +116,7 @@ sudo apt-get install -y libreoffice poppler-utils
 \li{Use formulas for derived values rather than hardcoding results.}
 \li{Keep formulas simple and legible; use helper cells for complex logic.}
 \li{Avoid volatile functions like INDIRECT and OFFSET unless required.}
-\li{Prefer cell references over magic numbers (e.g., \code{\startverb =H6*(1+$B$3)\stopverb} not \code{\startverb =H6*1.04\stopverb}).}
+\li{\startverb Prefer cell references over magic numbers (e.g., `=H6*(1+$B$3)` not `=H6*1.04`).\stopverb}
 \li{Guard against errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?) with validation and checks.}
 \li{openpyxl does not evaluate formulas; leave formulas intact and note that results will calculate in Excel/Sheets.}
 }
@@ -169,7 +169,7 @@ sudo apt-get install -y libreoffice poppler-utils
 \ul{
 \li{Format zeros as "-".}
 \li{Negative numbers should be red and in parentheses.}
-\li{Always specify units in headers (e.g., "Revenue ($mm)").}
+\li{\startverb Always specify units in headers (e.g., "Revenue ($mm)").\stopverb}
 \li{Cite sources for all raw inputs in cell comments.}
 }
 }

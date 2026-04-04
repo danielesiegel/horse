@@ -16,7 +16,9 @@ export WEB_GAME_CLIENT="$CODEX_HOME/skills/develop-web-game/scripts/web_game_pla
 export WEB_GAME_ACTIONS="$CODEX_HOME/skills/develop-web-game/references/action_payloads.json"
 \stopverb}
 
-\p{User-scoped skills install under \code{\startverb $CODEX_HOME/skills\stopverb} (default: \code{\startverb ~/.codex/skills\stopverb}).}
+\pre{\startverb
+User-scoped skills install under `$CODEX_HOME/skills` (default: `~/.codex/skills`).
+\stopverb}
 }
 
 \subtree{
@@ -28,8 +30,8 @@ export WEB_GAME_ACTIONS="$CODEX_HOME/skills/develop-web-game/references/action_p
 \li{\strong{Add \code{\startverb window.advanceTime(ms)\stopverb}.} Strongly prefer a deterministic step hook so the Playwright script can advance frames reliably; without it, automated tests can be flaky.}
 \li{\strong{Initialize progress.md.} If \code{\startverb progress.md\stopverb} exists, read it first and confirm the original user prompt is recorded at the top (prefix with \code{\startverb Original prompt:\stopverb}). Also note any TODOs and suggestions left by the previous agent. If missing, create it and write \code{\startverb Original prompt: <prompt>\stopverb} at the top before appending updates.}
 \li{\strong{Verify Playwright availability.} Ensure \code{\startverb playwright\stopverb} is available (local dependency or global install). If unsure, check \code{\startverb npx\stopverb} first.}
-\li{\strong{Run the Playwright test script.} You must run \code{\startverb $WEB_GAME_CLIENT\stopverb} after each meaningful change; do not invent a new client unless required.}
-\li{\strong{Use the payload reference.} Base actions on \code{\startverb $WEB_GAME_ACTIONS\stopverb} to avoid guessing keys.}
+\li{\startverb **Run the Playwright test script.** You must run `$WEB_GAME_CLIENT` after each meaningful change; do not invent a new client unless required.\stopverb}
+\li{\startverb **Use the payload reference.** Base actions on `$WEB_GAME_ACTIONS` to avoid guessing keys.\stopverb}
 \li{\strong{Inspect state.} Capture screenshots and text state after each burst.}
 \li{\strong{Inspect screenshots.} Open the latest screenshot, verify expected visuals, fix any issues, and rerun the script. Repeat until correct.}
 \li{\strong{Verify controls and state (multi-step focus).} Exhaustively exercise all important interactions. For each, think through the full multi-step sequence it implies (cause → intermediate states → outcome) and verify the entire chain works end-to-end. Confirm \code{\startverb render_game_to_text\stopverb} reflects the same state shown on screen. If anything is off, fix and rerun.}
@@ -168,14 +170,14 @@ window.advanceTime = (ms) => {
 \subtree{
 \title{Scripts}
 \ul{
-\li{\code{\startverb $WEB_GAME_CLIENT\stopverb} (installed default: \code{\startverb $CODEX_HOME/skills/develop-web-game/scripts/web_game_playwright_client.js\stopverb}) — Playwright-based action loop with virtual-time stepping, screenshot capture, and console error buffering. You must pass an action burst via \code{\startverb --actions-file\stopverb}, \code{\startverb --actions-json\stopverb}, or \code{\startverb --click\stopverb}.}
+\li{\startverb `$WEB_GAME_CLIENT` (installed default: `$CODEX_HOME/skills/develop-web-game/scripts/web_game_playwright_client.js`) — Playwright-based action loop with virtual-time stepping, screenshot capture, and console error buffering. You must pass an action burst via `--actions-file`, `--actions-json`, or `--click`.\stopverb}
 }
 }
 
 \subtree{
 \title{References}
 \ul{
-\li{\code{\startverb $WEB_GAME_ACTIONS\stopverb} (installed default: \code{\startverb $CODEX_HOME/skills/develop-web-game/references/action_payloads.json\stopverb}) — example action payloads (keyboard + mouse, per-frame capture). Use these to build your burst.}
+\li{\startverb `$WEB_GAME_ACTIONS` (installed default: `$CODEX_HOME/skills/develop-web-game/references/action_payloads.json`) — example action payloads (keyboard + mouse, per-frame capture). Use these to build your burst.\stopverb}
 }
 }
 }

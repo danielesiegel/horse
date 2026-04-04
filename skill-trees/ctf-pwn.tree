@@ -108,7 +108,7 @@
 
 \ul{
 \li{\strong{Unbounded copies}: strcpy, strcat, sprintf, gets}
-\li{\strong{Underspecified bounds}: read(), recv(), scanf("\%s"), strncpy (no null termination)}
+\li{\startverb **Underspecified bounds**: read(), recv(), scanf("%s"), strncpy (no null termination)\stopverb}
 \li{\strong{Format string bugs}: printf(user_input), fprintf(fp, user_input)}
 \li{\strong{Integer overflows}: malloc(user_size), buffer[user_index], length calculations}
 }
@@ -208,7 +208,7 @@ Low addresses
 \p{Identify exploitation constraints:}
 
 \ul{
-\li{\strong{Bad bytes}: Null bytes (\startverb \x\stopverb00) terminate C strings → avoid in address/payload}
+\li{\startverb **Bad bytes**: Null bytes (\x00) terminate C strings → avoid in address/payload\stopverb}
 \li{\strong{Input size limits}: Truncation, buffering, network MTU}
 \li{\strong{Character restrictions}: Printable-only, alphanumeric, no special chars}
 \li{\strong{Protection mechanisms}: Detect via \code{\startverb search-decompilation\stopverb} pattern="(canary|__stack_chk)"}
@@ -359,7 +359,7 @@ Low addresses
 \p{\strong{Investigation for each strategy:}}
 
 \ol{
-\li{\code{\startverb get-strings\stopverb} regexPattern="(\\startverb \x\stopverb2f|/)bin/(sh|bash)" → Find shell strings}
+\li{\startverb `get-strings` regexPattern="(\\x2f|/)bin/(sh|bash)" → Find shell strings\stopverb}
 \li{\code{\startverb find-cross-references\stopverb} to "/bin/sh" → Get string address}
 \li{\code{\startverb get-symbols\stopverb} includeExternal=true → Find system/exec imports}
 \li{\code{\startverb get-decompilation\stopverb} of system → Get address (if not PIE)}
@@ -377,7 +377,7 @@ Low addresses
 
 \ol{
 \li{\code{\startverb get-decompilation\stopverb} of printf call → Analyze format string control}
-\li{Test format string primitives: \%x (leak), \%n (write), \%s (arbitrary read)}
+\li{\startverb Test format string primitives: %x (leak), %n (write), %s (arbitrary read)\stopverb}
 \li{\code{\startverb set-comment\stopverb} documenting exploitation primitive}
 }
 }
@@ -455,7 +455,7 @@ Low addresses
 \p{\strong{Discovery}:}
 
 \ol{
-\li{Find unsafe copy: strcpy, gets, scanf("\%s"), read with large size}
+\li{\startverb Find unsafe copy: strcpy, gets, scanf("%s"), read with large size\stopverb}
 \li{Identify buffer size from decompilation}
 \li{Compare buffer size to maximum input size}
 \li{Calculate offset to return address (buffer size + saved registers)}
@@ -478,15 +478,15 @@ Low addresses
 \ol{
 \li{\code{\startverb search-decompilation\stopverb} pattern="printf|fprintf|sprintf"}
 \li{Check if format string comes from user input: printf(user_buffer)}
-\li{Vulnerable pattern: printf(input) instead of printf("\%s", input)}
+\li{\startverb Vulnerable pattern: printf(input) instead of printf("%s", input)\stopverb}
 }
 
 \p{\strong{Exploitation}:}
 
 \ul{
-\li{Read: \%x, \%p (leak stack values), \%s (arbitrary read via pointer on stack)}
-\li{Write: \%n (write number of bytes printed to pointer on stack)}
-\li{Position: \%N$x (access Nth argument directly)}
+\li{\startverb Read: %x, %p (leak stack values), %s (arbitrary read via pointer on stack)\stopverb}
+\li{\startverb Write: %n (write number of bytes printed to pointer on stack)\stopverb}
+\li{\startverb Position: %N$x (access Nth argument directly)\stopverb}
 }
 
 \p{\strong{Investigation}:}

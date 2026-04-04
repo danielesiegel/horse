@@ -1,0 +1,320 @@
+\title{Forester}
+
+\taxon{skill}
+
+\tag{markup}
+
+\tag{math}
+
+\tag{documentation}
+
+\tag{bci-horse}
+
+\meta{version}{2.0.0}
+
+\meta{trit}{0}
+
+\meta{description}{Jon Sterling's forester tool for tending mathematical forests — syntax, escaping, bci.horse workflow, tables, images}
+
+\subtree{
+\title{Forester}
+\p{Forester (ocaml-forester by Jon Sterling) builds hypertext forests from \code{\startverb .tree\stopverb} files.}
+
+\subtree{
+\title{Installation}
+\p{Not in nixpkgs. Build from Jon's flake:}
+
+\pre{\startverb
+nix --extra-experimental-features "nix-command flakes" build github:jonsterling/ocaml-forester
+./result/bin/forester --version  # 4.1.0
+\stopverb}
+}
+
+\subtree{
+\title{Syntax}
+\pre{\startverb
+One construct: `\commandname{argument}`. LaTeX-like but NOT LaTeX.
+\stopverb}
+
+\subtree{
+\title{Special Characters}
+\pre{\startverb
+| Char | Meaning | Escape Method |
+|------|---------|---------------|
+| `%` | Comment (rest of line ignored) | `\%` |
+| `#` | Math mode prefix: `#{x + y}` | Bare `#` without `{` is literal |
+| `\` | Command prefix | `\startverb \\\stopverb` |
+| `{` | Open argument | Only inside `\startverb...\stopverb` |
+| `}` | Close argument | Only inside `\startverb...\stopverb` |
+\stopverb}
+}
+
+\subtree{
+\title{\code{\startverb \{\stopverb} and \code{\startverb \}\stopverb} DO NOT WORK as brace escapes. Use \code{\startverb \startverb...\stopverb\stopverb}.}
+
+}
+
+\subtree{
+\title{\code{\startverb \#\stopverb} DOES NOT WORK. Bare \code{\startverb #\stopverb} is fine outside \code{\startverb #{...}\stopverb} context.}
+
+}
+
+\subtree{
+\title{Gotchas Learned the Hard Way}
+\ul{
+\li{\startverb **`\$` breaks parsing** — bare `$` is fine in forester text (e.g. `$419`). Do NOT escape as `\$`.\stopverb}
+\li{\startverb **`\_` breaks parsing** — bare `_` is fine (e.g. `5V_SUPP1`). Do NOT escape as `\_`.\stopverb}
+\li{\strong{Bare \code{\startverb {100}\stopverb} is parsed as a group} — if you mean literal braces in text (e.g. crystal face \code{\startverb {100}\stopverb}), they get consumed as forester arguments. Avoid or wrap in verbatim.}
+\li{\strong{\code{\startverb --\stopverb} for ranges is fine} — e.g. \code{\startverb 10--55 mm\stopverb} renders as an en-dash.}
+\li{\strong{Unicode is fine} — em-dash (—), ×, Ω, ≈, µ all work in body text.}
+}
+}
+}
+
+\subtree{
+\title{Verbatim}
+\pre{\startverb
+`\startverb` ... `\stopverb` — everything between is literal. No parsing.
+\stopverb}
+
+\ul{
+\li{\startverb Must have whitespace/newline after `\startverb`\stopverb}
+\li{\startverb Can nest inside `\pre{}`, `\code{}`, etc.\stopverb}
+}
+}
+
+\subtree{
+\title{Commands}
+\pre{\startverb
+| Command | Purpose |
+|---------|---------|
+| `\title{...}` | Tree title |
+| `\taxon{...}` | Classification (device, protocol, reference, theorem, definition, document, forest, index, remark) |
+| `\author{...}` | Author identifier |
+| `\date{YYYY-MM-DD}` | Date |
+| `\meta{key}{value}` | Metadata |
+| `\tag{...}` | Tag |
+| `\p{...}` | Paragraph |
+| `\em{...}` | Emphasis |
+| `\strong{...}` | Bold |
+| `\code{...}` | Inline code |
+| `\pre{...}` | Preformatted block |
+| `\ul{...}` | Unordered list |
+| `\ol{...}` | Ordered list |
+| `\li{...}` | List item |
+| `\blockquote{...}` | Block quote |
+| `\subtree{...}` | Nested tree (can have its own \title, \taxon) |
+| `\import{addr}` | Import macros |
+| `\transclude{addr}` | Include tree by address |
+| `\def\name[args]{body}` | Macro definition |
+| `[[addr]]` | Link to another tree |
+\stopverb}
+}
+
+\subtree{
+\title{Tables (via macros)}
+\p{Tables are NOT built-in — they use HTML namespace macros defined in \code{\startverb macros.tree\stopverb}:}
+
+\pre{\startverb
+\import{macros}
+
+\table{
+  \tr{\th{Item} \th{Channels} \th{Cost}}
+  \tr{\td{Brite Lite} \td{8--10} \td{~$6,000}}
+  \tr{\td{OpenNIRScap} \td{24} \td{$419}}
+}
+\stopverb}
+
+\p{The macros in bci.horse's \code{\startverb macros.tree\stopverb}:}
+
+\pre{\startverb
+\xmlns:html{http://www.w3.org/1999/xhtml}
+\def\table[body]{\<html:table>{\body}}
+\def\th[body]{\<html:th>{\body}}
+\def\tr[body]{\<html:tr>{\body}}
+\def\td[body]{\<html:td>{\body}}
+\stopverb}
+}
+
+\subtree{
+\title{Images}
+\p{Also via macro in \code{\startverb macros.tree\stopverb}:}
+
+\pre{\startverb
+\def\image[source]{
+  \<html:center>{\<html:img>[src]{\source}{}}
+}
+\stopverb}
+
+\pre{\startverb
+Usage: `\image{/assets/photo.jpg}` — put images in the `assets/` directory.
+\stopverb}
+}
+
+\subtree{
+\title{Quiver Diagrams}
+\p{For commutative diagrams (requires LaTeX installed):}
+
+\pre{\startverb
+\quiver{
+  \begin{tikzcd}[sep=small]
+    ...
+  \end{tikzcd}
+}
+\stopverb}
+
+\p{Note: forester calls \code{\startverb latex\stopverb} to render these. If latex is not installed, the build crashes with \code{\startverb Executable "latex" not found\stopverb} but all non-quiver trees still parse fine.}
+}
+
+\subtree{
+\title{Config (forest.toml)}
+\pre{\startverb
+[forest]
+trees = ["trees", "localcharts/forest/trees", "bci/stages", "stacks-trees"]
+assets = ["assets", "localcharts/forest/assets"]
+url = "https://bci.horse/"
+home = "output"
+root = "bcf-0001"
+\stopverb}
+}
+
+\subtree{
+\title{Build}
+\pre{\startverb
+forester build                  # uses forest.toml in cwd
+forester build forest.toml      # explicit config
+forester build --dev            # attach source locations
+\stopverb}
+}
+
+\subtree{
+\title{bci.horse (plurigrid/horse) Workflow}
+\subtree{
+\title{Repo: \code{\startverb ~/worlds/plurigrid-horse\stopverb}}
+\ul{
+\li{Remote: \code{\startverb https://github.com/plurigrid/horse.git\stopverb}}
+\li{Branch: \code{\startverb main\stopverb} (merge from \code{\startverb inventory-additions\stopverb} when ready)}
+\li{140+ trees in \code{\startverb trees/\stopverb} directory}
+}
+}
+
+\subtree{
+\title{Tree Numbering (bcf- prefix)}
+\pre{\startverb
+| Range | Type | Examples |
+|-------|------|---------|
+| bcf-0001 | Root forest | BCI Factory top-level |
+| bcf-0002 | Manifesto | |
+| bcf-0003 | The Stack | **Main device listing — transclude new devices here** |
+| bcf-0004 | The Space | |
+| bcf-0005 | References | |
+| bcf-0006 | Hardware Sources | Purchasing links, specs |
+| bcf-0008 | Economics | |
+| bcf-0009 | Modalities Index | Also transcludes devices (legacy, keep in sync with bcf-0003) |
+| bcf-0010--0016 | Devices (original) | EEG, fNIRS, eye tracking, body, face EMG, ultrasound |
+| bcf-0017--0029 | Protocols, theorems, references | |
+| bcf-0030 | Self-Serve BCI Readings | Walk-up protocol |
+| bcf-0031 | NV Diamond Magnetometer (Uncut Gem) | Quantum sensing device |
+| bcf-0032 | NIRSport 2 (NIRx) | Research-grade fNIRS reference |
+| bcf-0033 | PLUX 8-Channel Hub fNIRS | |
+| bcf-0034 | fNIRS source-detector separation physics | |
+| bcf-0035 | Artinis Brite Lite | Calibration reference fNIRS |
+| bcf-0036 | OpenNIRScap | Open-source fNIRS build target |
+\stopverb}
+}
+
+\subtree{
+\title{CRITICAL: Two places to transclude devices}
+\ol{
+\li{\strong{\code{\startverb bcf-0003.tree\stopverb} (The Stack)} — this is what renders in the TOC on the site}
+\li{\strong{\code{\startverb bcf-0009.tree\stopverb} (Modalities Index)} — legacy index, keep in sync}
+}
+
+\pre{\startverb
+If you add a device and it doesn't show up on the site, you forgot to add `\transclude{bcf-XXXX}` to `bcf-0003.tree`.
+\stopverb}
+}
+
+\subtree{
+\title{Device Tree Template}
+\pre{\startverb
+\title{DEVICE NAME}
+\taxon{device}
+\author{monaduck1069}
+\date{YYYY-MM-DD}
+\tag{modality-tag}
+\tag{hardware}
+\meta{modality}{electrical|hemodynamic|magnetic|oculomotor|kinematic|muscular}
+\meta{manufacturer}{...}
+\meta{product}{...}
+\meta{price}{...}
+\meta{channels}{...}
+
+\p{Description.}
+
+\subtree{\title{Specifications}
+\taxon{remark}
+\ul{
+\li{Spec 1}
+\li{Spec 2}
+}}
+\stopverb}
+}
+
+\subtree{
+\title{Taxonomies Used}
+\ul{
+\li{\code{\startverb device\stopverb} — hardware (EEG headset, fNIRS system, magnetometer)}
+\li{\code{\startverb protocol\stopverb} — procedures (walk-up readings, synchronization)}
+\li{\code{\startverb reference\stopverb} — external links, papers, hardware sources}
+\li{\code{\startverb theorem\stopverb} — mathematical derivations}
+\li{\code{\startverb definition\stopverb} — formal definitions}
+\li{\code{\startverb document\stopverb} — narrative (manifesto, space description)}
+\li{\code{\startverb forest\stopverb} — top-level container}
+\li{\code{\startverb index\stopverb} — listing/index page}
+\li{\code{\startverb remark\stopverb} — notes, observations}
+}
+}
+
+\subtree{
+\title{Parse Verification}
+\p{Always check parse before committing:}
+
+\pre{\startverb
+/path/to/forester build 2>&1 | grep -E "error.*bcf|parse"
+\stopverb}
+
+\p{If it says \code{\startverb parse trees\stopverb} with no error lines mentioning your tree, you're good. The \code{\startverb latex not found\stopverb} crash is from quiver diagrams in OTHER trees — ignore it.}
+}
+
+\subtree{
+\title{Git Workflow}
+\pre{\startverb
+cd ~/worlds/plurigrid-horse
+# Edit trees
+git add trees/bcf-XXXX.tree trees/bcf-0003.tree
+git commit -m "add bcf-XXXX: description"
+git push origin main
+\stopverb}
+}
+
+\subtree{
+\title{Inventory Database}
+\ul{
+\li{\code{\startverb ~/worlds/bci_inventory.duckdb\stopverb} — DuckDB with equipment, custody_log, reservations, maintenance_log tables}
+\li{Schema in \code{\startverb ~/worlds/bci_inventory.sql\stopverb}}
+\li{Access: \code{\startverb nix --extra-experimental-features "nix-command flakes" shell nixpkgs#duckdb --command duckdb ~/worlds/bci_inventory.duckdb\stopverb}}
+\li{WARNING: existing data may be stale/wrong — verify with user before trusting}
+}
+}
+
+\subtree{
+\title{Emacs Integration}
+\pre{\startverb
+EC="/nix/store/4zsd25jdvfqc4djbyr4ph2hg3j3kxwr3-emacs-30.2/bin/emacsclient"
+SOCK="/var/folders/6b/ry3vh8r17s9c6p2pwhsbx6b80000gn/T/emacs501/server"
+$EC -s "$SOCK" --eval '(find-file "/path/to/file")'
+\stopverb}
+}
+}
+}

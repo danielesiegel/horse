@@ -51,8 +51,8 @@
 \p{Build the initial certificate inventory for monitored domains:}
 
 \ul{
-\li{\strong{Define monitoring scope}: List all owned root domains, registered brand names, and known subsidiaries. Include wildcard patterns (\code{\startverb \%.example.com\stopverb}) for comprehensive subdomain coverage.}
-\li{\strong{Query crt.sh for historical certificates}: Use the crt.sh JSON API to retrieve all known certificates for each domain. The API endpoint \code{\startverb https://crt.sh/?q=\%.example.com&output=json\stopverb} returns certificates matching the wildcard pattern with fields including \code{\startverb issuer_ca_id\stopverb}, \code{\startverb issuer_name\stopverb}, \code{\startverb common_name\stopverb}, \code{\startverb name_value\stopverb}, \code{\startverb not_before\stopverb}, \code{\startverb not_after\stopverb}, and \code{\startverb serial_number\stopverb}.}
+\li{\startverb **Define monitoring scope**: List all owned root domains, registered brand names, and known subsidiaries. Include wildcard patterns (`%.example.com`) for comprehensive subdomain coverage.\stopverb}
+\li{\startverb **Query crt.sh for historical certificates**: Use the crt.sh JSON API to retrieve all known certificates for each domain. The API endpoint `https://crt.sh/?q=%.example.com&output=json` returns certificates matching the wildcard pattern with fields including `issuer_ca_id`, `issuer_name`, `common_name`, `name_value`, `not_before`, `not_after`, and `serial_number`.\stopverb}
 \li{\strong{Build baseline database}: Store the initial certificate set in a local SQLite database with columns for certificate ID, domain, issuer, validity dates, SANs (Subject Alternative Names), and first-seen timestamp. This baseline prevents alerting on already-known certificates.}
 \li{\strong{Identify authorized CAs}: From the baseline, extract the set of Certificate Authorities that have legitimately issued certificates for your domains. Any future issuance from a CA not in this set triggers a high-priority alert.}
 \li{\strong{Map subdomains}: Extract all unique subdomains from the \code{\startverb name_value\stopverb} field across all certificates to build an initial subdomain inventory.}
@@ -69,7 +69,7 @@
 \li{\strong{Detect precertificates}: CT logs include precertificates (poisoned certificates submitted before final issuance). Track these as early warnings since they indicate a certificate is about to be issued but may not yet be active.}
 \li{\strong{Monitor CT log Signed Tree Heads (STH)}: For advanced monitoring, query CT log servers directly to fetch the latest STH and verify consistency proofs between consecutive tree heads. An inconsistency indicates log misbehavior (split-view attack).}
 \li{\strong{Rate limiting awareness}: Respect crt.sh rate limits by spacing queries and caching responses. Implement exponential backoff on HTTP 429 responses. For high-volume monitoring, consider querying the crt.sh PostgreSQL interface directly at \code{\startverb crt.sh:5432\stopverb}.}
-\li{\strong{Atom/RSS feed alternative}: Subscribe to crt.sh's Atom feed for lighter-weight monitoring: \code{\startverb https://crt.sh/atom?q=\%25.example.com\stopverb} provides real-time notification of new log entries.}
+\li{\startverb **Atom/RSS feed alternative**: Subscribe to crt.sh's Atom feed for lighter-weight monitoring: `https://crt.sh/atom?q=%25.example.com` provides real-time notification of new log entries.\stopverb}
 }
 }
 
@@ -161,7 +161,7 @@
 \p{\strong{Pitfalls}:}
 
 \ul{
-\li{Not monitoring wildcard patterns (\code{\startverb \%.bank.example.com\stopverb}) and missing certificates for subdomains}
+\li{\startverb Not monitoring wildcard patterns (`%.bank.example.com`) and missing certificates for subdomains\stopverb}
 \li{Ignoring precertificates that appear in CT logs before the actual certificate is issued, losing the early warning advantage}
 \li{Failing to verify that CAA records are properly configured on all domains after an incident}
 \li{Over-alerting on legitimate certificate renewals because the baseline database was not updated after authorized changes}
@@ -175,7 +175,7 @@
 \p{\strong{Approach}:}
 
 \ol{
-\li{Query crt.sh for \code{\startverb \%.target.com\stopverb} and all known subsidiary domains, collecting 2,400 unique certificates spanning 8 years}
+\li{\startverb Query crt.sh for `%.target.com` and all known subsidiary domains, collecting 2,400 unique certificates spanning 8 years\stopverb}
 \li{Extract 347 unique subdomains from SAN fields across all certificates, including expired ones}
 \li{DNS-resolve all 347 subdomains, finding 189 currently active with A/AAAA records}
 \li{Identify 12 subdomains pointing to decommissioned cloud services (CNAME to S3 buckets, Azure endpoints) that are candidates for subdomain takeover}

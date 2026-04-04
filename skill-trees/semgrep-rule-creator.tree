@@ -96,7 +96,7 @@ pattern-sinks:
 \ul{
 \li{\strong{Read documentation first}: See [Documentation](#documentation) before writing Semgrep rules}
 \li{\strong{Test-first is mandatory}: Never write a rule without tests}
-\li{\strong{100\% test pass is required}: "Most tests pass" is not acceptable}
+\li{\startverb **100% test pass is required**: "Most tests pass" is not acceptable\stopverb}
 \li{\strong{Optimization comes last}: Only simplify patterns after all tests pass}
 \li{\strong{Avoid generic patterns}: Rules must be specific, not match broad patterns}
 \li{\strong{Prioritize taint mode}: For data flow vulnerabilities}
@@ -117,7 +117,9 @@ pattern-sinks:
 \li{\strong{Pattern matching}: Simple syntactic patterns without data flow requirements}
 }
 
-\p{\strong{Why prioritize taint mode?} Pattern matching finds syntax but misses context. A pattern \code{\startverb eval($X)\stopverb} matches both \code{\startverb eval(user_input)\stopverb} (vulnerable) and \code{\startverb eval("safe_literal")\stopverb} (safe). Taint mode tracks data flow, so it only alerts when untrusted data actually reaches the sink—dramatically reducing false positives for injection vulnerabilities.}
+\pre{\startverb
+**Why prioritize taint mode?** Pattern matching finds syntax but misses context. A pattern `eval($X)` matches both `eval(user_input)` (vulnerable) and `eval("safe_literal")` (safe). Taint mode tracks data flow, so it only alerts when untrusted data actually reaches the sink—dramatically reducing false positives for injection vulnerabilities.
+\stopverb}
 
 \p{\strong{Iterating between approaches:} It's okay to experiment. If you start with taint mode and it's not working well (e.g., taint doesn't propagate as expected, too many false positives/negatives), switch to pattern matching. Conversely, if pattern matching produces too many false positives on safe cases, try taint mode instead. The goal is a working rule—not rigid adherence to one approach.}
 

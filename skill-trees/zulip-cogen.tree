@@ -150,7 +150,9 @@ Before ANY generation, verify sufficient context:
 
 \p{def pre_generation_gate(query: str, mode: str) -> Verdict: """Gate generation on sufficient Zulip context.""" messages = retrieve(query) coverage = compute_coverage(query, messages)}
 
-\p{if coverage.score >= 0.7:  # 70\% threshold for generation return Verdict.PROCEED elif coverage.score >= 0.3: return Verdict.WARN(f"Low coverage: {coverage.score:.0\%}") else: return Verdict.ABORT(f"Insufficient context: {len(messages)} msgs")}
+\pre{\startverb
+if coverage.score >= 0.7:  # 70% threshold for generation return Verdict.PROCEED elif coverage.score >= 0.3: return Verdict.WARN(f"Low coverage: {coverage.score:.0%}") else: return Verdict.ABORT(f"Insufficient context: {len(messages)} msgs")
+\stopverb}
 
 \pre{\startverb
 

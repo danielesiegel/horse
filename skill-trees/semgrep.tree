@@ -15,7 +15,7 @@
 \li{\strong{User must approve the scan plan (Step 3 is a hard gate)} — The original "scan this codebase" request is NOT approval. Present exact rulesets, target, engine, and mode; wait for explicit "yes"/"proceed" before spawning scanners.}
 \li{\strong{Third-party rulesets are required, not optional} — Trail of Bits, 0xdea, and Decurity rules catch vulnerabilities absent from the official registry. Include them whenever the detected language matches.}
 \li{\strong{Spawn all scan Tasks in a single message} — Parallel execution is the core performance advantage. Never spawn Tasks sequentially; always emit all Task tool calls in one response.}
-\li{\strong{Always check for Semgrep Pro before scanning} — Pro enables cross-file taint tracking and catches ~250\% more true positives. Skipping the check means silently missing critical inter-file vulnerabilities.}
+\li{\startverb **Always check for Semgrep Pro before scanning** — Pro enables cross-file taint tracking and catches ~250% more true positives. Skipping the check means silently missing critical inter-file vulnerabilities.\stopverb}
 }
 }
 
@@ -217,19 +217,19 @@ uv run {baseDir}/scripts/merge_sarif.py $OUTPUT_DIR/raw $OUTPUT_DIR/results/resu
 \title{Success Criteria}
 \ul{
 \li{[ ] Output directory resolved (user-specified or auto-incremented default)}
-\li{[ ] All generated files stored inside \code{\startverb $OUTPUT_DIR\stopverb}}
+\li{\startverb [ ] All generated files stored inside `$OUTPUT_DIR`\stopverb}
 \li{[ ] Languages detected with file counts; Pro status checked}
 \li{[ ] Scan mode selected by user (run all / important only)}
 \li{[ ] Rulesets include third-party rules for all detected languages}
 \li{[ ] User explicitly approved the scan plan (Step 3 gate passed)}
 \li{[ ] All scan Tasks spawned in a single message and completed}
 \li{[ ] Every \code{\startverb semgrep\stopverb} command used \code{\startverb --metrics=off\stopverb}}
-\li{[ ] Approved rulesets logged to \code{\startverb $OUTPUT_DIR/rulesets.txt\stopverb}}
-\li{[ ] Raw per-scan outputs stored in \code{\startverb $OUTPUT_DIR/raw/\stopverb}}
-\li{[ ] \code{\startverb results.sarif\stopverb} exists in \code{\startverb $OUTPUT_DIR/results/\stopverb} and is valid JSON}
+\li{\startverb [ ] Approved rulesets logged to `$OUTPUT_DIR/rulesets.txt`\stopverb}
+\li{\startverb [ ] Raw per-scan outputs stored in `$OUTPUT_DIR/raw/`\stopverb}
+\li{\startverb [ ] `results.sarif` exists in `$OUTPUT_DIR/results/` and is valid JSON\stopverb}
 \li{[ ] Important-only mode: post-filter applied before merge; unfiltered results preserved in \code{\startverb raw/\stopverb}}
 \li{[ ] Results summary reported with severity and category breakdown}
-\li{[ ] Cloned repos (if any) cleaned up from \code{\startverb $OUTPUT_DIR/repos/\stopverb}}
+\li{\startverb [ ] Cloned repos (if any) cleaned up from `$OUTPUT_DIR/repos/`\stopverb}
 }
 }
 }

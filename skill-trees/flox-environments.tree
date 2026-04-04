@@ -11,11 +11,11 @@
 \ul{
 \li{Use \strong{modular, idempotent bash functions} in hooks}
 \li{Never, ever use absolute paths. Flox environments are designed to be reproducible. Use Flox's environment variables instead}
-\li{I REPEAT: NEVER, EVER USE ABSOLUTE PATHS. Don't do it. Use \code{\startverb $FLOX_ENV\stopverb} for environment-specific runtime dependencies; use \code{\startverb $FLOX_ENV_PROJECT\stopverb} for the project directory}
+\li{\startverb I REPEAT: NEVER, EVER USE ABSOLUTE PATHS. Don't do it. Use `$FLOX_ENV` for environment-specific runtime dependencies; use `$FLOX_ENV_PROJECT` for the project directory\stopverb}
 \li{Name functions descriptively (e.g., \code{\startverb setup_postgres()\stopverb})}
 \li{Consider using \strong{gum} for styled output when creating environments for interactive use; this is an anti-pattern in CI}
-\li{Put persistent data/configs in \code{\startverb $FLOX_ENV_CACHE\stopverb}}
-\li{Return to \code{\startverb $FLOX_ENV_PROJECT\stopverb} at end of hooks}
+\li{\startverb Put persistent data/configs in `$FLOX_ENV_CACHE`\stopverb}
+\li{\startverb Return to `$FLOX_ENV_PROJECT` at end of hooks\stopverb}
 \li{Use \code{\startverb mktemp\stopverb} for temp files, clean up immediately}
 \li{Do not over-engineer: e.g., do not create unnecessary echo statements or superfluous comments; do not print unnecessary information displays in \code{\startverb [hook]\stopverb} or \code{\startverb [profile]\stopverb}; do not create helper functions or aliases without the user requesting these explicitly}
 }
@@ -40,9 +40,9 @@
 \li{Key paths:}
 \li{\code{\startverb .flox/env/manifest.toml\stopverb}: Environment definition}
 \li{\code{\startverb .flox/env.json\stopverb}: Environment metadata}
-\li{\code{\startverb $FLOX_ENV_CACHE\stopverb}: Persistent, local-only storage (survives \code{\startverb flox delete\stopverb})}
-\li{\code{\startverb $FLOX_ENV_PROJECT\stopverb}: Project root directory (where .flox/ lives)}
-\li{\code{\startverb $FLOX_ENV\stopverb}: basically the path to \code{\startverb /usr\stopverb}: contains all the libs, includes, bins, configs, etc. available to a specific flox environment}
+\li{\startverb `$FLOX_ENV_CACHE`: Persistent, local-only storage (survives `flox delete`)\stopverb}
+\li{\startverb `$FLOX_ENV_PROJECT`: Project root directory (where .flox/ lives)\stopverb}
+\li{\startverb `$FLOX_ENV`: basically the path to `/usr`: contains all the libs, includes, bins, configs, etc. available to a specific flox environment\stopverb}
 \li{Always use \code{\startverb flox init\stopverb} to create environments}
 \li{Manifest changes take effect on next \code{\startverb flox activate\stopverb} (not live reload)}
 }
@@ -200,10 +200,10 @@ fi
 \p{\strong{Key patterns}:}
 
 \ul{
-\li{\strong{venv location}: Always use \code{\startverb $FLOX_ENV_CACHE/venv\stopverb} - survives environment rebuilds}
-\li{\strong{uv with venv}: Use \code{\startverb uv pip install --python "$venv/bin/python"\stopverb} NOT \code{\startverb "$venv/bin/python" -m uv\stopverb}}
-\li{\strong{Cache dirs}: Set \code{\startverb UV_CACHE_DIR\stopverb} and \code{\startverb PIP_CACHE_DIR\stopverb} to \code{\startverb $FLOX_ENV_CACHE\stopverb} subdirs}
-\li{\strong{Dependency installation flag}: Touch \code{\startverb $FLOX_ENV_CACHE/.deps_installed\stopverb} to prevent reinstalls}
+\li{\startverb **venv location**: Always use `$FLOX_ENV_CACHE/venv` - survives environment rebuilds\stopverb}
+\li{\startverb **uv with venv**: Use `uv pip install --python "$venv/bin/python"` NOT `"$venv/bin/python" -m uv`\stopverb}
+\li{\startverb **Cache dirs**: Set `UV_CACHE_DIR` and `PIP_CACHE_DIR` to `$FLOX_ENV_CACHE` subdirs\stopverb}
+\li{\startverb **Dependency installation flag**: Touch `$FLOX_ENV_CACHE/.deps_installed` to prevent reinstalls\stopverb}
 }
 }
 
@@ -257,9 +257,9 @@ coreutils.systems = ["x86_64-darwin", "aarch64-darwin"]
 \ul{
 \li{Check manifest before installing new packages}
 \li{Use \code{\startverb return\stopverb} not \code{\startverb exit\stopverb} in hooks}
-\li{Define env vars with \code{\startverb ${VAR:-default}\stopverb}}
+\li{\startverb Define env vars with `${VAR:-default}`\stopverb}
 \li{Use descriptive, prefixed function names in composed envs}
-\li{Cache downloads in \code{\startverb $FLOX_ENV_CACHE\stopverb}}
+\li{\startverb Cache downloads in `$FLOX_ENV_CACHE`\stopverb}
 \li{Test activation with \code{\startverb flox activate -- <command>\stopverb} before adding to services}
 \li{Use \code{\startverb --quiet\stopverb} flag with uv/pip in hooks to reduce noise}
 }
@@ -321,8 +321,8 @@ flox edit -f /tmp/manifest.toml
 \title{Hook Issues}
 \ul{
 \li{Use \code{\startverb return\stopverb} not \code{\startverb exit\stopverb} in hooks}
-\li{Define env vars with \code{\startverb ${VAR:-default}\stopverb}}
-\li{Guard FLOX_ENV_CACHE usage: \code{\startverb ${FLOX_ENV_CACHE:-}\stopverb} with fallback}
+\li{\startverb Define env vars with `${VAR:-default}`\stopverb}
+\li{\startverb Guard FLOX_ENV_CACHE usage: `${FLOX_ENV_CACHE:-}` with fallback\stopverb}
 }
 }
 }

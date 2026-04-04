@@ -173,9 +173,9 @@ Dangerous command detected!
 \p{\strong{Common patterns:}}
 
 \ul{
-\li{Dangerous commands: \code{\startverb rm\startverb \s\stopverb+-rf\stopverb}, \code{\startverb dd\startverb \s\stopverb+if=\stopverb}, \code{\startverb mkfs\stopverb}}
-\li{Privilege escalation: \code{\startverb sudo\startverb \s\stopverb+\stopverb}, \code{\startverb su\startverb \s\stopverb+\stopverb}}
-\li{Permission issues: \code{\startverb chmod\startverb \s\stopverb+777\stopverb}, \code{\startverb chown\startverb \s\stopverb+root\stopverb}}
+\li{\startverb Dangerous commands: `rm\s+-rf`, `dd\s+if=`, `mkfs`\stopverb}
+\li{\startverb Privilege escalation: `sudo\s+`, `su\s+`\stopverb}
+\li{\startverb Permission issues: `chmod\s+777`, `chown\s+root`\stopverb}
 }
 }
 
@@ -212,9 +212,9 @@ Console.log in TypeScript file!
 \p{\strong{Common patterns:}}
 
 \ul{
-\li{Debug code: \code{\startverb console\.log\(\stopverb}, \code{\startverb debugger\stopverb}, \code{\startverb print\(\stopverb}}
-\li{Security risks: \code{\startverb eval\(\stopverb}, \code{\startverb innerHTML\startverb \s\stopverb*=\stopverb}, \code{\startverb dangerouslySetInnerHTML\stopverb}}
-\li{Sensitive files: \code{\startverb \.env$\stopverb}, \code{\startverb credentials\stopverb}, \code{\startverb \.pem$\stopverb}}
+\li{\startverb Debug code: `console\.log\(`, `debugger`, `print\(`\stopverb}
+\li{\startverb Security risks: `eval\(`, `innerHTML\s*=`, `dangerouslySetInnerHTML`\stopverb}
+\li{\startverb Sensitive files: `\.env$`, `credentials`, `\.pem$`\stopverb}
 \li{Generated files: \code{\startverb node_modules/\stopverb}, \code{\startverb dist/\stopverb}, \code{\startverb build/\stopverb}}
 }
 }
@@ -279,17 +279,17 @@ Production deployment checklist:
 \p{\strong{Special characters need escaping:}}
 
 \ul{
-\li{\code{\startverb .\stopverb} (any char) → \code{\startverb \.\stopverb} (literal dot)}
-\li{\code{\startverb (\stopverb} \code{\startverb )\stopverb} → \code{\startverb \(\stopverb} \code{\startverb \)\stopverb} (literal parens)}
-\li{\code{\startverb [\stopverb} \code{\startverb ]\stopverb} → \code{\startverb \[\stopverb} \code{\startverb \]\stopverb} (literal brackets)}
+\li{\startverb `.` (any char) → `\.` (literal dot)\stopverb}
+\li{\startverb `(` `)` → `\(` `\)` (literal parens)\stopverb}
+\li{\startverb `[` `]` → `\[` `\]` (literal brackets)\stopverb}
 }
 
 \p{\strong{Common metacharacters:}}
 
 \ul{
-\li{\code{\startverb \startverb \s\stopverb\stopverb} - whitespace (space, tab, newline)}
-\li{\code{\startverb \startverb \d\stopverb\stopverb} - digit (0-9)}
-\li{\code{\startverb \startverb \w\stopverb\stopverb} - word character (a-z, A-Z, 0-9, _)}
+\li{\startverb `\s` - whitespace (space, tab, newline)\stopverb}
+\li{\startverb `\d` - digit (0-9)\stopverb}
+\li{\startverb `\w` - word character (a-z, A-Z, 0-9, _)\stopverb}
 \li{\code{\startverb .\stopverb} - any character}
 \li{\code{\startverb +\stopverb} - one or more}
 \li{\code{\startverb *\stopverb} - zero or more}
@@ -327,7 +327,9 @@ python3 -c "import re; print(re.search(r'your_pattern', 'test text'))"
 pattern: log    # Matches "log", "login", "dialog", "catalog"
 \stopverb}
 
-\p{Better: \code{\startverb console\.log\(|logger\.\stopverb}}
+\pre{\startverb
+Better: `console\.log\(|logger\.`
+\stopverb}
 
 \p{\strong{Too specific:}}
 
@@ -335,13 +337,15 @@ pattern: log    # Matches "log", "login", "dialog", "catalog"
 pattern: rm -rf /tmp  # Only matches exact path
 \stopverb}
 
-\p{Better: \code{\startverb rm\startverb \s\stopverb+-rf\stopverb}}
+\pre{\startverb
+Better: `rm\s+-rf`
+\stopverb}
 
 \p{\strong{Escaping issues:}}
 
 \ul{
-\li{YAML quoted strings: \code{\startverb "pattern"\stopverb} requires double backslashes \code{\startverb \\startverb \s\stopverb\stopverb}}
-\li{YAML unquoted: \code{\startverb pattern: \startverb \s\stopverb\stopverb} works as-is}
+\li{\startverb YAML quoted strings: `"pattern"` requires double backslashes `\\s`\stopverb}
+\li{\startverb YAML unquoted: `pattern: \s` works as-is\stopverb}
 \li{\strong{Recommendation}: Use unquoted patterns in YAML}
 }
 }
@@ -400,7 +404,9 @@ pattern: rm -rf /tmp  # Only matches exact path
 
 \subtree{
 \title{Examples}
-\p{See \code{\startverb ${CLAUDE_PLUGIN_ROOT}/examples/\stopverb} for complete examples:}
+\pre{\startverb
+See `${CLAUDE_PLUGIN_ROOT}/examples/` for complete examples:
+\stopverb}
 
 \ul{
 \li{\code{\startverb dangerous-rm.local.md\stopverb} - Block dangerous rm commands}

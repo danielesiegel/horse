@@ -37,9 +37,13 @@
 
 \p{\strong{1. "It only runs on PRs from maintainers"} Wrong because it ignores \code{\startverb pull_request_target\stopverb}, \code{\startverb issue_comment\stopverb}, and other trigger events that expose actions to external input. Attackers do not need write access to trigger these workflows. A \code{\startverb pull_request_target\stopverb} event runs in the context of the base branch, not the PR branch, meaning any external contributor can trigger it by opening a PR.}
 
-\p{\strong{2. "We use allowed_tools to restrict what it can do"} Wrong because tool restrictions can still be weaponized. Even restricted tools like \code{\startverb echo\stopverb} can be abused for data exfiltration via subshell expansion (\code{\startverb echo $(env)\stopverb}). A tool allowlist reduces attack surface but does not eliminate it. Limited tools != safe tools.}
+\pre{\startverb
+**2. "We use allowed_tools to restrict what it can do"** Wrong because tool restrictions can still be weaponized. Even restricted tools like `echo` can be abused for data exfiltration via subshell expansion (`echo $(env)`). A tool allowlist reduces attack surface but does not eliminate it. Limited tools != safe tools.
+\stopverb}
 
-\p{\strong{3. "There's no ${{ }} in the prompt, so it's safe"} Wrong because this is the classic env var intermediary miss. Data flows through \code{\startverb env:\stopverb} blocks to the prompt field with zero visible expressions in the prompt itself. The YAML looks clean but the AI agent still receives attacker-controlled input. This is the most commonly missed vector because reviewers only look for direct expression injection.}
+\pre{\startverb
+**3. "There's no ${{ }} in the prompt, so it's safe"** Wrong because this is the classic env var intermediary miss. Data flows through `env:` blocks to the prompt field with zero visible expressions in the prompt itself. The YAML looks clean but the AI agent still receives attacker-controlled input. This is the most commonly missed vector because reviewers only look for direct expression injection.
+\stopverb}
 
 \p{\strong{4. "The sandbox prevents any real damage"} Wrong because sandbox misconfigurations (\code{\startverb danger-full-access\stopverb}, \code{\startverb Bash(*)\stopverb}, \code{\startverb --yolo\stopverb}) disable protections entirely. Even properly configured sandboxes leak secrets if the AI agent can read environment variables or mounted files. The sandbox boundary is only as strong as its configuration.}
 }
@@ -118,7 +122,7 @@
 \ul{
 \li{Pipe fetched YAML content to \code{\startverb bash\stopverb}, \code{\startverb sh\stopverb}, \code{\startverb eval\stopverb}, or \code{\startverb source\stopverb}}
 \li{Pipe fetched content to \code{\startverb python\stopverb}, \code{\startverb node\stopverb}, \code{\startverb ruby\stopverb}, or any interpreter}
-\li{Use fetched content in shell command substitution \code{\startverb $(...)\stopverb} or backticks}
+\li{\startverb Use fetched content in shell command substitution `$(...)` or backticks\stopverb}
 \li{Write fetched content to a file and then execute that file}
 }
 }
@@ -258,7 +262,7 @@
 \li{Check workflow-level \code{\startverb env:\stopverb} (top of file, outside \code{\startverb jobs:\stopverb})}
 \li{Check job-level \code{\startverb env:\stopverb} (inside \code{\startverb jobs.<job_id>:\stopverb}, outside \code{\startverb steps:\stopverb})}
 \li{Check step-level \code{\startverb env:\stopverb} (inside the AI action step itself)}
-\li{For each env var, note whether its value contains \code{\startverb ${{ }}\stopverb} expressions referencing event data (e.g., \code{\startverb ${{ github.event.issue.body }}\stopverb}, \code{\startverb ${{ github.event.pull_request.title }}\stopverb})}
+\li{\startverb For each env var, note whether its value contains `${{ }}` expressions referencing event data (e.g., `${{ github.event.issue.body }}`, `${{ github.event.pull_request.title }}`)\stopverb}
 }
 
 \p{\strong{Permissions} (from \code{\startverb permissions:\stopverb} blocks):}

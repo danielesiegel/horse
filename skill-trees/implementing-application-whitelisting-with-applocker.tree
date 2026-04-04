@@ -261,8 +261,8 @@ Get-WinEvent -LogName "Microsoft-Windows-AppLocker/EXE and DLL" `
 \title{Common Pitfalls}
 \ul{
 \li{\strong{Skipping Audit mode}: Deploying AppLocker in Enforce mode without audit period will block critical applications and cause outages.}
-\li{\strong{Relying solely on path rules}: Users with write access to allowed paths (C:\startverb \Windows\stopverb\startverb \Temp\stopverb) can bypass path-based rules. Prefer publisher rules.}
-\li{\strong{Not blocking user-writable directories}: The most common gap is allowing execution from \%TEMP\%, Downloads, or \%APPDATA\%.}
+\li{\startverb **Relying solely on path rules**: Users with write access to allowed paths (C:\Windows\Temp) can bypass path-based rules. Prefer publisher rules.\stopverb}
+\li{\startverb **Not blocking user-writable directories**: The most common gap is allowing execution from %TEMP%, Downloads, or %APPDATA%.\stopverb}
 \li{\strong{Forgetting Application Identity service}: AppLocker requires the AppIDSvc service running. If it stops, all rules stop enforcing.}
 \li{\strong{Admin bypass}: Local administrators can bypass AppLocker by default. For full enforcement, combine with WDAC which enforces for all users including admins.}
 \li{\strong{DLL rule performance}: Enabling DLL rules creates significant performance overhead. Only enable in high-security environments where the tradeoff is justified.}
