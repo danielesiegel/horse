@@ -1,7 +1,7 @@
 \title{fNIRS: Hemodynamic (OpenNIRScap)}
 \taxon{device}
 \author{monaduck1069}
-\date{2026-04-03}
+\date{2026-04-04}
 \tag{fnirs}
 \tag{hardware}
 \tag{diy}
@@ -10,17 +10,18 @@
 \meta{manufacturer}{University of Toronto (Kim et al.)}
 \meta{product}{OpenNIRScap}
 \meta{channels}{24 detectors + 8 dual-wavelength sources}
-\meta{price}{$419 BOM}
+\meta{price-diy}{$419 BOM (hand-solder)}
+\meta{price-jlcpcb}{$220--$320 (JLCPCB assembly)}
 \meta{open-source}{true}
 \meta{repo}{https://github.com/tonykim07/fNIRS}
 
-\p{OpenNIRScap. Open-source, wearable, 24-channel fNIRS cap from the University of Toronto (Kim et al., May 2025). 35 mm source-detector separation for cortical depth sensitivity. Validated hemodynamic response detection during cognitive tasks. $419 total BOM from off-the-shelf components. Replaces bcf-0012 as the primary open-source fNIRS build target.}
+\p{OpenNIRScap. Open-source, wearable, 24-channel fNIRS cap from the University of Toronto (Kim et al., May 2025). 35 mm source-detector separation for cortical depth sensitivity. Validated hemodynamic response detection during cognitive tasks. Replaces bcf-0012 as the primary open-source fNIRS build target.}
 
 \subtree{\title{Architecture}
 \taxon{remark}
 \ul{
 \li{8 dual-wavelength sources: VSMD66694 (660 nm + 940 nm)}
-\li{24 detectors: BPW34S silicon PIN photodiode + AD8618 dual TIA}
+\li{24 detectors: VBPW34S silicon PIN photodiode + AD8618 quad TIA}
 \li{ECU: STM32L476 MCU + 8x TMUX1104 analog MUX + PCA9685 PWM}
 \li{Sensor PCBs: 25 mm diameter circular, source + detector on same board}
 \li{Triangular sensor sets: 1 source + 1 short-channel det + 2 long-channel det at 35 mm}
@@ -34,26 +35,50 @@
 \taxon{remark}
 \p{Flask-SocketIO web GUI with real-time 3D brain mesh visualization (Plotly.js + BrainNet Viewer). Modified Beer-Lambert Law processing via NIRSimple library. Bandpass 0.01--0.5 Hz for cortical hemodynamics. Correlation-based signal improvement for HbO/HbR separation. All open source.}}
 
-\subtree{\title{Cost breakdown}
+\subtree{\title{Build routes}
 \taxon{remark}
-\ul{
-\li{Detector components (24x): $175}
-\li{Emitter components (8x): $12}
-\li{Sensor PCB manufacturing (24x): $4}
-\li{fNIRS ECU components: $83}
-\li{fNIRS ECU PCB manufacturing: $7}
-\li{Cable harnesses (8x): $73}
-\li{Battery (1100 mAh): $12}
-\li{PLA filament (3D-printed housings): $23}
-\li{Wearable components (cap, straps): $30}
-\li{Total: $419}
+
+\subtree{\title{JLCPCB assembles everything (recommended)}
+\p{JLCPCB fabricates and populates all PCBs -- 24 sensor modules (photodiodes, LEDs, op-amps, MOSFETs, passives) and 1 ECU (STM32, MUXes, PWM controller, USB isolator). You buy only non-PCB items from Amazon.}
+
+\import{macros}
+
+\table{
+\tr{\th{Source} \th{What} \th{Cost}}
+\tr{\td{JLCPCB} \td{24 sensor PCBs + 1 ECU + 1 STLINK breakout, fully assembled} \td{$150--$250}}
+\tr{\td{Amazon} \td{Battery, programmer, cables, PLA, headband, velcro, tape} \td{$72}}
+\tr{\td{} \td{Total} \td{$220--$320}}
+}
+
+\p{Blocker: repo has Altium .PcbDoc source files only, no exported gerbers or BOM. Must import into KiCad 8 and export production files before ordering.}
+}
+
+\subtree{\title{DIY hand-solder}
+\p{Order bare PCBs from JLCPCB, buy all components from DigiKey, solder yourself. Paper's official cost: $419.}
+}}
+
+\subtree{\title{Paper cost breakdown (Table I)}
+\taxon{remark}
+\table{
+\tr{\th{Category} \th{Qty} \th{Cost}}
+\tr{\td{Detector components} \td{24} \td{$175}}
+\tr{\td{Emitter components} \td{8} \td{$12}}
+\tr{\td{Sensor PCB manufacturing} \td{24} \td{$4}}
+\tr{\td{fNIRS ECU components} \td{1} \td{$83}}
+\tr{\td{fNIRS ECU PCB manufacturing} \td{1} \td{$7}}
+\tr{\td{Cable harnesses} \td{8} \td{$73}}
+\tr{\td{Rechargeable battery} \td{1} \td{$12}}
+\tr{\td{PLA filament} \td{1} \td{$23}}
+\tr{\td{Wearable components} \td{1} \td{$30}}
+\tr{\td{} \td{Total} \td{$419}}
 }}
 
 \subtree{\title{Comparison}
 \taxon{remark}
 \p{From the OpenNIRScap paper (Table II):}
-\ul{
-\li{OpenNIRScap: 24 channels, 1 kHz, 12-bit, wearable, $419, open source}
-\li{DIY-fNIRS headband (Tsow et al.): 4 channels, 10 Hz, 12-bit, wearable, $215, open source}
-\li{PLUX biosignalsplux fNIRS: 1 channel, 500 Hz, 16-bit, not wearable, $789, proprietary}
+\table{
+\tr{\th{System} \th{Channels} \th{Sampling} \th{Resolution} \th{Wearable} \th{Cost} \th{Open}}
+\tr{\td{OpenNIRScap} \td{24} \td{1 kHz} \td{12-bit} \td{Yes} \td{$419} \td{Yes}}
+\tr{\td{DIY-fNIRS headband} \td{4} \td{10 Hz} \td{12-bit} \td{Yes} \td{$215} \td{Yes}}
+\tr{\td{PLUX biosignalsplux} \td{1} \td{500 Hz} \td{16-bit} \td{No} \td{$789} \td{No}}
 }}
