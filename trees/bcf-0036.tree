@@ -1,0 +1,59 @@
+\title{fNIRS: Hemodynamic (OpenNIRScap)}
+\taxon{device}
+\author{monaduck1069}
+\date{2026-04-03}
+\tag{fnirs}
+\tag{hardware}
+\tag{diy}
+\tag{open-source}
+\meta{modality}{hemodynamic}
+\meta{manufacturer}{University of Toronto (Kim et al.)}
+\meta{product}{OpenNIRScap}
+\meta{channels}{24 detectors + 8 dual-wavelength sources}
+\meta{price}{$419 BOM}
+\meta{open-source}{true}
+\meta{repo}{https://github.com/tonykim07/fNIRS}
+
+\p{OpenNIRScap. Open-source, wearable, 24-channel fNIRS cap from the University of Toronto (Kim et al., May 2025). 35 mm source-detector separation for cortical depth sensitivity. Validated hemodynamic response detection during cognitive tasks. $419 total BOM from off-the-shelf components. Replaces bcf-0012 as the primary open-source fNIRS build target.}
+
+\subtree{\title{Architecture}
+\taxon{remark}
+\ul{
+\li{8 dual-wavelength sources: VSMD66694 (660 nm + 940 nm)}
+\li{24 detectors: BPW34S silicon PIN photodiode + AD8618 dual TIA}
+\li{ECU: STM32L476 MCU + 8x TMUX1104 analog MUX + PCA9685 PWM}
+\li{Sensor PCBs: 25 mm diameter circular, source + detector on same board}
+\li{Triangular sensor sets: 1 source + 1 short-channel det + 2 long-channel det at 35 mm}
+\li{Communication: USB (isolated via ADUM4160)}
+\li{Power: 1100 mAh LiPo, >5 hr runtime}
+\li{SNR: 52.3 dB average}
+\li{Sampling: 1 kHz effective (12-bit ADC, multiplexed)}
+}}
+
+\subtree{\title{Software}
+\taxon{remark}
+\p{Flask-SocketIO web GUI with real-time 3D brain mesh visualization (Plotly.js + BrainNet Viewer). Modified Beer-Lambert Law processing via NIRSimple library. Bandpass 0.01--0.5 Hz for cortical hemodynamics. Correlation-based signal improvement for HbO/HbR separation. All open source.}}
+
+\subtree{\title{Cost breakdown}
+\taxon{remark}
+\ul{
+\li{Detector components (24x): $175}
+\li{Emitter components (8x): $12}
+\li{Sensor PCB manufacturing (24x): $4}
+\li{fNIRS ECU components: $83}
+\li{fNIRS ECU PCB manufacturing: $7}
+\li{Cable harnesses (8x): $73}
+\li{Battery (1100 mAh): $12}
+\li{PLA filament (3D-printed housings): $23}
+\li{Wearable components (cap, straps): $30}
+\li{Total: $419}
+}}
+
+\subtree{\title{Comparison}
+\taxon{remark}
+\p{From the OpenNIRScap paper (Table II):}
+\ul{
+\li{OpenNIRScap: 24 channels, 1 kHz, 12-bit, wearable, $419, open source}
+\li{DIY-fNIRS headband (Tsow et al.): 4 channels, 10 Hz, 12-bit, wearable, $215, open source}
+\li{PLUX biosignalsplux fNIRS: 1 channel, 500 Hz, 16-bit, not wearable, $789, proprietary}
+}}
