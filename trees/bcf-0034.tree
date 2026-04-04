@@ -1,0 +1,33 @@
+\title{fNIRS: Source-Detector Separation and Depth Sensitivity}
+\taxon{reference}
+\author{monaduck1069}
+\date{2026-04-03}
+\tag{fnirs}
+\tag{physics}
+\meta{modality}{hemodynamic}
+
+\p{The spatial separation between the light source and photodetector in an fNIRS system determines what tissue depth is measured. Light follows a banana-shaped path through tissue: wider separation means deeper penetration into cortex.}
+
+\subtree{\title{Separation vs depth}
+\taxon{remark}
+\ul{
+\li{<10 mm: scalp blood flow only (artifact)}
+\li{15--20 mm: skull, mostly extracerebral}
+\li{30 mm: gray matter -- the standard for cortical hemodynamics}
+\li{40--45 mm: deeper gray matter, weaker signal}
+\li{>50 mm: diminishing returns, too much attenuation}
+}
+\p{Per Strangman et al. (PLOS ONE 2013): for every 10 mm increase in source-detector separation up to ~45 mm, gray matter sensitivity increases ~4\%. Depth sensitivity decreases exponentially: S = 0.75 * 0.85^depth. The standard research separation is 30 mm.}}
+
+\subtree{\title{Implications for the bci.horse stack}
+\taxon{remark}
+
+\subtree{\title{PLUX biosignalsplux fNIRS sensor (bcf-0011, bcf-0033)}
+\p{Source and detector are in a single compact housing with LEDs angled at 45 degrees. Short optical path, designed for prefrontal placement. This is closer to reflectance pulse oximetry than cortical fNIRS. Measures superficial hemodynamics at one site per sensor. Adequate for prefrontal cognitive load detection, insufficient for spatial mapping of cortical activity.}}
+
+\subtree{\title{NIRx NIRSport 2 (bcf-0032)}
+\p{Separate source and detector optodes in a headcap at precisely controlled 30 mm spacing. Each source illuminates multiple detectors at different distances, creating overlapping channels for tomographic reconstruction. 20--48 channels of true cortical hemodynamic data. This is why it costs 10--100x more.}}
+
+\subtree{\title{DIY full-head build (bcf-0012)}
+\p{Discrete optodes (760/850 nm LEDs + silicon photodiodes) mounted at 30 mm separation can achieve the same depth sensitivity as NIRx if the geometry is controlled. The AFE4404 front-end uses the same modified Beer-Lambert deconvolution. The engineering challenge is maintaining exact optode-scalp coupling across a full montage without the precision headcap.}}
+}
