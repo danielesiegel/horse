@@ -33,8 +33,8 @@ sshpass -p 'aaaaaa' ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no a@100.6
 
 \ul{
 \li{Host: gx10-acee, Tailscale IP: 100.67.53.87}
-\li{User: \code{\startverba\stopverb}, Password: \code{\startverbaaaaaa\stopverb}}
-\li{NVIDIA HDA audio card, WiFi on \code{\startverbwlP9s9\stopverb}}
+\li{User: \code{\startverb a\stopverb}, Password: \code{\startverb aaaaaa\stopverb}}
+\li{NVIDIA HDA audio card, WiFi on \code{\startverb wlP9s9\stopverb}}
 }
 }
 
@@ -46,7 +46,7 @@ sshpass -p 'aaaaaa' ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no alu@10.1
 
 \ul{
 \li{Host: conversation-logger, LAN IP: 10.1.10.107}
-\li{User: \code{\startverbalu\stopverb}, Password: \code{\startverbaaaaaa\stopverb}}
+\li{User: \code{\startverb alu\stopverb}, Password: \code{\startverb aaaaaa\stopverb}}
 \li{3x EMEET mics on ALSA cards 1, 2, 3}
 }
 }
@@ -93,22 +93,22 @@ sshpass -p 'aaaaaa' ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no a@100.6
 \subtree{
 \title{Systemd Services}
 \ul{
-\li{\code{\startverbwarehouse-capture-mic1.service\stopverb} — Mic 1 capture (device 4, Whisper large-v3-turbo)}
-\li{\code{\startverbwarehouse-capture-mic2.service\stopverb} — Mic 2 capture (device 5)}
-\li{\code{\startverbwarehouse-capture-mic3.service\stopverb} — Mic 3 capture (device 6)}
-\li{\code{\startverbwarehouse-autogain.service\stopverb} — Auto-gain controller}
-\li{\code{\startverbwarehouse-gui.service\stopverb} — Flask web dashboard (:5000)}
-\li{\code{\startverbpostgresql@16-main.service\stopverb} — PostgreSQL 16}
+\li{\code{\startverb warehouse-capture-mic1.service\stopverb} — Mic 1 capture (device 4, Whisper large-v3-turbo)}
+\li{\code{\startverb warehouse-capture-mic2.service\stopverb} — Mic 2 capture (device 5)}
+\li{\code{\startverb warehouse-capture-mic3.service\stopverb} — Mic 3 capture (device 6)}
+\li{\code{\startverb warehouse-autogain.service\stopverb} — Auto-gain controller}
+\li{\code{\startverb warehouse-gui.service\stopverb} — Flask web dashboard (:5000)}
+\li{\code{\startverb postgresql@16-main.service\stopverb} — PostgreSQL 16}
 }
 }
 
 \subtree{
 \title{Key Paths}
 \ul{
-\li{\code{\startverb/opt/warehouse-logging/scripts/capture_node.py\stopverb} — Main capture script}
-\li{\code{\startverb/opt/warehouse-logging/scripts/auto_gain.py\stopverb} — Gain controller}
-\li{\code{\startverb/opt/warehouse-logging/app.py\stopverb} — Flask dashboard}
-\li{\code{\startverb/opt/warehouse-logging/venv/\stopverb} — Python virtualenv}
+\li{\code{\startverb /opt/warehouse-logging/scripts/capture_node.py\stopverb} — Main capture script}
+\li{\code{\startverb /opt/warehouse-logging/scripts/auto_gain.py\stopverb} — Gain controller}
+\li{\code{\startverb /opt/warehouse-logging/app.py\stopverb} — Flask dashboard}
+\li{\code{\startverb /opt/warehouse-logging/venv/\stopverb} — Python virtualenv}
 }
 }
 
@@ -124,7 +124,7 @@ sshpass -p 'aaaaaa' ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no a@100.6
 \subtree{
 \title{Network}
 \ul{
-\li{WiFi only (\code{\startverbwlP9s9\stopverb}): SSID \code{\startverbTP-Link_A7B3\stopverb}, 2.4GHz Ch2, -47dBm, 94\%}
+\li{WiFi only (\code{\startverb wlP9s9\stopverb}): SSID \code{\startverb TP-Link_A7B3\stopverb}, 2.4GHz Ch2, -47dBm, 94\%}
 \li{All ethernet ports DOWN (NO-CARRIER) — single point of failure}
 \li{Consider connecting ethernet for reliability}
 }
@@ -133,7 +133,7 @@ sshpass -p 'aaaaaa' ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no a@100.6
 
 \subtree{
 \title{Live Narration Script}
-\p{Save to \code{\startverb/tmp/live-warehouse-stream.sh\stopverb}:}
+\p{Save to \code{\startverb /tmp/live-warehouse-stream.sh\stopverb}:}
 
 \pre{\startverb
 #!/bin/bash
@@ -220,9 +220,9 @@ done
 \subtree{
 \title{Key design choices}
 \ul{
-\li{\strong{\code{\startverblimit=50\stopverb}}: Catches all transcripts between polls (Whisper produces ~1 fragment/second)}
+\li{\strong{\code{\startverb limit=50\stopverb}}: Catches all transcripts between polls (Whisper produces ~1 fragment/second)}
 \li{\strong{Chronological reversal}: API returns newest-first; we reverse for natural speech order}
-\li{\strong{Speaker batching}: Consecutive same-speaker fragments concatenated into one \code{\startverbsay\stopverb} call}
+\li{\strong{Speaker batching}: Consecutive same-speaker fragments concatenated into one \code{\startverb say\stopverb} call}
 \li{\strong{No "SPEAKER says:" prefix}: Voice identity conveys the speaker; text spoken naturally}
 \li{\strong{First-poll skip}: Initializes at current position without blasting history}
 }
@@ -271,9 +271,9 @@ done
 \subtree{
 \title{MCP vs CLI Usage}
 \ul{
-\li{\strong{Background script} (\code{\startverb/tmp/live-warehouse-stream.sh\stopverb}): Uses CLI \code{\startverbsay -v "Voice Name"\stopverb} — works headless}
-\li{\strong{In-session narration}: Use \code{\startverbmcp\strong{macos-speech-sdk}speak\stopverb} with voice identifier for full control}
-\li{\code{\startverbmcp\strong{say}speak\stopverb} has \code{\startverbbackground: true\stopverb} param for non-blocking speech}
+\li{\strong{Background script} (\code{\startverb /tmp/live-warehouse-stream.sh\stopverb}): Uses CLI \code{\startverb say -v "Voice Name"\stopverb} — works headless}
+\li{\strong{In-session narration}: Use \code{\startverb mcp\strong{macos-speech-sdk}speak\stopverb} with voice identifier for full control}
+\li{\code{\startverb mcp\strong{say}speak\stopverb} has \code{\startverb background: true\stopverb} param for non-blocking speech}
 }
 }
 }
@@ -287,9 +287,9 @@ done
 \stopverb}
 
 \ul{
-\li{Captures MacBook Pro Microphone via FFmpeg avfoundation \code{\startverb:1\stopverb}}
+\li{Captures MacBook Pro Microphone via FFmpeg avfoundation \code{\startverb :1\stopverb}}
 \li{Transcribes with mlx-whisper-small (16kHz, 8s chunks)}
-\li{Appends to \code{\startverb/Users/alice/v/audio-capture.org\stopverb}}
+\li{Appends to \code{\startverb /Users/alice/v/audio-capture.org\stopverb}}
 }
 }
 
@@ -303,15 +303,15 @@ duckdb -c ".read /Users/alice/v/live_history_pipeline.sql"
 
 \ul{
 \li{Merges claude/preclaude/codex history}
-\li{Generates TTS-ready \code{\startverbnarration_line\stopverb} fields}
-\li{\code{\startverbaudio_digest\stopverb} view: top 10 sessions formatted for voice}
+\li{Generates TTS-ready \code{\startverb narration_line\stopverb} fields}
+\li{\code{\startverb audio_digest\stopverb} view: top 10 sessions formatted for voice}
 }
 }
 
 \subtree{
 \title{Audio ACSet database}
 \ul{
-\li{\code{\startverb/Users/alice/v/audio_acset.duckdb\stopverb} — Structured audio metadata}
+\li{\code{\startverb /Users/alice/v/audio_acset.duckdb\stopverb} — Structured audio metadata}
 \li{Tables: AudioFile, Transcript, Segment, Speaker, Topic, ACSetSchema}
 }
 }
@@ -325,7 +325,7 @@ duckdb -c ".read /Users/alice/v/live_history_pipeline.sql"
 \li{\strong{Ch1 Combinators}: Pipeline = compose(ssh_tunnel, api_poll, tts_narrate)}
 \li{\strong{Ch7 Propagators}: Transcripts flow: mic → whisper → postgres → API → say (bidirectional: can query history backwards)}
 \li{\strong{Ch8 Degeneracy}: Remote warehouse (primary) vs local mic (fallback) — same generic interface, different implementations}
-\li{\strong{Ch9 Generic Dispatch}: \code{\startverbnarrate(source)\stopverb} dispatches on source type: warehouse API vs local org file}
+\li{\strong{Ch9 Generic Dispatch}: \code{\startverb narrate(source)\stopverb} dispatches on source type: warehouse API vs local org file}
 }
 }
 

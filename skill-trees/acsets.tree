@@ -28,7 +28,7 @@
 \title{What Are ACSets?}
 \p{ACSets ("attributed C-sets") are a family of data structures generalizing both \strong{graphs} and \strong{data frames}. They are an efficient in-memory implementation of a category-theoretic formalism for relational databases.}
 
-\p{\strong{C-set} = Functor \code{\startverbX: C → Set\stopverb} where C is a small category (schema)}
+\p{\strong{C-set} = Functor \code{\startverb X: C → Set\stopverb} where C is a small category (schema)}
 
 \pre{\startverb
 ┌─────────────────────────────────────────────────────────────┐
@@ -121,7 +121,7 @@ end
 
 \subtree{
 \title{Gay.jl Color Bindings for @acset_colim (PR #990)}
-\p{Since Catlab PR #990, \code{\startverb@acset_colim\stopverb} exposes name→part bindings. Combine with Gay.jl for:}
+\p{Since Catlab PR #990, \code{\startverb @acset_colim\stopverb} exposes name→part bindings. Combine with Gay.jl for:}
 
 \subtree{
 \title{Named Part Coloring}
@@ -442,7 +442,7 @@ to_graphviz(g, node_labels=true, edge_labels=true)
 
 \subtree{
 \title{Indexing for Efficient Queries}
-\p{The \code{\startverbindex=[:src,:tgt]\stopverb} parameter creates inverse lookups:}
+\p{The \code{\startverb index=[:src,:tgt]\stopverb} parameter creates inverse lookups:}
 
 \pre{\startverb
 @acset_type Graph(SchGraph, index=[:src,:tgt])
@@ -480,9 +480,9 @@ inv² = id_E
 \p{For every edge e ∈ G(E):}
 
 \ul{
-\li{\code{\startverbe.inv.src = e.tgt\stopverb} (inverted edge starts where original ends)}
-\li{\code{\startverbe.inv.tgt = e.src\stopverb} (inverted edge ends where original starts)}
-\li{\code{\startverbe.inv.inv = e\stopverb} (involution is self-inverse)}
+\li{\code{\startverb e.inv.src = e.tgt\stopverb} (inverted edge starts where original ends)}
+\li{\code{\startverb e.inv.tgt = e.src\stopverb} (inverted edge ends where original starts)}
+\li{\code{\startverb e.inv.inv = e\stopverb} (involution is self-inverse)}
 }
 
 \pre{\startverb
@@ -506,7 +506,7 @@ add_edges!(g, [1,2,3,4], [2,3,4,1])
 
 \subtree{
 \title{Indexing Optimization}
-\p{Only \code{\startverbsrc\stopverb} needs indexing. Target queries use: \code{\startverbincident(g, v, :tgt)\stopverb} = \code{\startverbincident(g, v, :src) .|> (e -> g[e, :inv])\stopverb}}
+\p{Only \code{\startverb src\stopverb} needs indexing. Target queries use: \code{\startverb incident(g, v, :tgt)\stopverb} = \code{\startverb incident(g, v, :src) .|> (e -> g[e, :inv])\stopverb}}
 }
 }
 
@@ -550,7 +550,7 @@ end
 
 \subtree{
 \title{Dangling Edges}
-\p{Fixed points \code{\startverbh·inv = h\stopverb} are \strong{dangling edges} — half-edges not paired with others, left at the boundary. Distinct half-edges \code{\startverbh ≠ h'\stopverb} with \code{\startverbh·inv = h'\stopverb} and same vertex are self-loops.}
+\p{Fixed points \code{\startverb h·inv = h\stopverb} are \strong{dangling edges} — half-edges not paired with others, left at the boundary. Distinct half-edges \code{\startverb h ≠ h'\stopverb} with \code{\startverb h·inv = h'\stopverb} and same vertex are self-loops.}
 
 \pre{\startverb
 g = HalfEdgeGraph(3)
@@ -1373,7 +1373,7 @@ gc!(G)                # Compact: removes gaps
 
 \subtree{
 \title{Julia Scientific Package Integration}
-\p{From \code{\startverbjulia-scientific\stopverb} skill - the full Julia package ecosystem that builds on ACSets:}
+\p{From \code{\startverb julia-scientific\stopverb} skill - the full Julia package ecosystem that builds on ACSets:}
 
 \pre{\startverb
 | Package | Category | ACSet Integration |
