@@ -107,26 +107,26 @@ toadia -a claude .
 \subtree{
 \title{Span Attributes}
 \subtree{
-\title{Tool Spans (\code{tool.<name>})}
+\title{Tool Spans (\code{\startverbtool.<name>\stopverb})}
 \ul{
-\li{\code{toad.tool.id} - Unique tool call ID}
-\li{\code{toad.tool.name} - Tool name (Bash, Read, Write, etc.)}
-\li{\code{toad.tool.kind} - Tool category}
-\li{\code{toad.tool.status} - Completion status}
-\li{\code{toad.tool.duration_ms} - Execution time}
-\li{\code{toad.tool.error} - Error message (if any)}
-\li{\code{toad.session.id} - Session identifier}
-\li{\code{toad.agent} - Agent name}
+\li{\code{\startverbtoad.tool.id\stopverb} - Unique tool call ID}
+\li{\code{\startverbtoad.tool.name\stopverb} - Tool name (Bash, Read, Write, etc.)}
+\li{\code{\startverbtoad.tool.kind\stopverb} - Tool category}
+\li{\code{\startverbtoad.tool.status\stopverb} - Completion status}
+\li{\code{\startverbtoad.tool.duration_ms\stopverb} - Execution time}
+\li{\code{\startverbtoad.tool.error\stopverb} - Error message (if any)}
+\li{\code{\startverbtoad.session.id\stopverb} - Session identifier}
+\li{\code{\startverbtoad.agent\stopverb} - Agent name}
 }
 }
 
 \subtree{
-\title{Turn Spans (\code{agent.turn})}
+\title{Turn Spans (\code{\startverbagent.turn\stopverb})}
 \ul{
-\li{\code{toad.prompt.length} - Input prompt character count}
-\li{\code{toad.turn.stop_reason} - Why the turn ended}
-\li{\code{toad.turn.duration_ms} - Total turn time}
-\li{\code{toad.agent} - Agent name}
+\li{\code{\startverbtoad.prompt.length\stopverb} - Input prompt character count}
+\li{\code{\startverbtoad.turn.stop_reason\stopverb} - Why the turn ended}
+\li{\code{\startverbtoad.turn.duration_ms\stopverb} - Total turn time}
+\li{\code{\startverbtoad.agent\stopverb} - Agent name}
 }
 }
 }
@@ -162,21 +162,21 @@ toadia -a claude .
 \p{The instrumentation uses deferred monkey-patching via Python import hooks to avoid circular imports:}
 
 \ol{
-\li{\code{instrument_toad()} installs an import hook that waits for \code{toad.app} to load}
-\li{Once Toad is fully initialized, it patches \code{Agent.rpc_session_update} and \code{Agent.send_prompt}}
-\li{\code{rpc_session_update} receives all ACP protocol events (tool_call, tool_call_update, etc.)}
+\li{\code{\startverbinstrument_toad()\stopverb} installs an import hook that waits for \code{\startverbtoad.app\stopverb} to load}
+\li{Once Toad is fully initialized, it patches \code{\startverbAgent.rpc_session_update\stopverb} and \code{\startverbAgent.send_prompt\stopverb}}
+\li{\code{\startverbrpc_session_update\stopverb} receives all ACP protocol events (tool_call, tool_call_update, etc.)}
 \li{Each tool call gets a span that tracks its lifecycle from start to completion}
-\li{\code{send_prompt} wraps each agent turn with timing and stop reason}
+\li{\code{\startverbsend_prompt\stopverb} wraps each agent turn with timing and stop reason}
 }
 }
 
 \subtree{
 \title{Files}
 \ul{
-\li{\code{SKILL.md} - This documentation}
-\li{\code{\strong{init}.py} - Package entry point}
-\li{\code{instrumentation.py} - Core monkey-patching and OTEL integration}
-\li{\code{toadia} - Wrapper script with Jaeger quickstart help}
+\li{\code{\startverbSKILL.md\stopverb} - This documentation}
+\li{\code{\startverb\strong{init}.py\stopverb} - Package entry point}
+\li{\code{\startverbinstrumentation.py\stopverb} - Core monkey-patching and OTEL integration}
+\li{\code{\startverbtoadia\stopverb} - Wrapper script with Jaeger quickstart help}
 }
 }
 
@@ -226,9 +226,9 @@ uv pip install opentelemetry-sdk opentelemetry-exporter-otlp \
 \subtree{
 \title{No spans appearing}
 \ol{
-\li{Check collector is running: \code{docker ps | grep jaeger}}
-\li{Enable console export: \code{TOAD_TELEMETRY_CONSOLE=1 toadia ...}}
-\li{Verify telemetry enabled: \code{TOAD_TELEMETRY_ENABLED=1}}
+\li{Check collector is running: \code{\startverbdocker ps | grep jaeger\stopverb}}
+\li{Enable console export: \code{\startverbTOAD_TELEMETRY_CONSOLE=1 toadia ...\stopverb}}
+\li{Verify telemetry enabled: \code{\startverbTOAD_TELEMETRY_ENABLED=1\stopverb}}
 }
 }
 
@@ -245,8 +245,8 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 toadia -a claude .
 \subtree{
 \title{Related Skills}
 \ul{
-\li{\code{otel-cli} - Command-line OTEL span emission}
-\li{\code{claude_telemetry} - Similar instrumentation for Claude Code CLI}
+\li{\code{\startverbotel-cli\stopverb} - Command-line OTEL span emission}
+\li{\code{\startverbclaude_telemetry\stopverb} - Similar instrumentation for Claude Code CLI}
 }
 }
 }

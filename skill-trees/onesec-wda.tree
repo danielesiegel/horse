@@ -13,7 +13,7 @@
 \ol{
 \li{\strong{iPhone connected via USB} with developer mode enabled}
 \li{\strong{WebDriverAgent running} via xcodebuild:}
-\li{\strong{WDA accessible} at \code{http://localhost:8100} (use \code{pymobiledevice3 remote start-tunnel} + port forward if needed)}
+\li{\strong{WDA accessible} at \code{\startverbhttp://localhost:8100\stopverb} (use \code{\startverbpymobiledevice3 remote start-tunnel\stopverb} + port forward if needed)}
 \li{\strong{one sec app installed} on the device with Shortcuts integration enabled}
 }
 }
@@ -28,7 +28,7 @@ python3 /path/to/onesec_setup.py --test
 python3 /path/to/onesec_setup.py
 \stopverb}
 
-\p{The script is at: \code{<skill-dir>/scripts/onesec_setup.py}}
+\p{The script is at: \code{\startverb<skill-dir>/scripts/onesec_setup.py\stopverb}}
 }
 
 \subtree{
@@ -43,12 +43,12 @@ python3 /path/to/onesec_setup.py
 \li{Tap Done to save}
 }
 
-\p{Screenshots are saved to \code{/tmp/onesec_step*} and \code{/tmp/onesec_fail*} for debugging.}
+\p{Screenshots are saved to \code{\startverb/tmp/onesec_step*\stopverb} and \code{\startverb/tmp/onesec_fail*\stopverb} for debugging.}
 }
 
 \subtree{
 \title{Customization}
-\p{Edit \code{APPS_TO_PROTECT} list in the script. Move completed apps to \code{ALREADY_DONE} to skip them on re-runs.}
+\p{Edit \code{\startverbAPPS_TO_PROTECT\stopverb} list in the script. Move completed apps to \code{\startverbALREADY_DONE\stopverb} to skip them on re-runs.}
 }
 
 \subtree{
@@ -56,12 +56,12 @@ python3 /path/to/onesec_setup.py
 \p{The script provides reusable WDA functions (no pip dependencies):}
 
 \ul{
-\li{\code{wda(method, path, data)} — raw HTTP to WDA}
-\li{\code{find(using, value)} / \code{find_one(using, value)} — element lookup}
-\li{\code{tap(element_id)} / \code{tap_name(name)} / \code{tap_label(label)} — tap elements}
-\li{\code{type_text(text)} — type into active element}
-\li{\code{swipe(x1, y1, x2, y2)} — drag gesture}
-\li{\code{screenshot(path)} — save screenshot as PNG}
+\li{\code{\startverbwda(method, path, data)\stopverb} — raw HTTP to WDA}
+\li{\code{\startverbfind(using, value)\stopverb} / \code{\startverbfind_one(using, value)\stopverb} — element lookup}
+\li{\code{\startverbtap(element_id)\stopverb} / \code{\startverbtap_name(name)\stopverb} / \code{\startverbtap_label(label)\stopverb} — tap elements}
+\li{\code{\startverbtype_text(text)\stopverb} — type into active element}
+\li{\code{\startverbswipe(x1, y1, x2, y2)\stopverb} — drag gesture}
+\li{\code{\startverbscreenshot(path)\stopverb} — save screenshot as PNG}
 }
 }
 
@@ -69,8 +69,8 @@ python3 /path/to/onesec_setup.py
 \title{Troubleshooting}
 \ul{
 \li{\strong{WDA connection refused}: Ensure xcodebuild test is running and port 8100 is reachable}
-\li{\strong{pymobiledevice3 tunnel timeout}: Restart tunnel with \code{sudo pymobiledevice3 remote start-tunnel}}
-\li{\strong{Element not found}: Check screenshots in \code{/tmp/onesec_fail_*} to see actual UI state}
+\li{\strong{pymobiledevice3 tunnel timeout}: Restart tunnel with \code{\startverbsudo pymobiledevice3 remote start-tunnel\stopverb}}
+\li{\strong{Element not found}: Check screenshots in \code{\startverb/tmp/onesec_fail_*\stopverb} to see actual UI state}
 \li{\strong{App not in picker}: App name must match exactly as shown on device home screen}
 }
 }

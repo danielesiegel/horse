@@ -18,7 +18,7 @@
 | **Soundscapes** | Boodler ambient audio mapped to major modes via UNIX socket | Continuous background audio |
 \stopverb}
 
-\p{On macOS with SwiftMac, \code{swiftmac-configure-tts} forces \code{emacspeak-play-program} to \code{nil}, routing ALL auditory icons through SwiftMac's OGG player. This is the sound you hear during normal editing.}
+\p{On macOS with SwiftMac, \code{\startverbswiftmac-configure-tts\stopverb} forces \code{\startverbemacspeak-play-program\stopverb} to \code{\startverbnil\stopverb}, routing ALL auditory icons through SwiftMac's OGG player. This is the sound you hear during normal editing.}
 }
 
 \subtree{
@@ -26,17 +26,17 @@
 \p{Emacspeak's designed mechanism for changing sounds:}
 
 \ol{
-\li{Create a directory under \code{~/emacspeak/sounds/<theme-name>/}}
-\li{Populate with \code{.ogg} files named after the 56 standard icons}
-\li{Call \code{(emacspeak-sounds-select-theme (expand-file-name "<theme-name>" emacspeak-sounds-dir))}}
+\li{Create a directory under \code{\startverb~/emacspeak/sounds/<theme-name>/\stopverb}}
+\li{Populate with \code{\startverb.ogg\stopverb} files named after the 56 standard icons}
+\li{Call \code{\startverb(emacspeak-sounds-select-theme (expand-file-name "<theme-name>" emacspeak-sounds-dir))\stopverb}}
 }
 
-\p{The cache rebuilds automatically. All playback paths (\code{emacspeak-icon}, \code{emacspeak-serve-icon}, \code{emacspeak-play-icon}, \code{emacspeak-queue-icon}) use the same cache.}
+\p{The cache rebuilds automatically. All playback paths (\code{\startverbemacspeak-icon\stopverb}, \code{\startverbemacspeak-serve-icon\stopverb}, \code{\startverbemacspeak-play-icon\stopverb}, \code{\startverbemacspeak-queue-icon\stopverb}) use the same cache.}
 }
 
 \subtree{
 \title{Current Installation}
-\p{Theme directory: \code{~/emacspeak/sounds/binaural/} Generated: 56 OGG files via SoX, each a distinct binaural beat.}
+\p{Theme directory: \code{\startverb~/emacspeak/sounds/binaural/\stopverb} Generated: 56 OGG files via SoX, each a distinct binaural beat.}
 
 \p{init.el config (after emacspeak loads):}
 
@@ -86,30 +86,30 @@ select-object shutdown task-done tick-tick time tock-tock unmodified-object
 voice-mail warn-user window-resize y-answer yank-object yes-answer
 \stopverb}
 
-\p{Missing icons fall back to \code{button.ogg} (via \code{emacspeak-sounds-cache-get} default).}
+\p{Missing icons fall back to \code{\startverbbutton.ogg\stopverb} (via \code{\startverbemacspeak-sounds-cache-get\stopverb} default).}
 }
 
 \subtree{
 \title{Key Pitfalls (Learned the Hard Way)}
 \subtree{
-\title{DO NOT override \code{dtk-tone} or \code{emacspeak-icon}}
+\title{DO NOT override \code{\startverbdtk-tone\stopverb} or \code{\startverbemacspeak-icon\stopverb}}
 \p{Function overrides fail silently on macOS because:}
 
 \ul{
-\li{\code{sox-gen-p} / \code{sox-play} are nil if \code{/Users/alice/.local/bin/} isn't in \code{exec-path} at \code{emacspeak-preamble.el} load time}
-\li{\code{start-process} with SoX \code{play} may not route audio correctly from within Emacs subprocesses}
-\li{The sound you hear is auditory icons (OGGs), NOT tones — overriding \code{dtk-tone} changes nothing audible}
+\li{\code{\startverbsox-gen-p\stopverb} / \code{\startverbsox-play\stopverb} are nil if \code{\startverb/Users/alice/.local/bin/\stopverb} isn't in \code{\startverbexec-path\stopverb} at \code{\startverbemacspeak-preamble.el\stopverb} load time}
+\li{\code{\startverbstart-process\stopverb} with SoX \code{\startverbplay\stopverb} may not route audio correctly from within Emacs subprocesses}
+\li{The sound you hear is auditory icons (OGGs), NOT tones — overriding \code{\startverbdtk-tone\stopverb} changes nothing audible}
 }
 }
 
 \subtree{
-\title{DO NOT set \code{SWIFTMAC_TONE_VOLUME=0.0}}
+\title{DO NOT set \code{\startverbSWIFTMAC_TONE_VOLUME=0.0\stopverb}}
 \p{This env var silences more than just pure tones. Remove it.}
 }
 
 \subtree{
-\title{DO NOT set \code{emacspeak-play-program} manually on macOS}
-\p{\code{swiftmac-configure-tts} sets it to \code{nil} during emacspeak startup. Fighting this breaks icon playback.}
+\title{DO NOT set \code{\startverbemacspeak-play-program\stopverb} manually on macOS}
+\p{\code{\startverbswiftmac-configure-tts\stopverb} sets it to \code{\startverbnil\stopverb} during emacspeak startup. Fighting this breaks icon playback.}
 }
 
 \subtree{
@@ -138,28 +138,28 @@ Warning icons (alarm, warn-user) → gamma beats 40+ Hz (attention)
 
 \subtree{
 \title{Longer/shorter durations}
-\p{Adjust \code{synth 0.15} — current is 150ms. Chimes default is ~100ms.}
+\p{Adjust \code{\startverbsynth 0.15\stopverb} — current is 150ms. Chimes default is ~100ms.}
 }
 
 \subtree{
 \title{Volume}
-\p{Adjust \code{gain -18} — lower values are quieter. Chimes use various gains.}
+\p{Adjust \code{\startverbgain -18\stopverb} — lower values are quieter. Chimes use various gains.}
 }
 }
 
 \subtree{
 \title{Related Emacspeak Systems}
 \ul{
-\li{\strong{sox-gen.el}: T.V. Raman's binaural beat module (\code{sox-tone-binaural}, \code{sox-binaural}). Standalone — NOT wired into the icon system. Use \code{M-x sox-binaural} for on-demand effects (sleep, dream, think, act, focus).}
-\li{\strong{soundscape.el}: Continuous ambient audio per major mode via Boodler. Separate from icons. Toggle with \code{M-x soundscape-toggle}.}
-\li{\strong{Sound themes}: \code{chimes/} (default), \code{3d/} (spatial). Switch interactively: \code{M-x emacspeak-sounds-select-theme}.}
+\li{\strong{sox-gen.el}: T.V. Raman's binaural beat module (\code{\startverbsox-tone-binaural\stopverb}, \code{\startverbsox-binaural\stopverb}). Standalone — NOT wired into the icon system. Use \code{\startverbM-x sox-binaural\stopverb} for on-demand effects (sleep, dream, think, act, focus).}
+\li{\strong{soundscape.el}: Continuous ambient audio per major mode via Boodler. Separate from icons. Toggle with \code{\startverbM-x soundscape-toggle\stopverb}.}
+\li{\strong{Sound themes}: \code{\startverbchimes/\stopverb} (default), \code{\startverb3d/\stopverb} (spatial). Switch interactively: \code{\startverbM-x emacspeak-sounds-select-theme\stopverb}.}
 }
 }
 
 \subtree{
 \title{Dependencies}
 \ul{
-\li{SoX (\code{sox} and \code{play} at \code{/Users/alice/.local/bin/})}
+\li{SoX (\code{\startverbsox\stopverb} and \code{\startverbplay\stopverb} at \code{\startverb/Users/alice/.local/bin/\stopverb})}
 \li{Emacspeak with SwiftMac TTS server}
 \li{macOS (SwiftMac is macOS-only via AVSpeechSynthesizer)}
 }

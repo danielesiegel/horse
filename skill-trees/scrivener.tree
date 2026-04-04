@@ -13,7 +13,7 @@
 \subtree{
 \title{When to use this skill}
 \ul{
-\li{Parsing or inspecting \code{.scriv} project bundles (XML, RTF, metadata)}
+\li{Parsing or inspecting \code{\startverb.scriv\stopverb} project bundles (XML, RTF, metadata)}
 \li{Querying a DuckDB export of Scrivener data (documents, content, labels)}
 \li{Extracting manuscript text, character info, or synopses programmatically}
 \li{Migrating projects across Scrivener versions or platforms (Windows ↔ macOS)}
@@ -23,7 +23,7 @@
 
 \subtree{
 \title{File Format: .scriv Bundle}
-\p{A \code{.scriv} project is a directory. On macOS it displays as a single file (document package); on Windows it's a regular folder.}
+\p{A \code{\startverb.scriv\stopverb} project is a directory. On macOS it displays as a single file (document package); on Windows it's a regular folder.}
 
 \pre{\startverb
 MyProject.scriv/
@@ -68,10 +68,10 @@ MyProject.scriv/
 \subtree{
 \title{Windows → macOS migration}
 \ul{
-\li{\code{.scriv} folder on Windows is a regular directory; on macOS it becomes a document package (UTI: \code{com.literatureandlatte.scrivener3.scriv})}
-\li{Copy the entire \code{.scriv} folder to macOS and open with Scrivener 3 — it auto-upgrades}
-\li{The \code{Creator} attribute in \code{.scrivx} preserves origin: \code{SCRWIN-3.1.5.1} means Windows Scrivener 3.1.5.1}
-\li{\code{ui.ini} stores platform-specific UI state; \code{ui-common.xml} stores cross-platform state}
+\li{\code{\startverb.scriv\stopverb} folder on Windows is a regular directory; on macOS it becomes a document package (UTI: \code{\startverbcom.literatureandlatte.scrivener3.scriv\stopverb})}
+\li{Copy the entire \code{\startverb.scriv\stopverb} folder to macOS and open with Scrivener 3 — it auto-upgrades}
+\li{The \code{\startverbCreator\stopverb} attribute in \code{\startverb.scrivx\stopverb} preserves origin: \code{\startverbSCRWIN-3.1.5.1\stopverb} means Windows Scrivener 3.1.5.1}
+\li{\code{\startverbui.ini\stopverb} stores platform-specific UI state; \code{\startverbui-common.xml\stopverb} stores cross-platform state}
 \li{QuickLook/ only generated on macOS}
 \li{Line endings in RTF may differ (CRLF from Windows, LF on macOS) — both parse correctly}
 }
@@ -85,7 +85,7 @@ MyProject.scriv/
 
 \subtree{
 \title{.scrivx XML Schema}
-\p{The \code{.scrivx} file is the master index:}
+\p{The \code{\startverb.scrivx\stopverb} file is the master index:}
 
 \pre{\startverb
 <?xml version="1.0" encoding="UTF-8"?>
@@ -149,10 +149,10 @@ MyProject.scriv/
 
 \subtree{
 \title{Document Content Storage}
-\p{Each document's UUID maps to \code{Files/Data/<UUID>/}:}
+\p{Each document's UUID maps to \code{\startverbFiles/Data/<UUID>/\stopverb}:}
 
 \ul{
-\li{\strong{content.rtf}: Body text. Contains inline annotations via \code{\{\Scrv_fn=...\}} custom tags.}
+\li{\strong{content.rtf}: Body text. Contains inline annotations via \code{\startverb{\Scrv_fn=...}\stopverb} custom tags.}
 \li{\strong{notes.rtf}: Inspector notes pane.}
 \li{\strong{synopsis.txt}: Plain text synopsis (corkboard cards).}
 \li{\strong{snapshot-YYYY-MM-DD-HH-MM-SS.rtf}: Version snapshots.}
@@ -161,7 +161,7 @@ MyProject.scriv/
 
 \subtree{
 \title{Color Values}
-\p{Colors in \code{.scrivx} are space-separated RGB floats (0.0–1.0):}
+\p{Colors in \code{\startverb.scrivx\stopverb} are space-separated RGB floats (0.0–1.0):}
 
 \pre{\startverb
 # "0.952941 0.917647 0.329412" → #F3EB54
@@ -172,10 +172,10 @@ hex_color = f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
 
 \subtree{
 \title{DuckDB Export Schema}
-\p{When exported to DuckDB (via \code{build_sun_org.py} or similar):}
+\p{When exported to DuckDB (via \code{\startverbbuild_sun_org.py\stopverb} or similar):}
 
 \subtree{
-\title{\code{documents}}
+\title{\code{\startverbdocuments\stopverb}}
 \pre{\startverb
 CREATE TABLE documents (
     project VARCHAR,          -- e.g. '☼'
@@ -194,7 +194,7 @@ CREATE TABLE documents (
 }
 
 \subtree{
-\title{\code{content}}
+\title{\code{\startverbcontent\stopverb}}
 \pre{\startverb
 CREATE TABLE content (
     project VARCHAR,
@@ -209,14 +209,14 @@ CREATE TABLE content (
 }
 
 \subtree{
-\title{\code{labels}, \code{statuses}, \code{comments}}
+\title{\code{\startverblabels\stopverb}, \code{\startverbstatuses\stopverb}, \code{\startverbcomments\stopverb}}
 \pre{\startverb
 CREATE TABLE labels (project VARCHAR, label_id INT, name VARCHAR, color VARCHAR);
 CREATE TABLE statuses (project VARCHAR, status_id INT, name VARCHAR);
 CREATE TABLE comments (project VARCHAR, uuid VARCHAR, comment_text TEXT, position INT);
 \stopverb}
 
-\p{Additional tables: \code{collections}, \code{bookmarks}, \code{styles}, \code{section_types}, \code{projects}.}
+\p{Additional tables: \code{\startverbcollections\stopverb}, \code{\startverbbookmarks\stopverb}, \code{\startverbstyles\stopverb}, \code{\startverbsection_types\stopverb}, \code{\startverbprojects\stopverb}.}
 }
 }
 
@@ -259,11 +259,11 @@ clean = re.sub(r'\{\\Scrv_fn=.*?\\end_Scrv_fn\}', '', body)
 \subtree{
 \title{RTF Content Notes}
 \ul{
-\li{\strong{Inline annotations}: \code{\{\Scrv_fn=footnote ...text... \end_Scrv_fn\}}}
-\li{\strong{Comments}: Stored in \code{comments} table with position offsets}
-\li{\strong{Styles}: Referenced by name from \code{styles.xml}}
-\li{\strong{Images}: Embedded as RTF \code{\pict} objects or referenced externally}
-\li{\strong{Links}: Internal links use \code{scrivener://} protocol with UUID targets}
+\li{\strong{Inline annotations}: \code{\startverb{\Scrv_fn=footnote ...text... \end_Scrv_fn}\stopverb}}
+\li{\strong{Comments}: Stored in \code{\startverbcomments\stopverb} table with position offsets}
+\li{\strong{Styles}: Referenced by name from \code{\startverbstyles.xml\stopverb}}
+\li{\strong{Images}: Embedded as RTF \code{\startverb\pict\stopverb} objects or referenced externally}
+\li{\strong{Links}: Internal links use \code{\startverbscrivener://\stopverb} protocol with UUID targets}
 }
 }
 
@@ -310,24 +310,24 @@ def character_chunks(char_name: str) -> list:
 
 \subtree{
 \title{Verify it worked}
-\p{After parsing a \code{.scriv} project:}
+\p{After parsing a \code{\startverb.scriv\stopverb} project:}
 
 \ol{
-\li{Check that the \code{.scrivx} XML parses and contains \code{<Binder>} with at least one \code{<BinderItem>}}
-\li{Verify UUID directories exist under \code{Files/Data/} for documents listed in the binder}
-\li{Confirm \code{content.rtf} files are valid RTF (start with \code{\{\rtf1})}
-\li{If using DuckDB export: \code{SELECT count(*) FROM documents} should match binder item count}
+\li{Check that the \code{\startverb.scrivx\stopverb} XML parses and contains \code{\startverb<Binder>\stopverb} with at least one \code{\startverb<BinderItem>\stopverb}}
+\li{Verify UUID directories exist under \code{\startverbFiles/Data/\stopverb} for documents listed in the binder}
+\li{Confirm \code{\startverbcontent.rtf\stopverb} files are valid RTF (start with \code{\startverb{\rtf1\stopverb})}
+\li{If using DuckDB export: \code{\startverbSELECT count(*) FROM documents\stopverb} should match binder item count}
 }
 }
 
 \subtree{
 \title{What not to do}
 \ul{
-\li{Don't modify \code{.scriv} files while Scrivener has the project open — it uses file locks}
+\li{Don't modify \code{\startverb.scriv\stopverb} files while Scrivener has the project open — it uses file locks}
 \li{Don't assume synopsis or notes fields are populated — many projects leave them empty}
 \li{Don't parse RTF with regex for anything beyond stripping Scrivener tags — use a real RTF parser for styled content}
-\li{Don't assume macOS package structure on Windows — \code{.scriv} is just a folder there}
-\li{Don't delete \code{docs.checksum} — Scrivener uses it for integrity verification on open}
+\li{Don't assume macOS package structure on Windows — \code{\startverb.scriv\stopverb} is just a folder there}
+\li{Don't delete \code{\startverbdocs.checksum\stopverb} — Scrivener uses it for integrity verification on open}
 }
 }
 

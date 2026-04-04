@@ -6,14 +6,14 @@
 
 \subtree{
 \title{Skill Repo Sync}
-\p{Manages the flow between local skill directories and the upstream \code{plurigrid/asi} repo.}
+\p{Manages the flow between local skill directories and the upstream \code{\startverbplurigrid/asi\stopverb} repo.}
 
 \subtree{
 \title{Directories}
 \ul{
-\li{\strong{Upstream}: \code{/Users/alice/v/asi/skills/}}
-\li{\strong{Local sources}: \code{~/.claude/skills/}, \code{~/v/.agents/skills/}, \code{~/.codex/skills/}, \code{~/.config/goose/skills/}, \code{~/.copilot/skills/}, \code{~/.openhands/skills/}}
-\li{\strong{Standalone}: \code{~/repos/skills/skill-codex/}, \code{~/ies/mcp/topos/}, \code{~/v/gay-terminal-colors/}}
+\li{\strong{Upstream}: \code{\startverb/Users/alice/v/asi/skills/\stopverb}}
+\li{\strong{Local sources}: \code{\startverb~/.claude/skills/\stopverb}, \code{\startverb~/v/.agents/skills/\stopverb}, \code{\startverb~/.codex/skills/\stopverb}, \code{\startverb~/.config/goose/skills/\stopverb}, \code{\startverb~/.copilot/skills/\stopverb}, \code{\startverb~/.openhands/skills/\stopverb}}
+\li{\strong{Standalone}: \code{\startverb~/repos/skills/skill-codex/\stopverb}, \code{\startverb~/ies/mcp/topos/\stopverb}, \code{\startverb~/v/gay-terminal-colors/\stopverb}}
 }
 }
 
@@ -21,13 +21,13 @@
 \title{Operations}
 \subtree{
 \title{Find what needs pushing}
-\p{Use \code{skill-finder-verifier} first:}
+\p{Use \code{\startverbskill-finder-verifier\stopverb} first:}
 
 \pre{\startverb
 python3 ~/.claude/skills/skill-finder-verifier/scripts/finder.py scan
 \stopverb}
 
-\p{Skills classified as \code{local-only} are candidates for pushing.}
+\p{Skills classified as \code{\startverblocal-only\stopverb} are candidates for pushing.}
 }
 
 \subtree{
@@ -70,7 +70,7 @@ git push --force origin main
 
 \subtree{
 \title{Keep a skill local-only (no purge needed)}
-\p{Just add to \code{.gitignore}:}
+\p{Just add to \code{\startverb.gitignore\stopverb}:}
 
 \pre{\startverb
 echo "skills/skill-name/" >> /Users/alice/v/asi/.gitignore
@@ -83,19 +83,19 @@ echo "skills/skill-name/" >> /Users/alice/v/asi/.gitignore
 \p{When pushing skills, review and fix them inline — never report issues without fixing them. skill-creator criteria take priority:}
 
 \ul{
-\li{SKILL.md with YAML frontmatter (\code{name}, \code{description} with trigger words). No extra fields.}
+\li{SKILL.md with YAML frontmatter (\code{\startverbname\stopverb}, \code{\startverbdescription\stopverb} with trigger words). No extra fields.}
 \li{Under 500 lines. Only context Claude doesn't already have.}
 \li{No human-oriented content: no README, prerequisites, pip install, "Learn More", difficulty ratings, estimated times.}
 \li{No textbook definitions or standard algorithms Claude already knows.}
 \li{No GF(3) trit assignment sections, SDF interleaving, or philosophical decoration.}
 \li{Ground all APIs to actual file paths and commands. No aspirational/unimplemented interfaces.}
-\li{File must be named \code{SKILL.md}, not \code{instructions.md} or anything else.}
+\li{File must be named \code{\startverbSKILL.md\stopverb}, not \code{\startverbinstructions.md\stopverb} or anything else.}
 }
 }
 
 \subtree{
 \title{GPG Note}
-\p{GPG signing is not available on this machine. Use \code{git -c commit.gpgsign=false commit} for commits.}
+\p{GPG signing is not available on this machine. Use \code{\startverbgit -c commit.gpgsign=false commit\stopverb} for commits.}
 }
 
 \subtree{
