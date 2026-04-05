@@ -57,14 +57,8 @@
           installPhase = ''
             mkdir -p $out
             cp -r output/* $out/
-            cp $out/index.xml $out/index.html.bak 2>/dev/null || true
-            cat > $out/_redirects <<'EOF'
-            / /index.xml 200
-            EOF
-            cat > $out/_headers <<'EOF'
-            /index.xml
-              Content-Type: application/xml
-            EOF
+            echo "/ /index.xml 200" > $out/_redirects
+            printf "/index.xml\n  Content-Type: application/xml\n/*.xml\n  Content-Type: application/xml\n" > $out/_headers
           '';
         };
         default = forest;
