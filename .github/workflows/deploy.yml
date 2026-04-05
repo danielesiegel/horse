@@ -64,7 +64,7 @@ jobs:
         run: nix build --print-build-logs
 
   deploy:
-    needs: [build, build-localcharts]
+    needs: [build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-24.04
     environment: production
