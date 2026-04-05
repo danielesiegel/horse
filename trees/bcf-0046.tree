@@ -1,0 +1,163 @@
+\title{Type Erasure: Git vs Pijul on Transcluded Forests}
+\date{2026-04-04}
+\taxon{theory}
+\author{barton-rhodes}
+\tag{version-control}
+\tag{type-theory}
+\tag{transclusion}
+
+\import{macros}
+
+\p{Git erases the categorical structure of transclusion. Pijul's patch theory preserves it. This tree documents exactly what is lost in our 829-link, 265-tree forest.}
+
+\subtree{\title{What git sees}
+\p{The 3-commit session that created 96 scan trees with 829 \code{\\ref\{\}} links is stored as:}
+\pre{\startverb
+commit 4e84008
+  tree: <sha256>           -- a snapshot, not a delta
+  diff: Hunk[]             -- reconstructed, not stored
+    Hunk = { path: Path, range: (Int, Int), content: Byte[] }
+\stopverb}
+
+\p{Every hunk has the same type: bytes at a line range in a file. Git does not know:}
+\ol{
+\li{That \code{\\ref\{scan-0090\}} is a \strong{morphism} in the forest graph, not a string.}
+\li{That \code{\\meta\{trit\}\{-1\}} is a \strong{GF(3) value}, not text.}
+\li{That the 96 scan trees form a \strong{presheaf} over 12 repo-grouped components.}
+\li{That the 18 structural links preserve a \strong{conservation law}.}
+\li{That sibling groups are \strong{equivalence classes}, not "files in one commit".}
+}
+\p{The functor \code{Forest → Git} is forgetful. It has no left adjoint. You cannot reconstruct the transclusion graph from the diff.}
+}
+
+\subtree{\title{What pijul would see}
+\p{Pijul (Mimram–Di Giusto 2013, Sanadhya 2020) stores patches as typed operations on a \strong{directed graph of lines}:}
+
+\pre{\startverb
+-- Pijul's actual patch algebra
+data PatchOp
+  = NewVertex  VertexId Bytes [Edge] [Edge]
+  | EdgeDel    VertexId VertexId
+
+-- Typed extension for forester forests
+data ForestOp
+  = AddTree    TreeId Taxon (Map String Value)
+  | AddRef     TreeId TreeId RefKind
+  | SetMeta    TreeId String Value
+  | AddTag     TreeId Tag
+
+data RefKind
+  = Sibling            -- scan-0090 ↔ scan-0091
+  | StructuralLink     -- scan-0090 → bcf-0044
+  | IndexEntry         -- scan-0090 → scan-0000
+  | StationContext     -- scan-0090 → bcf-0043
+
+data Taxon  = Scan | Design | Theory | Implementation | Index
+data Value  = Trit Int | Vertices Int | Format String | Path FilePath
+\stopverb}
+
+\p{The critical difference: \code{RefKind} is a type that \strong{commutation respects}. Two patches that add different RefKind edges to the same tree commute — pijul merges them automatically. Git may conflict on line adjacency.}
+}
+
+\subtree{\title{The commutation failure}
+
+\pre{\startverb
+-- Alice: adds structural link
+patch_A = AddRef "scan-0090" "bcf-0044" StructuralLink
+
+-- Bob: adds sibling link
+patch_B = AddRef "scan-0090" "scan-0093" Sibling
+\stopverb}
+
+\table{
+\tr{\th{VCS}\th{Adjacent lines}\th{Non-adjacent lines}}
+\tr{\td{Git (A,B independent)}\td{FALSE CONFLICT}\td{Silent merge (correct by luck)}}
+\tr{\td{Git (A,B conflicting)}\td{Conflict (correct)}\td{SILENT CORRUPTION}}
+\tr{\td{Pijul (A,B commute)}\td{Auto-merge}\td{Auto-merge}}
+\tr{\td{Pijul (A,B don't commute)}\td{Conflict}\td{Conflict}}
+}
+
+\p{Git's merge decision depends on \strong{line proximity} — a topological property of the text layout. Pijul's depends on \strong{operation independence} — a semantic property of the graph. Type erasure converts a semantic decision into a geometric coin flip.}
+}
+
+\subtree{\title{The conservation invariant git cannot enforce}
+
+\pre{\startverb
+-- Dependent type for station triad
+StationTriad : Type
+StationTriad = (a : Scan × b : Scan × c : Scan ×
+                proof : trit(a) + trit(b) + trit(c) ≡ 0 mod 3)
+
+-- Git stores: three files with text "\meta{trit}{-1}", "\meta{trit}{0}", "\meta{trit}{+1}"
+-- Pijul + ForestOp: a patch that changes trit(a) from -1 to 0
+--   DOES NOT COMMUTE with the StationTriad invariant
+--   until trit(b) or trit(c) is adjusted to restore sum = 0
+\stopverb}
+
+\p{When someone changes \code{\\meta\{trit\}\{-1\}} to \code{\\meta\{trit\}\{0\}}, git sees a line edit. Pijul with typed patches sees a \code{SetMeta} that breaks the triad constraint — merge is blocked until conservation is restored.}
+}
+
+\subtree{\title{The five erased types}
+\table{
+\tr{\th{Structure}\th{Git type}\th{True type}\th{Erasure effect}}
+\tr{\td{\code{\\ref\{X\}}}\td{Byte[]}\td{Morphism (forest graph edge)}\td{Dangling refs undetected}}
+\tr{\td{\code{\\meta\{trit\}}}\td{Byte[]}\td{GF(3) element}\td{Conservation violations pass}}
+\tr{\td{Sibling group}\td{Files in commit}\td{Equivalence class}\td{Regrouping destroys provenance}}
+\tr{\td{Structural link}\td{Line in file}\td{Typed edge (RefKind)}\td{Semantic conflicts invisible}}
+\tr{\td{Taxon}\td{Text string}\td{Sum type}\td{Taxon change skips revalidation}}
+}
+}
+
+\subtree{\title{Concrete example from this session}
+\p{Our three commits:}
+\pre{\startverb
+C1: AddTree(scan-0001..0095) + AddRef(*, scan-0000, IndexEntry)
+      + AddRef(*, bcf-0043, StationContext)
+    -- 96 trees, ~580 refs
+    -- Git: 98 new files, 2871 text insertions
+
+C2: AddTree(bci-roomscan/*) -- 4 source files
+    -- Git: 4 new files, 675 text insertions
+    -- No forest ops — these are code, not trees
+
+C3: AddRef(scan-0007, bcf-0037, StructuralLink)
+    + AddRef(scan-0090, bcf-0044, StructuralLink)
+    + ... (18 structural links)
+    -- Git: 19 files modified, 141 text insertions
+\stopverb}
+
+\p{Git stores C1, C2, C3 as three points in a poset (DAG). They cannot be reordered. But C1 and C3 are \strong{semantically sequential} (C3 adds edges to trees created in C1), while C2 is \strong{semantically independent} (code files, not trees). Pijul would allow C2 to commute past C1 and C3 freely. Git locks C2 into position between C1 and C3 because it happened to be committed second.}
+
+\p{If someone rebases C2 before C1, git must replay text patches — which might conflict on the directory listing. Pijul would recognize that C2's operations (AddTree of code files) are independent of C1's operations (AddTree of .tree files + AddRef) and commute them without conflict.}
+}
+
+\subtree{\title{Recovery: semantic-git shim}
+\p{Short of migrating to pijul, we recover type information at the boundary:}
+\ol{
+\li{\strong{Pre-commit hook}: parse all \code{.tree} files, extract \code{\\ref\{\}} targets, verify no dangling refs.}
+\li{\strong{Pre-commit hook}: check GF(3) conservation for any \code{trit-*} tagged tree group sharing a parent.}
+\li{\strong{Post-merge hook}: diff the transclusion graph (not the text). Flag silently dropped edges.}
+\li{\strong{Custom diff driver}: display \code{+ref(scan-0090 → bcf-0044, StructuralLink)} instead of raw text.}
+}
+\p{This reconstructs a \strong{section} of the forgetful functor. The functor \code{Forest → Git} has no left adjoint, but we can build a right inverse that recovers types from syntactic convention. Pijul doesn't need this section because it never forgets.}
+}
+
+\subtree{\title{The categorical picture}
+\pre{\startverb
+Pijul:  Patch groupoid on PSh(Site)
+          |
+          | forgetful (type erasure)
+          ↓
+Git:    Commit poset on Set
+
+PSh(Site) ──forget──→ Set
+    ↑                   |
+    |  section (hooks)  |
+    └───────────────────┘
+
+The section is partial: hooks recover RefKind and GF(3)
+but cannot recover commutation — that requires the groupoid.
+\stopverb}
+
+\p{The forester forest is a presheaf on a site (tree transclusion = covering sieve). Pijul's patch groupoid is the natural VCS for presheaves. Git's commit poset is the natural VCS for sets. Using git for a presheaf-structured forest is like using a monoid where you need a group — you can compute forward but you can't invert.}
+}
