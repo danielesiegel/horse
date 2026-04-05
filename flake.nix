@@ -57,8 +57,13 @@
           installPhase = ''
             mkdir -p $out
             cp -r output/* $out/
-            echo "/ /index.xml 200" > $out/_redirects
             printf "/index.xml\n  Content-Type: application/xml\n/*.xml\n  Content-Type: application/xml\n" > $out/_headers
+            cat > $out/index.html <<EOHTML
+            <!DOCTYPE html><html><head>
+            <script>window.location.replace("index.xml");</script>
+            <noscript><meta http-equiv="refresh" content="0;url=index.xml"></noscript>
+            </head><body></body></html>
+            EOHTML
           '';
         };
         default = forest;
