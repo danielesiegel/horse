@@ -57,12 +57,13 @@
           installPhase = ''
             mkdir -p $out
             cp -r output/* $out/
-            cat > $out/index.html <<'EOF'
-            <!DOCTYPE html>
-            <html>
-            <head><meta http-equiv="refresh" content="0; url=index.xml"></head>
-            <body><a href="index.xml">Redirecting to bci.horse...</a></body>
-            </html>
+            cp $out/index.xml $out/index.html.bak 2>/dev/null || true
+            cat > $out/_redirects <<'EOF'
+            / /index.xml 200
+            EOF
+            cat > $out/_headers <<'EOF'
+            /index.xml
+              Content-Type: application/xml
             EOF
           '';
         };
