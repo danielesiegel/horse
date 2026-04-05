@@ -309,6 +309,7 @@ that is NOT its natural occupant."
 
 (defvar pluri-tree-search-dirs
   (list (expand-file-name "trees/" pluri-horse-root)
+        (expand-file-name "skill-trees/" pluri-horse-root)
         (expand-file-name "stacks-trees/" pluri-horse-root)
         (expand-file-name "localcharts/forest/trees/" pluri-horse-root)
         (expand-file-name "bci/stages/" pluri-horse-root))

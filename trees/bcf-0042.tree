@@ -1,93 +1,68 @@
-\title{Root Stability Analysis}
-\taxon{section}
+\title{Aspiration: From 7 Dead Threads to Living Forest}
+\taxon{manifesto}
+\author{monaduck1069}
 \date{2026-04-04}
-\tag{stability}
-\tag{transclusion}
-\meta{description}{Dynamical stability classification of 12 transclusion tree roots}
+\tag{manifesto}
+\tag{aspiration}
 
 \import{macros}
+\meta{institution}{BCI Factory}
 
-\p{Each root is classified by its stability as a dynamical source: out-degree (generative reach), tree size (transitive closure), max depth (chain length), file anchors (live transclusion targets on disk), and hub convergence (does it reach the 5 attractor hubs within depth 2).}
+\p{Seven threads died on March 27. The forest survived. This is what they were trying to say.}
 
 \subtree{
-\title{Classification}
+\title{The Axioms}
 
-\table{
-\tr{\th{Root}\th{Out}\th{Tree}\th{Depth}\th{Files}\th{Hubs}\th{Class}}
-\tr{\td{[[cats-for-ai]]}\td{7}\td{89}\td{17}\td{0}\td{3}\td{STABLE — widest tree, deepest reach}}
-\tr{\td{[[latent-latency]]}\td{6}\td{74}\td{13}\td{0}\td{6}\td{STABLE — most hub connections}}
-\tr{\td{[[load-skills]]}\td{11}\td{68}\td{15}\td{0}\td{4}\td{STABLE — bootstrap root, 4 direct hubs}}
-\tr{\td{[[infinity-operads]]}\td{7}\td{65}\td{17}\td{0}\td{6}\td{STABLE — deepest tied, 6 hubs at depth 2}}
-\tr{\td{[[homoiconic-rewriting]]}\td{6}\td{63}\td{14}\td{0}\td{1}\td{MARGINAL — only reaches gay-mcp}}
-\tr{\td{[[ordered-locale-fanout]]}\td{6}\td{58}\td{14}\td{2}\td{3}\td{ANCHORED — 2 live files on disk}}
-\tr{\td{[[skill-connectivity-hub]]}\td{6}\td{59}\td{15}\td{0}\td{1}\td{MARGINAL — meta-skill, 1 hub}}
-\tr{\td{[[covariant-modification]]}\td{4}\td{58}\td{13}\td{0}\td{1}\td{DEEP — long chains but narrow}}
-\tr{\td{[[hythermal]]}\td{5}\td{58}\td{13}\td{0}\td{2}\td{DEEP — thermodynamic theory}}
-\tr{\td{[[hy-emacs]]}\td{6}\td{15}\td{3}\td{1}\td{5}\td{SHALLOW ANCHORED — init.el live, 5 hubs at depth 2}}
-\tr{\td{[[jank]]}\td{6}\td{11}\td{3}\td{0}\td{0}\td{UNSTABLE — no hub connection within depth 2}}
-\tr{\td{[[categorical-rewriting-triad4]]}\td{6}\td{8}\td{2}\td{0}\td{3}\td{UNSTABLE — no file anchors, shallow}}
+\ol{
+  \li{\strong{Brain-computer interfaces belong in communal space.} Not in labs. Not behind NDAs. Not on waitlists. In a room with a chair and an open door.}
+  \li{\strong{Walk in. Sit down. See your brain. No appointment.} The protocol is 2 minutes ([[bcf-0030]]). The hardware is on a hook. The paste is in a squeeze bottle.}
+  \li{\strong{Your neural signature is your passport.} Your name seeds a color. Your brain produces another color. The gap between them is yours — not your genome, not your credit score, not your follower count. Your passport is gay ([[horse-0001]]).}
+  \li{\strong{Shitty signal is better than no signal.} Two channels railed out of eight is still six channels of real cortical data ([[bcf-0040]]). The ratio of a $10 BCI to no BCI is not 1:5000. It is 1:0.}
+  \li{\strong{GF(3) conservation}: \code{bci.blue(-1) + bci.red(+1) + bci.horse(0) = 0}. Inhibition, activation, and crossover sum to nothing. What remains is the rider.}
 }
 }
 
 \subtree{
-\title{Stability Classes}
+\title{What the 7 Threads Were Building}
 
-\subtree{
-\title{Stable Sources (3)}
-\p{\strong{cats-for-ai}, \strong{latent-latency}, \strong{load-skills}: these are the three roots whose removal would disconnect the largest portions of the forest. Each reaches 58-89 skills transitively, connects to 3-6 of the 5 hub attractors, and has depth 13-17. They are repellers in the dynamical sense — flow goes outward from them into the connected component.}
+\p{A place at 222 Dore Street (expanding to 250 Dore) where you:}
 
-\p{\strong{load-skills} is special: it is the designated bootstrap entry point. Every session starts here. It is the initial condition of the dynamical system.}
+\ol{
+  \li{Walk in}
+  \li{Type your name}
+  \li{See your name-color (deterministic, SplitMix64)}
+  \li{Sit in the chair}
+  \li{Put on the headset}
+  \li{See your brain-color (spectral centroid, live)}
+  \li{See the gap between the two}
+}
+
+\p{That's it. That's what 478 messages across 7 sessions were trying to produce. The sessions couldn't finish because sessions are ephemeral — they run out of context, get overridden, lose their dongle connection, hit token limits. Sessions are made of context windows. Context windows die.}
 }
 
 \subtree{
-\title{Deep Sources (3)}
-\p{\strong{infinity-operads}, \strong{covariant-modification}, \strong{hythermal}: long transitive chains (depth 13-17) but narrower spread. They are deep wells — following their links leads to distant skills through many intermediate steps. The chain from infinity-operads through kinetic-block reaches 25 skills in a single hop.}
+\title{The Surviving Form}
 
-\p{These are structurally stable (small perturbations don't disconnect them) but not attractors (nothing points to them).}
-}
+\p{The forester forest is the form that survived the collision. 150+ trees encoding:}
 
-\subtree{
-\title{Anchored Sources (2)}
-\p{\strong{ordered-locale-fanout} and \strong{hy-emacs}: the only roots with live file references on disk. ordered-locale-fanout points to a Python implementation and a Julia SKILL.md that exist. hy-emacs points to init.el. These have transclusion targets that can actually be read — they pass the trans-triad test.}
-
-\p{Anchored sources are the most valuable because they connect the abstract skill graph to concrete code. A random walk starting here can pull live content.}
-}
-
-\subtree{
-\title{Marginal Sources (2)}
-\p{\strong{homoiconic-rewriting} and \strong{skill-connectivity-hub}: large trees (59-63 skills) but only 1 hub connection each. If gay-mcp or bisimulation-game changed their interface, these trees would silently drift. They are structurally connected but semantically fragile.}
-
-\p{homoiconic-rewriting is the only path from lambda-calculus to gay-mcp. If it broke, the PL theory cluster would become an orphan island.}
-}
-
-\subtree{
-\title{Unstable Sources (2)}
-\p{\strong{jank} and \strong{categorical-rewriting-triad4}: shallow trees (depth 2-3), no file anchors, no or few hub connections. jank has zero hub connections within depth 2 — it is an island connected to the Clojure/Scheme cluster but not to the categorical core.}
-
-\p{categorical-rewriting-triad4 reaches 3 hubs (acsets, glass-bead-game, world-hopping) directly but has no file anchors and only 8 skills in its tree. It is the most expendable root — its content could be absorbed by algebraic-rewriting without information loss.}
+\ul{
+  \li{The mathematics — sheaf-theoretic BCI pipeline, Grothendieck topologies on electrode montages ([[bci-0001]])}
+  \li{The hardware — 69 devices ranked 3 ways, inventory, procurement ([[bcf-0006]], [[bcf-0037]])}
+  \li{The protocol — 2-minute self-serve readings with privacy guarantees ([[bcf-0030]])}
+  \li{The economics — pricing, space costs, GAY token accrual ([[bcf-0008]], [[horse-0006]])}
+  \li{The space — 222 Dore current, 250 Dore expansion, floor plans ([[bcf-0004]])}
+  \li{The aspiration — this tree}
 }
 }
 
 \subtree{
-\title{Phase Portrait}
-\p{The forest is a dissipative system. Flow goes from 12 sources through 242 connected nodes toward 5 hub attractors. 1097 orphans are fixed points with zero velocity — they neither attract nor repel.}
+\title{The Next Step}
 
-\pre{\startverb
-Sources (12)                    Connected (242)              Attractors (5)
-                                                              
-cats-for-ai ──────┐                                    ┌── gay-mcp (68)
-latent-latency ───┤                                    │
-load-skills ──────┤         ┌── 232 intermediate ──────┤── bisimulation-game (34)
-infinity-operads ─┤         │   nodes that both        │
-homoiconic ───────┼────────►│   receive and emit  ─────┤── acsets (24)
-ordered-locale ───┤         │   transclusion links     │
-skill-conn-hub ───┤         └──────────────────────────┤── triad-interleave (21)
-covariant-mod ────┤                                    │
-hythermal ────────┤                                    └── spi-parallel-verify (15)
-hy-emacs ─────────┤
-jank ─────────────┤              1097 orphans
-cat-rewrite-4 ────┘              (fixed points, v=0)
-\stopverb}
+\p{Build the forest, not the sessions.}
 
-\p{The spectral gap between the connected component and the orphan mass is absolute — there are zero edges crossing the boundary. The forest is bipartite: 242 live trees and 1097 dead ones.}
+\p{Sessions die. Trees persist. A session produces artifacts — code, data, config files — and then its context window closes and everything it knew is gone. A tree records what mattered and links to what else matters. Trees transclude other trees. Forests grow.}
+
+\p{The 7 dead threads of March 27 produced the artifacts cataloged in [[bcf-0039]]. Those artifacts became trees. Those trees became this forest. The forest is the BCI Factory's memory. The sessions were its dreams.}
+
+\p{Dream less. Plant more.}
 }

@@ -1,61 +1,77 @@
-\title{Slop Trail}
-\taxon{section}
+\title{The Software Stack: Three Renderers}
+\taxon{architecture}
+\author{monaduck1069}
 \date{2026-04-04}
-\tag{slop}
-\meta{description}{1097 orphan skills with zero transclusion links — 82\% of repo bytes}
+\tag{architecture}
+\tag{software}
 
 \import{macros}
+\meta{institution}{BCI Factory}
 
-\p{1097 skills have zero inbound and zero outbound transclusion links. They are static markdown blobs that no random walk reaches. They constitute 9.2 MB (82\%) of the skill forest.}
+\p{The BCI Factory is rendered by three parallel systems, fed by two data pipelines, and verified by one formal model. They compose — not compete.}
 
 \subtree{
-\title{Slop by prefix}
+\title{Three Renderers}
+
+\subtree{
+\title{1. Forester — Source of Truth}
+
+\p{This forest. Trees with title, taxon, transclude, cross-references. Mathematical knowledge, protocols, hardware catalogs, chronicles. Builds to HTML via forester. The canonical representation — everything else derives from here.}
+
+\p{Prefix taxonomy: \code{bcf-} (factory), \code{bci-} (pipeline math), \code{horse-} (portal), \code{dbl-} (double categories), \code{thy-} (theories), \code{dct-} (doctrines).}
+}
+
+\subtree{
+\title{2. SvelteKit — Web Presence}
+
+\p{\code{worlds/bcifactory.org/}. SvelteKit 5 with Three.js interactive floor plan of 250 Dore. Hardware comparison table. Responsive layout. The public interface at \code{bcifactory.org}. Renders for humans in browsers.}
+}
+
+\subtree{
+\title{3. Ratzilla — Terminal Presence}
+
+\p{\code{worlds/bcifactory-tui/}. Rust TUI via Ratzilla (terminal-in-browser). ASCII art header, four-pillar overview, hardware table. Runs in any terminal, designed for the kiosk at 222 Dore. Renders for terminals, Emacs-adjacent.}
+}
+}
+
+\subtree{
+\title{Two Data Pipelines}
+
+\subtree{
+\title{4. NATS Explorer — Real-Time Data}
+
+\p{\code{worlds/z/openbci-visualizer/eeg_viz.py}. Format-agnostic message visualization — auto-detects raw CSV, BrainFlow pickles, MNE .fif, EDF, and NATS streams. Sparkline rendering in terminal. Moves data from devices to displays.}
+}
+
+\subtree{
+\title{5. BrainFlow Bridge — Hardware Color}
+
+\p{\code{worlds/g/gay-colors-brain/gay_eeg_brain.py}. EEG acquisition → spectral decomposition → brain-color computation via SplitMix64 spectral centroid. Bridges OpenBCI Cyton hardware to the Gay.jl color space. Produces the brain-color shown in the self-serve reading ([[bcf-0040]]).}
+}
+}
+
+\subtree{
+\title{One Formal Model}
+
+\subtree{
+\title{6. OCaml — Compiler-Verified Structure}
+
+\p{\code{worlds/b/bci_horse/bci_horse.ml}. OCaml 5.3.0. 69 BCI devices ranked along 3 oppositional axes. If the types don't check, the ranking is wrong. Provides the formal backbone for hardware comparisons in [[bcf-0006]].}
+}
+}
+
+\subtree{
+\title{Composition}
 
 \table{
-\tr{\th{Prefix}\th{Count}\th{Bytes}\th{Character}}
-\tr{\td{detecting-*}\td{~90}\td{2.1 MB}\td{SOC detection rules}}
-\tr{\td{implementing-*}\td{~130}\td{2.8 MB}\td{Security control deployment}}
-\tr{\td{performing-*}\td{~120}\td{2.5 MB}\td{Penetration testing procedures}}
-\tr{\td{building-*}\td{~50}\td{0.9 MB}\td{Infrastructure construction}}
-\tr{\td{analyzing-*}\td{~60}\td{1.2 MB}\td{Forensic analysis}}
-\tr{\td{configuring-*}\td{~30}\td{0.5 MB}\td{System hardening}}
-\tr{\td{hunting-*}\td{~40}\td{0.7 MB}\td{Threat hunting}}
-\tr{\td{other}\td{~577}\td{mixed}\td{Bioinformatics, ML, misc}}
+  \tr{\th{System} \th{Role} \th{Consumes} \th{Produces}}
+  \tr{\td{Forester} \td{Source of truth} \td{Human knowledge} \td{Trees, HTML}}
+  \tr{\td{SvelteKit} \td{Public interface} \td{Forest content} \td{Web pages, 3D views}}
+  \tr{\td{Ratzilla} \td{Kiosk interface} \td{Forest content} \td{Terminal UI}}
+  \tr{\td{NATS} \td{Data transport} \td{Device streams} \td{Formatted messages}}
+  \tr{\td{BrainFlow} \td{Hardware bridge} \td{EEG samples} \td{Brain-color}}
+  \tr{\td{OCaml} \td{Verification} \td{Device specs} \td{Type-checked rankings}}
 }
 
-\p{These are the K-Dense-AI security corpus. Bulk-ingested, never linked to the categorical core.}
-}
-
-\subtree{
-\title{Largest orphans}
-
-\table{
-\tr{\th{Skill}\th{Bytes}\th{Promise}}
-\tr{\td{detecting-command-and-control-over-dns}\td{50,927}\td{DNS C2 detection}}
-\tr{\td{performing-purple-team-atomic-testing}\td{39,214}\td{ATT\&CK atomic tests}}
-\tr{\td{detecting-ntlm-relay-with-event-correlation}\td{34,130}\td{NTLM relay detection}}
-\tr{\td{implementing-data-loss-prevention-with-microsoft-purview}\td{31,656}\td{DLP policies}}
-\tr{\td{dynamic-sufficiency}\td{26,794}\td{Causal state gating}}
-}
-
-\p{\code{\startverb dynamic-sufficiency\stopverb} is the only non-security orphan in the top 10. It has rich content (Ivan Illich's convivial tools, epsilon-machine state gating) but links to nothing.}
-}
-
-\subtree{
-\title{Three options}
-
-\ol{
-\li{\strong{Delete}: Remove 1097 orphans. Recover 9.2 MB. Forest becomes 242 connected trees plus 5 hubs. Clean but lossy.}
-\li{\strong{Link}: Add transclusion targets to each orphan. A \code{\startverb detecting-*\stopverb} skill could transclude from a Suricata rules file. A \code{\startverb performing-*\stopverb} skill could transclude from a Metasploit module. Connects them to the forest but requires 1097 edits.}
-\li{\strong{Tier}: Move orphans to \code{\startverb slop/\stopverb} directory. They load only on explicit \code{\startverb skill\stopverb} tool invocation, never in random walks. The forest.toml excludes \code{\startverb slop/\stopverb} from the default trees list. Zero loss, clean separation.}
-}
-}
-
-\subtree{
-\title{The transclusion test}
-\p{A skill passes the transclusion test if removing its SKILL.md would cause information loss. If the content exists identically in the source code it points to, the SKILL.md is redundant — it should be a 20-line stub with transclusion targets.}
-
-\p{Of the 1097 orphans, approximately zero point to source code. They ARE the content. They have no transclusion targets because they have no backing implementation. They are knowledge blobs, not lenses.}
-
-\p{The trans-triad pattern (transclusion × transduction × transitivity) applies only to skills that are \em{instruments for using tools}. Skills that are \em{reference documents} belong in a wiki, not a forest.}
+\p{Forester is the source of truth. SvelteKit renders for browsers. Ratzilla renders for terminals. NATS moves data between them. BrainFlow bridges wetware to software. OCaml proves the structure is consistent.}
 }

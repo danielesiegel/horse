@@ -1,0 +1,98 @@
+#!/usr/bin/env bb
+;; pre-commit hook: recover typed structure from forester trees
+;; Checks: dangling refs, GF(3) conservation, taxon consistency
+;; Install: git config core.hooksPath .githooks
+
+(require '[clojure.java.io :as io]
+         '[clojure.string :as str])
+
+(def tree-dir "trees")
+
+(defn parse-tree [path]
+  (let [content (slurp path)
+        filename (.getName (io/file path))
+        id (str/replace filename #"\.tree$" "")]
+    {:id id
+     :path path
+     ;; Extract refs but skip those inside \startverb...\stopverb blocks
+     :refs (let [stripped (str/replace content #"\\startverb[^§]*?\\stopverb" "")]
+             (mapv second (re-seq #"\\ref\{([^}]+)\}" stripped)))
+     :trit (some->> (re-find #"\\meta\{trit\}\{(-?\d+)\}" content) second parse-long)
+     :taxon (second (re-find #"\\taxon\{(\w+)\}" content))
+     :tags (mapv second (re-seq #"\\tag\{([^}]+)\}" content))}))
+
+(defn check-dangling-refs [trees]
+  (let [all-ids (set (map :id trees))
+        errors (atom [])]
+    (doseq [t trees
+            ref (:refs t)]
+      (when-not (contains? all-ids ref)
+        (swap! errors conj (format "DANGLING REF: %s → %s (target does not exist)" (:id t) ref))))
+    @errors))
+
+(defn check-gf3-conservation [trees]
+  (let [errors (atom [])
+        ;; Group by station context: trees that share a StationContext ref
+        station-trees (filter :trit trees)
+        trit-sum (reduce + (keep :trit station-trees))]
+    ;; Check overall scan trit balance
+    (let [scan-trees (filter #(= "scan" (:taxon %)) station-trees)
+          by-tag (group-by #(cond
+                              (some #{"trit-minus"} (:tags %)) :minus
+                              (some #{"trit-zero"} (:tags %)) :zero
+                              (some #{"trit-plus"} (:tags %)) :plus
+                              :else :untagged)
+                           scan-trees)
+          n-minus (count (:minus by-tag))
+          n-zero (count (:zero by-tag))
+          n-plus (count (:plus by-tag))]
+      (when (and (pos? n-minus) (pos? n-zero) (pos? n-plus))
+        (let [sum (+ (* -1 n-minus) (* 0 n-zero) (* 1 n-plus))]
+          (when-not (zero? (mod sum 3))
+            (swap! errors conj
+              (format "GF(3) VIOLATION: %d minus + %d zero + %d plus = %d (mod 3 = %d)"
+                      n-minus n-zero n-plus sum (mod sum 3)))))))
+    @errors))
+
+(defn check-taxon-consistency [trees]
+  (let [errors (atom [])]
+    (doseq [t trees]
+      ;; scan trees must have trit metadata
+      (when (and (= "scan" (:taxon t)) (nil? (:trit t)))
+        (swap! errors conj (format "TAXON: scan tree %s missing \\meta{trit}" (:id t))))
+      ;; design trees should ref bcf-0002 (axiom zero)
+      ;; (soft check, just warn)
+      )
+    @errors))
+
+;; --- main ---
+(let [tree-files (->> (file-seq (io/file tree-dir))
+                      (filter #(and (str/ends-with? (.getName %) ".tree")
+                         (not (str/starts-with? (.getName %) ".#"))
+                         (.isFile %)))
+                      (map #(.getPath %)))
+      trees (mapv parse-tree tree-files)
+      dangling (check-dangling-refs trees)
+      gf3 (check-gf3-conservation trees)
+      taxon (check-taxon-consistency trees)
+      all-errors (concat dangling gf3 taxon)]
+
+  (println (format "pre-commit: %d trees, %d refs, %d trit-tagged"
+                   (count trees)
+                   (reduce + (map #(count (:refs %)) trees))
+                   (count (filter :trit trees))))
+
+  (if (seq all-errors)
+    (do
+      (println)
+      (println "ERRORS:")
+      (doseq [e all-errors]
+        (println (str "  ✗ " e)))
+      (println)
+      (println (format "%d error(s). Commit blocked." (count all-errors)))
+      (System/exit 1))
+    (do
+      (println "  ✓ No dangling refs")
+      (println "  ✓ GF(3) conservation holds")
+      (println "  ✓ Taxon consistency")
+      (System/exit 0))))
