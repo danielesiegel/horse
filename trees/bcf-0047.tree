@@ -1,0 +1,62 @@
+\title{Workspace Topology: jj on a Transcluded Forest}
+\date{2026-04-04}
+\taxon{theory}
+\author{barton-rhodes}
+\tag{version-control}
+\tag{jujutsu}
+
+\import{macros}
+
+\p{jj workspaces recover a fragment of pijul's commutation algebra within git's commit poset. This tree documents the workspace topology for the horse forest.}
+
+\subtree{\title{Three workspaces}
+\table{
+\tr{\th{Workspace}\th{Path}\th{Purpose}\th{Trit}}
+\tr{\td{default}\td{horse/}\td{Main forest editing}\td{0}}
+\tr{\td{scan}\td{horse-scan/}\td{LiDAR ingest, new scan trees}\td{-1}}
+\tr{\td{theory}\td{horse-theory/}\td{Theory trees (bcf-004x)}\td{+1}}
+}
+\p{GF(3) conservation: each workspace owns one trit role. Scan workspace creates PLY(-1) ingest. Theory workspace creates structural analysis(+1). Default workspace coordinates(0).}
+}
+
+\subtree{\title{Why workspaces commute}
+\p{jj workspaces share a single repo but have independent working copies. A change in \code{horse-scan/} that adds \code{scan-0097.tree} and a change in \code{horse-theory/} that adds \code{bcf-0048.tree} are automatically independent — they touch disjoint files.}
+
+\p{This is weaker than pijul's typed commutation (\ref{bcf-0046}) but stronger than git branches:}
+\ol{
+\li{No branch switching. Each workspace has its own working copy at all times.}
+\li{No stash/pop ceremony. Work-in-progress is always a first-class change.}
+\li{Diamond merges are explicit. \code{jj new A B} creates a merge node that records the commutation.}
+\li{Conflicts are materialized in the working copy, not blocking. You can resolve later.}
+}
+}
+
+\subtree{\title{The semantic-git shim in workspace context}
+\p{The pre-commit hook and diff driver (\ref{bcf-0046}) compose with jj workspaces:}
+\ol{
+\li{Each workspace runs the same \code{.githooks/pre-commit} — GF(3) conservation is checked in all three.}
+\li{The forest diff driver shows typed operations regardless of which workspace produced the change.}
+\li{jj's \code{squash}, \code{split}, and \code{move} preserve the operation graph that the diff driver displays.}
+}
+\p{The workspace topology is the closest approximation to pijul's patch groupoid achievable within git's commit poset.}
+}
+
+\subtree{\title{Workspace lifecycle}
+\pre{\startverb
+# Create
+jj workspace add ../horse-scan --name scan
+
+# Work (changes are auto-tracked, no git add needed)
+echo "..." > trees/scan-0097.tree
+
+# Merge from another workspace
+jj new scan@default theory@default -m "merge scan + theory"
+
+# Push merged result
+jj bookmark set main -r @
+jj git push --bookmark main
+
+# Remove when done
+jj workspace forget scan
+\stopverb}
+}
