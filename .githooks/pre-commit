@@ -14,7 +14,9 @@
         id (str/replace filename #"\.tree$" "")]
     {:id id
      :path path
-     :refs (mapv second (re-seq #"\\ref\{([^}]+)\}" content))
+     ;; Extract refs but skip those inside \startverb...\stopverb blocks
+     :refs (let [stripped (str/replace content #"\\startverb[^§]*?\\stopverb" "")]
+             (mapv second (re-seq #"\\ref\{([^}]+)\}" stripped)))
      :trit (some->> (re-find #"\\meta\{trit\}\{(-?\d+)\}" content) second parse-long)
      :taxon (second (re-find #"\\taxon\{(\w+)\}" content))
      :tags (mapv second (re-seq #"\\tag\{([^}]+)\}" content))}))

@@ -11,7 +11,7 @@
 \p{Git erases the categorical structure of transclusion. Pijul's patch theory preserves it. This tree documents exactly what is lost in our 829-link, 265-tree forest.}
 
 \subtree{\title{What git sees}
-\p{The 3-commit session that created 96 scan trees with 829 \code{\\ref\{\}} links is stored as:}
+\p{The 3-commit session that created 96 scan trees with 829 \code{\startverb\ref{}\stopverb} links is stored as:}
 \pre{\startverb
 commit 4e84008
   tree: <sha256>           -- a snapshot, not a delta
@@ -21,8 +21,8 @@ commit 4e84008
 
 \p{Every hunk has the same type: bytes at a line range in a file. Git does not know:}
 \ol{
-\li{That \code{\\ref\{scan-0090\}} is a \strong{morphism} in the forest graph, not a string.}
-\li{That \code{\\meta\{trit\}\{-1\}} is a \strong{GF(3) value}, not text.}
+\li{That \code{\startverb\ref{scan-0090}\stopverb} is a \strong{morphism} in the forest graph, not a string.}
+\li{That \code{\startverb\meta{trit}{-1}\stopverb} is a \strong{GF(3) value}, not text.}
 \li{That the 96 scan trees form a \strong{presheaf} over 12 repo-grouped components.}
 \li{That the 18 structural links preserve a \strong{conservation law}.}
 \li{That sibling groups are \strong{equivalence classes}, not "files in one commit".}
@@ -94,14 +94,14 @@ StationTriad = (a : Scan × b : Scan × c : Scan ×
 --   until trit(b) or trit(c) is adjusted to restore sum = 0
 \stopverb}
 
-\p{When someone changes \code{\\meta\{trit\}\{-1\}} to \code{\\meta\{trit\}\{0\}}, git sees a line edit. Pijul with typed patches sees a \code{SetMeta} that breaks the triad constraint — merge is blocked until conservation is restored.}
+\p{When someone changes \code{\startverb\meta{trit}{-1}\stopverb} to \code{\startverb\meta{trit}{0}\stopverb}, git sees a line edit. Pijul with typed patches sees a \code{SetMeta} that breaks the triad constraint — merge is blocked until conservation is restored.}
 }
 
 \subtree{\title{The five erased types}
 \table{
 \tr{\th{Structure}\th{Git type}\th{True type}\th{Erasure effect}}
-\tr{\td{\code{\\ref\{X\}}}\td{Byte[]}\td{Morphism (forest graph edge)}\td{Dangling refs undetected}}
-\tr{\td{\code{\\meta\{trit\}}}\td{Byte[]}\td{GF(3) element}\td{Conservation violations pass}}
+\tr{\td{\code{\startverb\ref{X}\stopverb}}\td{Byte[]}\td{Morphism (forest graph edge)}\td{Dangling refs undetected}}
+\tr{\td{\code{\startverb\meta{trit}\stopverb}}\td{Byte[]}\td{GF(3) element}\td{Conservation violations pass}}
 \tr{\td{Sibling group}\td{Files in commit}\td{Equivalence class}\td{Regrouping destroys provenance}}
 \tr{\td{Structural link}\td{Line in file}\td{Typed edge (RefKind)}\td{Semantic conflicts invisible}}
 \tr{\td{Taxon}\td{Text string}\td{Sum type}\td{Taxon change skips revalidation}}
@@ -134,7 +134,7 @@ C3: AddRef(scan-0007, bcf-0037, StructuralLink)
 \subtree{\title{Recovery: semantic-git shim}
 \p{Short of migrating to pijul, we recover type information at the boundary:}
 \ol{
-\li{\strong{Pre-commit hook}: parse all \code{.tree} files, extract \code{\\ref\{\}} targets, verify no dangling refs.}
+\li{\strong{Pre-commit hook}: parse all \code{.tree} files, extract \code{\startverb\ref{}\stopverb} targets, verify no dangling refs.}
 \li{\strong{Pre-commit hook}: check GF(3) conservation for any \code{trit-*} tagged tree group sharing a parent.}
 \li{\strong{Post-merge hook}: diff the transclusion graph (not the text). Flag silently dropped edges.}
 \li{\strong{Custom diff driver}: display \code{+ref(scan-0090 → bcf-0044, StructuralLink)} instead of raw text.}
