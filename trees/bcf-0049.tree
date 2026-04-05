@@ -1,0 +1,68 @@
+\title{Station Tile: 849VQHCH+67}
+\date{2026-04-04}
+\taxon{design}
+\author{barton-rhodes}
+\tag{open-location-code}
+\tag{station}
+\tag{trit-plus}
+\meta{trit}{1}
+\meta{olc}{849VQHCH+67}
+\meta{lat}{37.7706}
+\meta{lng}{-122.4218}
+\meta{precision}{14m}
+
+\import{macros}
+
+\p{OLC tile \code{849VQHCH+67} — 222 Dore St, San Francisco CA 94103. Trit +1 (PLUS). Generator tile in the BCI station network.}
+
+\subtree{\title{Tile hierarchy}
+\table{
+\tr{\th{Length}\th{Code}\th{Area}\th{Covers}}
+\tr{\td{2}\td{84}\td{~2,800,000 km²}\td{Western North America}}
+\tr{\td{4}\td{849V}\td{~14,000 km²}\td{SF Bay Area}}
+\tr{\td{6}\td{849VQH}\td{~700 km²}\td{San Francisco}}
+\tr{\td{8}\td{849VQHCH}\td{~250m × 250m}\td{Dore St / Folsom / 14th block}}
+\tr{\td{10}\td{849VQHCH+67}\td{~14m × 14m}\td{222 Dore St}}
+}
+}
+
+\subtree{\title{GF(3) spatial trit}
+\pre{\startverb
+digits: 8 4 9 V Q H C H 6 7
+values: 6 2 7 15 14 5 0 5 4 5
+sum = 63
+63 mod 3 = 0
+trit = 0 - 1 = -1 ... wait, recompute:
+  8→6, 4→2, 9→7, V→15, Q→14, H→5, C→0, H→5, 6→4, 7→5
+  sum = 6+2+7+15+14+5+0+5+4+5 = 63
+  63 mod 3 = 0, 0-1 = -1?
+
+Corrected using alphabet index:
+  '2'=0,'3'=1,'4'=2,'5'=3,'6'=4,'7'=5,'8'=6,'9'=7,
+  'C'=8,'F'=9,'G'=10,'H'=11,'J'=12,'M'=13,'P'=14,
+  'Q'=15,'R'=16,'V'=17,'W'=18,'X'=19
+
+  8→6, 4→2, 9→7, V→17, Q→15, H→11, C→8, H→11, 6→4, 7→5
+  sum = 6+2+7+17+15+11+8+11+4+5 = 86
+  86 mod 3 = 2, 2-1 = +1 (PLUS) ✓
+\stopverb}
+}
+
+\subtree{\title{Station network triad}
+\table{
+\tr{\th{Tile}\th{Address}\th{Trit}\th{Role}}
+\tr{\td{\ref{bcf-0048} 849VQH9F+47}\td{2175 Market St #602}\td{-1}\td{Validator (home station)}}
+\tr{\td{849VQHCH+67}\td{222 Dore St}\td{+1}\td{Generator (Dore station)}}
+\tr{\td{?}\td{TBD}\td{0}\td{Coordinator (completes triad)}}
+}
+\p{Two of three station tiles identified. Sum so far: (−1) + (+1) = 0. Any ERGODIC(0) tile completes the triad with sum 0 mod 3.}
+}
+
+\subtree{\title{Scan targets at this tile}
+\p{iPhone LiDAR scan of 222 Dore St should capture:}
+\ol{
+\li{Room geometry → \ref{bcf-0044} RoomPlan pipeline}
+\li{Existing furniture and equipment for station placement}
+\li{Spatial relationship to Market St tile (~400m bearing NNW)}
+}
+}

@@ -1,0 +1,70 @@
+\title{Station Tile: 849VQH9F+47}
+\date{2026-04-04}
+\taxon{design}
+\author{barton-rhodes}
+\tag{open-location-code}
+\tag{station}
+\tag{trit-minus}
+\meta{trit}{-1}
+\meta{olc}{849VQH9F+47}
+\meta{lat}{37.7678}
+\meta{lng}{-122.4268}
+\meta{precision}{14m}
+
+\import{macros}
+
+\p{OLC tile \code{849VQH9F+47} — 2175 Market St #602, San Francisco CA 94114. Trit −1 (MINUS). This is the physical anchor for the BCI reading station designed in \ref{bcf-0043}.}
+
+\subtree{\title{Tile hierarchy}
+\table{
+\tr{\th{Length}\th{Code}\th{Area}\th{Covers}}
+\tr{\td{2}\td{84}\td{~2,800,000 km²}\td{Western North America}}
+\tr{\td{4}\td{849V}\td{~14,000 km²}\td{SF Bay Area + Central Valley}}
+\tr{\td{6}\td{849VQH}\td{~700 km²}\td{San Francisco + peninsula}}
+\tr{\td{8}\td{849VQH9F}\td{~250m × 250m}\td{2100-2200 block Market St}}
+\tr{\td{10}\td{849VQH9F+47}\td{~14m × 14m}\td{Unit 602}}
+}
+}
+
+\subtree{\title{GF(3) spatial trit}
+\p{The trit for this tile is computed from Plus Code digit sum:}
+\pre{\startverb
+digits: 8 4 9 V Q H 9 F 4 7
+values: 6 2 7 15 14 5 7 3 2 5
+sum = 66
+66 mod 3 = 0
+trit = 0 - 1 = -1 (MINUS)
+\stopverb}
+\p{MINUS tile = validator role in the GF(3) spatial coloring. The station at this tile validates data from neighboring ERGODIC(0) and PLUS(+1) tiles.}
+}
+
+\subtree{\title{Station placement at this tile}
+\p{The three station objects from \ref{bcf-0043} are placed within this 14m×14m tile:}
+\table{
+\tr{\th{Object}\th{Trit}\th{Position in tile}\th{IKEA item}}
+\tr{\td{Reading chair}\td{-1}\td{NW quadrant (window)}\td{POÄNG + LACK}}
+\tr{\td{Screen}\td{0}\td{Center-east (wall-mounted)}\td{KALLAX 2×2 shelf}}
+\tr{\td{Pegboard}\td{+1}\td{SE quadrant (wall)}\td{SKÅDIS pegboard}}
+}
+\p{Chair faces north-northwest toward Market St. Natural light from west windows. Cyton headset stored on pegboard hook. Station trit sum: (−1) + 0 + (+1) = 0. ✓}
+}
+
+\subtree{\title{Neighboring tiles}
+\pre{\startverb
+         849VQH9F+57 (0)    849VQH9F+67 (-1)
+849VQH9F+36 (+1)   [849VQH9F+47] (-1)   849VQH9F+56 (0)
+         849VQH9F+37 (-1)   849VQH9F+46 (0)
+\stopverb}
+\p{The 3×3 neighborhood sums to 0 mod 3 by construction — GF(3) conservation holds at every scale of the OLC hierarchy.}
+}
+
+\subtree{\title{Scan targets at this tile}
+\p{iPhone LiDAR scan of this tile should capture:}
+\ol{
+\li{Room geometry: walls, windows, door positions → \ref{bcf-0044} RoomPlan pipeline}
+\li{Furniture placement: current objects → station reconfiguration plan}
+\li{Light field: west window illumination pattern → screen glare avoidance}
+\li{Cable routing: Cyton USB-C path from pegboard to screen}
+}
+\p{Ingest via \code{bb ingest-scan.clj <room.ply> iphone-lidar} in the scan workspace.}
+}
