@@ -1,0 +1,62 @@
+\title{LiDAR Room Scan → Point Cloud → Station Placement}
+\date{2026-04-04}
+\taxon{implementation}
+\author{barton-rhodes}
+\tag{lidar}
+\tag{homekit}
+\tag{spatial}
+
+\import{macros}
+
+\p{Scan the BCI station space with iPhone/iPad LiDAR. RoomPlan identifies walls, doors, windows. ARKit depth maps produce dense point clouds. The point cloud feeds placement scoring for the GF(3) station triad (\ref{bcf-0043}).}
+
+\subtree{\title{Pipeline}
+\pre{\startverb
+iPhone LiDAR (30Hz, 256×192)
+    ↓
+RoomPlan CapturedRoom          ARKit sceneDepth
+    ↓                              ↓
+walls/doors/windows            PLY point cloud
+    ↓                              ↓
+PlacementZone scoring          zig-syrup/src/point_cloud.zig
+    ↓                              ↓
+JSON placement zones           DuckDB spatial queries
+    ↓                              ↓
+world:// state update          ghostty-ix 3D view
+\stopverb}
+}
+
+\subtree{\title{Three scan modes (GF(3))}
+\ul{
+\li{\strong{−1 (blue)}: RoomPlan \code{CapturedRoom} → structured walls/furniture/openings. The sieve: filters raw depth into semantic objects.}
+\li{\strong{0 (horse)}: ARKit scene mesh → classified triangle mesh. The crossover: geometry meets meaning.}
+\li{\strong{+1 (red)}: LiDAR depth → dense PLY point cloud. The cosieve: raw generation of spatial data.}
+}
+}
+
+\subtree{\title{Placement scoring}
+\p{Each zone scored 0–1 by heuristic:}
+\ul{
+\li{\strong{Chair (−1)}: floor area ≥ 0.6m², near wall, away from door}
+\li{\strong{Screen (0)}: wall width ≥ 0.5m, height 1.1–1.4m (seated eye), no window glare}
+\li{\strong{Pegboard (+1)}: wall width ≥ 0.4m, within 0.8m of chair (arm's reach)}
+}
+}
+
+\subtree{\title{HomeKit bridge}
+\p{If the scanned room has HomeKit accessories:}
+\ul{
+\li{Smart plug on Cyton PSU → remote power cycle}
+\li{Hue/LIFX bulb → mirror \code{color://} URI as ambient room lighting}
+\li{Motion sensor → auto-wake Emacs kiosk on approach}
+\li{Temp/humidity sensor → session metadata (comfort affects EEG)}
+}
+}
+
+\subtree{\title{Files}
+\ul{
+\li{\code{horse/bci-roomscan/Sources/BCIRoomScan.swift} — data model, PLY export, placement scoring, DuckDB CSV}
+\li{\code{horse/bci-roomscan/Sources/ScanView.swift} — iOS RoomPlan UI, ARKit depth extraction}
+\li{\code{zig-syrup/src/point_cloud.zig} — PLY parser, wall segment finder, placement computation, Syrup encoding}
+}
+}
