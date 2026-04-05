@@ -56,10 +56,7 @@
           '';
           installPhase = ''
             mkdir -p $out
-            # Copy everything then remove unstable-* (Stacks Project: 36k+ files)
-            # to stay under Cloudflare Pages 20,000 file limit
             cp -r output/* $out/
-            find $out -name 'unstable-*' -delete
             printf "/index.xml\n  Content-Type: application/xml\n/*.xml\n  Content-Type: application/xml\n" > $out/_headers
             cat > $out/index.html <<EOHTML
             <!DOCTYPE html><html><head>
