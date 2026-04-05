@@ -83,3 +83,113 @@
 \tr{\td{DIY-fNIRS headband} \td{4} \td{10 Hz} \td{12-bit} \td{Yes} \td{$215} \td{Yes}}
 \tr{\td{PLUX biosignalsplux} \td{1} \td{500 Hz} \td{16-bit} \td{No} \td{$789} \td{No}}
 }}
+
+\subtree{\title{Order record: 2026-04-05}
+\taxon{remark}
+\date{2026-04-05}
+
+\p{Test batch of 5 sensor modules + 5 ECU boards ordered. Altium-to-Gerber conversion pipeline solved (altium2kicad Perl + KiCad CLI 10.0.0). Circular board outline manually fixed in Gerber (degenerate arc bug). GH issue filed: tonykim07/fNIRS\#10.}
+
+\subtree{\title{JLCPCB orders}
+\p{Order 1: Sensor module -- 5x 25mm circular 2-layer PCBs, Standard assembly both sides, 11 JLCPCB-placed parts. LeadFree HASL.}
+\p{Order 2: ECU -- 5x 112x128mm 4-layer PCBs, Standard assembly top side, 24 JLCPCB-placed parts. STM32L476RET6 + passives + connectors + switches.}
+}
+
+\subtree{\title{DigiKey order (sensor hand-solder parts)}
+\table{
+\tr{\th{MPN} \th{Part} \th{Qty}}
+\tr{\td{ST-LINK/V2} \td{STM32 programmer} \td{1}}
+\tr{\td{CRCW060360K4FKEA} \td{60.4k 1 percent 0603} \td{5}}
+\tr{\td{CRCW06033M90FKEA} \td{3.9M 1 percent 0603} \td{5}}
+\tr{\td{AD8618ARUZ} \td{Quad op-amp TSSOP-14} \td{5}}
+\tr{\td{C0603C201J5GACTU} \td{200pF C0G 0603} \td{5}}
+\tr{\td{T1M-06-F-SH-L-K} \td{6-pin Samtec connector} \td{5}}
+\tr{\td{T1M-10-F-SH-L-K} \td{10-pin Samtec connector} \td{8}}
+\tr{\td{FTSH-107-01-L-DV-K} \td{14-pin SWD header} \td{1}}
+}}
+
+\subtree{\title{DigiKey order (ECU hand-solder parts)}
+\table{
+\tr{\th{MPN} \th{Part} \th{Qty}}
+\tr{\td{PCA9685PW,118} \td{PWM LED driver TSSOP-28} \td{1}}
+\tr{\td{B0512S-2WR3} \td{DC-DC converter 5V to 12V} \td{1}}
+\tr{\td{ABM8-24.000MHZ-B2-T} \td{24MHz crystal SMD} \td{1}}
+\tr{\td{BLM18AG102SN1D} \td{Ferrite bead 0603} \td{1}}
+\tr{\td{0472192001} \td{Molex micro SD connector} \td{1}}
+\tr{\td{4pF C0G 0603} \td{Crystal load caps} \td{2}}
+}}
+
+\subtree{\title{Mouser order}
+\p{TMUX1104DGSR (4:1 analog mux, VSSOP-10) x8 -- not available on DigiKey or LCSC. Found via Octopart.}
+}
+
+\subtree{\title{Amazon order}
+\ul{
+\li{LiPo battery 1100mAh JST}
+\li{EEG 10-20 cloth cap (replaces neoprene headband)}
+\li{PLA filament 1.75mm}
+\li{Velcro strips + 3M Micropore tape}
+}}
+
+\subtree{\title{Verified LCSC part numbers (sensor module)}
+\p{These were verified 2026-04-05 after multiple wrong mappings.}
+\table{
+\tr{\th{LCSC} \th{Part} \th{Type}}
+\tr{\td{C14663} \td{100nF X7R 0603} \td{basic}}
+\tr{\td{C19702} \td{10uF X5R 0603} \td{basic}}
+\tr{\td{C511435} \td{VSMD66694 dual LED 660/940nm} \td{extended}}
+\tr{\td{C145262} \td{VBPW34S photodiode 940nm} \td{extended}}
+\tr{\td{C965799} \td{LED 0603} \td{extended}}
+\tr{\td{C260872} \td{BSD840NH6327XTSA1 dual MOSFET} \td{extended}}
+\tr{\td{C25804} \td{10K 1 percent 0603} \td{basic}}
+\tr{\td{C22935} \td{1M 1 percent 0603} \td{basic}}
+\tr{\td{C21189} \td{0R 0603} \td{basic}}
+\tr{\td{C8218} \td{200R 1 percent 0603} \td{basic}}
+}}
+
+\subtree{\title{Verified LCSC part numbers (ECU)}
+\table{
+\tr{\th{LCSC} \th{Part} \th{Type}}
+\tr{\td{C71075} \td{STM32L476RET6} \td{extended}}
+\tr{\td{C484732} \td{LMV324AIDR quad op-amp} \td{extended}}
+\tr{\td{C130204} \td{TCA9535PWR I/O expander} \td{extended}}
+\tr{\td{C579406} \td{ADUM4160BRWZ USB isolator} \td{extended}}
+\tr{\td{C2678753} \td{PCA9685PW PWM driver (out of stock)} \td{extended}}
+\tr{\td{C7519} \td{USBLC6-2SC6 TVS/ESD} \td{extended}}
+\tr{\td{C424093} \td{MCP73831T Li-Ion charger} \td{extended}}
+\tr{\td{C6186} \td{AMS1117-3.3 LDO} \td{basic}}
+\tr{\td{C23162} \td{4.7K 1 percent 0603} \td{basic}}
+\tr{\td{C142556} \td{NTC 10K thermistor 0603} \td{extended}}
+\tr{\td{C46398} \td{USB Mini-B connector} \td{extended}}
+}}
+
+\subtree{\title{Wrong LCSC numbers (DO NOT USE)}
+\p{Documented to prevent future sessions from repeating these errors.}
+\table{
+\tr{\th{Wrong LCSC} \th{Actual part} \th{Was mapped to}}
+\tr{\td{C23192} \td{510k resistor} \td{R1 (should be 60.4k)}}
+\tr{\td{C137393} \td{100k 1206 resistor} \td{R2 (should be 3.9M 0603)}}
+\tr{\td{C2828836} \td{91k thin film resistor} \td{D1 (should be VSMD66694 LED)}}
+\tr{\td{C2069767} \td{TPS3305 voltage supervisor} \td{D2 (should be VBPW34S photodiode)}}
+\tr{\td{C520268} \td{1.5uH inductor} \td{U1 (should be AD8618ARUZ op-amp)}}
+\tr{\td{C25811} \td{200k 0603 resistor} \td{R29 (should be 4.7k -- fixed to C23162)}}
+}}
+
+\subtree{\title{Session browser history (2026-04-04 to 2026-04-05)}
+\ul{
+\li{jlcpcb.com/order -- sensor module + ECU orders}
+\li{github.com/tonykim07/fNIRS -- source repo}
+\li{github.com/tonykim07/fNIRS/issues/10 -- gerber export request (filed)}
+\li{github.com/thesourcerer8/altium2kicad -- Perl converter (used)}
+\li{gitlab.com/kicad/code/kicad/-/merge\_requests/1932 -- KiCad CLI Altium import MR (not merged)}
+\li{kicad.org/download/macos -- KiCad 10.0.0 dmg (downloaded, used for gerber export)}
+\li{forum.kicad.info/t/how-to-import-altium-pcbdoc-via-commandline-tools/50893}
+\li{lcsc.com -- part verification (C511435 VSMD66694, C145262 VBPW34S, C484732 LMV324AIDR, C130204 TCA9535PWR, C2678753 PCA9685PW, C142556 NTC thermistor, C23162 4.7K)}
+\li{digikey.com -- ST-LINK/V2, resistors, AD8618ARUZ, caps, Samtec connectors, crystal, ferrite, SD connector}
+\li{octopart.com -- TMUX1104DGSR, ABM8-24MHz, GRM1885C1H4R0CA01D (4pF cap)}
+\li{mouser.com -- TMUX1104DGSR (not on DigiKey or LCSC)}
+\li{amazon.com -- LiPo battery, EEG 10-20 cap, PLA filament, velcro, micropore tape, headband}
+\li{samtec.com -- T1M-06-F-SH-L-K, T1M-10-F-SH-L-K, FTSH-107-01-L-DV-K}
+\li{arxiv.org/abs/2505.20509 -- OpenNIRScap paper}
+}}
+}
