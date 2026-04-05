@@ -1,0 +1,61 @@
+\title{Learnable Color Space: Device-Conditional Metric}
+\author{bmorphism}
+\date{2026-04-04}
+\taxon{definition}
+
+\p{The Gap ([[horse-0001]]) between name-color and brain-color is measured
+on a display. The display's gamut constrains which colors are physically
+renderable. The \strong{device-conditional metric} #{M(\mathrm{device})} transforms
+the Gap measurement to be faithful to the output medium.}
+
+\p{Given two colors #{c_1, c_2} in Gay.jl's SplitMix64 sequence, their
+perceptual distance on device #{d} is:
+##{d(c_1, c_2 \mid d) = \sqrt{(c_1 - c_2)^\top M(d) \, (c_1 - c_2)}}
+where #{M(d)} is a learned Mahalanobis matrix encoding the device's gamut
+boundary, emission physics, and spatial bleed characteristics.}
+
+\subtree{
+\title{Device Metric Catalog}
+
+\table{
+  \tr{\th{Device} \th{Gamut (Rec.2020)} \th{#{M} structure} \th{Use}}
+  \tr{\td{EIZO CG2700S} \td{80\%} \td{Near-identity (hardware cal)} \td{Authoring / measurement}}
+  \tr{\td{QD-OLED S95F} \td{85\%} \td{#{\approx} Oklab} \td{Rendering / three rooms}}
+  \tr{\td{Neon tubes} \td{\sim 15 spectral lines} \td{Block-diagonal} \td{Signage / ring-0 to photon}}
+  \tr{\td{CMYK vinyl} \td{\sim 55\%} \td{Contracted} \td{Stickers / physical tokens}}
+  \tr{\td{Human cortex} \td{\infty (neural)} \td{Fisher-Rao on EEG manifold} \td{#{M_{\mathrm{bci}}} — the true metric}}
+}
+}
+
+\subtree{
+\title{Universality of Sequence, Locality of Metric}
+
+\p{The SplitMix64 golden-angle stepping ([[bci-0002]]) is the same on every device.
+The metric #{M} is local — it varies per output medium. This is a \strong{sheaf over
+output devices}: the color sequence is the global section, the device metrics are
+the stalks, and the restriction maps are gamut compressions.}
+
+\p{The HolyC principle applies: #{M} compiles to a lookup table per device class.
+No heap, no stack — baked metric tensor. Learning happens offline; rendering is ring-0.}
+}
+
+\subtree{
+\title{BCI as Ground Truth}
+
+\p{All other metrics (colorimeter ΔE, Oklab distance, Pantone matching) approximate
+human perception. #{M_{\mathrm{bci}}} \em{is} human perception — measured via P300/SSVEP
+amplitude in response to color transitions on the Cyton 8ch EEG ([[horse-0002]]),
+with fNIRS HbO/HbR asymmetry providing the GF(3) trit valence.}
+
+\p{The \strong{Rider's personal color profile} is their individual #{M_{\mathrm{bci}}}.
+Two Riders viewing the same Gay.jl sequence on the same display experience different
+distinguishability. The sheaf has a second index: device \emph{and} observer.}
+}
+
+\subtree{
+\title{Calibration Protocol}
+
+\p{Planned: week of 2026-04-07. 69 CAD, 1hr session at 222 Dore St or Best Buy
+(1717 Harrison St) for side-by-side QD-OLED vs Mini-LED measurement.
+See [[horse-0001]] for the chair protocol.}
+}
