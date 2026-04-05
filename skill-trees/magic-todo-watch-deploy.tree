@@ -1,21 +1,21 @@
-\title{Magic Todo Watch Deploy}
+\title{Magic World Watch Deploy}
 
 \taxon{skill}
 
-\meta{description}{Build, deploy, and manage the MagicTodoWatch iOS/watchOS voice-to-task pipeline app. Use when building for device or simulator, fixing Xcode project issues, or running the 7-world backend pipeline.}
+\meta{description}{Build, deploy, and manage the MagicWorldWatch iOS/watchOS voice-to-task pipeline app. Use when building for device or simulator, fixing Xcode project issues, or running the 7-world backend pipeline.}
 
 \subtree{
-\title{MagicTodoWatch Deploy}
+\title{MagicWorldWatch Deploy}
 \subtree{
 \title{Project Location}
 \ul{
-\li{\strong{Source}: \code{\startverb /Users/alice/worlds/w/MagicTodoWatch/\stopverb}}
-\li{\strong{jj repo}: \code{\startverb /Users/alice/worlds/magic-todo-watch/\stopverb}}
-\li{\strong{GitHub}: \code{\startverb monaduck1069/magic-todo-watch\stopverb} (private)}
-\li{\strong{Bundle ID}: \code{\startverb com.monaduck1069.MagicTodoWatch\stopverb}}
-\li{\strong{Watch Bundle}: \code{\startverb com.monaduck1069.MagicTodoWatch.watchkitapp\stopverb}}
+\li{\strong{Source}: \code{\startverb /Users/alice/worlds/w/MagicWorldWatch/\stopverb}}
+\li{\strong{jj repo}: \code{\startverb /Users/alice/worlds/magic-world-watch/\stopverb}}
+\li{\strong{GitHub}: \code{\startverb bci-horse/magic-world-watch\stopverb} (private)}
+\li{\strong{Bundle ID}: \code{\startverb horse.bci.MagicWorldWatch\stopverb}}
+\li{\strong{Watch Bundle}: \code{\startverb horse.bci.MagicWorldWatch.watchkitapp\stopverb}}
 \li{\strong{Team}: \code{\startverb FLLV2L2D4K\stopverb}}
-\li{\strong{Device (#ee2b49)}: \code{\startverb 00008150-00123D3E0C46401C\stopverb}}
+\li{\strong{Device (#ee2b49-bci.horse)}: \code{\startverb 00008150-00123D3E0C46401C\stopverb}}
 }
 }
 
@@ -45,18 +45,18 @@ DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /Users/alice/D
 \pre{\startverb
 XC="DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /Users/alice/Downloads/Xcode.app/Contents/Developer/usr/bin/xcodebuild"
 DC="DEVELOPER_DIR=/Users/alice/Downloads/Xcode.app/Contents/Developer /Users/alice/Downloads/Xcode.app/Contents/Developer/usr/bin/devicectl"
-PROJ="-project /Users/alice/worlds/w/MagicTodoWatch/MagicTodoWatch.xcodeproj"
+PROJ="-project /Users/alice/worlds/w/MagicWorldWatch/MagicWorldWatch.xcodeproj"
 DEVICE="id=00008150-00123D3E0C46401C"
 
 # Build (includes embedded watch app)
-$XC $PROJ -scheme MagicTodoWatch -configuration Debug -destination "$DEVICE" -allowProvisioningUpdates clean build
+$XC $PROJ -scheme MagicWorldWatch -configuration Debug -destination "$DEVICE" -allowProvisioningUpdates clean build
 
 # Install
-APP_PATH=$(ls -d ~/Library/Developer/Xcode/DerivedData/MagicTodoWatch-*/Build/Products/Debug-iphoneos/MagicTodoWatch.app | head -1)
+APP_PATH=$(ls -d ~/Library/Developer/Xcode/DerivedData/MagicWorldWatch-*/Build/Products/Debug-iphoneos/MagicWorldWatch.app | head -1)
 $DC device install app --device 00008150-00123D3E0C46401C "$APP_PATH"
 
 # Launch (phone must be unlocked)
-$DC device process launch --device 00008150-00123D3E0C46401C com.monaduck1069.MagicTodoWatch
+$DC device process launch --device 00008150-00123D3E0C46401C horse.bci.MagicWorldWatch
 \stopverb}
 }
 
@@ -72,15 +72,15 @@ $SIMCTL boot $IPHONE_SIM
 $SIMCTL boot $WATCH_SIM
 
 # Build for sim
-$XC $PROJ -scheme MagicTodoWatch -destination "id=$IPHONE_SIM" -allowProvisioningUpdates build
+$XC $PROJ -scheme MagicWorldWatch -destination "id=$IPHONE_SIM" -allowProvisioningUpdates build
 
 # Install
-$SIMCTL install $IPHONE_SIM ~/Library/Developer/Xcode/DerivedData/MagicTodoWatch-*/Build/Products/Debug-iphonesimulator/MagicTodoWatch.app
-$SIMCTL install $WATCH_SIM ~/Library/Developer/Xcode/DerivedData/MagicTodoWatch-*/Build/Products/Debug-watchsimulator/MagicTodoWatchWatch.app
+$SIMCTL install $IPHONE_SIM ~/Library/Developer/Xcode/DerivedData/MagicWorldWatch-*/Build/Products/Debug-iphonesimulator/MagicWorldWatch.app
+$SIMCTL install $WATCH_SIM ~/Library/Developer/Xcode/DerivedData/MagicWorldWatch-*/Build/Products/Debug-watchsimulator/MagicWorldWatchWatch.app
 
 # Launch
-$SIMCTL launch $IPHONE_SIM com.monaduck1069.MagicTodoWatch
-$SIMCTL launch $WATCH_SIM com.monaduck1069.MagicTodoWatch.watchkitapp
+$SIMCTL launch $IPHONE_SIM horse.bci.MagicWorldWatch
+$SIMCTL launch $WATCH_SIM horse.bci.MagicWorldWatch.watchkitapp
 
 # Open Simulator.app
 open /Users/alice/Downloads/Xcode.app/Contents/Developer/Applications/Simulator.app
@@ -183,7 +183,7 @@ python3 /Users/alice/worlds/p/task-olog-export.py --input /Users/alice/worlds/p/
 \title{jj Workflow}
 \pre{\startverb
 JJ=/nix/store/jjyhca8bymk8zvgc65q5cy19wm9pqkmd-jujutsu-0.38.0/bin/jj
-cd /Users/alice/worlds/magic-todo-watch
+cd /Users/alice/worlds/magic-world-watch
 
 $JJ status
 $JJ log
