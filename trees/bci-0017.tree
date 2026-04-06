@@ -1,0 +1,106 @@
+\title{Temporal Sheaf: Time Units as Necessary Neighbors}
+\import{macros}
+\author{bmorphism}
+\date{2026-04-05}
+\taxon{definition}
+\tag{time}
+\tag{helek}
+\tag{trit}
+
+\p{The BCI pipeline operates across 10 decades of temporal scale. Each time unit
+defines a \strong{necessary neighbor} — a device or computation that \em{must} exist
+to resolve that scale. The sheaf structure: base space = time scales, stalks =
+device/software pairs, restriction maps = downsampling/integration.}
+
+\subtree{
+\title{The Temporal Stack}
+
+\p{Ordered by duration, with the device or process that resolves each scale:}
+
+\table{
+  \tr{\th{Scale} \th{Unit} \th{Duration} \th{Resolver} \th{GF(3)}}
+  \tr{\td{Sub-neural} \td{trit-tick} \td{~2ms} \td{brainfloj.zig classifier (per-sample)} \td{The quantum}}
+  \tr{\td{Sample} \td{eeg_sample} \td{4ms} \td{ADS1299 ADC @ 250/500Hz} \td{Raw}}
+  \tr{\td{Perceptual} \td{critical_flicker} \td{16.7ms} \td{SSVEP stimulus (60Hz)} \td{+1 red}}
+  \tr{\td{Oscillatory} \td{alpha_cycle} \td{100ms} \td{FFT bandpower window} \td{0 horse}}
+  \tr{\td{Neural} \td{chronaxie} \td{~300ms} \td{P300/ERP component} \td{-1 blue}}
+  \tr{\td{Vascular} \td{hemodynamic_delay} \td{2s} \td{fNIRS HbO/HbR (planned)} \td{GF(3) on HbO}}
+  \tr{\td{Phenomenal} \td{specious_present} \td{2.5s} \td{Rider's subjective "now"} \td{Integration window}}
+  \tr{\td{Babylonian} \td{helek} \td{3.333s} \td{brainfloj_helek pipeline} \td{Trit output}}
+  \tr{\td{Archival} \td{ducklake_snapshot} \td{60s} \td{DuckLake parquet commit} \td{Time-travel}}
+  \tr{\td{Circadian} \td{circadian} \td{86400s} \td{Session-level statistics} \td{Drift}}
+}
+}
+
+\subtree{
+\title{Necessity Relations}
+
+\p{A device is a \strong{necessary neighbor} of a time unit when removing it creates
+a gap in the temporal sheaf — no other device can resolve that scale.}
+
+\ul{
+  \li{\strong{Quick-20 → alpha_cycle}: 20ch dry EEG is the minimal device for
+      spatial alpha topography. Cyton 8ch undersamples spatially.}
+  \li{\strong{fNIRS → hemodynamic_delay}: No EEG device resolves the 2s hemodynamic
+      response. fNIRS is necessary, not optional.}
+  \li{\strong{Haptic (Neosensory Buzz) → chronaxie}: Closing the K⊣P adjunction
+      ([[bci-0003]]) requires efferent output at neural timescale.}
+  \li{\strong{Eye tracker → critical_flicker}: Gaze-contingent SSVEP requires
+      knowing fixation point at 60Hz+.}
+  \li{\strong{DuckLake → ducklake_snapshot}: Versioned storage is the only way to
+      do temporal queries across sessions.}
+  \li{\strong{brainfloj.zig → trit-tick}: The classifier \em{is} the trit-tick.
+      Without it, raw samples have no GF(3) semantics.}
+  \li{\strong{helek → specious_present}: The helek (3.333s) is the nearest
+      computational quantum above the specious present (2.5s). It integrates
+      phenomenal experience into a trit.}
+}
+}
+
+\subtree{
+\title{The Helek as Compositional Fixed Point}
+
+\p{Why 3.333s and not 1s or 5s? The helek sits at the intersection of:}
+\ol{
+  \li{Above specious present (2.5s) — captures one full "now"}
+  \li{Contains 3+ alpha cycles — sufficient for bandpower estimation}
+  \li{Contains 1+ hemodynamic responses — fNIRS-compatible window}
+  \li{Maximally divisible: #{1080 = 2^3 \times 3^3 \times 5} heleks per hour}
+  \li{GF(3) native: #{1080 \equiv 0 \pmod{3}} — trit arithmetic closes cleanly}
+  \li{At 500Hz: 1667 samples = prime-adjacent, resists aliasing artifacts}
+}
+
+\p{The helek is not arbitrary — it is the \strong{necessary neighbor} of human
+temporal experience in the same way that the Planck time is the necessary
+neighbor of quantum gravity. It is the smallest window that captures
+a complete phenomenal moment with statistical significance.}
+}
+
+\subtree{
+\title{LSL Stream Topology}
+
+\p{LabStreaming Layer unifies the multi-device temporal sheaf into a single
+synchronized clock domain:}
+
+\pre{%
+  CGX Quick-20 ──[CGX LSL Connector]──→ LSL outlet (20ch, 500Hz)
+  fNIRS        ──[NIRx LSL bridge]────→ LSL outlet (8ch, 10Hz)
+  Eye tracker  ──[Tobii LSL bridge]───→ LSL outlet (gaze, 120Hz)
+  Haptic out   ←──[LSL inlet]─────────── Neosensory Buzz (trit→vibration)
+                         │
+                    LSL LabRecorder
+                         │
+                    XDF file (all streams, unified timestamps)
+                         │
+                  ┌──────┴──────┐
+                  │             │
+           BrainVision    brainfloj_stream.py
+           Analyzer 2          │
+                          DuckLake parquet
+}
+
+\p{Each LSL stream is a \strong{local section} of the temporal sheaf.
+The XDF file is the \strong{descent datum} — it glues all local sections
+into a global brain state per helek window. BrainVision Analyzer and
+brainfloj are two different \strong{cocycles} on the same descent data.}
+}

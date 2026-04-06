@@ -1,0 +1,119 @@
+\title{Cognionics Quick-20: Serial Protocol and Software Integration}
+\import{macros}
+\author{bmorphism}
+\date{2026-04-05}
+\taxon{reference}
+\tag{device}
+\tag{cognionics}
+\tag{serial}
+
+\p{The \strong{CGX/Cognionics Quick-20} (HD-72 variant) is a dry-electrode EEG system
+currently connected at \code{/dev/cu.usbserial-AI1B2OSR} at 115200 baud.
+Measured via \code{brainfloj_helek_cognionics.py}: 20 channels detected,
+~5.65 Hz effective sample rate (impedance/heartbeat mode), 1,384 B/s.
+Full acquisition mode (500 Hz, 20ch) requires a CGX Acquisition start command.}
+
+\subtree{
+\title{Binary Protocol}
+
+\p{The Quick-20 uses a proprietary binary protocol over USB serial:}
+\ul{
+  \li{24-bit samples (3 bytes per channel, big-endian, two's complement)}
+  \li{No consistent 0xA0 sync header (unlike OpenBCI Cyton)}
+  \li{Packet size = \code{n_channels * 3} bytes}
+  \li{Auto-detection: try channel counts [20, 32, 64, 8], score by active-channel variance}
+  \li{ADS1299 ADC likely on-board (same as Cyton, different protocol wrapper)}
+}
+
+\p{Current state: device streams impedance/heartbeat packets at ~5.65 Hz.
+Switching to full EEG acquisition requires the CGX Acquisition software
+or the correct serial init sequence (undocumented publicly).}
+}
+
+\subtree{
+\title{Helek Measurement Results (30 heleks)}
+
+\p{From \code{brainfloj_helek_cognionics.py}, 30 heleks = 100s:}
+\ul{
+  \li{Shannon entropy: 4.32 bits (near-maximal for 20ch = log2(20) = 4.32)}
+  \li{Trit classification: oscillates {-1, 0, +1} — uniform in impedance mode}
+  \li{Mean channel std: ~600 (arbitrary units, impedance-dominated)}
+  \li{Active channels (std > 1): 20/20}
+}
+
+\p{Interpretation: maximal entropy + random trit = no structured neural signal yet.
+Once acquisition mode is unlocked, expect entropy to drop to 2.5-3.5 bits
+and trit to correlate with cognitive state (per [[bci-0003]] cofunctor model).}
+}
+
+\subtree{
+\title{Software Compatibility Matrix}
+
+\table{
+  \tr{\th{Platform} \th{Support} \th{Protocol} \th{Notes}}
+  \tr{\td{LabStreaming Layer (LSL)} \td{Native} \td{CGX LSL Connector (bundled)} \td{Primary real-time streaming path. XDF output.}}
+  \tr{\td{BrainVision Recorder} \td{Via LSL} \td{LSL→BVR bridge} \td{.vhdr/.vmrk/.eeg export. Impedance check in CGX Acquisition first.}}
+  \tr{\td{MATLAB} \td{Via LSL / BCILAB} \td{\code{lsl_inlet} or \code{cgx_matlab_sdk}} \td{Real-time via \code{liblsl-Matlab}. Offline via XDF import.}}
+  \tr{\td{OpenViBE} \td{Via LSL} \td{LSL Client driver} \td{Acquisition Server → LSL Client box. 20ch standard montage.}}
+  \tr{\td{BrainFlow} \td{No native board ID} \td{N/A} \td{Not supported. Use direct serial (\code{brainfloj_helek_cognionics.py}).}}
+  \tr{\td{brainfloj (nanoclj-zig)} \td{Native} \td{CSV/TSV delimited} \td{\code{(brainfloj-read path 20 1)} — column offset 1 for timestamp.}}
+  \tr{\td{DuckLake} \td{Via brainfloj_stream} \td{Parquet snapshots} \td{Time-travel versioned storage. 60s commit interval.}}
+}
+}
+
+\subtree{
+\title{Time-Unit Resolution Map}
+
+\p{The device's temporal resolution determines which time units ([[bci-0015]],
+time-units.md) are \em{necessary neighbors} — scales that require this device
+to resolve:}
+
+\table{
+  \tr{\th{Time Unit} \th{Duration} \th{Quick-20 @ 500Hz} \th{Quick-20 @ 5.65Hz} \th{Necessity}}
+  \tr{\td{trit-tick} \td{~2ms} \td{1 sample} \td{below Nyquist} \td{Requires 500Hz mode}}
+  \tr{\td{flick} \td{1.4ns} \td{below ADC} \td{below ADC} \td{Not resolvable}}
+  \tr{\td{eeg_sample} \td{4ms} \td{2 samples} \td{below Nyquist} \td{Requires 500Hz mode}}
+  \tr{\td{critical_flicker} \td{16.7ms} \td{8 samples} \td{below Nyquist} \td{SSVEP needs 500Hz}}
+  \tr{\td{alpha_cycle} \td{100ms} \td{50 samples} \td{0.6 samples} \td{Resolved only at 500Hz}}
+  \tr{\td{chronaxie} \td{~300ms} \td{150 samples} \td{1.7 samples} \td{Marginal at 5.65Hz}}
+  \tr{\td{hemodynamic_delay} \td{2s} \td{1000 samples} \td{11 samples} \td{Resolvable (coarse)}}
+  \tr{\td{specious_present} \td{2.5s} \td{1250 samples} \td{14 samples} \td{Resolvable}}
+  \tr{\td{helek} \td{3.333s} \td{1667 samples} \td{19 samples} \td{Resolvable (brainfloj quantum)}}
+  \tr{\td{ducklake_snapshot} \td{60s} \td{30000 samples} \td{339 samples} \td{Well-resolved}}
+}
+
+\p{The \strong{critical gap}: impedance mode (5.65 Hz) cannot resolve anything faster
+than hemodynamic delay. Unlocking 500Hz acquisition is the necessary condition
+for the Quick-20 to participate in the full trit-tick → helek pipeline.}
+}
+
+\subtree{
+\title{GF(3) Device Role}
+
+\p{In the three-room framework ([[horse-0001]]):}
+\ul{
+  \li{\strong{bci.blue} (-1): Quick-20 covers frontal (Fp1/Fp2/F3/F4/F7/F8/Fz) and
+      temporal (T3/T4/T5/T6) — inhibition, alpha suppression, afferent decode}
+  \li{\strong{bci.red} (+1): Quick-20 covers occipital (O1/O2/Oz) and parietal (P3/P4/Pz)
+      — activation, beta burst, SSVEP, efferent motor imagery}
+  \li{\strong{bci.horse} (0): The \em{crossover} channels (C3/C4/Cz) sit at the
+      boundary — sensorimotor cortex where afferent meets efferent}
+}
+
+\p{20-channel montage spans all three rooms simultaneously, unlike the 8ch Cyton
+which requires montage compromises. The Quick-20 is the \strong{minimal complete}
+device for the GF(3) trit pipeline.}
+}
+
+\subtree{
+\title{Next Steps}
+
+\ol{
+  \li{Obtain CGX Acquisition software license or reverse-engineer the serial init
+      command to switch from impedance to EEG acquisition mode}
+  \li{Re-measure 30+ heleks at 500 Hz — expect structured entropy and meaningful trits}
+  \li{Bridge to LSL for real-time streaming to BrainVision/MATLAB/OpenViBE}
+  \li{Update \code{brainfloj_stream.py} with Quick-20 serial parser (currently Cyton-only)}
+  \li{Calibrate #{M_{\mathrm{bci}}} ([[bci-0015]]) using Quick-20 during color bounty session}
+}
+}

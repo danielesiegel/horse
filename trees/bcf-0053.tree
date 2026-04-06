@@ -1,0 +1,104 @@
+\title{Cognionics HD-72: Serial Acquisition Log}
+\taxon{experiment}
+\author{barton-rhodes}
+\date{2026-04-05}
+\import{macros}
+\tag{eeg}
+\tag{cognionics}
+\tag{serial}
+\tag{protocol}
+\tag{live}
+\meta{modality}{electrophysiological}
+\meta{device}{Cognionics HD-72 64CH 1702HDG}
+\meta{dongle-serial}{AI1B2OSR}
+\meta{port}{/dev/cu.usbserial-AI1B2OSR}
+\meta{status}{streaming-partial}
+
+\p{Live acquisition log for the Cognionics HD-72 (\ref{bcf-0052}). Protocol reverse-engineered from \code{labstreaminglayer/App-Cognionics} and confirmed empirically. Key discovery: the device uses FTDI serial (not USB HID) and requires continuous 0x11 keepalive to sustain streaming.}
+
+\subtree{\title{Protocol Discovery}
+\taxon{finding}
+
+\subtree{\title{Step 1: Port identification}
+\p{Device enumerates as FTDI USB serial, not USB HID.}
+\pre{\startverb
+$ ls /dev/cu.usbserial-*
+/dev/cu.usbserial-AI1B2OSR
+
+$ ioreg -p IOUSB | grep -A5 AI1B2OSR
+USB Vendor Name = "FTDI"
+USBSpeed = 1          (Full Speed, 12 Mbps)
+UsbLinkSpeed = 12000000
+idVendor = 1027       (FTDI)
+idProduct = 24577
+\stopverb}
+}
+
+\subtree{\title{Step 2: Baud rate and wake command}
+\p{App-Cognionics specifies 1,500,000 baud (1.5 Mbaud), 8N1. Two control bytes:}
+\table{
+\tr{\th{Byte}\th{Function}\th{Effect}}
+\tr{\td{\code{0x11}}\td{Impedance ON}\td{Starts streaming (with impedance interleave)}}
+\tr{\td{\code{0x12}}\td{Impedance OFF}\td{Strips impedance, but device goes idle without keepalive}}
+}
+\p{Critical finding: \code{0x11} is the de facto start command. Without it, device outputs only ~1 KB/s of idle noise. With 0x11 sent every 50ms as keepalive, throughput jumps to \strong{52 KB/s}.}
+}
+
+\subtree{\title{Step 3: Throughput analysis}
+\table{
+\tr{\th{Condition}\th{Throughput}\th{Interpretation}}
+\tr{\td{Port open, no command}\td{1,065 B/s}\td{Idle / enumeration noise}}
+\tr{\td{Single 0x12 sent}\td{1,384 B/s}\td{Impedance stripped, device sleeps}}
+\tr{\td{Single 0x11 sent}\td{52,219 B/s (burst)}\td{Streams then drops to idle}}
+\tr{\td{0x11 every 50ms (keepalive)}\td{52,000 B/s (sustained)}\td{Full streaming}}
+}
+\p{Expected for 64ch at 500Hz: 194 bytes/sample times 500 = 97 KB/s. Observed 52 KB/s suggests either 250 Hz sampling or impedance interleaving doubles some packets.}
+}
+
+\subtree{\title{Step 4: Packet structure}
+\p{Stream entropy: 6.85 bits/byte (near-uniform). No clean 0xFF sync byte found -- contradicts App-Cognionics source which expects 0xFF framing. Strongest periodic signal: gap=66 bytes.}
+\p{Hypothesis: the HD-72 1702HDG firmware uses a different packet format than the models App-Cognionics was written for. The 66-byte gap could indicate a 21-channel sub-packet in a multiplexed scheme, or 64 single-byte samples plus 2-byte header.}
+\p{52,000 B/s divided by 194 bytes = 268 Hz (plausible reduced rate). 52,000 divided by 66 = 788 Hz (implausible). Protocol investigation ongoing.}
+}
+}
+
+\subtree{\title{Acquisition Tools}
+\taxon{remark}
+
+\subtree{\title{Python streamer}
+\p{\code{cognionics-stream.py}: pyserial-based, 64ch decode, LSL outlet + CSV output. Works but drops packets due to Python overhead at 52 KB/s.}
+}
+
+\subtree{\title{C streamer}
+\p{\code{cognionics-fast.c}: zero-copy C reader with macOS \code{IOSSIOSPEED} for 1.5 Mbaud. Compiled with \code{-framework IOKit}. Stalls on blocking reads -- needs the keepalive thread that the Python version discovered.}
+}
+
+\subtree{\title{nanoclj-zig path}
+\p{Once CSV is captured, \code{brainfloj-read} (\ref{bcf-0052}) handles 64-channel matrices natively. The pipeline is: serial to CSV to brainfloj to DuckDB to bci.horse transclusion.}
+}
+}
+
+\subtree{\title{Next: Full Streaming}
+\taxon{protocol}
+\p{To reach 500 Hz 64ch streaming:}
+\ol{
+\li{Determine correct packet format for HD-72 1702HDG firmware (may differ from App-Cognionics reference)}
+\li{Implement keepalive in C streamer (0x11 every 50ms on write thread)}
+\li{Find the actual sync byte or framing mechanism in the 52 KB/s stream}
+\li{Run 5-probe protocol (\ref{bcf-0052}) once framing is locked}
+\li{Feed to brainfloj for per-channel entropy and GF(3) trit classification}
+}
+}
+
+\subtree{\title{Transclusion chain}
+\p{This tree sits in the acquisition sequence:}
+\pre{\startverb
+bcf-0030 (Cyton 8ch, reference)
+  -> bcf-0051 (BCI landscape, where HD-72 fits)
+    -> bcf-0052 (HD-72 pipeline design, repos, probes)
+      -> bcf-0053 (THIS: live serial acquisition log)
+        -> cgt-0002 (resource sharing game, 64ch montage)
+          -> cgt-0004 (stock-flow, 6 cortical regions)
+\stopverb}
+\p{The chain goes: landscape to pipeline design to empirical data to game-theoretic analysis. Each tree transcludes the next via ref links.}
+}
