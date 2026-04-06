@@ -70,42 +70,57 @@ idProduct = 24577
 \p{\strong{Definitive finding}: the HD-72 1702HDG outputs raw, unframed serial data. The 104-byte autocorrelation is physical signal periodicity, not protocol structure. Without CGX proprietary software or protocol documentation, the channel count, byte order, and sample boundaries cannot be determined from the wire data alone.}
 }
 
-\subtree{\title{Step 5: Path to streaming}
-\p{Three options, ordered by speed to data:}
+\subtree{\title{Step 5: Exhaustive command probe}
+\p{Sent 22 different single-byte and multi-byte commands. Result: the device streams at 63-76 KB/s regardless of command content. There is no start/stop command -- the stream is always on. The \code{0x12} command briefly disrupts the stream (22 KB/s for one reading) then recovers.}
+\p{All commands produce identical entropy (~6.83 bits/byte). The device ignores unknown bytes.}
+}
+
+\subtree{\title{Step 6: Wireless link behavior}
+\p{Stream rate alternates between 65 KB/s (headset transmitting) and 1-2 KB/s (idle/no wireless packets). The dongle outputs whatever the headset sends, plus low-rate idle noise when no wireless packets arrive. This explains the variable rates across test runs.}
+}
+
+\subtree{\title{Step 7: Protocol search}
+\p{Exhaustive online search across CGX website (dev-kit, documents, software pages), NeuroPype CognionicsInput docs, Exa deep search, GitHub, Reddit, NeurotechX -- zero public documentation of the HD-72 1702HDG wire protocol. The CGX serial format is fully proprietary and undocumented.}
+\p{The only open-source reference (labstreaminglayer/App-Cognionics) targets an older protocol with 0xFF sync bytes that the HD-72 does not use.}
+}
+}
+
+\subtree{\title{USB Descriptor}
+\taxon{reference}
+\table{
+\tr{\th{Field}\th{Value}\th{Meaning}}
+\tr{\td{idVendor}\td{1027}\td{FTDI}}
+\tr{\td{idProduct}\td{24577 (0x6001)}\td{FT232R}}
+\tr{\td{bcdDevice}\td{0x0600}\td{Firmware 6.00}}
+\tr{\td{bDeviceClass}\td{0}\td{No device class (serial only)}}
+\tr{\td{bMaxPacketSize0}\td{8}\td{Full Speed standard}}
+\tr{\td{bNumConfigurations}\td{1}\td{Single config}}
+}
+\p{Plain FTDI FT232R -- no HID, no custom USB protocol. All data flows through the virtual serial port.}
+}
+
+\subtree{\title{Evidence Summary}
+\taxon{finding}
+\p{The HD-72 1702HDG serial protocol is:}
 \ol{
-\li{\strong{CGX Acquisition} (cgxsystems.com/software) -- proprietary, knows the framing, streams to LSL natively. Fastest path.}
-\li{\strong{Headset on head} -- re-run autocorrelation with real brain signals. Alpha rhythm (8-12Hz) will create periodic structure that reveals packet boundaries.}
-\li{\strong{CGX developer support} -- request HD-72 1702HDG serial protocol spec.}
+\li{\strong{Always streaming} -- no start/stop command, device ignores unknown bytes}
+\li{\strong{Unframed} -- no sync byte, no counter, no header/tail at any candidate packet size}
+\li{\strong{High entropy} (6.83 bits/byte) -- no structural bytes, uniform byte distribution}
+\li{\strong{Wireless-gated} -- 65 KB/s when headset transmits, 1-2 KB/s idle}
+\li{\strong{Undocumented} -- no public protocol spec, SDK, or reverse engineering exists}
+\li{\strong{Incompatible with App-Cognionics} -- different framing than the deprecated LSL relay}
 }
-}
-}
-
-\subtree{\title{Acquisition Tools}
-\taxon{remark}
-
-\subtree{\title{Python streamer}
-\p{\code{cognionics-stream.py}: pyserial-based, 64ch decode, LSL outlet + CSV output. Works but drops packets due to Python overhead at 52 KB/s.}
+\p{The 104-byte autocorrelation peak (corr=0.16) with harmonics at 208 and 311 bytes is ADC signal correlation, not packet framing -- confirmed by completely flat per-position variance across all positions.}
 }
 
-\subtree{\title{C streamer}
-\p{\code{cognionics-fast.c}: zero-copy C reader with macOS \code{IOSSIOSPEED} for 1.5 Mbaud. Compiled with \code{-framework IOKit}. Stalls on blocking reads -- needs the keepalive thread that the Python version discovered.}
-}
-
-\subtree{\title{nanoclj-zig path}
-\p{Once CSV is captured, \code{brainfloj-read} (\ref{bcf-0052}) handles 64-channel matrices natively. The pipeline is: serial to CSV to brainfloj to DuckDB to bci.horse transclusion.}
-}
-}
-
-\subtree{\title{Next: Full Streaming}
+\subtree{\title{Path to Streaming}
 \taxon{protocol}
-\p{To reach 500 Hz 64ch streaming:}
+\p{Two viable paths remain:}
 \ol{
-\li{Determine correct packet format for HD-72 1702HDG firmware (may differ from App-Cognionics reference)}
-\li{Implement keepalive in C streamer (0x11 every 50ms on write thread)}
-\li{Find the actual sync byte or framing mechanism in the 52 KB/s stream}
-\li{Run 5-probe protocol (\ref{bcf-0052}) once framing is locked}
-\li{Feed to brainfloj for per-channel entropy and GF(3) trit classification}
+\li{\strong{CGX Acquisition} (cgxsystems.com/software) -- proprietary Windows/macOS app that knows the framing. Outputs to LSL natively. Then: \code{pylsl} capture to CSV to \code{brainfloj-read} (\ref{bcf-0052}) to DuckDB to bci.horse.}
+\li{\strong{Sniff CGX Acquisition} -- run CGX software, simultaneously capture raw serial, correlate the LSL output with the raw bytes to reverse-engineer the framing. This is the open-source path.}
 }
+\p{Once LSL is flowing, all downstream tools are ready: \code{cognionics-stream.py} (Python LSL+CSV), \code{cognionics-fast.c} (C), \code{brainfloj.zig} (nanoclj-zig 64ch mode).}
 }
 
 \subtree{\title{Transclusion chain}
