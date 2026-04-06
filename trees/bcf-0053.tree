@@ -48,17 +48,33 @@ idProduct = 24577
 \table{
 \tr{\th{Condition}\th{Throughput}\th{Interpretation}}
 \tr{\td{Port open, no command}\td{1,065 B/s}\td{Idle / enumeration noise}}
-\tr{\td{Single 0x12 sent}\td{1,384 B/s}\td{Impedance stripped, device sleeps}}
-\tr{\td{Single 0x11 sent}\td{52,219 B/s (burst)}\td{Streams then drops to idle}}
-\tr{\td{0x11 every 50ms (keepalive)}\td{52,000 B/s (sustained)}\td{Full streaming}}
+\tr{\td{Single 0x12 sent}\td{55-77 KB/s (sustained)}\td{Full streaming, no keepalive needed}}
+\tr{\td{Single 0x11 sent}\td{52 KB/s (sustained)}\td{Streaming with impedance interleave}}
+\tr{\td{0x11 keepalive flood}\td{52 KB/s (corrupted)}\td{Keepalive bytes pollute data stream}}
 }
-\p{Expected for 64ch at 500Hz: 194 bytes/sample times 500 = 97 KB/s. Observed 52 KB/s suggests either 250 Hz sampling or impedance interleaving doubles some packets.}
+\p{Key correction: \code{0x12} alone sustains streaming (55-77 KB/s, variable due to macOS FTDI scheduling). No keepalive needed. The \code{0x11} keepalive flood was corrupting framing.}
 }
 
-\subtree{\title{Step 4: Packet structure}
-\p{Stream entropy: 6.85 bits/byte (near-uniform). No clean 0xFF sync byte found -- contradicts App-Cognionics source which expects 0xFF framing. Strongest periodic signal: gap=66 bytes.}
-\p{Hypothesis: the HD-72 1702HDG firmware uses a different packet format than the models App-Cognionics was written for. The 66-byte gap could indicate a 21-channel sub-packet in a multiplexed scheme, or 64 single-byte samples plus 2-byte header.}
-\p{52,000 B/s divided by 194 bytes = 268 Hz (plausible reduced rate). 52,000 divided by 66 = 788 Hz (implausible). Protocol investigation ongoing.}
+\subtree{\title{Step 4: Protocol mismatch}
+\p{The HD-72 1702HDG firmware does NOT use the App-Cognionics 0xFF sync byte protocol:}
+\ul{
+\li{Stream entropy: 6.81 bits/byte at 1.5Mbaud (near-uniform, no structural bytes)}
+\li{Zero 0xFF sync bytes in 122K sample}
+\li{No low-variance byte positions at any candidate packet size (66, 98, 130, 194, 200, 258)}
+\li{Autocorrelation: best lag=102 (corr=0.117), not 194}
+\li{Baud scan: 1.5Mbaud confirmed correct (1Mbaud shows bit-error artifacts: entropy drops to 5.70, byte values cluster on multiples of 8)}
+}
+\p{App-Cognionics \code{mainwindow.cpp} uses non-standard bit packing: \code{(msb<<24) | (lsb2<<17) | (lsb1<<10)}, not standard 24-bit. But this is irrelevant since the HD-72 1702HDG does not emit the expected framing at all.}
+\p{Without headset on head, all channels rail to noise (sample-to-sample diff ~610,000 uV vs ~1-50 uV for real EEG). The raw data cannot be decoded until framing is known.}
+}
+
+\subtree{\title{Step 5: Path to streaming}
+\p{Three options, ordered by speed to data:}
+\ol{
+\li{\strong{CGX Acquisition} (cgxsystems.com/software) -- proprietary, knows the framing, streams to LSL natively. Fastest path.}
+\li{\strong{Headset on head} -- re-run autocorrelation with real brain signals. Alpha rhythm (8-12Hz) will create periodic structure that reveals packet boundaries.}
+\li{\strong{CGX developer support} -- request HD-72 1702HDG serial protocol spec.}
+}
 }
 }
 

@@ -25,9 +25,13 @@ Full acquisition mode (500 Hz, 20ch) requires a CGX Acquisition start command.}
   \li{ADS1299 ADC likely on-board (same as Cyton, different protocol wrapper)}
 }
 
-\p{Current state: device streams impedance/heartbeat packets at ~5.65 Hz.
-Switching to full EEG acquisition requires the CGX Acquisition software
-or the correct serial init sequence (undocumented publicly).}
+\p{Current state: device streams impedance noise at baud-rate-dependent throughput.
+At 921600 baud: 729 Hz effective, but entropy=4.322 (maximal), band power flat,
+full 24-bit range saturated — confirmed impedance mode, not EEG.
+36.4 Hz autocorrelation = impedance injection frequency.
+Serial port is \strong{unidirectional output} — device ignores all input commands.
+Control channel likely requires CGX Acquisition software (Windows) via separate
+USB endpoint or proprietary handshake.}
 }
 
 \subtree{
@@ -55,7 +59,7 @@ and trit to correlate with cognitive state (per [[bci-0003]] cofunctor model).}
   \tr{\td{BrainVision Recorder} \td{Via LSL} \td{LSL→BVR bridge} \td{.vhdr/.vmrk/.eeg export. Impedance check in CGX Acquisition first.}}
   \tr{\td{MATLAB} \td{Via LSL / BCILAB} \td{\code{lsl_inlet} or \code{cgx_matlab_sdk}} \td{Real-time via \code{liblsl-Matlab}. Offline via XDF import.}}
   \tr{\td{OpenViBE} \td{Via LSL} \td{LSL Client driver} \td{Acquisition Server → LSL Client box. 20ch standard montage.}}
-  \tr{\td{BrainFlow} \td{No native board ID} \td{N/A} \td{Not supported. Use direct serial (\code{brainfloj_helek_cognionics.py}).}}
+  \tr{\td{BrainFlow} \td{Native} \td{\code{BoardIds.CGX_QUICK20_BOARD}} \td{Direct Bluetooth. \code{pip install brainflow}. Bypasses CGX Acquisition.}}
   \tr{\td{brainfloj (nanoclj-zig)} \td{Native} \td{CSV/TSV delimited} \td{\code{(brainfloj-read path 20 1)} — column offset 1 for timestamp.}}
   \tr{\td{DuckLake} \td{Via brainfloj_stream} \td{Parquet snapshots} \td{Time-travel versioned storage. 60s commit interval.}}
 }
@@ -109,8 +113,9 @@ device for the GF(3) trit pipeline.}
 \title{Next Steps}
 
 \ol{
-  \li{Obtain CGX Acquisition software license or reverse-engineer the serial init
-      command to switch from impedance to EEG acquisition mode}
+  \li{Switch to acquisition mode: either (a) CGX Acquisition software (click "Record"/"Start LSL"),
+      (b) BrainFlow with \code{BoardIds.CGX_QUICK20_BOARD} via Bluetooth, or
+      (c) reverse-engineer the serial init command}
   \li{Re-measure 30+ heleks at 500 Hz — expect structured entropy and meaningful trits}
   \li{Bridge to LSL for real-time streaming to BrainVision/MATLAB/OpenViBE}
   \li{Update \code{brainfloj_stream.py} with Quick-20 serial parser (currently Cyton-only)}
