@@ -1,0 +1,109 @@
+\title{Cognionics HD-72: Acquisition Pipeline}
+\taxon{device}
+\author{barton-rhodes}
+\date{2026-04-05}
+\import{macros}
+\tag{eeg}
+\tag{hardware}
+\tag{cognionics}
+\tag{64ch}
+\tag{dry-electrode}
+\meta{modality}{electrophysiological}
+\meta{manufacturer}{CGX / Cognionics}
+\meta{product}{HD-72 64CH 1702HDG}
+\meta{channels}{64}
+\meta{electrode-type}{dry}
+\meta{interface}{USB (FTDI)}
+\meta{dongle-serial}{AI1B2OSR}
+\meta{status}{enumerated-not-streaming}
+
+\p{Cognionics HD-72 64-channel dry EEG headset detected at USB. Device enumerated as \code{Cognionics HD-72 64CH 1702HDG@00100000}. Research-grade wireless dry EEG -- 8x the channel count of the Cyton 8ch (\ref{bcf-0030}).}
+
+\subtree{\title{Open Source Acquisition Paths}
+\taxon{remark}
+
+\subtree{\title{Path A: LSL via App-Cognionics (canonical)}
+\p{Official LSL relay for Cognionics devices.}
+\ul{
+\li{Repo: \code{labstreaminglayer/App-Cognionics} (C++, contributors: cboulay, xloem)}
+\li{URL: \code{https://github.com/labstreaminglayer/App-Cognionics}}
+\li{Protocol: Cognionics USB HID to LSL outlet, 64ch at 500Hz}
+\li{Downstream: \code{pylsl} or \code{mne-lsl} reads LSL stream}
+}}
+
+\subtree{\title{Path B: Python closed-loop}
+\p{Minimal Python scripts for Cognionics to LSL to PsychoPy feedback loop.}
+\ul{
+\li{Repo: \code{idontknoweider/cognionics-lsl-loop} (Python)}
+\li{URL: \code{https://github.com/idontknoweider/cognionics-lsl-loop}}
+\li{Shows full acquire to process to feedback cycle}
+}}
+
+\subtree{\title{Path C: CGX Acquisition (proprietary)}
+\p{CGX official DAQ software. Streams to LSL natively. Download from \code{cgxsystems.com/software}. Fastest path to data but closed source.}
+}
+
+\subtree{\title{Path D: nanoclj-zig brainfloj (native Zig ingest)}
+\p{Already built. \code{brainfloj.zig} handles 72-channel-style CSV matrices.}
+\pre{\startverb
+;; nanoclj-zig REPL
+(def data (brainfloj-read "cognionics-rest.csv" 64 1))
+;; => {:samples 5000 :channels 64 :means [...] :entropy 4.72 :trit 0}
+
+;; MCP tool for agent use
+nanoclj_brainfloj_read path="rest.csv" channels=64 offset=1
+\stopverb}
+\p{Returns per-channel means, Shannon entropy, GF(3) trit classification. No BrainFlow support exists for Cognionics -- this is the open alternative.}
+}}
+
+\subtree{\title{Full Pipeline}
+\pre{\startverb
+Cognionics HD-72 (USB HID)
+  -> App-Cognionics (C++ LSL relay) or CGX Acquisition
+    -> LSL outlet (64ch @ 500Hz)
+      -> pylsl capture to CSV
+        -> nanoclj-zig (brainfloj-read path 64 1)
+          -> DuckDB ies_messages.duckdb (interactions table)
+            -> bci.horse transclusion (this tree)
+\stopverb}
+}
+
+\subtree{\title{Maximally Different Initial Probes}
+\taxon{protocol}
+\p{Five probes, each activating a different spatial region and frequency band. Together they give full 64-channel quality coverage in under 60 seconds.}
+
+\table{
+\tr{\th{Probe}\th{Duration}\th{Instruction}\th{Target region}\th{Differentiates}}
+\tr{\td{1. Eyes closed rest}\td{10s}\td{Relax, breathe}\td{O1/O2/Oz/POz}\td{Occipital alpha (8-12Hz) -- posterior channels}}
+\tr{\td{2. Jaw clench 3x}\td{5s}\td{Clench-release}\td{T7/T8/FT7/FT8}\td{Temporal EMG artifact -- lateral channels}}
+\tr{\td{3. Eye blinks 5x}\td{5s}\td{Blink deliberately}\td{Fp1/Fp2/AF3/AF4}\td{Frontal artifact -- anterior channels}}
+\tr{\td{4. Left hand squeeze imagery}\td{10s}\td{Imagine squeezing}\td{C4/CP4 vs C3/CP3}\td{Mu desync -- central + lateralization}}
+\tr{\td{5. Count backwards from 100 by 7s}\td{10s}\td{Mental arithmetic}\td{Fz/FCz}\td{Frontal theta -- midline + cognitive load}}
+}
+
+\p{GF(3) trit assignment: rest = -1 (coplay), motor = +1 (play), arithmetic = 0 (ergodic). Sum check: (-1) + (+1) + 0 = 0. Conservation holds.}
+}
+
+\subtree{\title{HD-72 vs Cyton 8ch}
+\table{
+\tr{\th{Dimension}\th{Cyton (\ref{bcf-0030})}\th{HD-72 (this)}\th{Ratio}}
+\tr{\td{Channels}\td{8}\td{64}\td{8x}}
+\tr{\td{Electrode type}\td{Dry (Ultracortex)}\td{Dry (proprietary flex)}\td{--}}
+\tr{\td{Sampling rate}\td{250 Hz}\td{500 Hz}\td{2x}}
+\tr{\td{Known bad channels}\td{C3, P7 (railed)}\td{TBD}\td{--}}
+\tr{\td{Open protocol}\td{Yes (OpenBCI serial)}\td{No (USB HID, needs LSL relay)}\td{--}}
+\tr{\td{BrainFlow support}\td{Yes}\td{No}\td{--}}
+\tr{\td{nanoclj-zig support}\td{Yes (brainfloj)}\td{Yes (brainfloj, 64ch mode)}\td{--}}
+}
+\p{The HD-72 has 8x spatial resolution but a closed USB protocol. The LSL relay is the bridge. Once data hits CSV or LSL stream, nanoclj-zig treats both identically.}
+}
+
+\subtree{\title{CGT Game-Theoretic Reading}
+\p{With 64 channels, the resource sharing game (\ref{cgt-0002}) becomes richer: the montage is no longer sparse (8 electrodes sampling a 2D manifold) but dense (64 electrodes at 10-20+ positions). The Kan extension obstruction that plagued the Cyton (C3/P7 dead = left hemisphere blind spot) is likely resolvable -- with 64 channels, neighboring electrodes (C1, C5, CP3, FC3) can interpolate for any single bad contact.}
+
+\p{The coordination game (\ref{cgt-0004}) gains a richer stock-flow structure: 64 channels partition naturally into 6 cortical regions (frontal, central, temporal, parietal, occipital, midline), each a stock with inter-region flows. The double operadic composition (\ref{cgt-0001}) has more levels to compose.}
+}
+
+\subtree{\title{Morgan Hough Connection}
+\p{Morgan Hough (Frontier Tower neurotech channel) has access to dry electrode systems and organizes NeurotechSF. The HD-72 is exactly the class of device he works with. Follow-up action: share this tree + probe protocol as conversation starter for the Sunday Gemma 4 x BCI event.}
+}

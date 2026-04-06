@@ -1,0 +1,28 @@
+\title{Pattern-on-matter decoding}
+\taxon{definition}
+\import{macros}
+
+\p{The decode stage (Stage 4) is an instance of Libkind-Spivak's
+\strong{pattern runs on matter} ([[libkind-pattern-matter-2024]]).}
+
+\p{The \strong{pattern} (free monad) is the decoder's decision tree:
+given brain state #{s}, the decoder chooses action #{a}, then awaits
+feedback #{f}, then chooses again. This is a free monad on the endofunctor
+#{F(X) = A \times (B \to X)} where #{A} is the action set and #{B} is the
+feedback set.}
+
+\p{The \strong{matter} (cofree comonad) is the brain + body: it has a current
+state, and for every action produces a next state plus feedback. This is
+the cofree comonad on #{G(X) = S \times (A \to X)} where #{S} is the
+observation set.}
+
+\p{The \strong{module action} #{W \triangleright M} runs pattern on matter:
+at each step, the free monad's decision is fed to the cofree comonad's
+transition, producing the next observation. This is precisely the
+closed-loop cofunctor chain from [[bci-0003]]:
+#{\mathrm{Brain} \to \mathrm{Decoder} \to \mathrm{Effector} \to \mathrm{Stimulator} \to \mathrm{Brain}}.}
+
+\p{Nash equilibrium of the decode game: the pattern (decoder) cannot
+improve its classification accuracy by unilateral deviation from the
+current strategy, given the brain's dynamical response. Calibration
+(the 2-cell from [[bci-0003]]) is the process of finding this equilibrium.}
