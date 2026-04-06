@@ -61,11 +61,13 @@ idProduct = 24577
 \li{Stream entropy: 6.81 bits/byte at 1.5Mbaud (near-uniform, no structural bytes)}
 \li{Zero 0xFF sync bytes in 122K sample}
 \li{No low-variance byte positions at any candidate packet size (66, 98, 130, 194, 200, 258)}
-\li{Autocorrelation: best lag=102 (corr=0.117), not 194}
+\li{Autocorrelation: best lag=104 bytes (corr=0.16) on 200KB sample at 65 KB/s. Harmonics at 208 (corr=0.20) and 311 (corr=0.35) confirm 104 as fundamental}
+\li{104-byte periodicity comes from ADC signal structure, not packet framing -- zero structural bytes at any position (variance range 5800-6267, completely flat)}
+\li{No counter detected (0\% sequential diffs at any byte or 16-bit position)}
 \li{Baud scan: 1.5Mbaud confirmed correct (1Mbaud shows bit-error artifacts: entropy drops to 5.70, byte values cluster on multiples of 8)}
 }
-\p{App-Cognionics \code{mainwindow.cpp} uses non-standard bit packing: \code{(msb<<24) | (lsb2<<17) | (lsb1<<10)}, not standard 24-bit. But this is irrelevant since the HD-72 1702HDG does not emit the expected framing at all.}
-\p{Without headset on head, all channels rail to noise (sample-to-sample diff ~610,000 uV vs ~1-50 uV for real EEG). The raw data cannot be decoded until framing is known.}
+\p{App-Cognionics \code{mainwindow.cpp} expects: \code{[0xFF sync] [counter] [N×3B channels] [0x10/0x11 tail]}. Uses non-standard bit packing: \code{(msb<<24) | (lsb2<<17) | (lsb1<<10)}. The HD-72 1702HDG emits none of this -- no sync, no counter, no tail, no framing of any kind.}
+\p{\strong{Definitive finding}: the HD-72 1702HDG outputs raw, unframed serial data. The 104-byte autocorrelation is physical signal periodicity, not protocol structure. Without CGX proprietary software or protocol documentation, the channel count, byte order, and sample boundaries cannot be determined from the wire data alone.}
 }
 
 \subtree{\title{Step 5: Path to streaming}
