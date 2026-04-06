@@ -1,0 +1,161 @@
+\title{The Trans-Pentad: Transduction, Transclusion, Transitivity, Transcendental, Transfusion}
+\taxon{framework}
+\author{barton-rhodes}
+\date{2026-04-05}
+\import{macros}
+\tag{trans}
+\tag{2-transducer}
+\tag{operadic}
+\tag{markov-blanket}
+\tag{capability}
+\tag{gf3}
+\meta{origin}{trans_trinity.jl (Gay.jl)}
+\meta{gf5-sum}{0}
+
+\p{Five modalities of the prefix \em{trans-} (across, through, beyond), extending the Trans-Trinity of \code{trans_trinity.jl} (Loregian 2-transducers + DMBD + Gay.jl coloring) into a pentad. Each modality names a distinct way structure crosses a boundary. Together they classify the morphism types in the bci.horse stack.}
+
+\subtree{\title{Pentad Diagram}
+\taxon{remark}
+
+\pre{\startverb
+                    TRANSDUCTION (+1)
+                   signal -> representation
+                   2-transducer (Q,t): A -> B
+                      /           \
+                     /    TRANS-   \
+                    /   CENDENTAL   \
+                   /      (+1)      \
+                  / conditions of    \
+                 /   possibility      \
+   TRANSCLUSION /         |           \ TRANSITIVITY
+      (-1)     /          |            \    (0)
+   operadic   *-----------+------------->* composition
+   embedding  |     TRANSFUSION (-1)    | f ; g
+              |  capability flow across | cod(f)=dom(g)
+              |  trust membrane         |
+              +-----------+-------------+
+\stopverb}
+
+\p{GF(5) conservation: (+1) + (-1) + (0) + (+1) + (-1) = 0.}
+}
+
+\subtree{\title{[+1] Transduction}
+\taxon{modality}
+\meta{trit}{+1}
+\meta{role}{PLUS}
+
+\p{\strong{Signal to representation.} A 2-transducer \code{(Q, t) : A -> B} converts input words over alphabet \code{A} to output words over \code{B}, mediated by a state category \code{Q} whose objects carry morphisms (not just identity). After Loregian (arXiv:2509.06769).}
+
+\p{Instances in the stack:}
+\ul{
+\li{BCI: EEG voltage -> neural features (HD-72 64ch pipeline, \ref{bcf-0052})}
+\li{CETI: cetacean vocalization -> symbolic parse}
+\li{LLM: natural language -> PLoT (Word-to-World, Wong et al.)}
+\li{Gay.jl: MAC address -> SplitMix64 seed -> SRGB color}
+}
+
+\p{The profunctor \code{t : A x Q^op x Q x B*^op -> Set} encodes context-sensitive translation. 2-cells between transducers = fine-tuning / adaptation.}
+}
+
+\subtree{\title{[-1] Transclusion}
+\taxon{modality}
+\meta{trit}{-1}
+\meta{role}{MINUS}
+
+\p{\strong{Operadic embedding.} One structure includes another by reference, not by copy. Ted Nelson's original: a document includes a passage from another document, which remains live-linked to its source. Categorically: operadic substitution \code{self.substitute(box, other)}.}
+
+\p{Instances in the stack:}
+\ul{
+\li{Forester \code{\\ref\{bcf-0052\}}: this tree transcluding the HD-72 pipeline}
+\li{Aella term-graph DPO rewriting: CRDT merge = transclusion of concurrent edits}
+\li{OCapN CapTP: a capability reference is a transclusion of authority}
+\li{nanoclj-zig \code{brainfloj-read}: transcluding a CSV matrix into the REPL namespace}
+}
+
+\p{Transclusion is the dual of transduction: where transduction transforms content across a boundary, transclusion preserves content while crossing a reference boundary.}
+}
+
+\subtree{\title{[0] Transitivity}
+\taxon{modality}
+\meta{trit}{0}
+\meta{role}{ERGODIC}
+
+\p{\strong{Composition.} If \code{f : A -> B} and \code{g : B -> C} then \code{f ; g : A -> C}. The most basic categorical operation. Transitivity is what makes a preorder into something you can reason along.}
+
+\p{Instances in the stack:}
+\ul{
+\li{Markov blanket factorization: \code{p(s,z|b) = p(s|b) p(z|b)} -- conditional independence is transitive through the blanket (\code{nanoclj-zig/src/transitivity.zig})}
+\li{Boris-hedges ParaLens: \code{play ; coplay} composition through 6-wire diagrams}
+\li{Nashator game trees: backward induction = transitive closure of best-response}
+\li{GF(3) conservation: \code{(+1) + (0) + (-1) = 0} -- trit sums are transitive across triads}
+}
+
+\p{Transitivity is the ergodic modality: it neither creates nor destroys, it connects.}
+}
+
+\subtree{\title{[+1] Transcendental}
+\taxon{modality}
+\meta{trit}{+1}
+\meta{role}{PLUS}
+
+\p{\strong{Conditions of possibility.} Kant: the transcendental is not what is experienced but what makes experience possible. The keyboard before the keystroke. The type system before the program. The Markov blanket before the inference.}
+
+\p{Instances in the stack:}
+\ul{
+\li{Transcendental keyboard (\code{asi/skills/transcendental-keyboard/}): Emacs keybindings as precondition for all editing}
+\li{Ordered locale: the way-below relation \code{<<} is the transcendental structure -- it determines which opens are computably reachable before you ask about any particular open}
+\li{OCapN: the capability discipline is transcendental -- it determines what interactions are possible before any message is sent}
+\li{GF(3) itself: the conservation law is transcendental -- it constrains all triads before any specific trit assignment}
+}
+}
+
+\subtree{\title{[-1] Transfusion}
+\taxon{modality}
+\meta{trit}{-1}
+\meta{role}{MINUS}
+
+\p{\strong{Capability flow across trust membranes.} Blood transfusion: typed fluid crossing a biological membrane, compatibility checked at the boundary. In distributed systems: capability tokens flowing across trust boundaries with attenuation.}
+
+\p{Instances in the stack:}
+\ul{
+\li{zig-syrup <-> Nashator wire: 4-byte BE + JSON-RPC 2.0 crossing process boundary on :9999}
+\li{Goblins CapTP: sturdyrefs attenuating as they cross vat boundaries}
+\li{CCTP V2: USDC crossing Cosmos -> EVM chain boundary (Noble CCTP V2 gap)}
+\li{BCI: neural signal crossing skull -> electrode -> amplifier -> ADC -> LSL -> nanoclj-zig (each boundary = a transfusion with impedance matching)}
+\li{Gay.jl color propagation: deterministic seed crossing CRDT replica boundaries, same color on all sides}
+}
+
+\p{Transfusion is the dual of the transcendental: where the transcendental establishes conditions before experience, transfusion is the actual flow that those conditions constrain. The Markov blanket (transcendental) determines what can flow; the sensory/active signals (transfusion) are what actually flows.}
+}
+
+\subtree{\title{Pentad Algebra}
+\taxon{remark}
+
+\p{The five modalities form a pentagon, not a triangle. The GF(3) trit assignment \code{(+1, -1, 0, +1, -1)} sums to 0 mod 5 (and mod 3, since 0 mod 3 too). But the natural algebraic setting is \strong{GF(5)}: the smallest field where a 5-element sum can vanish nontrivially.}
+
+\table{
+\tr{\th{Trans-}\th{Trit}\th{Role}\th{Boundary type}\th{Direction}}
+\tr{\td{Transduction}\td{+1}\td{PLUS}\td{Signal/meaning}\td{Content transforms}}
+\tr{\td{Transclusion}\td{-1}\td{MINUS}\td{Reference/identity}\td{Content preserved}}
+\tr{\td{Transitivity}\td{0}\td{ERGODIC}\td{Composition}\td{Connects}}
+\tr{\td{Transcendental}\td{+1}\td{PLUS}\td{Possibility/type}\td{Constrains before}}
+\tr{\td{Transfusion}\td{-1}\td{MINUS}\td{Trust/membrane}\td{Flows through}}
+}
+
+\p{Dual pairs: Transduction/Transclusion (content transforms vs. preserves). Transcendental/Transfusion (conditions vs. flow). Transitivity is the fixed point.}
+}
+
+\subtree{\title{Connections}
+\taxon{remark}
+
+\p{Sources and cross-references:}
+\ul{
+\li{\code{.tmp/Gay.jl/examples/trans_trinity.jl} -- original Trans-Trinity implementation with 2-transducer visualization}
+\li{\code{nanoclj-zig/src/transitivity.zig} -- Markov blanket factorization as transitivity}
+\li{\ref{bcf-0052} -- HD-72 acquisition pipeline as transclusion chain + transfusion cascade}
+\li{\code{asi/skills/transcendental-keyboard/} -- keyboard as transcendental interface}
+\li{Loregian, arXiv:2509.06769 -- 2-transducers as 1-cells in a bicategory}
+\li{Nelson, \em{Literary Machines} (1981) -- transclusion as live reference}
+\li{Kant, \em{Critique of Pure Reason} (1781) -- transcendental as conditions of possibility}
+}
+}
