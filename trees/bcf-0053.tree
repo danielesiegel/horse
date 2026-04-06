@@ -83,6 +83,30 @@ idProduct = 24577
 \p{Exhaustive online search across CGX website (dev-kit, documents, software pages), NeuroPype CognionicsInput docs, Exa deep search, GitHub, Reddit, NeurotechX -- zero public documentation of the HD-72 1702HDG wire protocol. The CGX serial format is fully proprietary and undocumented.}
 \p{The only open-source reference (labstreaminglayer/App-Cognionics) targets an older protocol with 0xFF sync bytes that the HD-72 does not use.}
 }
+
+\subtree{\title{Step 8: Deep source analysis}
+\p{Retrieved full source of both independent old-protocol implementations and searched patents, NeuroPype docs, and wireless radio specs.}
+
+\subtree{\title{OpenViBE CDriverCognionics (Mike Chi, AGPL3, 2013)}
+\p{Full source retrieved from gitlab.inria.fr. Packet format identical to App-Cognionics: \code{0xFF} sync, counter, N×3B channels with \code{(msb<<24)|(lsb2<<17)|(lsb1<<10)} packing, 2 dummy bytes, 2B trigger. Scaling: \code{ADC_TO_VOLTS = 2*(2.5/(2^32*3.0))} with GAIN=3, VREF=2.5, ISTIM=24nA for impedance. Windows-only (\code{#if WIN32}). No descrambling. No model detection -- channel count/rate configured manually via UI.}
+}
+
+\subtree{\title{Mike Chi patents (7 total, Cognionics Inc.)}
+\p{No patent describes the wire-level serial protocol. US9935726B2 describes dual-radio architecture: Bluetooth data link + nRF24L01+ low-latency timing link (<300us). Other patents cover impedance measurement (US11779253), headgear mechanics (US10765363), dry electrode design (US9314183, US8798710).}
+}
+
+\subtree{\title{NeuroPype CognionicsInput}
+\p{Closed-source commercial software. CognionicsInput node has model-specific code paths via \code{headset} EnumPort with per-model defaults for baud rate, channel count, channel labels, sample rate. Verbose mode writes raw bytestream to \code{~/.neuropype/testing/cgx_bytes.txt}. Academic Edition available free for university researchers. Source would be inspectable as Python files once installed.}
+}
+
+\subtree{\title{FTDI and wireless radio analysis}
+\p{FT232R is a pure USB-UART bridge -- no data transformation (no scrambling, whitening, bit reversal). Wireless radios (Nordic nRF24L01+, TI CC2500) apply PN9 whitening at the radio layer, but it is stripped by the receiver chip before UART output. The high entropy (6.83 bits/byte) is consistent with raw 24-bit ADC data at mid-rail DC bias, not any form of scrambling.}
+}
+
+\subtree{\title{XOR differential analysis}
+\p{XOR of buf[i] with buf[i+3] produces entropy=7.72 (lower than raw 7.85), confirming 3-byte ADC channel grouping is preserved. XOR at all candidate periods (66-311) shows no encryption key period. Data is definitively NOT encrypted -- the structure is raw ADC output.}
+}
+}
 }
 
 \subtree{\title{USB Descriptor}
@@ -115,10 +139,12 @@ idProduct = 24577
 
 \subtree{\title{Path to Streaming}
 \taxon{protocol}
-\p{Two viable paths remain:}
+\p{Four viable paths, ordered by speed to first data:}
 \ol{
-\li{\strong{CGX Acquisition} (cgxsystems.com/software) -- proprietary Windows/macOS app that knows the framing. Outputs to LSL natively. Then: \code{pylsl} capture to CSV to \code{brainfloj-read} (\ref{bcf-0052}) to DuckDB to bci.horse.}
-\li{\strong{Sniff CGX Acquisition} -- run CGX software, simultaneously capture raw serial, correlate the LSL output with the raw bytes to reverse-engineer the framing. This is the open-source path.}
+\li{\strong{CGX Acquisition} (cgxsystems.com/software) -- proprietary macOS/Windows app that knows the framing. Outputs to LSL natively. Fastest path: \code{pylsl} capture to CSV to DuckDB to bci.horse.}
+\li{\strong{Contact CGX directly} -- cognionics.com states: "For building completely custom applications on new platforms, Cognionics can provide the technical details to interface directly with the hardware." Email info@cognionics.com with device serial and model.}
+\li{\strong{NeuroPype Academic Edition} -- free for university researchers. Once installed, inspect Python source of CognionicsInput node for HD-72 code path. Enable verbose mode to dump raw bytes to \code{~/.neuropype/testing/cgx_bytes.txt}.}
+\li{\strong{Sniff CGX Acquisition} -- run CGX software, simultaneously capture raw serial with \code{cognionics-fast.c}, correlate LSL output with raw bytes to reverse-engineer the framing. The open-source path.}
 }
 \p{Once LSL is flowing, all downstream tools are ready: \code{cognionics-stream.py} (Python LSL+CSV), \code{cognionics-fast.c} (C), \code{brainfloj.zig} (nanoclj-zig 64ch mode).}
 }
