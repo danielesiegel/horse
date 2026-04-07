@@ -2,6 +2,8 @@
 
 > Mixed-signal PCB redesign for a universal BCI analog front-end, compatible with OpenBCI Cyton/Daisy, Cognionics HD-72, and a new ultra-low-cost "ShitBCI" target.
 
+> **NOTE: All component selections below (MCUs, ADCs, passives, connectors) are provisional starting points, not final picks. Final BOM will be determined by availability, pricing at order time, layout constraints, power budget, and hands-on eval. Treat every part number as TBD until schematic review is complete.**
+
 ---
 
 ## 1. Design Goals
@@ -185,17 +187,19 @@ From `sheaf-cohomology-bci` skill:
 
 ---
 
-## 8. Chip Selection Matrix
+## 8. Chip Selection Matrix (ALL TBD -- Starting Points Only)
+
+> Every row below is a **placeholder** based on initial research. Final selection depends on: DigiKey/LCSC stock at order time, JLCPCB basic vs extended parts library, thermal/layout feasibility once schematic is drafted, actual noise measurements from eval boards, and budget. Prices are approximate and will shift.
 
 | Component | Tier 1 (OpenBCI) | Tier 3 (ShitBCI) | Notes |
 |-----------|-------------------|-------------------|-------|
-| ADC | ADS1299 ($35) | ADS131M08 ($8) or ADS1220+mux ($5) | ADS1299 is proven, ADS131M08 is newer/cheaper |
-| MCU | nRF5340 ($7) | RP2040 ($0.70) | nRF5340 has BLE; RP2040 is USB-only but dirt cheap |
-| Power | TPS7A4901 (LDO) | AP2112K-3.3 ($0.20) | Tier 1 needs ultra-low-noise LDO for analog |
-| ESD | TPD4E05U06 | TVS diode array | Both tiers need electrode ESD protection |
-| Accel | LSM6DSO ($2.50) | MMA8452Q ($1) or omit | Motion artifact detection |
-| Crystal | 32.768 kHz + 8 MHz | 12 MHz (USB) | nRF5340 needs 32k for BLE timing |
-| Connector | Samtec or Hirose electrode | 2.54mm pin header | Cost reduction on Tier 3 |
+| ADC | ADS1299 (~$35) | ADS131M08 (~$8) or ADS1220+mux (~$5) | Starting point -- need eval board noise comparison first |
+| MCU | nRF5340 (~$7) | RP2040 (~$0.70) | BLE vs USB-only tradeoff; alternatives: ESP32-S3, STM32 |
+| Power | TPS7A4901 (LDO) | AP2112K-3.3 (~$0.20) | Analog LDO choice heavily depends on ADC PSRR needs |
+| ESD | TPD4E05U06 | TVS diode array | Specific parts TBD based on electrode interface design |
+| Accel | LSM6DSO (~$2.50) | MMA8452Q (~$1) or omit | May swap for BMI270 or similar; may cut entirely |
+| Crystal | 32.768 kHz + 8 MHz | 12 MHz (USB) | Frequency depends on final MCU choice |
+| Connector | Samtec or Hirose electrode | 2.54mm pin header | Connector choice follows mechanical/form factor decisions |
 
 ---
 
