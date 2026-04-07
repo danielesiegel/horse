@@ -80,9 +80,8 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
-        env:
-          PAGES_WRANGLER_MAJOR_VERSION: "4"
         with:
+          wrangler-version: '3'
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy ./output --project-name=bci-horse --commit-dirty=true
