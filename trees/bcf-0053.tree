@@ -123,24 +123,40 @@ idProduct = 24577
 \p{Plain FTDI FT232R -- no HID, no custom USB protocol. All data flows through the virtual serial port.}
 }
 
-\subtree{\title{Step 9: .NET Decompilation Breakthrough}
+\subtree{\title{Step 9: .NET Decompilation + Live Validation}
 \taxon{finding}
 
 \p{CGX Acquisition v66 installed in Parallels Windows 11 VM via \code{boxxy parallels}. The executable is a .NET 4.6.2 assembly (\code{Cognionics_Data_Acqusition}) using FTDI D2XX (\code{FTD2XX_NET.dll}), not VCP serial. Custom IL disassembler built and run inside x86 PowerShell to decompile all protocol classes.}
 
-\subtree{\title{Protocol: Delta-Compressed Encoding}
-\p{The HD-72 does NOT output raw ADC data or the legacy 0xFF-sync format. It uses \strong{variable-length delta compression} via the \code{DeltaDecoder} class:}
-\ol{
-\li{\strong{Reset byte}: first byte of each sample. If == 1, clear all previous sample buffers.}
-\li{\strong{Per-channel encoding} (69 channels total):
-\ul{
-\li{\strong{Mode 0} (bit 0 == 0): 7-bit signed delta, 1 byte. Decoded as \code{(header >> 1)} sign-extended from 7 bits, scaled x8. Added to previous sample.}
-\li{\strong{Mode 1} (bits [1:0] == 01): ~14-bit signed delta, 2 bytes. Decoded as \code{(header & 0xFC) | (next << 8)}, sign-extended via \code{<<16 >>15}. Added to previous sample.}
-\li{\strong{Mode 2} (bits [1:0] == 11): 24-bit absolute value, 3 bytes. \code{(b2 << 24) | (b1 << 16) | ((header & 0xF8) << 8)}, then \code{>>8}. Replaces previous sample (no delta).}
-}}
-\li{\strong{Post-delta byte}: one additional byte after all channels (packet counter or status).}
+\p{\strong{Critical correction}: the .NET assembly contains BOTH a \code{DeltaDecoder} class (for newer models) AND a legacy 0xFF-sync path. The CogDAQ constructor sets \code{legacyFormat = true} and this is \strong{never changed}. The HD-72 1702HDG uses the \strong{legacy 0xFF-sync protocol}, not delta compression.}
+
+\p{The earlier finding (Step 4) that "the HD-72 does not use 0xFF sync" was wrong -- caused by capturing at 1.5 Mbaud instead of 3 Mbaud. At the wrong baud rate, bit errors destroyed the sync bytes, producing the uniform-entropy unframed appearance.}
+
+\subtree{\title{Protocol: Legacy 0xFF-Sync (CONFIRMED)}
+\p{Validated with live hardware at 3 Mbaud. 100\% counter continuity over 2000+ samples.}
+\table{
+\tr{\th{Field}\th{Bytes}\th{Description}}
+\tr{\td{Sync}\td{1}\td{\code{0xFF}}}
+\tr{\td{Counter}\td{1}\td{Mod 128, increments by 1 per sample}}
+\tr{\td{Channels}\td{201}\td{67 channels × 3 bytes (64 EEG + 3 ACC)}}
+\tr{\td{Tail}\td{1}\td{\code{0x11} = impedance ON, \code{0x10} = OFF}}
+\tr{\td{Battery}\td{1}\td{Raw byte, scale by BatteryGain}}
+\tr{\td{Trigger}\td{2}\td{Big-endian 16-bit}}
 }
-\p{Ring buffer of 4 previous samples for delta prediction (\code{numPrevSamples = 4}).}
+\p{Total: \strong{207 bytes/packet}. At ~333 Hz = 68.9 KB/s.}
+}
+
+\subtree{\title{Channel Bit Packing (NON-STANDARD)}
+\p{Each 3-byte channel uses Cognionics non-standard packing, NOT standard big-endian:}
+\pre{\startverb
+raw = (msb << 24) | (lsb2 << 17) | (lsb1 << 10)
+value = raw >> 8  // arithmetic shift (sign-extends)
+uV = value * (1e6 / 2^32)
+\stopverb}
+}
+
+\subtree{\title{DeltaDecoder (NOT used by HD-72)}
+\p{The assembly also contains a \code{DeltaDecoder} class with variable-length delta compression (3 modes: 7-bit/14-bit/24-bit per channel, ring buffer of 4 previous samples). This code path is gated by \code{legacyFormat == false}, which is never triggered for the HD-72. Preserved here for reference if other CGX models use it.}
 }
 
 \subtree{\title{Channel Layout}
@@ -169,21 +185,23 @@ idProduct = 24577
 
 \subtree{\title{Evidence Summary}
 \taxon{finding}
-\p{The HD-72 1702HDG serial protocol is now \strong{fully reversed}:}
+\p{The HD-72 1702HDG serial protocol is now \strong{fully reversed and validated with live hardware}:}
 \ol{
-\li{\strong{Delta-compressed} -- variable-length encoding with 3 modes per channel (1/2/3 bytes)}
-\li{\strong{69 channels} -- 64 EEG + 3 accelerometer + packet counter + trigger}
-\li{\strong{3 Mbaud} via FTDI D2XX (not 1.5M VCP)}
-\li{\strong{No sync byte needed} -- reset flag (byte == 1) initializes the decoder}
-\li{\strong{Wireless-gated} -- 65+ KB/s when headset transmits, 1-2 KB/s idle}
-\li{\strong{Incompatible with App-Cognionics} -- completely different encoding scheme}
+\li{\strong{Legacy 0xFF-sync format} -- 207 bytes/packet, NOT delta-compressed}
+\li{\strong{67 channels} -- 64 EEG + 3 accelerometer, each 3 bytes with non-standard bit packing}
+\li{\strong{3 Mbaud} via FTDI (not 1.5M -- wrong baud destroyed sync bytes, causing all earlier confusion)}
+\li{\strong{0xFF sync + mod-128 counter} -- standard Cognionics framing, compatible with App-Cognionics format}
+\li{\strong{~333 Hz sample rate} -- 207 bytes × 333 = 68.9 KB/s}
+\li{\strong{100\% counter continuity} confirmed over 2000+ live samples}
+\li{\strong{Tail byte} 0x11/0x10 for impedance, 1-byte battery, 2-byte trigger}
 }
-\p{The earlier observations (high entropy, no framing, variable autocorrelation) are fully explained by delta compression: most channels use 1-byte Mode 0 deltas (high entropy, variable packet size), with occasional 3-byte absolute resets that create the 104-byte autocorrelation peak.}
+\p{The earlier observations (high entropy, no framing at 1.5 Mbaud) were caused entirely by \strong{baud rate mismatch}. At 1.5 Mbaud, the FTDI chip negotiates what it can but introduces bit errors that scramble every byte, destroying the 0xFF sync markers and producing the uniform-entropy appearance. At the correct 3 Mbaud, the protocol is straightforward legacy Cognionics.}
 }
 
 \subtree{\title{Streaming Status}
 \taxon{protocol}
-\p{Protocol fully reversed. Open-source decoder at \code{cgx_delta_decode.py}. Awaiting dongle connection to validate live decoding. All downstream tools ready: LSL outlet, CSV writer, DuckDB ingest, bci.horse display.}
+\p{\strong{LIVE STREAMING CONFIRMED.} Open-source decoder at \code{cgx_legacy_decode.py}. Validated: 2006 samples in 5.1s at 333 Hz, 100\% counter continuity, 64 EEG + 3 ACC channels decoded. All downstream tools ready: LSL outlet, CSV writer, DuckDB ingest, bci.horse display.}
+\p{Bidirectional control established: Claude Code 2.1.94 installed in Parallels Windows 11 VM (ARM64) for CGX Acquisition GUI automation. macOS-side Python decoder for live serial streaming.}
 }
 
 \subtree{\title{Transclusion chain}
