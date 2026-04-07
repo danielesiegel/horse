@@ -1,0 +1,149 @@
+\title{HRV as Coplay Signal in Vibesnipe Challenge Races}
+\taxon{design}
+\author{barton-rhodes}
+\date{2026-04-07}
+\import{macros}
+\tag{hrv}
+\tag{vibesnipe}
+\tag{coplay}
+\tag{ppg}
+\tag{autonomic}
+\tag{gf3}
+\meta{modality}{cardiovascular}
+\meta{scope}{game-physiology}
+
+\p{Heart rate variability (HRV) as a physiological coplay input for vibesnipe challenge races. During a race, each player's autonomic state is a legible signal: flow, baseline, or tilt. This signal feeds into the goblin swarm's coplay system alongside wins, losses, and market data.}
+
+\subtree{\title{HRV Metrics That Matter for Competition}
+\taxon{remark}
+
+\p{Not all HRV indices are useful in a 5-30 minute challenge race. The following are extractable from ultra-short recordings (30s-5min windows, sliding):}
+
+\table{
+\tr{\th{Metric}\th{Domain}\th{Window}\th{What it tells you}}
+\tr{\td{RMSSD}\td{Time}\td{30s+}\td{Parasympathetic tone. High = calm, regulated. Low = stressed, reactive.}}
+\tr{\td{LF/HF ratio}\td{Frequency}\td{2min+}\td{Sympathovagal balance. High LF = mobilization. High HF = rest-and-digest.}}
+\tr{\td{SD1 (Poincare)}\td{Nonlinear}\td{60s+}\td{Beat-to-beat variability. Fast parasympathetic fluctuations.}}
+\tr{\td{SD2/SD1}\td{Nonlinear}\td{60s+}\td{Long vs short-term balance. Decision rhythm signature.}}
+\tr{\td{DFA alpha1}\td{Fractal}\td{300 beats}\td{Fractal scaling. alpha1 near 1.0 = healthy complexity. Below 0.75 = fragmentation.}}
+\tr{\td{PIP}\td{Fragmentation}\td{60s+}\td{Percentage of inflection points. Above 70 percent = autonomic dysregulation.}}
+}
+
+\p{For a typical vibesnipe race (5-20 min), RMSSD and SD1 are available immediately. LF/HF stabilizes after 2 minutes. DFA alpha1 requires approximately 300 beats (roughly 4-5 minutes at 65 bpm).}
+}
+
+\subtree{\title{GF(3) Trit Classification of Autonomic State}
+\taxon{definition}
+
+\p{Map continuous HRV into a trit for coplay broadcast:}
+
+\table{
+\tr{\th{Regime}\th{Trit}\th{Signature}\th{Interpretation}}
+\tr{\td{Flow}\td{+1}\td{RMSSD > personal 75th percentile, DFA alpha1 in [0.9, 1.2], LF/HF < 1.5}\td{Player in parasympathetic-dominant, fractal-coherent state. Peak performance window.}}
+\tr{\td{Baseline}\td{0}\td{RMSSD in [25th, 75th] percentile, DFA alpha1 in [0.75, 1.3]}\td{Normal autonomic balance. Neither advantage nor disadvantage.}}
+\tr{\td{Tilt}\td{-1}\td{RMSSD < personal 25th percentile, or PIP > 70 percent, or DFA alpha1 < 0.75}\td{Sympathetic overdrive or fragmentation. Stress, frustration, cognitive overload.}}
+}
+
+\p{Thresholds are \strong{personal percentiles}, not population norms. Each player calibrates a 5-minute resting baseline before first race. The trit is recomputed every 30 seconds from a 2-minute sliding window.}
+
+\p{Conservation: across the two-player challenge, trits are independent (each player has their own). But in the goblin swarm coplay, the player's autonomic trit modulates goblin strategy selection: +1 goblins get wider exploration budgets, -1 goblins get conservative fallback strategies.}
+}
+
+\subtree{\title{Input Devices}
+\taxon{remark}
+
+\table{
+\tr{\th{Device}\th{Signal}\th{R-R quality}\th{Latency}\th{Notes}}
+\tr{\td{Polar H10 chest strap}\td{ECG (1-lead)}\td{Gold standard}\td{BLE, sub-second}\td{Best option. Direct R-R intervals via BLE HR profile.}}
+\tr{\td{Apple Watch}\td{PPG (optical)}\td{Good, motion-sensitive}\td{HealthKit export, batch}\td{Not real-time. Useful for post-race analysis only.}}
+\tr{\td{Cyton 8ch EEG}\td{ECG artifact in EEG}\td{Moderate}\td{250Hz stream}\td{Already in stack (\ref{bcf-0030}). Extract R-peaks from frontal channels (Fp1/Fp2 pick up cardiac artifact).}}
+\tr{\td{Cognionics HD-72}\td{ECG artifact in EEG}\td{Good (64ch, 500Hz)}\td{Serial stream}\td{Higher SNR than Cyton due to channel density (\ref{bcf-0052}). Temporal channels (T7/T8) have strongest cardiac artifact.}}
+\tr{\td{Webcam rPPG}\td{Remote PPG (facial blood flow)}\td{Poor-moderate}\td{30fps}\td{No hardware needed. Research-grade only. Sensitive to lighting and motion.}}
+}
+
+\p{Recommended path: Polar H10 for dedicated HRV. Cyton/Cognionics EEG for simultaneous brain+heart when running BCI experiments. The EEG-derived cardiac path means a single device gives both neural and autonomic channels.}
+}
+
+\subtree{\title{Processing Pipeline}
+\taxon{remark}
+
+\pre{\startverb
+Polar H10 (BLE R-R intervals)     Cyton/Cognionics (EEG stream)
+          |                                    |
+          v                                    v
+   R-R interval stream              nk.ecg_findpeaks() on EEG
+          |                          cardiac artifact channel
+          v                                    |
+   nk.intervals_process()                     v
+   (artifact rejection)              R-peak indices at Fs
+          |                                    |
+          +----------------+-------------------+
+                           |
+                           v
+              nk.hrv_time() -> RMSSD, SDNN, pNN50
+              nk.hrv_frequency() -> LF, HF, LF/HF
+              nk.hrv_nonlinear() -> SD1, SD2, DFA_alpha1, PIP
+                           |
+                           v
+                  trit_classify(hrv_indices, baseline)
+                           |
+                           v
+              { trit: +1/0/-1, rmssd: float, alpha1: float, ... }
+                           |
+                           v
+              vibesnipe coplay broadcast (OCapN / WebSocket)
+                           |
+                           v
+              goblin swarm strategy modulation
+\stopverb}
+}
+
+\subtree{\title{Coplay Integration with Vibesnipe}
+\taxon{design}
+
+\p{The HRV trit enters the vibesnipe coplay system at the same level as wins, losses, and market signals. Each goblin in the 26-slot swarm receives:}
+
+\ul{
+\li{\strong{Challenge state}: current issue, PR status, CI results}
+\li{\strong{Opponent actions}: commits, PR updates (from mesh)}
+\li{\strong{Market state}: mnx.fi odds, if a betting market exists for this challenge}
+\li{\strong{Player autonomic trit}: +1 (flow), 0 (baseline), -1 (tilt)}
+}
+
+\p{Strategy modulation by autonomic trit:}
+
+\table{
+\tr{\th{Trit}\th{Goblin behavior}\th{Rationale}}
+\tr{\td{+1 (flow)}\td{Wider exploration. Try novel approaches. Accept higher-risk refactors.}\td{Player is regulated, can handle complexity and course-correct.}}
+\tr{\td{0 (baseline)}\td{Default strategy. Balance exploration and exploitation.}\td{Normal operating conditions.}}
+\tr{\td{-1 (tilt)}\td{Conservative. Prefer minimal diffs. Avoid risky refactors. Suggest breaks.}\td{Player under stress. Reduce cognitive load. Protect against rage-commits.}}
+}
+
+\p{The tilt detection also triggers a \strong{nudge}: the TUI can display a breathing pacer (4s in, 6s out) to drive respiratory sinus arrhythmia and shift the player back toward vagal tone. This is not paternalistic gating -- the player can dismiss it -- but it is available.}
+}
+
+\subtree{\title{On-Chain Representation}
+\taxon{remark}
+
+\p{HRV trits are \strong{not} posted on-chain during the race (privacy, latency). They are:}
+\ul{
+\li{Stored locally in DuckDB \code{ies_messages} table with goblin ID and timestamp}
+\li{Optionally included in post-race settlement as a \strong{physiological attestation} (hash of HRV trace, not raw data)}
+\li{Available for post-race analytics: "I was in flow state for 73 percent of the race"}
+}
+
+\p{The hash-based attestation allows future reputation systems to factor in physiological difficulty without exposing health data. A player who wins while in tilt (-1) for most of the race demonstrates higher capacity under pressure.}
+}
+
+\subtree{\title{Connections}
+\taxon{remark}
+
+\ul{
+\li{\ref{bcf-0030} -- Cyton 8ch as cardiac artifact source}
+\li{\ref{bcf-0052} -- Cognionics HD-72 temporal channels for ECG extraction}
+\li{\ref{bcf-0054} -- Trans-Pentad: HRV pipeline is a transfusion (physiological signal crossing body-to-digital membrane)}
+\li{NeuroKit2 skill: \code{asi/skills/neurokit2/} -- processing library}
+\li{Vibesnipe INTENT_PLAN: coplay system where goblins ingest environment signals}
+\li{Task Force (1996): HRV standards of measurement -- 5-min short-term protocol}
+}
+}
