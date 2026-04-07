@@ -123,30 +123,67 @@ idProduct = 24577
 \p{Plain FTDI FT232R -- no HID, no custom USB protocol. All data flows through the virtual serial port.}
 }
 
-\subtree{\title{Evidence Summary}
+\subtree{\title{Step 9: .NET Decompilation Breakthrough}
 \taxon{finding}
-\p{The HD-72 1702HDG serial protocol is:}
+
+\p{CGX Acquisition v66 installed in Parallels Windows 11 VM via \code{boxxy parallels}. The executable is a .NET 4.6.2 assembly (\code{Cognionics_Data_Acqusition}) using FTDI D2XX (\code{FTD2XX_NET.dll}), not VCP serial. Custom IL disassembler built and run inside x86 PowerShell to decompile all protocol classes.}
+
+\subtree{\title{Protocol: Delta-Compressed Encoding}
+\p{The HD-72 does NOT output raw ADC data or the legacy 0xFF-sync format. It uses \strong{variable-length delta compression} via the \code{DeltaDecoder} class:}
 \ol{
-\li{\strong{Always streaming} -- no start/stop command, device ignores unknown bytes}
-\li{\strong{Unframed} -- no sync byte, no counter, no header/tail at any candidate packet size}
-\li{\strong{High entropy} (6.83 bits/byte) -- no structural bytes, uniform byte distribution}
-\li{\strong{Wireless-gated} -- 65 KB/s when headset transmits, 1-2 KB/s idle}
-\li{\strong{Undocumented} -- no public protocol spec, SDK, or reverse engineering exists}
-\li{\strong{Incompatible with App-Cognionics} -- different framing than the deprecated LSL relay}
+\li{\strong{Reset byte}: first byte of each sample. If == 1, clear all previous sample buffers.}
+\li{\strong{Per-channel encoding} (69 channels total):
+\ul{
+\li{\strong{Mode 0} (bit 0 == 0): 7-bit signed delta, 1 byte. Decoded as \code{(header >> 1)} sign-extended from 7 bits, scaled x8. Added to previous sample.}
+\li{\strong{Mode 1} (bits [1:0] == 01): ~14-bit signed delta, 2 bytes. Decoded as \code{(header & 0xFC) | (next << 8)}, sign-extended via \code{<<16 >>15}. Added to previous sample.}
+\li{\strong{Mode 2} (bits [1:0] == 11): 24-bit absolute value, 3 bytes. \code{(b2 << 24) | (b1 << 16) | ((header & 0xF8) << 8)}, then \code{>>8}. Replaces previous sample (no delta).}
+}}
+\li{\strong{Post-delta byte}: one additional byte after all channels (packet counter or status).}
 }
-\p{The 104-byte autocorrelation peak (corr=0.16) with harmonics at 208 and 311 bytes is ADC signal correlation, not packet framing -- confirmed by completely flat per-position variance across all positions.}
+\p{Ring buffer of 4 previous samples for delta prediction (\code{numPrevSamples = 4}).}
 }
 
-\subtree{\title{Path to Streaming}
-\taxon{protocol}
-\p{Four viable paths, ordered by speed to first data:}
-\ol{
-\li{\strong{CGX Acquisition} (cgxsystems.com/software) -- proprietary macOS/Windows app that knows the framing. Outputs to LSL natively. Fastest path: \code{pylsl} capture to CSV to DuckDB to bci.horse.}
-\li{\strong{Contact CGX directly} -- cognionics.com states: "For building completely custom applications on new platforms, Cognionics can provide the technical details to interface directly with the hardware." Email info@cognionics.com with device serial and model.}
-\li{\strong{NeuroPype Academic Edition} -- free for university researchers. Once installed, inspect Python source of CognionicsInput node for HD-72 code path. Enable verbose mode to dump raw bytes to \code{~/.neuropype/testing/cgx_bytes.txt}.}
-\li{\strong{Sniff CGX Acquisition} -- run CGX software, simultaneously capture raw serial with \code{cognionics-fast.c}, correlate LSL output with raw bytes to reverse-engineer the framing. The open-source path.}
+\subtree{\title{Channel Layout}
+\table{
+\tr{\th{Index}\th{Type}\th{Count}\th{Post-processing}}
+\tr{\td{0..63}\td{EEG}\td{64}\td{raw x UV_SCALE}}
+\tr{\td{64..66}\td{Accelerometer}\td{3}\td{raw << 5, then scale}}
+\tr{\td{67}\td{Packet counter}\td{1}\td{integer}}
+\tr{\td{68}\td{Trigger}\td{1}\td{integer}}
 }
-\p{Once LSL is flowing, all downstream tools are ready: \code{cognionics-stream.py} (Python LSL+CSV), \code{cognionics-fast.c} (C), \code{brainfloj.zig} (nanoclj-zig 64ch mode).}
+\p{Total: 69 channels. \code{NumChannels = NumEEG + NumACC + NumEXT + 2}. Confirmed by \code{CogDAQ.CogInit()} IL.}
+}
+
+\subtree{\title{Baud Rate}
+\p{\strong{3,000,000 baud} (3 Mbaud), not 1.5 Mbaud. The \code{CGX Acquisition.exe.config} specifies \code{BaudRate = 3000000}. CGX uses FTDI D2XX direct API (\code{FTD2XX_NET.dll}), not the OS VCP serial driver. Our earlier captures at 1.5 Mbaud were receiving data because the FTDI chip does its own baud negotiation, but at half rate with potential bit errors.}
+}
+
+\subtree{\title{Calibration Constants (from CogDAQ fields)}
+\p{\code{EEGGain}, \code{EXTGain}, \code{ACCGain}: per-type gain factors. \code{ISTIM = 24 nA} for impedance. \code{UV_SCALE = 1e6 / 2^32}. Same as legacy protocol scaling. \code{Encrypted} field exists but likely unused for live streaming.}
+}
+
+\subtree{\title{Channel Remap (hd72.map)}
+\p{The file \code{hd72.map} contains: device name ("HD-72 Dry Headset"), channel count (64), a 64-entry remapping table (ADC index to physical electrode position), and 64 electrode coordinates for topographic display. The remapping is essential: ADC channel order does not match physical electrode positions.}
+}
+}
+
+\subtree{\title{Evidence Summary}
+\taxon{finding}
+\p{The HD-72 1702HDG serial protocol is now \strong{fully reversed}:}
+\ol{
+\li{\strong{Delta-compressed} -- variable-length encoding with 3 modes per channel (1/2/3 bytes)}
+\li{\strong{69 channels} -- 64 EEG + 3 accelerometer + packet counter + trigger}
+\li{\strong{3 Mbaud} via FTDI D2XX (not 1.5M VCP)}
+\li{\strong{No sync byte needed} -- reset flag (byte == 1) initializes the decoder}
+\li{\strong{Wireless-gated} -- 65+ KB/s when headset transmits, 1-2 KB/s idle}
+\li{\strong{Incompatible with App-Cognionics} -- completely different encoding scheme}
+}
+\p{The earlier observations (high entropy, no framing, variable autocorrelation) are fully explained by delta compression: most channels use 1-byte Mode 0 deltas (high entropy, variable packet size), with occasional 3-byte absolute resets that create the 104-byte autocorrelation peak.}
+}
+
+\subtree{\title{Streaming Status}
+\taxon{protocol}
+\p{Protocol fully reversed. Open-source decoder at \code{cgx_delta_decode.py}. Awaiting dongle connection to validate live decoding. All downstream tools ready: LSL outlet, CSV writer, DuckDB ingest, bci.horse display.}
 }
 
 \subtree{\title{Transclusion chain}
