@@ -1,0 +1,172 @@
+\title{Alterstructure: BCI Factory Network at Vivarium}
+\taxon{design}
+\author{barton-rhodes}
+\date{2026-04-07}
+\import{macros}
+\tag{network}
+\tag{zero-trust}
+\tag{capability}
+\tag{vlan}
+\tag{gf5}
+\tag{alterstructure}
+\meta{scope}{infrastructure}
+\meta{gf5-sum}{0}
+\meta{location}{Vivarium, San Francisco}
+
+\p{A six-layer alterstructure for the BCI Factory at Vivarium. Not just a network -- a capability-secure physical-to-digital stack where every layer corresponds to a Trans-Pentad modality (\ref{bcf-0054}) and the GF(5) sum conserves to zero. The design replaces ambient authority (flat /24, shared passwords) with attenuated capabilities (VLANs, short-lived certificates, DNS immune system).}
+
+\subtree{\title{Layer 0: Physical Sovereignty}
+\taxon{design}
+
+\p{Starlink Gen 3 as sovereign uplink. No ISP chokepoint. Two built-in ethernet ports. Portable -- if Vivarium moves, the uplink moves.}
+
+\p{UniFi Dream Machine SE as edge compute gateway. ARM Cortex-A57 quad-core, 4GB RAM, 128GB SSD. Runs containers: Pi-hole, step-ca, FreeRADIUS. All trust infrastructure on-prem, zero cloud dependency for auth or DNS.}
+
+\p{TP-Link Tapo H200 hub for IoT bridging. Ethernet port for VLAN tagging, Matter bridge, Sub-1G radio for battery cameras, microSD up to 512GB for local camera storage. Camera footage stays on-prem.}
+}
+
+\subtree{\title{Layer 1: Zero-Trust Membrane}
+\taxon{design}
+\meta{trans}{transfusion}
+\meta{trit}{-1}
+
+\p{\strong{Transfusion}: capability tokens flowing across trust membranes with attenuation.}
+
+\p{Every device joining the network proves identity with a short-lived certificate (step-ca, 24h TTL). No passwords anywhere. WPA3-Enterprise with EAP-TLS. Certificate rotation happens automatically -- compromise of one cert expires itself.}
+
+\p{Each VLAN boundary is an impedance-matched transfusion point. The certificate is the typed fluid; the VLAN firewall is the biological membrane; compatibility is checked at the boundary.}
+
+\table{
+\tr{\th{VLAN}\th{ID}\th{Subnet}\th{Devices}}
+\tr{\td{Trusted}\td{10}\td{192.168.10.0/24}\td{Workstations, DGX, BCI rigs}}
+\tr{\td{IoT}\td{20}\td{192.168.20.0/24}\td{LG TV, Tapo H200, cameras, sensors}}
+\tr{\td{Guest}\td{30}\td{192.168.30.0/24}\td{Visitors, untrusted devices}}
+}
+}
+
+\subtree{\title{Layer 2: DNS Immune System}
+\taxon{design}
+\meta{trans}{transduction}
+\meta{trit}{+1}
+
+\p{\strong{Transduction}: DNS queries transduced into immune decisions. Signal to representation to action.}
+
+\p{Pi-hole on the UDM SE transduces every DNS query into allow/deny. LG telemetry domains sinkholed: \code{lgtvcommon.com}, \code{lgtvsdp.com}, \code{ibis.lgappstv.com}, \code{us.rdx2.lgtvsdp.com}, \code{us.info.lgsmartad.com}. The TV thinks it is talking to its telemetry servers but gets \code{0.0.0.0}.}
+
+\p{Extension: all IoT DNS traffic logged to DuckDB on the UDM SE. Anomaly detection = new domains appearing outside the baseline. This is the network's Markov blanket -- sensory states at the boundary.}
+}
+
+\subtree{\title{Layer 3: Capability Topology}
+\taxon{design}
+\meta{trans}{transclusion}
+\meta{trit}{-1}
+
+\p{\strong{Transclusion}: devices get capability references, not ambient authority. Each firewall rule is an operadic substitution -- the device's reachable set is transcluded from the policy, not copied from a flat network.}
+
+\table{
+\tr{\th{Device}\th{Can reach}\th{Cannot reach}}
+\tr{\td{LG TV}\td{Streaming CDNs, NTP}\td{Workstations, DGX, cameras}}
+\tr{\td{Tapo cameras}\td{H200 hub only}\td{Everything else}}
+\tr{\td{H200 hub}\td{Tapo cloud (optional), NTP}\td{Trusted VLAN}}
+\tr{\td{DGX}\td{Internet (model pulls), workstations}\td{IoT VLAN}}
+\tr{\td{Workstations}\td{Everything (outbound)}\td{--}}
+\tr{\td{BCI rigs}\td{DGX, LSL multicast, workstations}\td{IoT, Guest}}
+}
+
+\p{No ambient authority. Each row is an OCapN-style capability grant. The firewall is the runtime enforcement.}
+}
+
+\subtree{\title{Layer 4: BCI Multicast Zone}
+\taxon{design}
+\meta{trans}{transitivity}
+\meta{trit}{0}
+
+\p{\strong{Transitivity}: composition. \code{Cyton -> LSL -> DGX -> trit_classify -> goblin swarm}. Each hop composes with the next.}
+
+\p{LSL (Lab Streaming Layer) uses multicast for EEG/HRV data. BCI rigs on VLAN 10 with IGMP snooping enabled. Multicast group \code{224.0.0.0/8} allowed only within VLAN 10. DGX receives LSL streams for real-time processing.}
+
+\p{HRV trit broadcast (\ref{bci-0018}) rides the same multicast fabric. The autonomic signal crosses the body-to-digital membrane (transfusion at the electrode), gets transduced by NeuroKit2, and composes transitively through the goblin swarm's coplay system.}
+}
+
+\subtree{\title{Layer 5: Attestation}
+\taxon{design}
+\meta{trans}{transcendental}
+\meta{trit}{+1}
+
+\p{\strong{Transcendental}: conditions of possibility before any data flows.}
+
+\ul{
+\li{\strong{step-ca root certificate} = the transcendental object. All trust derives from it.}
+\li{\strong{YubiKey} (FIDO2): root key stored on hardware. Physical possession = root authority.}
+\li{\strong{Aptos attestation}: hash of network config posted weekly = immutable audit trail.}
+\li{\strong{HRV physiological attestation} (\ref{bci-0018}): hash of HRV trace anchored to the same chain. No raw health data on-chain.}
+}
+
+\p{The transcendental layer establishes what is possible before any experiment runs. The root cert determines which devices can join. The attestation chain determines which states are auditable. The YubiKey determines who holds root authority.}
+}
+
+\subtree{\title{GF(5) Conservation}
+\taxon{remark}
+
+\table{
+\tr{\th{Layer}\th{Trans-}\th{Trit}\th{What}}
+\tr{\td{0}\td{(physical)}\td{--}\td{Substrate, not classified}}
+\tr{\td{1}\td{Transfusion}\td{-1}\td{Certs flowing through membranes}}
+\tr{\td{2}\td{Transduction}\td{+1}\td{DNS queries transduced to immune decisions}}
+\tr{\td{3}\td{Transclusion}\td{-1}\td{Capability references, not copies}}
+\tr{\td{4}\td{Transitivity}\td{0}\td{LSL multicast composition}}
+\tr{\td{5}\td{Transcendental}\td{+1}\td{Root cert as condition of possibility}}
+}
+
+\p{Sum: (-1) + (+1) + (-1) + (0) + (+1) = \strong{0}. Conserved under GF(5).}
+}
+
+\subtree{\title{Bill of Materials}
+\taxon{reference}
+
+\table{
+\tr{\th{Item}\th{Model}\th{Est. cost}\th{Role}}
+\tr{\td{ISP}\td{Starlink Standard Gen 3}\td{USD 299 kit + 120/mo}\td{Sovereign uplink}}
+\tr{\td{Gateway}\td{UniFi Dream Machine SE (existing)}\td{--}\td{Router, firewall, containers}}
+\tr{\td{Switch}\td{USW-Lite-8-PoE}\td{USD 110}\td{VLAN trunking, PoE}}
+\tr{\td{IoT hub}\td{TP-Link Tapo H200}\td{USD 50}\td{Camera bridge, Matter, Sub-1G}}
+\tr{\td{Cameras}\td{Tapo C420S3 3-pack (existing)}\td{--}\td{4K battery cameras}}
+\tr{\td{Storage}\td{Samsung EVO Plus 512GB microSD}\td{USD 40}\td{Local camera footage}}
+\tr{\td{HSM}\td{YubiKey 5 NFC}\td{USD 50}\td{Root key custody}}
+\tr{\td{CA}\td{step-ca (open source)}\td{USD 0}\td{Short-lived cert rotation}}
+\tr{\td{DNS}\td{Pi-hole (container)}\td{USD 0}\td{Ad/telemetry sinkhole}}
+}
+
+\p{Total new spend: approximately USD 550 one-time + USD 120/month for Starlink.}
+}
+
+\subtree{\title{Deploy Sequence}
+\taxon{remark}
+
+\ol{
+\li{Flash UDM SE firmware to latest (container support)}
+\li{Create VLANs 10/20/30 in UniFi controller}
+\li{Deploy Pi-hole container on UDM SE}
+\li{Deploy step-ca container, generate root CA}
+\li{Move root key to YubiKey}
+\li{Configure WPA3-Enterprise SSID with EAP-TLS}
+\li{Move LG TV to VLAN 20 (static DHCP reservation)}
+\li{Plug Tapo H200 into tagged VLAN 20 port via ethernet}
+\li{Pair C420S3 cameras to H200, insert 512GB microSD}
+\li{Add Starlink as WAN2 (failover or load-balance)}
+}
+}
+
+\subtree{\title{Connections}
+\taxon{remark}
+
+\ul{
+\li{\ref{bcf-0054} -- Trans-Pentad: each layer maps to a modality}
+\li{\ref{bci-0018} -- HRV trit broadcast rides Layer 4 multicast}
+\li{\ref{bcf-0052} -- Cognionics HD-72 as BCI rig on VLAN 10}
+\li{\ref{bcf-0030} -- Cyton 8ch as BCI rig on VLAN 10}
+\li{LG OLED77C5PUA at 192.168.0.103 -- moves to 192.168.20.103 on IoT VLAN}
+\li{OCapN CapTP -- Layer 3 capability topology mirrors capability discipline}
+\li{Aptos -- Layer 5 attestation chain}
+}
+}
