@@ -56,7 +56,8 @@
           '';
           installPhase = ''
             mkdir -p $out
-            cp -r output/* $out/
+            # Use rsync instead of cp to avoid "Argument list too long" with 20K+ files
+            ${pkgs.rsync}/bin/rsync -a output/ $out/
             printf "/index.xml\n  Content-Type: application/xml\n/*.xml\n  Content-Type: application/xml\n" > $out/_headers
             cat > $out/index.html <<EOHTML
             <!DOCTYPE html><html><head>

@@ -78,6 +78,12 @@ jobs:
           name: forest-output
           path: output/
 
+      - name: Prune unstable artifacts (Cloudflare Pages 20K file limit)
+        run: |
+          echo "Files before prune: $(find output/ -type f | wc -l)"
+          find output/ -name 'unstable-*' -delete
+          echo "Files after prune: $(find output/ -type f | wc -l)"
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
