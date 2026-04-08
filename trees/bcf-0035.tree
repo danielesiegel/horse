@@ -1,0 +1,41 @@
+\title{Oscilloscope: Rigol DHO924S}
+\taxon{device}
+\author{barton-rhodes}
+\date{2026-04-08}
+\tag{test-equipment}
+\tag{hardware}
+\tag{debug}
+\meta{manufacturer}{Rigol}
+\meta{product}{DHO924S}
+\meta{status}{to-buy}
+\meta{price}{$449}
+
+\p{Rigol DHO924S 4-channel 250 MHz 12-bit digital oscilloscope with built-in 25 MHz arbitrary waveform generator. Mr. Ziegel's primary bench instrument for debugging BCI analog front-ends, validating SPI/I2C bus integrity on Cyton and biosignalsplux boards, and characterizing the ADF4351 PLL output on the Uncut Gem magnetometer (\ref{bcf-0031}).}
+
+\subtree{\title{Why this scope for BCI work}
+\taxon{remark}
+\ol{
+\li{\strong{12-bit ADC resolution.} EEG signals after the ADS1299 front-end are microvolt-scale. 12-bit vertical resolution (vs. 8-bit on cheaper scopes) means Mr. Ziegel can see actual signal morphology on the SPI data lines, not just clock edges buried in quantization noise.}
+\li{\strong{4 channels simultaneously.} Debug the full Cyton SPI bus (SCLK + MOSI + MISO + CS) without swapping probes. Or monitor Cyton DRDY interrupt + SPI clock + power rail ripple + analog test point in one capture.}
+\li{\strong{Protocol decode (SPI, I2C, UART) included.} Decode ADS1299 register reads/writes directly on-screen. Verify that the Cyton firmware is configuring gain, sample rate, and bias correctly. No license fees for SPI/I2C/UART decode -- Rigol includes them standard on the DHO924S.}
+\li{\strong{250 MHz bandwidth.} The ADF4351 PLL in the Uncut Gem outputs at 2.87 GHz -- beyond direct measurement -- but the 250 MHz bandwidth handles the ESP32's 80 MHz SPI clock, the ADF4351's reference oscillator (10 MHz), and any sub-harmonics or spurs in the RF amplifier chain below 250 MHz.}
+\li{\strong{50 Mpt memory depth.} Capture long SPI transactions (full ADS1299 register dump is 216 bits per DRDY cycle at 250 SPS = continuous streaming) without missing events. Deep memory + protocol decode = Mr. Ziegel can scroll through minutes of decoded Cyton traffic.}
+\li{\strong{Built-in AWG (25 MHz).} Inject test signals into the BCI analog chain: simulate electrode impedance changes, generate calibration sine waves for the ADS1299 test mode, or drive the fNIRS LED modulation input during bench testing without a separate signal generator.}
+}
+}
+
+\subtree{\title{Specifications}
+\taxon{remark}
+\ul{
+\li{Bandwidth: 250 MHz}
+\li{Channels: 4 analog}
+\li{ADC resolution: 12-bit}
+\li{Sample rate: 1.25 GSa/s}
+\li{Memory depth: 50 Mpt}
+\li{Display: 7" IPS touchscreen (1024×600)}
+\li{Protocol decode: SPI, I2C, UART, CAN, LIN (standard)}
+\li{AWG: 25 MHz, 200 MSa/s}
+\li{Connectivity: USB, LAN, WiFi}
+\li{Trigger types: edge, pulse, slope, video, pattern, serial}
+}
+}

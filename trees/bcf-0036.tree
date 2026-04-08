@@ -1,0 +1,88 @@
+\title{EE Test Bench: Complementary Equipment}
+\taxon{device}
+\author{barton-rhodes}
+\date{2026-04-08}
+\tag{test-equipment}
+\tag{hardware}
+\tag{debug}
+\meta{status}{to-buy}
+
+\p{Complementary bench equipment for Mr. Ziegel's BCI hardware prototyping lab. Selected to close the gaps between the oscilloscope (\ref{bcf-0035}), the 3D printer (\ref{bcf-0034}), and the BCI devices under development. Every item here accelerates the path from PCB to validated BCI headset.}
+
+\subtree{\title{Bench Digital Multimeter: Rigol DM3058E}
+\taxon{reference}
+\meta{manufacturer}{Rigol}
+\meta{product}{DM3058E}
+\meta{price}{$399}
+\meta{status}{to-buy}
+\tag{test-equipment}
+\p{5.5-digit bench DMM. Measures electrode impedance (2-wire and 4-wire resistance modes), validates LDO output voltages on Cyton/biosignalsplux boards, and checks continuity on hand-soldered MMG3014NT1 RF amplifier joints (\ref{bcf-0031}). The 4-wire Kelvin mode eliminates lead resistance from sub-ohm measurements -- essential for verifying electrode-paste-scalp contact impedance targets (<5 kOhm for wet EEG, <40 kOhm for dry).}
+}
+
+\subtree{\title{Logic Analyzer: Saleae Logic Pro 8}
+\taxon{reference}
+\meta{manufacturer}{Saleae}
+\meta{product}{Logic Pro 8}
+\meta{price}{$479}
+\meta{status}{to-buy}
+\tag{test-equipment}
+\p{8-channel USB logic analyzer, 500 MSa/s digital, 50 MSa/s analog. Complements the oscilloscope when Mr. Ziegel needs more than 4 digital channels simultaneously -- e.g., monitoring Cyton SPI (4 lines) + Daisy SPI (4 lines) during dual-board 16-channel EEG acquisition. Saleae's protocol analyzers decode ADS1299 SPI frames, Bluetooth UART, and I2C sensor buses. The analog channels double as a low-bandwidth scope for slow signals (battery voltage droop during WiFi TX bursts on the ESP32).}
+}
+
+\subtree{\title{Soldering Station: Hakko FX-951}
+\taxon{reference}
+\meta{manufacturer}{Hakko}
+\meta{product}{FX-951}
+\meta{price}{$325}
+\meta{status}{to-buy}
+\tag{fabrication}
+\p{Temperature-controlled soldering station with T12 tips. Required for hand-soldering the MMG3014NT1 SOT-89 RF amplifiers and SMA connectors on the Uncut Gem PCBs (\ref{bcf-0031}). Also handles rework on Cyton board modifications (ShitBCI hardware mods -- bodge wires, component swaps, adding test points). The T12 tip system has fine-pitch options (T12-ILS, T12-J02) for 0603 passives and SOIC rework.}
+}
+
+\subtree{\title{Hot Air Rework Station: Quick 861DW}
+\taxon{reference}
+\meta{manufacturer}{Quick}
+\meta{product}{861DW}
+\meta{price}{$169}
+\meta{status}{to-buy}
+\tag{fabrication}
+\p{1000W hot air station for SMD rework. Needed for reflowing QFN packages (CP2102N USB-UART bridge on Uncut Gem), replacing damaged components on Cyton boards, and heat-shrinking custom cable assemblies for the BCI harness. Digital PID temperature control prevents overheating sensitive biosignal front-end ICs.}
+}
+
+\subtree{\title{Bench Power Supply: Rigol DP832}
+\taxon{reference}
+\meta{manufacturer}{Rigol}
+\meta{product}{DP832}
+\meta{price}{$399}
+\meta{status}{to-buy}
+\tag{test-equipment}
+\p{Triple-output programmable DC power supply (30V/3A, 30V/3A, 5V/3A). Three independent channels match the three voltage rails in a typical BCI stack: 3.3V (Cyton logic + ADS1299), 5V (USB/ESP32), and variable (LED driver for fNIRS, laser supply for Uncut Gem). Current limiting protects prototype boards during bring-up. OVP/OCP prevents magic smoke when Mr. Ziegel is probing live circuits. The third fixed 5V channel powers the USB hub that connects scope + logic analyzer + Cyton simultaneously.}
+}
+
+\subtree{\title{Stereo Microscope: AmScope SE400-Z}
+\taxon{reference}
+\meta{manufacturer}{AmScope}
+\meta{product}{SE400-Z}
+\meta{price}{$110}
+\meta{status}{to-buy}
+\tag{fabrication}
+\p{10X/20X stereo microscope for inspecting solder joints on 0603 passives, MMG3014NT1 pin alignment, and verifying 3D-printed electrode comb geometry. Also used to inspect dry electrode prong tips for wear and Ten20 paste distribution under electrode cups. LED ring light illumination.}
+}
+
+\subtree{\title{Cost summary}
+\taxon{remark}
+\table{
+\tr{\th{Item}\th{Price}}
+\tr{\td{Rigol DHO924S oscilloscope}\td{$449}}
+\tr{\td{Rigol DM3058E bench DMM}\td{$399}}
+\tr{\td{Saleae Logic Pro 8}\td{$479}}
+\tr{\td{Hakko FX-951 soldering station}\td{$325}}
+\tr{\td{Quick 861DW hot air rework}\td{$169}}
+\tr{\td{Rigol DP832 bench PSU}\td{$399}}
+\tr{\td{AmScope SE400-Z microscope}\td{$110}}
+\tr{\td{\strong{Test bench total}}\td{\strong{$2,330}}}
+\tr{\td{Bambu Lab H2C (bcf-0034)}\td{$2,399+}}
+\tr{\td{\strong{Full fabrication lab total}}\td{\strong{$4,729+}}}
+}
+\p{For context: this entire lab costs less than the entry-level NIRSport 2 system (\ref{bcf-0032}) and enables Mr. Ziegel to design, print, assemble, and validate every BCI device in the horse inventory in-house.}
+}

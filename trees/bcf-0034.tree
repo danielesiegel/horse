@@ -1,0 +1,77 @@
+\title{3D Printer: Bambu Lab H2C}
+\taxon{device}
+\author{barton-rhodes}
+\date{2026-04-08}
+\tag{fabrication}
+\tag{hardware}
+\tag{3d-printing}
+\meta{manufacturer}{Bambu Lab}
+\meta{product}{H2C}
+\meta{url}{https://us.store.bambulab.com/products/h2c}
+\meta{status}{to-buy}
+\meta{price}{$2,399+}
+
+\p{Bambu Lab H2C multi-material FDM 3D printer. Vortek hotend-change system with 6 interchangeable contactless hotends, enabling up to 7 materials per print without purge waste. 325 × 320 × 325 mm build volume. Active heated chamber (65°C), heated bed (120°C), nozzle temps to 350°C. 59 sensors, quad-camera computer vision. Expands to 24 filaments via AMS.}
+
+\subtree{\title{Justification for immediate purchase}
+\taxon{remark}
+\p{Mr. Ziegel's BCI fabrication pipeline requires this printer \strong{now} for three converging reasons:}
+\ol{
+\li{\strong{Flexible material printing for BCI wearables.} The right hotend prints TPU 95A HF / 90A / 85A -- the exact shore hardnesses needed for electrode gaskets, skin-contact headband liners, and conformable fNIRS optode holders. ShitBCI (our in-house OpenBCI fork) needs rapid iteration on comfort geometry before committing to injection molds. TPU gaskets printed on a lesser machine lack the dimensional accuracy to maintain consistent electrode-scalp impedance.}
+\li{\strong{Full build volume for headset-scale parts.} 325 × 320 × 325 mm prints an entire adult Ultracortex-class headframe in one piece -- no seam lines, no bonded joints that crack under repeated don/doff cycles. The Uncut Gem magnetometer enclosure (\ref{bcf-0031}) and fNIRS sensor housings (\ref{bcf-0011}, \ref{bcf-0033}) also fit within this volume as single-print assemblies.}
+\li{\strong{Multi-material for functional prototypes.} Rigid PLA/PETG structural frame + flexible TPU gaskets + soluble PVA supports in a single print eliminates manual assembly of the 3--5 part sub-assemblies currently needed for each headset iteration. This collapses a 2-day print-sand-bond-test cycle into a 6-hour single-print-test cycle.}
+}
+}
+
+\subtree{\title{Key specifications}
+\taxon{remark}
+\ul{
+\li{Build volume: 325 × 320 × 325 mm}
+\li{Hotend system: Vortek -- 6 contactless hotend slots, zero-purge material changes}
+\li{Max nozzle temp: 350°C (supports PA/Nylon, PC, carbon fiber composites)}
+\li{Max bed temp: 120°C}
+\li{Active heated chamber: 65°C (prevents warping in ABS/ASA/PA enclosure prints)}
+\li{TPU support: 95A HF, 90A, 85A on right hotend (manual feed via AMS HT bypass)}
+\li{Sensors: 59 (filament runout, vibration compensation, chamber monitoring)}
+\li{Vision: quad-camera system for first-layer inspection and spaghetti detection}
+\li{Multi-material: up to 7 simultaneous materials, 24 via AMS expansion}
+}
+}
+
+\subtree{\title{Supported materials relevant to BCI fabrication}
+\taxon{remark}
+\table{
+\tr{\th{Material}\th{Use case}\th{Hotend}}
+\tr{\td{TPU 85A/90A}\td{Electrode gaskets, skin-contact comfort layers}\td{Right}}
+\tr{\td{TPU 95A HF}\td{Semi-rigid cable strain reliefs, headband flex zones}\td{Right}}
+\tr{\td{PLA/PETG}\td{Structural headframe, sensor mounts, electrode holders}\td{Left/Right}}
+\tr{\td{ABS/ASA}\td{UV-stable outdoor enclosures, Uncut Gem housing}\td{Left/Right}}
+\tr{\td{PA (Nylon)}\td{High-fatigue hinge points, clip mechanisms}\td{Left/Right}}
+\tr{\td{PC (Polycarbonate)}\td{Optically clear fNIRS light guides}\td{Left/Right}}
+\tr{\td{PVA}\td{Soluble supports for complex internal channels}\td{Left/Right}}
+\tr{\td{CF-PETG/CF-PA}\td{EMI shielding enclosures, stiff lightweight frames}\td{Left/Right}}
+}
+}
+
+\subtree{\title{Fabrication roadmap}
+\taxon{protocol}
+\ol{
+\li{\strong{Week 1:} Print ShitBCI headframe v0.1 in PETG. Validate 10-20 electrode positions against modified Ultracortex geometry. Full build volume allows single-piece print.}
+\li{\strong{Week 2:} Print TPU 90A electrode gaskets and comfort liners. Fit-test with Cyton board + dry comb electrodes (\ref{bcf-0006}). Measure impedance delta vs. bare electrode contact.}
+\li{\strong{Week 3:} Multi-material print -- PETG frame + TPU gaskets + PVA supports in single job. Validate snap-fit tolerances for electrode units.}
+\li{\strong{Week 4:} Print Uncut Gem magnetometer enclosure (\ref{bcf-0031}) in ABS with integrated laser/photodiode alignment features. Print fNIRS sensor housings for PLUX optodes.}
+\li{\strong{Ongoing:} Iterate headset geometry based on EEG signal quality data. Each iteration is a 4--6 hour print-to-test cycle. Accumulate design knowledge for eventual injection mold tooling.}
+}
+}
+
+\subtree{\title{Why not a cheaper printer}
+\taxon{remark}
+\p{The existing on-site FDM printer (\ref{bcf-0006}) lacks:}
+\ul{
+\li{Heated chamber -- ABS/ASA/PA prints warp, making enclosures unreliable}
+\li{Multi-material capability -- rigid + flexible in one print is impossible}
+\li{TPU reliability -- Bowden-tube extruders jam on shore 85A--90A filaments}
+\li{Build volume -- full headframes require splitting and bonding, introducing mechanical weak points at exactly the locations where electrode pressure matters most}
+}
+\p{The H2C's direct-drive right hotend with AMS HT bypass is specifically engineered for reliable flexible filament feeding. This is not a nice-to-have -- it is the critical path for ShitBCI prototyping before Mr. Ziegel commits to injection mold tooling ($5,000--$15,000 per mold).}
+}
