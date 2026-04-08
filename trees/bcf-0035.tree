@@ -1,26 +1,65 @@
-\title{Oscilloscope: Rigol DHO924S}
+\title{Oscilloscope: BCI Debugging Profile}
 \taxon{device}
 \author{barton-rhodes}
 \date{2026-04-08}
 \tag{test-equipment}
 \tag{hardware}
 \tag{debug}
-\meta{manufacturer}{Rigol}
-\meta{product}{DHO924S}
-\meta{status}{to-buy}
-\meta{price}{$449}
+\meta{status}{owned}
+\meta{note}{Mr. Ziegel already has an oscilloscope on-site. Specs below document the recommended profile and BCI-specific debugging scenarios regardless of exact model.}
 
-\p{Rigol DHO924S 4-channel 250 MHz 12-bit digital oscilloscope with built-in 25 MHz arbitrary waveform generator. Mr. Ziegel's primary bench instrument for debugging BCI analog front-ends, validating SPI/I2C bus integrity on Cyton and biosignalsplux boards, and characterizing the ADF4351 PLL output on the Uncut Gem magnetometer (\ref{bcf-0031}).}
+\p{Mr. Ziegel's on-site oscilloscope serves as the primary bench instrument for debugging the full BCI hardware stack: Cyton ADS1299 SPI bus, biosignalsplux fNIRS analog front-end, Uncut Gem ADF4351 PLL, and the colored operad isolation boundaries at the physical layer. The scenarios below document the recommended measurement profiles regardless of exact scope model. Key capabilities needed: 4+ channels, protocol decode (SPI/I2C/UART), and sufficient bandwidth for the ESP32 SPI clock (80 MHz).}
 
 \subtree{\title{Why this scope for BCI work}
 \taxon{remark}
-\ol{
-\li{\strong{12-bit ADC resolution.} EEG signals after the ADS1299 front-end are microvolt-scale. 12-bit vertical resolution (vs. 8-bit on cheaper scopes) means Mr. Ziegel can see actual signal morphology on the SPI data lines, not just clock edges buried in quantization noise.}
-\li{\strong{4 channels simultaneously.} Debug the full Cyton SPI bus (SCLK + MOSI + MISO + CS) without swapping probes. Or monitor Cyton DRDY interrupt + SPI clock + power rail ripple + analog test point in one capture.}
-\li{\strong{Protocol decode (SPI, I2C, UART) included.} Decode ADS1299 register reads/writes directly on-screen. Verify that the Cyton firmware is configuring gain, sample rate, and bias correctly. No license fees for SPI/I2C/UART decode -- Rigol includes them standard on the DHO924S.}
-\li{\strong{250 MHz bandwidth.} The ADF4351 PLL in the Uncut Gem outputs at 2.87 GHz -- beyond direct measurement -- but the 250 MHz bandwidth handles the ESP32's 80 MHz SPI clock, the ADF4351's reference oscillator (10 MHz), and any sub-harmonics or spurs in the RF amplifier chain below 250 MHz.}
-\li{\strong{50 Mpt memory depth.} Capture long SPI transactions (full ADS1299 register dump is 216 bits per DRDY cycle at 250 SPS = continuous streaming) without missing events. Deep memory + protocol decode = Mr. Ziegel can scroll through minutes of decoded Cyton traffic.}
-\li{\strong{Built-in AWG (25 MHz).} Inject test signals into the BCI analog chain: simulate electrode impedance changes, generate calibration sine waves for the ADS1299 test mode, or drive the fNIRS LED modulation input during bench testing without a separate signal generator.}
+
+\subtree{\title{12-bit ADC resolution for microvolt-scale EEG}
+\taxon{remark}
+\p{The ADS1299 on the Cyton board achieves 24-bit resolution at 250 Hz per channel (cyton-dongle skill). The SPI data lines carry this data as 33-byte packets (0xA0 start, 24 bytes channel data, 6 bytes aux, counter, 0xC0 stop). With 12-bit vertical resolution (vs. 8-bit on cheaper scopes), Mr. Ziegel can see actual signal morphology on the MISO line during register reads, not just clock edges buried in quantization noise. This matters when debugging gain settings -- the ADS1299 register 0x68 (normal input, gain 24x, powered on) vs. 0xE8 (powered down) difference must be visible in the SPI trace.}
+}
+
+\subtree{\title{4 channels for full Cyton SPI bus}
+\taxon{remark}
+\p{Debug the full SPI bus simultaneously: SCLK + MOSI + MISO + CS (4 signals). Or monitor the critical diagnostic quartet: DRDY interrupt + SPI clock + 3.3V rail ripple + analog test point. The cyton-dongle skill documents that electrode quality thresholds (CLEAN < 50 uV, RAILED at +/- 187500 uV) depend on clean power delivery to the ADS1299. Observing power rail noise during SPI transactions reveals whether digital switching is coupling into the analog front-end.}
+}
+
+\subtree{\title{Protocol decode for ADS1299 register verification}
+\taxon{remark}
+\p{SPI, I2C, UART decode included standard (no license fees). Decode ADS1299 register reads/writes directly on-screen:}
+\ul{
+\li{Verify gain configuration: is CONFIG1 = 0xB6 (250 Hz, daisy mode)?}
+\li{Check BIAS_SENSP = 0xFF (all channels feeding bias drive)?}
+\li{Confirm Daisy interleaving: odd sample numbers = main board, even = Daisy (cyton-dongle skill).}
+\li{Decode I2C transactions to ATECC608A secure elements (embedded-medical-device skill) and PLUX biosignalsplux sensors.}
+\li{UART decode at 115200 baud for Cyton serial commands (v, b, s, ?, D, C).}
+}
+}
+
+\subtree{\title{250 MHz bandwidth for RF subsystems}
+\taxon{remark}
+\p{The Uncut Gem magnetometer's ADF4351 PLL operates at 2.87 GHz (beyond direct measurement), but 250 MHz bandwidth captures:}
+\ul{
+\li{ESP32 SPI clock (80 MHz) -- verify ADF4351 register programming.}
+\li{10 MHz reference oscillator waveform quality -- jitter here degrades ODMR frequency resolution.}
+\li{Sub-harmonics and spurs in the MMG3014NT1 RF amplifier chain below 250 MHz.}
+\li{Per the rf-signal-analysis skill: 2.4 GHz BLE advertising from the Cyton dongle (RFDuino) can interfere with nearby circuits. The scope captures coupling artifacts.}
+}
+}
+
+\subtree{\title{50 Mpt memory for continuous protocol capture}
+\taxon{remark}
+\p{The Cyton streams at 250 SPS with 33-byte packets. Full ADS1299 register dump is 216 bits per DRDY cycle. 50 Mpt memory depth captures minutes of decoded traffic, allowing Mr. Ziegel to scroll through and identify intermittent glitches: dropped Daisy packets, SPI bus contention during BLE TX bursts, and the channel mismatch issues documented in the cyton-dongle skill (''Device failed to poll Host'' = channel mismatch, fixable with 0xF0 0x02 override but the scope reveals the timing).}
+}
+
+\subtree{\title{Built-in AWG for analog chain testing}
+\taxon{remark}
+\p{25 MHz AWG injects test signals into the BCI analog chain:}
+\ul{
+\li{Simulate electrode impedance changes by driving known waveforms into the ADS1299 test mode inputs.}
+\li{Generate calibration sine waves at each frequency band: delta (0.5--4 Hz), theta (4--8 Hz), alpha (8--12 Hz), beta (12--30 Hz), gamma (30--100 Hz) per the bci-colored-operad skill's 40-dimensional feature space.}
+\li{Drive fNIRS LED modulation input during bench testing -- the PLUX sensors use dual-wavelength (660 nm / 860 nm) with adjustable LED intensity via the biosignalsplux API.}
+\li{Inject known signals to validate the sheaf-cohomology-bci consistency check: if injected alpha is consistent across channels, Tr(L_F) should be near zero.}
+}
 }
 }
 
@@ -32,10 +71,25 @@
 \li{ADC resolution: 12-bit}
 \li{Sample rate: 1.25 GSa/s}
 \li{Memory depth: 50 Mpt}
-\li{Display: 7" IPS touchscreen (1024×600)}
-\li{Protocol decode: SPI, I2C, UART, CAN, LIN (standard)}
+\li{Display: 7'' IPS touchscreen (1024x600)}
+\li{Protocol decode: SPI, I2C, UART, CAN, LIN (standard, no license fees)}
 \li{AWG: 25 MHz, 200 MSa/s}
 \li{Connectivity: USB, LAN, WiFi}
 \li{Trigger types: edge, pulse, slope, video, pattern, serial}
+}
+}
+
+\subtree{\title{Debugging scenarios by skill domain}
+\taxon{remark}
+\table{
+\tr{\th{Scenario}\th{Scope channels}\th{Skill reference}}
+\tr{\td{Cyton SPI register verify}\td{SCLK + MOSI + MISO + CS}\td{cyton-dongle}}
+\tr{\td{Daisy packet interleaving}\td{DRDY + MISO + CS + Daisy\_CS}\td{cyton-dongle (odd/even sample numbers)}}
+\tr{\td{ADS1299 power rail noise}\td{3.3V rail + GND ref + DRDY + analog TP}\td{cyton-dongle (RAILED threshold)}}
+\tr{\td{Uncut Gem PLL lock}\td{10MHz ref + ADF4351 LD + SPI\_CLK + RF\_out}\td{rf-signal-analysis}}
+\tr{\td{fNIRS LED modulation}\td{LED drive + photodiode + I2C\_SDA + I2C\_SCL}\td{sheaf-cohomology-bci (optical path)}}
+\tr{\td{BLE interference coupling}\td{Cyton analog TP + RFDuino TX + 3.3V rail + GND}\td{rf-signal-analysis, bci-colored-operad (RED boundary)}}
+\tr{\td{Secure element attestation}\td{I2C SDA + SCL + ATECC608A INT + power}\td{embedded-medical-device}}
+\tr{\td{CAN bus actuator debug}\td{CAN\_H + CAN\_L + motor encoder + torque ref}\td{kscale-actuator (Robstride CAN @ 1Mbps)}}
 }
 }

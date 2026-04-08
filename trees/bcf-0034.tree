@@ -11,26 +11,58 @@
 \meta{status}{to-buy}
 \meta{price}{$2,399+}
 
-\p{Bambu Lab H2C multi-material FDM 3D printer. Vortek hotend-change system with 6 interchangeable contactless hotends, enabling up to 7 materials per print without purge waste. 325 × 320 × 325 mm build volume. Active heated chamber (65°C), heated bed (120°C), nozzle temps to 350°C. 59 sensors, quad-camera computer vision. Expands to 24 filaments via AMS.}
+\p{Bambu Lab H2C multi-material FDM 3D printer. Vortek hotend-change system with 6 interchangeable contactless hotends, enabling up to 7 materials per print without purge waste. 325 x 320 x 325 mm build volume. Active heated chamber (65C), heated bed (120C), nozzle temps to 350C. 59 sensors, quad-camera computer vision. Expands to 24 filaments via AMS.}
 
 \subtree{\title{Justification for immediate purchase}
 \taxon{remark}
-\p{Mr. Ziegel's BCI fabrication pipeline requires this printer \strong{now} for three converging reasons:}
-\ol{
-\li{\strong{Flexible material printing for BCI wearables.} The right hotend prints TPU 95A HF / 90A / 85A -- the exact shore hardnesses needed for electrode gaskets, skin-contact headband liners, and conformable fNIRS optode holders. ShitBCI (our in-house OpenBCI fork) needs rapid iteration on comfort geometry before committing to injection molds. TPU gaskets printed on a lesser machine lack the dimensional accuracy to maintain consistent electrode-scalp impedance.}
-\li{\strong{Full build volume for headset-scale parts.} 325 × 320 × 325 mm prints an entire adult Ultracortex-class headframe in one piece -- no seam lines, no bonded joints that crack under repeated don/doff cycles. The Uncut Gem magnetometer enclosure (\ref{bcf-0031}) and fNIRS sensor housings (\ref{bcf-0011}, \ref{bcf-0033}) also fit within this volume as single-print assemblies.}
-\li{\strong{Multi-material for functional prototypes.} Rigid PLA/PETG structural frame + flexible TPU gaskets + soluble PVA supports in a single print eliminates manual assembly of the 3--5 part sub-assemblies currently needed for each headset iteration. This collapses a 2-day print-sand-bond-test cycle into a 6-hour single-print-test cycle.}
+\p{Mr. Ziegel's BCI fabrication pipeline requires this printer \strong{now}. The convergence of five active hardware programs -- ShitBCI headset, Cyton+Daisy 16-channel EEG (\ref{bcf-0006}), PLUX fNIRS optode mounting (\ref{bcf-0011}, \ref{bcf-0033}), Uncut Gem magnetometer (\ref{bcf-0031}), and the colored operad isolation stack -- demands a printer that can produce functional multi-material assemblies in a single job.}
+
+\subtree{\title{1. Flexible materials for BCI wearables}
+\taxon{remark}
+\p{The right hotend prints TPU 95A HF / 90A / 85A -- the exact shore hardnesses needed for:}
+\ul{
+\li{\strong{Electrode gaskets} -- the cyton-dongle skill documents electrode quality thresholds (CLEAN < 50 uV std, OK < 100 uV). Gasket geometry directly controls electrode-scalp pressure and therefore impedance. TPU 90A gaskets maintain consistent sub-5 kOhm contact impedance across the Ultracortex 16-channel 10-20 montage (Fp1/Fp2/C3/C4/P7/P8/O1/O2 + Daisy F7/F8/F3/F4/T7/T8/P3/P4).}
+\li{\strong{Skin-contact comfort layers} -- conformable liners that distribute headset clamping force evenly. Critical for extended BCI sessions where the sheaf-cohomology-bci skill validates signal consistency: if a subject shifts the headset due to discomfort, the sheaf Laplacian Tr(L_F) spikes because local sections no longer glue (H^1 becomes non-trivial).}
+\li{\strong{fNIRS optode holders} -- the PLUX dual-wavelength sensors (660 nm red / 860 nm IR) require precise skin coupling. TPU 85A spring-loaded holders maintain consistent optode-scalp distance without rigid pressure points. This directly affects the modified Beer-Lambert deconvolution of oxyhemoglobin vs. deoxyhemoglobin.}
+}
+\p{ShitBCI (our in-house OpenBCI fork) needs rapid iteration on comfort geometry before committing to injection molds ($5,000--$15,000 per mold). The ADS1299 front-end achieves 24-bit resolution at 250 Hz per channel, but that precision is wasted if mechanical coupling introduces motion artifacts.}
+}
+
+\subtree{\title{2. Full build volume for headset-scale parts}
+\taxon{remark}
+\p{325 x 320 x 325 mm prints an entire adult Ultracortex-class headframe in one piece:}
+\ul{
+\li{\strong{No seam lines} -- bonded joints crack under repeated don/doff cycles, exactly at the electrode positions where mechanical stability matters most.}
+\li{\strong{Uncut Gem enclosure} (\ref{bcf-0031}) -- the magnetometer's ADF4351 PLL synthesizer, cascaded MMG3014NT1 RF amplifiers, ESP32, and HPHT diamond mount all fit within this volume as a single integrated housing with designed-in alignment features for the 520 nm laser, BPW34 photodiode, and red gel filter.}
+\li{\strong{Colored operad isolation stack physical enclosure} -- the bci-colored-operad skill defines four nested isolation layers (RED acquisition -> YELLOW processing -> GREEN compute -> BLUE trusted). The H2C can print a physical enclosure that mirrors this topology: RF-shielded inner chamber (CF-PETG for EMI attenuation) nested inside a protective outer shell (ABS), with gasket-sealed access points (TPU) at each boundary crossing.}
+}
+}
+
+\subtree{\title{3. Multi-material for functional prototypes}
+\taxon{remark}
+\p{Rigid PLA/PETG structural frame + flexible TPU gaskets + soluble PVA supports in a single print eliminates the manual assembly of 3--5 part sub-assemblies currently needed for each headset iteration.}
+\ul{
+\li{Collapses a 2-day print-sand-bond-test cycle into a 6-hour single-print-test cycle.}
+\li{The Vortek zero-purge hotend change system means TPU-to-PETG transitions don't waste material or leave contamination that could affect gasket flexibility.}
+\li{CF-PETG or CF-PA for EMI shielding enclosures -- relevant because the Cyton board operates at 250 Hz sample rate with 24-bit resolution, and the Uncut Gem sweeps 2.87 GHz +/- 50 MHz. These are wildly different frequency regimes that need proper shielding.}
+}
+}
+
+\subtree{\title{4. Supply chain and tariff context}
+\taxon{remark}
+\p{Per the kscale-biomimetic-supply skill: 145\% tariffs on Chinese components mean domestic prototyping capability is now a strategic necessity, not a convenience. The H2C enables in-house fabrication of enclosures and mechanical assemblies that would otherwise require overseas manufacturing or expensive CNC machining. At \$2,399, the printer pays for itself after 3--5 injection mold iterations that it prevents by validating geometry before tooling commitment.}
+\p{The zeroth-bot platform (K-Scale ecosystem) demonstrates that 3D-printed humanoid platforms are viable at scale. The same design-print-test methodology applies to BCI headsets: functional prototypes first, manufacturing tooling only after design convergence.}
 }
 }
 
 \subtree{\title{Key specifications}
 \taxon{remark}
 \ul{
-\li{Build volume: 325 × 320 × 325 mm}
+\li{Build volume: 325 x 320 x 325 mm}
 \li{Hotend system: Vortek -- 6 contactless hotend slots, zero-purge material changes}
-\li{Max nozzle temp: 350°C (supports PA/Nylon, PC, carbon fiber composites)}
-\li{Max bed temp: 120°C}
-\li{Active heated chamber: 65°C (prevents warping in ABS/ASA/PA enclosure prints)}
+\li{Max nozzle temp: 350C (supports PA/Nylon, PC, carbon fiber composites)}
+\li{Max bed temp: 120C}
+\li{Active heated chamber: 65C (prevents warping in ABS/ASA/PA enclosure prints)}
 \li{TPU support: 95A HF, 90A, 85A on right hotend (manual feed via AMS HT bypass)}
 \li{Sensors: 59 (filament runout, vibration compensation, chamber monitoring)}
 \li{Vision: quad-camera system for first-layer inspection and spaghetti detection}
@@ -38,29 +70,31 @@
 }
 }
 
-\subtree{\title{Supported materials relevant to BCI fabrication}
+\subtree{\title{BCI-specific material matrix}
 \taxon{remark}
 \table{
-\tr{\th{Material}\th{Use case}\th{Hotend}}
-\tr{\td{TPU 85A/90A}\td{Electrode gaskets, skin-contact comfort layers}\td{Right}}
-\tr{\td{TPU 95A HF}\td{Semi-rigid cable strain reliefs, headband flex zones}\td{Right}}
-\tr{\td{PLA/PETG}\td{Structural headframe, sensor mounts, electrode holders}\td{Left/Right}}
-\tr{\td{ABS/ASA}\td{UV-stable outdoor enclosures, Uncut Gem housing}\td{Left/Right}}
-\tr{\td{PA (Nylon)}\td{High-fatigue hinge points, clip mechanisms}\td{Left/Right}}
-\tr{\td{PC (Polycarbonate)}\td{Optically clear fNIRS light guides}\td{Left/Right}}
-\tr{\td{PVA}\td{Soluble supports for complex internal channels}\td{Left/Right}}
-\tr{\td{CF-PETG/CF-PA}\td{EMI shielding enclosures, stiff lightweight frames}\td{Left/Right}}
+\tr{\th{Material}\th{BCI use case}\th{Skill reference}\th{Hotend}}
+\tr{\td{TPU 85A}\td{Electrode gaskets, fNIRS optode springs}\td{cyton-dongle (impedance), sheaf-cohomology-bci (consistency)}\td{Right}}
+\tr{\td{TPU 90A}\td{Comfort liners, cable strain reliefs}\td{bci-colored-operad (extended session stability)}\td{Right}}
+\tr{\td{TPU 95A HF}\td{Semi-rigid headband flex zones}\td{embedded-medical-device (wearable enclosure)}\td{Right}}
+\tr{\td{PLA/PETG}\td{Structural headframe, sensor mounts}\td{cyton-dongle (Ultracortex 10-20 montage geometry)}\td{Left/Right}}
+\tr{\td{ABS/ASA}\td{UV-stable enclosures, Uncut Gem housing}\td{rf-signal-analysis (RF shielding)}\td{Left/Right}}
+\tr{\td{PA (Nylon)}\td{High-fatigue hinge points, clip mechanisms}\td{kscale-actuator (mechanical stress points)}\td{Left/Right}}
+\tr{\td{PC}\td{Optically clear fNIRS light guides}\td{sheaf-cohomology-bci (optical path consistency)}\td{Left/Right}}
+\tr{\td{PVA}\td{Soluble supports for internal channels}\td{embedded-medical-device (complex sensor routing)}\td{Left/Right}}
+\tr{\td{CF-PETG/CF-PA}\td{EMI shielding, stiff lightweight frames}\td{rf-signal-analysis (wireless isolation), bci-colored-operad (RED boundary)}\td{Left/Right}}
 }
 }
 
 \subtree{\title{Fabrication roadmap}
 \taxon{protocol}
 \ol{
-\li{\strong{Week 1:} Print ShitBCI headframe v0.1 in PETG. Validate 10-20 electrode positions against modified Ultracortex geometry. Full build volume allows single-piece print.}
-\li{\strong{Week 2:} Print TPU 90A electrode gaskets and comfort liners. Fit-test with Cyton board + dry comb electrodes (\ref{bcf-0006}). Measure impedance delta vs. bare electrode contact.}
-\li{\strong{Week 3:} Multi-material print -- PETG frame + TPU gaskets + PVA supports in single job. Validate snap-fit tolerances for electrode units.}
-\li{\strong{Week 4:} Print Uncut Gem magnetometer enclosure (\ref{bcf-0031}) in ABS with integrated laser/photodiode alignment features. Print fNIRS sensor housings for PLUX optodes.}
-\li{\strong{Ongoing:} Iterate headset geometry based on EEG signal quality data. Each iteration is a 4--6 hour print-to-test cycle. Accumulate design knowledge for eventual injection mold tooling.}
+\li{\strong{Week 1:} Print ShitBCI headframe v0.1 in PETG. Validate all 16 electrode positions against the Ultracortex 10-20 montage (cyton-dongle skill: Fp1/Fp2/C3/C4/P7/P8/O1/O2 main + F7/F8/F3/F4/T7/T8/P3/P4 Daisy). Full build volume allows single-piece print. Verify electrode unit snap-fit tolerances.}
+\li{\strong{Week 2:} Print TPU 90A electrode gaskets and comfort liners. Fit-test with Cyton board + dry comb electrodes (\ref{bcf-0006}). Stream 16-channel data via dongle and measure impedance quality per cyton-dongle thresholds: target CLEAN (< 50 uV std) on all channels. Compare gasket vs. bare electrode contact impedance delta.}
+\li{\strong{Week 3:} Multi-material print -- PETG frame + TPU gaskets + PVA supports in single job. Validate snap-fit tolerances for electrode units. Run sheaf-cohomology-bci consistency check: verify Tr(L_F) < 1.0 across all 16 channels during head movement (subject turns head left/right/nod while recording alpha band power).}
+\li{\strong{Week 4:} Print Uncut Gem magnetometer enclosure (\ref{bcf-0031}) in ABS with integrated alignment features for 520 nm laser, BPW34 photodiode, and red gel filter. Print PLUX fNIRS sensor housings for biosignalsplux optodes. Print RF-shielded inner chamber for Cyton board in CF-PETG.}
+\li{\strong{Week 5:} Print colored operad physical isolation stack -- nested enclosures matching RED/YELLOW/GREEN/BLUE security boundaries. Test EMI isolation between Cyton SPI bus (ADS1299 DRDY at 250 Hz) and ESP32 WiFi TX (2.4 GHz) using oscilloscope (\ref{bcf-0035}).}
+\li{\strong{Ongoing:} Iterate headset geometry based on EEG signal quality data. Each iteration is a 4--6 hour print-to-test cycle. Accumulate design knowledge for eventual injection mold tooling. GF(3) conservation: each design iteration preserves the trit balance of the physical enclosure stack.}
 }
 }
 
@@ -68,10 +102,10 @@
 \taxon{remark}
 \p{The existing on-site FDM printer (\ref{bcf-0006}) lacks:}
 \ul{
-\li{Heated chamber -- ABS/ASA/PA prints warp, making enclosures unreliable}
-\li{Multi-material capability -- rigid + flexible in one print is impossible}
-\li{TPU reliability -- Bowden-tube extruders jam on shore 85A--90A filaments}
-\li{Build volume -- full headframes require splitting and bonding, introducing mechanical weak points at exactly the locations where electrode pressure matters most}
+\li{\strong{Heated chamber} -- ABS/ASA/PA prints warp, making enclosures dimensionally unreliable. The Uncut Gem enclosure requires sub-0.5mm tolerance on laser/photodiode alignment features.}
+\li{\strong{Multi-material capability} -- rigid + flexible in one print is impossible. Every BCI headset iteration requires separate prints + manual assembly + adhesive bonding, introducing failure points at electrode contact positions.}
+\li{\strong{TPU reliability} -- Bowden-tube extruders jam on shore 85A--90A filaments. The H2C's direct-drive right hotend with AMS HT bypass is specifically engineered for reliable flexible filament feeding.}
+\li{\strong{Build volume} -- full headframes require splitting and bonding, introducing mechanical weak points at exactly the locations where electrode pressure matters most for the ADS1299 front-end's 24-bit resolution.}
 }
-\p{The H2C's direct-drive right hotend with AMS HT bypass is specifically engineered for reliable flexible filament feeding. This is not a nice-to-have -- it is the critical path for ShitBCI prototyping before Mr. Ziegel commits to injection mold tooling ($5,000--$15,000 per mold).}
+\p{The H2C is the critical path for ShitBCI prototyping before Mr. Ziegel commits to injection mold tooling. It is also the fabrication backbone for every physical enclosure in the horse inventory: Cyton housings, Daisy shield covers, fNIRS optode mounts, and Uncut Gem magnetometer casings.}
 }

@@ -7,7 +7,7 @@
 \tag{debug}
 \meta{status}{to-buy}
 
-\p{Complementary bench equipment for Mr. Ziegel's BCI hardware prototyping lab. Selected to close the gaps between the oscilloscope (\ref{bcf-0035}), the 3D printer (\ref{bcf-0034}), and the BCI devices under development. Every item here accelerates the path from PCB to validated BCI headset.}
+\p{Complementary bench equipment for Mr. Ziegel's BCI hardware prototyping lab. Selected by cross-referencing skill requirements across the entire horse inventory: each item closes a specific gap between design, fabrication, and validation. Every device is justified against concrete debugging scenarios from the bci-colored-operad, cyton-dongle, embedded-medical-device, rf-signal-analysis, and kscale-actuator skills.}
 
 \subtree{\title{Bench Digital Multimeter: Rigol DM3058E}
 \taxon{reference}
@@ -16,17 +16,30 @@
 \meta{price}{$399}
 \meta{status}{to-buy}
 \tag{test-equipment}
-\p{5.5-digit bench DMM. Measures electrode impedance (2-wire and 4-wire resistance modes), validates LDO output voltages on Cyton/biosignalsplux boards, and checks continuity on hand-soldered MMG3014NT1 RF amplifier joints (\ref{bcf-0031}). The 4-wire Kelvin mode eliminates lead resistance from sub-ohm measurements -- essential for verifying electrode-paste-scalp contact impedance targets (<5 kOhm for wet EEG, <40 kOhm for dry).}
+\p{5.5-digit bench DMM. Primary use: electrode impedance measurement.}
+\ul{
+\li{\strong{4-wire Kelvin mode} eliminates lead resistance from sub-ohm measurements. The cyton-dongle skill documents electrode quality thresholds: CLEAN < 50 uV std requires electrode-scalp impedance < 5 kOhm (wet EEG with Ten20 paste) or < 40 kOhm (dry comb electrodes). 4-wire measurement verifies these targets directly.}
+\li{\strong{LDO output verification} -- check 3.3V rail on Cyton (ADS1299 requires 3.13--3.47V per datasheet), 5V USB on ESP32, and biosignalsplux hub supply voltages.}
+\li{\strong{Continuity on hand-soldered joints} -- the Uncut Gem build (\ref{bcf-0031}) requires hand-soldering MMG3014NT1 SOT-89 RF amplifiers and SMA connectors. 5.5-digit resolution catches cold joints that pass a basic continuity beep.}
+\li{\strong{fNIRS sensor resistance} -- verify PLUX optode LED forward voltage and photodiode bias before connecting to the biosignalsplux hub.}
+}
 }
 
 \subtree{\title{Logic Analyzer: Saleae Logic Pro 8}
 \taxon{reference}
 \meta{manufacturer}{Saleae}
 \meta{product}{Logic Pro 8}
-\meta{price}{$479}
-\meta{status}{to-buy}
+\meta{price}{$479 (new) / available from Tufts contact}
+\meta{status}{available-via-contact}
 \tag{test-equipment}
-\p{8-channel USB logic analyzer, 500 MSa/s digital, 50 MSa/s analog. Complements the oscilloscope when Mr. Ziegel needs more than 4 digital channels simultaneously -- e.g., monitoring Cyton SPI (4 lines) + Daisy SPI (4 lines) during dual-board 16-channel EEG acquisition. Saleae's protocol analyzers decode ADS1299 SPI frames, Bluetooth UART, and I2C sensor buses. The analog channels double as a low-bandwidth scope for slow signals (battery voltage droop during WiFi TX bursts on the ESP32).}
+\p{8-channel USB logic analyzer, 500 MSa/s digital, 50 MSa/s analog. Mr. Ziegel has extensive personal experience with Saleae for embedded firmware debugging -- GDB integration, protocol decode across SPI/I2C/UART/CAN, and embedded security analysis (Cutter, binary reversing). Available via contact at Tufts. Complements the on-site oscilloscope (\ref{bcf-0035}) when more than 4 digital channels are needed simultaneously.}
+\ul{
+\li{\strong{Cyton + Daisy dual-SPI capture} -- the cyton-dongle skill documents Daisy interleaving: odd sample numbers = channels 1--8 (main board SPI), even = channels 9--16 (Daisy SPI). Monitoring both SPI buses simultaneously requires 8 digital channels: 4 per SPI bus (SCLK + MOSI + MISO + CS x 2).}
+\li{\strong{Saleae protocol analyzers} decode ADS1299 SPI frames natively. Map register values to the cyton-dongle register table: CONFIG1 = 0xB6 (250 Hz, daisy), BIAS\_SENSP = 0xFF (all channels bias), per-channel gain registers 0x68/0xE8.}
+\li{\strong{Bluetooth UART decode} -- capture the 115200-baud serial protocol between the FTDI FT231X USB-UART and the RFDuino 2.4 GHz radio on the Cyton dongle. Decode radio commands (0xF0 prefix): channel override (0xF0 0x02), system status (0xF0 0x07), baud changes.}
+\li{\strong{Analog channels} (50 MSa/s) double as a low-bandwidth scope for slow signals: battery voltage droop during WiFi TX bursts on the ESP32, LiPo discharge curves during extended recording sessions.}
+\li{\strong{Colored operad boundary validation} -- the bci-colored-operad skill defines four isolation layers (RED/YELLOW/GREEN/BLUE). The Logic Pro 8 can simultaneously monitor signal transitions across all four boundaries, verifying that data flows inward only (less trusted -> more trusted) at the physical layer.}
+}
 }
 
 \subtree{\title{Soldering Station: Hakko FX-951}
@@ -36,7 +49,13 @@
 \meta{price}{$325}
 \meta{status}{to-buy}
 \tag{fabrication}
-\p{Temperature-controlled soldering station with T12 tips. Required for hand-soldering the MMG3014NT1 SOT-89 RF amplifiers and SMA connectors on the Uncut Gem PCBs (\ref{bcf-0031}). Also handles rework on Cyton board modifications (ShitBCI hardware mods -- bodge wires, component swaps, adding test points). The T12 tip system has fine-pitch options (T12-ILS, T12-J02) for 0603 passives and SOIC rework.}
+\p{Temperature-controlled soldering station with T12 tips.}
+\ul{
+\li{\strong{Uncut Gem PCB assembly} (\ref{bcf-0031}) -- hand-solder MMG3014NT1 SOT-89 RF amplifiers (2 per board, 19.5 dB gain each, 40 MHz--4 GHz), SMA female edge-mount connectors (50 Ohm), pin headers/sockets for OLED, SPI, photodiode.}
+\li{\strong{ShitBCI hardware mods} -- bodge wires, component swaps, adding test points to Cyton boards. The cyton-dongle skill identifies debugging scenarios (''Device failed to poll Host'', RAILED channels, FLAT signals) that may require hardware-level fixes: reflowing the ADS1299 LQFP-64 package, replacing damaged ESD protection diodes, or adding decoupling caps.}
+\li{\strong{T12 tip system} -- fine-pitch options (T12-ILS, T12-J02) for 0603 passives and SOIC rework. The Uncut Gem BOM includes 44 capacitors, 24 resistors, 2 inductors, diodes, LEDs, NPN transistors -- all 0603 SMD that JLCPCB assembles, but rework after testing requires a quality iron.}
+\li{\strong{nRF5340 prototyping} -- the embedded-medical-device skill recommends the nRF5340-DK for medical-grade BCI firmware. Connecting external sensors (MAX30102 pulse ox, ATECC608A secure element) via breakout boards requires clean soldering of I2C header pins.}
+}
 }
 
 \subtree{\title{Hot Air Rework Station: Quick 861DW}
@@ -46,7 +65,12 @@
 \meta{price}{$169}
 \meta{status}{to-buy}
 \tag{fabrication}
-\p{1000W hot air station for SMD rework. Needed for reflowing QFN packages (CP2102N USB-UART bridge on Uncut Gem), replacing damaged components on Cyton boards, and heat-shrinking custom cable assemblies for the BCI harness. Digital PID temperature control prevents overheating sensitive biosignal front-end ICs.}
+\p{1000W hot air station for SMD rework.}
+\ul{
+\li{\strong{QFN package rework} -- the Uncut Gem PCB has CP2102N-A02-GQFN28R (USB-UART bridge) assembled by JLCPCB, but post-assembly rework of QFN packages requires hot air. Mr. Ziegel cannot fix assembly defects with an iron alone.}
+\li{\strong{Cyton component replacement} -- damaged ADS1299 (LQFP-64), nRF24L01 radio modules, and voltage regulators on Cyton boards require hot air removal before resoldering.}
+\li{\strong{Heat-shrink on custom cables} -- BCI harness wiring (Cyton USB-C, Daisy header cables, fNIRS optical fiber bundles) needs proper heat-shrink termination. Digital PID temperature control prevents overheating the biosignal front-end ICs on adjacent boards.}
+}
 }
 
 \subtree{\title{Bench Power Supply: Rigol DP832}
@@ -56,7 +80,14 @@
 \meta{price}{$399}
 \meta{status}{to-buy}
 \tag{test-equipment}
-\p{Triple-output programmable DC power supply (30V/3A, 30V/3A, 5V/3A). Three independent channels match the three voltage rails in a typical BCI stack: 3.3V (Cyton logic + ADS1299), 5V (USB/ESP32), and variable (LED driver for fNIRS, laser supply for Uncut Gem). Current limiting protects prototype boards during bring-up. OVP/OCP prevents magic smoke when Mr. Ziegel is probing live circuits. The third fixed 5V channel powers the USB hub that connects scope + logic analyzer + Cyton simultaneously.}
+\p{Triple-output programmable DC power supply (30V/3A, 30V/3A, 5V/3A). Three independent channels match the three voltage domains in the BCI stack:}
+\ul{
+\li{\strong{Channel 1 (3.3V):} Cyton logic + ADS1299 analog supply. Current limiting protects the board during bring-up. The cyton-dongle skill documents that the Cyton accepts 3--6V DC battery input; the bench supply eliminates battery variability during signal quality testing.}
+\li{\strong{Channel 2 (5V variable):} USB/ESP32 power, LED driver for fNIRS, laser supply for Uncut Gem (520 nm, Class 2, < 1 mW). Variable voltage allows characterizing the ODMR signal-to-noise vs. laser drive current.}
+\li{\strong{Channel 3 (5V fixed):} Powers the USB hub that connects oscilloscope + logic analyzer + Cyton dongle simultaneously. Eliminates ground loop noise from multiple laptop USB ports.}
+\li{\strong{OVP/OCP:} Prevents magic smoke when Mr. Ziegel is probing live circuits. The ADS1299 is a $20 chip; the Cyton board is $200; an accidental short during rework without current limiting destroys both.}
+\li{\strong{Supply chain context} (kscale-biomimetic-supply): Rigol is headquartered in Suzhou but has US distribution and inventory. The DP832 is available from US distributors (Tequipment, Amazon) with no tariff risk on test equipment.}
+}
 }
 
 \subtree{\title{Stereo Microscope: AmScope SE400-Z}
@@ -66,23 +97,30 @@
 \meta{price}{$110}
 \meta{status}{to-buy}
 \tag{fabrication}
-\p{10X/20X stereo microscope for inspecting solder joints on 0603 passives, MMG3014NT1 pin alignment, and verifying 3D-printed electrode comb geometry. Also used to inspect dry electrode prong tips for wear and Ten20 paste distribution under electrode cups. LED ring light illumination.}
+\p{10X/20X stereo microscope for visual inspection.}
+\ul{
+\li{Inspect solder joints on 0603 passives and MMG3014NT1 pin alignment after Uncut Gem hand assembly.}
+\li{Verify 3D-printed electrode comb prong geometry -- the cyton-dongle skill documents 5mm flexible prongs on the dry EEG comb electrodes. Printed replacements must match this geometry within 0.2mm for consistent impedance.}
+\li{Inspect Ten20 paste distribution under electrode cups during wet EEG setup.}
+\li{Check TPU gasket surface finish after printing -- layer lines on skin-contact surfaces affect comfort and impedance consistency.}
+}
 }
 
 \subtree{\title{Cost summary}
 \taxon{remark}
 \table{
-\tr{\th{Item}\th{Price}}
-\tr{\td{Rigol DHO924S oscilloscope}\td{$449}}
-\tr{\td{Rigol DM3058E bench DMM}\td{$399}}
-\tr{\td{Saleae Logic Pro 8}\td{$479}}
-\tr{\td{Hakko FX-951 soldering station}\td{$325}}
-\tr{\td{Quick 861DW hot air rework}\td{$169}}
-\tr{\td{Rigol DP832 bench PSU}\td{$399}}
-\tr{\td{AmScope SE400-Z microscope}\td{$110}}
-\tr{\td{\strong{Test bench total}}\td{\strong{$2,330}}}
-\tr{\td{Bambu Lab H2C (bcf-0034)}\td{$2,399+}}
-\tr{\td{\strong{Full fabrication lab total}}\td{\strong{$4,729+}}}
+\tr{\th{Item}\th{Price}\th{Status}\th{Primary skill justification}}
+\tr{\td{Oscilloscope (\ref{bcf-0035})}\td{--}\td{OWNED}\td{cyton-dongle (SPI decode), rf-signal-analysis (RF debug)}}
+\tr{\td{Saleae Logic Pro 8}\td{--}\td{AVAILABLE (Tufts contact)}\td{cyton-dongle (dual-SPI Daisy), bci-colored-operad (boundary monitoring)}}
+\tr{\td{Rigol DM3058E bench DMM}\td{$399}\td{TO BUY}\td{cyton-dongle (electrode impedance)}}
+\tr{\td{Hakko FX-951 soldering station}\td{$325}\td{TO BUY}\td{embedded-medical-device (nRF5340 prototyping)}}
+\tr{\td{Quick 861DW hot air rework}\td{$169}\td{TO BUY}\td{rf-signal-analysis (QFN rework)}}
+\tr{\td{Rigol DP832 bench PSU}\td{$399}\td{TO BUY}\td{cyton-dongle (isolated power), sheaf-cohomology-bci (noise floor)}}
+\tr{\td{AmScope SE400-Z microscope}\td{$110}\td{TO BUY}\td{cyton-dongle (electrode geometry inspection)}}
+\tr{\td{\strong{Test bench remaining}}\td{\strong{$1,402}}\td{}\td{}}
+\tr{\td{Bambu Lab H2C (\ref{bcf-0034})}\td{$2,399+}\td{TO BUY}\td{}}
+\tr{\td{\strong{Total new purchases needed}}\td{\strong{$3,801+}}\td{}\td{}}
 }
-\p{For context: this entire lab costs less than the entry-level NIRSport 2 system (\ref{bcf-0032}) and enables Mr. Ziegel to design, print, assemble, and validate every BCI device in the horse inventory in-house.}
+\p{Mr. Ziegel's existing oscilloscope and available Saleae Logic Pro 8 (via Tufts) save $928 off the original estimate. Mr. Ziegel has extensive personal experience with Saleae for embedded firmware debugging (GDB, Cutter, protocol analysis across SPI/I2C/UART/CAN), making the logic analyzer immediately productive for Cyton and Uncut Gem debugging without ramp-up time.}
+\p{For context: this entire lab at $3,801 costs less than a single PLUX fNIRS Pioneer Kit (\ref{bcf-0011}) and enables Mr. Ziegel to design, print, assemble, debug, and validate every BCI device in the horse inventory in-house. The kscale-biomimetic-supply skill's tariff analysis reinforces this: domestic fabrication capability eliminates dependency on overseas manufacturing for every iteration cycle.}
 }
